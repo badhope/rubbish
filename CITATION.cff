@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use ScholarLib-EM in your research, please cite it as below."
 title: "ScholarLib-EM: A Curated Collection of Open-Access Papers in Economics & Management"
-abstract: "A systematically organized, open-access repository of research papers in Economics and Management fields, with ready-to-use BibTeX citations for academic writing."
+abstract: "A systematically organized, open-access repository of 45+ research papers across 18 fields in Economics and Management, classified by 6-level taxonomy (Year, Field, Topic, Journal Tier, Method, Industry Scenario) with ready-to-use BibTeX citations for academic writing."
 type: dataset
 authors:
   - family-names: "badhope"
@@ -17,6 +17,10 @@ keywords:
   - "bibliography"
   - "open access"
   - "academic library"
+  - "BibTeX"
+  - "FT50"
+  - "SSCI"
+  - "citation manager"
 license: MIT
-version: "1.0.0"
-date-released: "2025-01-01"
+version: "2.0.0"
+date-released: "2026-05-18"

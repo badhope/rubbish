@@ -5,9 +5,27 @@ url: https://github.com/badhope/ScholarLib-EM
 # Repository settings
 owner: badhope
 repo: ScholarLib-EM
+default_branch: main
 
-# Paper categories
+# 6-level taxonomy: Year → Field → Topic → Journal Tier → Method → Industry Scenario
+taxonomy:
+  levels:
+    - name: year
+      description: Publication year
+    - name: field
+      description: Research field (18 fields)
+    - name: topic
+      description: Research topic within field (3-5 per field)
+    - name: journal_tier
+      description: Journal quality tier (5 tiers)
+    - name: method
+      description: Research methodology (5 types)
+    - name: scenario
+      description: Industry application scenario (12 scenarios)
+
+# Research fields (18 total)
 categories:
+  # Core Economics & Management (10)
   - microeconomics
   - macroeconomics
   - finance
@@ -18,6 +36,142 @@ categories:
   - innovation-entrepreneurship
   - human-resources
   - public-economics
+  # Extended Fields (8)
+  - behavioral-economics
+  - labor-economics
+  - digital-economy
+  - esg-sustainability
+  - international-business
+  - health-economics
+  - tourism-hospitality
+  - real-estate-urban-economics
+
+# Research topics per field
+topics:
+  microeconomics:
+    - consumer-theory
+    - industrial-organization
+    - game-theory
+    - behavioral-experiments
+  macroeconomics:
+    - monetary-policy
+    - economic-growth
+    - international-trade
+    - business-cycles
+  finance:
+    - corporate-finance
+    - asset-pricing
+    - derivatives
+    - fintech
+    - financial-markets
+  accounting:
+    - financial-reporting
+    - auditing
+    - managerial-accounting
+    - esg-disclosure
+  marketing:
+    - consumer-behavior
+    - digital-marketing
+    - branding
+    - pricing-strategy
+  strategic-management:
+    - competitive-strategy
+    - corporate-governance
+    - ma
+    - business-model-innovation
+  operations-management:
+    - supply-chain
+    - logistics
+    - production-optimization
+    - quality-management
+  innovation-entrepreneurship:
+    - tech-innovation
+    - startup-strategy
+    - venture-capital
+    - open-innovation
+  human-resources:
+    - ai-work
+    - leadership
+    - compensation-rewards
+    - diversity-dei
+    - employee-wellbeing
+    - talent-management
+  public-economics:
+    - public-policy
+    - taxation
+    - welfare-economics
+    - education-economics
+  behavioral-economics:
+    - prospect-theory
+    - nudging
+    - decision-bias
+    - neuroeconomics
+  labor-economics:
+    - unemployment
+    - wage-dynamics
+    - labor-market
+    - immigration
+  digital-economy:
+    - platform-economy
+    - e-commerce
+    - digital-transformation
+    - data-economy
+  esg-sustainability:
+    - corporate-social-responsibility
+    - green-finance
+    - sustainable-supply-chain
+    - climate-risk
+  international-business:
+    - cross-cultural
+    - mne-strategy
+    - global-supply-chain
+    - foreign-entry
+  health-economics:
+    - health-policy
+    - pharmaceutical-economics
+    - health-insurance
+    - aging
+  tourism-hospitality:
+    - tourism-management
+    - hotel-management
+    - destination-marketing
+    - experience-economy
+  real-estate-urban-economics:
+    - housing-market
+    - urban-development
+    - real-estate-finance
+    - smart-city
+
+# Journal tier classification
+journal_tiers:
+  - FT50-UTD24        # Financial Times Top 50 & UTD 24
+  - SSCI-Q1           # SSCI Q1 journals
+  - SCI-Q1            # SCI Q1 journals
+  - CSSCI             # Chinese Social Science Citation Index
+  - Other-Top         # ABS 3/4, ABDC A*, etc.
+
+# Research methodology classification
+methods:
+  - empirical         # Empirical studies (archival, survey, secondary data)
+  - theoretical       # Theory building, conceptual, analytical models
+  - meta-analysis     # Meta-analyses, systematic reviews with effect sizes
+  - review            # Literature reviews, systematic reviews
+  - experimental      # Lab experiments, field experiments, RCTs
+
+# Industry scenario classification
+scenarios:
+  - cross-industry                        # Cross-industry, generalizable findings
+  - technology-internet                   # Tech companies, internet platforms, AI, software
+  - manufacturing                         # Manufacturing, production, supply chain
+  - finance-banking                       # Banking, insurance, investment, fintech
+  - healthcare-pharma                     # Hospitals, pharma, healthcare systems
+  - education                             # Schools, universities, edtech
+  - government-public                     # Government agencies, public administration
+  - retail-consumer-goods                 # Retail, e-commerce, FMCG
+  - energy-utilities                      # Energy, oil & gas, utilities
+  - real-estate-construction              # Real estate, construction, infrastructure
+  - consulting-professional-services      # Consulting, law, accounting firms
+  - agriculture-food                      # Agriculture, food industry
 
 # Year range
 years:
@@ -27,12 +181,21 @@ years:
   - 2023
   - 2024
   - 2025
+  - 2026
 
 # Paper entry format
 paper_format:
-  - "{paper-name}.pdf"
   - "{paper-name}.bib"
   - "metadata.json"
+
+# Statistics
+stats:
+  total_papers: 45
+  total_fields: 18
+  total_topics: 72
+  journal_tiers: 5
+  methods: 5
+  scenarios: 12
 
 # License
 license: MIT
