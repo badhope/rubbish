@@ -4,6 +4,7 @@ export default defineConfig({
   title: 'ScholarLib',
   description: 'A curated, open-access scholarly library of Computer Science, Economics & Management papers — browse, search, and cite, all in one place.',
   lang: 'en-US',
+  base: '/ScholarLib/',
   cleanUrls: true,
   lastUpdated: true,
   head: [
