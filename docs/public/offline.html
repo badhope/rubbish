@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Offline · ScholarLib</title>
+  <meta name="description" content="You are offline. ScholarLib cached pages are still available.">
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; }
+    .offline {
+      max-width: 640px; margin: 10vh auto; padding: 2rem;
+      text-align: center; line-height: 1.6;
+    }
+    .offline h1 { font-size: 2.2rem; margin-bottom: 0.5rem; }
+    .offline p  { opacity: 0.8; }
+    .offline .actions { margin-top: 2rem; display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+    .offline a {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.6rem 1.2rem; border-radius: 6px;
+      background: var(--vp-c-brand-1, #3b82f6); color: #fff;
+      text-decoration: none; font-weight: 500;
+    }
+    .offline a.secondary { background: transparent; color: inherit; border: 1px solid currentColor; }
+    .offline .icon { font-size: 3rem; }
+  </style>
+</head>
+<body>
+  <main id="VPContent" class="offline">
+    <div class="icon" aria-hidden="true">📚</div>
+    <h1>You're offline</h1>
+    <p>
+      We couldn't reach the network. The page you requested wasn't cached.
+      ScholarLib will work again as soon as you're back online.
+    </p>
+    <p>
+      If you visited any paper pages recently, you can still browse them from your browser history.
+    </p>
+    <div class="actions">
+      <a href="/ScholarLib/">Retry</a>
+      <a class="secondary" href="/ScholarLib/about">About ScholarLib</a>
+    </div>
+  </main>
+  <script>
+    window.addEventListener('online', function() { location.reload(); });
+  </script>
+</body>
+</html>
