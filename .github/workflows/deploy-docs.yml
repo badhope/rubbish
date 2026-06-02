@@ -25,9 +25,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
 
-      - run: npm ci || npm install
+      - run: npm install
       - run: npm run docs:build
 
       - uses: actions/configure-pages@v5
