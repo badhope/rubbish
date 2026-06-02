@@ -25,10 +25,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
+          cache: npm
 
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run docs:build
+      - run: npm ci || npm install
+      - run: npm run docs:build
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
