@@ -1,0 +1,12 @@
+# ScholarLib
+# https://github.com/ai-robots/awesome-ai-robots
+
+User-agent: *
+Allow: /
+Disallow: /404
+
+# Sitemap
+Sitemap: https://badhope.github.io/ScholarLib/sitemap.xml
+
+# Crawl-delay (politeness)
+Crawl-delay: 1

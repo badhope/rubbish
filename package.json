@@ -7,13 +7,26 @@
   "scripts": {
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "docs:sidebar": "python3 build_sidebar.py",
+    "format": "prettier --write \"**/*.{ts,js,json,md,yml,yaml}\" --ignore-path .gitignore",
+    "format:check": "prettier --check \"**/*.{ts,js,json,md,yml,yaml}\" --ignore-path .gitignore"
   },
   "devDependencies": {
-    "vitepress": "^1.6.0"
+    "prettier": "^3.3.3",
+    "vitepress": "^1.6.4",
+    "vitepress-plugin-llms": "^0.0.6"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/badhope/ScholarLib.git"
+  },
+  "bugs": {
+    "url": "https://github.com/badhope/ScholarLib/issues"
+  },
+  "homepage": "https://badhope.github.io/ScholarLib/"
 }

@@ -1,0 +1,108 @@
+/* ──────────────────────────────────────────────────────────────
+   ScholarLib — Custom VitePress theme overrides
+   ────────────────────────────────────────────────────────────── */
+
+:root {
+  --vp-c-brand-1: #3b82f6;
+  --vp-c-brand-2: #6366f1;
+  --vp-c-brand-3: #818cf8;
+  --vp-c-brand-soft: rgba(99, 102, 241, 0.14);
+}
+
+/* Hero gradient background */
+.VPHero .container .main {
+  background: linear-gradient(120deg, #3b82f6 30%, #8b5cf6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+}
+
+/* Hero CTA buttons polish */
+.VPButton.medium {
+  border-radius: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.VPButton.medium:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(59, 130, 246, 0.25);
+}
+
+/* Features card hover */
+.VPFeature {
+  transition: transform 0.2s ease, border-color 0.2s ease;
+  border-radius: 12px;
+}
+.VPFeature:hover {
+  transform: translateY(-4px);
+  border-color: var(--vp-c-brand-1);
+}
+
+/* Sidebar — better visual hierarchy */
+.VPSidebarItem.level-0 .text {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* Markdown body links */
+.vp-doc a {
+  text-decoration: none;
+  border-bottom: 1px dashed currentColor;
+  transition: border-bottom-style 0.2s;
+}
+.vp-doc a:hover {
+  border-bottom-style: solid;
+}
+
+/* Footer */
+.VPFooter {
+  border-top: 1px solid var(--vp-c-divider);
+  padding: 32px 24px;
+}
+
+/* Code blocks (custom theme) */
+.vp-doc div[class*='language-'] {
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Search modal polish */
+.VPLocalSearch {
+  border-radius: 12px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--vp-c-divider);
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--vp-c-brand-1);
+}
+
+/* Table polish */
+.vp-doc table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Skip link for accessibility */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 8px;
+  background: var(--vp-c-brand-1);
+  color: white;
+  padding: 8px 16px;
+  z-index: 9999;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: top 0.2s;
+}
+.skip-link:focus {
+  top: 8px;
+}

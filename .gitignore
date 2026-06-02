@@ -2,6 +2,8 @@
 .DS_Store
 Thumbs.db
 desktop.ini
+ehthumbs.db
+$RECYCLE.BIN/
 
 # Editor files
 .vscode/
@@ -9,22 +11,12 @@ desktop.ini
 *.swp
 *.swo
 *~
+*.code-workspace
 
 # Temporary files
 *.tmp
 *.bak
 *.log
-
-# Large files (use Git LFS for PDFs if needed)
-*.pdf
-!templates/**/*.pdf
-
-# Python
-__pycache__/
-*.py[cod]
-*.egg-info/
-.venv/
-venv/
 
 # Node
 node_modules/
@@ -34,3 +26,28 @@ dist/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
 docs/.vitepress/.temp/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+secrets/
+
+# OS-specific
+.directory
+*.lnk
+
+# IDE / formatter
+.history/
+*.iml
