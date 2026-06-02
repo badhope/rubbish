@@ -1,0 +1,17 @@
+{
+  "title": "Test Assets and Weak Factors",
+  "authors": ["Dacheng Xiu", "Ding Zhang"],
+  "year": 2025,
+  "journal": "Journal of Finance",
+  "journal_tier": "FT50",
+  "volume": 80,
+  "number": 1,
+  "pages": "259-319",
+  "doi": "10.1111/jofi.13415",
+  "url": "https://doi.org/10.1111/jofi.13415",
+  "abstract": "We show that two important issues in empirical asset pricing—the presence of test assets and weak factors—are intimately related. Test assets appear weak because the factors used to price them are weak.",
+  "keywords": ["asset pricing", "factor models", "weak factors", "test assets", "empirical asset pricing"],
+  "category": "finance",
+  "submitted_by": "ScholarLib-EM",
+  "date_added": "2026-05-18"
+}

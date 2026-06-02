@@ -1,0 +1,16 @@
+{
+  "title": "Denoising Search Query Improves Tourism Forecasting",
+  "authors": ["Wanyi Cao", "Mingming Hu"],
+  "year": 2025,
+  "journal": "Annals of Tourism Research",
+  "journal_tier": "SSCI-Q1",
+  "volume": 114,
+  "pages": "103892",
+  "doi": "10.1016/j.annals.2025.103892",
+  "url": "https://doi.org/10.1016/j.annals.2025.103892",
+  "abstract": "Proposes a denoising approach for search query data to improve tourism demand forecasting accuracy, demonstrating that noise-filtered search data significantly outperforms raw search data in predicting tourist arrivals.",
+  "keywords": ["tourism forecasting", "search query", "denoising", "demand prediction", "big data"],
+  "category": "tourism-hospitality",
+  "submitted_by": "ScholarLib-EM",
+  "date_added": "2026-05-18"
+}

@@ -1,0 +1,31 @@
+{
+  "ci": {
+    "collect": {
+      "startServerCommand": "npx http-server docs/.vitepress/dist -p 8080 -c-1",
+      "startServerReadyPattern": "Available on:",
+      "startServerReadyTimeout": 30000,
+      "url": [
+        "http://localhost:8080/",
+        "http://localhost:8080/papers/computer-science/",
+        "http://localhost:8080/papers/economics-management/",
+        "http://localhost:8080/about"
+      ],
+      "numberOfRuns": 1,
+      "settings": {
+        "preset": "desktop",
+        "skipAudits": ["uses-http2", "csp-xss"]
+      }
+    },
+    "assert": {
+      "assertions": {
+        "categories:performance": ["off"],
+        "categories:accessibility": ["off"],
+        "categories:best-practices": ["off"],
+        "categories:seo": ["off"]
+      }
+    },
+    "upload": {
+      "target": "temporary-public-storage"
+    }
+  }
+}

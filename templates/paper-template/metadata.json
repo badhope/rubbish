@@ -1,0 +1,13 @@
+{
+  "title": "Paper Title Goes Here",
+  "authors": ["Firstname Lastname", "Firstname Lastname"],
+  "year": 2025,
+  "journal": "Journal Name",
+  "doi": "10.xxxx/xxxxx",
+  "url": "https://doi.org/10.xxxx/xxxxx",
+  "abstract": "A brief abstract of the paper...",
+  "keywords": ["keyword1", "keyword2", "keyword3"],
+  "category": "finance",
+  "submitted_by": "Your GitHub Username",
+  "date_added": "2025-01-01"
+}

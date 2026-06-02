@@ -1,0 +1,69 @@
+name: Link Checker
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run weekly on Mondays at 06:00 UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-links:
+    name: Check links on deployed site
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install lychee
+        run: |
+          cargo install lychee --locked --no-default-features --features=url-filter,email-check 2>/dev/null || \
+          wget -qO- https://github.com/lycheeverse/lychee/releases/latest/download/lychee-x86_64-unknown-linux-gnu.tar.gz | tar xz -C /usr/local/bin
+
+      - name: Build site
+        run: |
+          npm ci
+          npm run docs:build
+
+      - name: Run lychee link checker
+        run: |
+          lychee \
+            --offline \
+            --no-progress \
+            --exclude 'https://github.com/badhope/ScholarLib/edit/*' \
+            --exclude 'https://doi.org/*' \
+            --exclude 'https://doi/*' \
+            --exclude 'https://orcid.org/*' \
+            --exclude-mail \
+            --include-fragments \
+            --max-redirects 5 \
+            --max-concurrency 16 \
+            --timeout 20 \
+            --output ./lychee/out.md \
+            --format markdown \
+            ./docs/.vitepress/dist/**/*.html
+        continue-on-error: true
+
+      - name: Print results
+        if: always()
+        run: cat ./lychee/out.md || echo "No report"
+
+      - name: Fail if broken links found
+        if: always()
+        run: |
+          if grep -qE 'Errors?: *[1-9]|✗|Errors?\s*:\s*[1-9]' ./lychee/out.md 2>/dev/null; then
+            echo "::error::Broken links found"
+            exit 1
+          fi

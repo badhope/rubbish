@@ -1,0 +1,94 @@
+name: ScholarLib
+description: Curated open-access research papers in Computer Science, Economics & Management
+url: https://github.com/badhope/ScholarLib
+docs: https://badhope.github.io/ScholarLib/
+
+# Repository settings
+owner: badhope
+repo: ScholarLib
+default_branch: main
+homepage: https://badhope.github.io/ScholarLib/
+
+# Top-level sections
+sections:
+  - id: computer-science
+    name: Computer Science
+    path: papers/computer-science
+    organization: topic-first   # each topic has year subfolders
+    source_repo: badhope/ScholarLib-CS
+  - id: economics-management
+    name: Economics & Management
+    path: papers/economics-management
+    organization: year-first    # each year has field subfolders
+    source_repo: badhope/ScholarLib-EM
+    taxonomy_levels:
+      - year
+      - field
+      - topic
+      - journal_tier
+      - method
+      - scenario
+
+# Computer Science topics (33)
+computer_science_topics:
+  - machine-learning
+  - deep-learning
+  - natural-language-processing
+  - computer-vision
+  - reinforcement-learning
+  - graph-neural-networks
+  - generative-models
+  - large-language-models
+  - multimodal-learning
+  - embodied-ai
+  - information-retrieval
+  - recommender-systems
+  - speech-audio-processing
+  - time-series-analysis
+  - automl-nas
+  - ai-safety-alignment
+  - ai-for-science
+  - algorithms-data-structures
+  - bioinformatics
+  - causal-inference
+  - computer-networks
+  - computer-security
+  - data-mining
+  - database-systems
+  - distributed-systems
+  - explainable-ai
+  - human-computer-interaction
+  - operating-systems
+  - optimization-theory
+  - programming-languages
+  - quantum-computing
+  - robotics
+  - software-engineering
+
+# Economics & Management fields (18)
+economics_management_fields:
+  - microeconomics
+  - macroeconomics
+  - finance
+  - accounting
+  - marketing
+  - strategic-management
+  - operations-management
+  - innovation-entrepreneurship
+  - human-resources
+  - public-economics
+  - behavioral-economics
+  - digital-economy
+  - health-economics
+  - esg-sustainability
+  - tourism-hospitality
+  - real-estate-urban-economics
+  - international-business
+  - labor-economics
+
+# Build & deploy
+build:
+  framework: vitepress
+  source_dir: docs
+  output_dir: docs/.vitepress/dist
+  deploy_target: github-pages
