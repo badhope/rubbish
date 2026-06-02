@@ -158,6 +158,19 @@ export default defineConfig({
           ],
         },
       ],
+      '/about/': [
+        {
+          text: 'About',
+          collapsed: false,
+          items: [
+            { text: 'Overview', link: '/about' },
+            { text: 'License', link: '/about#license' },
+            { text: 'Contributing', link: '/about#contributing' },
+            { text: 'History', link: '/about#history' },
+            { text: 'Maintainer', link: '/about#maintainer' },
+          ],
+        },
+      ],
     },
 
     outline: { level: [2, 3], label: 'On this page' },
