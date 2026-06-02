@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2025 ScholarLib-EM Contributors
+Copyright (c) 2026 ScholarLib-CS Contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,10 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-Note: Individual research papers in this repository retain their original
-copyright and are shared under their respective open-access licenses.
-This MIT license applies only to the repository structure, templates,
-scripts, and metadata files created by contributors.

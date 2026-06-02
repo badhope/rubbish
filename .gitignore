@@ -29,3 +29,8 @@ venv/
 # Node
 node_modules/
 dist/
+
+# VitePress build output
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+docs/.vitepress/.temp/

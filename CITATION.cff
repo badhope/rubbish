@@ -1,26 +1,25 @@
 cff-version: 1.2.0
-message: "If you use ScholarLib-EM in your research, please cite it as below."
-title: "ScholarLib-EM: A Curated Collection of Open-Access Papers in Economics & Management"
-abstract: "A systematically organized, open-access repository of 45+ research papers across 18 fields in Economics and Management, classified by 6-level taxonomy (Year, Field, Topic, Journal Tier, Method, Industry Scenario) with ready-to-use BibTeX citations for academic writing."
-type: dataset
+message: "If you use ScholarLib in your research, please cite it as below."
+type: software
+title: "ScholarLib"
+abstract: "A curated, open-access scholarly library of Computer Science, Economics & Management papers. Browse, search, and cite, all in one place."
 authors:
   - family-names: "badhope"
-    given-names: ""
-    orcid: "https://orcid.org/0000-0000-0000-0000"
-    affiliation: "Independent Researcher"
-repository-code: "https://github.com/badhope/ScholarLib-EM"
-url: "https://github.com/badhope/ScholarLib-EM"
-keywords:
-  - "economics"
-  - "management"
-  - "research papers"
-  - "bibliography"
-  - "open access"
-  - "academic library"
-  - "BibTeX"
-  - "FT50"
-  - "SSCI"
-  - "citation manager"
+    given-names: "badhope"
+    alias: "badhope"
+    affiliation: "Independent"
+    orcid: "https://orcid.org/"
 license: MIT
-version: "2.0.0"
-date-released: "2026-05-18"
+license-url: "https://github.com/badhope/ScholarLib/blob/main/LICENSE"
+repository-code: "https://github.com/badhope/ScholarLib"
+url: "https://badhope.github.io/ScholarLib/"
+keywords:
+  - academic-papers
+  - computer-science
+  - economics
+  - management
+  - open-access
+  - research-library
+  - scholarly-articles
+  - papers
+date-released: 2026-06-02

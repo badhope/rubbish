@@ -1,0 +1,19 @@
+{
+  "name": "scholarlib",
+  "version": "1.0.0",
+  "description": "A curated, open-access scholarly library of Computer Science, Economics & Management papers.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

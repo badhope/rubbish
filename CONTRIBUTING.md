@@ -1,101 +1,66 @@
-# Contributing to ScholarLib-EM
+# 🤝 贡献指南
 
-Thank you for helping grow this open-access academic library! 🎉
+感谢你对 ScholarLib-CS 的关注！本文档将帮助你快速了解如何为本仓库贡献论文。
 
-## 📋 How to Submit a Paper
+## 📋 贡献前必读
 
-### Prerequisites
+- 请确保上传的论文具有 **合法的分发权限**（优先选择开放获取论文）
+- 请勿上传受严格版权保护的付费论文全文
+- 每次提交请控制在 **合理范围内**（建议每次 PR 不超过 20 篇论文）
 
-- The paper must be **open-access** (freely available as a full-text PDF)
-- The paper must be related to **Economics or Management**
-- You must have the right to share the paper (check the paper's license)
+## 📝 论文命名规范
 
-### Submission Steps
-
-1. **Fork** this repository
-2. **Navigate** to `papers/{year}/{category}/`
-3. **Create a folder** named after the paper (use `kebab-case`, e.g., `market-frictions-in-crypto`)
-4. **Add the following files** inside the folder:
+所有论文 PDF 文件名遵循以下格式：
 
 ```
-market-frictions-in-crypto/
-├── market-frictions-in-crypto.pdf    # Full-text PDF
-├── market-frictions-in-crypto.bib    # BibTeX citation
-└── metadata.json                     # Structured metadata
+FirstAuthor-YYYY-ShortTitle.pdf
 ```
 
-### File Templates
+| 部分 | 说明 | 示例 |
+|------|------|------|
+| FirstAuthor | 第一作者姓氏 | Vaswani |
+| YYYY | 发表年份 | 2017 |
+| ShortTitle | 论文标题简写（首字母大写，无空格） | AttentionIsAllYouNeed |
 
-#### BibTeX Template (`.bib`)
+**完整示例：**
+- ✅ `Vaswani-2017-AttentionIsAllYouNeed.pdf`
+- ✅ `He-2016-DeepResidualLearning.pdf`
+- ✅ `Devlin-2019-BERT.pdf`
+- ❌ `attention is all you need.pdf`
+- ❌ `paper1.pdf`
+- ❌ `2017_transformer.pdf`
 
-```bibtex
-@article{author2025keyword,
-  title   = {Paper Title Goes Here},
-  author  = {Lastname, Firstname and Lastname, Firstname},
-  journal = {Journal Name},
-  year    = {2025},
-  volume  = {1},
-  number  = {1},
-  pages   = {1--20},
-  doi     = {10.xxxx/xxxxx},
-  url     = {https://doi.org/10.xxxx/xxxxx},
-  keywords = {keyword1, keyword2, keyword3}
-}
+## 📂 文件放置规则
+
+1. 确定论文所属的 **主题目录**（如 `Deep-Learning/`）
+2. 确定论文的 **发表年份**（如 `2024/`）
+3. 将 PDF 放入对应路径：`Deep-Learning/2024/`
+4. 更新该年份目录下的 `README.md`
+
+## 🔄 PR 提交流程
+
+1. **Fork** 本仓库
+2. 创建分支：`git checkout -b add/papers-topic-year`
+3. 添加论文 PDF 到对应目录
+4. 更新目录下的 `README.md` 论文列表
+5. 提交：`git commit -m "docs: add X papers to Topic/Year"`
+6. 推送：`git push origin add/papers-topic-year`
+7. 创建 **Pull Request**
+
+## ❓ 常见问题
+
+**Q: 我不确定论文属于哪个主题？**
+A: 选择最相关的主题即可。如果确实难以归类，可以提交 Issue 讨论。
+
+**Q: 论文是 2018 年的，应该放在哪里？**
+A: 放在对应主题的 `2019-and-earlier/` 目录下。
+
+**Q: 我只有论文链接没有 PDF，怎么办？**
+A: 可以在对应年份的 README.md 中添加链接，格式为：
 ```
-
-#### Metadata Template (`metadata.json`)
-
-```json
-{
-  "title": "Paper Title Goes Here",
-  "authors": ["Firstname Lastname", "Firstname Lastname"],
-  "year": 2025,
-  "journal": "Journal Name",
-  "doi": "10.xxxx/xxxxx",
-  "url": "https://doi.org/10.xxxx/xxxxx",
-  "abstract": "A brief abstract of the paper...",
-  "keywords": ["keyword1", "keyword2", "keyword3"],
-  "category": "finance",
-  "submitted_by": "Your GitHub Username",
-  "date_added": "2025-01-01"
-}
+- [论文标题](链接) — 作者, 发表于 *会议/期刊*
 ```
-
-### Category Reference
-
-| Directory | Field |
-|-----------|-------|
-| `microeconomics/` | Microeconomics |
-| `macroeconomics/` | Macroeconomics |
-| `finance/` | Finance |
-| `accounting/` | Accounting |
-| `marketing/` | Marketing |
-| `strategic-management/` | Strategic Management |
-| `operations-management/` | Operations Management |
-| `innovation-entrepreneurship/` | Innovation & Entrepreneurship |
-| `human-resources/` | Human Resources |
-| `public-economics/` | Public Economics |
-
-### Naming Conventions
-
-- **Folder name**: `kebab-case` (e.g., `digital-transformation-in-banking`)
-- **File names**: Match the folder name (e.g., `digital-transformation-in-banking.pdf`)
-- **BibTeX key**: `{firstauthorlastname}{year}{keyword}` (e.g., `smith2025digital`)
-
-### Pull Request Checklist
-
-- [ ] Paper is open-access
-- [ ] Paper is in Economics or Management field
-- [ ] All 3 files are included (PDF, BibTeX, metadata.json)
-- [ ] BibTeX entry is valid and complete
-- [ ] metadata.json is valid JSON with all required fields
-- [ ] Files are placed in the correct `year/category/` directory
-- [ ] Folder and file names follow naming conventions
-
-## 📜 License
-
-By contributing, you agree that your submissions comply with the original paper's license and that the repository structure files are released under the MIT license.
 
 ---
 
-Thank you for making academic research more accessible! 🙏
+感谢你的贡献！每一篇论文的添加都在帮助更多的 CS 研究者！🎉
