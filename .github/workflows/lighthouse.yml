@@ -31,13 +31,6 @@ jobs:
           npm ci
           npm run docs:build
 
-      - name: Serve site
-        run: |
-          npm install -g http-server
-          nohup http-server docs/.vitepress/dist -p 8080 -c-1 > /dev/null 2>&1 &
-          sleep 3
-          curl -sI http://localhost:8080/ | head -1
-
       - name: Run Lighthouse
         uses: treosh/lighthouse-ci-action@v11
         with:
