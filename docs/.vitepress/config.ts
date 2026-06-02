@@ -64,6 +64,19 @@ export default defineConfig({
       },
     })],
 
+    // PWA manifest
+    ['link', { rel: 'manifest', href: 'https://badhope.github.io/ScholarLib/manifest.webmanifest' }],
+    ['meta', { name: 'apple-mobile-web-app-capable', content: 'yes' }],
+    ['meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'default' }],
+    ['meta', { name: 'apple-mobile-web-app-title', content: 'ScholarLib' }],
+    ['meta', { name: 'mobile-web-app-capable', content: 'yes' }],
+    ['meta', { name: 'application-name', content: 'ScholarLib' }],
+    ['meta', { name: 'format-detection', content: 'telephone=no' }],
+
+    // Icons
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/ScholarLib/og-image.svg' }],
+    ['link', { rel: 'apple-touch-icon', href: '/ScholarLib/pwa-192.png' }],
+
     // RSS feed auto-discovery
     ['link', { rel: 'alternate', type: 'application/rss+xml', title: 'ScholarLib', href: 'https://badhope.github.io/ScholarLib/rss.xml' }],
 
@@ -77,6 +90,38 @@ export default defineConfig({
     theme: { light: 'github-light', dark: 'github-dark' },
   },
 
+  // ── Internationalization (i18n) ─────────────────────────────────────
+  locales: {
+    root: {
+      label: 'English',
+      lang: 'en-US',
+      description: 'A curated, open-access scholarly library of Computer Science, Economics & Management papers — browse, search, and cite, all in one place.',
+      themeConfig: {
+        nav: [
+          { text: 'Home', link: '/' },
+          { text: 'Computer Science', link: '/papers/computer-science/index' },
+          { text: 'Economics & Management', link: '/papers/economics-management/index' },
+          { text: 'Citation Graph', link: '/citation-graph' },
+          { text: 'About', link: '/about' },
+        ],
+      },
+    },
+    zh: {
+      label: '简体中文',
+      lang: 'zh-CN',
+      description: '精选开放获取的计算机科学、经济学与管理学论文库 — 浏览、检索、引用，一站式搞定。',
+      themeConfig: {
+        nav: [
+          { text: '首页', link: '/zh/' },
+          { text: '计算机科学', link: '/zh/papers/computer-science/index' },
+          { text: '经济与管理', link: '/zh/papers/economics-management/index' },
+          { text: '引用图谱', link: '/zh/citation-graph' },
+          { text: '关于', link: '/zh/about' },
+        ],
+      },
+    },
+  },
+
   // ── Theme configuration ─────────────────────────────────────────────
   themeConfig: {
     siteTitle: 'ScholarLib',
@@ -85,6 +130,7 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       { text: 'Computer Science', link: '/papers/computer-science/index' },
       { text: 'Economics & Management', link: '/papers/economics-management/index' },
+      { text: 'Citation Graph', link: '/citation-graph' },
       { text: 'About', link: '/about' },
     ],
 

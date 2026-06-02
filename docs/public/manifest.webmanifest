@@ -1,0 +1,51 @@
+{
+  "name": "ScholarLib — Open-Access Paper Library",
+  "short_name": "ScholarLib",
+  "description": "A curated, open-access scholarly library of Computer Science, Economics & Management papers — browse, search, and cite, all in one place.",
+  "start_url": "/ScholarLib/",
+  "scope": "/ScholarLib/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "lang": "en-US",
+  "dir": "ltr",
+  "categories": ["education", "books", "productivity", "science"],
+  "icons": [
+    {
+      "src": "/ScholarLib/pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/ScholarLib/pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Computer Science",
+      "short_name": "CS",
+      "description": "Browse Computer Science papers",
+      "url": "/ScholarLib/papers/computer-science/index",
+      "icons": [{ "src": "/ScholarLib/pwa-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Economics & Management",
+      "short_name": "EM",
+      "description": "Browse Economics & Management papers",
+      "url": "/ScholarLib/papers/economics-management/index",
+      "icons": [{ "src": "/ScholarLib/pwa-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Search",
+      "short_name": "Search",
+      "description": "Search across all papers",
+      "url": "/ScholarLib/?q="
+    }
+  ],
+  "prefer_related_applications": false
+}

@@ -1,42 +1,29 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { useRoute } from 'vitepress'
 import DefaultLayout from 'vitepress/dist/client/theme-default/Layout.vue'
 
 const route = useRoute()
+
+onMounted(() => {
+  // Register service worker for PWA support
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker
+        .register('/ScholarLib/sw.js', { scope: '/ScholarLib/' })
+        .then((reg) => {
+          // Periodic update check (every 60 min)
+          setInterval(() => reg.update().catch(() => {}), 60 * 60 * 1000)
+        })
+        .catch(() => {
+          // Silent: PWA is a progressive enhancement
+        })
+    })
+  }
+})
 </script>
 
 <template>
-  <!--
-    Custom layout: adds a skip-link to satisfy
-    WCAG 2.1 'landmark-one-main' and 'bypass-blocks'.
-  -->
   <a class="skip-link" href="#VPContent">Skip to main content</a>
-  <DefaultLayout>
-    <template #doc-before v-if="route.path !== '/'">
-      <nav aria-label="Breadcrumb" class="VPSBreadcrumb" v-if="false" />
-    </template>
-  </DefaultLayout>
+  <DefaultLayout />
 </template>
-
-<style>
-/* Skip link styling — moved from custom.css for proximity */
-.skip-link {
-  position: fixed;
-  top: -100px;
-  left: 8px;
-  background: var(--vp-c-brand-1);
-  color: #fff;
-  padding: 12px 20px;
-  z-index: 10000;
-  border-radius: 0 0 6px 6px;
-  text-decoration: none;
-  font-weight: 600;
-  transition: top 0.2s ease;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-}
-.skip-link:focus {
-  top: 0;
-  outline: 3px solid #fbbf24;
-  outline-offset: 2px;
-}
-</style>

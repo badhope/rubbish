@@ -1,0 +1,508 @@
+{
+  "nodes": [
+    {
+      "id": "chen2016xgboost",
+      "title": "XGBoost: A Scalable Tree Boosting System",
+      "author": "Chen, Tianqi and Guestrin, Carlos",
+      "year": "2016",
+      "journal": "Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining",
+      "topic": "computer-science",
+      "keywords": ""
+    },
+    {
+      "id": "wei2024disabilities",
+      "title": "Does Featuring People with Disabilities Help or Hurt Fashion Marketing Effectiveness?",
+      "author": "Wei, Chuang",
+      "year": "2024",
+      "journal": "Journal of Marketing Research",
+      "topic": "economics-management",
+      "keywords": "disability, fashion marketing, inclusive advertising, consumer response, branding"
+    },
+    {
+      "id": "assad2024algorithmic",
+      "title": "Algorithmic Pricing and Competition: Empirical Evidence from the German Retail Gasoline Market",
+      "author": "Assad, Stephanie and Clark, Robert and Ershov, Daniel and Xu, Lei",
+      "year": "2024",
+      "journal": "Journal of Political Economy",
+      "topic": "economics-management",
+      "keywords": "algorithmic pricing, competition, gasoline market, Germany, artificial intelligence"
+    },
+    {
+      "id": "mousa2025sustainability",
+      "title": "Sustainability Reporting Quality Impediments in Emerging Markets: Evidence from ESG Disclosures",
+      "author": "Mousa, Fatma",
+      "year": "2025",
+      "journal": "Accounting Horizons",
+      "topic": "economics-management",
+      "keywords": "sustainability reporting, ESG disclosure, emerging markets, reporting quality, institutional factors"
+    },
+    {
+      "id": "kuan2025behavioral",
+      "title": "Behavioral Nudges Prevent Loan Delinquencies at Scale: A 13-Million-Person Field Experiment",
+      "author": "Kuan, Robert and Blagg, Kristin and Castleman, Benjamin L. and Darolia, Rajeev and Matsudaira, Jordan D. and Milkman, Katherine L. and Turner, Lesley J.",
+      "year": "2025",
+      "journal": "Proceedings of the National Academy of Sciences",
+      "topic": "economics-management",
+      "keywords": "behavioral nudges, student loans, field experiment, delinquency, education finance"
+    },
+    {
+      "id": "chen2025ai",
+      "title": "Realizing Business Value from AI: The Role of AI Capability Alignment and Development Mode",
+      "author": "Chen, Wang and Zhang",
+      "year": "2025",
+      "journal": "MIS Quarterly",
+      "topic": "economics-management",
+      "keywords": "AI, business value, capability alignment, digital strategy, implementation"
+    },
+    {
+      "id": "babina2025ai",
+      "title": "When AI Increases Productivity: The Moderating Role of Task Complexity",
+      "author": "Babina, Kireeva and Wucherpfennig",
+      "year": "2025",
+      "journal": "Research Policy",
+      "topic": "economics-management",
+      "keywords": "AI, productivity, task complexity, digital transformation, firm performance"
+    },
+    {
+      "id": "carbon2025leakage",
+      "title": "Carbon Leakage: A Meta-Analytic Review and Future Research Agenda",
+      "author": "Multiple Authors",
+      "year": "2025",
+      "journal": "Corporate Social Responsibility and Environmental Management",
+      "topic": "economics-management",
+      "keywords": "carbon leakage, climate change, environmental management, meta-analysis, international trade"
+    },
+    {
+      "id": "fang2025esg",
+      "title": "ESG-Consistent Investment and Idiosyncratic Risk: The Roles of Information Asymmetry and Information Acquisition",
+      "author": "Fang, Wang and Li",
+      "year": "2025",
+      "journal": "Journal of Business Ethics",
+      "topic": "economics-management",
+      "keywords": "ESG, idiosyncratic risk, information asymmetry, green finance, investment"
+    },
+    {
+      "id": "xiu2025test",
+      "title": "Test Assets and Weak Factors",
+      "author": "Xiu, Dacheng and Zhang, Ding",
+      "year": "2025",
+      "journal": "Journal of Finance",
+      "topic": "economics-management",
+      "keywords": "asset pricing, factor models, weak factors, test assets, empirical asset pricing"
+    },
+    {
+      "id": "ye2025fintech",
+      "title": "Fintech Entry, Lending Market Competition, and Welfare",
+      "author": "Ye, Zhiqiang and Vives, Xavier",
+      "year": "2025",
+      "journal": "Journal of Financial Economics",
+      "topic": "economics-management",
+      "keywords": "fintech, lending, competition, welfare, financial inclusion"
+    },
+    {
+      "id": "sun2025generative",
+      "title": "How and for Whom Using Generative {AI",
+      "author": "Sun, Shuhua and Li, Zhuyi Angelina and Foo, Maw-Der and Zhou, Jing",
+      "year": "2025",
+      "journal": "Journal of Applied Psychology",
+      "topic": "economics-management",
+      "keywords": "generative AI, creativity, field experiment, cognitive approach, editor's choice"
+    },
+    {
+      "id": "ai2025double",
+      "title": "Gain or Pain: The Double-Edged Sword Effect of Artificial Intelligence Adoption on Employee Service Performance",
+      "author": "Zhang, Nan and Wang, Mo and Xu, Heng and Koenig, Nick and Hickman, Louis and Kuruzovich, Jason and Ng, Vincent and Arhin, Kofi and Wilson, Danielle and Song, Q. Chelsea and Tang, Chen and Alexander, Leo and Kim, Yesuel",
+      "year": "2025",
+      "journal": "Journal of Organizational Behavior",
+      "topic": "economics-management",
+      "keywords": "AI adoption, service performance, affective events theory, curvilinear effect, employee well-being"
+    },
+    {
+      "id": "bloomfield2025feminist",
+      "title": "Feminist Value Creation: The Pursuit of Gender Equality",
+      "author": "Bloomfield, Michael J.",
+      "year": "2025",
+      "journal": "Academy of Management Review",
+      "topic": "economics-management",
+      "keywords": "feminist theory, value creation, gender equality, diversity, DEI, organizational theory"
+    },
+    {
+      "id": "yagil2025burdensome",
+      "title": "I Don't Want To: The Violation of Burdensome Role Expectations",
+      "author": "Yagil, Dana",
+      "year": "2025",
+      "journal": "Academy of Management Review",
+      "topic": "economics-management",
+      "keywords": "role expectations, employee resistance, role violation, organizational behavior, psychological contract"
+    },
+    {
+      "id": "jachimowicz2025passion",
+      "title": "Riding the Passion Wave or Fighting to Stay Afloat? A Theory of Differentiated Passion Contagion",
+      "author": "Jachimowicz, Jon M. and He, Joyce and Moore, Celia",
+      "year": "2025",
+      "journal": "Administrative Science Quarterly",
+      "topic": "economics-management",
+      "keywords": "passion contagion, emotions, organizational behavior, differentiated theory, employee engagement"
+    },
+    {
+      "id": "lu2025common",
+      "title": "Enhancing Employee Outcomes Through Common Good Human Resource Management: Exploring the Role of Meaningfulness and Thriving",
+      "author": "Lu, Ying and Zhang, Mingqiong Mike and Yang, Miles M. and Li, Teng",
+      "year": "2025",
+      "journal": "Human Resource Management",
+      "topic": "economics-management",
+      "keywords": "common good HRM, meaningfulness, thriving, employee outcomes, human resource management"
+    },
+    {
+      "id": "allen2025flexible",
+      "title": "A Meta-Analysis of Antecedents and Outcomes of Flexible Working Arrangements",
+      "author": "Allen, Tammy D. and Golden, Timothy D. and Shockley, Kristen M.",
+      "year": "2025",
+      "journal": "Journal of Organizational Behavior",
+      "topic": "economics-management",
+      "keywords": "flexible working arrangements, flextime, flexplace, meta-analysis, work-life balance, remote work"
+    },
+    {
+      "id": "ijhrm2025safety",
+      "title": "See Something, Say Something: A Meta-Analytic Review of Safety Voice",
+      "author": "Curry, Catherine and Clarke, Sharon and McCarthy, V. and Taylor, S.",
+      "year": "2025",
+      "journal": "International Journal of Human Resource Management",
+      "topic": "economics-management",
+      "keywords": "safety voice, employee voice, safety compliance, meta-analysis, safety management, organizational safety"
+    },
+    {
+      "id": "mitchell2025better",
+      "title": "Better Than Myself: A Translation and Extension of Internal Comparison Theories in Management",
+      "author": "Mitchell, Rebecca L. and Hollenbeck, John R.",
+      "year": "2025",
+      "journal": "Journal of Management",
+      "topic": "economics-management",
+      "keywords": "social comparison, internal comparison, self-enhancement, motivation, organizational behavior, performance"
+    },
+    {
+      "id": "pathki2025hypercompetitiveness",
+      "title": "The Effect of Leader-Follower Hypercompetitiveness Dissimilarity on Relationship and Performance Outcomes",
+      "author": "Pathki, Chandra S. and Swab, R. Gabrielle and Kluemper, Donald H. and Johnson, Paul D.",
+      "year": "2025",
+      "journal": "Leadership Quarterly",
+      "topic": "economics-management",
+      "keywords": "hypercompetitiveness, leader-follower relationship, dissimilarity, performance, LMX, personality"
+    },
+    {
+      "id": "liden2025servant",
+      "title": "Servant Leadership: Strengths, Weaknesses, and a Path Forward",
+      "author": "Liden, Robert C. and van Knippenberg, Daan",
+      "year": "2025",
+      "journal": "Leadership Quarterly",
+      "topic": "economics-management",
+      "keywords": "servant leadership, leadership theory, critique, theoretical development, leadership effectiveness"
+    },
+    {
+      "id": "nishii2025meta",
+      "title": "A Meta-Analysis of Employee {HR",
+      "author": "Nishii, Lillian H. and Oh, In-Sue and Agolli, A.",
+      "year": "2025",
+      "journal": "Human Resource Management",
+      "topic": "economics-management",
+      "keywords": "HR attributions, high-performance work systems, meta-analysis, employee outcomes, HRM systems"
+    },
+    {
+      "id": "xu2025fueling",
+      "title": "Fueling Employees' Initiative: A Meta-Analysis of the Motivational Antecedents of Proactive Work Behavior",
+      "author": "Xu, Shan and Jia, Jiale and Wang, Yumei",
+      "year": "2025",
+      "journal": "Journal of Organizational Behavior",
+      "topic": "economics-management",
+      "keywords": "proactive work behavior, motivation, meta-analysis, employee initiative, self-efficacy, role breadth"
+    },
+    {
+      "id": "nieberle2025voice",
+      "title": "Voice Echoes: A Critical Review and Future Research Agenda on the Consequences of Employee Voice for Voicers, their Co-workers, and Managers",
+      "author": "Nieberle, Karolina W. and Fladerer, Martin P.",
+      "year": "2025",
+      "journal": "Human Relations",
+      "topic": "economics-management",
+      "keywords": "employee voice, voice consequences, critical review, co-workers, managers, voice behavior"
+    },
+    {
+      "id": "digital2025ambidexterity",
+      "title": "Digitalizing for Knowledge: How Does Digital Technology Influence Innovation Ambidexterity",
+      "author": "Multiple Authors",
+      "year": "2025",
+      "journal": "Academy of Management Proceedings",
+      "topic": "economics-management",
+      "keywords": "digital technology, innovation ambidexterity, manufacturing, China, radical innovation, incremental innovation"
+    },
+    {
+      "id": "teece2025mne",
+      "title": "The Multinational Enterprise, Capabilities, and Digitalization: Governance and Growth with World Disorder",
+      "author": "Teece, David J.",
+      "year": "2025",
+      "journal": "Journal of International Business Studies",
+      "topic": "economics-management",
+      "keywords": "multinational enterprise, capabilities, digitalization, geopolitics, international business"
+    },
+    {
+      "id": "niu2025restructuring",
+      "title": "Restructuring Global Supply Chains: Navigating Challenges of the COVID-19 Pandemic and Beyond",
+      "author": "Niu, Y. and Werle, N. and Cohen, M. and Cui, S. and Deshpande, V. and Ernst, R. and Huchzermeier, A. and Tsay, A. and Wu, J.",
+      "year": "2025",
+      "journal": "Manufacturing \\& Service Operations Management",
+      "topic": "economics-management",
+      "keywords": "supply chain, COVID-19, resilience, globalization, operations management"
+    },
+    {
+      "id": "spiritus2025optimal",
+      "title": "Optimal Taxation with Multiple Incomes and Types",
+      "author": "Spiritus, Kevin and Lehmann, {\\'E",
+      "year": "2025",
+      "journal": "Theoretical Economics",
+      "topic": "economics-management",
+      "keywords": "optimal taxation, multiple incomes, tax design, redistribution, public economics"
+    },
+    {
+      "id": "superstar2025housing",
+      "title": "Superstar Returns? Spatial Heterogeneity in Returns to Housing",
+      "author": "Multiple Authors",
+      "year": "2025",
+      "journal": "Journal of Finance",
+      "topic": "economics-management",
+      "keywords": "housing returns, spatial heterogeneity, real estate, superstar cities, housing investment"
+    },
+    {
+      "id": "weather2025migration",
+      "title": "Long-term Effects of Weather-Induced Migration on Urban Labor and Housing Markets",
+      "author": "Multiple Authors",
+      "year": "2025",
+      "journal": "Journal of Urban Economics",
+      "topic": "economics-management",
+      "keywords": "weather migration, urban labor market, housing market, climate change, urban economics"
+    },
+    {
+      "id": "bingham2025business",
+      "title": "Making Business Model Decisions Like Scientists: Strategic Commitment, Uncertainty, and Economic Performance",
+      "author": "Bingham, Connelly and Dean",
+      "year": "2025",
+      "journal": "Strategic Management Journal",
+      "topic": "economics-management",
+      "keywords": "business model, decision-making, scientific approach, entrepreneurship, uncertainty"
+    },
+    {
+      "id": "mikulic2025llms",
+      "title": "Large Language Models in Tourism Research: Support, Substitution, or Something Else?",
+      "author": "Mikuli{\\'c",
+      "year": "2025",
+      "journal": "Annals of Tourism Research",
+      "topic": "economics-management",
+      "keywords": "large language models, tourism research, AI, academic integrity, research methodology"
+    },
+    {
+      "id": "cao2025denoising",
+      "title": "Denoising Search Query Improves Tourism Forecasting",
+      "author": "Cao, Wanyi and Hu, Mingming",
+      "year": "2025",
+      "journal": "Annals of Tourism Research",
+      "topic": "economics-management",
+      "keywords": "tourism forecasting, search query, denoising, demand prediction, big data"
+    },
+    {
+      "id": "jenei2026global",
+      "title": "Global Mechanisms to Improve Affordability of High-Priced Medicines: The Role of the WHO Model Lists of Essential Medicines",
+      "author": "Jenei, Kristina",
+      "year": "2026",
+      "journal": "Journal of Pharmaceutical Policy and Practice",
+      "topic": "economics-management",
+      "keywords": "essential medicines, WHO, pharmaceutical pricing, affordability, health policy"
+    },
+    {
+      "id": "call2026star",
+      "title": "Star Advantage: Employee Value Creation and Capture in the Age of Artificial Intelligence",
+      "author": "Call, Matthew L. and Jiang, Kaifeng and Idso, C.",
+      "year": "2026",
+      "journal": "Human Resource Management",
+      "topic": "economics-management",
+      "keywords": "artificial intelligence, star employees, value creation, human resource management, employee value capture"
+    },
+    {
+      "id": "jiang2026ceo",
+      "title": "CEO-to-Employee Pay Ratios, Societal-Level Income Inequality, and Citizens' Subjective Well-Being",
+      "author": "Jiang, Kaifeng and Jia, Y. and Tsui, Anne S. and Yu, J.",
+      "year": "2026",
+      "journal": "Journal of International Business Studies",
+      "topic": "economics-management",
+      "keywords": "CEO pay ratio, income inequality, subjective well-being, compensation, societal outcomes"
+    },
+    {
+      "id": "ozturk2026relationship",
+      "title": "Relationship Splintering and Repair: The Dynamics of Marginalization in Organizations",
+      "author": "\\",
+      "year": "2026",
+      "journal": "Academy of Management Journal",
+      "topic": "economics-management",
+      "keywords": "marginalization, workplace relationships, refugee workers, organizational dynamics, relationship repair, diversity"
+    },
+    {
+      "id": "jiang2026career",
+      "title": "Career Outcomes of Work--Family Conflict: A Literature Review and Future Research Agenda",
+      "author": "Jiang, Y. and Jiang, Z. and Zheng, X. and Wu, Chia-Huei",
+      "year": "2026",
+      "journal": "Journal of Vocational Behavior",
+      "topic": "economics-management",
+      "keywords": "work-family conflict, career outcomes, literature review, work-life interface, career development"
+    },
+    {
+      "id": "sackett2026hiring",
+      "title": "Hiring People in Organizations: The State and Future of the Science",
+      "author": "Sackett, Paul R. and Lievens, Filip and Landers, Richard N.",
+      "year": "2026",
+      "journal": "Annual Review of Organizational Psychology and Organizational Behavior",
+      "topic": "economics-management",
+      "keywords": "hiring, personnel selection, recruitment, organizational psychology, science of selection, future directions"
+    },
+    {
+      "id": "campion2026machine",
+      "title": "Can Legal and Professional Personnel Selection Principles be Met With Machine Learning (Artificial Intelligence)?",
+      "author": "Campion, Michael A.",
+      "year": "2026",
+      "journal": "Human Resource Management",
+      "topic": "economics-management",
+      "keywords": "machine learning, AI, personnel selection, hiring, legal compliance, professional standards, algorithmic fairness"
+    },
+    {
+      "id": "ai2026entrepreneurship",
+      "title": "Towards an AI-Augmented Graduate Model for Entrepreneurship Education: Connecting Knowledge, Innovation, and Venture Ecosystems",
+      "author": "Multiple Authors",
+      "year": "2026",
+      "journal": "Administrative Sciences",
+      "topic": "economics-management",
+      "keywords": "AI, entrepreneurship education, venture ecosystems, innovation, knowledge management"
+    },
+    {
+      "id": "berger2026labor",
+      "title": "Labor Market Power: From Micro Evidence to Macro Consequences",
+      "author": "Berger, David and Herkenhoff, Kyle and Mongey, Simon",
+      "year": "2026",
+      "journal": "Journal of Economic Perspectives",
+      "topic": "economics-management",
+      "keywords": "labor market power, monopsony, wages, employment, market concentration"
+    },
+    {
+      "id": "choi2026tying",
+      "title": "Tying with Network Effects",
+      "author": "Choi, Jay Pil and Jeon, Doh-Shin and Whinston, Michael D.",
+      "year": "2026",
+      "journal": "American Economic Review",
+      "topic": "economics-management",
+      "keywords": "tying, network effects, bundling, platforms, competition policy"
+    },
+    {
+      "id": "bayerl2026weekend",
+      "title": "The Weekend Effect in Online Reviews",
+      "author": "Bayerl, Andreas",
+      "year": "2026",
+      "journal": "Journal of Marketing Research",
+      "topic": "economics-management",
+      "keywords": "online reviews, weekend effect, consumer behavior, e-commerce, rating patterns"
+    },
+    {
+      "id": "li2026female",
+      "title": "Bottom-up Effects of Female Strategic Leadership: Firm Performance Effects Through Employees",
+      "author": "Li, Jingyuan and Kim, Yong H. and Uribe, Jose",
+      "year": "2026",
+      "journal": "Strategic Management Journal",
+      "topic": "economics-management",
+      "keywords": "female leadership, strategic leadership, firm performance, employees, gender"
+    }
+  ],
+  "edges": [],
+  "stats": {
+    "total_papers": 46,
+    "total_keywords": 212,
+    "total_journals": 34,
+    "year_distribution": {
+      "2016": 1,
+      "2024": 2,
+      "2025": 31,
+      "2026": 12
+    },
+    "top_keywords": {
+      "meta-analysis": 5,
+      "organizational behavior": 3,
+      "field experiment": 2,
+      "firm performance": 2,
+      "climate change": 2,
+      "competition": 2,
+      "artificial intelligence": 2,
+      "value creation": 2,
+      "human resource management": 2,
+      "diversity": 2,
+      "employee outcomes": 2,
+      "employee voice": 2,
+      "motivation": 2,
+      "performance": 2,
+      "hiring": 2,
+      "personnel selection": 2,
+      "sustainability reporting": 1,
+      "esg disclosure": 1,
+      "emerging markets": 1,
+      "reporting quality": 1,
+      "institutional factors": 1,
+      "behavioral nudges": 1,
+      "student loans": 1,
+      "delinquency": 1,
+      "education finance": 1,
+      "business value": 1,
+      "capability alignment": 1,
+      "digital strategy": 1,
+      "implementation": 1,
+      "productivity": 1,
+      "task complexity": 1,
+      "digital transformation": 1,
+      "carbon leakage": 1,
+      "environmental management": 1,
+      "international trade": 1,
+      "esg": 1,
+      "idiosyncratic risk": 1,
+      "information asymmetry": 1,
+      "green finance": 1,
+      "investment": 1,
+      "asset pricing": 1,
+      "factor models": 1,
+      "weak factors": 1,
+      "test assets": 1,
+      "empirical asset pricing": 1,
+      "fintech": 1,
+      "lending": 1,
+      "welfare": 1,
+      "financial inclusion": 1,
+      "essential medicines": 1
+    },
+    "top_journals": {
+      "Human Resource Management": 4,
+      "Journal of Organizational Behavior": 3,
+      "Journal of Finance": 2,
+      "Journal of International Business Studies": 2,
+      "Academy of Management Review": 2,
+      "Leadership Quarterly": 2,
+      "Journal of Marketing Research": 2,
+      "Strategic Management Journal": 2,
+      "Annals of Tourism Research": 2,
+      "Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining": 1,
+      "Accounting Horizons": 1,
+      "Proceedings of the National Academy of Sciences": 1,
+      "MIS Quarterly": 1,
+      "Research Policy": 1,
+      "Corporate Social Responsibility and Environmental Management": 1,
+      "Journal of Business Ethics": 1,
+      "Journal of Financial Economics": 1,
+      "Journal of Pharmaceutical Policy and Practice": 1,
+      "Journal of Applied Psychology": 1,
+      "Academy of Management Journal": 1
+    },
+    "topic_distribution": {
+      "economics-management/2026": 45,
+      "computer-science/Machine-Learning": 1
+    }
+  }
+}
