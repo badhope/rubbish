@@ -6,8 +6,9 @@
   "type": "module",
   "scripts": {
     "docs:dev": "vitepress dev docs",
-    "docs:build": "vitepress build docs && python3 postbuild_a11y.py",
-    "docs:build:no-a11y": "vitepress build docs",
+    "docs:prebuild": "node scripts/copy-paper-assets.mjs",
+    "docs:build": "npm run docs:prebuild && vitepress build docs && python3 postbuild_a11y.py",
+    "docs:build:no-a11y": "npm run docs:prebuild && vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "docs:sidebar": "python3 build_sidebar.py",
     "docs:bib": "python3 scripts/generate_index.py",

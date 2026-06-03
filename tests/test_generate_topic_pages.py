@@ -61,7 +61,7 @@ class GeneratorSmokeTest(unittest.TestCase):
                 "authors": ["A"], "_rel": "x/y", "has_pdf": True}
         row = gtp.paper_row(meta)
         self.assertIn("PDF", row)
-        self.assertIn("/blob/main/x/y/paper.pdf", row)
+        self.assertIn("/papers/x/y/paper.pdf", row)
 
     def test_read_column_falls_back_to_publisher_url(self):
         meta = {"doi": "10.1/2.3", "year": 2025, "journal": "J", "title": "T",

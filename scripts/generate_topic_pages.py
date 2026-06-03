@@ -127,9 +127,10 @@ def paper_row(meta: dict) -> str:
     doi_link = f"[{doi}](https://doi.org/{doi})" if doi else "—"
 
     # Build a "Read" cell that points to the best available copy:
-    # 1) bundled PDF  2) publisher landing page  3) DOI fallback
+    # 1) bundled PDF on the published site  2) publisher landing page
+    # 3) DOI fallback
     if meta.get("has_pdf"):
-        read = f"[📄 PDF]({REPO_URL}/blob/main/{meta['_rel']}/paper.pdf)"
+        read = f"[📄 PDF](/papers/{meta['_rel']}/paper.pdf)"
     else:
         pub_url = (meta.get("publisher_url") or "").strip()
         if pub_url:
