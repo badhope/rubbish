@@ -32,7 +32,7 @@ python3 scripts/recover_pdfs.py        # one-off, fills in missing PDFs from arX
 
 - **VitePress, not Next.js / Astro.** Static output, no JS framework on the page, and VitePress' default theme is already 90% what I'd build by hand. The build is ~5s.
 - **`metadata.json` per paper, not a single index.** Lets each paper's folder be self-contained — easy to vendor a topic out, easy to PR a single paper. The downside is the auto-generated sidebar has to be rebuilt after structural changes; `build_sidebar.py` does that and writes into `docs/.vitepress/config.ts`.
-- **The site is multilingual (en / zh), but the paper content is English-only.** I only localized UI strings. Translating 2,500 abstracts is a different project.
+- **The site is multilingual (en / zh), but the paper content is English-only.** I only localized UI strings. Translating the abstracts is a different project and not on the roadmap.
 - **PWA is opt-in.** The service worker only registers in production builds and on `load`, so dev HMR isn't disturbed.
 
 ## Things I deliberately didn't do
