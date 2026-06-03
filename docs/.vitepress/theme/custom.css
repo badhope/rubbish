@@ -111,10 +111,8 @@ main#VPContent {
 .VPNavBarTitle,
 .VPNavBarMenuLink,
 .VPSidebarItem.level-1 > .item .link,
-button.VPSwitch,
 button.DocSearch-Button,
 a.VPSkipLink,
-a.skip-link,
 .VPNavBarActions a,
 .VPNavBarActions button {
   min-height: 40px;
@@ -122,36 +120,6 @@ a.skip-link,
   display: inline-flex;
   align-items: center;
   justify-content: center;
-}
-
-/* VPSwitch — fix the 6px hit area (Lighthouse target-size) */
-button.VPSwitch {
-  min-height: 28px;
-  min-width: 44px;
-  padding: 0 8px;
-  position: relative;
-}
-button.VPSwitch::before {
-  /* Larger hit area via pseudo-element */
-  content: "";
-  position: absolute;
-  inset: -10px;
-  z-index: 1;
-}
-
-/* Skip-link — make hit area larger (only when focused) */
-.skip-link {
-  min-height: 44px;
-  min-width: 44px;
-  padding: 12px 20px;
-  display: inline-flex;
-  align-items: center;
-}
-
-/* VPSwitch — add visible focus ring (a11y) */
-.VPSwitch:focus-visible {
-  outline: 2px solid var(--vp-c-brand-1);
-  outline-offset: 2px;
 }
 
 /* Improve focus visibility globally */

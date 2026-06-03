@@ -2,7 +2,8 @@
 import { onMounted } from "vue";
 import DefaultLayout from "vitepress/dist/client/theme-default/Layout.vue";
 
-// SW only in prod — HMR collides with the cache in dev.
+// Register the service worker for PWA support. Skipped in dev so HMR
+// isn't fighting the SW cache.
 onMounted(() => {
   if (import.meta.env.DEV) return;
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
@@ -27,6 +28,5 @@ onMounted(() => {
 </script>
 
 <template>
-  <a class="skip-link" href="#VPContent">Skip to main content</a>
   <DefaultLayout />
 </template>
