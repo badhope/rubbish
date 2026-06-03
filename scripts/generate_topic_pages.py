@@ -130,7 +130,10 @@ def paper_row(meta: dict) -> str:
     # 1) bundled PDF on the published site  2) publisher landing page
     # 3) DOI fallback
     if meta.get("has_pdf"):
-        read = f"[📄 PDF](/papers/{meta['_rel']}/paper.pdf)"
+        # _rel already starts with "papers/" (see line above), so don't prefix it again.
+        # VitePress's `base: "/ScholarLib/"` is prepended automatically, yielding
+        # https://badhope.github.io/ScholarLib/papers/<field>/.../paper.pdf
+        read = f"[📄 PDF](/{meta['_rel']}/paper.pdf)"
     else:
         pub_url = (meta.get("publisher_url") or "").strip()
         if pub_url:
