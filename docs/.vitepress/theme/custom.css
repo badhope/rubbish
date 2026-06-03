@@ -10,25 +10,62 @@
 }
 
 /* ── Hero gradient text ── */
-.VPHero .container .main {
+/* Scoped tightly: the previous selector `.VPHero .container .main` was
+   inheriting `-webkit-text-fill-color: transparent` to descendant
+   elements, which made hero button text invisible. The doubled
+   `.name.name` selector + the `> .text` direct child limit keeps
+   the gradient contained to the actual title spans. */
+.VPHero .name.name {
+  font-weight: 800;
+}
+.VPHero .name.name > .clip,
+.VPHero .text.text {
   background: linear-gradient(120deg, #3b82f6 30%, #8b5cf6);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  font-weight: 800;
 }
 
 /* ── Buttons ── */
+/* `text-fill-color` is supposed to be non-inherited, but Chromium
+   has been observed letting it leak from gradient-text ancestors.
+   Reset it explicitly so hero buttons never render as blank pills. */
+.VPButton,
+.VPButton * {
+  -webkit-text-fill-color: currentColor;
+}
+/* Use flex + align-items: center so text is reliably centered and
+   rendered. The VitePress default of `line-height: 38px` + `padding: 0 20px`
+   combined with our `min-height: 44px` for a11y is fragile on some
+   Chromium builds — text nodes can paint as invisible. Flex is bulletproof.
+   The doubled `.VPButton.VPButton` selector bumps specificity to 0,2,0 so we
+   win over VitePress's `.VPButton[data-v-...]` (0,1,1). */
+.VPButton.VPButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  line-height: 1.4;
+}
 .VPButton.medium {
+  min-height: 44px; /* WCAG 2.5.5 target size (Level AAA) */
+  padding: 0 20px;
+  font-size: 14px;
+}
+.VPButton.big {
+  min-height: 48px;
+  padding: 0 24px;
+  font-size: 16px;
+}
+.VPButton.medium,
+.VPButton.big {
   border-radius: 8px;
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
-  min-height: 44px; /* WCAG 2.5.5 target size (Level AAA) */
-  padding: 12px 24px;
 }
-.VPButton.medium:hover {
-  transform: translateY(-2px);
+.VPButton:hover {
+  transform: translateY(-1px);
   box-shadow: 0 6px 24px rgba(59, 130, 246, 0.25);
 }
 
@@ -43,6 +80,14 @@
 .VPFeature:hover {
   transform: translateY(-4px);
   border-color: var(--vp-c-brand-1);
+}
+.VPFeature .icon {
+  background-color: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+}
+.VPFeature .icon svg {
+  width: 24px;
+  height: 24px;
 }
 
 /* ── Sidebar ── */
@@ -127,11 +172,6 @@ a.VPSkipLink,
   outline: 2px solid var(--vp-c-brand-1);
   outline-offset: 2px;
   border-radius: 4px;
-}
-
-/* Buttons get min-width for tap targets */
-.VPButton {
-  min-height: 40px;
 }
 
 /* Color contrast improvements */
