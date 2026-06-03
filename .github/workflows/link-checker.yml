@@ -49,6 +49,7 @@ jobs:
             --exclude 'https://doi.org/*' \
             --exclude 'https://orcid.org/*' \
             --exclude 'https://opencollective.com/*' \
+            --exclude-code 429 \
             --exclude-mail \
             --include-fragments \
             --max-redirects 5 \
