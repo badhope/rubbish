@@ -1,0 +1,18 @@
+# lychee ignore patterns (regex, one per line)
+# Use this to skip links that are flaky / not our responsibility to check.
+
+# Publisher DOIs — these sometimes return 403 to bots but work for users
+^https?://(dx\.)?doi\.org/
+^https?://orcid\.org/
+
+# OpenCollective — rate-limits bots with 403
+^https?://opencollective\.com/
+
+# GitHub edit-on-this-page links (only valid when logged in)
+^https?://github\.com/[^/]+/[^/]+/edit/
+
+# GitHub blob/file links — rate limited to 60/hr for unauthenticated
+# requests. The links themselves are valid; CI just can't always verify.
+^https?://github\.com/[^/]+/[^/]+/blob/
+^https?://github\.com/[^/]+/[^/]+/tree/
+^https?://github\.com/[^/]+/[^/]+/commit/

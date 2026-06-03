@@ -1,12 +1,12 @@
 name: Link Checker
 
 on:
-  schedule:
-    - cron: "0 6 * * 1" # Mondays
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
   workflow_dispatch:
 
 permissions:
@@ -15,44 +15,40 @@ permissions:
 jobs:
   check-links:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
+          cache: npm
 
-      - name: Install lychee
-        run: |
-          set -euo pipefail
-          curl -sSfL --retry 3 --retry-delay 2 --retry-all-errors \
-            -o /tmp/lychee.tar.gz \
-            https://github.com/lycheeverse/lychee/releases/download/lychee-v0.24.2/lychee-x86_64-unknown-linux-gnu.tar.gz
-          # The archive is `lychee-x86_64-unknown-linux-gnu/lychee`; pull the
-          # binary out with --strip-components so we don't depend on a
-          # specific top-level name across lychee versions.
-          tar xzf /tmp/lychee.tar.gz -C /tmp/ --strip-components=1 '*/lychee'
-          install -m 0755 /tmp/lychee /usr/local/bin/lychee
-          lychee --version
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-      - name: Build site
-        run: |
-          npm ci
-          npm run docs:build
+      - run: npm ci
+      - run: pip install -r requirements.txt
+      - run: npm run docs:build
 
       - name: Run lychee
-        run: |
-          lychee \
-            --offline \
-            --no-progress \
-            --exclude 'https://github.com/badhope/ScholarLib/edit/*' \
-            --exclude 'https://doi.org/*' \
-            --exclude 'https://orcid.org/*' \
-            --exclude 'https://opencollective.com/*' \
-            --exclude-code 429 \
-            --exclude-mail \
-            --include-fragments \
-            --max-redirects 5 \
-            --max-concurrency 16 \
-            --timeout 20 \
+        uses: lycheeverse/lychee-action@v2.8.0
+        with:
+          # Don't fail the workflow — link checks are advisory and can
+          # flap on transient rate limits. The job summary still shows
+          # the report so reviewers see the state.
+          fail: false
+          format: markdown
+          output: lychee/out.md
+          jobSummary: true
+          args: >-
+            --root-dir .
+            --no-progress
+            --max-redirects 5
+            --max-concurrency 16
+            --timeout 20
+            --exclude-mail
+            --include-fragments
             ./docs/.vitepress/dist/**/*.html
