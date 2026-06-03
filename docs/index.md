@@ -2,7 +2,7 @@
 layout: home
 
 hero:
-  name: "ScholarLib"
+  name: "ScholarLib "
   text: "Open-Access Paper Library"
   tagline: "A curated, open-access scholarly library of Computer Science, Economics & Management papers — browse, search, and cite, all in one place."
   actions:
@@ -39,16 +39,17 @@ features:
 
 ## Quick Stats
 
-- **33** Computer Science topics
-- **18** Economics & Management fields
+- **33** Computer Science topics, scaffolded and ready for papers
+- **18** Economics & Management fields, fully indexed
 - **7** publication years covered (2020 – 2026)
-- **2498+** paper entries (CS only, growing)
+- **45** papers currently indexed across all fields, growing
+- **0** papers with bundled PDFs (DOIs only — see [About](/about))
 
 ## How to Use
 
 1. Pick a section in the sidebar (Computer Science or Economics & Management).
 2. Browse by topic or year.
-3. Each paper has a `.bib` file — copy it into your LaTeX project.
-4. Need full-text PDFs? They are linked from each paper page.
+3. Each indexed paper has a `.bib` file — copy it into your LaTeX project.
+4. Full-text PDFs are linked from the DOI on each paper entry. PDFs are not bundled in this repo to keep it lean.
 
 > **Note**: This repository is the successor of [`ScholarLib-CS`](https://github.com/badhope/ScholarLib-CS) and [`ScholarLib-EM`](https://github.com/badhope/ScholarLib-EM). All content from those repositories has been merged here.

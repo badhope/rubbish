@@ -3,6 +3,10 @@ name: Link Checker
 on:
   schedule:
     - cron: "0 6 * * 1" # Mondays
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:

@@ -1,32 +1,18 @@
-# 🤖 Machine Learning
+# Computer Science / Machine Learning — curated best-papers list
 
-> 经典机器学习：监督/无监督/半监督学习、集成方法、贝叶斯方法等
+This folder is the only Computer-Science branch that ships a hand-maintained
+`references.bib` _without_ a per-paper `metadata.json`. That's intentional.
 
-## 📂 子方向 / Sub-Directions
+Unlike the rest of `papers/computer-science/<Topic>/`, the BibTeX in this
+folder is a **curated reading list** — a single consolidated dump of the
+"best-paper" or "outstanding-paper" winners from the top ML venues
+(NeurIPS 2017 – 2025, ICML 2018 – 2025, ICLR 2018 – 2025, JMLR 2017 – 2025,
+TMLR 2022 – 2025, ACL Outstanding 2020 – 2025, EMNLP Best Long 2018 – 2024,
+SIGGRAPH Outstanding 2018 – 2024, IEEE VIS 2019 – 2024, IEEE TPAMI 2018 – 2024).
 
-[Ensemble-Methods](./Ensemble-Methods/README.md) | [Supervised-Learning](./Supervised-Learning/README.md) | [Unsupervised-Learning](./Unsupervised-Learning/README.md) | [Semi-Supervised-Learning](./Semi-Supervised-Learning/README.md) | [Bayesian-Methods](./Bayesian-Methods/README.md) | [Feature-Engineering](./Feature-Engineering/README.md) | [Federated-Learning](./Federated-Learning/README.md) | [Transfer-Learning](./Transfer-Learning/README.md)
+It is regenerated from a private notebook when there's a new round of
+awards. **One `.bib`, 100+ entries, no `metadata.json`** — by design.
 
-## 📊 论文统计 / Paper Statistics
-
-| 子方向                                                           | 论文数 |
-| ---------------------------------------------------------------- | ------ |
-| [Ensemble-Methods](./Ensemble-Methods/README.md)                 | 0      |
-| [Supervised-Learning](./Supervised-Learning/README.md)           | 0      |
-| [Unsupervised-Learning](./Unsupervised-Learning/README.md)       | 0      |
-| [Semi-Supervised-Learning](./Semi-Supervised-Learning/README.md) | 0      |
-| [Bayesian-Methods](./Bayesian-Methods/README.md)                 | 0      |
-| [Feature-Engineering](./Feature-Engineering/README.md)           | 0      |
-| [Federated-Learning](./Federated-Learning/README.md)             | 0      |
-| [Transfer-Learning](./Transfer-Learning/README.md)               | 0      |
-
-## 📖 BibTeX
-
-该主题的 BibTeX 引用文件：[references.bib](./references.bib)
-
-## 🤝 贡献论文
-
-欢迎提交 PR！请遵循命名规范：`FirstAuthor-YYYY-ShortTitle.pdf`
-
----
-
-[⬅️ 返回总目录](../README.md)
+The rest of `papers/computer-science/` is structured per-paper with
+`metadata.json` + `<paper-name>.bib` + a `README.md`. When that flow starts
+producing ML papers, this consolidated list will be retired.

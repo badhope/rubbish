@@ -6,11 +6,13 @@ A small, opinionated library of CS / economics papers I've actually read or want
 
 ## What's in it
 
-- ~2,500 paper entries, 51 topic folders, organized by `papers/<discipline>/<topic>/`
-- Each paper has a `README.md`, a `metadata.json`, and a `.bib` you can copy straight into LaTeX
+- **45** papers currently indexed across **18** Economics & Management fields
+- **33** Computer Science topics scaffolded and waiting for the first submissions
+- Each paper has a `metadata.json` and a `.bib` you can copy straight into LaTeX
+- 7 publication years (2020 – 2026) wired into the folder structure
 - A static site that builds into a searchable, dark-mode-friendly doc
 
-I originally kept this as two separate repos (CS and Econ/Management) and a pile of Google Docs bookmarks. This repo is the merge.
+I originally kept this as two separate repos (CS and Econ/Management) and a pile of Google Docs bookmarks. This repo is the merge. The EM side is filling in faster than the CS side right now — pull requests for CS papers are very welcome.
 
 ## Run it locally
 
@@ -38,7 +40,8 @@ python3 scripts/recover_pdfs.py        # one-off, fills in missing PDFs from arX
 - No Algolia. The built-in `local` search is fast enough for a few thousand docs and I don't want to pay for it.
 - No comment system. The repo is read-only for most people; the GitHub issue template is enough.
 - No analytics.
-- No telemetry on the PDF recovery script. If it pings arXiv 50 times you might get rate-limited; that's the worst case.
+- No telemetry on the PDF recovery script. If it pings arXiv 50 times you might get rate-limited; that's the worst case. (The current indexed papers are journal-only, so the script is mostly a no-op — see the DOI line in `metadata.json`.)
+- **No bundled PDFs.** Each entry links to the DOI; the repo stays small and respects publisher paywalls. Run `scripts/recover_pdfs.py` only if you actually want to mirror a paper locally.
 
 ## Repo layout
 
