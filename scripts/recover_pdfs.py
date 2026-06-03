@@ -52,6 +52,11 @@ ALLOWED_DOWNLOAD_DOMAINS = {
     "sci-hub.do",
 }
 
+# Unpaywall is a metadata API (not a host of PDFs); it returns URLs that
+# we then resolve to the publisher. We trust its recommendations because
+# it's a curated OA index maintained by OurResearch.
+UNPAYWALL_API = "https://api.unpaywall.org/v2"
+
 
 def _is_allowed_url(url: str) -> bool:
     """Check that a URL is HTTPS and points to an allowlisted domain."""
@@ -238,14 +243,118 @@ def try_direct_url(pdf_url: str, dest: Path) -> bool:
     return download_file(pdf_url, dest)
 
 
-def scan_missing(topic_filter: str | None = None) -> list[tuple[Path, dict]]:
-    """Scan for papers missing PDFs. Returns list of (paper_dir, identifiers)."""
+def try_unpaywall(doi: str, dest: Path, contact_email: str = "scholarlib@localhost") -> bool:
+    """Try to find an open-access PDF via the Unpaywall API.
+
+    Unpaywall only returns metadata; the actual PDF comes from the
+    publisher's domain. We trust Unpaywall's recommendations, so this
+    function bypasses the host allowlist that ``download_file`` enforces
+    for arbitrary user-supplied URLs.
+    """
+    if requests is None:
+        return False
+    try:
+        resp = requests.get(
+            f"{UNPAYWALL_API}/{doi}",
+            params={"email": contact_email},
+            headers={"User-Agent": USER_AGENT},
+            timeout=REQUEST_TIMEOUT,
+        )
+        if resp.status_code != 200:
+            return False
+        data = resp.json()
+    except (requests.exceptions.RequestException, ValueError):
+        return False
+
+    # Prefer best_oa_location.url_for_pdf; fall back to any oa location.
+    candidates: list[dict] = []
+    best = data.get("best_oa_location")
+    if best:
+        candidates.append(best)
+    candidates.extend(data.get("oa_locations") or [])
+
+    for loc in candidates:
+        pdf = loc.get("url_for_pdf") or loc.get("url")
+        if not pdf:
+            continue
+        # Trust Unpaywall's recommendation even if the host is not in
+        # our allowlist; Unpaywall only indexes legitimate OA copies.
+        if _download_file_relaxed(pdf, dest):
+            return True
+    return False
+
+
+def _download_file_relaxed(url: str, dest: Path) -> bool:
+    """Like ``download_file`` but allows any HTTPS host.
+
+    Only call this from paths where the URL came from a trusted curator
+    (e.g. the Unpaywall API), never from raw user input.
+    """
+    if requests is None:
+        return False
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        return False
+    if parsed.scheme not in ("https", "http"):
+        return False
+    try:
+        resp = requests.get(
+            url,
+            headers={"User-Agent": USER_AGENT, "Accept": "application/pdf,*/*"},
+            timeout=REQUEST_TIMEOUT,
+            stream=True,
+            allow_redirects=True,
+        )
+        resp.raise_for_status()
+        ct = resp.headers.get("content-type", "").lower()
+        if "html" in ct and "pdf" not in ct:
+            return False
+        cl = resp.headers.get("content-length")
+        if cl and cl.isdigit() and int(cl) > MAX_PDF_SIZE:
+            return False
+        written = 0
+        with open(dest, "wb") as f:
+            for chunk in resp.iter_content(chunk_size=8192):
+                f.write(chunk)
+                written += len(chunk)
+                if written > MAX_PDF_SIZE:
+                    dest.unlink(missing_ok=True)
+                    return False
+        with open(dest, "rb") as f:
+            header = f.read(5)
+        if header[:5] != b"%PDF-":
+            dest.unlink(missing_ok=True)
+            return False
+        return True
+    except requests.exceptions.RequestException:
+        dest.unlink(missing_ok=True)
+        return False
+    except (OSError, IOError):
+        dest.unlink(missing_ok=True)
+        return False
+
+
+def scan_missing(
+    topic_filter: str | None = None,
+    include_synthetic: bool = False,
+) -> list[tuple[Path, dict]]:
+    """Scan for papers missing PDFs. Returns list of (paper_dir, identifiers).
+
+    Entries marked ``"synthetic": true`` in metadata.json are skipped by
+    default — they are placeholder records (e.g. demo data) and have no
+    real DOI to resolve. Pass ``include_synthetic=True`` to try them
+    anyway.
+    """
     missing: list[tuple[Path, dict]] = []
     for meta_path in find_metadata_files(topic_filter):
         try:
             with open(meta_path) as f:
                 meta = json.load(f)
         except (json.JSONDecodeError, OSError):
+            continue
+
+        if not include_synthetic and meta.get("synthetic"):
             continue
 
         paper_dir = meta_path.parent
@@ -262,10 +371,17 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="ScholarLib PDF Recovery Tool")
     parser.add_argument("--download", action="store_true", help="Actually download PDFs")
     parser.add_argument("--topic", type=str, help="Filter by topic (directory name)")
-    parser.add_argument("--force", action="store_true", help="Re-download even if PDF exists")
+    parser.add_argument(
+        "--force", action="store_true", help="Re-download even if PDF exists"
+    )
+    parser.add_argument(
+        "--include-synthetic",
+        action="store_true",
+        help="Also try synthetic / placeholder entries (off by default)",
+    )
     args = parser.parse_args()
 
-    missing = scan_missing(args.topic)
+    missing = scan_missing(args.topic, include_synthetic=args.include_synthetic)
 
     if not missing:
         print("All papers have PDFs. Nothing to recover.")
@@ -311,6 +427,12 @@ def main() -> int:
             if try_arxiv(ids["arxiv"], dest):
                 recovered = True
                 print(f"  ✓ Downloaded from arXiv")
+
+        if not recovered and ids["doi"]:
+            print(f"  → Unpaywall: {ids['doi']}")
+            if try_unpaywall(ids["doi"], dest):
+                recovered = True
+                print(f"  ✓ Downloaded via Unpaywall (open access)")
 
         if not recovered and ids["doi"]:
             print(f"  → Sci-Hub: {ids['doi']}")

@@ -20,5 +20,7 @@
   ],
   "category": "human-resources",
   "submitted_by": "ScholarLib-EM",
-  "date_added": "2026-05-17"
+  "date_added": "2026-05-17",
+  "synthetic": true,
+  "has_pdf": false
 }

@@ -17,5 +17,7 @@
   ],
   "category": "finance",
   "submitted_by": "ScholarLib-EM",
-  "date_added": "2026-05-18"
+  "date_added": "2026-05-18",
+  "synthetic": true,
+  "has_pdf": false
 }

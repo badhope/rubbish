@@ -3,11 +3,13 @@
 Run: python -m pytest tests/ -v
 """
 
+import json
 import sys
 import unittest
 import tempfile
 import shutil
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -151,6 +153,65 @@ class TestDownloadFile(unittest.TestCase):
             # The HTML content doesn't start with %PDF-, so it should delete
             self.assertFalse(result)
             self.assertFalse(dest.exists())
+
+
+class TestScanMissing(unittest.TestCase):
+    """Test that scan_missing honours the ``synthetic`` flag in metadata."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        # Build a minimal repo tree:
+        #   tmp/papers/<topic>/<paper>/metadata.json
+        self.papers_root = self.tmp / "papers"
+        self.topic_dir = self.papers_root / "t"
+        self.topic_dir.mkdir(parents=True)
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def _make_paper(self, name: str, meta: dict) -> Path:
+        d = self.topic_dir / name
+        d.mkdir()
+        (d / "metadata.json").write_text(json.dumps(meta), encoding="utf-8")
+        return d
+
+    def _scan(self) -> list:
+        with patch.object(recover, "PAPERS_DIR", self.papers_root):
+            return recover.scan_missing()
+
+    def test_skips_synthetic_entries_by_default(self):
+        self._make_paper(
+            "synth",
+            {"doi": "10.9999/fake", "synthetic": True},
+        )
+        self.assertEqual(self._scan(), [])
+
+    def test_includes_real_entries(self):
+        self._make_paper(
+            "real",
+            {"doi": "10.1234/real", "synthetic": False},
+        )
+        result = self._scan()
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0][1]["doi"], "10.1234/real")
+
+    def test_include_synthetic_flag_includes_them(self):
+        self._make_paper(
+            "synth",
+            {"doi": "10.9999/fake", "synthetic": True},
+        )
+        self._make_paper(
+            "real",
+            {"doi": "10.1234/real", "synthetic": False},
+        )
+        with patch.object(recover, "PAPERS_DIR", self.papers_root):
+            result = recover.scan_missing(include_synthetic=True)
+        self.assertEqual(len(result), 2)
+
+    def test_paper_with_pdf_is_skipped_even_if_not_synthetic(self):
+        d = self._make_paper("real", {"doi": "10.1234/real", "synthetic": False})
+        (d / "paper.pdf").write_bytes(b"%PDF-1.4 fake")
+        self.assertEqual(self._scan(), [])
 
 
 if __name__ == "__main__":

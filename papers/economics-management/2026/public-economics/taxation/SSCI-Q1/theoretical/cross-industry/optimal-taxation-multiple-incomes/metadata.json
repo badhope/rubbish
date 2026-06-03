@@ -24,5 +24,8 @@
   ],
   "category": "public-economics",
   "submitted_by": "ScholarLib-EM",
-  "date_added": "2026-05-18"
+  "date_added": "2026-05-18",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true
 }
