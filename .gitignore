@@ -26,8 +26,10 @@ dist/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
 docs/.vitepress/.temp/
-# docs/public/ is the publishable static root copied by VitePress
-docs/public/
+# docs/public/papers/ is rebuilt on every docs:prebuild from papers/.
+# Track the rest of docs/public/ (favicons, manifest, rss, sw.js, etc.)
+# because those are the actual static source files.
+docs/public/papers/
 
 # Python
 __pycache__/
