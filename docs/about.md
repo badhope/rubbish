@@ -19,12 +19,11 @@ ScholarLib provides curated, organized, and downloadable open-access papers — 
 
 ## History
 
-ScholarLib was formed by merging two earlier projects:
+ScholarLib was formed by merging an earlier Economics & Management project:
 
-- **[ScholarLib-CS](https://github.com/badhope/ScholarLib-CS)** — Computer Science paper reference library (originally 33 topics, ~2,500 paper entries). Merged in 2026.
 - **[ScholarLib-EM](https://github.com/badhope/ScholarLib-EM)** — Economics & Management paper library (18 fields, 2020 – 2026). Merged in 2026.
 
-Both legacy repositories are now archived. All content has been migrated here under a unified structure:
+The legacy EM repository is now archived. Its content has been migrated here under a unified structure:
 
 ```
 papers/

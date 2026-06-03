@@ -19,12 +19,11 @@ ScholarLib 提供精选、有序、可下载的开放获取论文 —— 附带�
 
 ## 历史
 
-ScholarLib 由两个早期项目合并而成：
+ScholarLib 由一个早期经济与管理项目合并而成：
 
-- **[ScholarLib-CS](https://github.com/badhope/ScholarLib-CS)** —— 计算机科学论文参考库（原 33 个主题，约 2,500 条论文条目）。2026 年合并。
 - **[ScholarLib-EM](https://github.com/badhope/ScholarLib-EM)** —— 经济与管理论文库（18 个领域，2020 – 2026）。2026 年合并。
 
-两个旧仓库现已归档。全部内容已迁移至统一的目录结构：
+旧 EM 仓库现已归档。其内容已迁移至统一的目录结构：
 
 ```
 papers/

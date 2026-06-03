@@ -48,6 +48,7 @@ jobs:
             --exclude 'https://github.com/badhope/ScholarLib/edit/*' \
             --exclude 'https://doi.org/*' \
             --exclude 'https://orcid.org/*' \
+            --exclude 'https://opencollective.com/*' \
             --exclude-mail \
             --include-fragments \
             --max-redirects 5 \

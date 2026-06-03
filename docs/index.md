@@ -53,4 +53,4 @@ features:
 3. Each indexed paper has a `.bib` file — copy it into your LaTeX project.
 4. Full-text PDFs are linked from the DOI on each paper entry. PDFs are not bundled in this repo to keep it lean.
 
-> **Note**: This repository is the successor of [`ScholarLib-CS`](https://github.com/badhope/ScholarLib-CS) and [`ScholarLib-EM`](https://github.com/badhope/ScholarLib-EM). All content from those repositories has been merged here.
+> **Note**: This repository merged [`ScholarLib-EM`](https://github.com/badhope/ScholarLib-EM) in 2026. The CS side is scaffolded and ready for first submissions — pull requests welcome.

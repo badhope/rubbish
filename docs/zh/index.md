@@ -53,4 +53,4 @@ features:
 3. 每篇已索引论文都有 `.bib` 文件 —— 复制到你的 LaTeX 项目即可。
 4. 全文 PDF 链接在各论文条目的 DOI 处。为了仓库精简，PDF 不入仓。
 
-> **注意**：此仓库是 [`ScholarLib-CS`](https://github.com/badhope/ScholarLib-CS) 和 [`ScholarLib-EM`](https://github.com/badhope/ScholarLib-EM) 的合并产物。所有内容已迁移至此。
+> **注意**：此仓库于 2026 年合并了 [`ScholarLib-EM`](https://github.com/badhope/ScholarLib-EM)。计算机科学一侧已搭建好目录，等待首批投稿 —— 欢迎提 PR。
