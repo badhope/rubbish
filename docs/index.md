@@ -43,7 +43,8 @@ features:
 - **18** Economics & Management fields, fully indexed
 - **7** publication years covered (2020 – 2026)
 - **45** papers currently indexed across all fields, growing
-- **0** papers with bundled PDFs (DOIs only — see [About](/about))
+- **8** DOIs verified against doi.org; **37** entries are placeholder seed data
+- **1** open-access PDF bundled (Springer OA); the rest link out to the publisher
 
 ## How to Use
 

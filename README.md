@@ -8,6 +8,8 @@ A small, opinionated library of CS / economics papers I've actually read or want
 
 - **45** papers currently indexed across **18** Economics & Management fields
 - **33** Computer Science topics scaffolded and waiting for the first submissions
+- **8** of the 45 DOIs are real (verified against doi.org); the rest are placeholder seed data
+- **1** open-access PDF bundled (Springer OA); the rest link out to the publisher
 - Each paper has a `metadata.json` and a `.bib` you can copy straight into LaTeX
 - 7 publication years (2020 – 2026) wired into the folder structure
 - A static site that builds into a searchable, dark-mode-friendly doc
