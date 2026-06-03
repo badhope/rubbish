@@ -26,6 +26,8 @@ dist/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
 docs/.vitepress/.temp/
+# docs/public/ is the publishable static root copied by VitePress
+docs/public/
 
 # Python
 __pycache__/

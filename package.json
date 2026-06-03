@@ -7,6 +7,8 @@
   "scripts": {
     "docs:dev": "vitepress dev docs",
     "docs:prebuild": "node scripts/copy-paper-assets.mjs",
+    "docs:readme": "python3 scripts/generate_leaf_readmes.py",
+    "docs:readme:check": "python3 scripts/generate_leaf_readmes.py --check",
     "docs:build": "npm run docs:prebuild && vitepress build docs && python3 postbuild_a11y.py",
     "docs:build:no-a11y": "npm run docs:prebuild && vitepress build docs",
     "docs:preview": "vitepress preview docs",
@@ -20,7 +22,7 @@
     "type-check": "vue-tsc --noEmit -p tsconfig.ci.json",
     "test": "python3 -m unittest discover -s tests -p 'test_*.py' -v",
     "validate": "python3 scripts/validate_papers.py",
-    "ci": "npm run format:check && npm run type-check && npm run test && npm run validate && npm run docs:build",
+    "ci": "npm run docs:readme:check && npm run format:check && npm run type-check && npm run test && npm run validate && npm run docs:build",
     "prepublishOnly": "npm run ci"
   },
   "devDependencies": {
