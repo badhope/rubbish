@@ -221,6 +221,7 @@ export default defineConfig({
     zh: {
       label: "简体中文",
       lang: "zh-CN",
+      link: "/zh/",
       description:
         "精选开放获取的计算机科学、经济学与管理学论文库 — 浏览、检索、引用，一站式搞定。",
       themeConfig: {
@@ -228,9 +229,251 @@ export default defineConfig({
           { text: "首页", link: "/zh/" },
           { text: "计算机科学", link: "/zh/papers/computer-science/index" },
           { text: "经济与管理", link: "/zh/papers/economics-management/index" },
-          { text: "引用图谱", link: "/zh/citation-graph" },
           { text: "关于", link: "/zh/about" },
         ],
+        // zh has no per-topic subpages, so the topic sidebar only renders
+        // on the two landing pages and lists the en counterparts (which do
+        // exist) under Chinese labels. /zh/citation-graph is intentionally
+        // absent — citation-graph.md is en-only.
+        sidebar: {
+          "/zh/papers/computer-science/": [
+            {
+              text: "计算机科学",
+              collapsed: false,
+              items: [
+                { text: "概览", link: "/zh/papers/computer-science/index" },
+                {
+                  text: "AI 安全与对齐",
+                  link: "/papers/computer-science/ai-safety-alignment",
+                },
+                {
+                  text: "AI for Science",
+                  link: "/papers/computer-science/ai-for-science",
+                },
+                {
+                  text: "算法与数据结构",
+                  link: "/papers/computer-science/algorithms-data-structures",
+                },
+                {
+                  text: "AutoML 与 NAS",
+                  link: "/papers/computer-science/automl-nas",
+                },
+                {
+                  text: "生物信息学",
+                  link: "/papers/computer-science/bioinformatics",
+                },
+                {
+                  text: "因果推断",
+                  link: "/papers/computer-science/causal-inference",
+                },
+                {
+                  text: "计算机网络",
+                  link: "/papers/computer-science/computer-networks",
+                },
+                {
+                  text: "计算机安全",
+                  link: "/papers/computer-science/computer-security",
+                },
+                {
+                  text: "计算机视觉",
+                  link: "/papers/computer-science/computer-vision",
+                },
+                {
+                  text: "数据挖掘",
+                  link: "/papers/computer-science/data-mining",
+                },
+                {
+                  text: "数据库系统",
+                  link: "/papers/computer-science/database-systems",
+                },
+                {
+                  text: "深度学习",
+                  link: "/papers/computer-science/deep-learning",
+                },
+                {
+                  text: "分布式系统",
+                  link: "/papers/computer-science/distributed-systems",
+                },
+                {
+                  text: "具身智能",
+                  link: "/papers/computer-science/embodied-ai",
+                },
+                {
+                  text: "可解释 AI",
+                  link: "/papers/computer-science/explainable-ai",
+                },
+                {
+                  text: "生成模型",
+                  link: "/papers/computer-science/generative-models",
+                },
+                {
+                  text: "图神经网络",
+                  link: "/papers/computer-science/graph-neural-networks",
+                },
+                {
+                  text: "人机交互",
+                  link: "/papers/computer-science/human-computer-interaction",
+                },
+                {
+                  text: "信息检索",
+                  link: "/papers/computer-science/information-retrieval",
+                },
+                {
+                  text: "大语言模型",
+                  link: "/papers/computer-science/large-language-models",
+                },
+                {
+                  text: "机器学习",
+                  link: "/papers/computer-science/machine-learning",
+                },
+                {
+                  text: "多模态学习",
+                  link: "/papers/computer-science/multimodal-learning",
+                },
+                {
+                  text: "自然语言处理",
+                  link: "/papers/computer-science/natural-language-processing",
+                },
+                {
+                  text: "操作系统",
+                  link: "/papers/computer-science/operating-systems",
+                },
+                {
+                  text: "优化理论",
+                  link: "/papers/computer-science/optimization-theory",
+                },
+                {
+                  text: "编程语言",
+                  link: "/papers/computer-science/programming-languages",
+                },
+                {
+                  text: "量子计算",
+                  link: "/papers/computer-science/quantum-computing",
+                },
+                {
+                  text: "推荐系统",
+                  link: "/papers/computer-science/recommender-systems",
+                },
+                {
+                  text: "强化学习",
+                  link: "/papers/computer-science/reinforcement-learning",
+                },
+                { text: "机器人", link: "/papers/computer-science/robotics" },
+                {
+                  text: "软件工程",
+                  link: "/papers/computer-science/software-engineering",
+                },
+                {
+                  text: "语音与音频处理",
+                  link: "/papers/computer-science/speech-audio-processing",
+                },
+                {
+                  text: "时间序列分析",
+                  link: "/papers/computer-science/time-series-analysis",
+                },
+              ],
+            },
+          ],
+          "/zh/papers/economics-management/": [
+            {
+              text: "经济与管理",
+              collapsed: false,
+              items: [
+                { text: "概览", link: "/zh/papers/economics-management/index" },
+                {
+                  text: "会计学",
+                  link: "/papers/economics-management/accounting",
+                },
+                {
+                  text: "行为经济学",
+                  link: "/papers/economics-management/behavioral-economics",
+                },
+                {
+                  text: "数字经济",
+                  link: "/papers/economics-management/digital-economy",
+                },
+                {
+                  text: "ESG 与可持续",
+                  link: "/papers/economics-management/esg-sustainability",
+                },
+                {
+                  text: "金融学",
+                  link: "/papers/economics-management/finance",
+                },
+                {
+                  text: "健康经济学",
+                  link: "/papers/economics-management/health-economics",
+                },
+                {
+                  text: "人力资源",
+                  link: "/papers/economics-management/human-resources",
+                },
+                {
+                  text: "创新与创业",
+                  link: "/papers/economics-management/innovation-entrepreneurship",
+                },
+                {
+                  text: "国际商务",
+                  link: "/papers/economics-management/international-business",
+                },
+                {
+                  text: "劳动经济学",
+                  link: "/papers/economics-management/labor-economics",
+                },
+                {
+                  text: "宏观经济学",
+                  link: "/papers/economics-management/macroeconomics",
+                },
+                {
+                  text: "市场营销",
+                  link: "/papers/economics-management/marketing",
+                },
+                {
+                  text: "微观经济学",
+                  link: "/papers/economics-management/microeconomics",
+                },
+                {
+                  text: "运营管理",
+                  link: "/papers/economics-management/operations-management",
+                },
+                {
+                  text: "公共经济学",
+                  link: "/papers/economics-management/public-economics",
+                },
+                {
+                  text: "房地产与城市经济学",
+                  link: "/papers/economics-management/real-estate-urban-economics",
+                },
+                {
+                  text: "战略管理",
+                  link: "/papers/economics-management/strategic-management",
+                },
+                {
+                  text: "旅游与酒店",
+                  link: "/papers/economics-management/tourism-hospitality",
+                },
+              ],
+            },
+          ],
+          "/zh/": [
+            {
+              text: "ScholarLib",
+              collapsed: false,
+              items: [
+                { text: "首页", link: "/zh/" },
+                {
+                  text: "计算机科学",
+                  link: "/zh/papers/computer-science/index",
+                },
+                {
+                  text: "经济与管理",
+                  link: "/zh/papers/economics-management/index",
+                },
+                { text: "关于", link: "/zh/about" },
+              ],
+            },
+          ],
+        },
       },
     },
   },
@@ -519,6 +762,16 @@ export default defineConfig({
         },
       },
     },
+
+    // Disable the lang switcher's URL auto-mapping. The site only fully
+    // translates the four zh landing pages; per-topic subpages are en-only.
+    // With i18nRouting on (the default), the switcher maps e.g.
+    //   /papers/computer-science/foo  →  /zh/papers/computer-science/foo
+    // and 404s. With it off, every zh switcher click goes to the
+    // locale's `link` (locales.zh.link = /zh/, root.link = /), which
+    // always exists. Users on an en topic page who want the Chinese
+    // view land on the zh home and can browse the zh landing pages.
+    i18nRouting: false,
   },
 
   // ── Sitemap generation ──────────────────────────────────────────────
