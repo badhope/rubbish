@@ -1,27 +1,52 @@
 """Post-build a11y enhancements.
 
 This script runs after VitePress build to add:
-1. aria-label to VitePress theme buttons (VPSwitch, DocSearch-Button, etc.)
-2. Convert <div id=VPContent> to <main id=VPContent>
-3. Add sufficient touch target sizes via wrapper class
+1. Convert <div id="VPContent"> → <main id="VPContent"> (WCAG landmark)
+2. Add aria-label to theme buttons (VitePress theme doesn't include them)
+3. Add aria-label to skip-link
+4. Mark Decorative SVGs as aria-hidden (where missing)
+
+Safe to run on already-processed output (idempotent).
 """
+
 import sys
 from pathlib import Path
-from bs4 import BeautifulSoup
+
+try:
+    from bs4 import BeautifulSoup, Comment
+except ImportError:
+    print(
+        "Error: beautifulsoup4 not installed.\n"
+        "  pip install beautifulsoup4",
+        file=sys.stderr,
+    )
+    sys.exit(1)
 
 DIST = Path(__file__).parent / "docs" / ".vitepress" / "dist"
 
 
 def transform(html: str) -> str:
+    """Apply all a11y transformations to a single HTML string."""
     soup = BeautifulSoup(html, "html.parser")
 
     # 1) Convert <div id="VPContent"> → <main id="VPContent">
+    #    Only if no <main> with that id already exists (idempotent).
     for div in soup.find_all("div", id="VPContent"):
+        if soup.find("main", id="VPContent"):
+            break
         main = soup.new_tag("main", id="VPContent")
-        for attr, value in div.attrs.items():
-            main[attr] = value
-        for child in list(div.children):
-            main.append(child.extract() if hasattr(child, 'extract') else child)
+        # Copy attributes (skip boolean attrs BeautifulSoup can't re-assign).
+        for attr, value in list(div.attrs.items()):
+            if isinstance(value, list):
+                value = " ".join(value)
+            try:
+                main[attr] = value
+            except (TypeError, ValueError):
+                # Skip non-serializable attributes
+                continue
+        # Move children: extract() removes from source, append() adds to dest.
+        for child in list(div.contents):
+            main.append(child.extract() if hasattr(child, "extract") else child)
         div.replace_with(main)
 
     # 2) aria-label on VPSwitch (theme toggle)
@@ -31,47 +56,61 @@ def transform(html: str) -> str:
         if not btn.get("title"):
             btn["title"] = "Toggle theme"
 
-    # 3) aria-label on DocSearch button (match its visible text "Search")
+    # 3) aria-label on DocSearch button
     for btn in soup.find_all("button", class_="DocSearch-Button"):
-        # Visible text includes keyboard shortcut; make aria-label more descriptive
         if not btn.get("aria-label"):
             btn["aria-label"] = "Search papers (press Ctrl+K)"
         btn["title"] = "Search papers (Ctrl+K)"
 
-    # 4) Add aria-label on skip-link (if not present)
+    # 4) aria-label on skip-link
     for a in soup.find_all("a", class_="skip-link"):
         if not a.get("aria-label"):
             a["aria-label"] = "Skip to main content"
 
-    # 5) Wrap VPSidebarItem links for better touch target size (CSS does the work)
+    # 5) Mark decorative SVGs in the badge/nav that lack aria-hidden
+    for svg in soup.find_all("svg"):
+        # Skip SVGs that are already labeled
+        if svg.get("aria-label") or svg.get("aria-labelledby") or svg.get("role"):
+            continue
+        # Skip SVGs inside <a> or <button> that already have aria-label
+        parent = svg.parent
+        if parent and parent.name in ("a", "button") and parent.get("aria-label"):
+            continue
+        # Otherwise mark as hidden from screen readers
+        svg["aria-hidden"] = "true"
+        svg["focusable"] = "false"
 
     return str(soup)
 
 
-def main():
+def main() -> int:
     if not DIST.exists():
         print(f"✗ dist not found: {DIST}", file=sys.stderr)
-        sys.exit(1)
+        return 1
 
-    html_files = list(DIST.rglob("*.html"))
+    html_files = sorted(DIST.rglob("*.html"))
     if not html_files:
         print(f"✗ no HTML files in {DIST}", file=sys.stderr)
-        sys.exit(1)
+        return 1
 
-    total_modified = 0
+    total = 0
+    failed = 0
     for f in html_files:
-        original = f.read_text(encoding='utf-8')
+        original = f.read_text(encoding="utf-8")
         try:
             transformed = transform(original)
         except Exception as e:
-            print(f"  ✗ {f.relative_to(DIST)}: {e}", file=sys.stderr)
+            print(f"  ✗ {f.relative_to(DIST)}: {type(e).__name__}: {e}", file=sys.stderr)
+            failed += 1
             continue
         if transformed != original:
-            f.write_text(transformed, encoding='utf-8')
-            total_modified += 1
+            f.write_text(transformed, encoding="utf-8")
+            total += 1
 
-    print(f"✓ a11y post-processing: {total_modified}/{len(html_files)} files")
+    print(f"✓ a11y post-processing: {total}/{len(html_files)} files modified"
+          + (f" ({failed} failed)" if failed else ""))
+    return 0 if failed == 0 else 1
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

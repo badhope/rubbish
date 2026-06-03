@@ -115,7 +115,8 @@ export default defineConfig({
     ['meta', { name: 'format-detection', content: 'telephone=no' }],
 
     // Icons
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/ScholarLib/og-image.svg' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/ScholarLib/favicon.svg' }],
+    ['link', { rel: 'alternate icon', href: '/ScholarLib/favicon.ico' }],
     ['link', { rel: 'apple-touch-icon', href: '/ScholarLib/pwa-192.png' }],
 
     // RSS feed auto-discovery

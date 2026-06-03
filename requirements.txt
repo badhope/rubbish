@@ -1,0 +1,22 @@
+# Python dependencies for ScholarLib scripts.
+#
+# Optional — only install what you need:
+#   - beautifulsoup4: required for postbuild_a11y.py and offline.html generation
+#   - requests: required for recover_pdfs.py (PDF recovery)
+#   - pillow: required for generate_favicons.py and generate_og_image.py
+#   - cairosvg: preferred for SVG → PNG conversion
+#   - anthropic: required for generate_summaries.py (AI paper summaries)
+#
+# Install all: pip install -r requirements.txt
+# Install core: pip install beautifulsoup4 requests pillow cairosvg
+
+# Core (used by build pipeline)
+beautifulsoup4>=4.12.0
+requests>=2.31.0
+
+# Optional - for icon/OG image generation
+pillow>=10.0.0
+cairosvg>=2.7.0
+
+# Optional - for AI paper summaries
+anthropic>=0.20.0

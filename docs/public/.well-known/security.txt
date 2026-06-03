@@ -1,0 +1,5 @@
+Contact: https://github.com/badhope/ScholarLib/security/advisories/new
+Contact: mailto:security@badhope.dev
+Expires: 2027-12-31T23:59:59z
+Preferred-Languages: en, zh
+Canonical: https://badhope.github.io/ScholarLib/.well-known/security.txt

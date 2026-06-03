@@ -3,23 +3,28 @@
  *   - Navigation requests: network-first, fall back to cached offline page.
  *   - Same-origin static assets (JS/CSS/font/image): stale-while-revalidate.
  *   - Cross-origin: passthrough.
- * Version is bumped on every release to invalidate old caches.
+ *
+ * NOTE: Bump VERSION (in both this file and Layout.vue's auto-update
+ * interval) on every release to invalidate old caches.
  */
-const VERSION = 'v1.0.0'
+const VERSION = 'v1.0.1'
 const CACHE_RUNTIME = `scholarlib-runtime-${VERSION}`
-const CACHE_OFFLINE = `scholarlib-offline-${VERSION}`
 const OFFLINE_URL = '/ScholarLib/offline.html'
+const BASE = '/ScholarLib/'
 
 const PRECACHE_URLS = [
-  '/ScholarLib/',
-  '/ScholarLib/index.html',
-  '/ScholarLib/about',
-  '/ScholarLib/manifest.webmanifest',
-  '/ScholarLib/og-image.svg',
+  BASE,
+  `${BASE}index.html`,
+  `${BASE}about/`,
+  `${BASE}about.html`,
+  `${BASE}manifest.webmanifest`,
+  `${BASE}og-image.svg`,
+  `${BASE}og-image.png`,
+  `${BASE}favicon.svg`,
   OFFLINE_URL,
 ]
 
-// ── install: pre-cache critical assets ───────────────────────────────
+// ── install: pre-cache critical assets ───────────────────────────────────
 self.addEventListener('install', (event) => {
   event.waitUntil(
     (async () => {
@@ -31,18 +36,23 @@ self.addEventListener('install', (event) => {
   )
 })
 
-// ── activate: clean old caches ───────────────────────────────────────
+// ── activate: clean old caches ────────────────────────────────────────────
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
       const keys = await caches.keys()
-      await Promise.all(keys.filter((k) => !k.endsWith(VERSION)).map((k) => caches.delete(k)))
+      // Delete any cache that doesn't match the current version
+      await Promise.all(
+        keys
+          .filter((k) => !k.startsWith('scholarlib-runtime-') || !k.endsWith(VERSION))
+          .map((k) => caches.delete(k))
+      )
       await self.clients.claim()
     })()
   )
 })
 
-// ── fetch: route by request type ─────────────────────────────────────
+// ── fetch: route by request type ──────────────────────────────────────────
 self.addEventListener('fetch', (event) => {
   const req = event.request
   if (req.method !== 'GET') return
@@ -57,15 +67,23 @@ self.addEventListener('fetch', (event) => {
       (async () => {
         try {
           const fresh = await fetch(req)
-          const cache = await caches.open(CACHE_RUNTIME)
-          cache.put(req, fresh.clone())
+          // Only cache successful 2xx responses
+          if (fresh && fresh.status === 200) {
+            const cache = await caches.open(CACHE_RUNTIME)
+            cache.put(req, fresh.clone())
+          }
           return fresh
         } catch {
+          // Try the exact request first, then OFFLINE_URL
           const cached = await caches.match(req)
           return (
             cached ||
             (await caches.match(OFFLINE_URL)) ||
-            new Response('Offline', { status: 503, statusText: 'Offline' })
+            new Response('Offline', {
+              status: 503,
+              statusText: 'Offline',
+              headers: { 'Content-Type': 'text/plain' },
+            })
           )
         }
       })()
@@ -74,10 +92,11 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Static assets → stale-while-revalidate
-  if (
-    url.pathname.startsWith('/ScholarLib/assets/') ||
-    /\.(?:js|css|woff2?|ttf|svg|png|jpg|jpeg|webp|ico|webmanifest)$/.test(url.pathname)
-  ) {
+  const isAsset =
+    url.pathname.startsWith(`${BASE}assets/`) ||
+    /\.(?:js|css|woff2?|ttf|svg|png|jpg|jpeg|webp|ico|webmanifest|json)$/.test(url.pathname)
+
+  if (isAsset) {
     event.respondWith(
       (async () => {
         const cache = await caches.open(CACHE_RUNTIME)
@@ -87,14 +106,14 @@ self.addEventListener('fetch', (event) => {
             if (res && res.status === 200) cache.put(req, res.clone())
             return res
           })
-          .catch(() => cached)
-        return cached || network
+          .catch(() => null)
+        return cached || network || new Response('', { status: 504 })
       })()
     )
   }
 })
 
-// ── message: allow page to skip waiting ──────────────────────────────
+// ── message: allow page to skip waiting ───────────────────────────────────
 self.addEventListener('message', (event) => {
   if (event.data === 'SKIP_WAITING') self.skipWaiting()
 })

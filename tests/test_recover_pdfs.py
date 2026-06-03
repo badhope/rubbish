@@ -47,7 +47,8 @@ class TestExtractIdentifiers(unittest.TestCase):
     def test_extracts_arxiv_version(self):
         meta = {"url": "https://arxiv.org/abs/2501.12345v2"}
         ids = recover.extract_identifiers(meta)
-        self.assertEqual(ids["arxiv"], "2501.12345v2")
+        # Version suffix is stripped for downstream URL building
+        self.assertEqual(ids["arxiv"], "2501.12345")
 
     def test_extracts_arxiv_with_pdf(self):
         meta = {"url": "https://arxiv.org/pdf/2501.12345"}
@@ -65,14 +66,19 @@ class TestExtractIdentifiers(unittest.TestCase):
         self.assertEqual(ids["arxiv"], "2501.12345")
 
     def test_extracts_direct_pdf_url(self):
-        meta = {"pdf_url": "https://example.com/paper.pdf"}
+        meta = {"pdf_url": "https://arxiv.org/pdf/2501.12345.pdf"}
         ids = recover.extract_identifiers(meta)
-        self.assertEqual(ids["pdf_url"], "https://example.com/paper.pdf")
+        self.assertEqual(ids["pdf_url"], "https://arxiv.org/pdf/2501.12345.pdf")
 
     def test_detects_pdf_extension_in_url(self):
-        meta = {"url": "https://example.com/paper.pdf"}
+        meta = {"url": "https://arxiv.org/pdf/2501.12345.pdf"}
         ids = recover.extract_identifiers(meta)
-        self.assertEqual(ids["pdf_url"], "https://example.com/paper.pdf")
+        self.assertEqual(ids["pdf_url"], "https://arxiv.org/pdf/2501.12345.pdf")
+
+    def test_rejects_pdf_on_untrusted_domain(self):
+        meta = {"url": "https://evil.com/paper.pdf"}
+        ids = recover.extract_identifiers(meta)
+        self.assertIsNone(ids["pdf_url"])
 
     def test_empty_metadata(self):
         ids = recover.extract_identifiers({})
@@ -106,6 +112,19 @@ class TestPaperHasPdf(unittest.TestCase):
         paper_dir.mkdir()
         (paper_dir / "main.pdf").write_bytes(b"%PDF-1.4 fake")
         self.assertTrue(recover.paper_has_pdf(paper_dir))
+
+    def test_ignores_pdf_in_parent_directory(self):
+        """Regression: a sibling paper's PDF in the parent dir must NOT
+        count as the current paper having a PDF.
+        """
+        topic_dir = self.tmp / "topic"
+        topic_dir.mkdir()
+        paper_dir = topic_dir / "paper1"
+        paper_dir.mkdir()
+        # PDF lives in sibling paper dir, NOT in paper1 itself
+        (topic_dir / "paper2").mkdir()
+        (topic_dir / "paper2" / "paper.pdf").write_bytes(b"%PDF-1.4 fake")
+        self.assertFalse(recover.paper_has_pdf(paper_dir))
 
 
 class TestDownloadFile(unittest.TestCase):
