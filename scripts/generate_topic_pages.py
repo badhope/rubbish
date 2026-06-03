@@ -124,8 +124,22 @@ def paper_row(meta: dict) -> str:
     year = meta.get("year", "—")
     journal = (meta.get("journal") or "—").strip().replace("|", "\\|")
     doi = (meta.get("doi") or "").strip()
-    link = f"[{doi}](https://doi.org/{doi})" if doi else "—"
-    return f"| [{title}]({REPO_URL}/tree/main/{meta['_rel']}) | {format_authors(meta)} | {year} | {journal} | {link} |"
+    doi_link = f"[{doi}](https://doi.org/{doi})" if doi else "—"
+
+    # Build a "Read" cell that points to the best available copy:
+    # 1) bundled PDF  2) publisher landing page  3) DOI fallback
+    if meta.get("has_pdf"):
+        read = f"[📄 PDF]({REPO_URL}/blob/main/{meta['_rel']}/paper.pdf)"
+    else:
+        pub_url = (meta.get("publisher_url") or "").strip()
+        if pub_url:
+            read = f"[publisher]({pub_url})"
+        elif doi:
+            read = f"[doi](https://doi.org/{doi})"
+        else:
+            read = "—"
+
+    return f"| [{title}]({REPO_URL}/tree/main/{meta['_rel']}) | {format_authors(meta)} | {year} | {journal} | {doi_link} | {read} |"
 
 
 def pad_markdown_tables(text: str) -> str:
@@ -233,8 +247,8 @@ def render_em_field(field: str, pretty: str, papers_dir: Path | None = None) -> 
     for year in sorted(papers_by_year.keys(), reverse=True):
         rows = sorted(papers_by_year[year], key=lambda m: m.get("title", "").lower())
         body_parts.append(f"## {year} · {len(rows)} paper{'s' if len(rows) != 1 else ''}\n")
-        body_parts.append("| Title | Authors | Year | Journal | DOI |")
-        body_parts.append("| --- | --- | ---: | --- | --- |")
+        body_parts.append("| Title | Authors | Year | Journal | DOI | Read |")
+        body_parts.append("| --- | --- | ---: | --- | --- | --- |")
         body_parts.extend(paper_row(m) for m in rows)
         body_parts.append("")
 

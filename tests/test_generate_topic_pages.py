@@ -56,6 +56,27 @@ class GeneratorSmokeTest(unittest.TestCase):
         meta_no_doi = {"doi": "", "year": 2025, "journal": "J", "title": "T", "authors": ["A"], "_rel": "x/y"}
         self.assertIn("—", gtp.paper_row(meta_no_doi))
 
+    def test_read_column_prefers_pdf(self):
+        meta = {"doi": "10.1/2.3", "year": 2025, "journal": "J", "title": "T",
+                "authors": ["A"], "_rel": "x/y", "has_pdf": True}
+        row = gtp.paper_row(meta)
+        self.assertIn("PDF", row)
+        self.assertIn("/blob/main/x/y/paper.pdf", row)
+
+    def test_read_column_falls_back_to_publisher_url(self):
+        meta = {"doi": "10.1/2.3", "year": 2025, "journal": "J", "title": "T",
+                "authors": ["A"], "_rel": "x/y",
+                "publisher_url": "https://journals.example.com/article/123"}
+        row = gtp.paper_row(meta)
+        self.assertIn("publisher", row)
+        self.assertIn("https://journals.example.com/article/123", row)
+
+    def test_read_column_falls_back_to_doi(self):
+        meta = {"doi": "10.1/2.3", "year": 2025, "journal": "J", "title": "T",
+                "authors": ["A"], "_rel": "x/y"}
+        row = gtp.paper_row(meta)
+        self.assertIn("[doi](https://doi.org/10.1/2.3)", row)
+
     def test_pad_markdown_tables(self):
         before = (
             "## 2026 · 2 papers\n\n"
