@@ -28,7 +28,11 @@ jobs:
           curl -sSfL --retry 3 --retry-delay 2 --retry-all-errors \
             -o /tmp/lychee.tar.gz \
             https://github.com/lycheeverse/lychee/releases/download/lychee-v0.24.2/lychee-x86_64-unknown-linux-gnu.tar.gz
-          tar xzf /tmp/lychee.tar.gz -C /usr/local/bin lychee
+          # The archive is `lychee-x86_64-unknown-linux-gnu/lychee`; pull the
+          # binary out with --strip-components so we don't depend on a
+          # specific top-level name across lychee versions.
+          tar xzf /tmp/lychee.tar.gz -C /tmp/ --strip-components=1 '*/lychee'
+          install -m 0755 /tmp/lychee /usr/local/bin/lychee
           lychee --version
 
       - name: Build site
