@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Copy any bundled paper assets (PDF / .bib / README.md) from the canonical
+// Copy any bundled paper assets (PDF / .bib) from the canonical
 // `papers/` tree into `docs/public/papers/` so VitePress serves them
 // at /ScholarLib/papers/<relpath>/<filename>. Without this step the
 // "📄 PDF" links in the topic tables would 404 on GitHub Pages.
@@ -8,10 +8,14 @@
 // mirror. The script is idempotent and runs in ~5 ms for the current
 // 1-PDF repo.
 //
-// For .md files we only mirror the per-leaf README.md (i.e. the one
-// that sits next to a metadata.json). Intermediate overview READMEs
-// from older years/fields stay in the repo and are rendered by
-// VitePress from `docs/`, so we don't want to shadow them.
+// IMPORTANT: we deliberately do NOT mirror README.md here. Even though
+// `docs/public/` is a VitePress static-passthrough directory, VitePress
+// 1.6's default srcExclude does not cover `.md` files under `public/`,
+// so any README.md placed there gets picked up as a page source and
+// rendered as a stray `/public/papers/.../README.html`. The leaf
+// README.md files live in `papers/` and are reachable on GitHub
+// (https://github.com/badhope/ScholarLib/tree/main/papers/...) which
+// is where readers are expected to view them.
 
 import { existsSync, mkdirSync, copyFileSync, readdirSync, statSync } from "node:fs";
 import { join, dirname, relative } from "node:path";
@@ -19,7 +23,6 @@ import { join, dirname, relative } from "node:path";
 const SRC = "papers";
 const DEST = "docs/public/papers";
 const ASSET_EXTS = new Set([".pdf", ".bib"]);
-const LEAF_README = "README.md";
 
 function walk(dir, out) {
   for (const entry of readdirSync(dir)) {
@@ -32,13 +35,6 @@ function walk(dir, out) {
       const ext = dot >= 0 ? entry.slice(dot) : "";
       if (ASSET_EXTS.has(ext)) {
         out.push(p);
-      } else if (entry === LEAF_README) {
-        // Only mirror a README.md if it lives in a leaf directory
-        // (i.e. its parent folder also contains metadata.json).
-        const parent = dirname(p);
-        if (existsSync(join(parent, "metadata.json"))) {
-          out.push(p);
-        }
       }
     }
   }

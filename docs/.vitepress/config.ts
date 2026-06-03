@@ -15,6 +15,15 @@ export default defineConfig({
   appearance: "force-auto",
   ignoreDeadLinks: false,
 
+  // VitePress's default srcExclude only filters out `**/README.md` and
+  // `**/readme.md`; it does NOT exclude `docs/public/` itself. We mirror
+  // paper PDFs (and, previously, leaf READMEs) into `docs/public/papers/`
+  // so the site can serve them at /papers/.../<filename>. If anyone ever
+  // drops a `.md` into `docs/public/`, VitePress would silently render it
+  // as a stray page (`/public/.../<name>.html`) and pollute the SPA hash
+  // map. Exclude the whole subtree defensively.
+  srcExclude: ["**/public/**"],
+
   // ── Head: meta tags, OG, Twitter card, canonical, JSON-LD ─────────────
   head: [
     ["meta", { charset: "utf-8" }],
