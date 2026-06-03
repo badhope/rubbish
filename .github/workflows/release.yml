@@ -1,16 +1,16 @@
 name: Release
 
-# Creates a GitHub release when a tag matching v*.*.* is pushed.
-# Also updates CHANGELOG.md by extracting the [Unreleased] section.
+# Tag with `git tag v1.2.3 && git push --tags` to cut a release.
+# Pulls the matching section from CHANGELOG.md as the body.
 
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version (e.g., v1.2.3)'
+        description: "Version tag (e.g. v1.2.3)"
         required: true
 
 permissions:
@@ -18,52 +18,39 @@ permissions:
 
 jobs:
   release:
-    name: Build & publish release
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get version
+      - name: Resolve version
         id: version
         run: |
-          if [ -n "${{ github.ref_type }}" ] && [ "${{ github.ref_type }}" = "tag" ]; then
-            VERSION=${GITHUB_REF#refs/tags/}
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            echo "VERSION=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
           else
-            VERSION=${{ inputs.version }}
+            echo "VERSION=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
           fi
-          echo "VERSION=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "Version: ${VERSION}"
 
-      - name: Extract changelog section
-        id: changelog
+      - name: Build release notes from CHANGELOG.md
         run: |
-          python3 << 'PY'
-          import re, os, sys
-          version = os.environ.get("VERSION", "")
-          if not version:
-              version = "${{ steps.version.outputs.VERSION }}"
+          python3 - <<'PY' > /tmp/release-notes.md
+          import os, re
+          version = os.environ.get("VERSION") or "${{ steps.version.outputs.VERSION }}"
           with open("CHANGELOG.md", encoding="utf-8") as f:
-              content = f.read()
-          # Find the [Unreleased] section
-          m = re.search(r"## \[Unreleased\]([\s\S]*?)(?=\n## \[|\Z)", content)
-          notes = m.group(1).strip() if m else "_No changes recorded yet._"
-          with open("/tmp/release-notes.md", "w", encoding="utf-8") as f:
-              f.write(f"## What's changed in {version}\n\n{notes}\n")
-          print(f"Extracted {len(notes)} chars of release notes")
+              text = f.read()
+          # Try a [Unreleased] section first, fall back to whatever's in the file.
+          m = re.search(r"## \[Unreleased\]([\s\S]*?)(?=\n## \[|\Z)", text)
+          body = m.group(1).strip() if m else text.strip()
+          print(f"## {version}\n")
+          print(body or "_No release notes._")
           PY
 
-      - name: Create GitHub release
-        uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v2
         with:
           name: ${{ steps.version.outputs.VERSION }}
           draft: false
           prerelease: ${{ contains(steps.version.outputs.VERSION, '-') }}
           body_path: /tmp/release-notes.md
-          # Attach source archives
-          files: |
-            LICENSE
+          files: LICENSE

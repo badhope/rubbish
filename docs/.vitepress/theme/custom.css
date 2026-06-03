@@ -68,7 +68,7 @@
 }
 
 /* ── Code blocks ── */
-.vp-doc div[class*='language-'] {
+.vp-doc div[class*="language-"] {
   border-radius: 10px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
@@ -133,7 +133,7 @@ button.VPSwitch {
 }
 button.VPSwitch::before {
   /* Larger hit area via pseudo-element */
-  content: '';
+  content: "";
   position: absolute;
   inset: -10px;
   z-index: 1;

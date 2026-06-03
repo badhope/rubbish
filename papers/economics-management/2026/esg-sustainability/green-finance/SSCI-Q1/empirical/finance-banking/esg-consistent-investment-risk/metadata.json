@@ -10,7 +10,13 @@
   "doi": "10.1007/s10551-023-11434-0",
   "url": "https://doi.org/10.1007/s10551-023-11434-0",
   "abstract": "Examines how ESG-consistent investment affects idiosyncratic risk through information asymmetry and information acquisition channels.",
-  "keywords": ["ESG", "idiosyncratic risk", "information asymmetry", "green finance", "investment"],
+  "keywords": [
+    "ESG",
+    "idiosyncratic risk",
+    "information asymmetry",
+    "green finance",
+    "investment"
+  ],
   "category": "esg-sustainability",
   "submitted_by": "ScholarLib-EM",
   "date_added": "2026-05-18"

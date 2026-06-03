@@ -1,12 +1,10 @@
-"""Post-build a11y enhancements.
+"""VitePress build post-processor.
 
-This script runs after VitePress build to add:
-1. Convert <div id="VPContent"> → <main id="VPContent"> (WCAG landmark)
-2. Add aria-label to theme buttons (VitePress theme doesn't include them)
-3. Add aria-label to skip-link
-4. Mark Decorative SVGs as aria-hidden (where missing)
-
-Safe to run on already-processed output (idempotent).
+VitePress's default theme ships without a <main> landmark and without
+aria-labels on the theme buttons, which trips axe-core and the
+screen-reader quick-nav. This script runs after `vitepress build` and
+adds the missing landmarks. Safe to re-run on already-processed HTML
+(idempotent on the <main id="VPContent"> rewrite).
 """
 
 import sys

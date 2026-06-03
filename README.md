@@ -1,165 +1,77 @@
-<div align="center">
+# ScholarLib
 
-# 📚 ScholarLib
+A small, opinionated library of CS / economics papers I've actually read or want to read, with a VitePress site on top so I can find them again.
 
-**The Open-Access Scholarly Library**
+**Live site →** https://badhope.github.io/ScholarLib/
 
-_A curated collection of influential research papers in **Computer Science** and **Economics & Management** — browse, search, and cite, all in one place._
+## What's in it
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![GitHub Pages](https://img.shields.io/badge/Site-Live-brightgreen)](https://badhope.github.io/ScholarLib/)
-[![Deploy](https://github.com/badhope/ScholarLib/actions/workflows/deploy-docs.yml/badge.svg)](https://github.com/badhope/ScholarLib/actions/workflows/deploy-docs.yml)
-[![Link Check](https://github.com/badhope/ScholarLib/actions/workflows/link-checker.yml/badge.svg)](https://github.com/badhope/ScholarLib/actions/workflows/link-checker.yml)
-[![Lighthouse](https://github.com/badhope/ScholarLib/actions/workflows/lighthouse.yml/badge.svg)](https://github.com/badhope/ScholarLib/actions/workflows/lighthouse.yml)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-[![Code of Conduct](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
-[![Security](https://img.shields.io/badge/Security-Policy-green)](SECURITY.md)
+- ~2,500 paper entries, 51 topic folders, organized by `papers/<discipline>/<topic>/`
+- Each paper has a `README.md`, a `metadata.json`, and a `.bib` you can copy straight into LaTeX
+- A static site that builds into a searchable, dark-mode-friendly doc
 
-[🌐 Visit the Documentation Site](https://badhope.github.io/ScholarLib/) · [📖 Browse the Source](https://github.com/badhope/ScholarLib) · [💬 Discussions](https://github.com/badhope/ScholarLib/discussions)
+I originally kept this as two separate repos (CS and Econ/Management) and a pile of Google Docs bookmarks. This repo is the merge.
 
-</div>
+## Run it locally
+
+```sh
+npm install
+npm run docs:dev      # http://localhost:5173
+```
+
+The Python helpers in `scripts/` only matter if you're adding or auditing papers:
+
+```sh
+python3 scripts/validate_papers.py     # CI runs this
+python3 scripts/recover_pdfs.py        # one-off, fills in missing PDFs from arXiv
+```
+
+## A few choices worth flagging
+
+- **VitePress, not Next.js / Astro.** Static output, no JS framework on the page, and VitePress' default theme is already 90% what I'd build by hand. The build is ~5s.
+- **`metadata.json` per paper, not a single index.** Lets each paper's folder be self-contained — easy to vendor a topic out, easy to PR a single paper. The downside is the auto-generated sidebar has to be rebuilt after structural changes; `build_sidebar.py` does that and writes into `docs/.vitepress/config.ts`.
+- **The site is multilingual (en / zh), but the paper content is English-only.** I only localized UI strings. Translating 2,500 abstracts is a different project.
+- **PWA is opt-in.** The service worker only registers in production builds and on `load`, so dev HMR isn't disturbed.
+
+## Things I deliberately didn't do
+
+- No Algolia. The built-in `local` search is fast enough for a few thousand docs and I don't want to pay for it.
+- No comment system. The repo is read-only for most people; the GitHub issue template is enough.
+- No analytics.
+- No telemetry on the PDF recovery script. If it pings arXiv 50 times you might get rate-limited; that's the worst case.
+
+## Repo layout
+
+```
+.
+├── docs/                       VitePress site
+│   ├── .vitepress/             config, theme overrides
+│   ├── {index,about,architecture,citation-graph}.md
+│   ├── zh/                     Chinese UI strings
+│   └── public/                 static assets, PWA manifest, sw.js
+├── papers/                     the actual content
+│   ├── computer-science/<topic>/
+│   └── economics-management/<year>/
+├── scripts/                    build-time helpers (Python)
+├── tests/                      unit tests for the scripts
+├── templates/paper-template/   copy this when adding a new paper
+├── .github/workflows/          CI, deploy, security scans
+├── build_sidebar.py            auto-generates the VitePress sidebar
+├── postbuild_a11y.py           runs after vitepress build
+├── Makefile                    the day-to-day commands
+└── package.json
+```
+
+## Contributing
+
+Bug reports and paper additions are the most useful. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+If you're proposing a new paper, please use the `new_paper` issue template — it asks for the metadata fields the validation script needs, and submissions missing them just bounce.
+
+## License
+
+MIT for the repo and the metadata. The papers themselves keep their own licenses — check each entry's `metadata.json` before redistributing.
 
 ---
 
-## 🎯 What is ScholarLib?
-
-**ScholarLib** is a systematically organized, open-access repository of research papers in two major disciplines:
-
-- 🤖 **Computer Science** — **33** curated topics from Machine Learning and Deep Learning to Algorithms, Systems, Security, and beyond
-- 📊 **Economics & Management** — **18** research fields organized by year (2020 – 2026)
-
-Every paper comes with a **ready-to-use BibTeX citation** — copy, paste, and keep writing.
-
-> **No more hunting through Google Scholar, juggling tabs, or wrestling with paywalls.**
-
-## 📊 At a Glance
-
-| Metric                        |               Value |
-| ----------------------------- | ------------------: |
-| Computer Science topics       |              **33** |
-| Economics & Management fields |              **18** |
-| Publication years covered     | **7** (2020 – 2026) |
-| Paper entries                 |          **2,500+** |
-| Documented pages on the site  |             **50+** |
-| Repository size               |             ~412 MB |
-| License                       |                 MIT |
-
-## ✨ Features
-
-- 🔍 **Local full-text search** — fuzzy + prefix matching, instant results
-- 🌗 **Dark / light mode** — auto-detects your system preference
-- 📱 **Mobile-friendly** — responsive design, works on all screen sizes
-- 🗂️ **Topic-based + year-based navigation** — find papers your way
-- 📄 **Ready-to-cite BibTeX** — for every paper
-- 🚀 **GitHub Pages deployed** — fast, free, reliable hosting
-- 🛡️ **Comprehensive SEO** — sitemap, RSS, Open Graph, JSON-LD
-- ♿ **Accessibility** — skip links, semantic HTML, ARIA labels
-- 🤖 **LLM-friendly** — `vitepress-plugin-llms` integration
-- 🔄 **CI/CD** — auto-deploy on every push, weekly link check, Lighthouse audits
-
-## 📂 Repository Structure
-
-```
-ScholarLib/
-├── docs/                          # VitePress documentation site
-│   ├── .vitepress/
-│   │   ├── config.ts              # Site config (SEO, sidebar, theme)
-│   │   ├── theme/
-│   │   │   ├── custom.css         # Custom theme overrides
-│   │   │   └── index.ts           # Theme extension
-│   ├── 404.md                     # Custom 404 page
-│   ├── about.md
-│   ├── index.md                   # Home page
-│   ├── papers/
-│   │   ├── computer-science/      # 33 CS topic pages
-│   │   └── economics-management/  # 18 EM field pages
-│   └── public/
-│       ├── og-image.svg           # Social preview (1200×630)
-│       └── robots.txt
-├── papers/                        # Source paper resources
-│   ├── computer-science/          # 33 CS topic folders (from CS repo)
-│   └── economics-management/      # 7 year folders (from EM repo)
-├── templates/
-├── scripts/
-├── .github/
-│   ├── workflows/
-│   │   ├── deploy-docs.yml        # Auto-deploy to GitHub Pages
-│   │   ├── link-checker.yml       # Weekly + on-PR link check
-│   │   └── lighthouse.yml         # Performance/A11y/SEO audits
-│   ├── ISSUE_TEMPLATE/            # 3 templates
-│   ├── pull_request_template.md
-│   ├── dependabot.yml             # Auto-update dependencies
-│   └── FUNDING.yml
-├── .scholarlib.yaml               # EM taxonomy config
-├── .editorconfig                  # Editor consistency
-├── .prettierrc.json               # Code formatting
-├── .nvmrc                         # Node version pin
-├── package.json                   # VitePress + Prettier
-├── package-lock.json              # Locked dependencies
-├── README.md                      # This file
-├── CHANGELOG.md                   # Version history
-├── LICENSE                        # MIT
-├── CONTRIBUTING.md
-├── CODE_OF_CONDUCT.md
-├── SECURITY.md
-└── CITATION.cff
-```
-
-## 🌐 Live Documentation Site
-
-The full site is built with [VitePress 1.6](https://vitepress.dev/) and deployed via GitHub Actions:
-
-👉 **https://badhope.github.io/ScholarLib/**
-
-### Browse the Library
-
-- 🤖 [Computer Science Papers](https://badhope.github.io/ScholarLib/papers/computer-science/) — 33 topics
-- 📊 [Economics & Management Papers](https://badhope.github.io/ScholarLib/papers/economics-management/) — 18 fields
-- 📜 [About ScholarLib](https://badhope.github.io/ScholarLib/about) — Mission, history, contributing
-
-## 🆕 Migration Notice (2026)
-
-This repository is the **successor** of two earlier projects. All content has been merged here:
-
-| Old Repo                                                    | What it held                                         | Status                             |
-| ----------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------- |
-| [`ScholarLib-CS`](https://github.com/badhope/ScholarLib-CS) | Computer Science papers (33 topics, ~2,500 entries)  | ✅ Merged & archived               |
-| [`ScholarLib-EM`](https://github.com/badhope/ScholarLib-EM) | Economics & Management papers (18 fields, 2020-2026) | ✅ Renamed in place → `ScholarLib` |
-
-If you have external links pointing to the old repositories:
-
-- **`ScholarLib-EM`** → GitHub automatically redirects old URLs to `ScholarLib`. No action needed.
-- **`ScholarLib-CS`** → Please update your links to point to `ScholarLib/papers/computer-science/{topic}/`.
-
-## 🤝 Contributing
-
-We welcome new papers, typo fixes, metadata corrections, and topic suggestions.
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide. Quick start:
-
-1. Fork this repo
-2. Add your paper to the appropriate topic folder
-3. Include a `.bib` citation and a `metadata.json`
-4. Open a pull request
-
-Or use the [paper submission issue template](https://github.com/badhope/ScholarLib/issues/new?template=new_paper.md).
-
-## 📜 License
-
-This repository is released under the [MIT License](LICENSE). Individual papers retain their own licenses — please check each paper's metadata before redistribution.
-
-## 📖 Citing
-
-If you use ScholarLib in your research, please cite it. See [CITATION.cff](CITATION.cff) for the canonical citation, or use the **"Cite this repository"** button on the GitHub repo page.
-
-## 🛡️ Security
-
-Found a security issue? See [SECURITY.md](SECURITY.md) for responsible disclosure.
-
-## 👤 Maintainer
-
-Maintained by [@badhope](https://github.com/badhope).
-
-## ⭐ Star History
-
-If this project helps you, consider starring ⭐ the repo to help others find it.
+Maintained by [@badhope](https://github.com/badhope). The site rebuilds on every push to `main`.

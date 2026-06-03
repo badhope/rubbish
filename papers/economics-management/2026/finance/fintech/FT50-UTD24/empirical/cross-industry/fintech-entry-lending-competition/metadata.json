@@ -8,7 +8,13 @@
   "doi": "10.1016/j.jfinec.2025.105234",
   "url": "https://doi.org/10.1016/j.jfinec.2025.105234",
   "abstract": "This paper examines how fintech entry affects lending market competition and overall welfare, demonstrating that fintech entrants can enhance competition and improve welfare for borrowers.",
-  "keywords": ["fintech", "lending", "competition", "welfare", "financial inclusion"],
+  "keywords": [
+    "fintech",
+    "lending",
+    "competition",
+    "welfare",
+    "financial inclusion"
+  ],
   "category": "finance",
   "submitted_by": "ScholarLib-EM",
   "date_added": "2026-05-18"

@@ -79,8 +79,10 @@ def validate_metadata(meta_path: Path, strict: bool = False) -> list[str]:
         if not any_bib:
             issues.append(f"MISSING .bib file (expected: {bib_name})")
 
-    # PDF (warn only)
-    pdfs = list(paper_dir.glob("*.pdf")) + list(paper_dir.parent.glob("*.pdf"))
+    # PDF (warn only) — only count PDFs in this paper's own folder;
+    # scanning the parent would let a sibling paper's PDF mask this
+    # one as "present".
+    pdfs = list(paper_dir.glob("*.pdf"))
     if not pdfs and strict:
         issues.append("WARN: no PDF file found")
 

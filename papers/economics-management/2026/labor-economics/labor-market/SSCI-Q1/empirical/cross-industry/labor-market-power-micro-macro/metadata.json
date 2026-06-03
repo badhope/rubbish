@@ -10,7 +10,13 @@
   "doi": "10.1257/jep.20251456",
   "url": "https://doi.org/10.1257/jep.20251456",
   "abstract": "Synthesizes micro evidence on labor market power and its macroeconomic consequences, examining how employer concentration affects wages, employment, and aggregate economic outcomes.",
-  "keywords": ["labor market power", "monopsony", "wages", "employment", "market concentration"],
+  "keywords": [
+    "labor market power",
+    "monopsony",
+    "wages",
+    "employment",
+    "market concentration"
+  ],
   "category": "labor-economics",
   "submitted_by": "ScholarLib-EM",
   "date_added": "2026-05-18"

@@ -1,6 +1,11 @@
 {
   "title": "Optimal Taxation with Multiple Incomes and Types",
-  "authors": ["Kevin Spiritus", "Étienne Lehmann", "Sander Renes", "Floris T. Zoutman"],
+  "authors": [
+    "Kevin Spiritus",
+    "Étienne Lehmann",
+    "Sander Renes",
+    "Floris T. Zoutman"
+  ],
   "year": 2025,
   "journal": "Theoretical Economics",
   "journal_tier": "SSCI-Q1",
