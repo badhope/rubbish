@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [Cryptography](./Cryptography/README.md) | 0 |
-| [Zero-Knowledge-Proof](./Zero-Knowledge-Proof/README.md) | 0 |
-| [Differential-Privacy](./Differential-Privacy/README.md) | 0 |
-| [Adversarial-Attacks](./Adversarial-Attacks/README.md) | 0 |
-| [Intrusion-Detection](./Intrusion-Detection/README.md) | 0 |
-| [Malware-Analysis](./Malware-Analysis/README.md) | 0 |
-| [Trusted-Computing](./Trusted-Computing/README.md) | 0 |
-| [Blockchain-Security](./Blockchain-Security/README.md) | 0 |
+| 子方向                                                   | 论文数 |
+| -------------------------------------------------------- | ------ |
+| [Cryptography](./Cryptography/README.md)                 | 0      |
+| [Zero-Knowledge-Proof](./Zero-Knowledge-Proof/README.md) | 0      |
+| [Differential-Privacy](./Differential-Privacy/README.md) | 0      |
+| [Adversarial-Attacks](./Adversarial-Attacks/README.md)   | 0      |
+| [Intrusion-Detection](./Intrusion-Detection/README.md)   | 0      |
+| [Malware-Analysis](./Malware-Analysis/README.md)         | 0      |
+| [Trusted-Computing](./Trusted-Computing/README.md)       | 0      |
+| [Blockchain-Security](./Blockchain-Security/README.md)   | 0      |
 
 ## 📖 BibTeX
 

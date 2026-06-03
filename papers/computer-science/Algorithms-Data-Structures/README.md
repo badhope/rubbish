@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [Sorting-Searching](./Sorting-Searching/README.md) | 0 |
-| [Graph-Algorithms](./Graph-Algorithms/README.md) | 0 |
-| [Dynamic-Programming](./Dynamic-Programming/README.md) | 0 |
-| [Greedy](./Greedy/README.md) | 0 |
-| [NP-Completeness](./NP-Completeness/README.md) | 0 |
-| [Approximation-Algorithms](./Approximation-Algorithms/README.md) | 0 |
-| [Randomized-Algorithms](./Randomized-Algorithms/README.md) | 0 |
-| [Online-Algorithms](./Online-Algorithms/README.md) | 0 |
+| 子方向                                                           | 论文数 |
+| ---------------------------------------------------------------- | ------ |
+| [Sorting-Searching](./Sorting-Searching/README.md)               | 0      |
+| [Graph-Algorithms](./Graph-Algorithms/README.md)                 | 0      |
+| [Dynamic-Programming](./Dynamic-Programming/README.md)           | 0      |
+| [Greedy](./Greedy/README.md)                                     | 0      |
+| [NP-Completeness](./NP-Completeness/README.md)                   | 0      |
+| [Approximation-Algorithms](./Approximation-Algorithms/README.md) | 0      |
+| [Randomized-Algorithms](./Randomized-Algorithms/README.md)       | 0      |
+| [Online-Algorithms](./Online-Algorithms/README.md)               | 0      |
 
 ## 📖 BibTeX
 

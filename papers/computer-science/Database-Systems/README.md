@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [SQL-Optimization](./SQL-Optimization/README.md) | 0 |
-| [NoSQL](./NoSQL/README.md) | 0 |
-| [NewSQL](./NewSQL/README.md) | 0 |
-| [Transaction-Processing](./Transaction-Processing/README.md) | 0 |
-| [Indexing](./Indexing/README.md) | 0 |
-| [OLAP](./OLAP/README.md) | 0 |
-| [Data-Lake](./Data-Lake/README.md) | 0 |
-| [Vector-Database](./Vector-Database/README.md) | 0 |
+| 子方向                                                       | 论文数 |
+| ------------------------------------------------------------ | ------ |
+| [SQL-Optimization](./SQL-Optimization/README.md)             | 0      |
+| [NoSQL](./NoSQL/README.md)                                   | 0      |
+| [NewSQL](./NewSQL/README.md)                                 | 0      |
+| [Transaction-Processing](./Transaction-Processing/README.md) | 0      |
+| [Indexing](./Indexing/README.md)                             | 0      |
+| [OLAP](./OLAP/README.md)                                     | 0      |
+| [Data-Lake](./Data-Lake/README.md)                           | 0      |
+| [Vector-Database](./Vector-Database/README.md)               | 0      |
 
 ## 📖 BibTeX
 

@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [Causal-Discovery](./Causal-Discovery/README.md) | 0 |
-| [Causal-Effect-Estimation](./Causal-Effect-Estimation/README.md) | 0 |
-| [Structural-Causal-Models](./Structural-Causal-Models/README.md) | 0 |
-| [Counterfactual-Reasoning](./Counterfactual-Reasoning/README.md) | 0 |
-| [Instrumental-Variables](./Instrumental-Variables/README.md) | 0 |
-| [Do-Calculus](./Do-Calculus/README.md) | 0 |
-| [Causal-Representation-Learning](./Causal-Representation-Learning/README.md) | 0 |
-| [Causal-Machine-Learning](./Causal-Machine-Learning/README.md) | 0 |
+| 子方向                                                                       | 论文数 |
+| ---------------------------------------------------------------------------- | ------ |
+| [Causal-Discovery](./Causal-Discovery/README.md)                             | 0      |
+| [Causal-Effect-Estimation](./Causal-Effect-Estimation/README.md)             | 0      |
+| [Structural-Causal-Models](./Structural-Causal-Models/README.md)             | 0      |
+| [Counterfactual-Reasoning](./Counterfactual-Reasoning/README.md)             | 0      |
+| [Instrumental-Variables](./Instrumental-Variables/README.md)                 | 0      |
+| [Do-Calculus](./Do-Calculus/README.md)                                       | 0      |
+| [Causal-Representation-Learning](./Causal-Representation-Learning/README.md) | 0      |
+| [Causal-Machine-Learning](./Causal-Machine-Learning/README.md)               | 0      |
 
 ## 📖 BibTeX
 

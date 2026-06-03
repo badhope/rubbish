@@ -2,9 +2,9 @@
 layout: home
 
 hero:
-  name: "ScholarLib"
-  text: "开放获取论文库"
-  tagline: "精选开放获取的计算机科学、经济学与管理学论文库 —— 浏览、检索、引用，一站式搞定。"
+  name: 'ScholarLib'
+  text: '开放获取论文库'
+  tagline: '精选开放获取的计算机科学、经济学与管理学论文库 —— 浏览、检索、引用，一站式搞定。'
   actions:
     - theme: brand
       text: 浏览计算机科学

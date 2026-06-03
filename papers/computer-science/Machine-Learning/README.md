@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [Ensemble-Methods](./Ensemble-Methods/README.md) | 0 |
-| [Supervised-Learning](./Supervised-Learning/README.md) | 0 |
-| [Unsupervised-Learning](./Unsupervised-Learning/README.md) | 0 |
-| [Semi-Supervised-Learning](./Semi-Supervised-Learning/README.md) | 0 |
-| [Bayesian-Methods](./Bayesian-Methods/README.md) | 0 |
-| [Feature-Engineering](./Feature-Engineering/README.md) | 0 |
-| [Federated-Learning](./Federated-Learning/README.md) | 0 |
-| [Transfer-Learning](./Transfer-Learning/README.md) | 0 |
+| 子方向                                                           | 论文数 |
+| ---------------------------------------------------------------- | ------ |
+| [Ensemble-Methods](./Ensemble-Methods/README.md)                 | 0      |
+| [Supervised-Learning](./Supervised-Learning/README.md)           | 0      |
+| [Unsupervised-Learning](./Unsupervised-Learning/README.md)       | 0      |
+| [Semi-Supervised-Learning](./Semi-Supervised-Learning/README.md) | 0      |
+| [Bayesian-Methods](./Bayesian-Methods/README.md)                 | 0      |
+| [Feature-Engineering](./Feature-Engineering/README.md)           | 0      |
+| [Federated-Learning](./Federated-Learning/README.md)             | 0      |
+| [Transfer-Learning](./Transfer-Learning/README.md)               | 0      |
 
 ## 📖 BibTeX
 

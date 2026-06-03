@@ -10,7 +10,13 @@
   "doi": "10.1111/jofi.13479",
   "url": "https://doi.org/10.1111/jofi.13479",
   "abstract": "Examines spatial heterogeneity in housing returns across markets, finding that 'superstar' housing markets exhibit fundamentally different return dynamics compared to average markets, with implications for real estate investment and urban policy.",
-  "keywords": ["housing returns", "spatial heterogeneity", "real estate", "superstar cities", "housing investment"],
+  "keywords": [
+    "housing returns",
+    "spatial heterogeneity",
+    "real estate",
+    "superstar cities",
+    "housing investment"
+  ],
   "category": "real-estate-urban-economics",
   "submitted_by": "ScholarLib-EM",
   "date_added": "2026-05-18"

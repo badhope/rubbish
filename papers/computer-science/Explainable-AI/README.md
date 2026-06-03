@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [Feature-Attribution](./Feature-Attribution/README.md) | 0 |
-| [Concept-Based](./Concept-Based/README.md) | 0 |
-| [Example-Based](./Example-Based/README.md) | 0 |
-| [Intrinsic-Interpretability](./Intrinsic-Interpretability/README.md) | 0 |
-| [Post-Hoc-Explanation](./Post-Hoc-Explanation/README.md) | 0 |
-| [Saliency-Maps](./Saliency-Maps/README.md) | 0 |
-| [Attention-Visualization](./Attention-Visualization/README.md) | 0 |
-| [Rule-Based-Explanation](./Rule-Based-Explanation/README.md) | 0 |
+| 子方向                                                               | 论文数 |
+| -------------------------------------------------------------------- | ------ |
+| [Feature-Attribution](./Feature-Attribution/README.md)               | 0      |
+| [Concept-Based](./Concept-Based/README.md)                           | 0      |
+| [Example-Based](./Example-Based/README.md)                           | 0      |
+| [Intrinsic-Interpretability](./Intrinsic-Interpretability/README.md) | 0      |
+| [Post-Hoc-Explanation](./Post-Hoc-Explanation/README.md)             | 0      |
+| [Saliency-Maps](./Saliency-Maps/README.md)                           | 0      |
+| [Attention-Visualization](./Attention-Visualization/README.md)       | 0      |
+| [Rule-Based-Explanation](./Rule-Based-Explanation/README.md)         | 0      |
 
 ## 📖 BibTeX
 

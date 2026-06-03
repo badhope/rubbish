@@ -10,7 +10,13 @@
   "doi": "10.1086/726906",
   "url": "https://doi.org/10.1086/726906",
   "abstract": "First empirical analysis of algorithmic pricing and competition. Adoption increases margins for non-monopoly stations. In duopoly and triopoly markets, margins increase only if all stations adopt, suggesting AP significantly affects competition.",
-  "keywords": ["algorithmic pricing", "competition", "gasoline market", "Germany", "artificial intelligence"],
+  "keywords": [
+    "algorithmic pricing",
+    "competition",
+    "gasoline market",
+    "Germany",
+    "artificial intelligence"
+  ],
   "category": "microeconomics",
   "submitted_by": "ScholarLib-EM",
   "date_added": "2026-05-18"

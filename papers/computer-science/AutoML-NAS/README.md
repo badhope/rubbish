@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [Hyperparameter-Optimization](./Hyperparameter-Optimization/README.md) | 0 |
-| [Neural-Architecture-Search](./Neural-Architecture-Search/README.md) | 0 |
-| [Feature-AutoML](./Feature-AutoML/README.md) | 0 |
-| [Meta-Learning](./Meta-Learning/README.md) | 0 |
-| [Few-Shot-Learning](./Few-Shot-Learning/README.md) | 0 |
-| [Zero-Shot-Learning](./Zero-Shot-Learning/README.md) | 0 |
-| [Auto-Feature-Engineering](./Auto-Feature-Engineering/README.md) | 0 |
-| [Pipeline-Optimization](./Pipeline-Optimization/README.md) | 0 |
+| 子方向                                                                 | 论文数 |
+| ---------------------------------------------------------------------- | ------ |
+| [Hyperparameter-Optimization](./Hyperparameter-Optimization/README.md) | 0      |
+| [Neural-Architecture-Search](./Neural-Architecture-Search/README.md)   | 0      |
+| [Feature-AutoML](./Feature-AutoML/README.md)                           | 0      |
+| [Meta-Learning](./Meta-Learning/README.md)                             | 0      |
+| [Few-Shot-Learning](./Few-Shot-Learning/README.md)                     | 0      |
+| [Zero-Shot-Learning](./Zero-Shot-Learning/README.md)                   | 0      |
+| [Auto-Feature-Engineering](./Auto-Feature-Engineering/README.md)       | 0      |
+| [Pipeline-Optimization](./Pipeline-Optimization/README.md)             | 0      |
 
 ## 📖 BibTeX
 

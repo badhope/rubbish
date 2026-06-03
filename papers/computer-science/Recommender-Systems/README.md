@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [Collaborative-Filtering](./Collaborative-Filtering/README.md) | 0 |
-| [Content-Based](./Content-Based/README.md) | 0 |
-| [Sequential-Recommendation](./Sequential-Recommendation/README.md) | 0 |
-| [Graph-Based](./Graph-Based/README.md) | 0 |
-| [Multi-Task-Recommendation](./Multi-Task-Recommendation/README.md) | 0 |
-| [Cold-Start](./Cold-Start/README.md) | 0 |
-| [Explainable-Recommendation](./Explainable-Recommendation/README.md) | 0 |
-| [Fairness-in-Recommendation](./Fairness-in-Recommendation/README.md) | 0 |
+| 子方向                                                               | 论文数 |
+| -------------------------------------------------------------------- | ------ |
+| [Collaborative-Filtering](./Collaborative-Filtering/README.md)       | 0      |
+| [Content-Based](./Content-Based/README.md)                           | 0      |
+| [Sequential-Recommendation](./Sequential-Recommendation/README.md)   | 0      |
+| [Graph-Based](./Graph-Based/README.md)                               | 0      |
+| [Multi-Task-Recommendation](./Multi-Task-Recommendation/README.md)   | 0      |
+| [Cold-Start](./Cold-Start/README.md)                                 | 0      |
+| [Explainable-Recommendation](./Explainable-Recommendation/README.md) | 0      |
+| [Fairness-in-Recommendation](./Fairness-in-Recommendation/README.md) | 0      |
 
 ## 📖 BibTeX
 

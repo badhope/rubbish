@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [UI-UX-Design](./UI-UX-Design/README.md) | 0 |
-| [Accessibility](./Accessibility/README.md) | 0 |
-| [AR-VR](./AR-VR/README.md) | 0 |
-| [Brain-Computer-Interface](./Brain-Computer-Interface/README.md) | 0 |
-| [Gesture-Recognition](./Gesture-Recognition/README.md) | 0 |
-| [Eye-Tracking](./Eye-Tracking/README.md) | 0 |
-| [Adaptive-Interfaces](./Adaptive-Interfaces/README.md) | 0 |
-| [Conversational-Agents](./Conversational-Agents/README.md) | 0 |
+| 子方向                                                           | 论文数 |
+| ---------------------------------------------------------------- | ------ |
+| [UI-UX-Design](./UI-UX-Design/README.md)                         | 0      |
+| [Accessibility](./Accessibility/README.md)                       | 0      |
+| [AR-VR](./AR-VR/README.md)                                       | 0      |
+| [Brain-Computer-Interface](./Brain-Computer-Interface/README.md) | 0      |
+| [Gesture-Recognition](./Gesture-Recognition/README.md)           | 0      |
+| [Eye-Tracking](./Eye-Tracking/README.md)                         | 0      |
+| [Adaptive-Interfaces](./Adaptive-Interfaces/README.md)           | 0      |
+| [Conversational-Agents](./Conversational-Agents/README.md)       | 0      |
 
 ## 📖 BibTeX
 

@@ -1,0 +1,69 @@
+name: Release
+
+# Creates a GitHub release when a tag matching v*.*.* is pushed.
+# Also updates CHANGELOG.md by extracting the [Unreleased] section.
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.2.3)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & publish release
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get version
+        id: version
+        run: |
+          if [ -n "${{ github.ref_type }}" ] && [ "${{ github.ref_type }}" = "tag" ]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          else
+            VERSION=${{ inputs.version }}
+          fi
+          echo "VERSION=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Version: ${VERSION}"
+
+      - name: Extract changelog section
+        id: changelog
+        run: |
+          python3 << 'PY'
+          import re, os, sys
+          version = os.environ.get("VERSION", "")
+          if not version:
+              version = "${{ steps.version.outputs.VERSION }}"
+          with open("CHANGELOG.md", encoding="utf-8") as f:
+              content = f.read()
+          # Find the [Unreleased] section
+          m = re.search(r"## \[Unreleased\]([\s\S]*?)(?=\n## \[|\Z)", content)
+          notes = m.group(1).strip() if m else "_No changes recorded yet._"
+          with open("/tmp/release-notes.md", "w", encoding="utf-8") as f:
+              f.write(f"## What's changed in {version}\n\n{notes}\n")
+          print(f"Extracted {len(notes)} chars of release notes")
+          PY
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ steps.version.outputs.VERSION }}
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.VERSION, '-') }}
+          body_path: /tmp/release-notes.md
+          # Attach source archives
+          files: |
+            LICENSE

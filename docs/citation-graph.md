@@ -110,11 +110,11 @@ function renderGraph(container, data) {
 <div class="stats-grid">
 
 | Year | Papers |
-|-----:|-------:|
-| 2016 | 1 |
-| 2024 | 2 |
-| 2025 | 31 |
-| 2026 | 12 |
+| ---: | -----: |
+| 2016 |      1 |
+| 2024 |      2 |
+| 2025 |     31 |
+| 2026 |     12 |
 
 </div>
 
@@ -122,38 +122,38 @@ function renderGraph(container, data) {
 
 <div class="stats-grid">
 
-| Keyword | Occurrences |
-|--------:|------------:|
-| meta-analysis | 5 |
-| organizational behavior | 3 |
-| field experiment | 2 |
-| firm performance | 2 |
-| climate change | 2 |
-| competition | 2 |
-| artificial intelligence | 2 |
-| value creation | 2 |
-| human resource management | 2 |
-| diversity | 2 |
-| employee outcomes | 2 |
-| employee voice | 2 |
-| motivation | 2 |
-| performance | 2 |
-| hiring | 2 |
-| personnel selection | 2 |
-| sustainability reporting | 1 |
-| esg disclosure | 1 |
-| emerging markets | 1 |
-| reporting quality | 1 |
-| institutional factors | 1 |
-| behavioral nudges | 1 |
-| student loans | 1 |
-| delinquency | 1 |
-| education finance | 1 |
-| business value | 1 |
-| capability alignment | 1 |
-| digital strategy | 1 |
-| implementation | 1 |
-| productivity | 1 |
+|                   Keyword | Occurrences |
+| ------------------------: | ----------: |
+|             meta-analysis |           5 |
+|   organizational behavior |           3 |
+|          field experiment |           2 |
+|          firm performance |           2 |
+|            climate change |           2 |
+|               competition |           2 |
+|   artificial intelligence |           2 |
+|            value creation |           2 |
+| human resource management |           2 |
+|                 diversity |           2 |
+|         employee outcomes |           2 |
+|            employee voice |           2 |
+|                motivation |           2 |
+|               performance |           2 |
+|                    hiring |           2 |
+|       personnel selection |           2 |
+|  sustainability reporting |           1 |
+|            esg disclosure |           1 |
+|          emerging markets |           1 |
+|         reporting quality |           1 |
+|     institutional factors |           1 |
+|         behavioral nudges |           1 |
+|             student loans |           1 |
+|               delinquency |           1 |
+|         education finance |           1 |
+|            business value |           1 |
+|      capability alignment |           1 |
+|          digital strategy |           1 |
+|            implementation |           1 |
+|              productivity |           1 |
 
 </div>
 
@@ -161,23 +161,23 @@ function renderGraph(container, data) {
 
 <div class="stats-grid">
 
-| Journal | Papers |
-|--------:|-------:|
-| Human Resource Management | 4 |
-| Journal of Organizational Behavior | 3 |
-| Journal of Finance | 2 |
-| Journal of International Business Studies | 2 |
-| Academy of Management Review | 2 |
-| Leadership Quarterly | 2 |
-| Journal of Marketing Research | 2 |
-| Strategic Management Journal | 2 |
-| Annals of Tourism Research | 2 |
-| Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining | 1 |
-| Accounting Horizons | 1 |
-| Proceedings of the National Academy of Sciences | 1 |
-| MIS Quarterly | 1 |
-| Research Policy | 1 |
-| Corporate Social Responsibility and Environmental Management | 1 |
+|                                                                                            Journal | Papers |
+| -------------------------------------------------------------------------------------------------: | -----: |
+|                                                                          Human Resource Management |      4 |
+|                                                                 Journal of Organizational Behavior |      3 |
+|                                                                                 Journal of Finance |      2 |
+|                                                          Journal of International Business Studies |      2 |
+|                                                                       Academy of Management Review |      2 |
+|                                                                               Leadership Quarterly |      2 |
+|                                                                      Journal of Marketing Research |      2 |
+|                                                                       Strategic Management Journal |      2 |
+|                                                                         Annals of Tourism Research |      2 |
+| Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining |      1 |
+|                                                                                Accounting Horizons |      1 |
+|                                                    Proceedings of the National Academy of Sciences |      1 |
+|                                                                                      MIS Quarterly |      1 |
+|                                                                                    Research Policy |      1 |
+|                                       Corporate Social Responsibility and Environmental Management |      1 |
 
 </div>
 
@@ -185,9 +185,9 @@ function renderGraph(container, data) {
 
 <div class="stats-grid">
 
-| Topic | Papers |
-|------:|-------:|
-| economics-management/2026 | 45 |
-| computer-science/Machine-Learning | 1 |
+|                             Topic | Papers |
+| --------------------------------: | -----: |
+|         economics-management/2026 |     45 |
+| computer-science/Machine-Learning |      1 |
 
 </div>

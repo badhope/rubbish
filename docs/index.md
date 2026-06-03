@@ -2,9 +2,9 @@
 layout: home
 
 hero:
-  name: "ScholarLib"
-  text: "Open-Access Paper Library"
-  tagline: "A curated, open-access scholarly library of Computer Science, Economics & Management papers — browse, search, and cite, all in one place."
+  name: 'ScholarLib'
+  text: 'Open-Access Paper Library'
+  tagline: 'A curated, open-access scholarly library of Computer Science, Economics & Management papers — browse, search, and cite, all in one place.'
   actions:
     - theme: brand
       text: Explore Computer Science

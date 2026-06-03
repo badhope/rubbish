@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [GCN](./GCN/README.md) | 0 |
-| [GAT](./GAT/README.md) | 0 |
-| [GraphSAGE](./GraphSAGE/README.md) | 0 |
-| [Knowledge-Graphs](./Knowledge-Graphs/README.md) | 0 |
-| [Graph-Classification](./Graph-Classification/README.md) | 0 |
-| [Node-Classification](./Node-Classification/README.md) | 0 |
-| [Link-Prediction](./Link-Prediction/README.md) | 0 |
-| [Heterogeneous-Graphs](./Heterogeneous-Graphs/README.md) | 0 |
+| 子方向                                                   | 论文数 |
+| -------------------------------------------------------- | ------ |
+| [GCN](./GCN/README.md)                                   | 0      |
+| [GAT](./GAT/README.md)                                   | 0      |
+| [GraphSAGE](./GraphSAGE/README.md)                       | 0      |
+| [Knowledge-Graphs](./Knowledge-Graphs/README.md)         | 0      |
+| [Graph-Classification](./Graph-Classification/README.md) | 0      |
+| [Node-Classification](./Node-Classification/README.md)   | 0      |
+| [Link-Prediction](./Link-Prediction/README.md)           | 0      |
+| [Heterogeneous-Graphs](./Heterogeneous-Graphs/README.md) | 0      |
 
 ## 📖 BibTeX
 

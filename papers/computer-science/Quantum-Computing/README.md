@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [Quantum-Algorithms](./Quantum-Algorithms/README.md) | 0 |
-| [Quantum-Error-Correction](./Quantum-Error-Correction/README.md) | 0 |
-| [Quantum-Gates](./Quantum-Gates/README.md) | 0 |
-| [Quantum-ML](./Quantum-ML/README.md) | 0 |
-| [Quantum-Cryptography](./Quantum-Cryptography/README.md) | 0 |
-| [Quantum-Advantage](./Quantum-Advantage/README.md) | 0 |
-| [Variational-Algorithms](./Variational-Algorithms/README.md) | 0 |
-| [Quantum-Simulation](./Quantum-Simulation/README.md) | 0 |
+| 子方向                                                           | 论文数 |
+| ---------------------------------------------------------------- | ------ |
+| [Quantum-Algorithms](./Quantum-Algorithms/README.md)             | 0      |
+| [Quantum-Error-Correction](./Quantum-Error-Correction/README.md) | 0      |
+| [Quantum-Gates](./Quantum-Gates/README.md)                       | 0      |
+| [Quantum-ML](./Quantum-ML/README.md)                             | 0      |
+| [Quantum-Cryptography](./Quantum-Cryptography/README.md)         | 0      |
+| [Quantum-Advantage](./Quantum-Advantage/README.md)               | 0      |
+| [Variational-Algorithms](./Variational-Algorithms/README.md)     | 0      |
+| [Quantum-Simulation](./Quantum-Simulation/README.md)             | 0      |
 
 ## 📖 BibTeX
 

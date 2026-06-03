@@ -5,7 +5,9 @@ Papers on organizational behavior, human resource management, labor economics, l
 ## Journal Tiers
 
 ### FT50-UTD24 🏆
+
 Top journals in this tier include:
+
 - **Academy of Management Journal (AMJ)**
 - **Academy of Management Review (AMR)**
 - **Administrative Science Quarterly (ASQ)**
@@ -15,6 +17,7 @@ Top journals in this tier include:
 - **Strategic Management Journal (SMJ)**
 
 ### SSCI-Q1
+
 - **Human Resource Management (HRM)**
 - **International Journal of Human Resource Management (IJHRM)**
 - **Journal of Management**
@@ -23,17 +26,21 @@ Top journals in this tier include:
 - **Leadership Quarterly**
 
 ### SCI-Q1
+
 - **Journal of Vocational Behavior**
 - **Work & Stress**
 
 ### CSSCI
+
 - **管理世界**
 - **南开管理评论**
 - **心理学报**
 - **管理科学学报**
 
 ## Paper Format
+
 Each paper entry follows this structure:
+
 ```
 paper-name/
 ├── paper-name.bib          # BibTeX citation

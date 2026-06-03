@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [Design-Patterns](./Design-Patterns/README.md) | 0 |
-| [Microservice-Architecture](./Microservice-Architecture/README.md) | 0 |
-| [DevOps-CI-CD](./DevOps-CI-CD/README.md) | 0 |
-| [Code-Quality](./Code-Quality/README.md) | 0 |
-| [Testing](./Testing/README.md) | 0 |
-| [Refactoring](./Refactoring/README.md) | 0 |
-| [Agile](./Agile/README.md) | 0 |
-| [Domain-Driven-Design](./Domain-Driven-Design/README.md) | 0 |
+| 子方向                                                             | 论文数 |
+| ------------------------------------------------------------------ | ------ |
+| [Design-Patterns](./Design-Patterns/README.md)                     | 0      |
+| [Microservice-Architecture](./Microservice-Architecture/README.md) | 0      |
+| [DevOps-CI-CD](./DevOps-CI-CD/README.md)                           | 0      |
+| [Code-Quality](./Code-Quality/README.md)                           | 0      |
+| [Testing](./Testing/README.md)                                     | 0      |
+| [Refactoring](./Refactoring/README.md)                             | 0      |
+| [Agile](./Agile/README.md)                                         | 0      |
+| [Domain-Driven-Design](./Domain-Driven-Design/README.md)           | 0      |
 
 ## 📖 BibTeX
 

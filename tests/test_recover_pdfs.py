@@ -1,0 +1,138 @@
+"""Unit tests for recover_pdfs.py.
+
+Run: python -m pytest tests/ -v
+"""
+
+import sys
+import unittest
+import tempfile
+import shutil
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+
+# Import the module
+import importlib.util
+spec = importlib.util.spec_from_file_location(
+    "recover_pdfs", ROOT / "scripts" / "recover_pdfs.py"
+)
+recover = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(recover)
+
+
+class TestExtractIdentifiers(unittest.TestCase):
+    """Test DOI/arXiv extraction from metadata."""
+
+    def test_extracts_doi(self):
+        meta = {"doi": "10.1234/example"}
+        ids = recover.extract_identifiers(meta)
+        self.assertEqual(ids["doi"], "10.1234/example")
+
+    def test_normalizes_doi_url(self):
+        meta = {"doi": "https://doi.org/10.1234/example"}
+        ids = recover.extract_identifiers(meta)
+        self.assertEqual(ids["doi"], "10.1234/example")
+
+    def test_strips_dx_doi(self):
+        meta = {"doi": "https://dx.doi.org/10.1234/example"}
+        ids = recover.extract_identifiers(meta)
+        self.assertEqual(ids["doi"], "10.1234/example")
+
+    def test_extracts_arxiv_from_url(self):
+        meta = {"url": "https://arxiv.org/abs/2501.12345"}
+        ids = recover.extract_identifiers(meta)
+        self.assertEqual(ids["arxiv"], "2501.12345")
+
+    def test_extracts_arxiv_version(self):
+        meta = {"url": "https://arxiv.org/abs/2501.12345v2"}
+        ids = recover.extract_identifiers(meta)
+        self.assertEqual(ids["arxiv"], "2501.12345v2")
+
+    def test_extracts_arxiv_with_pdf(self):
+        meta = {"url": "https://arxiv.org/pdf/2501.12345"}
+        ids = recover.extract_identifiers(meta)
+        self.assertEqual(ids["arxiv"], "2501.12345")
+
+    def test_extracts_arxiv_from_field(self):
+        meta = {"arxiv": "2501.12345"}
+        ids = recover.extract_identifiers(meta)
+        self.assertEqual(ids["arxiv"], "2501.12345")
+
+    def test_extracts_arxiv_from_bibtex(self):
+        meta = {"bibtex": "@article{k, note={arXiv:2501.12345}}"}
+        ids = recover.extract_identifiers(meta)
+        self.assertEqual(ids["arxiv"], "2501.12345")
+
+    def test_extracts_direct_pdf_url(self):
+        meta = {"pdf_url": "https://example.com/paper.pdf"}
+        ids = recover.extract_identifiers(meta)
+        self.assertEqual(ids["pdf_url"], "https://example.com/paper.pdf")
+
+    def test_detects_pdf_extension_in_url(self):
+        meta = {"url": "https://example.com/paper.pdf"}
+        ids = recover.extract_identifiers(meta)
+        self.assertEqual(ids["pdf_url"], "https://example.com/paper.pdf")
+
+    def test_empty_metadata(self):
+        ids = recover.extract_identifiers({})
+        self.assertIsNone(ids["doi"])
+        self.assertIsNone(ids["arxiv"])
+        self.assertIsNone(ids["pdf_url"])
+
+
+class TestPaperHasPdf(unittest.TestCase):
+    """Test PDF existence check."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def test_returns_false_when_no_pdf(self):
+        paper_dir = self.tmp / "paper1"
+        paper_dir.mkdir()
+        self.assertFalse(recover.paper_has_pdf(paper_dir))
+
+    def test_returns_true_when_pdf_exists(self):
+        paper_dir = self.tmp / "paper1"
+        paper_dir.mkdir()
+        (paper_dir / "paper.pdf").write_bytes(b"%PDF-1.4 fake")
+        self.assertTrue(recover.paper_has_pdf(paper_dir))
+
+    def test_returns_true_for_any_pdf_name(self):
+        paper_dir = self.tmp / "paper1"
+        paper_dir.mkdir()
+        (paper_dir / "main.pdf").write_bytes(b"%PDF-1.4 fake")
+        self.assertTrue(recover.paper_has_pdf(paper_dir))
+
+
+class TestDownloadFile(unittest.TestCase):
+    """Test the file download helper (network calls mocked)."""
+
+    @unittest.skipUnless(
+        __import__("importlib").util.find_spec("requests") is not None,
+        "requests not installed",
+    )
+    def test_download_file_rejects_html(self):
+        # Without mocking, this might actually hit the network.
+        # We just test that it returns False for a 404 or non-PDF content.
+        from unittest.mock import patch, MagicMock
+        with patch("requests.get") as mock_get:
+            mock_resp = MagicMock()
+            mock_resp.headers = {"content-type": "text/html"}
+            mock_resp.status_code = 200
+            mock_resp.iter_content.return_value = [b"<html>Error</html>"]
+            mock_get.return_value = mock_resp
+
+            dest = Path(tempfile.mkdtemp()) / "test.pdf"
+            result = recover.download_file("http://example.com", dest)
+            # download_file will save then check header
+            # The HTML content doesn't start with %PDF-, so it should delete
+            self.assertFalse(result)
+            self.assertFalse(dest.exists())
+
+
+if __name__ == "__main__":
+    unittest.main()

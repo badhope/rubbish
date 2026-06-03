@@ -27,8 +27,7 @@ from urllib.parse import urlparse
 try:
     import requests
 except ImportError:
-    print("Error: requests not installed. Run: pip install requests")
-    sys.exit(1)
+    requests = None  # Allow importing module for unit tests without requests installed
 
 ROOT = Path(__file__).resolve().parent.parent
 PAPERS_DIR = ROOT / "papers"

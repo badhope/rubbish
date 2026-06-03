@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [Vision-Language-Action](./Vision-Language-Action/README.md) | 0 |
-| [Sim-to-Real](./Sim-to-Real/README.md) | 0 |
-| [Manipulation](./Manipulation/README.md) | 0 |
-| [Navigation](./Navigation/README.md) | 0 |
-| [Tool-Use](./Tool-Use/README.md) | 0 |
-| [World-Models](./World-Models/README.md) | 0 |
-| [Multi-Modal-Perception](./Multi-Modal-Perception/README.md) | 0 |
-| [Embodied-Reasoning](./Embodied-Reasoning/README.md) | 0 |
+| 子方向                                                       | 论文数 |
+| ------------------------------------------------------------ | ------ |
+| [Vision-Language-Action](./Vision-Language-Action/README.md) | 0      |
+| [Sim-to-Real](./Sim-to-Real/README.md)                       | 0      |
+| [Manipulation](./Manipulation/README.md)                     | 0      |
+| [Navigation](./Navigation/README.md)                         | 0      |
+| [Tool-Use](./Tool-Use/README.md)                             | 0      |
+| [World-Models](./World-Models/README.md)                     | 0      |
+| [Multi-Modal-Perception](./Multi-Modal-Perception/README.md) | 0      |
+| [Embodied-Reasoning](./Embodied-Reasoning/README.md)         | 0      |
 
 ## 📖 BibTeX
 

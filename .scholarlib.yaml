@@ -14,12 +14,12 @@ sections:
   - id: computer-science
     name: Computer Science
     path: papers/computer-science
-    organization: topic-first   # each topic has year subfolders
+    organization: topic-first # each topic has year subfolders
     source_repo: badhope/ScholarLib-CS
   - id: economics-management
     name: Economics & Management
     path: papers/economics-management
-    organization: year-first    # each year has field subfolders
+    organization: year-first # each year has field subfolders
     source_repo: badhope/ScholarLib-EM
     taxonomy_levels:
       - year

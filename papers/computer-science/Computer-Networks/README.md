@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [TCP-IP](./TCP-IP/README.md) | 0 |
-| [HTTP-QUIC](./HTTP-QUIC/README.md) | 0 |
-| [SDN-NFV](./SDN-NFV/README.md) | 0 |
-| [CDN](./CDN/README.md) | 0 |
-| [DNS](./DNS/README.md) | 0 |
-| [Load-Balancing](./Load-Balancing/README.md) | 0 |
-| [IoT-Networks](./IoT-Networks/README.md) | 0 |
-| [5G-6G](./5G-6G/README.md) | 0 |
+| 子方向                                       | 论文数 |
+| -------------------------------------------- | ------ |
+| [TCP-IP](./TCP-IP/README.md)                 | 0      |
+| [HTTP-QUIC](./HTTP-QUIC/README.md)           | 0      |
+| [SDN-NFV](./SDN-NFV/README.md)               | 0      |
+| [CDN](./CDN/README.md)                       | 0      |
+| [DNS](./DNS/README.md)                       | 0      |
+| [Load-Balancing](./Load-Balancing/README.md) | 0      |
+| [IoT-Networks](./IoT-Networks/README.md)     | 0      |
+| [5G-6G](./5G-6G/README.md)                   | 0      |
 
 ## 📖 BibTeX
 

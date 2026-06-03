@@ -10,14 +10,17 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).parent.parent
-PAPERS_DIR = REPO_ROOT / "papers"
 OUTPUT_FILE = REPO_ROOT / "references.bib"
+
+
+def _papers_dir():
+    return REPO_ROOT / "papers"
 
 
 def collect_bib_entries():
     """Walk through all paper directories and collect .bib files."""
     entries = []
-    for bib_file in sorted(PAPERS_DIR.rglob("*.bib")):
+    for bib_file in sorted(_papers_dir().rglob("*.bib")):
         rel_path = bib_file.relative_to(REPO_ROOT)
         try:
             content = bib_file.read_text(encoding="utf-8")
@@ -50,13 +53,22 @@ def generate_index(entries):
 
 
 def generate_stats(entries):
-    """Generate statistics by year and category."""
+    """Generate statistics by year and category.
+
+    Path layout: papers/{year}/{category}/.../{paper}.bib
+    So we look for a 4-digit year segment in the path.
+    """
+    import re
     stats = {}
     for entry in entries:
         parts = Path(entry["path"]).parts
-        if len(parts) >= 2:
-            year = parts[0]
-            category = parts[1]
+        year_idx = next(
+            (i for i, p in enumerate(parts) if re.match(r"^\d{4}$", p)),
+            None,
+        )
+        if year_idx is not None and year_idx + 1 < len(parts):
+            year = parts[year_idx]
+            category = parts[year_idx + 1]
             key = f"{year}/{category}"
             stats[key] = stats.get(key, 0) + 1
     return stats

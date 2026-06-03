@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [Compilers](./Compilers/README.md) | 0 |
-| [Interpreters](./Interpreters/README.md) | 0 |
-| [Type-Systems](./Type-Systems/README.md) | 0 |
-| [Program-Analysis](./Program-Analysis/README.md) | 0 |
-| [Static-Analysis](./Static-Analysis/README.md) | 0 |
-| [JIT-Compilation](./JIT-Compilation/README.md) | 0 |
-| [GC](./GC/README.md) | 0 |
-| [Concurrency-Models](./Concurrency-Models/README.md) | 0 |
+| 子方向                                               | 论文数 |
+| ---------------------------------------------------- | ------ |
+| [Compilers](./Compilers/README.md)                   | 0      |
+| [Interpreters](./Interpreters/README.md)             | 0      |
+| [Type-Systems](./Type-Systems/README.md)             | 0      |
+| [Program-Analysis](./Program-Analysis/README.md)     | 0      |
+| [Static-Analysis](./Static-Analysis/README.md)       | 0      |
+| [JIT-Compilation](./JIT-Compilation/README.md)       | 0      |
+| [GC](./GC/README.md)                                 | 0      |
+| [Concurrency-Models](./Concurrency-Models/README.md) | 0      |
 
 ## 📖 BibTeX
 

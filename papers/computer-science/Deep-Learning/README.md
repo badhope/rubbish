@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [CNN](./CNN/README.md) | 0 |
-| [RNN-LSTM-GRU](./RNN-LSTM-GRU/README.md) | 0 |
-| [Transformer](./Transformer/README.md) | 0 |
-| [Attention-Mechanism](./Attention-Mechanism/README.md) | 0 |
-| [Optimization](./Optimization/README.md) | 0 |
-| [Regularization](./Regularization/README.md) | 0 |
-| [Neural-Architecture-Search](./Neural-Architecture-Search/README.md) | 0 |
-| [Knowledge-Distillation](./Knowledge-Distillation/README.md) | 0 |
+| 子方向                                                               | 论文数 |
+| -------------------------------------------------------------------- | ------ |
+| [CNN](./CNN/README.md)                                               | 0      |
+| [RNN-LSTM-GRU](./RNN-LSTM-GRU/README.md)                             | 0      |
+| [Transformer](./Transformer/README.md)                               | 0      |
+| [Attention-Mechanism](./Attention-Mechanism/README.md)               | 0      |
+| [Optimization](./Optimization/README.md)                             | 0      |
+| [Regularization](./Regularization/README.md)                         | 0      |
+| [Neural-Architecture-Search](./Neural-Architecture-Search/README.md) | 0      |
+| [Knowledge-Distillation](./Knowledge-Distillation/README.md)         | 0      |
 
 ## 📖 BibTeX
 

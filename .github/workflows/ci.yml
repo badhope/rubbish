@@ -1,0 +1,153 @@
+name: CI
+
+# Runs on every push and pull_request to main.
+# Validates paper metadata, runs Python tests, checks formatting, and lints PR titles.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  # ── 1. Paper metadata validation ─────────────────────────────────────
+  validate-papers:
+    name: Validate paper metadata
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate metadata
+        run: python3 scripts/validate_papers.py
+
+  # ── 2. Python unit tests ─────────────────────────────────────────────
+  test-python:
+    name: Python unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+
+  # ── 3. TypeScript type-check ─────────────────────────────────────────
+  type-check:
+    name: TypeScript type check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx --yes vue-tsc --noEmit -p tsconfig.json
+
+  # ── 4. Prettier format check ─────────────────────────────────────────
+  format-check:
+    name: Prettier format check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check formatting
+        run: npm run format:check
+
+  # ── 5. PR title lint (Conventional Commits) ──────────────────────────
+  pr-title-lint:
+    name: PR title lint
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Lint PR title
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Allowed types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+          requireScope: false
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: |
+            The subject (the text after the colon in your PR title) must start with a lowercase letter.
+          # Optional scopes:
+          scopes: |
+            docs
+            papers
+            scripts
+            ci
+            a11y
+            i18n
+            pwa
+
+  # ── 6. Aggregate status ──────────────────────────────────────────────
+  all-green:
+    name: All checks passed
+    needs: [validate-papers, test-python, type-check, format-check]
+    if: success()
+    runs-on: ubuntu-latest
+    steps:
+      - name: ✅ Summary
+        run: |
+          echo "All ScholarLib CI checks passed."
+          echo "- Paper metadata valid"
+          echo "- Python tests pass"
+          echo "- TypeScript types check"
+          echo "- Code formatted"
