@@ -15,8 +15,9 @@ const BASE = "/ScholarLib/";
 const PRECACHE_URLS = [
   BASE,
   `${BASE}index.html`,
-  `${BASE}about/`,
   `${BASE}about.html`,
+  `${BASE}architecture.html`,
+  `${BASE}citation-graph.html`,
   `${BASE}manifest.webmanifest`,
   `${BASE}og-image.svg`,
   `${BASE}og-image.png`,
