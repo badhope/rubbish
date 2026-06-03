@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [Convex-Optimization](./Convex-Optimization/README.md) | 0 |
-| [Stochastic-Optimization](./Stochastic-Optimization/README.md) | 0 |
-| [Non-Convex-Optimization](./Non-Convex-Optimization/README.md) | 0 |
-| [Gradient-Methods](./Gradient-Methods/README.md) | 0 |
-| [Second-Order-Methods](./Second-Order-Methods/README.md) | 0 |
-| [Distributed-Optimization](./Distributed-Optimization/README.md) | 0 |
-| [Bandit-Algorithms](./Bandit-Algorithms/README.md) | 0 |
-| [Game-Theory](./Game-Theory/README.md) | 0 |
+| 子方向                                                           | 论文数 |
+| ---------------------------------------------------------------- | ------ |
+| [Convex-Optimization](./Convex-Optimization/README.md)           | 0      |
+| [Stochastic-Optimization](./Stochastic-Optimization/README.md)   | 0      |
+| [Non-Convex-Optimization](./Non-Convex-Optimization/README.md)   | 0      |
+| [Gradient-Methods](./Gradient-Methods/README.md)                 | 0      |
+| [Second-Order-Methods](./Second-Order-Methods/README.md)         | 0      |
+| [Distributed-Optimization](./Distributed-Optimization/README.md) | 0      |
+| [Bandit-Algorithms](./Bandit-Algorithms/README.md)               | 0      |
+| [Game-Theory](./Game-Theory/README.md)                           | 0      |
 
 ## 📖 BibTeX
 

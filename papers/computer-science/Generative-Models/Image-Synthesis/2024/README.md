@@ -2,8 +2,8 @@
 
 ## 📄 论文列表 / Paper List
 
-| 论文标题 | 作者 | 发表于 | 链接 |
-|----------|------|--------|------|
+| 论文标题                                                                           | 作者                | 发表于                     | 链接                                               |
+| ---------------------------------------------------------------------------------- | ------------------- | -------------------------- | -------------------------------------------------- |
 | [Visual Autoregressive Modeling (VAR)](Tian-2024-VisualAutoregressiveModeling.pdf) | Tian, Ye, Li et al. | NeurIPS 2024 🏅 Best Paper | [Link](https://openreview.net/forum?id=gojL67CfS8) |
 
 ---

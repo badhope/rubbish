@@ -1,6 +1,6 @@
 {
   "name": "scholarlib",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A curated, open-access scholarly library of Computer Science, Economics & Management papers.",
   "private": true,
   "type": "module",
@@ -10,13 +10,24 @@
     "docs:build:no-a11y": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "docs:sidebar": "python3 build_sidebar.py",
-    "format": "prettier --write \"**/*.{ts,js,json,md,yml,yaml}\" --ignore-path .gitignore",
-    "format:check": "prettier --check \"**/*.{ts,js,json,md,yml,yaml}\" --ignore-path .gitignore"
+    "docs:bib": "python3 scripts/generate_index.py",
+    "docs:rss": "python3 scripts/generate_rss.py",
+    "docs:graph": "python3 scripts/generate_citation_graph.py",
+    "docs:favicon": "python3 scripts/generate_favicons.py",
+    "format": "prettier --write \"**/*.{ts,js,json,md,yml,yaml,css,vue,html}\" --ignore-path .gitignore --ignore-unknown",
+    "format:check": "prettier --check \"**/*.{ts,js,json,md,yml,yaml,css,vue,html}\" --ignore-path .gitignore --ignore-unknown",
+    "type-check": "vue-tsc --noEmit -p tsconfig.ci.json",
+    "test": "python3 -m unittest discover -s tests -p 'test_*.py' -v",
+    "validate": "python3 scripts/validate_papers.py",
+    "ci": "npm run format:check && npm run type-check && npm run test && npm run validate && npm run docs:build",
+    "prepublishOnly": "npm run ci"
   },
   "devDependencies": {
     "prettier": "^3.3.3",
+    "typescript": "^5.4.0",
     "vitepress": "^1.6.4",
-    "vitepress-plugin-llms": "^0.0.6"
+    "vitepress-plugin-llms": "^0.0.6",
+    "vue-tsc": "^2.2.12"
   },
   "engines": {
     "node": ">=20"

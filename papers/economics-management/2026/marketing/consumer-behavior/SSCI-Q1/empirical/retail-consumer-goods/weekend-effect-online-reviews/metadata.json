@@ -10,7 +10,13 @@
   "doi": "10.1177/00222437261345678",
   "url": "https://doi.org/10.1177/00222437261345678",
   "abstract": "Analyzing 400 million reviews across 33 platforms, this paper finds that weekend reviews tend to have lower rating scores than weekday reviews.",
-  "keywords": ["online reviews", "weekend effect", "consumer behavior", "e-commerce", "rating patterns"],
+  "keywords": [
+    "online reviews",
+    "weekend effect",
+    "consumer behavior",
+    "e-commerce",
+    "rating patterns"
+  ],
   "category": "marketing",
   "submitted_by": "ScholarLib-EM",
   "date_added": "2026-05-18"

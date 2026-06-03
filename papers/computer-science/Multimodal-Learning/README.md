@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [Vision-Language-Models](./Vision-Language-Models/README.md) | 0 |
-| [Cross-Modal-Alignment](./Cross-Modal-Alignment/README.md) | 0 |
-| [Multimodal-Fusion](./Multimodal-Fusion/README.md) | 0 |
-| [Multimodal-Pretraining](./Multimodal-Pretraining/README.md) | 0 |
-| [Video-Understanding](./Video-Understanding/README.md) | 0 |
-| [Document-AI](./Document-AI/README.md) | 0 |
-| [Multimodal-Reasoning](./Multimodal-Reasoning/README.md) | 0 |
-| [Unified-Models](./Unified-Models/README.md) | 0 |
+| 子方向                                                       | 论文数 |
+| ------------------------------------------------------------ | ------ |
+| [Vision-Language-Models](./Vision-Language-Models/README.md) | 0      |
+| [Cross-Modal-Alignment](./Cross-Modal-Alignment/README.md)   | 0      |
+| [Multimodal-Fusion](./Multimodal-Fusion/README.md)           | 0      |
+| [Multimodal-Pretraining](./Multimodal-Pretraining/README.md) | 0      |
+| [Video-Understanding](./Video-Understanding/README.md)       | 0      |
+| [Document-AI](./Document-AI/README.md)                       | 0      |
+| [Multimodal-Reasoning](./Multimodal-Reasoning/README.md)     | 0      |
+| [Unified-Models](./Unified-Models/README.md)                 | 0      |
 
 ## 📖 BibTeX
 

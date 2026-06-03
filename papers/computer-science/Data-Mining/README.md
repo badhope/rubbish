@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [Association-Rules](./Association-Rules/README.md) | 0 |
-| [Clustering](./Clustering/README.md) | 0 |
-| [Anomaly-Detection](./Anomaly-Detection/README.md) | 0 |
-| [Frequent-Pattern](./Frequent-Pattern/README.md) | 0 |
-| [Classification](./Classification/README.md) | 0 |
-| [Regression](./Regression/README.md) | 0 |
-| [Dimensionality-Reduction](./Dimensionality-Reduction/README.md) | 0 |
-| [Social-Network-Analysis](./Social-Network-Analysis/README.md) | 0 |
+| 子方向                                                           | 论文数 |
+| ---------------------------------------------------------------- | ------ |
+| [Association-Rules](./Association-Rules/README.md)               | 0      |
+| [Clustering](./Clustering/README.md)                             | 0      |
+| [Anomaly-Detection](./Anomaly-Detection/README.md)               | 0      |
+| [Frequent-Pattern](./Frequent-Pattern/README.md)                 | 0      |
+| [Classification](./Classification/README.md)                     | 0      |
+| [Regression](./Regression/README.md)                             | 0      |
+| [Dimensionality-Reduction](./Dimensionality-Reduction/README.md) | 0      |
+| [Social-Network-Analysis](./Social-Network-Analysis/README.md)   | 0      |
 
 ## 📖 BibTeX
 

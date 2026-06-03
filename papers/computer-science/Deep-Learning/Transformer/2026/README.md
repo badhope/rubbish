@@ -2,8 +2,8 @@
 
 ## 📄 论文列表 / Paper List
 
-| 论文标题 | 作者 | 发表于 | 链接 |
-|----------|------|--------|------|
+| 论文标题                                                                                        | 作者                        | 发表于                         | 链接                                               |
+| ----------------------------------------------------------------------------------------------- | --------------------------- | ------------------------------ | -------------------------------------------------- |
 | [Transformers are Inherently Succinct](Bergstrasser-2026-TransformersAreInherentlySuccinct.pdf) | Bergsträßer, Cotterell, Lin | ICLR 2026 🏅 Outstanding Paper | [Link](https://openreview.net/forum?id=Yxz92UuPLQ) |
 
 ---

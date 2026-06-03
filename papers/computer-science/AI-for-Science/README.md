@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [Physics-Informed-NN](./Physics-Informed-NN/README.md) | 0 |
-| [Molecular-Generation](./Molecular-Generation/README.md) | 0 |
-| [Protein-Structure](./Protein-Structure/README.md) | 0 |
-| [Drug-Discovery](./Drug-Discovery/README.md) | 0 |
-| [Climate-Modeling](./Climate-Modeling/README.md) | 0 |
-| [Materials-Science](./Materials-Science/README.md) | 0 |
-| [Genomics](./Genomics/README.md) | 0 |
-| [Medical-Imaging](./Medical-Imaging/README.md) | 0 |
+| 子方向                                                   | 论文数 |
+| -------------------------------------------------------- | ------ |
+| [Physics-Informed-NN](./Physics-Informed-NN/README.md)   | 0      |
+| [Molecular-Generation](./Molecular-Generation/README.md) | 0      |
+| [Protein-Structure](./Protein-Structure/README.md)       | 0      |
+| [Drug-Discovery](./Drug-Discovery/README.md)             | 0      |
+| [Climate-Modeling](./Climate-Modeling/README.md)         | 0      |
+| [Materials-Science](./Materials-Science/README.md)       | 0      |
+| [Genomics](./Genomics/README.md)                         | 0      |
+| [Medical-Imaging](./Medical-Imaging/README.md)           | 0      |
 
 ## 📖 BibTeX
 

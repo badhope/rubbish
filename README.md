@@ -4,7 +4,7 @@
 
 **The Open-Access Scholarly Library**
 
-*A curated collection of influential research papers in **Computer Science** and **Economics & Management** — browse, search, and cite, all in one place.*
+_A curated collection of influential research papers in **Computer Science** and **Economics & Management** — browse, search, and cite, all in one place._
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![GitHub Pages](https://img.shields.io/badge/Site-Live-brightgreen)](https://badhope.github.io/ScholarLib/)
@@ -34,15 +34,15 @@ Every paper comes with a **ready-to-use BibTeX citation** — copy, paste, and k
 
 ## 📊 At a Glance
 
-| Metric | Value |
-|---|---:|
-| Computer Science topics | **33** |
-| Economics & Management fields | **18** |
-| Publication years covered | **7** (2020 – 2026) |
-| Paper entries | **2,500+** |
-| Documented pages on the site | **50+** |
-| Repository size | ~412 MB |
-| License | MIT |
+| Metric                        |               Value |
+| ----------------------------- | ------------------: |
+| Computer Science topics       |              **33** |
+| Economics & Management fields |              **18** |
+| Publication years covered     | **7** (2020 – 2026) |
+| Paper entries                 |          **2,500+** |
+| Documented pages on the site  |             **50+** |
+| Repository size               |             ~412 MB |
+| License                       |                 MIT |
 
 ## ✨ Features
 
@@ -121,9 +121,9 @@ The full site is built with [VitePress 1.6](https://vitepress.dev/) and deployed
 
 This repository is the **successor** of two earlier projects. All content has been merged here:
 
-| Old Repo | What it held | Status |
-|---|---|---|
-| [`ScholarLib-CS`](https://github.com/badhope/ScholarLib-CS) | Computer Science papers (33 topics, ~2,500 entries) | ✅ Merged & archived |
+| Old Repo                                                    | What it held                                         | Status                             |
+| ----------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------- |
+| [`ScholarLib-CS`](https://github.com/badhope/ScholarLib-CS) | Computer Science papers (33 topics, ~2,500 entries)  | ✅ Merged & archived               |
 | [`ScholarLib-EM`](https://github.com/badhope/ScholarLib-EM) | Economics & Management papers (18 fields, 2020-2026) | ✅ Renamed in place → `ScholarLib` |
 
 If you have external links pointing to the old repositories:

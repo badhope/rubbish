@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "skipLibCheck": true
+  },
+  "include": ["docs/.vitepress/config.ts"],
+  "exclude": [
+    "node_modules",
+    "docs/.vitepress/dist",
+    "docs/.vitepress/.temp",
+    "docs/.vitepress/cache",
+    "docs/.vitepress/theme",
+    "tests"
+  ]
+}

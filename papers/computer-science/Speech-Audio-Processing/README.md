@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [Speech-Recognition](./Speech-Recognition/README.md) | 0 |
-| [Speech-Synthesis](./Speech-Synthesis/README.md) | 0 |
-| [Speaker-Recognition](./Speaker-Recognition/README.md) | 0 |
-| [Audio-Classification](./Audio-Classification/README.md) | 0 |
-| [Music-IR](./Music-IR/README.md) | 0 |
-| [Speech-Translation](./Speech-Translation/README.md) | 0 |
-| [Voice-Cloning](./Voice-Cloning/README.md) | 0 |
-| [Audio-Generation](./Audio-Generation/README.md) | 0 |
+| 子方向                                                   | 论文数 |
+| -------------------------------------------------------- | ------ |
+| [Speech-Recognition](./Speech-Recognition/README.md)     | 0      |
+| [Speech-Synthesis](./Speech-Synthesis/README.md)         | 0      |
+| [Speaker-Recognition](./Speaker-Recognition/README.md)   | 0      |
+| [Audio-Classification](./Audio-Classification/README.md) | 0      |
+| [Music-IR](./Music-IR/README.md)                         | 0      |
+| [Speech-Translation](./Speech-Translation/README.md)     | 0      |
+| [Voice-Cloning](./Voice-Cloning/README.md)               | 0      |
+| [Audio-Generation](./Audio-Generation/README.md)         | 0      |
 
 ## 📖 BibTeX
 

@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [SLAM](./SLAM/README.md) | 0 |
-| [Motion-Planning](./Motion-Planning/README.md) | 0 |
-| [Path-Planning](./Path-Planning/README.md) | 0 |
-| [Perception](./Perception/README.md) | 0 |
-| [Control](./Control/README.md) | 0 |
-| [Autonomous-Driving](./Autonomous-Driving/README.md) | 0 |
-| [UAV](./UAV/README.md) | 0 |
-| [Human-Robot-Collaboration](./Human-Robot-Collaboration/README.md) | 0 |
+| 子方向                                                             | 论文数 |
+| ------------------------------------------------------------------ | ------ |
+| [SLAM](./SLAM/README.md)                                           | 0      |
+| [Motion-Planning](./Motion-Planning/README.md)                     | 0      |
+| [Path-Planning](./Path-Planning/README.md)                         | 0      |
+| [Perception](./Perception/README.md)                               | 0      |
+| [Control](./Control/README.md)                                     | 0      |
+| [Autonomous-Driving](./Autonomous-Driving/README.md)               | 0      |
+| [UAV](./UAV/README.md)                                             | 0      |
+| [Human-Robot-Collaboration](./Human-Robot-Collaboration/README.md) | 0      |
 
 ## 📖 BibTeX
 

@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [Text-Classification](./Text-Classification/README.md) | 0 |
-| [Named-Entity-Recognition](./Named-Entity-Recognition/README.md) | 0 |
-| [Machine-Translation](./Machine-Translation/README.md) | 0 |
-| [Text-Generation](./Text-Generation/README.md) | 0 |
-| [Semantic-Understanding](./Semantic-Understanding/README.md) | 0 |
-| [Question-Answering](./Question-Answering/README.md) | 0 |
-| [Dialogue-Systems](./Dialogue-Systems/README.md) | 0 |
-| [Information-Extraction](./Information-Extraction/README.md) | 0 |
+| 子方向                                                           | 论文数 |
+| ---------------------------------------------------------------- | ------ |
+| [Text-Classification](./Text-Classification/README.md)           | 0      |
+| [Named-Entity-Recognition](./Named-Entity-Recognition/README.md) | 0      |
+| [Machine-Translation](./Machine-Translation/README.md)           | 0      |
+| [Text-Generation](./Text-Generation/README.md)                   | 0      |
+| [Semantic-Understanding](./Semantic-Understanding/README.md)     | 0      |
+| [Question-Answering](./Question-Answering/README.md)             | 0      |
+| [Dialogue-Systems](./Dialogue-Systems/README.md)                 | 0      |
+| [Information-Extraction](./Information-Extraction/README.md)     | 0      |
 
 ## 📖 BibTeX
 

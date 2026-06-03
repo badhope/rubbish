@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [GAN](./GAN/README.md) | 0 |
-| [VAE](./VAE/README.md) | 0 |
-| [Diffusion-Models](./Diffusion-Models/README.md) | 0 |
-| [Flow-Models](./Flow-Models/README.md) | 0 |
-| [Image-Synthesis](./Image-Synthesis/README.md) | 0 |
-| [Text-to-Image](./Text-to-Image/README.md) | 0 |
-| [Audio-Generation](./Audio-Generation/README.md) | 0 |
-| [Style-Transfer](./Style-Transfer/README.md) | 0 |
+| 子方向                                           | 论文数 |
+| ------------------------------------------------ | ------ |
+| [GAN](./GAN/README.md)                           | 0      |
+| [VAE](./VAE/README.md)                           | 0      |
+| [Diffusion-Models](./Diffusion-Models/README.md) | 0      |
+| [Flow-Models](./Flow-Models/README.md)           | 0      |
+| [Image-Synthesis](./Image-Synthesis/README.md)   | 0      |
+| [Text-to-Image](./Text-to-Image/README.md)       | 0      |
+| [Audio-Generation](./Audio-Generation/README.md) | 0      |
+| [Style-Transfer](./Style-Transfer/README.md)     | 0      |
 
 ## 📖 BibTeX
 

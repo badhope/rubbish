@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [Consensus-Protocols](./Consensus-Protocols/README.md) | 0 |
-| [Distributed-Storage](./Distributed-Storage/README.md) | 0 |
-| [Distributed-Computing](./Distributed-Computing/README.md) | 0 |
-| [Microservices](./Microservices/README.md) | 0 |
-| [Container-Orchestration](./Container-Orchestration/README.md) | 0 |
-| [Serverless](./Serverless/README.md) | 0 |
-| [Distributed-Transactions](./Distributed-Transactions/README.md) | 0 |
-| [Fault-Tolerance](./Fault-Tolerance/README.md) | 0 |
+| 子方向                                                           | 论文数 |
+| ---------------------------------------------------------------- | ------ |
+| [Consensus-Protocols](./Consensus-Protocols/README.md)           | 0      |
+| [Distributed-Storage](./Distributed-Storage/README.md)           | 0      |
+| [Distributed-Computing](./Distributed-Computing/README.md)       | 0      |
+| [Microservices](./Microservices/README.md)                       | 0      |
+| [Container-Orchestration](./Container-Orchestration/README.md)   | 0      |
+| [Serverless](./Serverless/README.md)                             | 0      |
+| [Distributed-Transactions](./Distributed-Transactions/README.md) | 0      |
+| [Fault-Tolerance](./Fault-Tolerance/README.md)                   | 0      |
 
 ## 📖 BibTeX
 

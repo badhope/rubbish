@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [Time-Series-Forecasting](./Time-Series-Forecasting/README.md) | 0 |
-| [Anomaly-Detection](./Anomaly-Detection/README.md) | 0 |
-| [Representation-Learning](./Representation-Learning/README.md) | 0 |
-| [Classification](./Classification/README.md) | 0 |
-| [Imputation](./Imputation/README.md) | 0 |
-| [Multivariate-Time-Series](./Multivariate-Time-Series/README.md) | 0 |
-| [Streaming-Time-Series](./Streaming-Time-Series/README.md) | 0 |
-| [Foundation-Models](./Foundation-Models/README.md) | 0 |
+| 子方向                                                           | 论文数 |
+| ---------------------------------------------------------------- | ------ |
+| [Time-Series-Forecasting](./Time-Series-Forecasting/README.md)   | 0      |
+| [Anomaly-Detection](./Anomaly-Detection/README.md)               | 0      |
+| [Representation-Learning](./Representation-Learning/README.md)   | 0      |
+| [Classification](./Classification/README.md)                     | 0      |
+| [Imputation](./Imputation/README.md)                             | 0      |
+| [Multivariate-Time-Series](./Multivariate-Time-Series/README.md) | 0      |
+| [Streaming-Time-Series](./Streaming-Time-Series/README.md)       | 0      |
+| [Foundation-Models](./Foundation-Models/README.md)               | 0      |
 
 ## 📖 BibTeX
 

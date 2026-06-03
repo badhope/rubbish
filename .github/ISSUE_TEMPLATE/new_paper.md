@@ -17,6 +17,7 @@ labels: paper, contribution
 ## Topic / Field
 
 <!-- Which of the existing topics/fields does this paper belong to? -->
+
 - Computer Science topic: <!-- e.g. Machine Learning -->
 - Economics & Management field: <!-- e.g. Finance -->
 

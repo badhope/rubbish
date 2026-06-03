@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [Image-Classification](./Image-Classification/README.md) | 0 |
-| [Object-Detection](./Object-Detection/README.md) | 0 |
-| [Semantic-Segmentation](./Semantic-Segmentation/README.md) | 0 |
-| [Instance-Segmentation](./Instance-Segmentation/README.md) | 0 |
-| [Image-Generation](./Image-Generation/README.md) | 0 |
-| [Video-Understanding](./Video-Understanding/README.md) | 0 |
-| [3D-Vision](./3D-Vision/README.md) | 0 |
-| [Image-Super-Resolution](./Image-Super-Resolution/README.md) | 0 |
+| 子方向                                                       | 论文数 |
+| ------------------------------------------------------------ | ------ |
+| [Image-Classification](./Image-Classification/README.md)     | 0      |
+| [Object-Detection](./Object-Detection/README.md)             | 0      |
+| [Semantic-Segmentation](./Semantic-Segmentation/README.md)   | 0      |
+| [Instance-Segmentation](./Instance-Segmentation/README.md)   | 0      |
+| [Image-Generation](./Image-Generation/README.md)             | 0      |
+| [Video-Understanding](./Video-Understanding/README.md)       | 0      |
+| [3D-Vision](./3D-Vision/README.md)                           | 0      |
+| [Image-Super-Resolution](./Image-Super-Resolution/README.md) | 0      |
 
 ## 📖 BibTeX
 

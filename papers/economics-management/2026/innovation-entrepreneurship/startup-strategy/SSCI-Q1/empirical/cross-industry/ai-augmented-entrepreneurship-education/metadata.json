@@ -10,7 +10,13 @@
   "doi": "10.3390/admsci16010033",
   "url": "https://doi.org/10.3390/admsci16010033",
   "abstract": "Proposes an AI-augmented model for entrepreneurship education that connects knowledge, innovation, and venture ecosystems.",
-  "keywords": ["AI", "entrepreneurship education", "venture ecosystems", "innovation", "knowledge management"],
+  "keywords": [
+    "AI",
+    "entrepreneurship education",
+    "venture ecosystems",
+    "innovation",
+    "knowledge management"
+  ],
   "category": "innovation-entrepreneurship",
   "submitted_by": "ScholarLib-EM",
   "date_added": "2026-05-18"

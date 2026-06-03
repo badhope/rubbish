@@ -10,7 +10,13 @@
   "doi": "10.23077/MISQ.2025.R3-23456",
   "url": "https://doi.org/10.23077/MISQ.2025.R3-23456",
   "abstract": "Examines how firms can realize business value from AI investments through AI capability alignment and appropriate development modes.",
-  "keywords": ["AI", "business value", "capability alignment", "digital strategy", "implementation"],
+  "keywords": [
+    "AI",
+    "business value",
+    "capability alignment",
+    "digital strategy",
+    "implementation"
+  ],
   "category": "digital-economy",
   "submitted_by": "ScholarLib-EM",
   "date_added": "2026-05-18"

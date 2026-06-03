@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [Alignment](./Alignment/README.md) | 0 |
-| [Interpretability](./Interpretability/README.md) | 0 |
-| [Fairness](./Fairness/README.md) | 0 |
-| [Robustness](./Robustness/README.md) | 0 |
-| [Value-Learning](./Value-Learning/README.md) | 0 |
-| [Constitutional-AI](./Constitutional-AI/README.md) | 0 |
-| [Red-Teaming](./Red-Teaming/README.md) | 0 |
-| [AI-Governance](./AI-Governance/README.md) | 0 |
+| 子方向                                             | 论文数 |
+| -------------------------------------------------- | ------ |
+| [Alignment](./Alignment/README.md)                 | 0      |
+| [Interpretability](./Interpretability/README.md)   | 0      |
+| [Fairness](./Fairness/README.md)                   | 0      |
+| [Robustness](./Robustness/README.md)               | 0      |
+| [Value-Learning](./Value-Learning/README.md)       | 0      |
+| [Constitutional-AI](./Constitutional-AI/README.md) | 0      |
+| [Red-Teaming](./Red-Teaming/README.md)             | 0      |
+| [AI-Governance](./AI-Governance/README.md)         | 0      |
 
 ## 📖 BibTeX
 

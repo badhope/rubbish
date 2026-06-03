@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [Search-Engines](./Search-Engines/README.md) | 0 |
-| [Vector-Retrieval](./Vector-Retrieval/README.md) | 0 |
-| [Learning-to-Rank](./Learning-to-Rank/README.md) | 0 |
-| [Query-Understanding](./Query-Understanding/README.md) | 0 |
-| [Relevance-Feedback](./Relevance-Feedback/README.md) | 0 |
-| [Cross-Lingual-IR](./Cross-Lingual-IR/README.md) | 0 |
-| [Recommendation-Retrieval](./Recommendation-Retrieval/README.md) | 0 |
-| [Dense-Retrieval](./Dense-Retrieval/README.md) | 0 |
+| 子方向                                                           | 论文数 |
+| ---------------------------------------------------------------- | ------ |
+| [Search-Engines](./Search-Engines/README.md)                     | 0      |
+| [Vector-Retrieval](./Vector-Retrieval/README.md)                 | 0      |
+| [Learning-to-Rank](./Learning-to-Rank/README.md)                 | 0      |
+| [Query-Understanding](./Query-Understanding/README.md)           | 0      |
+| [Relevance-Feedback](./Relevance-Feedback/README.md)             | 0      |
+| [Cross-Lingual-IR](./Cross-Lingual-IR/README.md)                 | 0      |
+| [Recommendation-Retrieval](./Recommendation-Retrieval/README.md) | 0      |
+| [Dense-Retrieval](./Dense-Retrieval/README.md)                   | 0      |
 
 ## 📖 BibTeX
 

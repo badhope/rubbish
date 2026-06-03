@@ -9,7 +9,13 @@
   "doi": "10.1016/j.annals.2025.104003",
   "url": "https://doi.org/10.1016/j.annals.2025.104003",
   "abstract": "Examines the role of large language models (LLMs) in tourism scholarship, analyzing whether AI serves as a support tool, substitute for human researchers, or represents an entirely new paradigm for tourism research methodology.",
-  "keywords": ["large language models", "tourism research", "AI", "academic integrity", "research methodology"],
+  "keywords": [
+    "large language models",
+    "tourism research",
+    "AI",
+    "academic integrity",
+    "research methodology"
+  ],
   "category": "tourism-hospitality",
   "submitted_by": "ScholarLib-EM",
   "date_added": "2026-05-18"

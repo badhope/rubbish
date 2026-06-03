@@ -8,16 +8,16 @@
 
 ## 📊 论文统计 / Paper Statistics
 
-| 子方向 | 论文数 |
-|--------|--------|
-| [Model-Free-RL](./Model-Free-RL/README.md) | 0 |
-| [Model-Based-RL](./Model-Based-RL/README.md) | 0 |
-| [Multi-Agent-RL](./Multi-Agent-RL/README.md) | 0 |
-| [Imitation-Learning](./Imitation-Learning/README.md) | 0 |
-| [Inverse-RL](./Inverse-RL/README.md) | 0 |
-| [Reward-Shaping](./Reward-Shaping/README.md) | 0 |
-| [Exploration-Exploitation](./Exploration-Exploitation/README.md) | 0 |
-| [Offline-RL](./Offline-RL/README.md) | 0 |
+| 子方向                                                           | 论文数 |
+| ---------------------------------------------------------------- | ------ |
+| [Model-Free-RL](./Model-Free-RL/README.md)                       | 0      |
+| [Model-Based-RL](./Model-Based-RL/README.md)                     | 0      |
+| [Multi-Agent-RL](./Multi-Agent-RL/README.md)                     | 0      |
+| [Imitation-Learning](./Imitation-Learning/README.md)             | 0      |
+| [Inverse-RL](./Inverse-RL/README.md)                             | 0      |
+| [Reward-Shaping](./Reward-Shaping/README.md)                     | 0      |
+| [Exploration-Exploitation](./Exploration-Exploitation/README.md) | 0      |
+| [Offline-RL](./Offline-RL/README.md)                             | 0      |
 
 ## 📖 BibTeX
 
