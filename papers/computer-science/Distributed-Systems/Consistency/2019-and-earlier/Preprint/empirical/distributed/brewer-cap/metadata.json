@@ -1,0 +1,26 @@
+{
+  "title": "Towards Robust Distributed Systems",
+  "authors": [
+    "Eric A. Brewer"
+  ],
+  "year": 2000,
+  "journal": "ACM PODC",
+  "journal_tier": "-",
+  "volume": "2000",
+  "number": null,
+  "pages": null,
+  "doi": "10.1145/343477.343502",
+  "url": "https://dl.acm.org/doi/10.1145/343477.343502",
+  "abstract": "The CAP theorem is introduced.",
+  "keywords": [
+    "cap",
+    "consistency"
+  ],
+  "category": "Consistency",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://dl.acm.org/doi/10.1145/343477.343502"
+}

@@ -1,0 +1,30 @@
+{
+  "title": "Conservative Q-Learning for Offline Reinforcement Learning",
+  "authors": [
+    "Aviral Kumar",
+    "Aurick Zhou",
+    "George Tucker",
+    "Sergey Levine"
+  ],
+  "year": 2020,
+  "journal": "ICML",
+  "journal_tier": "ICML",
+  "volume": "2020",
+  "number": null,
+  "pages": null,
+  "doi": "10.48550/arXiv.2006.04779",
+  "url": "https://arxiv.org/abs/2006.04779",
+  "abstract": "We propose Conservative Q-Learning a simple offline RL algorithm that learns a conservative Q-function to avoid overestimation on out-of-distribution actions.",
+  "keywords": [
+    "offline rl",
+    "cql",
+    "batch rl"
+  ],
+  "category": "Offline-RL",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/2006.04779"
+}

@@ -1,0 +1,31 @@
+{
+  "title": "Large-scale cluster management at Google with Borg",
+  "authors": [
+    "Abhishek Verma",
+    "Luis Pedrosa",
+    "Madhukar R. Korupolu",
+    "David Oppenheimer",
+    "Eric Tune",
+    "John Wilkes"
+  ],
+  "year": 2014,
+  "journal": "SIGOPS",
+  "journal_tier": "SOSP",
+  "volume": "2015",
+  "number": null,
+  "pages": null,
+  "doi": "10.1145/2741948.2741964",
+  "url": "https://dl.acm.org/doi/10.1145/2741948.2741964",
+  "abstract": "Google Borg is a large-scale cluster manager.",
+  "keywords": [
+    "borg",
+    "cluster"
+  ],
+  "category": "Scheduling",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://dl.acm.org/doi/10.1145/2741948.2741964"
+}

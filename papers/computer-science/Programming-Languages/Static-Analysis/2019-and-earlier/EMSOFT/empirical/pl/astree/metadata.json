@@ -1,0 +1,32 @@
+{
+  "title": "A Static Analyzer for Large Safety-Critical Software",
+  "authors": [
+    "Patrick Cousot",
+    "Radhia Cousot",
+    "Jerome Feret",
+    "Laurent Mauborgne",
+    "Antoine Mine",
+    "David Monniaux",
+    "Xavier Rival"
+  ],
+  "year": 2002,
+  "journal": "PLDI",
+  "journal_tier": "EMSOFT",
+  "volume": "2006",
+  "number": null,
+  "pages": null,
+  "doi": "10.1145/1133255.1134024",
+  "url": "https://www.di.ens.fr/~cousot/PLDI06/",
+  "abstract": "A static analyzer by abstract interpretation.",
+  "keywords": [
+    "astree",
+    "static-analysis"
+  ],
+  "category": "Static-Analysis",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://www.di.ens.fr/~cousot/PLDI06/"
+}

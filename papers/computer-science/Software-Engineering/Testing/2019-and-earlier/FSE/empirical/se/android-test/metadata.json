@@ -1,0 +1,29 @@
+{
+  "title": "A Field Study of API Learning Obstacles",
+  "authors": [
+    "Martin P. Robillard",
+    "Jonas Boustedt",
+    "Andreas Zeller",
+    "Klaas W. N. A. V. Lethbridge"
+  ],
+  "year": 2012,
+  "journal": "Empirical Software Engineering",
+  "journal_tier": "FSE",
+  "volume": "2014",
+  "number": null,
+  "pages": null,
+  "doi": "10.1007/s10664-013-9246-6",
+  "url": "https://link.springer.com/article/10.1007/s10664-013-9246-6",
+  "abstract": "We study API learning obstacles in software engineering.",
+  "keywords": [
+    "api-learning",
+    "se"
+  ],
+  "category": "Testing",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://link.springer.com/article/10.1007/s10664-013-9246-6"
+}

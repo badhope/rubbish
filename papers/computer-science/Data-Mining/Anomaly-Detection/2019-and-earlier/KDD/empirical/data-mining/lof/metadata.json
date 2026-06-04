@@ -1,0 +1,29 @@
+{
+  "title": "LOF: Identifying Density-Based Local Outliers",
+  "authors": [
+    "Markus M. Breunig",
+    "Hans-Peter Kriegel",
+    "Raymond T. Ng",
+    "Jörg Sander"
+  ],
+  "year": 2000,
+  "journal": "ACM Sigmod Record",
+  "journal_tier": "KDD",
+  "volume": "29",
+  "number": "2",
+  "pages": "93-104",
+  "doi": "10.1145/335191.335388",
+  "url": "https://dl.acm.org/doi/10.1145/335191.335388",
+  "abstract": "We propose LOF a local outlier factor for identifying density-based outliers.",
+  "keywords": [
+    "lof",
+    "anomaly"
+  ],
+  "category": "Anomaly-Detection",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://dl.acm.org/doi/10.1145/335191.335388"
+}

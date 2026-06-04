@@ -1,0 +1,31 @@
+{
+  "title": "Neural Collaborative Filtering",
+  "authors": [
+    "Xiangnan He",
+    "Lizi Liao",
+    "Hanwang Zhang",
+    "Liqiang Nie",
+    "Xia Hu",
+    "Tat-Seng Chua"
+  ],
+  "year": 2017,
+  "journal": "WWW",
+  "journal_tier": "WSDM",
+  "volume": "2017",
+  "number": null,
+  "pages": "173-182",
+  "doi": "10.1145/3038912.3052569",
+  "url": "https://arxiv.org/abs/1708.05031",
+  "abstract": "We present neural collaborative filtering.",
+  "keywords": [
+    "neumf",
+    "deep-learning"
+  ],
+  "category": "Deep-Learning",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/1708.05031"
+}

@@ -1,0 +1,33 @@
+{
+  "title": "Spectre Attacks: Exploiting Speculative Execution",
+  "authors": [
+    "Paul Kocher",
+    "Jann Horn",
+    "Anders Fogh",
+    "Daniel Genkin",
+    "Daniel Gruss",
+    "Werner Haas",
+    "Mike Hamburg",
+    "et al."
+  ],
+  "year": 2019,
+  "journal": "IEEE S&P",
+  "journal_tier": "USENIX",
+  "volume": "2019",
+  "number": null,
+  "pages": "1-19",
+  "doi": "10.1109/SP.2019.00002",
+  "url": "https://ieeexplore.ieee.org/document/8835233",
+  "abstract": "We present a new class of microarchitectural attacks that exploit speculative execution.",
+  "keywords": [
+    "spectre",
+    "security"
+  ],
+  "category": "Systems-Security",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://ieeexplore.ieee.org/document/8835233"
+}

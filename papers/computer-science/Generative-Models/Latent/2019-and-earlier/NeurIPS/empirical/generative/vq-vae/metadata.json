@@ -1,0 +1,28 @@
+{
+  "title": "Neural Discrete Representation Learning",
+  "authors": [
+    "Aaron van den Oord",
+    "Oriol Vinyals",
+    "Koray Kavukcuoglu"
+  ],
+  "year": 2016,
+  "journal": "NeurIPS",
+  "journal_tier": "NeurIPS",
+  "volume": "2017",
+  "number": null,
+  "pages": null,
+  "doi": "10.48550/arXiv.1711.00937",
+  "url": "https://arxiv.org/abs/1711.00937",
+  "abstract": "We introduce a method to learn discrete representations of data using vector quantization.",
+  "keywords": [
+    "vq-vae",
+    "discrete representations"
+  ],
+  "category": "Latent",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/1711.00937"
+}

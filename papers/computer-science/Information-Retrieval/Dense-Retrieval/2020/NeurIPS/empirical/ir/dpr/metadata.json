@@ -1,0 +1,33 @@
+{
+  "title": "Dense Passage Retrieval for Open-Domain Question Answering",
+  "authors": [
+    "Vladimir Karpukhin",
+    "Barlas Oğuz",
+    "Sewon Min",
+    "Patrick Lewis",
+    "Ledell Wu",
+    "Sergey Edunov",
+    "Danqi Chen",
+    "Wen-tau Yih"
+  ],
+  "year": 2020,
+  "journal": "NeurIPS",
+  "journal_tier": "NeurIPS",
+  "volume": "2020",
+  "number": null,
+  "pages": null,
+  "doi": "10.48550/arXiv.2004.04906",
+  "url": "https://arxiv.org/abs/2004.04906",
+  "abstract": "We present DPR for open-domain question answering.",
+  "keywords": [
+    "dpr",
+    "dense-retrieval"
+  ],
+  "category": "Dense-Retrieval",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/2004.04906"
+}

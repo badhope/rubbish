@@ -1,0 +1,29 @@
+{
+  "title": "ImageNet Classification with Deep Convolutional Neural Networks",
+  "authors": [
+    "Alex Krizhevsky",
+    "Ilya Sutskever",
+    "Geoffrey E. Hinton"
+  ],
+  "year": 2012,
+  "journal": "NeurIPS",
+  "journal_tier": "NeurIPS",
+  "volume": "2012",
+  "number": null,
+  "pages": "1097-1105",
+  "doi": "10.1145/3065386",
+  "url": "https://dl.acm.org/doi/10.1145/3065386",
+  "abstract": "We trained a large deep convolutional neural network to classify 1.2 million high-resolution images in the ImageNet LSVRC-2010 contest into 1000 different classes.",
+  "keywords": [
+    "alexnet",
+    "imagenet",
+    "deep learning"
+  ],
+  "category": "Image-Classification",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://dl.acm.org/doi/10.1145/3065386"
+}

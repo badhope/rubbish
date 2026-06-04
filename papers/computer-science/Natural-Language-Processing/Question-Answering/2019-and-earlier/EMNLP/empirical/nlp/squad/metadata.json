@@ -1,0 +1,29 @@
+{
+  "title": "SQuAD: 100000+ Questions for Machine Comprehension of Text",
+  "authors": [
+    "Pranav Rajpurkar",
+    "Jian Zhang",
+    "Konstantin Lopyrev",
+    "Percy Liang"
+  ],
+  "year": 2016,
+  "journal": "EMNLP",
+  "journal_tier": "EMNLP",
+  "volume": "2016",
+  "number": null,
+  "pages": "2383-2392",
+  "doi": "10.18653/v1/D16-1264",
+  "url": "https://aclanthology.org/D16-1264/",
+  "abstract": "We introduce the Stanford Question Answering Dataset SQuAD a new reading comprehension dataset consisting of questions posed by crowdworkers on a set of Wikipedia articles.",
+  "keywords": [
+    "question answering",
+    "squad"
+  ],
+  "category": "Question-Answering",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://aclanthology.org/D16-1264/"
+}

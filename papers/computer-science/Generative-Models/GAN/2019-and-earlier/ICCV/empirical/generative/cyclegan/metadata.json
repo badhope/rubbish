@@ -1,0 +1,29 @@
+{
+  "title": "Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks",
+  "authors": [
+    "Jun-Yan Zhu",
+    "Taesung Park",
+    "Phillip Isola",
+    "Alexei A. Efros"
+  ],
+  "year": 2017,
+  "journal": "ICCV",
+  "journal_tier": "ICCV",
+  "volume": "2017",
+  "number": null,
+  "pages": "2223-2232",
+  "doi": "10.1109/ICCV.2017.244",
+  "url": "https://arxiv.org/abs/1703.10593",
+  "abstract": "We present an approach for learning to translate an image from a source domain to a target domain without paired examples.",
+  "keywords": [
+    "cyclegan",
+    "image-to-image"
+  ],
+  "category": "GAN",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/1703.10593"
+}

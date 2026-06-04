@@ -1,0 +1,33 @@
+{
+  "title": "A variational eigenvalue solver on a quantum processor",
+  "authors": [
+    "Alberto Peruzzo",
+    "Jarrod McClean",
+    "Peter Shadbolt",
+    "Man-Hong Yung",
+    "Xiao-Qi Zhou",
+    "Peter J. Love",
+    "Alán Aspuru-Guzik",
+    "Jeremy L. O'Brien"
+  ],
+  "year": 2014,
+  "journal": "Nature Communications",
+  "journal_tier": "Nat Phys",
+  "volume": "5",
+  "number": "1",
+  "pages": "4213",
+  "doi": "10.1038/ncomms5213",
+  "url": "https://www.nature.com/articles/ncomms5213",
+  "abstract": "We propose a variational eigenvalue solver on a quantum processor.",
+  "keywords": [
+    "vqe",
+    "variational"
+  ],
+  "category": "VQE",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://www.nature.com/articles/ncomms5213"
+}

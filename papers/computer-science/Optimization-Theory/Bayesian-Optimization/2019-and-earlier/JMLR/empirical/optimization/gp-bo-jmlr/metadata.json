@@ -1,0 +1,27 @@
+{
+  "title": "Practical Bayesian Optimization of Machine Learning Algorithms",
+  "authors": [
+    "Jasper Snoek",
+    "Hugo Larochelle",
+    "Ryan P. Adams"
+  ],
+  "year": 2014,
+  "journal": "ICML",
+  "journal_tier": "JMLR",
+  "volume": "2012",
+  "number": null,
+  "pages": null,
+  "doi": "10.5555/jmlr-bayopt",
+  "url": "https://arxiv.org/abs/1206.2944",
+  "abstract": "Bayesian optimization for hyperparameter tuning.",
+  "keywords": [
+    "bayesian-opt"
+  ],
+  "category": "Bayesian-Optimization",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/1206.2944"
+}

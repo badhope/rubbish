@@ -1,0 +1,29 @@
+{
+  "title": "On the importance of initialization and momentum in deep learning",
+  "authors": [
+    "Ilya Sutskever",
+    "James Martens",
+    "George Dahl",
+    "Geoffrey Hinton"
+  ],
+  "year": 2014,
+  "journal": "NeurIPS",
+  "journal_tier": "NIPS",
+  "volume": "2013",
+  "number": null,
+  "pages": null,
+  "doi": "10.48550/arXiv.1206.6486",
+  "url": "https://arxiv.org/abs/1206.6486",
+  "abstract": "We investigate the role of momentum and initialization in deep learning.",
+  "keywords": [
+    "momentum",
+    "sgd"
+  ],
+  "category": "Stochastic",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/1206.6486"
+}

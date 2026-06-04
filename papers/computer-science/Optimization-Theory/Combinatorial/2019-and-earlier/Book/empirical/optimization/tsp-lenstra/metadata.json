@@ -1,0 +1,29 @@
+{
+  "title": "The Traveling Salesman Problem: A Computational Study",
+  "authors": [
+    "David L. Applegate",
+    "Robert E. Bixby",
+    "Vasek Chvatal",
+    "William J. Cook"
+  ],
+  "year": 1998,
+  "journal": "Princeton University Press",
+  "journal_tier": "Book",
+  "volume": "2006",
+  "number": null,
+  "pages": "1-608",
+  "doi": "10.1515/9781400841103",
+  "url": "https://press.princeton.edu/books/paperback/9780691129938/the-traveling-salesman-problem",
+  "abstract": "A comprehensive study of the TSP.",
+  "keywords": [
+    "tsp",
+    "combinatorial"
+  ],
+  "category": "Combinatorial",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://press.princeton.edu/books/paperback/9780691129938/the-traveling-salesman-problem"
+}

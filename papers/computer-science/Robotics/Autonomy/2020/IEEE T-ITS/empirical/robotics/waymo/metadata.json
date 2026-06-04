@@ -1,0 +1,30 @@
+{
+  "title": "Waymo Open Dataset: Scalable Self-Driving",
+  "authors": [
+    "Pei Sun",
+    "Henrik Kretzschmar",
+    "Xerxes Dotiwalla",
+    "Pauline Luc",
+    "et al."
+  ],
+  "year": 2020,
+  "journal": "ICRA",
+  "journal_tier": "IEEE T-ITS",
+  "volume": "2020",
+  "number": null,
+  "pages": null,
+  "doi": "10.1109/ICRA40945.2020.9197196",
+  "url": "https://arxiv.org/abs/1912.04838",
+  "abstract": "We present the Waymo Open Dataset for scalable self-driving research.",
+  "keywords": [
+    "waymo",
+    "autonomy"
+  ],
+  "category": "Autonomy",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/1912.04838"
+}

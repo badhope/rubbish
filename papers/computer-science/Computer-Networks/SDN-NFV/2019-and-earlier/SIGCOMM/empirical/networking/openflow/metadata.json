@@ -1,0 +1,33 @@
+{
+  "title": "OpenFlow: Enabling Innovation in Campus Networks",
+  "authors": [
+    "Nick McKeown",
+    "Tom Anderson",
+    "Hari Balakrishnan",
+    "Guru Parulkar",
+    "Larry Peterson",
+    "Jennifer Rexford",
+    "Scott Shenker",
+    "Jonathan Turner"
+  ],
+  "year": 2008,
+  "journal": "SIGCOMM CCR",
+  "journal_tier": "SIGCOMM",
+  "volume": "38",
+  "number": "2",
+  "pages": "69-74",
+  "doi": "10.1145/1355734.1355746",
+  "url": "https://www.cs.princeton.edu/courses/archive/fall10/cos561/papers/openflow.pdf",
+  "abstract": "We propose OpenFlow a way for researchers to run experimental protocols in campus networks.",
+  "keywords": [
+    "openflow",
+    "sdn"
+  ],
+  "category": "SDN-NFV",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://www.cs.princeton.edu/courses/archive/fall10/cos561/papers/openflow.pdf"
+}

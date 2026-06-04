@@ -1,0 +1,26 @@
+{
+  "title": "Web Content Accessibility Guidelines WCAG 2.1",
+  "authors": [
+    "W3C"
+  ],
+  "year": 2019,
+  "journal": "W3C Recommendation",
+  "journal_tier": "Preprint",
+  "volume": "2018",
+  "number": null,
+  "pages": "1-134",
+  "doi": "10.5555/w3c-wcag21",
+  "url": "https://www.w3.org/TR/WCAG21/",
+  "abstract": "WCAG 2.1 is the latest standard for web accessibility.",
+  "keywords": [
+    "wcag",
+    "accessibility"
+  ],
+  "category": "Accessibility",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://www.w3.org/TR/WCAG21/"
+}

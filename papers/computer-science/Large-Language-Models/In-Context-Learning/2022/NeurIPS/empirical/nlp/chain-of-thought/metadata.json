@@ -1,0 +1,35 @@
+{
+  "title": "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models",
+  "authors": [
+    "Jason Wei",
+    "Xuezhi Wang",
+    "Dale Schuurmans",
+    "Maarten Bosma",
+    "Brian Ichter",
+    "Fei Xia",
+    "Ed H. Chi",
+    "Quoc V. Le",
+    "Denny Zhou"
+  ],
+  "year": 2022,
+  "journal": "NeurIPS",
+  "journal_tier": "NeurIPS",
+  "volume": "2022",
+  "number": null,
+  "pages": "24824-24837",
+  "doi": "10.48550/arXiv.2201.11903",
+  "url": "https://arxiv.org/abs/2201.11903",
+  "abstract": "We explore how generating a chain of thought can improve the reasoning ability of large language models.",
+  "keywords": [
+    "chain-of-thought",
+    "reasoning",
+    "prompting"
+  ],
+  "category": "In-Context-Learning",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/2201.11903"
+}

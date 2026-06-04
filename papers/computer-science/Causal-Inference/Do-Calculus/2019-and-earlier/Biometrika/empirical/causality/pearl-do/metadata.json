@@ -1,0 +1,28 @@
+{
+  "title": "Causal Diagrams for Empirical Research",
+  "authors": [
+    "Peter Spirtes",
+    "Clark N. Glymour",
+    "Richard Scheines"
+  ],
+  "year": 1995,
+  "journal": "Biometrika",
+  "journal_tier": "Biometrika",
+  "volume": "82",
+  "number": "4",
+  "pages": "669-688",
+  "doi": "10.1093/biomet/82.4.669",
+  "url": "https://academic.oup.com/biomet/article/82/4/669/252363",
+  "abstract": "We discuss algorithms for causal inference using directed acyclic graphs.",
+  "keywords": [
+    "causal-discovery",
+    "do-calculus"
+  ],
+  "category": "Do-Calculus",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://academic.oup.com/biomet/article/82/4/669/252363"
+}

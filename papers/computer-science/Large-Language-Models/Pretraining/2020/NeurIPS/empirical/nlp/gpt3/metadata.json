@@ -1,0 +1,34 @@
+{
+  "title": "Language Models are Few-Shot Learners",
+  "authors": [
+    "Tom B. Brown",
+    "Benjamin Mann",
+    "Nick Ryder",
+    "Melanie Subbiah",
+    "Jared Kaplan",
+    "Prafulla Dhariwal",
+    "Arvind Neelakantan",
+    "et al."
+  ],
+  "year": 2020,
+  "journal": "NeurIPS",
+  "journal_tier": "NeurIPS",
+  "volume": "2020",
+  "number": null,
+  "pages": "1877-1901",
+  "doi": "10.48550/arXiv.2005.14165",
+  "url": "https://arxiv.org/abs/2005.14165",
+  "abstract": "We train GPT-3 an autoregressive language model with 175 billion parameters and test its performance in the few-shot setting.",
+  "keywords": [
+    "gpt-3",
+    "few-shot",
+    "in-context learning"
+  ],
+  "category": "Pretraining",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/2005.14165"
+}

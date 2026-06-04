@@ -1,0 +1,34 @@
+{
+  "title": "Human-level control through deep reinforcement learning",
+  "authors": [
+    "Volodymyr Mnih",
+    "Koray Kavukcuoglu",
+    "David Silver",
+    "Andrei A. Rusu",
+    "Joel Veness",
+    "Marc G. Bellemare",
+    "Alex Graves",
+    "et al."
+  ],
+  "year": 2015,
+  "journal": "Nature",
+  "journal_tier": "Nature",
+  "volume": "518",
+  "number": "7540",
+  "pages": "529-533",
+  "doi": "10.1038/nature14236",
+  "url": "https://www.nature.com/articles/nature14236",
+  "abstract": "We propose a deep Q-network that combines reinforcement learning with deep neural networks and demonstrate human-level performance on Atari 2600 games.",
+  "keywords": [
+    "deep reinforcement learning",
+    "dqn",
+    "atari"
+  ],
+  "category": "Model-Free-RL",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://www.nature.com/articles/nature14236"
+}

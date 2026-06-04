@@ -1,0 +1,32 @@
+{
+  "title": "Language Models are Unsupervised Multitask Learners",
+  "authors": [
+    "Alec Radford",
+    "Jeffrey Wu",
+    "Rewon Child",
+    "David Luan",
+    "Dario Amodei",
+    "Ilya Sutskever"
+  ],
+  "year": 2019,
+  "journal": "OpenAI Blog",
+  "journal_tier": "Preprint",
+  "volume": "2019",
+  "number": null,
+  "pages": "1-24",
+  "doi": "10.48550/arXiv.1911.02116",
+  "url": "https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf",
+  "abstract": "We demonstrate that language models begin to learn these tasks without any explicit supervision when trained on a new dataset of millions of webpages called WebText.",
+  "keywords": [
+    "gpt-2",
+    "language model",
+    "zero-shot"
+  ],
+  "category": "Pretraining",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf"
+}

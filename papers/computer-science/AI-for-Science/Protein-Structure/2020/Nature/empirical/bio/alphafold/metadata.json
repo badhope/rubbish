@@ -1,0 +1,33 @@
+{
+  "title": "Highly accurate protein structure prediction with AlphaFold",
+  "authors": [
+    "John Jumper",
+    "Richard Evans",
+    "Alexander Pritzel",
+    "Tim Green",
+    "Michael Figurnov",
+    "Olaf Ronneberger",
+    "Demis Hassabis",
+    "et al."
+  ],
+  "year": 2020,
+  "journal": "Nature",
+  "journal_tier": "Nature",
+  "volume": "596",
+  "number": "7873",
+  "pages": "583-589",
+  "doi": "10.1038/s41586-021-03819-2",
+  "url": "https://www.nature.com/articles/s41586-021-03819-2",
+  "abstract": "We provide the first computational method that can regularly predict protein structures with atomic accuracy even where no similar structure is known.",
+  "keywords": [
+    "alphafold",
+    "protein structure"
+  ],
+  "category": "Protein-Structure",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://www.nature.com/articles/s41586-021-03819-2"
+}

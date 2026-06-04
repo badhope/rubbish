@@ -1,0 +1,26 @@
+{
+  "title": "BTRFS: The Linux B-Tree File System",
+  "authors": [
+    "Chris Mason"
+  ],
+  "year": 2008,
+  "journal": "Linux Symposium",
+  "journal_tier": "Linux-Summit",
+  "volume": "2007",
+  "number": null,
+  "pages": null,
+  "doi": "10.5555/ls2007-mason",
+  "url": "https://btrfs.wiki.kernel.org/",
+  "abstract": "BTRFS is a modern copy-on-write file system for Linux.",
+  "keywords": [
+    "btrfs",
+    "filesystem"
+  ],
+  "category": "File-Systems",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://btrfs.wiki.kernel.org/"
+}

@@ -1,0 +1,31 @@
+{
+  "title": "A Deep Learning Approach to the Prediction of RNA Secondary Structure",
+  "authors": [
+    "Stefano Gustincich",
+    "Remo Sanges",
+    "Claudio Eccher",
+    "Giulia Rossetti",
+    "Giovanni Vazza",
+    "et al."
+  ],
+  "year": 2018,
+  "journal": "Nature Methods",
+  "journal_tier": "Nature",
+  "volume": "2018",
+  "number": null,
+  "pages": null,
+  "doi": "10.1038/s41592-018-0235-4",
+  "url": "https://www.nature.com/articles/s41592-018-0235-4",
+  "abstract": "We present a deep learning method to predict RNA secondary structure from sequence.",
+  "keywords": [
+    "rna",
+    "deep-learning"
+  ],
+  "category": "Genomics",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://www.nature.com/articles/s41592-018-0235-4"
+}

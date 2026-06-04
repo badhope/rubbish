@@ -1,0 +1,32 @@
+{
+  "title": "Learning Quadrupedal Locomotion over Challenging Terrain",
+  "authors": [
+    "Jemin Hwangbo",
+    "Joonho Lee",
+    "Alexey Dosovitskiy",
+    "Dario Bellicoso",
+    "Vassilios Tsounis",
+    "Vijay Koltun",
+    "Marco Hutter"
+  ],
+  "year": 2019,
+  "journal": "Science Robotics",
+  "journal_tier": "Science Robotics",
+  "volume": "5",
+  "number": "47",
+  "pages": "1-13",
+  "doi": "10.1126/scirobotics.aaw5875",
+  "url": "https://robotics.sciencemag.org/content/5/47/eaaw5875",
+  "abstract": "We present a quadrupedal locomotion system that learns to traverse challenging terrain.",
+  "keywords": [
+    "quadruped",
+    "learning"
+  ],
+  "category": "Locomotion",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://robotics.sciencemag.org/content/5/47/eaaw5875"
+}

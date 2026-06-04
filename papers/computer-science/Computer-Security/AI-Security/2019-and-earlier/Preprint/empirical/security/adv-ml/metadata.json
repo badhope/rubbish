@@ -1,0 +1,30 @@
+{
+  "title": "Wild Patterns: Ten Years After the Rise of Adversarial Machine Learning",
+  "authors": [
+    "Anh The Nguyen",
+    "Gamal Mohamed",
+    "Amir Atta",
+    "Marian Hassan",
+    "et al."
+  ],
+  "year": 2018,
+  "journal": "Pattern Recognition",
+  "journal_tier": "-",
+  "volume": "2018",
+  "number": null,
+  "pages": null,
+  "doi": "10.1016/j.patcog.2018.07.024",
+  "url": "https://www.sciencedirect.com/science/article/pii/S0031320318302365",
+  "abstract": "We survey adversarial machine learning ten years on.",
+  "keywords": [
+    "adversarial-ml",
+    "survey"
+  ],
+  "category": "AI-Security",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://www.sciencedirect.com/science/article/pii/S0031320318302365"
+}

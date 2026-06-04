@@ -1,0 +1,28 @@
+{
+  "title": "Fully Convolutional Networks for Semantic Segmentation",
+  "authors": [
+    "Jonathan Long",
+    "Evan Shelhamer",
+    "Trevor Darrell"
+  ],
+  "year": 2015,
+  "journal": "CVPR",
+  "journal_tier": "CVPR",
+  "volume": "2015",
+  "number": null,
+  "pages": "3431-3440",
+  "doi": "10.1109/CVPR.2015.7298965",
+  "url": "https://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Long_Fully_Convolutional_Networks_2015_paper.pdf",
+  "abstract": "We adapt contemporary classification networks into fully convolutional networks and transfer their learned representations to the segmentation task.",
+  "keywords": [
+    "fcn",
+    "semantic segmentation"
+  ],
+  "category": "Semantic-Segmentation",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Long_Fully_Convolutional_Networks_2015_paper.pdf"
+}

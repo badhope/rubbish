@@ -1,0 +1,31 @@
+{
+  "title": "Proximal Policy Optimization Algorithms",
+  "authors": [
+    "John Schulman",
+    "Filip Wolski",
+    "Prafulla Dhariwal",
+    "Alec Radford",
+    "Oleg Klimov"
+  ],
+  "year": 2017,
+  "journal": "NeurIPS",
+  "journal_tier": "NeurIPS",
+  "volume": "2017",
+  "number": null,
+  "pages": null,
+  "doi": "10.48550/arXiv.1707.06347",
+  "url": "https://arxiv.org/abs/1707.06347",
+  "abstract": "We propose a new family of policy gradient methods for reinforcement learning which alternate between sampling data and optimizing a surrogate objective.",
+  "keywords": [
+    "ppo",
+    "policy gradient",
+    "reinforcement learning"
+  ],
+  "category": "Model-Free-RL",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/1707.06347"
+}

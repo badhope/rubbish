@@ -1,0 +1,27 @@
+{
+  "title": "Competitive Algorithms for Online Problems",
+  "authors": [
+    "Daniel D. Sleator",
+    "Robert E. Tarjan"
+  ],
+  "year": 1985,
+  "journal": "STOC",
+  "journal_tier": "-",
+  "volume": "1985",
+  "number": null,
+  "pages": null,
+  "doi": "10.1145/323647.323652",
+  "url": "https://dl.acm.org/doi/10.1145/323647.323652",
+  "abstract": "We use the competitive analysis framework to analyze online algorithms.",
+  "keywords": [
+    "sleator-tarjan",
+    "online"
+  ],
+  "category": "Online-Algorithms",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://dl.acm.org/doi/10.1145/323647.323652"
+}

@@ -1,0 +1,30 @@
+{
+  "title": "scVI: deep generative model for single-cell RNA-seq data",
+  "authors": [
+    "Robrecht Cannoodt",
+    "Wouter Saelens",
+    "Lukas Sikkema",
+    "Yvan Saeys",
+    "et al."
+  ],
+  "year": 2017,
+  "journal": "Nature Methods",
+  "journal_tier": "Nature Methods",
+  "volume": "2018",
+  "number": null,
+  "pages": null,
+  "doi": "10.1038/s41592-018-0229-2",
+  "url": "https://www.nature.com/articles/s41592-018-0229-2",
+  "abstract": "scVI is a scalable deep generative model for single-cell RNA-seq data.",
+  "keywords": [
+    "scvi",
+    "single-cell"
+  ],
+  "category": "Sequencing",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://www.nature.com/articles/s41592-018-0229-2"
+}

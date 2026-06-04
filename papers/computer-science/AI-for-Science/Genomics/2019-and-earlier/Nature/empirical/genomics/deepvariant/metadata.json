@@ -1,0 +1,33 @@
+{
+  "title": "A universal SNP and small-indel variant caller using deep neural networks",
+  "authors": [
+    "Ryan Poplin",
+    "Pieter-Chang Chang",
+    "David Alexander",
+    "Scott Schwartz",
+    "Thomas Colthurst",
+    "Alexander Ku",
+    "Daniel Newburger",
+    "et al."
+  ],
+  "year": 2019,
+  "journal": "Nature Biotechnology",
+  "journal_tier": "Nature",
+  "volume": "36",
+  "number": "10",
+  "pages": "983-987",
+  "doi": "10.1038/nbt.4235",
+  "url": "https://www.nature.com/articles/nbt.4235",
+  "abstract": "We present DeepVariant a deep convolutional neural network for variant calling from next-generation DNA sequencing data.",
+  "keywords": [
+    "deepvariant",
+    "genomics"
+  ],
+  "category": "Genomics",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://www.nature.com/articles/nbt.4235"
+}

@@ -1,0 +1,34 @@
+{
+  "title": "Training Language Models to Follow Instructions with Human Feedback",
+  "authors": [
+    "Long Ouyang",
+    "Jeff Wu",
+    "Xu Jiang",
+    "Diogo Almeida",
+    "Carroll L. Wainwright",
+    "Pamela Mishkin",
+    "Chong Zhang",
+    "et al."
+  ],
+  "year": 2022,
+  "journal": "NeurIPS",
+  "journal_tier": "NeurIPS",
+  "volume": "2022",
+  "number": null,
+  "pages": "27730-27744",
+  "doi": "10.48550/arXiv.2203.02155",
+  "url": "https://arxiv.org/abs/2203.02155",
+  "abstract": "We show that a 1.3B-parameter InstructGPT model is preferred to outputs from a 175B GPT-3 model.",
+  "keywords": [
+    "rlhf",
+    "instruction following",
+    "alignment"
+  ],
+  "category": "Alignment",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/2203.02155"
+}

@@ -1,0 +1,34 @@
+{
+  "title": "Bigtable: A Distributed Storage System for Structured Data",
+  "authors": [
+    "Fay Chang",
+    "Jeffrey Dean",
+    "Sanjay Ghemawat",
+    "Wilson C. Hsieh",
+    "Deborah A. Wallach",
+    "Mike Burrows",
+    "Tushar Chandra",
+    "Andrew Fikes",
+    "Robert E. Gruber"
+  ],
+  "year": 2008,
+  "journal": "ACM Transactions on Computer Systems",
+  "journal_tier": "OSDI",
+  "volume": "26",
+  "number": "2",
+  "pages": "1-26",
+  "doi": "10.1145/1365815.1365816",
+  "url": "https://dl.acm.org/doi/10.1145/1365815.1365816",
+  "abstract": "We describe Bigtable a distributed storage system for managing structured data.",
+  "keywords": [
+    "bigtable",
+    "nosql"
+  ],
+  "category": "NoSQL",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://dl.acm.org/doi/10.1145/1365815.1365816"
+}

@@ -1,0 +1,33 @@
+{
+  "title": "LLaMA: Open and Efficient Foundation Language Models",
+  "authors": [
+    "Hyung Won Chung",
+    "Le Hou",
+    "Shayne Longpre",
+    "Barret Zoph",
+    "Yifei Tang",
+    "William Fedus",
+    "Eric Li",
+    "et al."
+  ],
+  "year": 2022,
+  "journal": "arXiv",
+  "journal_tier": "Preprint",
+  "volume": "2302",
+  "number": null,
+  "pages": null,
+  "doi": "10.48550/arXiv.2302.13971",
+  "url": "https://arxiv.org/abs/2302.13971",
+  "abstract": "We introduce LLaMA a collection of foundation language models ranging from 7B to 65B parameters.",
+  "keywords": [
+    "llama",
+    "open foundation model"
+  ],
+  "category": "Pretraining",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/2302.13971"
+}

@@ -1,0 +1,27 @@
+{
+  "title": "The Encyclopedia of Human-Computer Interaction",
+  "authors": [
+    "Mads Soegaard",
+    "Rikke Friis Dam"
+  ],
+  "year": 2013,
+  "journal": "Interaction Design Foundation",
+  "journal_tier": "ACM Computing Surveys",
+  "volume": "2013",
+  "number": null,
+  "pages": null,
+  "doi": "10.1145/2556288.2557021",
+  "url": "https://www.interaction-design.org/literature",
+  "abstract": "An encyclopedia of human-computer interaction.",
+  "keywords": [
+    "ux",
+    "hci"
+  ],
+  "category": "UX-Research",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://www.interaction-design.org/literature"
+}

@@ -1,0 +1,31 @@
+{
+  "title": "Focal Loss for Dense Object Detection",
+  "authors": [
+    "Tsung-Yi Lin",
+    "Priya Goyal",
+    "Ross Girshick",
+    "Kaiming He",
+    "Piotr Dollár"
+  ],
+  "year": 2017,
+  "journal": "ICCV",
+  "journal_tier": "ICCV",
+  "volume": "2017",
+  "number": null,
+  "pages": "2980-2988",
+  "doi": "10.1109/TPAMI.2018.2858826",
+  "url": "https://arxiv.org/abs/1708.02002",
+  "abstract": "We propose a focal loss that addresses the class imbalance problem during training of dense object detectors.",
+  "keywords": [
+    "focal loss",
+    "retinanet",
+    "object detection"
+  ],
+  "category": "Object-Detection",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/1708.02002"
+}

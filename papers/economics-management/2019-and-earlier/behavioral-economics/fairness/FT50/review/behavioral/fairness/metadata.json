@@ -1,0 +1,27 @@
+{
+  "title": "Fairness and the Theory of Games",
+  "authors": [
+    "Matthew Rabin",
+    "David Schmeidler"
+  ],
+  "year": 2010,
+  "journal": "Econometrica",
+  "journal_tier": "FT50",
+  "volume": "68",
+  "number": "6",
+  "pages": "1621-1717",
+  "doi": "10.1007/978-3-642-51093-0_7",
+  "url": "https://www.jstor.org/stable/2525547",
+  "abstract": "We study fairness in game theory.",
+  "keywords": [
+    "fairness",
+    "behavioral"
+  ],
+  "category": "fairness",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://www.jstor.org/stable/2525547"
+}

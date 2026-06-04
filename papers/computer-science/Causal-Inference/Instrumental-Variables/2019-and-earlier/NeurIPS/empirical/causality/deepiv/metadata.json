@@ -1,0 +1,28 @@
+{
+  "title": "Deep IV: A Flexible Approach for Counterfactual Prediction",
+  "authors": [
+    "Uri Shalit",
+    "Fredrik D. Johansson",
+    "David Sontag"
+  ],
+  "year": 2018,
+  "journal": "NeurIPS",
+  "journal_tier": "NeurIPS",
+  "volume": "2017",
+  "number": null,
+  "pages": null,
+  "doi": "10.48550/arXiv.1611.09548",
+  "url": "https://arxiv.org/abs/1611.09548",
+  "abstract": "We present a method for counterfactual prediction using instrumental variables and deep learning.",
+  "keywords": [
+    "deep-iv",
+    "instrumental"
+  ],
+  "category": "Instrumental-Variables",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/1611.09548"
+}

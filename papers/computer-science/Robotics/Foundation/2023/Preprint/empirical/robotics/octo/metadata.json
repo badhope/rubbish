@@ -1,0 +1,30 @@
+{
+  "title": "Octo: An Open-Source Generalist Robot Policy",
+  "authors": [
+    "Octo Model Team",
+    "Dibya Ghosh",
+    "Hadi Behnia",
+    "Pannag R. Sanketi",
+    "et al."
+  ],
+  "year": 2023,
+  "journal": "arXiv",
+  "journal_tier": "Preprint",
+  "volume": "2405",
+  "number": null,
+  "pages": null,
+  "doi": "10.48550/arXiv.2405.12213",
+  "url": "https://octo-models.github.io/",
+  "abstract": "Octo is an open-source generalist robot policy.",
+  "keywords": [
+    "octo",
+    "foundation"
+  ],
+  "category": "Foundation",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://octo-models.github.io/"
+}

@@ -1,0 +1,29 @@
+{
+  "title": "The Linux Kernel Book",
+  "authors": [
+    "Rémy Card",
+    "Thierry Maire",
+    "Etienne Baudin",
+    "et al."
+  ],
+  "year": 1991,
+  "journal": "O Reilly",
+  "journal_tier": "O Reilly",
+  "volume": "1998",
+  "number": null,
+  "pages": null,
+  "doi": "10.5555/978059",
+  "url": "https://www.oreilly.com/",
+  "abstract": "The Linux kernel book covers the design of the Linux kernel.",
+  "keywords": [
+    "linux",
+    "kernel"
+  ],
+  "category": "Kernels",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://www.oreilly.com/"
+}

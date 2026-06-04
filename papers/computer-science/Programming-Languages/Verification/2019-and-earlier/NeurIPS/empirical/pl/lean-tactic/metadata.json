@@ -1,0 +1,30 @@
+{
+  "title": "An Introduction to Lean",
+  "authors": [
+    "Leonardo de Moura",
+    "Soonho Kong",
+    "Jeremy Avigad",
+    "Floris van Doorn",
+    "Jakob von Raumer"
+  ],
+  "year": 2014,
+  "journal": "ICMS",
+  "journal_tier": "NeurIPS",
+  "volume": "2015",
+  "number": null,
+  "pages": null,
+  "doi": "10.1007/978-3-319-19759-6_2",
+  "url": "https://leanprover.github.io/",
+  "abstract": "An introduction to the Lean theorem prover.",
+  "keywords": [
+    "lean",
+    "verification"
+  ],
+  "category": "Verification",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://leanprover.github.io/"
+}

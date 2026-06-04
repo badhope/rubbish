@@ -1,0 +1,28 @@
+{
+  "title": "DARTS: Differentiable Architecture Search",
+  "authors": [
+    "Hanxiao Liu",
+    "Karen Simonyan",
+    "Yiming Yang"
+  ],
+  "year": 2019,
+  "journal": "NeurIPS",
+  "journal_tier": "ICLR",
+  "volume": "2019",
+  "number": null,
+  "pages": null,
+  "doi": "10.48550/arXiv.1806.09055",
+  "url": "https://arxiv.org/abs/1806.09055",
+  "abstract": "We address the scalability challenge of architecture search by proposing a differentiable architecture search method.",
+  "keywords": [
+    "darts",
+    "nas"
+  ],
+  "category": "Neural-Architecture-Search",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/1806.09055"
+}

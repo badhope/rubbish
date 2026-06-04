@@ -1,0 +1,27 @@
+{
+  "title": "Fast Algorithms for Mining Association Rules in Large Databases",
+  "authors": [
+    "Rakesh Agrawal",
+    "Ramakrishnan Srikant"
+  ],
+  "year": 1994,
+  "journal": "VLDB",
+  "journal_tier": "VLDB",
+  "volume": "1994",
+  "number": null,
+  "pages": "487-499",
+  "doi": "10.1007/978-3-642-48324-4_7",
+  "url": "https://www.vldb.org/conf/1994/P487.PDF",
+  "abstract": "We present the Apriori algorithm for mining frequent itemsets.",
+  "keywords": [
+    "apriori",
+    "frequent-itemsets"
+  ],
+  "category": "Frequent-Patterns",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://www.vldb.org/conf/1994/P487.PDF"
+}

@@ -1,0 +1,30 @@
+{
+  "title": "An End-to-End AutoML System for Data Engineering",
+  "authors": [
+    "Chengliang Dai",
+    "Zhuoye Ding",
+    "Jianlyu Chen",
+    "Yaxin Liu",
+    "et al."
+  ],
+  "year": 2019,
+  "journal": "VLDB",
+  "journal_tier": "VLDB",
+  "volume": "2020",
+  "number": null,
+  "pages": null,
+  "doi": "10.14778/3415478.3415537",
+  "url": "https://www.vldb.org/pvldb/vol13/p2581-dai.pdf",
+  "abstract": "We present Great an end-to-end AutoML system for data engineering.",
+  "keywords": [
+    "great",
+    "data-prep"
+  ],
+  "category": "Data-Preprocessing",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://www.vldb.org/pvldb/vol13/p2581-dai.pdf"
+}

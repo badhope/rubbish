@@ -1,0 +1,29 @@
+{
+  "title": "Causal Inference and the Data-Famine Situation",
+  "authors": [
+    "Kun Zhang",
+    "Biwei Huang",
+    "Jiji Zhang",
+    "Clark Glymour",
+    "Adrian Weller"
+  ],
+  "year": 2007,
+  "journal": "Journal of Machine Learning Research",
+  "journal_tier": "ML",
+  "volume": "18",
+  "number": "1",
+  "pages": "5762-5798",
+  "doi": "10.5555/3122009.3174821",
+  "url": "https://arxiv.org/abs/1611.10291",
+  "abstract": "We discuss recent advances in causal discovery and the data-famine situation.",
+  "keywords": [
+    "causal-discovery"
+  ],
+  "category": "Causal-Discovery",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/1611.10291"
+}

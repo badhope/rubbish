@@ -1,0 +1,28 @@
+{
+  "title": "Generative Adversarial Imitation Learning",
+  "authors": [
+    "Jonathan Ho",
+    "Stefano Ermon"
+  ],
+  "year": 2017,
+  "journal": "NeurIPS",
+  "journal_tier": "NeurIPS",
+  "volume": "2016",
+  "number": null,
+  "pages": null,
+  "doi": "10.48550/arXiv.1606.03476",
+  "url": "https://arxiv.org/abs/1606.03476",
+  "abstract": "We propose a new general framework for directly extracting a policy from data as if it were obtained by reinforcement learning following the expert.",
+  "keywords": [
+    "imitation learning",
+    "gail",
+    "inverse rl"
+  ],
+  "category": "Imitation-Learning",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/1606.03476"
+}

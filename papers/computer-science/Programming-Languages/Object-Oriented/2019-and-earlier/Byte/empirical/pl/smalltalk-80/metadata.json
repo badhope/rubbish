@@ -1,0 +1,27 @@
+{
+  "title": "Smalltalk-80: The Language and its Implementation",
+  "authors": [
+    "Adele Goldberg",
+    "David Robson"
+  ],
+  "year": 1986,
+  "journal": "Byte Magazine",
+  "journal_tier": "Byte",
+  "volume": "1981",
+  "number": null,
+  "pages": null,
+  "doi": "10.5555/smalltalk-80-byte",
+  "url": "https://www.miramontes.com/",
+  "abstract": "Smalltalk is a pure object-oriented programming language.",
+  "keywords": [
+    "smalltalk",
+    "oop"
+  ],
+  "category": "Object-Oriented",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://www.miramontes.com/"
+}

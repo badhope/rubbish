@@ -1,0 +1,27 @@
+{
+  "title": "Unix Time-Sharing System",
+  "authors": [
+    "Dennis M. Ritchie",
+    "Ken Thompson"
+  ],
+  "year": 1972,
+  "journal": "Communications of the ACM",
+  "journal_tier": "Comm ACM",
+  "volume": "17",
+  "number": "7",
+  "pages": "365-375",
+  "doi": "10.1145/361011.361061",
+  "url": "https://dl.acm.org/doi/10.1145/361011.361061",
+  "abstract": "We present the Unix time-sharing system.",
+  "keywords": [
+    "unix",
+    "systems"
+  ],
+  "category": "Systems",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://dl.acm.org/doi/10.1145/361011.361061"
+}

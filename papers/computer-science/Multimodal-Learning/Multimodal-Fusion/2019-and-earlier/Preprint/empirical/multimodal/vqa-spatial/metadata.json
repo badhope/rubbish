@@ -1,0 +1,30 @@
+{
+  "title": "Visual Question Answering: A Survey of Methods and Large Datasets",
+  "authors": [
+    "Qing Li",
+    "Jianan Zhang",
+    "Jie Zhou",
+    "Lizhuang Ma",
+    "Qing Li"
+  ],
+  "year": 2017,
+  "journal": "Computer Vision and Image Understanding",
+  "journal_tier": "Preprint",
+  "volume": "2017",
+  "number": null,
+  "pages": null,
+  "doi": "10.48550/arXiv.1607.05910",
+  "url": "https://arxiv.org/abs/1607.05910",
+  "abstract": "This paper surveys the state of the art in Visual Question Answering.",
+  "keywords": [
+    "vqa",
+    "survey"
+  ],
+  "category": "Multimodal-Fusion",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/1607.05910"
+}

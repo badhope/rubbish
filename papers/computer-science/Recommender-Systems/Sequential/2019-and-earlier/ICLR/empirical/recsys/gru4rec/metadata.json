@@ -1,0 +1,29 @@
+{
+  "title": "Session-based Recommendations with Recurrent Neural Networks",
+  "authors": [
+    "Balázs Hidasi",
+    "Alexandros Karatzoglou",
+    "Linas Baltrunas",
+    "Domonkos Tikk"
+  ],
+  "year": 2016,
+  "journal": "ICLR",
+  "journal_tier": "ICLR",
+  "volume": "2016",
+  "number": null,
+  "pages": null,
+  "doi": "10.48550/arXiv.1511.06939",
+  "url": "https://arxiv.org/abs/1511.06939",
+  "abstract": "We propose GRU4Rec for session-based recommendations.",
+  "keywords": [
+    "gru4rec",
+    "session"
+  ],
+  "category": "Sequential",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/1511.06939"
+}

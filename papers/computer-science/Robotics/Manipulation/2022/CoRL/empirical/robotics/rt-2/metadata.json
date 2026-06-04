@@ -1,0 +1,31 @@
+{
+  "title": "RT-2: Vision-Language-Action Models Transfer Web Knowledge to Robotic Control",
+  "authors": [
+    "Anthony Brohan",
+    "Noah Brown",
+    "Justice Carbajal",
+    "Yevgen Chebotar",
+    "Joseph Dabis",
+    "et al."
+  ],
+  "year": 2022,
+  "journal": "CoRL",
+  "journal_tier": "CoRL",
+  "volume": "2023",
+  "number": null,
+  "pages": null,
+  "doi": "10.48550/arXiv.2307.15818",
+  "url": "https://arxiv.org/abs/2307.15818",
+  "abstract": "We present RT-2 a vision-language-action model that transfers web knowledge to robotic control.",
+  "keywords": [
+    "rt-2",
+    "vla"
+  ],
+  "category": "Manipulation",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/2307.15818"
+}

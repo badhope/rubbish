@@ -1,0 +1,30 @@
+{
+  "title": "Anomaly Transformer: Time Series Anomaly Detection with Association Discrepancy",
+  "authors": [
+    "Shen Li",
+    "Yang Xiong",
+    "Zhicheng Pan",
+    "Karina P.",
+    "Vanessa L."
+  ],
+  "year": 2019,
+  "journal": "ICLR",
+  "journal_tier": "ICLR",
+  "volume": "2022",
+  "number": null,
+  "pages": null,
+  "doi": "10.48550/arXiv.2110.02642",
+  "url": "https://arxiv.org/abs/2110.02642",
+  "abstract": "We present Anomaly Transformer for time series anomaly detection.",
+  "keywords": [
+    "anomaly-transformer",
+    "anomaly"
+  ],
+  "category": "Anomaly-Detection",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/2110.02642"
+}

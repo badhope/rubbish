@@ -1,0 +1,29 @@
+{
+  "title": "The Hadoop Distributed File System",
+  "authors": [
+    "Konstantin Shvachko",
+    "Hairong Kuang",
+    "Sanjay Radia",
+    "Robert Chansler"
+  ],
+  "year": 2007,
+  "journal": "MSST",
+  "journal_tier": "OSDI",
+  "volume": "2010",
+  "number": null,
+  "pages": "1-10",
+  "doi": "10.1109/MSST.2010.5496972",
+  "url": "https://ieeexplore.ieee.org/document/5496972",
+  "abstract": "The Hadoop Distributed File System is a distributed file system.",
+  "keywords": [
+    "hdfs",
+    "storage"
+  ],
+  "category": "Storage",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://ieeexplore.ieee.org/document/5496972"
+}

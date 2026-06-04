@@ -1,0 +1,34 @@
+{
+  "title": "Attention Is All You Need",
+  "authors": [
+    "Ashish Vaswani",
+    "Noam Shazeer",
+    "Niki Parmar",
+    "Jakob Uszkoreit",
+    "Llion Jones",
+    "Aidan N. Gomez",
+    "Lukasz Kaiser",
+    "Illia Polosukhin"
+  ],
+  "year": 2017,
+  "journal": "NeurIPS",
+  "journal_tier": "NeurIPS",
+  "volume": "2017",
+  "number": null,
+  "pages": "5998-6008",
+  "doi": "10.48550/arXiv.1706.03762",
+  "url": "https://arxiv.org/abs/1706.03762",
+  "abstract": "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks. We propose a new simple network architecture the Transformer based solely on attention mechanisms.",
+  "keywords": [
+    "transformer",
+    "attention",
+    "neural machine translation"
+  ],
+  "category": "Pretraining",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/1706.03762"
+}

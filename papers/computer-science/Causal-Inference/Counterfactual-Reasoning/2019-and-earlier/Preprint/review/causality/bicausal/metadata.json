@@ -1,0 +1,26 @@
+{
+  "title": "Causality: Models Reasoning and Inference",
+  "authors": [
+    "Judea Pearl"
+  ],
+  "year": 2009,
+  "journal": "Cambridge University Press",
+  "journal_tier": "Preprint",
+  "volume": "2009",
+  "number": null,
+  "pages": "1-500",
+  "doi": "10.1017/CBO9780511803161",
+  "url": "https://www.cambridge.org/9780521895606",
+  "abstract": "This second edition of Causality by Judea Pearl covers the latest advances in causal inference.",
+  "keywords": [
+    "pearl",
+    "causality"
+  ],
+  "category": "Counterfactual-Reasoning",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://www.cambridge.org/9780521895606"
+}

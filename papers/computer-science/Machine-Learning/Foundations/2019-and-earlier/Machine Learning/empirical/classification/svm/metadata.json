@@ -1,0 +1,27 @@
+{
+  "title": "Support-Vector Networks",
+  "authors": [
+    "Corinna Cortes",
+    "Vladimir Vapnik"
+  ],
+  "year": 1995,
+  "journal": "Machine Learning",
+  "journal_tier": "Machine Learning",
+  "volume": "20",
+  "number": "3",
+  "pages": "273-297",
+  "doi": "10.1007/BF00994018",
+  "url": "https://link.springer.com/article/10.1007/BF00994018",
+  "abstract": "We describe a new type of learning machine called a support vector machine that achieves high generalization performance on pattern classification tasks.",
+  "keywords": [
+    "svm",
+    "support vector machine"
+  ],
+  "category": "Foundations",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://link.springer.com/article/10.1007/BF00994018"
+}

@@ -1,0 +1,34 @@
+{
+  "title": "Deep Neural Networks for Acoustic Modeling in Speech Recognition",
+  "authors": [
+    "Geoffrey Hinton",
+    "Li Deng",
+    "Dong Yu",
+    "George E. Dahl",
+    "Abdel-rahman Mohamed",
+    "Navdeep Jaitly",
+    "Andrew Senior",
+    "et al."
+  ],
+  "year": 2012,
+  "journal": "IEEE Signal Processing Magazine",
+  "journal_tier": "Nature",
+  "volume": "29",
+  "number": "6",
+  "pages": "82-97",
+  "doi": "10.1109/MSP.2012.2205597",
+  "url": "https://ieeexplore.ieee.org/document/6296526",
+  "abstract": "This article provides an overview of deep neural network acoustic models and their use in speech recognition.",
+  "keywords": [
+    "speech recognition",
+    "deep learning",
+    "acoustic"
+  ],
+  "category": "Architectures",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://ieeexplore.ieee.org/document/6296526"
+}

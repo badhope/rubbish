@@ -1,0 +1,28 @@
+{
+  "title": "Time-series Generative Adversarial Networks",
+  "authors": [
+    "Jinsung Yoon",
+    "Daniel Jarrett",
+    "Mihaela van der Schaar"
+  ],
+  "year": 2021,
+  "journal": "NeurIPS",
+  "journal_tier": "ICML",
+  "volume": "2019",
+  "number": null,
+  "pages": null,
+  "doi": "10.48550/arXiv.1909.13473",
+  "url": "https://papers.nips.cc/paper/2019/hash/c9efe5f26cd17ba6216bbe2a7d26d490-Abstract.html",
+  "abstract": "We present TimeGAN for time series generation.",
+  "keywords": [
+    "time-gan",
+    "generative"
+  ],
+  "category": "Generative",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://papers.nips.cc/paper/2019/hash/c9efe5f26cd17ba6216bbe2a7d26d490-Abstract.html"
+}

@@ -1,0 +1,33 @@
+{
+  "title": "Meltdown: Reading Kernel Memory from User Space",
+  "authors": [
+    "Moritz Lipp",
+    "Michael Schwarz",
+    "Daniel Gruss",
+    "Thomas Prescher",
+    "Werner Haas",
+    "Anders Fogh",
+    "Jann Horn",
+    "et al."
+  ],
+  "year": 2018,
+  "journal": "USENIX",
+  "journal_tier": "USENIX",
+  "volume": "2018",
+  "number": null,
+  "pages": null,
+  "doi": "10.1109/SP.2018.00057",
+  "url": "https://meltdownattack.com/",
+  "abstract": "We present Meltdown a powerful attack that allows reading privileged memory of other processes.",
+  "keywords": [
+    "meltdown",
+    "security"
+  ],
+  "category": "Systems-Security",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://meltdownattack.com/"
+}

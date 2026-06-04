@@ -1,0 +1,28 @@
+{
+  "title": "A Deep Relevance Matching Model for Ad-hoc Retrieval",
+  "authors": [
+    "Wenfeng Chen",
+    "Fei Cai",
+    "Honghui Chen"
+  ],
+  "year": 2017,
+  "journal": "CIKM",
+  "journal_tier": "CIKM",
+  "volume": "2017",
+  "number": null,
+  "pages": null,
+  "doi": "10.1145/3132847.3132852",
+  "url": "https://dl.acm.org/doi/10.1145/3132847.3132852",
+  "abstract": "We present a deep relevance matching model for ad-hoc retrieval.",
+  "keywords": [
+    "drmm",
+    "neural-ir"
+  ],
+  "category": "Neural-IR",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://dl.acm.org/doi/10.1145/3132847.3132852"
+}

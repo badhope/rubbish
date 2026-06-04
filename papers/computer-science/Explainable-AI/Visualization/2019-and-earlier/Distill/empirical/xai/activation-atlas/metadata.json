@@ -1,0 +1,29 @@
+{
+  "title": "Activation Atlas",
+  "authors": [
+    "Shan Carter",
+    "Zachary Feulner",
+    "Shlomi Hodor",
+    "et al."
+  ],
+  "year": 2017,
+  "journal": "Distill",
+  "journal_tier": "Distill",
+  "volume": "2019",
+  "number": null,
+  "pages": null,
+  "doi": "10.23915/distill.00015",
+  "url": "https://distill.pub/2019/activation-atlas/",
+  "abstract": "We present the activation atlas a feature visualization technique for understanding deep networks.",
+  "keywords": [
+    "activation-atlas",
+    "visualization"
+  ],
+  "category": "Visualization",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://distill.pub/2019/activation-atlas/"
+}

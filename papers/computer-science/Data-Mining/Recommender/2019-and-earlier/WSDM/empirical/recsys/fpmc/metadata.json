@@ -1,0 +1,28 @@
+{
+  "title": "Factorizing Personalized Markov Chains for Next-Bite Recommendation",
+  "authors": [
+    "Steffen Rendle",
+    "Christoph Freudenthaler",
+    "Lars Schmidt-Thieme"
+  ],
+  "year": 2016,
+  "journal": "WWW",
+  "journal_tier": "WSDM",
+  "volume": "2010",
+  "number": null,
+  "pages": "811-820",
+  "doi": "10.1145/1772690.1772773",
+  "url": "https://dl.acm.org/doi/10.1145/1772690.1772773",
+  "abstract": "We present FPMC a method for next-bite recommendation using personalized Markov chains.",
+  "keywords": [
+    "fpmc",
+    "recsys"
+  ],
+  "category": "Recommender",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://dl.acm.org/doi/10.1145/1772690.1772773"
+}

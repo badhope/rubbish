@@ -1,0 +1,31 @@
+{
+  "title": "Dropout: A Simple Way to Prevent Neural Networks from Overfitting",
+  "authors": [
+    "Nitish Srivastava",
+    "Geoffrey Hinton",
+    "Alex Krizhevsky",
+    "Ilya Sutskever",
+    "Ruslan Salakhutdinov"
+  ],
+  "year": 2014,
+  "journal": "JMLR",
+  "journal_tier": "JMLR",
+  "volume": "15",
+  "number": "56",
+  "pages": "1929-1958",
+  "doi": "10.5555/2627435.2670313",
+  "url": "https://jmlr.org/papers/v15/srivastava14a.html",
+  "abstract": "Dropout is a technique for addressing overfitting in deep neural networks by randomly dropping units during training.",
+  "keywords": [
+    "dropout",
+    "regularization",
+    "deep learning"
+  ],
+  "category": "Optimization",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://jmlr.org/papers/v15/srivastava14a.html"
+}

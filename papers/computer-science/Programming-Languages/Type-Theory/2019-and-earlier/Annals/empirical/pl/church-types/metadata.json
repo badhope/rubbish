@@ -1,0 +1,26 @@
+{
+  "title": "A Formulation of the Simple Theory of Types",
+  "authors": [
+    "Alonzo Church"
+  ],
+  "year": 1940,
+  "journal": "Journal of Symbolic Logic",
+  "journal_tier": "Annals",
+  "volume": "1940",
+  "number": null,
+  "pages": null,
+  "doi": "10.2307/2269058",
+  "url": "https://www.jstor.org/stable/2269058",
+  "abstract": "Church introduces the simple theory of types.",
+  "keywords": [
+    "church",
+    "type-theory"
+  ],
+  "category": "Type-Theory",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://www.jstor.org/stable/2269058"
+}

@@ -1,0 +1,31 @@
+{
+  "title": "Quantum Machine Learning",
+  "authors": [
+    "Jacob Biamonte",
+    "Peter Wittek",
+    "Nicola Pancotti",
+    "Patrick Rebentrost",
+    "Nathan Wiebe",
+    "Seth Lloyd"
+  ],
+  "year": 2017,
+  "journal": "Nature",
+  "journal_tier": "Nature",
+  "volume": "549",
+  "number": "7671",
+  "pages": "195-202",
+  "doi": "10.1038/nature23474",
+  "url": "https://www.nature.com/articles/nature23474",
+  "abstract": "We survey quantum machine learning.",
+  "keywords": [
+    "quantum-ml",
+    "survey"
+  ],
+  "category": "ML-Quantum",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://www.nature.com/articles/nature23474"
+}

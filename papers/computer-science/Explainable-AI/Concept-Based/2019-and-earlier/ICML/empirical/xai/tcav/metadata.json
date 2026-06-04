@@ -1,0 +1,32 @@
+{
+  "title": "Interpretability Beyond Feature Attribution: Quantitative Testing with Concept Activation Vectors (TCAV)",
+  "authors": [
+    "Been Kim",
+    "Martin Wattenberg",
+    "Justin Gilmer",
+    "Carrie Cai",
+    "James Wexler",
+    "Fernanda Viegas",
+    "Rory Sayres"
+  ],
+  "year": 2017,
+  "journal": "ICML",
+  "journal_tier": "ICML",
+  "volume": "2018",
+  "number": null,
+  "pages": null,
+  "doi": "10.48550/arXiv.1711.11279",
+  "url": "https://arxiv.org/abs/1711.11279",
+  "abstract": "We introduce TCAV a method for interpreting neural networks using high-level concepts.",
+  "keywords": [
+    "tcav",
+    "concept"
+  ],
+  "category": "Concept-Based",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/1711.11279"
+}

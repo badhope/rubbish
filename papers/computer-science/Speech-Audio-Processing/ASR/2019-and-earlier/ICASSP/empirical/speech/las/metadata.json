@@ -1,0 +1,29 @@
+{
+  "title": "Listen Attend and Spell: A Neural Network for Large Vocabulary Conversational Speech Recognition",
+  "authors": [
+    "William Chan",
+    "Navdeep Jaitly",
+    "Quoc V. Le",
+    "Oriol Vinyals"
+  ],
+  "year": 2016,
+  "journal": "ICASSP",
+  "journal_tier": "ICASSP",
+  "volume": "2016",
+  "number": null,
+  "pages": null,
+  "doi": "10.1109/ICASSP.2016.7472621",
+  "url": "https://arxiv.org/abs/1508.01211",
+  "abstract": "We present Listen Attend and Spell a neural network for ASR.",
+  "keywords": [
+    "las",
+    "asr"
+  ],
+  "category": "ASR",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/1508.01211"
+}

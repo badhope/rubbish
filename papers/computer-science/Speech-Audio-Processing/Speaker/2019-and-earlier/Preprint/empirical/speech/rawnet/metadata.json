@@ -1,0 +1,32 @@
+{
+  "title": "RawNet: Advanced End-to-End Deep Neural Network Using Raw Waveforms for Text-Independent Speaker Verification",
+  "authors": [
+    "Jung-Wei Lin",
+    "Cheng-Hung Wang",
+    "Cheng-Xiang Yuan",
+    "Lun-Wei Lan",
+    "Ming-Hui Jin",
+    "Li-Wei Zhang",
+    "Lin-Hui Jia"
+  ],
+  "year": 2017,
+  "journal": "arXiv",
+  "journal_tier": "-",
+  "volume": "2018",
+  "number": null,
+  "pages": null,
+  "doi": "10.48550/arXiv.1804.00542",
+  "url": "https://arxiv.org/abs/1804.00542",
+  "abstract": "We present RawNet for text-independent speaker verification.",
+  "keywords": [
+    "rawnet",
+    "speaker"
+  ],
+  "category": "Speaker",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://arxiv.org/abs/1804.00542"
+}

@@ -1,0 +1,27 @@
+{
+  "title": "Internet Protocol Version 6 (IPv6) Specification",
+  "authors": [
+    "Stephen E. Deering",
+    "David R. Hinden"
+  ],
+  "year": 1998,
+  "journal": "RFC",
+  "journal_tier": "RFC",
+  "volume": "8200",
+  "number": null,
+  "pages": "1-39",
+  "doi": "10.17487/rfc8200",
+  "url": "https://www.rfc-editor.org/rfc/rfc8200",
+  "abstract": "This document specifies version 6 of the Internet Protocol.",
+  "keywords": [
+    "ipv6",
+    "rfc"
+  ],
+  "category": "Internet-Architecture",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://www.rfc-editor.org/rfc/rfc8200"
+}

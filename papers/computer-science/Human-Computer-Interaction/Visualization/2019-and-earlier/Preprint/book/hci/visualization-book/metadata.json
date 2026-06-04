@@ -1,0 +1,26 @@
+{
+  "title": "Visualization Analysis and Design",
+  "authors": [
+    "Tamara Munzner"
+  ],
+  "year": 2010,
+  "journal": "A K Peters",
+  "journal_tier": "-",
+  "volume": "2014",
+  "number": null,
+  "pages": "1-422",
+  "doi": "10.1201/b17511",
+  "url": "https://www.cs.ubc.ca/~tmm/vadbook/",
+  "abstract": "An introduction to visualization analysis and design.",
+  "keywords": [
+    "visualization",
+    "book"
+  ],
+  "category": "Visualization",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://www.cs.ubc.ca/~tmm/vadbook/"
+}

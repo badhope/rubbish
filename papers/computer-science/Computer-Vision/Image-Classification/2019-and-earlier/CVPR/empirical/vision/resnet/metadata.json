@@ -1,0 +1,30 @@
+{
+  "title": "Deep Residual Learning for Image Recognition",
+  "authors": [
+    "Kaiming He",
+    "Xiangyu Zhang",
+    "Shaoqing Ren",
+    "Jian Sun"
+  ],
+  "year": 2015,
+  "journal": "CVPR",
+  "journal_tier": "CVPR",
+  "volume": "2016",
+  "number": null,
+  "pages": "770-778",
+  "doi": "10.1109/CVPR.2016.90",
+  "url": "https://ieeexplore.ieee.org/document/7780459",
+  "abstract": "We present a residual learning framework to ease the training of networks substantially deeper than those used previously.",
+  "keywords": [
+    "resnet",
+    "deep learning",
+    "image classification"
+  ],
+  "category": "Image-Classification",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://ieeexplore.ieee.org/document/7780459"
+}

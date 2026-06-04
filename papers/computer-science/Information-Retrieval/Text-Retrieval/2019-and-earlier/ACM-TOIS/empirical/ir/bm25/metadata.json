@@ -1,0 +1,27 @@
+{
+  "title": "The Probabilistic Relevance Framework: BM25 and Beyond",
+  "authors": [
+    "Stephen Robertson",
+    "Hugo Zaragoza"
+  ],
+  "year": 2008,
+  "journal": "Foundations and Trends in IR",
+  "journal_tier": "ACM-TOIS",
+  "volume": "3",
+  "number": "4",
+  "pages": "333-389",
+  "doi": "10.1561/1500000019",
+  "url": "https://www.nowpublishers.com/article/Details/INR-014",
+  "abstract": "We present the BM25 ranking function and its extensions.",
+  "keywords": [
+    "bm25",
+    "text-retrieval"
+  ],
+  "category": "Text-Retrieval",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://www.nowpublishers.com/article/Details/INR-014"
+}

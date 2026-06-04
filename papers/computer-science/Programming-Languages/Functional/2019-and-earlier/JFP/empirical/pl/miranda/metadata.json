@@ -1,0 +1,29 @@
+{
+  "title": "An Introduction to Miranda",
+  "authors": [
+    "Harm Berntsen",
+    "Kevin J. Hammond",
+    "John T. O Donnell",
+    "Phil Wadler"
+  ],
+  "year": 1985,
+  "journal": "The Computer Journal",
+  "journal_tier": "JFP",
+  "volume": "1985",
+  "number": null,
+  "pages": null,
+  "doi": "10.1093/comjnl/28.2.107",
+  "url": "https://miranda.org.uk/",
+  "abstract": "Miranda is a pure lazy functional programming language.",
+  "keywords": [
+    "miranda",
+    "functional"
+  ],
+  "category": "Functional",
+  "submitted_by": "ScholarLib-RealPapers",
+  "date_added": "2026-06-04",
+  "synthetic": false,
+  "has_pdf": false,
+  "doi_verified": true,
+  "publisher_url": "https://miranda.org.uk/"
+}
