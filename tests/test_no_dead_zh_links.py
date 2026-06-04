@@ -237,6 +237,33 @@ class TestConfigLinksResolve(unittest.TestCase):
                 "them:\n" + "\n".join(missing)
             )
 
+    def test_zh_top_level_pages_exist(self) -> None:
+        """Every top-level en page (404, about, architecture,
+        citation-graph, index) must have a zh counterpart so the lang
+        switcher's URL auto-mapping can land on a real page.
+
+        Hand-written zh pages (no generator marker, e.g. zh/index.md
+        and zh/about.md) are exempt — they exist, just not from the
+        generator.
+        """
+        TOP_LEVEL_SLUGS = ["404", "about", "architecture", "citation-graph", "index"]
+        missing: list[str] = []
+        for slug in TOP_LEVEL_SLUGS:
+            en = DOCS / f"{slug}.md"
+            zh = DOCS / "zh" / f"{slug}.md"
+            if not en.is_file():
+                # en file may not exist for the index; skip silently
+                continue
+            if not zh.is_file():
+                missing.append(f"  /zh/{slug}.md  (en: {en.name})")
+        if missing:
+            self.fail(
+                "These zh top-level pages are missing — the lang switcher "
+                "will 404. Run `python3 scripts/generate_zh_topic_stubs.py` "
+                "(it skips pages that already have hand-written content):\n"
+                + "\n".join(missing)
+            )
+
     def test_zh_topic_stubs_are_marked_generated(self) -> None:
         """Every zh stub must contain the generator marker so future runs
         of generate_zh_topic_stubs.py can identify and refresh them,
