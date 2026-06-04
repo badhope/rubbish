@@ -132,10 +132,10 @@ class TestConfigLinksResolve(unittest.TestCase):
             )
 
     def test_no_zh_link_points_to_legacy_topic_pages(self) -> None:
-        """Guard rail: /zh/ links in nav must only point to top-level
-        landing pages. Per-topic subpages exist only under /papers/...; the
-        zh locale does not ship them, and adding them to the zh nav was
-        the original 404 source.
+        """Guard rail: /zh/ links in nav must not reference per-topic
+        subpages that don't have a stub. (When stubs exist, the link is
+        legitimate and a different test — ``test_zh_topic_stubs_cover_all_en_topics``
+        — verifies the stub is on disk.)
         """
         offenders = [
             link
@@ -144,12 +144,17 @@ class TestConfigLinksResolve(unittest.TestCase):
             and link.rstrip("/").count("/") >= 3
             and not link.endswith("/index")
         ]
+        # Every per-topic /zh/papers/<area>/<slug> link must point at a
+        # stub file. We rely on the _source_path_for lookup to verify.
+        missing = [l for l in offenders if _source_path_for(l) is None]
         self.assertEqual(
-            offenders,
+            missing,
             [],
-            "zh nav/sidebar links must not reference per-topic subpages "
-            "(only /zh/, /zh/about, /zh/papers/<area>/index are allowed):\n  "
-            + "\n  ".join(offenders),
+            "These /zh/papers/<area>/<slug> links have no matching zh "
+            "stub file. Either add the stub (run "
+            "`python3 scripts/generate_zh_topic_stubs.py`) or remove the "
+            "link from nav/sidebar:\n  "
+            + "\n  ".join(missing),
         )
 
     def test_every_zh_link_resolves(self) -> None:
@@ -162,51 +167,15 @@ class TestConfigLinksResolve(unittest.TestCase):
                 + "\n  ".join(sorted(missing))
             )
 
-    def test_locales_zh_has_link_field(self) -> None:
-        """The zh locale must declare a `link:` so the lang switcher
-        always lands on a real page even when the user is on an en path
-        that has no zh equivalent (e.g. per-topic subpages).
-        """
-        text = CONFIG.read_text(encoding="utf-8")
-        # crude match: find the `zh: { ... }` block and assert `link:` is
-        # somewhere inside it before the next `},`
-        m = re.search(r"zh:\s*\{", text)
-        self.assertIsNotNone(m, "no zh locale block in config.ts")
-        # find matching close brace
-        start = m.end()
-        depth = 1
-        i = start
-        while i < len(text) and depth > 0:
-            if text[i] == "{":
-                depth += 1
-            elif text[i] == "}":
-                depth -= 1
-            i += 1
-        zh_block = text[start : i - 1]
-        self.assertRegex(
-            zh_block,
-            r"link:\s*[\"']/[^\"']*[\"']",
-            "locales.zh must declare a `link:` so the lang switcher has "
-            "a safe fallback (otherwise it auto-maps every en URL to a "
-            "non-existent /zh/... path)",
-        )
-
-    def test_i18n_routing_disabled_in_theme(self) -> None:
-        """`themeConfig.i18nRouting: false` is the other half of the fix:
-        even with locales.zh.link set, VitePress still path-maps the
-        switcher unless this is off. We assert it lives inside the
-        TOP-LEVEL themeConfig (not in locales.<lang>.themeConfig) and
-        is set to false.
+    def test_i18n_routing_enabled_with_zh_stubs(self) -> None:
+        """`themeConfig.i18nRouting` is left on (the default) — we want the
+        lang switcher to auto-map en paths to zh paths. For that to be
+        safe, a zh stub must exist for every en topic page; that is
+        asserted by ``test_zh_topic_stubs_cover_all_en_topics`` below.
         """
         text = _strip_comments(CONFIG.read_text(encoding="utf-8"))
         # Find the top-level themeConfig block (one indented at 2 spaces).
-        # The nested locales.<lang>.themeConfig blocks are indented further,
-        # so a 2-space indent is a reliable anchor.
-        m = re.search(
-            r"^  themeConfig:\s*\{",
-            text,
-            re.MULTILINE,
-        )
+        m = re.search(r"^  themeConfig:\s*\{", text, re.MULTILINE)
         self.assertIsNotNone(
             m, "no top-level themeConfig (indented at 2 spaces) in config.ts"
         )
@@ -220,12 +189,77 @@ class TestConfigLinksResolve(unittest.TestCase):
                 depth -= 1
             i += 1
         theme_block = text[start : i - 1]
-        self.assertRegex(
-            theme_block,
-            r"i18nRouting:\s*false",
-            "themeConfig.i18nRouting must be set to false so the lang "
-            "switcher stops auto-mapping /papers/cs/foo to "
-            "/zh/papers/cs/foo (which 404s)",
+        # Either the key is absent (default true) or explicitly set true.
+        match = re.search(r"i18nRouting:\s*(\w+)", theme_block)
+        if match is not None:
+            self.assertEqual(
+                match.group(1),
+                "true",
+                "i18nRouting must be true (or omitted) so the lang "
+                "switcher auto-maps en → zh paths and lands on the "
+                "corresponding zh stub.",
+            )
+
+    def test_zh_topic_stubs_cover_all_en_topics(self) -> None:
+        """Every en topic page under docs/papers/computer-science/ and
+        docs/papers/economics-management/ must have a matching zh stub
+        under docs/zh/papers/<area>/, otherwise the lang switcher will
+        404 from en → zh.
+
+        Convention: the zh stub lives at the same slug as the en page
+        (e.g. docs/papers/cs/ai-safety-alignment.md ↔
+               docs/zh/papers/cs/ai-safety-alignment.md).
+        """
+        # Slugs that explicitly opt out of zh coverage (hand-curated and
+        # intentionally kept en-only because they have no scholarly
+        # content the user would need in Chinese).
+        ALLOWLIST: set[str] = set()  # currently none
+
+        en_dirs = {
+            "computer-science": DOCS / "papers" / "computer-science",
+            "economics-management": DOCS / "papers" / "economics-management",
+        }
+        missing: list[str] = []
+        for area, en_dir in en_dirs.items():
+            zh_dir = DOCS / "zh" / "papers" / area
+            for en in sorted(en_dir.glob("*.md")):
+                slug = en.stem
+                if slug == "index" or slug in ALLOWLIST:
+                    continue
+                zh = zh_dir / f"{slug}.md"
+                if not zh.is_file():
+                    missing.append(f"  /zh/papers/{area}/{slug}.md  (en: {en.name})")
+        if missing:
+            self.fail(
+                "These zh stubs are missing — the lang switcher will 404 "
+                "from en to zh. Run "
+                "`python3 scripts/generate_zh_topic_stubs.py` to create "
+                "them:\n" + "\n".join(missing)
+            )
+
+    def test_zh_topic_stubs_are_marked_generated(self) -> None:
+        """Every zh stub must contain the generator marker so future runs
+        of generate_zh_topic_stubs.py can identify and refresh them,
+        and so a hand-edited page is protected from silent overwrite.
+        """
+        MARKER = "generated by scripts/generate_zh_topic_stubs.py"
+        offenders: list[str] = []
+        for area in ("computer-science", "economics-management"):
+            zh_dir = DOCS / "zh" / "papers" / area
+            if not zh_dir.is_dir():
+                continue
+            for p in sorted(zh_dir.glob("*.md")):
+                if p.name == "index.md":
+                    continue
+                if MARKER not in p.read_text(encoding="utf-8"):
+                    offenders.append(p.relative_to(REPO).as_posix())
+        self.assertEqual(
+            offenders,
+            [],
+            "These zh topic pages are not marked as generated; either "
+            "they're hand-written and should be protected by adding the "
+            "marker, or the generator was bypassed:\n  "
+            + "\n  ".join(offenders),
         )
 
 

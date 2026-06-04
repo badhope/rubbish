@@ -221,7 +221,10 @@ export default defineConfig({
     zh: {
       label: "简体中文",
       lang: "zh-CN",
-      link: "/zh/",
+      // No `link:` here on purpose: with `i18nRouting: true` (the default
+      // in themeConfig below) the language switcher will map the current
+      // en path to its zh counterpart, and a zh stub now exists for every
+      // en topic page — so the switcher always lands on a real page.
       description:
         "精选开放获取的计算机科学、经济学与管理学论文库 — 浏览、检索、引用，一站式搞定。",
       themeConfig: {
@@ -763,15 +766,15 @@ export default defineConfig({
       },
     },
 
-    // Disable the lang switcher's URL auto-mapping. The site only fully
-    // translates the four zh landing pages; per-topic subpages are en-only.
-    // With i18nRouting on (the default), the switcher maps e.g.
-    //   /papers/computer-science/foo  →  /zh/papers/computer-science/foo
-    // and 404s. With it off, every zh switcher click goes to the
-    // locale's `link` (locales.zh.link = /zh/, root.link = /), which
-    // always exists. Users on an en topic page who want the Chinese
-    // view land on the zh home and can browse the zh landing pages.
-    i18nRouting: false,
+    // Re-enable lang-switcher path auto-mapping. The previous setting
+    // (`i18nRouting: false`) was a stop-gap: it forced every zh
+    // switcher click to go to the zh home, which worked once but left
+    // zh users stranded on an en topic page unable to read the same
+    // page in Chinese. Now that a zh stub exists for every en topic
+    // (see scripts/generate_zh_topic_stubs.py), the auto-mapper is
+    // safe again — every /papers/cs/foo → /zh/papers/cs/foo lands on
+    // a real page.
+    i18nRouting: true,
   },
 
   // ── Sitemap generation ──────────────────────────────────────────────
