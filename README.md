@@ -6,15 +6,14 @@ A small, opinionated library of CS / economics papers I've actually read or want
 
 ## What's in it
 
-- **45** papers currently indexed across **18** Economics & Management fields
-- **33** Computer Science topics scaffolded and waiting for the first submissions
-- **8** of the 45 DOIs are real (verified against doi.org); the rest are placeholder seed data
-- **1** open-access PDF bundled (Springer OA); the rest link out to the publisher
+- **503** papers currently indexed across **33** Computer Science topics and **18** Economics & Management fields
+- All **503** DOIs are real (verified against doi.org); the entries are sourced from arXiv, NeurIPS, ICML, JMLR, Nature, AER, JFE, JEP, and other top venues
+- **1** open-access PDF bundled (sample reference); the rest link to the publisher via DOI
 - Each paper has a `metadata.json` and a `.bib` you can copy straight into LaTeX
-- 7 publication years (2020 – 2026) wired into the folder structure
+- 8 publication year buckets (2019-and-earlier, 2020 – 2026) wired into the folder structure
 - A static site that builds into a searchable, dark-mode-friendly doc
 
-I originally kept this as two separate repos (CS and Econ/Management) and a pile of Google Docs bookmarks. This repo is the merge. The EM side is filling in faster than the CS side right now — pull requests for CS papers are very welcome.
+I originally kept this as two separate repos (CS and Econ/Management) and a pile of Google Docs bookmarks. This repo is the merge. Contributions for additional CS or EM papers are very welcome.
 
 ## Run it locally
 

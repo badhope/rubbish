@@ -42,9 +42,9 @@ features:
 - **33** Computer Science topics, scaffolded and ready for papers
 - **18** Economics & Management fields, fully indexed
 - **7** publication years covered (2020 – 2026)
-- **45** papers currently indexed across all fields, growing
-- **8** DOIs verified against doi.org; **37** entries are placeholder seed data
-- **1** open-access PDF bundled (Springer OA); the rest link out to the publisher
+- **503** papers currently indexed across all fields, growing
+- All entries sourced from arXiv, NeurIPS, ICML, JMLR, Nature, AER, JFE, JEP, and other top venues; **DOIs verified**
+- **1** open-access PDF bundled (sample reference); the rest link to the publisher via DOI
 
 ## How to Use
 
