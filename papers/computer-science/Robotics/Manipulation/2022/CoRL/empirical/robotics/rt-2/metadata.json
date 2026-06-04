@@ -17,10 +17,7 @@
   "doi": "10.48550/arXiv.2307.15818",
   "url": "https://arxiv.org/abs/2307.15818",
   "abstract": "We present RT-2 a vision-language-action model that transfers web knowledge to robotic control.",
-  "keywords": [
-    "rt-2",
-    "vla"
-  ],
+  "keywords": ["rt-2", "vla"],
   "category": "Manipulation",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

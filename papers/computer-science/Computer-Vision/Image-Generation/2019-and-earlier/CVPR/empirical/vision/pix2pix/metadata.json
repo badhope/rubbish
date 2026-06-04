@@ -15,11 +15,7 @@
   "doi": "10.1109/CVPR.2017.632",
   "url": "https://arxiv.org/abs/1611.07004",
   "abstract": "We investigate conditional adversarial networks as a general-purpose solution to image-to-image translation problems.",
-  "keywords": [
-    "pix2pix",
-    "image-to-image",
-    "gan"
-  ],
+  "keywords": ["pix2pix", "image-to-image", "gan"],
   "category": "Image-Generation",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

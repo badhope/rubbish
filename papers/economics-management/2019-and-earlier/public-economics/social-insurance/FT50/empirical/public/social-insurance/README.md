@@ -4,13 +4,13 @@
 
 > ✓ DOI verified live
 
-| Field       | Value                                                                          |
-| ----------- | ------------------------------------------------------------------------------ |
-| ---         | ---                                                                            |
-| **Authors** | Jonathan G. & Thomas P. L.                                                     |
-| **Year**    | 2017                                                                           |
-| **Journal** | Handbook of Public Economics (FT50), 2002                                      |
-| **DOI**     | [10.1016/S1573-4420(02)80004-X](https://doi.org/10.1016/S1573-4420(02)80004-X) |
+| Field       | Value                                                                            |
+| ----------- | -------------------------------------------------------------------------------- |
+| ---         | ---                                                                              |
+| **Authors** | Jonathan G. & Thomas P. L.                                                       |
+| **Year**    | 2017                                                                             |
+| **Journal** | Handbook of Public Economics (FT50), 2002                                        |
+| **DOI**     | [10.1016/S1573-4420(02)80004-X](<https://doi.org/10.1016/S1573-4420(02)80004-X>) |
 
 ## Where it sits in the corpus
 
@@ -28,7 +28,7 @@
 
 ## Where to read it
 
-- [DOI landing page](https://doi.org/10.1016/S1573-4420(02)80004-X) — `10.1016/S1573-4420(02)80004-X`
+- [DOI landing page](<https://doi.org/10.1016/S1573-4420(02)80004-X>) — `10.1016/S1573-4420(02)80004-X`
 - [Publisher page](https://www.sciencedirect.com/science/article/pii/S157344200280004X)
 - [Repository folder](https://github.com/badhope/ScholarLib/tree/main/papers/economics-management/2019-and-earlier/public-economics/social-insurance/FT50/empirical/public/social-insurance)
 - [metadata.json](https://github.com/badhope/ScholarLib/tree/main/papers/economics-management/2019-and-earlier/public-economics/social-insurance/FT50/empirical/public/social-insurance/metadata.json)

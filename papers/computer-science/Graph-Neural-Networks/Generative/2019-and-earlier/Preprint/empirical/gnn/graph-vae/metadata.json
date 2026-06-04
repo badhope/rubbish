@@ -1,9 +1,6 @@
 {
   "title": "Variational Graph Auto-Encoders",
-  "authors": [
-    "Thomas N. Kipf",
-    "Max Welling"
-  ],
+  "authors": ["Thomas N. Kipf", "Max Welling"],
   "year": 2018,
   "journal": "NeurIPS",
   "journal_tier": "-",
@@ -13,10 +10,7 @@
   "doi": "10.48550/arXiv.1611.07308",
   "url": "https://arxiv.org/abs/1611.07308",
   "abstract": "We introduce the variational graph auto-encoder a framework for unsupervised learning on graph-structured data.",
-  "keywords": [
-    "graph vae",
-    "gnn"
-  ],
+  "keywords": ["graph vae", "gnn"],
   "category": "Generative",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

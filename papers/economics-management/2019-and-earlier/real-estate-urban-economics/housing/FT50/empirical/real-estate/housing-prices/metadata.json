@@ -1,10 +1,6 @@
 {
   "title": "Housing Prices",
-  "authors": [
-    "Edward L. Glaeser",
-    "Joseph Gyourko",
-    "Raven E. Saks"
-  ],
+  "authors": ["Edward L. Glaeser", "Joseph Gyourko", "Raven E. Saks"],
   "year": 2017,
   "journal": "Brookings Papers on Economic Activity",
   "journal_tier": "FT50",
@@ -14,9 +10,7 @@
   "doi": "10.1353/eca.2006.0002",
   "url": "https://muse.jhu.edu/article/204238",
   "abstract": "We study housing prices.",
-  "keywords": [
-    "housing"
-  ],
+  "keywords": ["housing"],
   "category": "housing",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,9 +1,6 @@
 {
   "title": "FoundationDB: A Distributed Unbundled Transactional Key Value Store",
-  "authors": [
-    "Sanjay Ghemawat",
-    "et al."
-  ],
+  "authors": ["Sanjay Ghemawat", "et al."],
   "year": 2020,
   "journal": "SIGMOD",
   "journal_tier": "SIGMOD",
@@ -13,10 +10,7 @@
   "doi": "10.1145/3477495.3531750",
   "url": "https://www.foundationdb.org/",
   "abstract": "FoundationDB is a distributed unbundled transactional key-value store.",
-  "keywords": [
-    "foundationdb",
-    "newsql"
-  ],
+  "keywords": ["foundationdb", "newsql"],
   "category": "NewSQL",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

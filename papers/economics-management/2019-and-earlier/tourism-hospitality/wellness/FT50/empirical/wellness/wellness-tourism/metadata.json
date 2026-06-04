@@ -1,9 +1,6 @@
 {
   "title": "Wellness Tourism",
-  "authors": [
-    "Donald L. M.",
-    "Daniel R. W."
-  ],
+  "authors": ["Donald L. M.", "Daniel R. W."],
   "year": 2017,
   "journal": "Tourism Recreation Research",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1080/02508281.2009.11081609",
   "url": "https://www.tandfonline.com/doi/full/10.1080/02508281.2009.11081609",
   "abstract": "We discuss wellness tourism.",
-  "keywords": [
-    "wellness"
-  ],
+  "keywords": ["wellness"],
   "category": "wellness",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

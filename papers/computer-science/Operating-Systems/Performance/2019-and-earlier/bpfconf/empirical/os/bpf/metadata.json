@@ -1,9 +1,6 @@
 {
   "title": "The BSD Packet Filter",
-  "authors": [
-    "Steven McCanne",
-    "Van Jacobson"
-  ],
+  "authors": ["Steven McCanne", "Van Jacobson"],
   "year": 2017,
   "journal": "USENIX Winter",
   "journal_tier": "bpfconf",
@@ -13,10 +10,7 @@
   "doi": "10.1145/1267244.1267247",
   "url": "https://www.tcpdump.org/papers/bpf-usenix93.pdf",
   "abstract": "The BSD Packet Filter is a kernel packet filtering mechanism.",
-  "keywords": [
-    "bpf",
-    "networking"
-  ],
+  "keywords": ["bpf", "networking"],
   "category": "Performance",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

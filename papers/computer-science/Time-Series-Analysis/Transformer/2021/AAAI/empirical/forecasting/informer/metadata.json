@@ -18,10 +18,7 @@
   "doi": "10.1609/aaai.v35i12.17325",
   "url": "https://arxiv.org/abs/2012.07436",
   "abstract": "We present Informer for long sequence time series forecasting.",
-  "keywords": [
-    "informer",
-    "transformer"
-  ],
+  "keywords": ["informer", "transformer"],
   "category": "Transformer",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

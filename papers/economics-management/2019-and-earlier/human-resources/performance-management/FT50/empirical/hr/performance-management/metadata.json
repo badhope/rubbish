@@ -1,9 +1,6 @@
 {
   "title": "Performance Management",
-  "authors": [
-    "Pierre Dussauge",
-    "Will Mitchell"
-  ],
+  "authors": ["Pierre Dussauge", "Will Mitchell"],
   "year": 2017,
   "journal": "Strategic Management Journal",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1002/smj.890",
   "url": "https://onlinelibrary.wiley.com/doi/10.1002/smj.890",
   "abstract": "We discuss performance management.",
-  "keywords": [
-    "performance"
-  ],
+  "keywords": ["performance"],
   "category": "performance-management",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

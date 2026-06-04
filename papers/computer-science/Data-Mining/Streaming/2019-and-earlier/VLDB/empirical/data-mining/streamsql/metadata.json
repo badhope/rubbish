@@ -1,10 +1,6 @@
 {
   "title": "The 8 Requirements of Real-Time Stream Processing",
-  "authors": [
-    "Michael Stonebraker",
-    "Uǧur Çetintemel",
-    "Stan Zdonik"
-  ],
+  "authors": ["Michael Stonebraker", "Uǧur Çetintemel", "Stan Zdonik"],
   "year": 2017,
   "journal": "ACM Sigmod Record",
   "journal_tier": "VLDB",
@@ -14,10 +10,7 @@
   "doi": "10.1145/1107499.1107504",
   "url": "https://www.cs.cmu.edu/~natassa/courses/15-721/papers/stream-req.pdf",
   "abstract": "We discuss the requirements of real-time stream processing systems.",
-  "keywords": [
-    "stream",
-    "streaming"
-  ],
+  "keywords": ["stream", "streaming"],
   "category": "Streaming",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

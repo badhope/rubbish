@@ -1,9 +1,6 @@
 {
   "title": "Probabilistic Primality Testing",
-  "authors": [
-    "Miller",
-    "Rabin"
-  ],
+  "authors": ["Miller", "Rabin"],
   "year": 1989,
   "journal": "Journal of Computer and System Sciences",
   "journal_tier": "JCSS",
@@ -13,10 +10,7 @@
   "doi": "10.1016/0022-0000(80)90021-9",
   "url": "https://www.sciencedirect.com/science/article/pii/0022000080900219",
   "abstract": "An efficient randomized algorithm for primality testing.",
-  "keywords": [
-    "miller-rabin",
-    "primality"
-  ],
+  "keywords": ["miller-rabin", "primality"],
   "category": "Randomized-Algorithms",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

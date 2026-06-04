@@ -1,8 +1,6 @@
 {
   "title": "The Psychology of Pandemics",
-  "authors": [
-    "Steven Taylor"
-  ],
+  "authors": ["Steven Taylor"],
   "year": 2017,
   "journal": "American Psychological Association",
   "journal_tier": "FT50",
@@ -12,10 +10,7 @@
   "doi": "10.1037/0000168-000",
   "url": "https://www.apa.org/pubs/books/4317364",
   "abstract": "The psychology of pandemics.",
-  "keywords": [
-    "risk-perception",
-    "behavioral"
-  ],
+  "keywords": ["risk-perception", "behavioral"],
   "category": "risk-perception",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -16,10 +16,7 @@
   "doi": "10.14778/3415478.3415537",
   "url": "https://www.vldb.org/pvldb/vol13/p2581-dai.pdf",
   "abstract": "We present Great an end-to-end AutoML system for data engineering.",
-  "keywords": [
-    "great",
-    "data-prep"
-  ],
+  "keywords": ["great", "data-prep"],
   "category": "Data-Preprocessing",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,8 +1,6 @@
 {
   "title": "Housing Policy",
-  "authors": [
-    "John M. Q."
-  ],
+  "authors": ["John M. Q."],
   "year": 2017,
   "journal": "Journal of Economic Perspectives",
   "journal_tier": "FT50",
@@ -12,9 +10,7 @@
   "doi": "10.1257/jep.13.2.101",
   "url": "https://www.aeaweb.org/articles?id=10.1257/jep.13.2.101",
   "abstract": "We discuss housing policy.",
-  "keywords": [
-    "housing-policy"
-  ],
+  "keywords": ["housing-policy"],
   "category": "housing-policy",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

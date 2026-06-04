@@ -4,13 +4,13 @@
 
 > ✓ DOI verified live
 
-| Field       | Value                                                                          |
-| ----------- | ------------------------------------------------------------------------------ |
-| ---         | ---                                                                            |
-| **Authors** | Daniel A. C. & James R. B.                                                     |
-| **Year**    | 2017                                                                           |
-| **Journal** | International Journal of Hospitality Management (FT50), 2002                   |
-| **DOI**     | [10.1016/S0278-4319(02)00036-1](https://doi.org/10.1016/S0278-4319(02)00036-1) |
+| Field       | Value                                                                            |
+| ----------- | -------------------------------------------------------------------------------- |
+| ---         | ---                                                                              |
+| **Authors** | Daniel A. C. & James R. B.                                                       |
+| **Year**    | 2017                                                                             |
+| **Journal** | International Journal of Hospitality Management (FT50), 2002                     |
+| **DOI**     | [10.1016/S0278-4319(02)00036-1](<https://doi.org/10.1016/S0278-4319(02)00036-1>) |
 
 ## Where it sits in the corpus
 
@@ -28,7 +28,7 @@
 
 ## Where to read it
 
-- [DOI landing page](https://doi.org/10.1016/S0278-4319(02)00036-1) — `10.1016/S0278-4319(02)00036-1`
+- [DOI landing page](<https://doi.org/10.1016/S0278-4319(02)00036-1>) — `10.1016/S0278-4319(02)00036-1`
 - [Publisher page](https://www.sciencedirect.com/science/article/pii/S0278431902000361)
 - [Repository folder](https://github.com/badhope/ScholarLib/tree/main/papers/economics-management/2019-and-earlier/tourism-hospitality/hospitality-management/FT50/empirical/hospitality/hotel-revenue-management)
 - [metadata.json](https://github.com/badhope/ScholarLib/tree/main/papers/economics-management/2019-and-earlier/tourism-hospitality/hospitality-management/FT50/empirical/hospitality/hotel-revenue-management/metadata.json)

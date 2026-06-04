@@ -16,10 +16,7 @@
   "doi": "10.48550/arXiv.1802.03268",
   "url": "https://arxiv.org/abs/1802.03268",
   "abstract": "Our approach to NAS achieves a 1000x speedup over state-of-the-art NAS methods.",
-  "keywords": [
-    "enas",
-    "nas"
-  ],
+  "keywords": ["enas", "nas"],
   "category": "Neural-Architecture-Search",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

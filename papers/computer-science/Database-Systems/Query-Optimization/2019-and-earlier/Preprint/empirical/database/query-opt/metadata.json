@@ -1,9 +1,6 @@
 {
   "title": "The Cascades Framework for Query Optimization",
-  "authors": [
-    "Goetz Graefe",
-    "William J. McKenna"
-  ],
+  "authors": ["Goetz Graefe", "William J. McKenna"],
   "year": 2017,
   "journal": "VLDB",
   "journal_tier": "-",
@@ -13,10 +10,7 @@
   "doi": "10.1007/BF01230611",
   "url": "https://link.springer.com/article/10.1007/BF01230611",
   "abstract": "The Cascades framework is a modern query optimization framework.",
-  "keywords": [
-    "cascades",
-    "query-opt"
-  ],
+  "keywords": ["cascades", "query-opt"],
   "category": "Query-Optimization",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

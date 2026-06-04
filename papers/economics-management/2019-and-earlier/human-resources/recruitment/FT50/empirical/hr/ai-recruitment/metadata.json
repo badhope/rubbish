@@ -1,8 +1,6 @@
 {
   "title": "AI in Recruitment",
-  "authors": [
-    "Jasper H. H. T. M."
-  ],
+  "authors": ["Jasper H. H. T. M."],
   "year": 2018,
   "journal": "International Journal of HRM",
   "journal_tier": "FT50",
@@ -12,10 +10,7 @@
   "doi": "10.1080/09585192.2018.1424909",
   "url": "https://www.tandfonline.com/doi/full/10.1080/09585192.2018.1424909",
   "abstract": "We discuss AI in recruitment.",
-  "keywords": [
-    "ai",
-    "recruitment"
-  ],
+  "keywords": ["ai", "recruitment"],
   "category": "recruitment",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,9 +1,6 @@
 {
   "title": "The Sharing Economy",
-  "authors": [
-    "Andrei Hagiu",
-    "Simon Rothman"
-  ],
+  "authors": ["Andrei Hagiu", "Simon Rothman"],
   "year": 2017,
   "journal": "Journal of Economic Perspectives",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1257/jep.30.1.145",
   "url": "https://www.aeaweb.org/articles?id=10.1257/jep.30.1.145",
   "abstract": "We discuss the sharing economy.",
-  "keywords": [
-    "sharing"
-  ],
+  "keywords": ["sharing"],
   "category": "sharing-economy",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

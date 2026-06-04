@@ -1,10 +1,6 @@
 {
   "title": "Macroeconomic Dynamics",
-  "authors": [
-    "Lawrence J. Christiano",
-    "Roberto Motto",
-    "Massimo Rostagno"
-  ],
+  "authors": ["Lawrence J. Christiano", "Roberto Motto", "Massimo Rostagno"],
   "year": 2008,
   "journal": "American Economic Review",
   "journal_tier": "FT50",
@@ -14,10 +10,7 @@
   "doi": "10.1257/aer.104.1.70",
   "url": "https://www.aeaweb.org/articles?id=10.1257/aer.104.1.70",
   "abstract": "We study macroeconomic dynamics with financial frictions.",
-  "keywords": [
-    "dsge",
-    "financial-frictions"
-  ],
+  "keywords": ["dsge", "financial-frictions"],
   "category": "business-cycles",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

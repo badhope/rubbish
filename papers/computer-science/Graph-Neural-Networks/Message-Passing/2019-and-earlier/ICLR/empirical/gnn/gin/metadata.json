@@ -1,11 +1,6 @@
 {
   "title": "How Powerful are Graph Neural Networks?",
-  "authors": [
-    "Keyulu Xu",
-    "Weihua Hu",
-    "Jure Leskovek",
-    "Stefanie Jegelka"
-  ],
+  "authors": ["Keyulu Xu", "Weihua Hu", "Jure Leskovek", "Stefanie Jegelka"],
   "year": 2018,
   "journal": "ICLR",
   "journal_tier": "ICLR",
@@ -15,10 +10,7 @@
   "doi": "10.48550/arXiv.1810.00826",
   "url": "https://arxiv.org/abs/1810.00826",
   "abstract": "We analyze the expressive power of graph neural networks and show that they are at most as powerful as the Weisfeiler-Lehman test.",
-  "keywords": [
-    "gin",
-    "gnn"
-  ],
+  "keywords": ["gin", "gnn"],
   "category": "Message-Passing",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

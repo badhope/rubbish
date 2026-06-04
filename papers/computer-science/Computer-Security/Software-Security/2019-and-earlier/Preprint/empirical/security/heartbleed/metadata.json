@@ -1,9 +1,6 @@
 {
   "title": "The Heartbleed Bug",
-  "authors": [
-    "Neel Mehta",
-    "et al."
-  ],
+  "authors": ["Neel Mehta", "et al."],
   "year": 2014,
   "journal": "CVE",
   "journal_tier": "Preprint",
@@ -13,10 +10,7 @@
   "doi": "10.1109/MSP.2014.66",
   "url": "https://heartbleed.com/",
   "abstract": "The Heartbleed bug is a serious vulnerability in OpenSSL.",
-  "keywords": [
-    "heartbleed",
-    "openssl"
-  ],
+  "keywords": ["heartbleed", "openssl"],
   "category": "Software-Security",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,11 +1,6 @@
 {
   "title": "Aggregate Confusion",
-  "authors": [
-    "Florian Berg",
-    "Julian F. Koelbel",
-    "Rik S.",
-    "Markus T."
-  ],
+  "authors": ["Florian Berg", "Julian F. Koelbel", "Rik S.", "Markus T."],
   "year": 2019,
   "journal": "Review of Finance",
   "journal_tier": "FT50",
@@ -15,9 +10,7 @@
   "doi": "10.1093/rof/rfaa018",
   "url": "https://academic.oup.com/rof/article/26/2/435/6133215",
   "abstract": "We study aggregate confusion in ESG ratings.",
-  "keywords": [
-    "esg-ratings"
-  ],
+  "keywords": ["esg-ratings"],
   "category": "esg-disclosure",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

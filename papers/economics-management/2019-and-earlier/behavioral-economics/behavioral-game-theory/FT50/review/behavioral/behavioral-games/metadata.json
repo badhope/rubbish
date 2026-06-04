@@ -1,8 +1,6 @@
 {
   "title": "Behavioral Game Theory",
-  "authors": [
-    "Colin F. Camerer"
-  ],
+  "authors": ["Colin F. Camerer"],
   "year": 2010,
   "journal": "Princeton University Press",
   "journal_tier": "FT50",
@@ -12,9 +10,7 @@
   "doi": "10.1515/9781400842452",
   "url": "https://press.princeton.edu/books/paperback/9780691090399/behavioral-game-theory",
   "abstract": "A textbook on behavioral game theory.",
-  "keywords": [
-    "behavioral-games"
-  ],
+  "keywords": ["behavioral-games"],
   "category": "behavioral-game-theory",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

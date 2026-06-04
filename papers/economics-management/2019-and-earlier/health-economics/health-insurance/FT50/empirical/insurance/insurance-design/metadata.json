@@ -1,8 +1,6 @@
 {
   "title": "Health Insurance Design",
-  "authors": [
-    "Mark V. Pauly"
-  ],
+  "authors": ["Mark V. Pauly"],
   "year": 2017,
   "journal": "Journal of Health Economics",
   "journal_tier": "FT50",
@@ -12,10 +10,7 @@
   "doi": "10.1016/j.jhealeco.2016.07.006",
   "url": "https://www.sciencedirect.com/science/article/pii/S0167629616301547",
   "abstract": "We discuss health insurance design.",
-  "keywords": [
-    "insurance",
-    "design"
-  ],
+  "keywords": ["insurance", "design"],
   "category": "health-insurance",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,8 +1,6 @@
 {
   "title": "The Part-Time Parliament",
-  "authors": [
-    "Leslie Lamport"
-  ],
+  "authors": ["Leslie Lamport"],
   "year": 1999,
   "journal": "ACM Transactions on Computer Systems",
   "journal_tier": "ACM Sigact",
@@ -12,10 +10,7 @@
   "doi": "10.1145/279227.279229",
   "url": "https://dl.acm.org/doi/10.1145/279227.279229",
   "abstract": "Paxos is a family of protocols for reaching consensus in distributed systems.",
-  "keywords": [
-    "paxos",
-    "consensus"
-  ],
+  "keywords": ["paxos", "consensus"],
   "category": "Consensus",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

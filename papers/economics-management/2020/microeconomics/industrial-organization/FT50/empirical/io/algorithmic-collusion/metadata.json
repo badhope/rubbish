@@ -1,8 +1,6 @@
 {
   "title": "Artificial Intelligence Algorithmic Pricing and Collusion",
-  "authors": [
-    "Tommaso Valletti"
-  ],
+  "authors": ["Tommaso Valletti"],
   "year": 2020,
   "journal": "American Economic Review",
   "journal_tier": "FT50",
@@ -12,10 +10,7 @@
   "doi": "10.1257/aer.20190623",
   "url": "https://www.aeaweb.org/articles?id=10.1257/aer.20190623",
   "abstract": "We study AI and algorithmic pricing.",
-  "keywords": [
-    "algorithmic-collusion",
-    "io"
-  ],
+  "keywords": ["algorithmic-collusion", "io"],
   "category": "industrial-organization",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

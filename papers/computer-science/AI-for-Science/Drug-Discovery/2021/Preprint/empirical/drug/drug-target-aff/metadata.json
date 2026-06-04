@@ -1,10 +1,6 @@
 {
   "title": "Deep DTA: Deep Drug-Target Binding Affinity Prediction",
-  "authors": [
-    "Hakime Ozturk",
-    "Elif Ozkirimli",
-    "Ayse Ozgur"
-  ],
+  "authors": ["Hakime Ozturk", "Elif Ozkirimli", "Ayse Ozgur"],
   "year": 2021,
   "journal": "arXiv",
   "journal_tier": "-",
@@ -14,10 +10,7 @@
   "doi": "10.3390/molecules24061011",
   "url": "https://www.mdpi.com/1420-3049/24/6/1011",
   "abstract": "We propose a deep learning model for predicting drug-target binding affinity.",
-  "keywords": [
-    "deep dta",
-    "drug discovery"
-  ],
+  "keywords": ["deep dta", "drug discovery"],
   "category": "Drug-Discovery",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,10 +1,6 @@
 {
   "title": "DeepAR: Probabilistic Forecasting with Autoregressive Recurrent Networks",
-  "authors": [
-    "Valentin Flunkert",
-    "David Salinas",
-    "Jan Gasthaus"
-  ],
+  "authors": ["Valentin Flunkert", "David Salinas", "Jan Gasthaus"],
   "year": 2017,
   "journal": "International Journal of Forecasting",
   "journal_tier": "International Journal of Forecasting",
@@ -14,10 +10,7 @@
   "doi": "10.1016/j.ijforecast.2019.07.001",
   "url": "https://arxiv.org/abs/1704.04110",
   "abstract": "We present DeepAR a probabilistic forecasting method.",
-  "keywords": [
-    "deepar",
-    "forecasting"
-  ],
+  "keywords": ["deepar", "forecasting"],
   "category": "Forecasting",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

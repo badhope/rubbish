@@ -17,10 +17,7 @@
   "doi": "10.48550/arXiv.1706.03741",
   "url": "https://arxiv.org/abs/1706.03741",
   "abstract": "We explore deep reinforcement learning from human preferences by training agents using human preferences between pairs of trajectory segments.",
-  "keywords": [
-    "rlhf",
-    "alignment"
-  ],
+  "keywords": ["rlhf", "alignment"],
   "category": "Alignment",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

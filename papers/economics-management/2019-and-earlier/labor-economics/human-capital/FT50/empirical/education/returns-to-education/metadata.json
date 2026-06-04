@@ -1,8 +1,6 @@
 {
   "title": "Returns to Education",
-  "authors": [
-    "David A. Card"
-  ],
+  "authors": ["David A. Card"],
   "year": 2017,
   "journal": "Handbook of Labor Economics",
   "journal_tier": "FT50",
@@ -12,9 +10,7 @@
   "doi": "10.1016/S1573-4463(99)03008-4",
   "url": "https://www.sciencedirect.com/science/article/pii/S1573446309930084",
   "abstract": "We discuss returns to education.",
-  "keywords": [
-    "education"
-  ],
+  "keywords": ["education"],
   "category": "human-capital",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

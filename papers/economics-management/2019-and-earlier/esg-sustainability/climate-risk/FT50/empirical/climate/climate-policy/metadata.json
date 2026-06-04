@@ -1,10 +1,6 @@
 {
   "title": "Climate Policy",
-  "authors": [
-    "William A. Pizer",
-    "Joseph S. Aldy",
-    "David M. R. Sterner"
-  ],
+  "authors": ["William A. Pizer", "Joseph S. Aldy", "David M. R. Sterner"],
   "year": 2019,
   "journal": "Journal of Economic Literature",
   "journal_tier": "FT50",
@@ -14,9 +10,7 @@
   "doi": "10.1257/jel.55.1.5",
   "url": "https://www.aeaweb.org/articles?id=10.1257/jel.55.1.5",
   "abstract": "We discuss climate policy.",
-  "keywords": [
-    "climate-policy"
-  ],
+  "keywords": ["climate-policy"],
   "category": "climate-risk",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

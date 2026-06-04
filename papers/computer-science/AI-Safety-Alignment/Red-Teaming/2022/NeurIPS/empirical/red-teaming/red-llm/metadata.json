@@ -17,10 +17,7 @@
   "doi": "10.48550/arXiv.2202.03286",
   "url": "https://arxiv.org/abs/2202.03286",
   "abstract": "We automatically discover cases where a language model is not safe to deploy.",
-  "keywords": [
-    "red-teaming",
-    "alignment"
-  ],
+  "keywords": ["red-teaming", "alignment"],
   "category": "Red-Teaming",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

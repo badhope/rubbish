@@ -1,9 +1,6 @@
 {
   "title": "Consumer Behavior in Tourism",
-  "authors": [
-    "Yuksel E. A.",
-    "Yasin B."
-  ],
+  "authors": ["Yuksel E. A.", "Yasin B."],
   "year": 2017,
   "journal": "Tourism Management",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1016/j.tourman.2006.04.005",
   "url": "https://www.sciencedirect.com/science/article/pii/S0261517706000521",
   "abstract": "We study consumer behavior in tourism.",
-  "keywords": [
-    "tourism-cb"
-  ],
+  "keywords": ["tourism-cb"],
   "category": "consumer-behavior",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

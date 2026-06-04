@@ -15,10 +15,7 @@
   "doi": "10.48550/arXiv.1905.10437",
   "url": "https://arxiv.org/abs/1905.10437",
   "abstract": "We present N-BEATS a deep learning model for time series forecasting.",
-  "keywords": [
-    "nbeats",
-    "forecasting"
-  ],
+  "keywords": ["nbeats", "forecasting"],
   "category": "Forecasting",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

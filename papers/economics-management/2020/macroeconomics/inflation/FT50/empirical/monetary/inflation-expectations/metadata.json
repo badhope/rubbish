@@ -1,10 +1,6 @@
 {
   "title": "Inflation Expectations and the Price Puzzle",
-  "authors": [
-    "Atsushi Inoue",
-    "Barbara Rossi",
-    "Yiru Wang"
-  ],
+  "authors": ["Atsushi Inoue", "Barbara Rossi", "Yiru Wang"],
   "year": 2020,
   "journal": "Journal of Monetary Economics",
   "journal_tier": "FT50",
@@ -14,10 +10,7 @@
   "doi": "10.1016/j.jmoneco.2019.09.002",
   "url": "https://www.sciencedirect.com/science/article/pii/S0304393219301423",
   "abstract": "We study inflation expectations and the price puzzle.",
-  "keywords": [
-    "inflation-expectations",
-    "monetary"
-  ],
+  "keywords": ["inflation-expectations", "monetary"],
   "category": "inflation",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

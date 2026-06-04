@@ -1,8 +1,6 @@
 {
   "title": "Urban Economics",
-  "authors": [
-    "Edward L. Glaeser"
-  ],
+  "authors": ["Edward L. Glaeser"],
   "year": 2017,
   "journal": "Journal of Economic Perspectives",
   "journal_tier": "FT50",
@@ -12,9 +10,7 @@
   "doi": "10.1257/jep.2.2.23",
   "url": "https://www.aeaweb.org/articles?id=10.1257/jep.2.2.23",
   "abstract": "We discuss urban economics.",
-  "keywords": [
-    "urban"
-  ],
+  "keywords": ["urban"],
   "category": "urban-economics",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

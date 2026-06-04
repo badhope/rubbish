@@ -19,10 +19,7 @@
   "doi": "10.1038/nbt.4235",
   "url": "https://www.nature.com/articles/nbt.4235",
   "abstract": "We present DeepVariant a deep convolutional neural network for variant calling from next-generation DNA sequencing data.",
-  "keywords": [
-    "deepvariant",
-    "genomics"
-  ],
+  "keywords": ["deepvariant", "genomics"],
   "category": "Genomics",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

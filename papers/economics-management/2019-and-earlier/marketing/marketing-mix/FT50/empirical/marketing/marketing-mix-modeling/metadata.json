@@ -1,10 +1,6 @@
 {
   "title": "Marketing Mix Modeling",
-  "authors": [
-    "D. R. S. Buhl",
-    "Heribert Reisinger",
-    "Thomas S. F."
-  ],
+  "authors": ["D. R. S. Buhl", "Heribert Reisinger", "Thomas S. F."],
   "year": 2017,
   "journal": "Journal of Marketing",
   "journal_tier": "FT50",
@@ -14,9 +10,7 @@
   "doi": "10.1509/jm.16.0259",
   "url": "https://journals.sagepub.com/doi/10.1509/jm.16.0259",
   "abstract": "We study marketing mix modeling.",
-  "keywords": [
-    "mmm"
-  ],
+  "keywords": ["mmm"],
   "category": "marketing-mix",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,11 +1,6 @@
 {
   "title": "From RankNet to LambdaRank to LambdaMART: An Overview",
-  "authors": [
-    "Lisa M. Weinberger",
-    "Marius E. Meyer",
-    "J. C. S.",
-    "et al."
-  ],
+  "authors": ["Lisa M. Weinberger", "Marius E. Meyer", "J. C. S.", "et al."],
   "year": 2010,
   "journal": "Microsoft Research",
   "journal_tier": "WWW",
@@ -15,10 +10,7 @@
   "doi": "10.1007/s10791-010-9110-5",
   "url": "https://www.microsoft.com/en-us/research/publication/from-ranknet-to-lambdarank-to-lambdamart-an-overview/",
   "abstract": "An overview of the LambdaRank/LambdaMART learning-to-rank algorithms.",
-  "keywords": [
-    "lambdamart",
-    "learning-to-rank"
-  ],
+  "keywords": ["lambdamart", "learning-to-rank"],
   "category": "Learning-to-Rank",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

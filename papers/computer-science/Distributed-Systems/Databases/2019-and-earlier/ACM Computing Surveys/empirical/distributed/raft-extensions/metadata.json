@@ -1,9 +1,6 @@
 {
   "title": "Paxos vs Raft: Have we reached consensus on distributed consensus",
-  "authors": [
-    "Heidi Howard",
-    "Richard Mortier"
-  ],
+  "authors": ["Heidi Howard", "Richard Mortier"],
   "year": 2016,
   "journal": "PaPoC",
   "journal_tier": "ACM Computing Surveys",
@@ -13,10 +10,7 @@
   "doi": "10.1145/3380787.3393686",
   "url": "https://dl.acm.org/doi/10.1145/3380787.3393686",
   "abstract": "A discussion of distributed consensus.",
-  "keywords": [
-    "consensus",
-    "survey"
-  ],
+  "keywords": ["consensus", "survey"],
   "category": "Databases",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

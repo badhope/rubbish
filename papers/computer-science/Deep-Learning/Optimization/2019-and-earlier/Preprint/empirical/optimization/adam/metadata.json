@@ -1,9 +1,6 @@
 {
   "title": "Adam: A Method for Stochastic Optimization",
-  "authors": [
-    "Diederik P. Kingma",
-    "Jimmy Ba"
-  ],
+  "authors": ["Diederik P. Kingma", "Jimmy Ba"],
   "year": 2014,
   "journal": "arXiv",
   "journal_tier": "Preprint",
@@ -13,11 +10,7 @@
   "doi": "10.48550/arXiv.1412.6980",
   "url": "https://arxiv.org/abs/1412.6980",
   "abstract": "We introduce Adam an algorithm for first-order gradient-based optimization of stochastic objective functions based on adaptive estimates of lower-order moments.",
-  "keywords": [
-    "adam",
-    "optimization",
-    "deep learning"
-  ],
+  "keywords": ["adam", "optimization", "deep learning"],
   "category": "Optimization",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

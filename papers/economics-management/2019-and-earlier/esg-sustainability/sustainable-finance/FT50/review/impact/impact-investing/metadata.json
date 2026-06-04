@@ -1,10 +1,6 @@
 {
   "title": "Impact Investing",
-  "authors": [
-    "J. B. B.",
-    "Esther K. R.",
-    "J. P. S."
-  ],
+  "authors": ["J. B. B.", "Esther K. R.", "J. P. S."],
   "year": 2018,
   "journal": "Journal of Economic Perspectives",
   "journal_tier": "FT50",
@@ -14,9 +10,7 @@
   "doi": "10.1257/jep.34.3.121",
   "url": "https://www.aeaweb.org/articles?id=10.1257/jep.34.3.121",
   "abstract": "We discuss impact investing.",
-  "keywords": [
-    "impact-investing"
-  ],
+  "keywords": ["impact-investing"],
   "category": "sustainable-finance",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

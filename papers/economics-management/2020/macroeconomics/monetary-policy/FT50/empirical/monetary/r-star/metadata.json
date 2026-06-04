@@ -1,9 +1,6 @@
 {
   "title": "Measuring the Natural Rate of Interest: Past Present and Future",
-  "authors": [
-    "James D. Hamilton",
-    "Ethier T. Harris"
-  ],
+  "authors": ["James D. Hamilton", "Ethier T. Harris"],
   "year": 2020,
   "journal": "Journal of Economic Literature",
   "journal_tier": "FT50",
@@ -13,10 +10,7 @@
   "doi": "10.1257/jel.53.1.67",
   "url": "https://www.aeaweb.org/articles?id=10.1257/jel.53.1.67",
   "abstract": "We measure the natural rate of interest.",
-  "keywords": [
-    "r-star",
-    "monetary"
-  ],
+  "keywords": ["r-star", "monetary"],
   "category": "monetary-policy",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,11 +1,6 @@
 {
   "title": "The Rise of the Capital Share",
-  "authors": [
-    "Holger Görg",
-    "Aoife Hanley",
-    "Erich K.",
-    "G. D. M."
-  ],
+  "authors": ["Holger Görg", "Aoife Hanley", "Erich K.", "G. D. M."],
   "year": 2014,
   "journal": "American Economic Review",
   "journal_tier": "FT50",
@@ -15,10 +10,7 @@
   "doi": "10.1257/aer.104.5.89",
   "url": "https://www.aeaweb.org/articles?id=10.1257/aer.104.5.89",
   "abstract": "We study the rise of the capital share.",
-  "keywords": [
-    "capital-share",
-    "inequality"
-  ],
+  "keywords": ["capital-share", "inequality"],
   "category": "inequality",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

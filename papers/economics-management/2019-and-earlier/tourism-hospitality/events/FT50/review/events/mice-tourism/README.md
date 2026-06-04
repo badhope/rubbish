@@ -4,13 +4,13 @@
 
 > ✓ DOI verified live
 
-| Field       | Value                                                                          |
-| ----------- | ------------------------------------------------------------------------------ |
-| ---         | ---                                                                            |
-| **Authors** | Donald G. & J. R. B. R.                                                        |
-| **Year**    | 2017                                                                           |
-| **Journal** | Tourism Management (FT50), 2003                                                |
-| **DOI**     | [10.1016/S0261-5177(02)00105-X](https://doi.org/10.1016/S0261-5177(02)00105-X) |
+| Field       | Value                                                                            |
+| ----------- | -------------------------------------------------------------------------------- |
+| ---         | ---                                                                              |
+| **Authors** | Donald G. & J. R. B. R.                                                          |
+| **Year**    | 2017                                                                             |
+| **Journal** | Tourism Management (FT50), 2003                                                  |
+| **DOI**     | [10.1016/S0261-5177(02)00105-X](<https://doi.org/10.1016/S0261-5177(02)00105-X>) |
 
 ## Where it sits in the corpus
 
@@ -28,7 +28,7 @@
 
 ## Where to read it
 
-- [DOI landing page](https://doi.org/10.1016/S0261-5177(02)00105-X) — `10.1016/S0261-5177(02)00105-X`
+- [DOI landing page](<https://doi.org/10.1016/S0261-5177(02)00105-X>) — `10.1016/S0261-5177(02)00105-X`
 - [Publisher page](https://www.sciencedirect.com/science/article/pii/S026151770200105X)
 - [Repository folder](https://github.com/badhope/ScholarLib/tree/main/papers/economics-management/2019-and-earlier/tourism-hospitality/events/FT50/review/events/mice-tourism)
 - [metadata.json](https://github.com/badhope/ScholarLib/tree/main/papers/economics-management/2019-and-earlier/tourism-hospitality/events/FT50/review/events/mice-tourism/metadata.json)

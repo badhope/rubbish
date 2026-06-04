@@ -1,9 +1,6 @@
 {
   "title": "Six Sigma",
-  "authors": [
-    "James O. West",
-    "Dean R. Carnell"
-  ],
+  "authors": ["James O. West", "Dean R. Carnell"],
   "year": 2017,
   "journal": "American Mathematical Monthly",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1080/00029890.2005.11920338",
   "url": "https://www.tandfonline.com/doi/10.1080/00029890.2005.11920338",
   "abstract": "We discuss Six Sigma.",
-  "keywords": [
-    "six-sigma"
-  ],
+  "keywords": ["six-sigma"],
   "category": "quality",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

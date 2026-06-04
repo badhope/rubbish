@@ -1,8 +1,6 @@
 {
   "title": "Procurement Strategy",
-  "authors": [
-    "Mark Pagell"
-  ],
+  "authors": ["Mark Pagell"],
   "year": 2017,
   "journal": "Journal of Operations Management",
   "journal_tier": "FT50",
@@ -12,9 +10,7 @@
   "doi": "10.1016/j.jom.2004.08.001",
   "url": "https://www.sciencedirect.com/science/article/pii/S0272696304000611",
   "abstract": "We study procurement strategy.",
-  "keywords": [
-    "procurement"
-  ],
+  "keywords": ["procurement"],
   "category": "procurement",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

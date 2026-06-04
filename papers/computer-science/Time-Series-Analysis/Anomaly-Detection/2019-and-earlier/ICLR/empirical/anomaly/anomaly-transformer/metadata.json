@@ -16,10 +16,7 @@
   "doi": "10.48550/arXiv.2110.02642",
   "url": "https://arxiv.org/abs/2110.02642",
   "abstract": "We present Anomaly Transformer for time series anomaly detection.",
-  "keywords": [
-    "anomaly-transformer",
-    "anomaly"
-  ],
+  "keywords": ["anomaly-transformer", "anomaly"],
   "category": "Anomaly-Detection",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

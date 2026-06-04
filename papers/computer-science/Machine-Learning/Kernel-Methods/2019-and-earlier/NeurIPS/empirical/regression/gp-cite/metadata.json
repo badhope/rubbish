@@ -1,10 +1,6 @@
 {
   "title": "A Sparse Gaussian Processes for Bayesian Inference",
-  "authors": [
-    "Anton Schwaighofer",
-    "Volker Tresp",
-    "Kai Yu"
-  ],
+  "authors": ["Anton Schwaighofer", "Volker Tresp", "Kai Yu"],
   "year": 2002,
   "journal": "NeurIPS",
   "journal_tier": "NeurIPS",
@@ -14,10 +10,7 @@
   "doi": "10.1007/978-3-540-30115-8_29",
   "url": "https://link.springer.com/chapter/10.1007/978-3-540-30115-8_29",
   "abstract": "We present a sparse Gaussian process approach to Bayesian learning.",
-  "keywords": [
-    "sparse gp",
-    "gaussian processes"
-  ],
+  "keywords": ["sparse gp", "gaussian processes"],
   "category": "Kernel-Methods",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

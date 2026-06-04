@@ -1,9 +1,6 @@
 {
   "title": "Balanced Scorecard",
-  "authors": [
-    "Robert S. Kaplan",
-    "David P. Norton"
-  ],
+  "authors": ["Robert S. Kaplan", "David P. Norton"],
   "year": 2017,
   "journal": "Harvard Business Review",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.5555/bsc-hbr",
   "url": "https://hbr.org/1992/01/the-balanced-scorecard-measures-that-drive-performance",
   "abstract": "We present the balanced scorecard.",
-  "keywords": [
-    "bsc"
-  ],
+  "keywords": ["bsc"],
   "category": "strategy-execution",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

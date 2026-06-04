@@ -1,11 +1,6 @@
 {
   "title": "BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models",
-  "authors": [
-    "Junnan Li",
-    "Dongxu Li",
-    "Silvio Savarese",
-    "Steven Hoi"
-  ],
+  "authors": ["Junnan Li", "Dongxu Li", "Silvio Savarese", "Steven Hoi"],
   "year": 2022,
   "journal": "ICML",
   "journal_tier": "ICML",
@@ -15,10 +10,7 @@
   "doi": "10.48550/arXiv.2301.12597",
   "url": "https://arxiv.org/abs/2301.12597",
   "abstract": "We propose BLIP-2 a generic and efficient pre-training strategy that bootstraps vision-language pre-training from off-the-shelf frozen pre-trained image encoders and frozen large language models.",
-  "keywords": [
-    "blip-2",
-    "vision-language"
-  ],
+  "keywords": ["blip-2", "vision-language"],
   "category": "Vision-Language-Models",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

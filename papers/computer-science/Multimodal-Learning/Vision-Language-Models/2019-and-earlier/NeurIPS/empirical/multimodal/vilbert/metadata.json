@@ -1,11 +1,6 @@
 {
   "title": "ViLBERT: Pretraining Task-Agnostic Visiolinguistic Representations for Vision-and-Language Tasks",
-  "authors": [
-    "Jiasen Lu",
-    "Dhruv Batra",
-    "Devi Parikh",
-    "Stefan Lee"
-  ],
+  "authors": ["Jiasen Lu", "Dhruv Batra", "Devi Parikh", "Stefan Lee"],
   "year": 2019,
   "journal": "NeurIPS",
   "journal_tier": "NeurIPS",
@@ -15,10 +10,7 @@
   "doi": "10.48550/arXiv.1908.02265",
   "url": "https://arxiv.org/abs/1908.02265",
   "abstract": "We introduce ViLBERT a model for learning task-agnostic joint representations of image content and natural language.",
-  "keywords": [
-    "vilbert",
-    "vision-language"
-  ],
+  "keywords": ["vilbert", "vision-language"],
   "category": "Vision-Language-Models",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,9 +1,6 @@
 {
   "title": "The Startup Ecosystem",
-  "authors": [
-    "B. E. Eesley",
-    "William R. Kerr"
-  ],
+  "authors": ["B. E. Eesley", "William R. Kerr"],
   "year": 2017,
   "journal": "Strategic Entrepreneurship Journal",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1002/sej.1247",
   "url": "https://onlinelibrary.wiley.com/doi/10.1002/sej.1247",
   "abstract": "We study the startup ecosystem.",
-  "keywords": [
-    "ecosystem"
-  ],
+  "keywords": ["ecosystem"],
   "category": "startups",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,10 +1,6 @@
 {
   "title": "Wage Inequality",
-  "authors": [
-    "David H. Autor",
-    "Lawrence F. Katz",
-    "Melissa S. K."
-  ],
+  "authors": ["David H. Autor", "Lawrence F. Katz", "Melissa S. K."],
   "year": 2017,
   "journal": "American Economic Review",
   "journal_tier": "FT50",
@@ -14,9 +10,7 @@
   "doi": "10.1257/aer.98.2.103",
   "url": "https://www.aeaweb.org/articles?id=10.1257/aer.98.2.103",
   "abstract": "We study wage inequality.",
-  "keywords": [
-    "wage-inequality"
-  ],
+  "keywords": ["wage-inequality"],
   "category": "wages",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

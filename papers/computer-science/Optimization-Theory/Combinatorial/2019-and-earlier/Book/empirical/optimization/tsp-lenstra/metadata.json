@@ -15,10 +15,7 @@
   "doi": "10.1515/9781400841103",
   "url": "https://press.princeton.edu/books/paperback/9780691129938/the-traveling-salesman-problem",
   "abstract": "A comprehensive study of the TSP.",
-  "keywords": [
-    "tsp",
-    "combinatorial"
-  ],
+  "keywords": ["tsp", "combinatorial"],
   "category": "Combinatorial",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

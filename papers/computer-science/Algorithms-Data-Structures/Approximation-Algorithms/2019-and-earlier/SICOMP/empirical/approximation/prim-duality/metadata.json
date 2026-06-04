@@ -1,8 +1,6 @@
 {
   "title": "Primal-Dual Approximation Algorithms for Feedback Problems in Digraphs",
-  "authors": [
-    "Vijay V. Vazirani"
-  ],
+  "authors": ["Vijay V. Vazirani"],
   "year": 1994,
   "journal": "SICOMP",
   "journal_tier": "SICOMP",
@@ -12,10 +10,7 @@
   "doi": "10.1137/S0097539791199815",
   "url": "https://epubs.siam.org/doi/10.1137/S0097539791199815",
   "abstract": "We provide primal-dual approximation algorithms for feedback set problems.",
-  "keywords": [
-    "approximation",
-    "feedback set"
-  ],
+  "keywords": ["approximation", "feedback set"],
   "category": "Approximation-Algorithms",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,9 +1,6 @@
 {
   "title": "Emerging Market Multinationals",
-  "authors": [
-    "Alvaro E.",
-    "M. Lourdes M."
-  ],
+  "authors": ["Alvaro E.", "M. Lourdes M."],
   "year": 2017,
   "journal": "Journal of International Business Studies",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1057/jibs.2012.42",
   "url": "https://link.springer.com/article/10.1057/jibs.2012.42",
   "abstract": "We study emerging market multinationals.",
-  "keywords": [
-    "em-mne"
-  ],
+  "keywords": ["em-mne"],
   "category": "emerging-markets",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

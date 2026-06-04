@@ -1,9 +1,6 @@
 {
   "title": "Urban Density",
-  "authors": [
-    "Edward L. Glaeser",
-    "Matthew E. K."
-  ],
+  "authors": ["Edward L. Glaeser", "Matthew E. K."],
   "year": 2018,
   "journal": "American Economic Review",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1257/aer.100.2.100",
   "url": "https://www.aeaweb.org/articles?id=10.1257/aer.100.2.100",
   "abstract": "We study urban density.",
-  "keywords": [
-    "density"
-  ],
+  "keywords": ["density"],
   "category": "urban-economics",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

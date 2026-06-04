@@ -1,9 +1,6 @@
 {
   "title": "The Financial Industry in the Era of AI: Opportunities and Risks",
-  "authors": [
-    "Andrew J. Karolyi",
-    "Alvaro G. Taboada"
-  ],
+  "authors": ["Andrew J. Karolyi", "Alvaro G. Taboada"],
   "year": 2019,
   "journal": "Review of Corporate Finance Studies",
   "journal_tier": "FT50",
@@ -13,10 +10,7 @@
   "doi": "10.1093/rcfs/cfab015",
   "url": "https://academic.oup.com/rcfs/article/10/4/847/6338229",
   "abstract": "We examine opportunities and risks of AI in finance.",
-  "keywords": [
-    "ai",
-    "fintech"
-  ],
+  "keywords": ["ai", "fintech"],
   "category": "fintech",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

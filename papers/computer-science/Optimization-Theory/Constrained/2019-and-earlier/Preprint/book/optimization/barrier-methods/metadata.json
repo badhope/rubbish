@@ -1,10 +1,6 @@
 {
   "title": "Interior Point Methods for Nonlinear Optimization",
-  "authors": [
-    "Cornelis Roos",
-    "Tamás Terlaky",
-    "Jean-Philippe Vial"
-  ],
+  "authors": ["Cornelis Roos", "Tamás Terlaky", "Jean-Philippe Vial"],
   "year": 2015,
   "journal": "Springer",
   "journal_tier": "-",
@@ -14,10 +10,7 @@
   "doi": "10.1007/b135573",
   "url": "https://www.springer.com/gp/book/9780387263793",
   "abstract": "Interior point methods for nonlinear optimization.",
-  "keywords": [
-    "barrier-methods",
-    "ipm"
-  ],
+  "keywords": ["barrier-methods", "ipm"],
   "category": "Constrained",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -17,10 +17,7 @@
   "doi": "10.48550/arXiv.2011.13456",
   "url": "https://arxiv.org/abs/2011.13456",
   "abstract": "We present a stochastic differential equation approach to score-based generative modeling.",
-  "keywords": [
-    "score-based",
-    "diffusion"
-  ],
+  "keywords": ["score-based", "diffusion"],
   "category": "Score-Based",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

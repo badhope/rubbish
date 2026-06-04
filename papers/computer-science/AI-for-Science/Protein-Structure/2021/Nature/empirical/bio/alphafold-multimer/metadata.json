@@ -1,10 +1,6 @@
 {
   "title": "Highly accurate protein structure prediction for the human proteome",
-  "authors": [
-    "John Jumper",
-    "Demis Hassabis",
-    "et al."
-  ],
+  "authors": ["John Jumper", "Demis Hassabis", "et al."],
   "year": 2021,
   "journal": "Nature",
   "journal_tier": "Nature",
@@ -14,10 +10,7 @@
   "doi": "10.1038/s41586-021-03828-1",
   "url": "https://www.nature.com/articles/s41586-021-03828-1",
   "abstract": "We provide accurate structure predictions for the human proteome.",
-  "keywords": [
-    "alphafold",
-    "human proteome"
-  ],
+  "keywords": ["alphafold", "human proteome"],
   "category": "Protein-Structure",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

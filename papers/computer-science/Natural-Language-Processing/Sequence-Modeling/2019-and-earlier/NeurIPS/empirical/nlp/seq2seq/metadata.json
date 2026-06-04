@@ -1,10 +1,6 @@
 {
   "title": "Sequence to Sequence Learning with Neural Networks",
-  "authors": [
-    "Ilya Sutskever",
-    "Oriol Vinyals",
-    "Quoc V. Le"
-  ],
+  "authors": ["Ilya Sutskever", "Oriol Vinyals", "Quoc V. Le"],
   "year": 2014,
   "journal": "NeurIPS",
   "journal_tier": "NeurIPS",
@@ -14,10 +10,7 @@
   "doi": "10.48550/arXiv.1409.3215",
   "url": "https://arxiv.org/abs/1409.3215",
   "abstract": "We present a general end-to-end approach to sequence learning that makes minimal assumptions on the sequence structure.",
-  "keywords": [
-    "seq2seq",
-    "machine translation"
-  ],
+  "keywords": ["seq2seq", "machine translation"],
   "category": "Sequence-Modeling",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

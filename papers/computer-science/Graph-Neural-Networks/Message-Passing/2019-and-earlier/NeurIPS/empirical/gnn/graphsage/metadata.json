@@ -1,10 +1,6 @@
 {
   "title": "Inductive Representation Learning on Large Graphs",
-  "authors": [
-    "William L. Hamilton",
-    "Rex Ying",
-    "Jure Leskovec"
-  ],
+  "authors": ["William L. Hamilton", "Rex Ying", "Jure Leskovec"],
   "year": 2018,
   "journal": "NeurIPS",
   "journal_tier": "NeurIPS",
@@ -14,10 +10,7 @@
   "doi": "10.48550/arXiv.1706.02216",
   "url": "https://arxiv.org/abs/1706.02216",
   "abstract": "We present GraphSAGE a general inductive framework that efficiently generates node embeddings for previously unseen data.",
-  "keywords": [
-    "graphsage",
-    "gnn"
-  ],
+  "keywords": ["graphsage", "gnn"],
   "category": "Message-Passing",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

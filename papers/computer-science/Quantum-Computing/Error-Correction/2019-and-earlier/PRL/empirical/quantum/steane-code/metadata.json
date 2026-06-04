@@ -1,8 +1,6 @@
 {
   "title": "Error Correcting Codes in Quantum Theory",
-  "authors": [
-    "Andrew M. Steane"
-  ],
+  "authors": ["Andrew M. Steane"],
   "year": 1996,
   "journal": "Physical Review Letters",
   "journal_tier": "PRL",
@@ -12,10 +10,7 @@
   "doi": "10.1103/PhysRevLett.77.793",
   "url": "https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.77.793",
   "abstract": "Steane introduces a class of quantum error correcting codes.",
-  "keywords": [
-    "steane",
-    "error-correction"
-  ],
+  "keywords": ["steane", "error-correction"],
   "category": "Error-Correction",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

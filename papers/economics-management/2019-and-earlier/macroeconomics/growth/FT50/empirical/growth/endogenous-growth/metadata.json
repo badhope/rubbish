@@ -1,8 +1,6 @@
 {
   "title": "Endogenous Technological Change",
-  "authors": [
-    "Paul M. Romer"
-  ],
+  "authors": ["Paul M. Romer"],
   "year": 1990,
   "journal": "Journal of Political Economy",
   "journal_tier": "FT50",
@@ -12,10 +10,7 @@
   "doi": "10.1086/261725",
   "url": "https://www.journals.uchicago.edu/doi/10.1086/261725",
   "abstract": "We present the endogenous growth model.",
-  "keywords": [
-    "endogenous-growth",
-    "growth"
-  ],
+  "keywords": ["endogenous-growth", "growth"],
   "category": "growth",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

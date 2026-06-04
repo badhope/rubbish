@@ -1,10 +1,6 @@
 {
   "title": "Sustainable Tourism",
-  "authors": [
-    "Stefan G.",
-    "Brian G.",
-    "Sara N."
-  ],
+  "authors": ["Stefan G.", "Brian G.", "Sara N."],
   "year": 2017,
   "journal": "Journal of Sustainable Tourism",
   "journal_tier": "FT50",
@@ -14,9 +10,7 @@
   "doi": "10.1080/09669582.2013.821630",
   "url": "https://www.tandfonline.com/doi/full/10.1080/09669582.2013.821630",
   "abstract": "We discuss sustainable tourism.",
-  "keywords": [
-    "sustainable"
-  ],
+  "keywords": ["sustainable"],
   "category": "sustainability",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

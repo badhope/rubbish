@@ -15,10 +15,7 @@
   "doi": "10.48550/arXiv.1205.3532",
   "url": "https://www.cs.princeton.edu/~blei/papers/TehJordanBealBlei2004.pdf",
   "abstract": "We define the hierarchical Dirichlet process a nonparametric Bayesian model for grouped data.",
-  "keywords": [
-    "hdp",
-    "bayesian nonparametrics"
-  ],
+  "keywords": ["hdp", "bayesian nonparametrics"],
   "category": "Bayesian-Methods",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

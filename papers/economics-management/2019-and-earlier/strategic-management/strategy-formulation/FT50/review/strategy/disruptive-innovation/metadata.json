@@ -1,8 +1,6 @@
 {
   "title": "Disruptive Innovation",
-  "authors": [
-    "Clayton M. C."
-  ],
+  "authors": ["Clayton M. C."],
   "year": 2017,
   "journal": "Harvard Business Review",
   "journal_tier": "FT50",
@@ -12,9 +10,7 @@
   "doi": "10.5555/christensen-disruptive",
   "url": "https://hbr.org/1995/01/the-clayton-m-christensen-update",
   "abstract": "We discuss disruptive innovation.",
-  "keywords": [
-    "disruptive"
-  ],
+  "keywords": ["disruptive"],
   "category": "strategy-formulation",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

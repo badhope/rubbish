@@ -1,10 +1,6 @@
 {
   "title": "Big Data and the Firm",
-  "authors": [
-    "Ulrich K. Dissertation",
-    "Xavier B. L.",
-    "N. S."
-  ],
+  "authors": ["Ulrich K. Dissertation", "Xavier B. L.", "N. S."],
   "year": 2018,
   "journal": "Journal of Economic Perspectives",
   "journal_tier": "FT50",
@@ -14,9 +10,7 @@
   "doi": "10.1257/jep.32.3.3",
   "url": "https://www.aeaweb.org/articles?id=10.1257/jep.32.3.3",
   "abstract": "We discuss big data and the firm.",
-  "keywords": [
-    "big-data"
-  ],
+  "keywords": ["big-data"],
   "category": "big-data",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

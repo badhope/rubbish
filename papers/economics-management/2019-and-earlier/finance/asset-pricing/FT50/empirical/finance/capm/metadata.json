@@ -1,9 +1,6 @@
 {
   "title": "Common Risk Factors in the Returns on Stocks and Bonds",
-  "authors": [
-    "Eugene F. Fama",
-    "Kenneth R. French"
-  ],
+  "authors": ["Eugene F. Fama", "Kenneth R. French"],
   "year": 1993,
   "journal": "Journal of Financial Economics",
   "journal_tier": "FT50",
@@ -13,10 +10,7 @@
   "doi": "10.1016/0304-405X(93)90023-5",
   "url": "https://www.sciencedirect.com/science/article/pii/0304405X93900235",
   "abstract": "We present the Fama-French three-factor model.",
-  "keywords": [
-    "capm",
-    "fama-french"
-  ],
+  "keywords": ["capm", "fama-french"],
   "category": "asset-pricing",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

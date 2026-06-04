@@ -1,9 +1,6 @@
 {
   "title": "Gaussian Processes for Machine Learning",
-  "authors": [
-    "Carl Edward Rasmussen",
-    "Christopher K. I. Williams"
-  ],
+  "authors": ["Carl Edward Rasmussen", "Christopher K. I. Williams"],
   "year": 2006,
   "journal": "MIT Press",
   "journal_tier": "-",
@@ -13,10 +10,7 @@
   "doi": "10.7551/mitpress/3206.001.0001",
   "url": "https://gaussianprocess.org/gpml/",
   "abstract": "This book provides a comprehensive introduction to Gaussian processes for machine learning.",
-  "keywords": [
-    "gaussian processes",
-    "book"
-  ],
+  "keywords": ["gaussian processes", "book"],
   "category": "Foundations",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

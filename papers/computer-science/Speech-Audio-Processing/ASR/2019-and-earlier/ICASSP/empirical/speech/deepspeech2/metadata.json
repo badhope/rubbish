@@ -17,10 +17,7 @@
   "doi": "10.48550/arXiv.1512.02595",
   "url": "https://arxiv.org/abs/1512.02595",
   "abstract": "We present Deep Speech 2 end-to-end speech recognition.",
-  "keywords": [
-    "deepspeech2",
-    "asr"
-  ],
+  "keywords": ["deepspeech2", "asr"],
   "category": "ASR",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

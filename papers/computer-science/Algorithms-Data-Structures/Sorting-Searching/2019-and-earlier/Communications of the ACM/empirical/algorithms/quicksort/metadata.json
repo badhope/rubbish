@@ -1,8 +1,6 @@
 {
   "title": "Quicksort",
-  "authors": [
-    "Charles A. R. Hoare"
-  ],
+  "authors": ["Charles A. R. Hoare"],
   "year": 1962,
   "journal": "Communications of the ACM",
   "journal_tier": "Communications of the ACM",
@@ -12,10 +10,7 @@
   "doi": "10.1145/366622.366644",
   "url": "https://dl.acm.org/doi/10.1145/366622.366644",
   "abstract": "The description of a method of sorting which is basically a recursive descent of the quicksort algorithm.",
-  "keywords": [
-    "quicksort",
-    "sorting"
-  ],
+  "keywords": ["quicksort", "sorting"],
   "category": "Sorting-Searching",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

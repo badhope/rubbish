@@ -1,9 +1,6 @@
 {
   "title": "Transfer Learning: A Comprehensive Survey",
-  "authors": [
-    "Sinno Jialin Pan",
-    "Qiang Yang"
-  ],
+  "authors": ["Sinno Jialin Pan", "Qiang Yang"],
   "year": 2010,
   "journal": "IEEE Transactions on Knowledge and Data Engineering",
   "journal_tier": "-",
@@ -13,10 +10,7 @@
   "doi": "10.1109/TKDE.2009.191",
   "url": "https://www.cse.ust.hk/~qyang/Docs/2009/tkde_transfer_learning.pdf",
   "abstract": "We present a comprehensive survey of transfer learning research and discuss the current state of the art and future research directions.",
-  "keywords": [
-    "transfer learning",
-    "survey"
-  ],
+  "keywords": ["transfer learning", "survey"],
   "category": "Transfer-Learning",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,11 +1,6 @@
 {
   "title": "Lattice-based Cryptography",
-  "authors": [
-    "Chris Peikert",
-    "Vadim Lyubashevsky",
-    "Chris D. Long",
-    "et al."
-  ],
+  "authors": ["Chris Peikert", "Vadim Lyubashevsky", "Chris D. Long", "et al."],
   "year": 2015,
   "journal": "Foundations and Trends in Theoretical Computer Science",
   "journal_tier": "-",
@@ -15,10 +10,7 @@
   "doi": "10.1007/978-3-642-13190-5_1",
   "url": "https://web.eecs.umich.edu/~cpeikert/pubs/lattice-survey.pdf",
   "abstract": "A survey of lattice-based cryptography.",
-  "keywords": [
-    "lattice-crypto",
-    "survey"
-  ],
+  "keywords": ["lattice-crypto", "survey"],
   "category": "Cryptography",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

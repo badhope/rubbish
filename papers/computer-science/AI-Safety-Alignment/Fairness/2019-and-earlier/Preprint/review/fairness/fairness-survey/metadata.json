@@ -1,8 +1,6 @@
 {
   "title": "Fairness in Machine Learning: A Survey",
-  "authors": [
-    "Indre Zliobaite"
-  ],
+  "authors": ["Indre Zliobaite"],
   "year": 2016,
   "journal": "SSRN",
   "journal_tier": "-",
@@ -12,10 +10,7 @@
   "doi": "10.2139/ssrn.2853647",
   "url": "https://arxiv.org/abs/2010.04053",
   "abstract": "We survey the literature on fairness in machine learning.",
-  "keywords": [
-    "fairness",
-    "survey"
-  ],
+  "keywords": ["fairness", "survey"],
   "category": "Fairness",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -19,11 +19,7 @@
   "doi": "10.48550/arXiv.2005.14165",
   "url": "https://arxiv.org/abs/2005.14165",
   "abstract": "We train GPT-3 an autoregressive language model with 175 billion parameters and test its performance in the few-shot setting.",
-  "keywords": [
-    "gpt-3",
-    "few-shot",
-    "in-context learning"
-  ],
+  "keywords": ["gpt-3", "few-shot", "in-context learning"],
   "category": "Pretraining",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,8 +1,6 @@
 {
   "title": "Transportation Economics",
-  "authors": [
-    "Richard A. M."
-  ],
+  "authors": ["Richard A. M."],
   "year": 2017,
   "journal": "American Economic Review",
   "journal_tier": "FT50",
@@ -12,9 +10,7 @@
   "doi": "10.1257/aer.p20171064",
   "url": "https://www.aeaweb.org/articles?id=10.1257/aer.p20171064",
   "abstract": "We discuss transportation economics.",
-  "keywords": [
-    "transportation"
-  ],
+  "keywords": ["transportation"],
   "category": "transportation",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

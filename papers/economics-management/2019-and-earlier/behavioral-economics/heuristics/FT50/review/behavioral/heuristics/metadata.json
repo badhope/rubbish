@@ -1,9 +1,6 @@
 {
   "title": "Judgment under Uncertainty: Heuristics and Biases",
-  "authors": [
-    "Amos Tversky",
-    "Daniel Kahneman"
-  ],
+  "authors": ["Amos Tversky", "Daniel Kahneman"],
   "year": 1974,
   "journal": "Science",
   "journal_tier": "FT50",
@@ -13,10 +10,7 @@
   "doi": "10.1126/science.185.4157.1124",
   "url": "https://www.science.org/doi/10.1126/science.185.4157.1124",
   "abstract": "We study heuristics and biases.",
-  "keywords": [
-    "heuristics",
-    "behavioral"
-  ],
+  "keywords": ["heuristics", "behavioral"],
   "category": "heuristics",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

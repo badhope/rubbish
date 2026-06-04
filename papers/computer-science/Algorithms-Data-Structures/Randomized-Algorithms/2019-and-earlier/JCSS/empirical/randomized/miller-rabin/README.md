@@ -4,13 +4,13 @@
 
 > ✓ DOI verified live
 
-| Field       | Value                                                                        |
-| ----------- | ---------------------------------------------------------------------------- |
-| ---         | ---                                                                          |
-| **Authors** | Miller & Rabin                                                               |
-| **Year**    | 1989                                                                         |
-| **Journal** | Journal of Computer and System Sciences (JCSS), 1980                         |
-| **DOI**     | [10.1016/0022-0000(80)90021-9](https://doi.org/10.1016/0022-0000(80)90021-9) |
+| Field       | Value                                                                          |
+| ----------- | ------------------------------------------------------------------------------ |
+| ---         | ---                                                                            |
+| **Authors** | Miller & Rabin                                                                 |
+| **Year**    | 1989                                                                           |
+| **Journal** | Journal of Computer and System Sciences (JCSS), 1980                           |
+| **DOI**     | [10.1016/0022-0000(80)90021-9](<https://doi.org/10.1016/0022-0000(80)90021-9>) |
 
 ## Where it sits in the corpus
 
@@ -28,7 +28,7 @@
 
 ## Where to read it
 
-- [DOI landing page](https://doi.org/10.1016/0022-0000(80)90021-9) — `10.1016/0022-0000(80)90021-9`
+- [DOI landing page](<https://doi.org/10.1016/0022-0000(80)90021-9>) — `10.1016/0022-0000(80)90021-9`
 - [Publisher page](https://www.sciencedirect.com/science/article/pii/0022000080900219)
 - [Repository folder](https://github.com/badhope/ScholarLib/tree/main/papers/computer-science/Algorithms-Data-Structures/Randomized-Algorithms/2019-and-earlier/JCSS/empirical/randomized/miller-rabin)
 - [metadata.json](https://github.com/badhope/ScholarLib/tree/main/papers/computer-science/Algorithms-Data-Structures/Randomized-Algorithms/2019-and-earlier/JCSS/empirical/randomized/miller-rabin/metadata.json)

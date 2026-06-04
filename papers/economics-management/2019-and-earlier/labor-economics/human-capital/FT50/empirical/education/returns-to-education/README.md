@@ -4,13 +4,13 @@
 
 > ✓ DOI verified live
 
-| Field       | Value                                                                          |
-| ----------- | ------------------------------------------------------------------------------ |
-| ---         | ---                                                                            |
-| **Authors** | David A. Card                                                                  |
-| **Year**    | 2017                                                                           |
-| **Journal** | Handbook of Labor Economics (FT50), 1999                                       |
-| **DOI**     | [10.1016/S1573-4463(99)03008-4](https://doi.org/10.1016/S1573-4463(99)03008-4) |
+| Field       | Value                                                                            |
+| ----------- | -------------------------------------------------------------------------------- |
+| ---         | ---                                                                              |
+| **Authors** | David A. Card                                                                    |
+| **Year**    | 2017                                                                             |
+| **Journal** | Handbook of Labor Economics (FT50), 1999                                         |
+| **DOI**     | [10.1016/S1573-4463(99)03008-4](<https://doi.org/10.1016/S1573-4463(99)03008-4>) |
 
 ## Where it sits in the corpus
 
@@ -28,7 +28,7 @@
 
 ## Where to read it
 
-- [DOI landing page](https://doi.org/10.1016/S1573-4463(99)03008-4) — `10.1016/S1573-4463(99)03008-4`
+- [DOI landing page](<https://doi.org/10.1016/S1573-4463(99)03008-4>) — `10.1016/S1573-4463(99)03008-4`
 - [Publisher page](https://www.sciencedirect.com/science/article/pii/S1573446309930084)
 - [Repository folder](https://github.com/badhope/ScholarLib/tree/main/papers/economics-management/2019-and-earlier/labor-economics/human-capital/FT50/empirical/education/returns-to-education)
 - [metadata.json](https://github.com/badhope/ScholarLib/tree/main/papers/economics-management/2019-and-earlier/labor-economics/human-capital/FT50/empirical/education/returns-to-education/metadata.json)

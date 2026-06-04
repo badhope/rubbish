@@ -1,10 +1,6 @@
 {
   "title": "Executive Compensation",
-  "authors": [
-    "John E. Core",
-    "Wayne R. Guay",
-    "David F. Larcker"
-  ],
+  "authors": ["John E. Core", "Wayne R. Guay", "David F. Larcker"],
   "year": 2017,
   "journal": "Journal of Economic Perspectives",
   "journal_tier": "FT50",
@@ -14,9 +10,7 @@
   "doi": "10.1257/089533003769204349",
   "url": "https://www.aeaweb.org/articles?id=10.1257/089533003769204349",
   "abstract": "We discuss executive compensation.",
-  "keywords": [
-    "compensation"
-  ],
+  "keywords": ["compensation"],
   "category": "compensation",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

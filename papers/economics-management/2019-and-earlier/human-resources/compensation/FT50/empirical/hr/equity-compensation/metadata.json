@@ -1,11 +1,6 @@
 {
   "title": "Equity Compensation",
-  "authors": [
-    "Xiaohui Gao",
-    "Randall A. Lewis",
-    "John M. F.",
-    "G. N. F."
-  ],
+  "authors": ["Xiaohui Gao", "Randall A. Lewis", "John M. F.", "G. N. F."],
   "year": 2017,
   "journal": "Review of Financial Studies",
   "journal_tier": "FT50",
@@ -15,9 +10,7 @@
   "doi": "10.1093/rfs/hhv022",
   "url": "https://academic.oup.com/rfs/article/28/8/2220/1948056",
   "abstract": "We study equity compensation.",
-  "keywords": [
-    "equity-comp"
-  ],
+  "keywords": ["equity-comp"],
   "category": "compensation",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

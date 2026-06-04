@@ -1,10 +1,6 @@
 {
   "title": "Deep Learning Book",
-  "authors": [
-    "Ian Goodfellow",
-    "Yoshua Bengio",
-    "Aaron Courville"
-  ],
+  "authors": ["Ian Goodfellow", "Yoshua Bengio", "Aaron Courville"],
   "year": 2017,
   "journal": "MIT Press",
   "journal_tier": "-",
@@ -14,11 +10,7 @@
   "doi": "10.5555/3243877",
   "url": "https://www.deeplearningbook.org/",
   "abstract": "The Deep Learning textbook is a resource intended to help students and practitioners enter the field of machine learning in general and deep learning in particular.",
-  "keywords": [
-    "deep learning",
-    "textbook",
-    "book"
-  ],
+  "keywords": ["deep learning", "textbook", "book"],
   "category": "Theory",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

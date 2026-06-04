@@ -1,10 +1,6 @@
 {
   "title": "Board Diversity and Firm Performance",
-  "authors": [
-    "Douglas Cumming",
-    "Tao Li",
-    "Lubomir P. Litov"
-  ],
+  "authors": ["Douglas Cumming", "Tao Li", "Lubomir P. Litov"],
   "year": 2014,
   "journal": "Journal of Corporate Finance",
   "journal_tier": "FT50",
@@ -14,10 +10,7 @@
   "doi": "10.1016/j.jcorpfin.2019.101539",
   "url": "https://www.sciencedirect.com/science/article/pii/S0929119918303050",
   "abstract": "We study board diversity and firm performance.",
-  "keywords": [
-    "board",
-    "governance"
-  ],
+  "keywords": ["board", "governance"],
   "category": "corporate-governance",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

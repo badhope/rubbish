@@ -1,8 +1,6 @@
 {
   "title": "R&D and Economic Growth",
-  "authors": [
-    "Zvi Griliches"
-  ],
+  "authors": ["Zvi Griliches"],
   "year": 2017,
   "journal": "Journal of Political Economy",
   "journal_tier": "FT50",
@@ -12,10 +10,7 @@
   "doi": "10.1086/260744",
   "url": "https://www.journals.uchicago.edu/doi/10.1086/260744",
   "abstract": "We study R&D and economic growth.",
-  "keywords": [
-    "rd",
-    "growth"
-  ],
+  "keywords": ["rd", "growth"],
   "category": "innovation",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

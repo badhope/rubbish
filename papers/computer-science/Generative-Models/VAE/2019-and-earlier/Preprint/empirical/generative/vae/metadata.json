@@ -1,9 +1,6 @@
 {
   "title": "Auto-Encoding Variational Bayes",
-  "authors": [
-    "Diederik P. Kingma",
-    "Max Welling"
-  ],
+  "authors": ["Diederik P. Kingma", "Max Welling"],
   "year": 2013,
   "journal": "arXiv",
   "journal_tier": "Preprint",
@@ -13,10 +10,7 @@
   "doi": "10.48550/arXiv.1312.6114",
   "url": "https://arxiv.org/abs/1312.6114",
   "abstract": "How can we perform efficient inference and learning in directed probabilistic models with continuous latent variables and intractable posterior distributions?",
-  "keywords": [
-    "vae",
-    "variational inference"
-  ],
+  "keywords": ["vae", "variational inference"],
   "category": "VAE",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

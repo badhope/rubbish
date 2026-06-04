@@ -16,10 +16,7 @@
   "doi": "10.1145/2491245",
   "url": "https://dl.acm.org/doi/10.1145/2491245",
   "abstract": "Spanner is a globally-distributed database with support for distributed transactions.",
-  "keywords": [
-    "spanner",
-    "distributed"
-  ],
+  "keywords": ["spanner", "distributed"],
   "category": "Distributed",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

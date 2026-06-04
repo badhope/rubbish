@@ -15,10 +15,7 @@
   "doi": "10.48550/arXiv.1808.09781",
   "url": "https://arxiv.org/abs/1808.09781",
   "abstract": "We propose SASRec a self-attentive model for sequential recommendation.",
-  "keywords": [
-    "sasrec",
-    "sequential"
-  ],
+  "keywords": ["sasrec", "sequential"],
   "category": "Sequential",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

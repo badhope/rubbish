@@ -1,10 +1,6 @@
 {
   "title": "Bayesian Learning and the Formation of Inflation Expectations",
-  "authors": [
-    "Michael Pfarrhofer",
-    "Philipp Schorn",
-    "Thomas Drechsel"
-  ],
+  "authors": ["Michael Pfarrhofer", "Philipp Schorn", "Thomas Drechsel"],
   "year": 2014,
   "journal": "Journal of Econometrics",
   "journal_tier": "FT50",
@@ -14,10 +10,7 @@
   "doi": "10.1016/j.jeconom.2017.01.005",
   "url": "https://www.sciencedirect.com/science/article/pii/S0304407617300050",
   "abstract": "We study Bayesian learning.",
-  "keywords": [
-    "bayesian-learning",
-    "behavioral"
-  ],
+  "keywords": ["bayesian-learning", "behavioral"],
   "category": "learning",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,10 +1,6 @@
 {
   "title": "Towards Learning Object Detection from Scratch",
-  "authors": [
-    "Jana K. Kosecka",
-    "Zhicheng Liu",
-    "Yuxiong Wang"
-  ],
+  "authors": ["Jana K. Kosecka", "Zhicheng Liu", "Yuxiong Wang"],
   "year": 2017,
   "journal": "CoRL",
   "journal_tier": "-",
@@ -14,10 +10,7 @@
   "doi": "10.48550/arXiv.1810.00387",
   "url": "https://arxiv.org/abs/1810.00387",
   "abstract": "We present a method for learning object detection from scratch.",
-  "keywords": [
-    "object-detection",
-    "robotics"
-  ],
+  "keywords": ["object-detection", "robotics"],
   "category": "Robotics",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

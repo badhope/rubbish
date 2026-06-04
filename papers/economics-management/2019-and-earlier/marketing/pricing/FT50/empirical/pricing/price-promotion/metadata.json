@@ -1,9 +1,6 @@
 {
   "title": "Price Promotion",
-  "authors": [
-    "Paul B. Ellickson",
-    "Sanford J. Grossman"
-  ],
+  "authors": ["Paul B. Ellickson", "Sanford J. Grossman"],
   "year": 2017,
   "journal": "Journal of Marketing Research",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1287/mksc.2018.1144",
   "url": "https://pubsonline.informs.org/doi/10.1287/mksc.2018.1144",
   "abstract": "We study price promotion.",
-  "keywords": [
-    "pricing"
-  ],
+  "keywords": ["pricing"],
   "category": "pricing",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

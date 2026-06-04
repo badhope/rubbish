@@ -1,9 +1,6 @@
 {
   "title": "Big Data and the Economics of AI in Firms",
-  "authors": [
-    "Martin B. Cass",
-    "Andrew D. Foster"
-  ],
+  "authors": ["Martin B. Cass", "Andrew D. Foster"],
   "year": 2015,
   "journal": "Journal of Economic Perspectives",
   "journal_tier": "FT50",
@@ -13,10 +10,7 @@
   "doi": "10.1257/jep.33.3.49",
   "url": "https://www.aeaweb.org/articles?id=10.1257/jep.33.3.49",
   "abstract": "We study big data and the economics of AI in firms.",
-  "keywords": [
-    "big-data",
-    "io"
-  ],
+  "keywords": ["big-data", "io"],
   "category": "industrial-organization",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,8 +1,6 @@
 {
   "title": "Flow Networks and Combinatorial Operations",
-  "authors": [
-    "Edsger W. Dijkstra"
-  ],
+  "authors": ["Edsger W. Dijkstra"],
   "year": 1959,
   "journal": "Numerische Mathematik",
   "journal_tier": "Numerische Mathematik",
@@ -12,10 +10,7 @@
   "doi": "10.1007/BF01386390",
   "url": "https://link.springer.com/article/10.1007/BF01386390",
   "abstract": "A note on two problems in connexion with graphs.",
-  "keywords": [
-    "dijkstra",
-    "shortest path"
-  ],
+  "keywords": ["dijkstra", "shortest path"],
   "category": "Graph-Algorithms",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

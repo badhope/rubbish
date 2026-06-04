@@ -1,10 +1,6 @@
 {
   "title": "The Effect of Online Reviews",
-  "authors": [
-    "Michael A.",
-    "M. A. P.",
-    "J. M."
-  ],
+  "authors": ["Michael A.", "M. A. P.", "J. M."],
   "year": 2018,
   "journal": "Marketing Science",
   "journal_tier": "FT50",
@@ -14,9 +10,7 @@
   "doi": "10.1287/mksc.2013.0811",
   "url": "https://pubsonline.informs.org/doi/10.1287/mksc.2013.0811",
   "abstract": "We study the effect of online reviews.",
-  "keywords": [
-    "reviews"
-  ],
+  "keywords": ["reviews"],
   "category": "customer-experience",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

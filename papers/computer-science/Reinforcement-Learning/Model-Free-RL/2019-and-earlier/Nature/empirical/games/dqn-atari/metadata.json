@@ -19,11 +19,7 @@
   "doi": "10.1038/nature14236",
   "url": "https://www.nature.com/articles/nature14236",
   "abstract": "We propose a deep Q-network that combines reinforcement learning with deep neural networks and demonstrate human-level performance on Atari 2600 games.",
-  "keywords": [
-    "deep reinforcement learning",
-    "dqn",
-    "atari"
-  ],
+  "keywords": ["deep reinforcement learning", "dqn", "atari"],
   "category": "Model-Free-RL",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -17,10 +17,7 @@
   "doi": "10.1145/2741948.2741964",
   "url": "https://dl.acm.org/doi/10.1145/2741948.2741964",
   "abstract": "Google Borg is a large-scale cluster manager.",
-  "keywords": [
-    "borg",
-    "cluster"
-  ],
+  "keywords": ["borg", "cluster"],
   "category": "Scheduling",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

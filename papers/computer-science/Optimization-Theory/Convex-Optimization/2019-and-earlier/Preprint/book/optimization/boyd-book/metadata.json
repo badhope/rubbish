@@ -1,9 +1,6 @@
 {
   "title": "Convex Optimization",
-  "authors": [
-    "Stephen Boyd",
-    "Lieven Vandenberghe"
-  ],
+  "authors": ["Stephen Boyd", "Lieven Vandenberghe"],
   "year": 2004,
   "journal": "Cambridge University Press",
   "journal_tier": "-",
@@ -13,10 +10,7 @@
   "doi": "10.1017/CBO9780511804441",
   "url": "https://web.stanford.edu/~boyd/cvxbook/",
   "abstract": "A comprehensive introduction to convex optimization.",
-  "keywords": [
-    "convex-optimization",
-    "book"
-  ],
+  "keywords": ["convex-optimization", "book"],
   "category": "Convex-Optimization",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

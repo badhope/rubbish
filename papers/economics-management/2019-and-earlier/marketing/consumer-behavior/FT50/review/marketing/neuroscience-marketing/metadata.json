@@ -1,10 +1,6 @@
 {
   "title": "Neuroscience in Marketing",
-  "authors": [
-    "Uma R. Karmarkar",
-    "Hilke Plassmann",
-    "John R. Hauser"
-  ],
+  "authors": ["Uma R. Karmarkar", "Hilke Plassmann", "John R. Hauser"],
   "year": 2018,
   "journal": "Journal of Marketing Research",
   "journal_tier": "FT50",
@@ -14,9 +10,7 @@
   "doi": "10.1509/jmr.16.0225",
   "url": "https://journals.sagepub.com/doi/10.1509/jmr.16.0225",
   "abstract": "We discuss neuroscience in marketing.",
-  "keywords": [
-    "neuro-marketing"
-  ],
+  "keywords": ["neuro-marketing"],
   "category": "consumer-behavior",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

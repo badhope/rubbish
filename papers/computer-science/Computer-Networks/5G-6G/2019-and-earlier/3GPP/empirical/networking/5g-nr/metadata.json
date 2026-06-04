@@ -1,8 +1,6 @@
 {
   "title": "5G New Radio: The Next Generation Wireless Access",
-  "authors": [
-    "Andrea Goldsmith"
-  ],
+  "authors": ["Andrea Goldsmith"],
   "year": 2017,
   "journal": "3GPP TS",
   "journal_tier": "3GPP",
@@ -12,10 +10,7 @@
   "doi": "10.1109/MCOM.2014.6820054",
   "url": "https://ieeexplore.ieee.org/document/6820054",
   "abstract": "An overview of 5G NR the next generation wireless access technology.",
-  "keywords": [
-    "5g",
-    "nr"
-  ],
+  "keywords": ["5g", "nr"],
   "category": "5G-6G",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

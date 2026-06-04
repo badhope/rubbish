@@ -1,10 +1,6 @@
 {
   "title": "Why Should I Trust You Explaining the Predictions of Any Classifier",
-  "authors": [
-    "Marco Tulio Ribeiro",
-    "Sameer Singh",
-    "Carlos Guestrin"
-  ],
+  "authors": ["Marco Tulio Ribeiro", "Sameer Singh", "Carlos Guestrin"],
   "year": 2016,
   "journal": "KDD",
   "journal_tier": "KDD",
@@ -14,10 +10,7 @@
   "doi": "10.1145/2939672.2939778",
   "url": "https://arxiv.org/abs/1602.04938",
   "abstract": "We propose LIME a novel explanation technique that explains the predictions of any classifier.",
-  "keywords": [
-    "lime",
-    "interpretability"
-  ],
+  "keywords": ["lime", "interpretability"],
   "category": "Local-Explanation",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,9 +1,6 @@
 {
   "title": "Semi-Supervised Classification with Graph Convolutional Networks",
-  "authors": [
-    "Thomas N. Kipf",
-    "Max Welling"
-  ],
+  "authors": ["Thomas N. Kipf", "Max Welling"],
   "year": 2017,
   "journal": "ICLR",
   "journal_tier": "ICLR",
@@ -13,10 +10,7 @@
   "doi": "10.48550/arXiv.1609.02907",
   "url": "https://arxiv.org/abs/1609.02907",
   "abstract": "We present a scalable approach for semi-supervised learning on graph-structured data based on an efficient variant of convolutional neural networks.",
-  "keywords": [
-    "gcn",
-    "graph convolutional network"
-  ],
+  "keywords": ["gcn", "graph convolutional network"],
   "category": "Message-Passing",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

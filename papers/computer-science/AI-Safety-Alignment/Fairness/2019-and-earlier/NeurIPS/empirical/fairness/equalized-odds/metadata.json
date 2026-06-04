@@ -1,10 +1,6 @@
 {
   "title": "Equality of Opportunity in Supervised Learning",
-  "authors": [
-    "Moritz Hardt",
-    "Eric Price",
-    "Nathan Srebro"
-  ],
+  "authors": ["Moritz Hardt", "Eric Price", "Nathan Srebro"],
   "year": 2017,
   "journal": "NeurIPS",
   "journal_tier": "NeurIPS",
@@ -14,10 +10,7 @@
   "doi": "10.48550/arXiv.1610.02413",
   "url": "https://arxiv.org/abs/1610.02413",
   "abstract": "We propose a framework for modeling fairness in supervised learning.",
-  "keywords": [
-    "equalized odds",
-    "fairness"
-  ],
+  "keywords": ["equalized odds", "fairness"],
   "category": "Fairness",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,8 +1,6 @@
 {
   "title": "Optimal Assignments in Linear Programming",
-  "authors": [
-    "Jack Edmonds"
-  ],
+  "authors": ["Jack Edmonds"],
   "year": 1973,
   "journal": "JACM",
   "journal_tier": "JACM",
@@ -12,10 +10,7 @@
   "doi": "10.1145/321694.321699",
   "url": "https://dl.acm.org/doi/10.1145/321694.321699",
   "abstract": "We describe a greedy algorithm for the matroid intersection problem.",
-  "keywords": [
-    "edmonds",
-    "greedy"
-  ],
+  "keywords": ["edmonds", "greedy"],
   "category": "Greedy",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,10 +1,6 @@
 {
   "title": "The Role of Entrepreneurship in Economic Growth",
-  "authors": [
-    "David B. Audretsch",
-    "Max C. Keilbach",
-    "Erik E. Lehmann"
-  ],
+  "authors": ["David B. Audretsch", "Max C. Keilbach", "Erik E. Lehmann"],
   "year": 2017,
   "journal": "Strategic Entrepreneurship Journal",
   "journal_tier": "FT50",
@@ -14,9 +10,7 @@
   "doi": "10.1002/sej.4",
   "url": "https://onlinelibrary.wiley.com/doi/10.1002/sej.4",
   "abstract": "We study the role of entrepreneurship in economic growth.",
-  "keywords": [
-    "entrepreneurship"
-  ],
+  "keywords": ["entrepreneurship"],
   "category": "entrepreneurship-empirical",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -17,10 +17,7 @@
   "doi": "10.1038/s41587-019-0140-0",
   "url": "https://www.nature.com/articles/s41587-019-0140-0",
   "abstract": "Kipoi is a community effort to enable the reuse and rapid deployment of predictive models in genomics.",
-  "keywords": [
-    "kipoi",
-    "genomics"
-  ],
+  "keywords": ["kipoi", "genomics"],
   "category": "Genomics",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

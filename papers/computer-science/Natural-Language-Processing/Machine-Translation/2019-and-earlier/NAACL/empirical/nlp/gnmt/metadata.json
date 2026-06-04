@@ -19,10 +19,7 @@
   "doi": "10.18653/v1/N16-1162",
   "url": "https://arxiv.org/abs/1609.08144",
   "abstract": "We present the GNMT system a deep LSTM network with 8 encoder and 8 decoder layers using attention connections.",
-  "keywords": [
-    "neural machine translation",
-    "gnmt"
-  ],
+  "keywords": ["neural machine translation", "gnmt"],
   "category": "Machine-Translation",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,9 +1,6 @@
 {
   "title": "When Choice is Demotivating",
-  "authors": [
-    "Sheena S. Iyengar",
-    "Mark R. Lepper"
-  ],
+  "authors": ["Sheena S. Iyengar", "Mark R. Lepper"],
   "year": 2014,
   "journal": "Journal of Personality and Social Psychology",
   "journal_tier": "FT50",
@@ -13,10 +10,7 @@
   "doi": "10.1037/0022-3514.79.6.995",
   "url": "https://psycnet.apa.org/record/2001-10053-005",
   "abstract": "We study choice overload.",
-  "keywords": [
-    "choice-overload",
-    "behavioral"
-  ],
+  "keywords": ["choice-overload", "behavioral"],
   "category": "decision-making",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

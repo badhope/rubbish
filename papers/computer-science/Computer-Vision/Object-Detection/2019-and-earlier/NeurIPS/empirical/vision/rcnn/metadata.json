@@ -15,11 +15,7 @@
   "doi": "10.48550/arXiv.1506.02640",
   "url": "https://arxiv.org/abs/1506.02640",
   "abstract": "We present YOLO a new approach to object detection. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation.",
-  "keywords": [
-    "yolo",
-    "object detection",
-    "real-time"
-  ],
+  "keywords": ["yolo", "object detection", "real-time"],
   "category": "Object-Detection",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

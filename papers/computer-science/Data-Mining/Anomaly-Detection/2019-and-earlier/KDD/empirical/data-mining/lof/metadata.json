@@ -15,10 +15,7 @@
   "doi": "10.1145/335191.335388",
   "url": "https://dl.acm.org/doi/10.1145/335191.335388",
   "abstract": "We propose LOF a local outlier factor for identifying density-based outliers.",
-  "keywords": [
-    "lof",
-    "anomaly"
-  ],
+  "keywords": ["lof", "anomaly"],
   "category": "Anomaly-Detection",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

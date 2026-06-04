@@ -1,8 +1,6 @@
 {
   "title": "Auctions: Theory and Practice",
-  "authors": [
-    "Paul Klemperer"
-  ],
+  "authors": ["Paul Klemperer"],
   "year": 2012,
   "journal": "Princeton University Press",
   "journal_tier": "FT50",
@@ -12,10 +10,7 @@
   "doi": "10.1515/9781400830113",
   "url": "https://press.princeton.edu/books/paperback/9780691119250/auctions",
   "abstract": "A textbook on auction theory.",
-  "keywords": [
-    "auctions",
-    "io"
-  ],
+  "keywords": ["auctions", "io"],
   "category": "industrial-organization",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

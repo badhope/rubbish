@@ -17,10 +17,7 @@
   "doi": "10.1109/IVS.2016.7535349",
   "url": "https://developer.nvidia.com/blog/deep-learning-self-driving-cars/",
   "abstract": "We describe an end-to-end deep learning approach to self-driving cars.",
-  "keywords": [
-    "autonomous-vehicle",
-    "self-driving"
-  ],
+  "keywords": ["autonomous-vehicle", "self-driving"],
   "category": "Autonomous-Vehicles",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

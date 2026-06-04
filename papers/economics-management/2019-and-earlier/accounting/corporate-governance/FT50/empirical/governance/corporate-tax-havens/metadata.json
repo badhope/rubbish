@@ -1,9 +1,6 @@
 {
   "title": "Corporate Tax Havens and Transparency",
-  "authors": [
-    "Niels J. Gormsen",
-    "Martin Huber"
-  ],
+  "authors": ["Niels J. Gormsen", "Martin Huber"],
   "year": 2018,
   "journal": "Review of Economic Studies",
   "journal_tier": "FT50",
@@ -13,10 +10,7 @@
   "doi": "10.1093/restud/rdx050",
   "url": "https://academic.oup.com/restud/article/84/3/1157/3856530",
   "abstract": "We study corporate tax havens and transparency.",
-  "keywords": [
-    "tax-havens",
-    "governance"
-  ],
+  "keywords": ["tax-havens", "governance"],
   "category": "corporate-governance",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

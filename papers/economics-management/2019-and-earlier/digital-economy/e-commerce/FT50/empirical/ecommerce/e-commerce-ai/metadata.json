@@ -1,11 +1,6 @@
 {
   "title": "The Impact of AI on E-Commerce",
-  "authors": [
-    "Andrew J. Caplin",
-    "S. D. Levitt",
-    "B. D. M.",
-    "et al."
-  ],
+  "authors": ["Andrew J. Caplin", "S. D. Levitt", "B. D. M.", "et al."],
   "year": 2017,
   "journal": "Marketing Science",
   "journal_tier": "FT50",
@@ -15,10 +10,7 @@
   "doi": "10.1287/mksc.2019.1177",
   "url": "https://pubsonline.informs.org/doi/10.1287/mksc.2019.1177",
   "abstract": "We study the impact of AI on e-commerce.",
-  "keywords": [
-    "e-commerce",
-    "ai"
-  ],
+  "keywords": ["e-commerce", "ai"],
   "category": "e-commerce",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

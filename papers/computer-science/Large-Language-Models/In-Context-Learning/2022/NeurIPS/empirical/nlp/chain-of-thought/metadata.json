@@ -20,11 +20,7 @@
   "doi": "10.48550/arXiv.2201.11903",
   "url": "https://arxiv.org/abs/2201.11903",
   "abstract": "We explore how generating a chain of thought can improve the reasoning ability of large language models.",
-  "keywords": [
-    "chain-of-thought",
-    "reasoning",
-    "prompting"
-  ],
+  "keywords": ["chain-of-thought", "reasoning", "prompting"],
   "category": "In-Context-Learning",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

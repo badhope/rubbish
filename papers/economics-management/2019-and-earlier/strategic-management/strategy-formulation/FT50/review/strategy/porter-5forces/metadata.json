@@ -1,8 +1,6 @@
 {
   "title": "The Five Competitive Forces",
-  "authors": [
-    "Michael E. Porter"
-  ],
+  "authors": ["Michael E. Porter"],
   "year": 2017,
   "journal": "Harvard Business Review",
   "journal_tier": "FT50",
@@ -12,9 +10,7 @@
   "doi": "10.5555/porter-5forces",
   "url": "https://hbr.org/2008/01/the-five-competitive-forces-that-shape-strategy",
   "abstract": "We present Porter's Five Forces model.",
-  "keywords": [
-    "porter"
-  ],
+  "keywords": ["porter"],
   "category": "strategy-formulation",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

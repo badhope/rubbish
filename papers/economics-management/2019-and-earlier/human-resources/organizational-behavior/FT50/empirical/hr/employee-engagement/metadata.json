@@ -1,10 +1,6 @@
 {
   "title": "Employee Engagement",
-  "authors": [
-    "William H. Macey",
-    "Benjamin Schneider",
-    "Karen M. B."
-  ],
+  "authors": ["William H. Macey", "Benjamin Schneider", "Karen M. B."],
   "year": 2018,
   "journal": "Journal of Applied Psychology",
   "journal_tier": "FT50",
@@ -14,9 +10,7 @@
   "doi": "10.1037/a0015884",
   "url": "https://psycnet.apa.org/record/2009-13833-002",
   "abstract": "We study employee engagement.",
-  "keywords": [
-    "engagement"
-  ],
+  "keywords": ["engagement"],
   "category": "organizational-behavior",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

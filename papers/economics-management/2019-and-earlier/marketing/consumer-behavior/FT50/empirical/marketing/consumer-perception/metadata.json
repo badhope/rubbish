@@ -1,10 +1,6 @@
 {
   "title": "Consumer Perception",
-  "authors": [
-    "John R. Hauser",
-    "J. D. Clausing",
-    "D. A. Griffin"
-  ],
+  "authors": ["John R. Hauser", "J. D. Clausing", "D. A. Griffin"],
   "year": 2017,
   "journal": "Journal of Marketing Research",
   "journal_tier": "FT50",
@@ -14,9 +10,7 @@
   "doi": "10.1177/0022243718793564",
   "url": "https://journals.sagepub.com/doi/10.1177/0022243718793564",
   "abstract": "We study consumer perception.",
-  "keywords": [
-    "consumer-perception"
-  ],
+  "keywords": ["consumer-perception"],
   "category": "consumer-behavior",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

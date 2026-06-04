@@ -1,9 +1,6 @@
 {
   "title": "Operational Risk",
-  "authors": [
-    "Christopher A. C. C.",
-    "P. C. H."
-  ],
+  "authors": ["Christopher A. C. C.", "P. C. H."],
   "year": 2017,
   "journal": "Journal of Operations Management",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1016/j.jom.2017.05.001",
   "url": "https://www.sciencedirect.com/science/article/pii/S0272696317300572",
   "abstract": "We study operational risk.",
-  "keywords": [
-    "op-risk"
-  ],
+  "keywords": ["op-risk"],
   "category": "risk",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

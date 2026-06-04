@@ -1,8 +1,6 @@
 {
   "title": "Network Neutrality",
-  "authors": [
-    "Barbara van Schewick"
-  ],
+  "authors": ["Barbara van Schewick"],
   "year": 2018,
   "journal": "Stanford Law Review",
   "journal_tier": "-",
@@ -12,10 +10,7 @@
   "doi": "10.2139/ssrn.1518166",
   "url": "https://www.law.stanford.edu/publications/network-neutrality/",
   "abstract": "An analysis of network neutrality.",
-  "keywords": [
-    "network-neutrality",
-    "policy"
-  ],
+  "keywords": ["network-neutrality", "policy"],
   "category": "Network-Security",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -19,10 +19,7 @@
   "doi": "10.48550/arXiv.2302.13971",
   "url": "https://arxiv.org/abs/2302.13971",
   "abstract": "We introduce LLaMA a collection of foundation language models ranging from 7B to 65B parameters.",
-  "keywords": [
-    "llama",
-    "open foundation model"
-  ],
+  "keywords": ["llama", "open foundation model"],
   "category": "Pretraining",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

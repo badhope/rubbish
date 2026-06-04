@@ -25,10 +25,7 @@
   "doi": "10.48550/arXiv.2110.07205",
   "url": "https://arxiv.org/abs/2110.07205",
   "abstract": "SpeechT5 is a unified-modal encoder-decoder pre-trained model for speech.",
-  "keywords": [
-    "speecht5",
-    "multimodal"
-  ],
+  "keywords": ["speecht5", "multimodal"],
   "category": "Multimodal",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

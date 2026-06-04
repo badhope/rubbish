@@ -1,9 +1,6 @@
 {
   "title": "ORB-SLAM2: An Open-Source SLAM System for Monocular Stereo and RGB-D Cameras",
-  "authors": [
-    "Raul Mur-Artal",
-    "Juan D. Tardós"
-  ],
+  "authors": ["Raul Mur-Artal", "Juan D. Tardós"],
   "year": 2016,
   "journal": "IEEE Transactions on Robotics",
   "journal_tier": "IEEE-TRO",
@@ -13,10 +10,7 @@
   "doi": "10.1109/TRO.2017.2705103",
   "url": "https://ieeexplore.ieee.org/document/7951748",
   "abstract": "We present ORB-SLAM2 an open-source SLAM system.",
-  "keywords": [
-    "orbslam2",
-    "slam"
-  ],
+  "keywords": ["orbslam2", "slam"],
   "category": "SLAM",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

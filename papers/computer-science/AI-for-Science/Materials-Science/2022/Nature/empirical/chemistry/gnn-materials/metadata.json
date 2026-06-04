@@ -19,10 +19,7 @@
   "doi": "10.1038/s41524-022-00829-4",
   "url": "https://www.nature.com/articles/s41524-022-00829-4",
   "abstract": "We discuss the application of graph neural networks to materials science.",
-  "keywords": [
-    "materials",
-    "gnn"
-  ],
+  "keywords": ["materials", "gnn"],
   "category": "Materials-Science",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

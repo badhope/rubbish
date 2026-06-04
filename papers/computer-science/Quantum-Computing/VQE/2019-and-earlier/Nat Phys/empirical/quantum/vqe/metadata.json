@@ -19,10 +19,7 @@
   "doi": "10.1038/ncomms5213",
   "url": "https://www.nature.com/articles/ncomms5213",
   "abstract": "We propose a variational eigenvalue solver on a quantum processor.",
-  "keywords": [
-    "vqe",
-    "variational"
-  ],
+  "keywords": ["vqe", "variational"],
   "category": "VQE",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

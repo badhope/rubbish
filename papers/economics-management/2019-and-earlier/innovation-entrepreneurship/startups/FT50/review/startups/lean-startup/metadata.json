@@ -1,8 +1,6 @@
 {
   "title": "The Lean Startup",
-  "authors": [
-    "Eric Ries"
-  ],
+  "authors": ["Eric Ries"],
   "year": 2017,
   "journal": "Crown Business",
   "journal_tier": "FT50",
@@ -12,9 +10,7 @@
   "doi": "10.5555/lean-startup",
   "url": "https://theleanstartup.com/",
   "abstract": "The Lean Startup methodology.",
-  "keywords": [
-    "lean-startup"
-  ],
+  "keywords": ["lean-startup"],
   "category": "startups",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

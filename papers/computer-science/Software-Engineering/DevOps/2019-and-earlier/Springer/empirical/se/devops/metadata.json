@@ -1,11 +1,6 @@
 {
   "title": "The DevOps Handbook",
-  "authors": [
-    "Gene Kim",
-    "Patrick Debois",
-    "John Willis",
-    "Jez Humble"
-  ],
+  "authors": ["Gene Kim", "Patrick Debois", "John Willis", "Jez Humble"],
   "year": 2014,
   "journal": "IT Revolution Press",
   "journal_tier": "Springer",
@@ -15,10 +10,7 @@
   "doi": "10.5555/devops-handbook",
   "url": "https://itrevolution.com/product/the-devops-handbook/",
   "abstract": "The DevOps Handbook.",
-  "keywords": [
-    "devops",
-    "se"
-  ],
+  "keywords": ["devops", "se"],
   "category": "DevOps",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

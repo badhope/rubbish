@@ -1,10 +1,6 @@
 {
   "title": "QUIC: A UDP-Based Multiplexed and Secure Transport",
-  "authors": [
-    "Robin Marx",
-    "Jana Iyengar",
-    "et al."
-  ],
+  "authors": ["Robin Marx", "Jana Iyengar", "et al."],
   "year": 2003,
   "journal": "RFC",
   "journal_tier": "RFC",
@@ -14,10 +10,7 @@
   "doi": "10.17487/rfc9000",
   "url": "https://www.rfc-editor.org/rfc/rfc9000",
   "abstract": "This document defines the QUIC protocol.",
-  "keywords": [
-    "quic",
-    "transport"
-  ],
+  "keywords": ["quic", "transport"],
   "category": "Internet-Architecture",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

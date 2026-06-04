@@ -17,10 +17,7 @@
   "doi": "10.48550/arXiv.2208.03299",
   "url": "https://arxiv.org/abs/2208.03299",
   "abstract": "We introduce RT-1 a robotics transformer for real-world control at scale.",
-  "keywords": [
-    "rt-1",
-    "transformer"
-  ],
+  "keywords": ["rt-1", "transformer"],
   "category": "Manipulation",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

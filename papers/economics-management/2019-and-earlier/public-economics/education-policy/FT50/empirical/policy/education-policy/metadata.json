@@ -1,9 +1,6 @@
 {
   "title": "The Economics of Education",
-  "authors": [
-    "C. S. M. H.",
-    "Mark H. M."
-  ],
+  "authors": ["C. S. M. H.", "Mark H. M."],
   "year": 2017,
   "journal": "Handbook of the Economics of Education",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1016/B978-0-444-53429-3.00001-3",
   "url": "https://www.sciencedirect.com/science/article/pii/B9780444534293000013",
   "abstract": "We discuss education policy.",
-  "keywords": [
-    "education-policy"
-  ],
+  "keywords": ["education-policy"],
   "category": "education-policy",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,9 +1,6 @@
 {
   "title": "Explainable AI: A Review of Machine Learning Interpretability Methods",
-  "authors": [
-    "Finale Doshi-Velez",
-    "Been Kim"
-  ],
+  "authors": ["Finale Doshi-Velez", "Been Kim"],
   "year": 2021,
   "journal": "Entropy",
   "journal_tier": "IEEE CIM",
@@ -13,10 +10,7 @@
   "doi": "10.3390/e19110668",
   "url": "https://www.mdpi.com/1099-4300/19/11/668",
   "abstract": "We review machine learning interpretability methods.",
-  "keywords": [
-    "xai",
-    "survey"
-  ],
+  "keywords": ["xai", "survey"],
   "category": "Survey",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

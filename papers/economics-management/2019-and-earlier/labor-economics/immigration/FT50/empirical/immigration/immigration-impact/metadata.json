@@ -1,8 +1,6 @@
 {
   "title": "The Economic Impact of Immigration",
-  "authors": [
-    "David A. Card"
-  ],
+  "authors": ["David A. Card"],
   "year": 2017,
   "journal": "American Economic Review",
   "journal_tier": "FT50",
@@ -12,9 +10,7 @@
   "doi": "10.1257/aer.102.5.1641",
   "url": "https://www.aeaweb.org/articles?id=10.1257/aer.102.5.1641",
   "abstract": "We study the economic impact of immigration.",
-  "keywords": [
-    "immigration"
-  ],
+  "keywords": ["immigration"],
   "category": "immigration",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

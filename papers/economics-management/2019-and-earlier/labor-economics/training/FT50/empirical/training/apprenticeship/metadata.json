@@ -1,9 +1,6 @@
 {
   "title": "Apprenticeship Training",
-  "authors": [
-    "Stefan C. Wolter",
-    "Paul Ryan"
-  ],
+  "authors": ["Stefan C. Wolter", "Paul Ryan"],
   "year": 2017,
   "journal": "Handbook of the Economics of Education",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1016/B978-0-444-53429-3.00003-7",
   "url": "https://www.sciencedirect.com/science/article/pii/B9780444534293000037",
   "abstract": "We discuss apprenticeship training.",
-  "keywords": [
-    "apprenticeship"
-  ],
+  "keywords": ["apprenticeship"],
   "category": "training",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

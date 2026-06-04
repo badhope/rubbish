@@ -1,8 +1,6 @@
 {
   "title": "Long-Term Care Economics",
-  "authors": [
-    "Edward C. Norton"
-  ],
+  "authors": ["Edward C. Norton"],
   "year": 2018,
   "journal": "Annual Review of Resource Economics",
   "journal_tier": "FT50",
@@ -12,9 +10,7 @@
   "doi": "10.1146/annurev-resource-100815-095706",
   "url": "https://www.annualreviews.org/doi/10.1146/annurev-resource-100815-095706",
   "abstract": "We study long-term care economics.",
-  "keywords": [
-    "long-term-care"
-  ],
+  "keywords": ["long-term-care"],
   "category": "health-policy",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

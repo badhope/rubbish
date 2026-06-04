@@ -17,10 +17,7 @@
   "doi": "10.1038/s41592-018-0235-4",
   "url": "https://www.nature.com/articles/s41592-018-0235-4",
   "abstract": "We present a deep learning method to predict RNA secondary structure from sequence.",
-  "keywords": [
-    "rna",
-    "deep-learning"
-  ],
+  "keywords": ["rna", "deep-learning"],
   "category": "Genomics",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

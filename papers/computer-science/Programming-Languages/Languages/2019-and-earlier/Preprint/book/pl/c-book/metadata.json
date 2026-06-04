@@ -1,9 +1,6 @@
 {
   "title": "The C Programming Language",
-  "authors": [
-    "Brian W. Kernighan",
-    "Dennis M. Ritchie"
-  ],
+  "authors": ["Brian W. Kernighan", "Dennis M. Ritchie"],
   "year": 1972,
   "journal": "Prentice Hall",
   "journal_tier": "-",
@@ -13,10 +10,7 @@
   "doi": "10.5555/c-lang-1978",
   "url": "https://www.cs.princeton.edu/courses/archive/spr10/cos217/reading/ksc.pdf",
   "abstract": "The original book on C programming language.",
-  "keywords": [
-    "c",
-    "language"
-  ],
+  "keywords": ["c", "language"],
   "category": "Languages",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

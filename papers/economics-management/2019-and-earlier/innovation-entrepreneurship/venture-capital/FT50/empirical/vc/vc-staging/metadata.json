@@ -1,10 +1,6 @@
 {
   "title": "Staging of Venture Capital Financing",
-  "authors": [
-    "Will Gornall",
-    "Luna T. G.",
-    "Richard B. H."
-  ],
+  "authors": ["Will Gornall", "Luna T. G.", "Richard B. H."],
   "year": 2017,
   "journal": "Review of Financial Studies",
   "journal_tier": "FT50",
@@ -14,9 +10,7 @@
   "doi": "10.1093/rfs/hhy068",
   "url": "https://academic.oup.com/rfs/article/33/1/1/5191247",
   "abstract": "We study the staging of venture capital financing.",
-  "keywords": [
-    "staging"
-  ],
+  "keywords": ["staging"],
   "category": "venture-capital",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

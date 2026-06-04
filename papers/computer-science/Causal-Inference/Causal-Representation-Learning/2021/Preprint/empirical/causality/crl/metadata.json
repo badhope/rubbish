@@ -1,9 +1,6 @@
 {
   "title": "Causal Representation Learning",
-  "authors": [
-    "Amy E. Weinberger",
-    "Judea Pearl"
-  ],
+  "authors": ["Amy E. Weinberger", "Judea Pearl"],
   "year": 2021,
   "journal": "arXiv",
   "journal_tier": "Preprint",
@@ -13,10 +10,7 @@
   "doi": "10.48550/arXiv.2102.11107",
   "url": "https://arxiv.org/abs/2102.11107",
   "abstract": "We introduce causal representation learning CRL as a unified framework for learning causal variables from observations.",
-  "keywords": [
-    "crl",
-    "causality"
-  ],
+  "keywords": ["crl", "causality"],
   "category": "Causal-Representation-Learning",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

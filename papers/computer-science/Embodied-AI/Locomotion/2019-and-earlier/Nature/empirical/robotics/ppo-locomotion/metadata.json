@@ -16,10 +16,7 @@
   "doi": "10.1038/s41586-019-1733-9",
   "url": "https://www.nature.com/articles/s41586-019-1733-9",
   "abstract": "We show that competition can drive the emergence of coordination.",
-  "keywords": [
-    "locomotion",
-    "rl"
-  ],
+  "keywords": ["locomotion", "rl"],
   "category": "Locomotion",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

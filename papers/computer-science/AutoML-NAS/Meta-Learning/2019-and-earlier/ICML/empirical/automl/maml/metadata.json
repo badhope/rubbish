@@ -1,10 +1,6 @@
 {
   "title": "Model-Agnostic Meta-Learning for Fast Adaptation of Deep Networks",
-  "authors": [
-    "Chelsea Finn",
-    "Pieter Abbeel",
-    "Sergey Levine"
-  ],
+  "authors": ["Chelsea Finn", "Pieter Abbeel", "Sergey Levine"],
   "year": 2017,
   "journal": "ICML",
   "journal_tier": "ICML",
@@ -14,10 +10,7 @@
   "doi": "10.48550/arXiv.1703.03400",
   "url": "https://arxiv.org/abs/1703.03400",
   "abstract": "We propose MAML an algorithm for meta-learning that is model-agnostic.",
-  "keywords": [
-    "maml",
-    "meta-learning"
-  ],
+  "keywords": ["maml", "meta-learning"],
   "category": "Meta-Learning",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

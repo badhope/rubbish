@@ -1,8 +1,6 @@
 {
   "title": "The Value of Patents",
-  "authors": [
-    "Manuel E. Trajtenberg"
-  ],
+  "authors": ["Manuel E. Trajtenberg"],
   "year": 2017,
   "journal": "American Economic Review",
   "journal_tier": "FT50",
@@ -12,9 +10,7 @@
   "doi": "10.2307/2006607",
   "url": "https://www.jstor.org/stable/2006607",
   "abstract": "We study the value of patents.",
-  "keywords": [
-    "patents"
-  ],
+  "keywords": ["patents"],
   "category": "innovation",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

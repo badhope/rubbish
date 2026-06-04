@@ -1,8 +1,6 @@
 {
   "title": "Open Innovation",
-  "authors": [
-    "Henry W. Chesbrough"
-  ],
+  "authors": ["Henry W. Chesbrough"],
   "year": 2018,
   "journal": "Harvard Business School Press",
   "journal_tier": "FT50",
@@ -12,9 +10,7 @@
   "doi": "10.5555/chesbrough-oi",
   "url": "https://www.hbs.edu/faculty/Pages/item.aspx?num=15833",
   "abstract": "We discuss open innovation.",
-  "keywords": [
-    "open-innovation"
-  ],
+  "keywords": ["open-innovation"],
   "category": "innovation",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

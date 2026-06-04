@@ -19,11 +19,7 @@
   "doi": "10.1109/MSP.2012.2205597",
   "url": "https://ieeexplore.ieee.org/document/6296526",
   "abstract": "This article provides an overview of deep neural network acoustic models and their use in speech recognition.",
-  "keywords": [
-    "speech recognition",
-    "deep learning",
-    "acoustic"
-  ],
+  "keywords": ["speech recognition", "deep learning", "acoustic"],
   "category": "Architectures",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,9 +1,6 @@
 {
   "title": "Pharmaceutical Innovation",
-  "authors": [
-    "C. P. Daly",
-    "David W. Galenson"
-  ],
+  "authors": ["C. P. Daly", "David W. Galenson"],
   "year": 2018,
   "journal": "American Economic Review",
   "journal_tier": "FT50",
@@ -13,10 +10,7 @@
   "doi": "10.1257/aer.99.2.435",
   "url": "https://www.aeaweb.org/articles?id=10.1257/aer.99.2.435",
   "abstract": "We study pharmaceutical innovation.",
-  "keywords": [
-    "innovation",
-    "pharma"
-  ],
+  "keywords": ["innovation", "pharma"],
   "category": "health-policy",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

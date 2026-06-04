@@ -16,10 +16,7 @@
   "doi": "10.14778/2735461.2735468",
   "url": "https://www.vldb.org/pvldb/vol7/p785-leis.pdf",
   "abstract": "We discuss the future of real-time OLTP transaction processing.",
-  "keywords": [
-    "oltp",
-    "databases"
-  ],
+  "keywords": ["oltp", "databases"],
   "category": "OLTP",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

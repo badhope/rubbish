@@ -15,10 +15,7 @@
   "doi": "10.18653/v1/D16-1264",
   "url": "https://aclanthology.org/D16-1264/",
   "abstract": "We introduce the Stanford Question Answering Dataset SQuAD a new reading comprehension dataset consisting of questions posed by crowdworkers on a set of Wikipedia articles.",
-  "keywords": [
-    "question answering",
-    "squad"
-  ],
+  "keywords": ["question answering", "squad"],
   "category": "Question-Answering",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

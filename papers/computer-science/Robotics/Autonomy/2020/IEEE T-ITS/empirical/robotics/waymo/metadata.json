@@ -16,10 +16,7 @@
   "doi": "10.1109/ICRA40945.2020.9197196",
   "url": "https://arxiv.org/abs/1912.04838",
   "abstract": "We present the Waymo Open Dataset for scalable self-driving research.",
-  "keywords": [
-    "waymo",
-    "autonomy"
-  ],
+  "keywords": ["waymo", "autonomy"],
   "category": "Autonomy",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

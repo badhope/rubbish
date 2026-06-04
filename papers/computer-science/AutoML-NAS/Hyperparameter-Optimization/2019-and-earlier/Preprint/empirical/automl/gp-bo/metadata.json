@@ -1,10 +1,6 @@
 {
   "title": "Practical Bayesian Optimization of Machine Learning Algorithms",
-  "authors": [
-    "Jasper Snoek",
-    "Hugo Larochelle",
-    "Ryan P. Adams"
-  ],
+  "authors": ["Jasper Snoek", "Hugo Larochelle", "Ryan P. Adams"],
   "year": 2002,
   "journal": "NeurIPS",
   "journal_tier": "-",
@@ -14,10 +10,7 @@
   "doi": "10.48550/arXiv.1206.2944",
   "url": "https://arxiv.org/abs/1206.2944",
   "abstract": "We describe a general framework for using Bayesian optimization for hyperparameter tuning.",
-  "keywords": [
-    "bayesian opt",
-    "hpo"
-  ],
+  "keywords": ["bayesian opt", "hpo"],
   "category": "Hyperparameter-Optimization",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

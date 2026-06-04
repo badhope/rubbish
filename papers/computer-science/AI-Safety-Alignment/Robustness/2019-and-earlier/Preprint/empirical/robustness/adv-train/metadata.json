@@ -16,10 +16,7 @@
   "doi": "10.48550/arXiv.1905.02175",
   "url": "https://arxiv.org/abs/1905.02175",
   "abstract": "We argue that adversarial vulnerability is a feature of the data distribution rather than the model.",
-  "keywords": [
-    "adversarial",
-    "robustness"
-  ],
+  "keywords": ["adversarial", "robustness"],
   "category": "Robustness",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

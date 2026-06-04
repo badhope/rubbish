@@ -1,9 +1,6 @@
 {
   "title": "Taxation and Foreign Direct Investment",
-  "authors": [
-    "Michael J. G.",
-    "M. J. G."
-  ],
+  "authors": ["Michael J. G.", "M. J. G."],
   "year": 2018,
   "journal": "Journal of International Economics",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1016/j.jinteco.2018.05.001",
   "url": "https://www.sciencedirect.com/science/article/pii/S0022199618300690",
   "abstract": "We study taxation and FDI.",
-  "keywords": [
-    "fdi-tax"
-  ],
+  "keywords": ["fdi-tax"],
   "category": "fdi",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

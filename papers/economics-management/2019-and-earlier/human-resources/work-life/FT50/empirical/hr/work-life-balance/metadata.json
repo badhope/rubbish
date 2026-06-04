@@ -1,9 +1,6 @@
 {
   "title": "Work-Life Balance",
-  "authors": [
-    "Tammy D. Allen",
-    "Shannon L. French"
-  ],
+  "authors": ["Tammy D. Allen", "Shannon L. French"],
   "year": 2017,
   "journal": "Journal of Applied Psychology",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1037/a0031434",
   "url": "https://psycnet.apa.org/record/2013-07174-002",
   "abstract": "We study work-life balance.",
-  "keywords": [
-    "work-life"
-  ],
+  "keywords": ["work-life"],
   "category": "work-life",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

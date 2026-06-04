@@ -4,13 +4,13 @@
 
 > ✓ DOI verified live
 
-| Field       | Value                                                                          |
-| ----------- | ------------------------------------------------------------------------------ |
-| ---         | ---                                                                            |
-| **Authors** | Mark Armstrong                                                                 |
-| **Year**    | 2002                                                                           |
-| **Journal** | Handbook of Industrial Organization (FT50), 2008                               |
-| **DOI**     | [10.1016/S1573-448X(06)03017-5](https://doi.org/10.1016/S1573-448X(06)03017-5) |
+| Field       | Value                                                                            |
+| ----------- | -------------------------------------------------------------------------------- |
+| ---         | ---                                                                              |
+| **Authors** | Mark Armstrong                                                                   |
+| **Year**    | 2002                                                                             |
+| **Journal** | Handbook of Industrial Organization (FT50), 2008                                 |
+| **DOI**     | [10.1016/S1573-448X(06)03017-5](<https://doi.org/10.1016/S1573-448X(06)03017-5>) |
 
 ## Where it sits in the corpus
 
@@ -28,7 +28,7 @@
 
 ## Where to read it
 
-- [DOI landing page](https://doi.org/10.1016/S1573-448X(06)03017-5) — `10.1016/S1573-448X(06)03017-5`
+- [DOI landing page](<https://doi.org/10.1016/S1573-448X(06)03017-5>) — `10.1016/S1573-448X(06)03017-5`
 - [Publisher page](https://www.sciencedirect.com/science/article/pii/S1573448X06030175)
 - [Repository folder](https://github.com/badhope/ScholarLib/tree/main/papers/economics-management/2019-and-earlier/microeconomics/industrial-organization/FT50/empirical/io/price-discrimination)
 - [metadata.json](https://github.com/badhope/ScholarLib/tree/main/papers/economics-management/2019-and-earlier/microeconomics/industrial-organization/FT50/empirical/io/price-discrimination/metadata.json)

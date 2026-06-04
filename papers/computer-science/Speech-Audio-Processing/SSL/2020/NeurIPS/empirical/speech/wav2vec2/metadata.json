@@ -15,10 +15,7 @@
   "doi": "10.48550/arXiv.2006.11477",
   "url": "https://arxiv.org/abs/2006.11477",
   "abstract": "We present wav2vec 2.0 for self-supervised learning of speech representations.",
-  "keywords": [
-    "wav2vec2",
-    "ssl"
-  ],
+  "keywords": ["wav2vec2", "ssl"],
   "category": "SSL",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

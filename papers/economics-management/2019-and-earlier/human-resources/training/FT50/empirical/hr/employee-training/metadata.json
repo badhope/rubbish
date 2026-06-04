@@ -1,9 +1,6 @@
 {
   "title": "Employee Training Investments",
-  "authors": [
-    "Hong K. Cheol",
-    "Hyun C. Yi"
-  ],
+  "authors": ["Hong K. Cheol", "Hyun C. Yi"],
   "year": 2017,
   "journal": "Journal of Labor Economics",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1086/681783",
   "url": "https://www.journals.uchicago.edu/doi/10.1086/681783",
   "abstract": "We study employee training investments.",
-  "keywords": [
-    "training"
-  ],
+  "keywords": ["training"],
   "category": "training",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

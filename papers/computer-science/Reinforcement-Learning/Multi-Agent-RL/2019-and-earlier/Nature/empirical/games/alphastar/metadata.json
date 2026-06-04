@@ -19,11 +19,7 @@
   "doi": "10.1038/s41586-019-1724-z",
   "url": "https://www.nature.com/articles/s41586-019-1724-z",
   "abstract": "We introduce StarCraft II as a benchmark for multi-agent reinforcement learning and present AlphaStar which grandmaster-level.",
-  "keywords": [
-    "multi-agent rl",
-    "starcraft",
-    "alphastar"
-  ],
+  "keywords": ["multi-agent rl", "starcraft", "alphastar"],
   "category": "Multi-Agent-RL",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,9 +1,6 @@
 {
   "title": "A Five-Factor Asset Pricing Model",
-  "authors": [
-    "Eugene F. Fama",
-    "Kenneth R. French"
-  ],
+  "authors": ["Eugene F. Fama", "Kenneth R. French"],
   "year": 2015,
   "journal": "Journal of Financial Economics",
   "journal_tier": "FT50",
@@ -13,10 +10,7 @@
   "doi": "10.1016/j.jfineco.2014.10.010",
   "url": "https://www.sciencedirect.com/science/article/pii/S0304405X14002323",
   "abstract": "We propose a five-factor asset pricing model.",
-  "keywords": [
-    "factor-model",
-    "fama-french"
-  ],
+  "keywords": ["factor-model", "fama-french"],
   "category": "asset-pricing",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

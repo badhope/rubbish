@@ -1,8 +1,6 @@
 {
   "title": "The Effect of Financial Reporting Quality on Debt Contracting",
-  "authors": [
-    "Christian Leuz"
-  ],
+  "authors": ["Christian Leuz"],
   "year": 2014,
   "journal": "Journal of Accounting Research",
   "journal_tier": "FT50",
@@ -12,10 +10,7 @@
   "doi": "10.1111/j.1475-679X.2010.00376.x",
   "url": "https://onlinelibrary.wiley.com/doi/10.1111/j.1475-679X.2010.00376.x",
   "abstract": "We study the effect of financial reporting quality on debt contracting.",
-  "keywords": [
-    "disclosure",
-    "accounting"
-  ],
+  "keywords": ["disclosure", "accounting"],
   "category": "financial-accounting",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

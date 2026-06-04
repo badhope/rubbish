@@ -1,8 +1,6 @@
 {
   "title": "Lean Production",
-  "authors": [
-    "John F. Krafcik"
-  ],
+  "authors": ["John F. Krafcik"],
   "year": 2017,
   "journal": "M Sloan Management Review",
   "journal_tier": "FT50",
@@ -12,9 +10,7 @@
   "doi": "10.5555/krafcik-lean",
   "url": "https://sloanreview.mit.edu/",
   "abstract": "We discuss lean production.",
-  "keywords": [
-    "lean"
-  ],
+  "keywords": ["lean"],
   "category": "lean",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

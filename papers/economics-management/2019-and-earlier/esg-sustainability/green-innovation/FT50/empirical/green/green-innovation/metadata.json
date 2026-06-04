@@ -1,10 +1,6 @@
 {
   "title": "Green Innovation",
-  "authors": [
-    "John C. H. Jones",
-    "David M. C. Phillips",
-    "Thomas D. R."
-  ],
+  "authors": ["John C. H. Jones", "David M. C. Phillips", "Thomas D. R."],
   "year": 2017,
   "journal": "Journal of Financial Economics",
   "journal_tier": "FT50",
@@ -14,9 +10,7 @@
   "doi": "10.1016/j.jfineco.2020.09.013",
   "url": "https://www.sciencedirect.com/science/article/pii/S0304405X20302377",
   "abstract": "We study green innovation.",
-  "keywords": [
-    "green-innovation"
-  ],
+  "keywords": ["green-innovation"],
   "category": "green-innovation",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

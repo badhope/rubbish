@@ -1,8 +1,6 @@
 {
   "title": "Network Effects in the Aftermath of the Financial Crisis",
-  "authors": [
-    "Bruno Biais"
-  ],
+  "authors": ["Bruno Biais"],
   "year": 2011,
   "journal": "Journal of Economic Literature",
   "journal_tier": "FT50",
@@ -12,10 +10,7 @@
   "doi": "10.1257/jel.49.2.425",
   "url": "https://www.aeaweb.org/articles?id=10.1257/jel.49.2.425",
   "abstract": "We study network effects.",
-  "keywords": [
-    "networks",
-    "io"
-  ],
+  "keywords": ["networks", "io"],
   "category": "industrial-organization",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

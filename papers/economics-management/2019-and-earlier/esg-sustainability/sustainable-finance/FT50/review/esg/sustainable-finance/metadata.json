@@ -1,10 +1,6 @@
 {
   "title": "Sustainable Finance",
-  "authors": [
-    "Nikolaos A. Kyriakopoulos",
-    "Stelios D. M.",
-    "George D. P."
-  ],
+  "authors": ["Nikolaos A. Kyriakopoulos", "Stelios D. M.", "George D. P."],
   "year": 2017,
   "journal": "Journal of Banking and Finance",
   "journal_tier": "FT50",
@@ -14,9 +10,7 @@
   "doi": "10.1016/j.jbankfin.2019.04.014",
   "url": "https://www.sciencedirect.com/science/article/pii/S0378426618301087",
   "abstract": "We discuss sustainable finance.",
-  "keywords": [
-    "sustainable-finance"
-  ],
+  "keywords": ["sustainable-finance"],
   "category": "sustainable-finance",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

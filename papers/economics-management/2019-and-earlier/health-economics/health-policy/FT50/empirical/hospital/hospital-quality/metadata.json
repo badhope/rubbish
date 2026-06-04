@@ -1,9 +1,6 @@
 {
   "title": "Hospital Quality and Quality Reporting",
-  "authors": [
-    "Paul J. Gertler",
-    "Andrew D. Foster"
-  ],
+  "authors": ["Paul J. Gertler", "Andrew D. Foster"],
   "year": 2017,
   "journal": "Annual Review of Economics",
   "journal_tier": "FT50",
@@ -13,10 +10,7 @@
   "doi": "10.1146/annurev-economics-080315-015127",
   "url": "https://www.annualreviews.org/doi/10.1146/annurev-economics-080315-015127",
   "abstract": "We discuss hospital quality and quality reporting.",
-  "keywords": [
-    "hospital",
-    "quality"
-  ],
+  "keywords": ["hospital", "quality"],
   "category": "health-policy",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

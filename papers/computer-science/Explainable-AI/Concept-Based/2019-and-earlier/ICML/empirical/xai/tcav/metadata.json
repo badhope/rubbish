@@ -18,10 +18,7 @@
   "doi": "10.48550/arXiv.1711.11279",
   "url": "https://arxiv.org/abs/1711.11279",
   "abstract": "We introduce TCAV a method for interpreting neural networks using high-level concepts.",
-  "keywords": [
-    "tcav",
-    "concept"
-  ],
+  "keywords": ["tcav", "concept"],
   "category": "Concept-Based",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,9 +1,6 @@
 {
   "title": "Health Economics Handbook",
-  "authors": [
-    "Pedro Pita Barros",
-    "Thomas G. McGuire"
-  ],
+  "authors": ["Pedro Pita Barros", "Thomas G. McGuire"],
   "year": 2017,
   "journal": "Handbook of Health Economics",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1016/S1574-0064(11)00001-0",
   "url": "https://www.sciencedirect.com/science/article/pii/S1574006411000010",
   "abstract": "A handbook of health economics.",
-  "keywords": [
-    "handbook"
-  ],
+  "keywords": ["handbook"],
   "category": "health-economics-empirical",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -19,11 +19,7 @@
   "doi": "10.48550/arXiv.1406.2661",
   "url": "https://arxiv.org/abs/1406.2661",
   "abstract": "We propose a new framework for estimating generative models via an adversarial process in which we simultaneously train two models.",
-  "keywords": [
-    "gan",
-    "generative",
-    "adversarial"
-  ],
+  "keywords": ["gan", "generative", "adversarial"],
   "category": "Architectures",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

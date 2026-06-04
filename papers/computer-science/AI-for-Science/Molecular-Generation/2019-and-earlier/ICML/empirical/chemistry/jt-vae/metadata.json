@@ -1,10 +1,6 @@
 {
   "title": "Junction Tree Variational Autoencoder for Molecular Graph Generation",
-  "authors": [
-    "Wengong Jin",
-    "Regina Barzilay",
-    "Tom Jaakkola"
-  ],
+  "authors": ["Wengong Jin", "Regina Barzilay", "Tom Jaakkola"],
   "year": 2018,
   "journal": "ICML",
   "journal_tier": "ICML",
@@ -14,10 +10,7 @@
   "doi": "10.48550/arXiv.1802.04364",
   "url": "https://arxiv.org/abs/1802.04364",
   "abstract": "We propose a junction tree based VAE for molecular graph generation.",
-  "keywords": [
-    "jtvae",
-    "molecular generation"
-  ],
+  "keywords": ["jtvae", "molecular generation"],
   "category": "Molecular-Generation",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

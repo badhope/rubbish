@@ -1,10 +1,6 @@
 {
   "title": "ESG Investing",
-  "authors": [
-    "L. R. G. E.",
-    "A. R.",
-    "L. S."
-  ],
+  "authors": ["L. R. G. E.", "A. R.", "L. S."],
   "year": 2017,
   "journal": "Review of Financial Studies",
   "journal_tier": "FT50",
@@ -14,9 +10,7 @@
   "doi": "10.1093/rfs/hhaa106",
   "url": "https://academic.oup.com/rfs/article/33/7/2884/5774106",
   "abstract": "We study ESG investing.",
-  "keywords": [
-    "esg"
-  ],
+  "keywords": ["esg"],
   "category": "green-finance",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

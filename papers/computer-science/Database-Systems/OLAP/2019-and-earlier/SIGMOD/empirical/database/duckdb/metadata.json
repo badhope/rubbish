@@ -1,9 +1,6 @@
 {
   "title": "DuckDB: An Embeddable SQL OLAP Database Management System",
-  "authors": [
-    "Mark Raasveldt",
-    "Hannes Mühleisen"
-  ],
+  "authors": ["Mark Raasveldt", "Hannes Mühleisen"],
   "year": 2015,
   "journal": "VLDB",
   "journal_tier": "SIGMOD",
@@ -13,10 +10,7 @@
   "doi": "10.14778/3342263.3342266",
   "url": "https://www.vldb.org/pvldb/vol12/p1982-raasveldt.pdf",
   "abstract": "We present DuckDB an embeddable SQL OLAP database management system.",
-  "keywords": [
-    "duckdb",
-    "olap"
-  ],
+  "keywords": ["duckdb", "olap"],
   "category": "OLAP",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

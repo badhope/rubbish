@@ -19,10 +19,7 @@
   "doi": "10.48550/arXiv.2004.04906",
   "url": "https://arxiv.org/abs/2004.04906",
   "abstract": "We present DPR for open-domain question answering.",
-  "keywords": [
-    "dpr",
-    "dense-retrieval"
-  ],
+  "keywords": ["dpr", "dense-retrieval"],
   "category": "Dense-Retrieval",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

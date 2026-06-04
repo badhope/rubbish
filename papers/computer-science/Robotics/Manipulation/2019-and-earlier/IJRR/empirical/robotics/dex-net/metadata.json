@@ -19,10 +19,7 @@
   "doi": "10.48550/arXiv.1703.09312",
   "url": "https://arxiv.org/abs/1703.09312",
   "abstract": "We present Dex-Net 2.0 for deep learning grasp planning.",
-  "keywords": [
-    "dex-net",
-    "grasp"
-  ],
+  "keywords": ["dex-net", "grasp"],
   "category": "Manipulation",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

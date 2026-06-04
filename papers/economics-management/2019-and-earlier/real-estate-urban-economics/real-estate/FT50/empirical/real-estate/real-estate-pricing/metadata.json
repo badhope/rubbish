@@ -1,10 +1,6 @@
 {
   "title": "Real Estate Pricing",
-  "authors": [
-    "Joseph Gyourko",
-    "Albert S.",
-    "Youngme M."
-  ],
+  "authors": ["Joseph Gyourko", "Albert S.", "Youngme M."],
   "year": 2017,
   "journal": "Journal of Economic Perspectives",
   "journal_tier": "FT50",
@@ -14,9 +10,7 @@
   "doi": "10.1257/jep.34.4.3",
   "url": "https://www.aeaweb.org/articles?id=10.1257/jep.34.4.3",
   "abstract": "We discuss real estate pricing.",
-  "keywords": [
-    "pricing"
-  ],
+  "keywords": ["pricing"],
   "category": "real-estate",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

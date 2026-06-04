@@ -1,9 +1,6 @@
 {
   "title": "The Effect of Minimum Wages on Low-Wage Jobs",
-  "authors": [
-    "David A. Card",
-    "Alan B. Krueger"
-  ],
+  "authors": ["David A. Card", "Alan B. Krueger"],
   "year": 2018,
   "journal": "American Economic Review",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.2307/2950891",
   "url": "https://www.jstor.org/stable/2950891",
   "abstract": "We study the effect of minimum wages on low-wage jobs.",
-  "keywords": [
-    "min-wage"
-  ],
+  "keywords": ["min-wage"],
   "category": "wages",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

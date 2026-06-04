@@ -15,10 +15,7 @@
   "doi": "10.1109/ICCV.2017.244",
   "url": "https://arxiv.org/abs/1703.10593",
   "abstract": "We present an approach for learning to translate an image from a source domain to a target domain without paired examples.",
-  "keywords": [
-    "cyclegan",
-    "image-to-image"
-  ],
+  "keywords": ["cyclegan", "image-to-image"],
   "category": "GAN",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

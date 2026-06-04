@@ -1,8 +1,6 @@
 {
   "title": "Workforce Diversity",
-  "authors": [
-    "Edward P. Lazear"
-  ],
+  "authors": ["Edward P. Lazear"],
   "year": 2017,
   "journal": "Journal of Labor Economics",
   "journal_tier": "FT50",
@@ -12,9 +10,7 @@
   "doi": "10.1086/209882",
   "url": "https://www.journals.uchicago.edu/doi/10.1086/209882",
   "abstract": "We study workforce diversity.",
-  "keywords": [
-    "diversity"
-  ],
+  "keywords": ["diversity"],
   "category": "diversity",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

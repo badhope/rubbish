@@ -1,8 +1,6 @@
 {
   "title": "The Complexity of Theorem-Proving Procedures",
-  "authors": [
-    "Stephen A. Cook"
-  ],
+  "authors": ["Stephen A. Cook"],
   "year": 1971,
   "journal": "STOC",
   "journal_tier": "STOC",
@@ -12,10 +10,7 @@
   "doi": "10.1145/800157.805047",
   "url": "https://dl.acm.org/doi/10.1145/800157.805047",
   "abstract": "We show that the class NP is as easy to recognize as it is to solve.",
-  "keywords": [
-    "cook theorem",
-    "np completeness"
-  ],
+  "keywords": ["cook theorem", "np completeness"],
   "category": "NP-Completeness",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

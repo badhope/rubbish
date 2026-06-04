@@ -1,9 +1,6 @@
 {
   "title": "Real Estate Finance",
-  "authors": [
-    "John M. G.",
-    "P. D. C."
-  ],
+  "authors": ["John M. G.", "P. D. C."],
   "year": 2017,
   "journal": "Journal of Economic Perspectives",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1257/jep.29.4.99",
   "url": "https://www.aeaweb.org/articles?id=10.1257/jep.29.4.99",
   "abstract": "We discuss real estate finance.",
-  "keywords": [
-    "refi"
-  ],
+  "keywords": ["refi"],
   "category": "real-estate-finance",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

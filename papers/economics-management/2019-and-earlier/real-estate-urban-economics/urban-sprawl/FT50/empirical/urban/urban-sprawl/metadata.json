@@ -1,9 +1,6 @@
 {
   "title": "Urban Sprawl",
-  "authors": [
-    "Jan K. B.",
-    "David E. W."
-  ],
+  "authors": ["Jan K. B.", "David E. W."],
   "year": 2017,
   "journal": "Brookings-Wharton Papers on Urban Affairs",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1353/urb.2001.0016",
   "url": "https://muse.jhu.edu/article/204238",
   "abstract": "We study urban sprawl.",
-  "keywords": [
-    "sprawl"
-  ],
+  "keywords": ["sprawl"],
   "category": "urban-sprawl",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

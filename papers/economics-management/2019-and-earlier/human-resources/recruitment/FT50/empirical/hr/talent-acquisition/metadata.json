@@ -1,9 +1,6 @@
 {
   "title": "Talent Acquisition Analytics",
-  "authors": [
-    "John W. Boudreau",
-    "Steven W. J. M."
-  ],
+  "authors": ["John W. Boudreau", "Steven W. J. M."],
   "year": 2017,
   "journal": "Journal of Applied Psychology",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1037/apl0000193",
   "url": "https://psycnet.apa.org/record/2017-15332-001",
   "abstract": "We discuss talent acquisition analytics.",
-  "keywords": [
-    "talent"
-  ],
+  "keywords": ["talent"],
   "category": "recruitment",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

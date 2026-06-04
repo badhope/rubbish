@@ -19,11 +19,7 @@
   "doi": "10.1038/nature16961",
   "url": "https://www.nature.com/articles/nature16961",
   "abstract": "We introduce a new approach to computer Go using value networks and policy networks combined with Monte Carlo tree search.",
-  "keywords": [
-    "alphago",
-    "deep learning",
-    "monte carlo tree search"
-  ],
+  "keywords": ["alphago", "deep learning", "monte carlo tree search"],
   "category": "Model-Free-RL",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

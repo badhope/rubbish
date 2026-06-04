@@ -1,11 +1,6 @@
 {
   "title": "Digital Transformation in the Age of AI",
-  "authors": [
-    "Lorin M. Hitt",
-    "Feng Mai",
-    "Yongjun Li",
-    "Hong C. Yang"
-  ],
+  "authors": ["Lorin M. Hitt", "Feng Mai", "Yongjun Li", "Hong C. Yang"],
   "year": 2017,
   "journal": "Management Science",
   "journal_tier": "FT50",
@@ -15,9 +10,7 @@
   "doi": "10.1287/mnsc.2019.3348",
   "url": "https://pubsonline.informs.org/doi/10.1287/mnsc.2019.3348",
   "abstract": "We study digital transformation in the age of AI.",
-  "keywords": [
-    "digital-transformation"
-  ],
+  "keywords": ["digital-transformation"],
   "category": "digital-transformation",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,9 +1,6 @@
 {
   "title": "Corporate Diversification",
-  "authors": [
-    "David J. Collis",
-    "David A. Montgomery"
-  ],
+  "authors": ["David J. Collis", "David A. Montgomery"],
   "year": 2017,
   "journal": "Strategic Management Journal",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1002/smj.273",
   "url": "https://onlinelibrary.wiley.com/doi/10.1002/smj.273",
   "abstract": "We study corporate diversification.",
-  "keywords": [
-    "diversification"
-  ],
+  "keywords": ["diversification"],
   "category": "corporate-strategy",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

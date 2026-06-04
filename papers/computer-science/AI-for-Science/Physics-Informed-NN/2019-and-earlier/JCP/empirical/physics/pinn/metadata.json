@@ -1,10 +1,6 @@
 {
   "title": "Physics-informed neural networks: A deep learning framework for solving forward and inverse problems involving nonlinear partial differential equations",
-  "authors": [
-    "M. Raissi",
-    "P. Perdikaris",
-    "G. E. Karniadakis"
-  ],
+  "authors": ["M. Raissi", "P. Perdikaris", "G. E. Karniadakis"],
   "year": 2019,
   "journal": "Journal of Computational Physics",
   "journal_tier": "JCP",
@@ -14,10 +10,7 @@
   "doi": "10.1016/j.jcp.2018.10.045",
   "url": "https://www.sciencedirect.com/science/article/pii/S0021999118307125",
   "abstract": "We introduce physics-informed neural networks PINNs for solving PDEs.",
-  "keywords": [
-    "pinn",
-    "physics-informed"
-  ],
+  "keywords": ["pinn", "physics-informed"],
   "category": "Physics-Informed-NN",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

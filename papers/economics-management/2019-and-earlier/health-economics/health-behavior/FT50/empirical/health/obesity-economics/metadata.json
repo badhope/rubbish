@@ -1,9 +1,6 @@
 {
   "title": "The Economics of Obesity",
-  "authors": [
-    "John Cawley",
-    "Chad Meyerhoefer"
-  ],
+  "authors": ["John Cawley", "Chad Meyerhoefer"],
   "year": 2017,
   "journal": "American Journal of Public Health",
   "journal_tier": "FT50",
@@ -13,10 +10,7 @@
   "doi": "10.2105/AJPH.2010.300520",
   "url": "https://ajph.aphapublications.org/doi/10.2105/AJPH.2010.300520",
   "abstract": "We study the economics of obesity.",
-  "keywords": [
-    "obesity",
-    "behavior"
-  ],
+  "keywords": ["obesity", "behavior"],
   "category": "health-behavior",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

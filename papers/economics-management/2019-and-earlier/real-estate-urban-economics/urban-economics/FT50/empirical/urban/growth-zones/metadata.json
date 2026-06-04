@@ -1,9 +1,6 @@
 {
   "title": "Urban Growth Zones",
-  "authors": [
-    "Jan K. B.",
-    "David E. W."
-  ],
+  "authors": ["Jan K. B.", "David E. W."],
   "year": 2017,
   "journal": "Journal of Economic Perspectives",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1257/jep.32.1.51",
   "url": "https://www.aeaweb.org/articles?id=10.1257/jep.32.1.51",
   "abstract": "We study urban growth zones.",
-  "keywords": [
-    "growth-zones"
-  ],
+  "keywords": ["growth-zones"],
   "category": "urban-economics",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

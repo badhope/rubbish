@@ -1,9 +1,6 @@
 {
   "title": "Customer Experience Management",
-  "authors": [
-    "Philipp D. M.",
-    "M. J. B."
-  ],
+  "authors": ["Philipp D. M.", "M. J. B."],
   "year": 2017,
   "journal": "Journal of Marketing",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1509/jm.11.0105",
   "url": "https://journals.sagepub.com/doi/10.1509/jm.11.0105",
   "abstract": "We study customer experience management.",
-  "keywords": [
-    "cx"
-  ],
+  "keywords": ["cx"],
   "category": "customer-experience",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

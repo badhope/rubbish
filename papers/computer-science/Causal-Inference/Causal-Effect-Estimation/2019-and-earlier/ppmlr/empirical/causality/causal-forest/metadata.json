@@ -1,9 +1,6 @@
 {
   "title": "Recursive Partitioning for Heterogeneous Causal Effects",
-  "authors": [
-    "Stefan Wager",
-    "Susan Athey"
-  ],
+  "authors": ["Stefan Wager", "Susan Athey"],
   "year": 2016,
   "journal": "NeurIPS",
   "journal_tier": "ppmlr",
@@ -13,10 +10,7 @@
   "doi": "10.1073/pnas.1510489113",
   "url": "https://arxiv.org/abs/1504.01132",
   "abstract": "We propose a nonparametric method for estimating heterogeneous treatment effects.",
-  "keywords": [
-    "causal-forest",
-    "hte"
-  ],
+  "keywords": ["causal-forest", "hte"],
   "category": "Causal-Effect-Estimation",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

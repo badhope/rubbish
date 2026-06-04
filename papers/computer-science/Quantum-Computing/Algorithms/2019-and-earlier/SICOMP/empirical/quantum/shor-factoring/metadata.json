@@ -1,8 +1,6 @@
 {
   "title": "Algorithms for Quantum Computation: Discrete Logarithms and Factoring",
-  "authors": [
-    "Peter W. Shor"
-  ],
+  "authors": ["Peter W. Shor"],
   "year": 1994,
   "journal": "SIAM Journal on Computing",
   "journal_tier": "SICOMP",
@@ -12,10 +10,7 @@
   "doi": "10.1137/S0097539795293172",
   "url": "https://epubs.siam.org/doi/10.1137/S0097539795293172",
   "abstract": "A polynomial-time quantum algorithm for integer factorization.",
-  "keywords": [
-    "shor",
-    "factoring"
-  ],
+  "keywords": ["shor", "factoring"],
   "category": "Algorithms",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

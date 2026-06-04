@@ -22,10 +22,7 @@
   "doi": "10.1145/3458457",
   "url": "https://github.com/RUCAIBox/RecBole",
   "abstract": "RecBole is a unified framework for recommendation algorithms.",
-  "keywords": [
-    "recbole",
-    "framework"
-  ],
+  "keywords": ["recbole", "framework"],
   "category": "Emerging",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

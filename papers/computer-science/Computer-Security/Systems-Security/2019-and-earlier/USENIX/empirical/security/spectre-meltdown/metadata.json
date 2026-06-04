@@ -19,10 +19,7 @@
   "doi": "10.1109/SP.2019.00002",
   "url": "https://ieeexplore.ieee.org/document/8835233",
   "abstract": "We present a new class of microarchitectural attacks that exploit speculative execution.",
-  "keywords": [
-    "spectre",
-    "security"
-  ],
+  "keywords": ["spectre", "security"],
   "category": "Systems-Security",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

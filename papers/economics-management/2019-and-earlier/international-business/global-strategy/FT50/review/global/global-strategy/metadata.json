@@ -1,9 +1,6 @@
 {
   "title": "Global Strategy",
-  "authors": [
-    "Tony S. M. K.",
-    "Yadong Luo"
-  ],
+  "authors": ["Tony S. M. K.", "Yadong Luo"],
   "year": 2017,
   "journal": "Journal of International Business Studies",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1057/s41267-016-0055-7",
   "url": "https://link.springer.com/article/10.1057/s41267-016-0055-7",
   "abstract": "We discuss global strategy.",
-  "keywords": [
-    "global-strategy"
-  ],
+  "keywords": ["global-strategy"],
   "category": "global-strategy",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

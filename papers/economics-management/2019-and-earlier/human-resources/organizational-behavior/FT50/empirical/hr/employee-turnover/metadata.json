@@ -1,9 +1,6 @@
 {
   "title": "Employee Turnover",
-  "authors": [
-    "James S. B.",
-    "Maury R. B."
-  ],
+  "authors": ["James S. B.", "Maury R. B."],
   "year": 2018,
   "journal": "Journal of Management",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1177/0149206311403151",
   "url": "https://journals.sagepub.com/doi/10.1177/0149206311403151",
   "abstract": "We study employee turnover.",
-  "keywords": [
-    "turnover"
-  ],
+  "keywords": ["turnover"],
   "category": "organizational-behavior",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

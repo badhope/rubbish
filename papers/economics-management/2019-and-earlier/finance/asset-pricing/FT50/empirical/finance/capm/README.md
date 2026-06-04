@@ -4,13 +4,13 @@
 
 > ✓ DOI verified live
 
-| Field       | Value                                                                        |
-| ----------- | ---------------------------------------------------------------------------- |
-| ---         | ---                                                                          |
-| **Authors** | Eugene F. Fama & Kenneth R. French                                           |
-| **Year**    | 1993                                                                         |
-| **Journal** | Journal of Financial Economics (FT50), 33(1), pp. 3-56                       |
-| **DOI**     | [10.1016/0304-405X(93)90023-5](https://doi.org/10.1016/0304-405X(93)90023-5) |
+| Field       | Value                                                                          |
+| ----------- | ------------------------------------------------------------------------------ |
+| ---         | ---                                                                            |
+| **Authors** | Eugene F. Fama & Kenneth R. French                                             |
+| **Year**    | 1993                                                                           |
+| **Journal** | Journal of Financial Economics (FT50), 33(1), pp. 3-56                         |
+| **DOI**     | [10.1016/0304-405X(93)90023-5](<https://doi.org/10.1016/0304-405X(93)90023-5>) |
 
 ## Where it sits in the corpus
 
@@ -28,7 +28,7 @@
 
 ## Where to read it
 
-- [DOI landing page](https://doi.org/10.1016/0304-405X(93)90023-5) — `10.1016/0304-405X(93)90023-5`
+- [DOI landing page](<https://doi.org/10.1016/0304-405X(93)90023-5>) — `10.1016/0304-405X(93)90023-5`
 - [Publisher page](https://www.sciencedirect.com/science/article/pii/0304405X93900235)
 - [Repository folder](https://github.com/badhope/ScholarLib/tree/main/papers/economics-management/2019-and-earlier/finance/asset-pricing/FT50/empirical/finance/capm)
 - [metadata.json](https://github.com/badhope/ScholarLib/tree/main/papers/economics-management/2019-and-earlier/finance/asset-pricing/FT50/empirical/finance/capm/metadata.json)

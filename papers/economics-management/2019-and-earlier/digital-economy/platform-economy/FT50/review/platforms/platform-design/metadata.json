@@ -1,9 +1,6 @@
 {
   "title": "Platform Design",
-  "authors": [
-    "Thomas R. Eisenmann",
-    "Andrei Hagiu"
-  ],
+  "authors": ["Thomas R. Eisenmann", "Andrei Hagiu"],
   "year": 2019,
   "journal": "Journal of Economics and Management Strategy",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1111/jems.12118",
   "url": "https://onlinelibrary.wiley.com/doi/10.1111/jems.12118",
   "abstract": "We discuss platform design.",
-  "keywords": [
-    "platforms"
-  ],
+  "keywords": ["platforms"],
   "category": "platform-economy",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

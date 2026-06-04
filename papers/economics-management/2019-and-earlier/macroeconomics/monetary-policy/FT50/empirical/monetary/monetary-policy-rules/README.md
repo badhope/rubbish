@@ -4,13 +4,13 @@
 
 > ✓ DOI verified live
 
-| Field       | Value                                                                          |
-| ----------- | ------------------------------------------------------------------------------ |
-| ---         | ---                                                                            |
-| **Authors** | Mark Gertler                                                                   |
-| **Year**    | 2002                                                                           |
-| **Journal** | Journal of Monetary Economics (FT50), 50(4), pp. 825-845                       |
-| **DOI**     | [10.1016/S0304-3932(03)00043-9](https://doi.org/10.1016/S0304-3932(03)00043-9) |
+| Field       | Value                                                                            |
+| ----------- | -------------------------------------------------------------------------------- |
+| ---         | ---                                                                              |
+| **Authors** | Mark Gertler                                                                     |
+| **Year**    | 2002                                                                             |
+| **Journal** | Journal of Monetary Economics (FT50), 50(4), pp. 825-845                         |
+| **DOI**     | [10.1016/S0304-3932(03)00043-9](<https://doi.org/10.1016/S0304-3932(03)00043-9>) |
 
 ## Where it sits in the corpus
 
@@ -28,7 +28,7 @@
 
 ## Where to read it
 
-- [DOI landing page](https://doi.org/10.1016/S0304-3932(03)00043-9) — `10.1016/S0304-3932(03)00043-9`
+- [DOI landing page](<https://doi.org/10.1016/S0304-3932(03)00043-9>) — `10.1016/S0304-3932(03)00043-9`
 - [Publisher page](https://www.sciencedirect.com/science/article/pii/S0304393203000439)
 - [Repository folder](https://github.com/badhope/ScholarLib/tree/main/papers/economics-management/2019-and-earlier/macroeconomics/monetary-policy/FT50/empirical/monetary/monetary-policy-rules)
 - [metadata.json](https://github.com/badhope/ScholarLib/tree/main/papers/economics-management/2019-and-earlier/macroeconomics/monetary-policy/FT50/empirical/monetary/monetary-policy-rules/metadata.json)

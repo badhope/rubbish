@@ -1,11 +1,6 @@
 {
   "title": "Efficient Estimation of Word Representations in Vector Space",
-  "authors": [
-    "Tomas Mikolov",
-    "Kai Chen",
-    "Greg Corrado",
-    "Jeffrey Dean"
-  ],
+  "authors": ["Tomas Mikolov", "Kai Chen", "Greg Corrado", "Jeffrey Dean"],
   "year": 2013,
   "journal": "arXiv",
   "journal_tier": "NeurIPS",
@@ -15,10 +10,7 @@
   "doi": "10.48550/arXiv.1301.3781",
   "url": "https://arxiv.org/abs/1301.3781",
   "abstract": "We propose two novel model architectures for computing continuous vector representations of words from very large data sets.",
-  "keywords": [
-    "word2vec",
-    "word embeddings"
-  ],
+  "keywords": ["word2vec", "word embeddings"],
   "category": "Representation-Learning",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

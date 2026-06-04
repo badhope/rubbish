@@ -1,10 +1,6 @@
 {
   "title": "AI in Hospitality",
-  "authors": [
-    "Sunmee K.",
-    "Jungkeun K.",
-    "Steve S."
-  ],
+  "authors": ["Sunmee K.", "Jungkeun K.", "Steve S."],
   "year": 2018,
   "journal": "International Journal of Contemporary Hospitality Management",
   "journal_tier": "FT50",
@@ -14,9 +10,7 @@
   "doi": "10.1108/IJCHM-07-2018-0587",
   "url": "https://www.emerald.com/insight/content/doi/10.1108/IJCHM-07-2018-0587/full/html",
   "abstract": "We discuss AI in hospitality.",
-  "keywords": [
-    "ai-hospitality"
-  ],
+  "keywords": ["ai-hospitality"],
   "category": "digitalization",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

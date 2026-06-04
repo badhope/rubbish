@@ -17,10 +17,7 @@
   "doi": "10.1038/s41586-019-1666-5",
   "url": "https://www.nature.com/articles/s41586-019-1666-5",
   "abstract": "We demonstrate quantum supremacy using a programmable superconducting processor.",
-  "keywords": [
-    "sycamore",
-    "supremacy"
-  ],
+  "keywords": ["sycamore", "supremacy"],
   "category": "Supremacy",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

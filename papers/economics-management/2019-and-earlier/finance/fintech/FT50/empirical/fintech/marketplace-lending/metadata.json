@@ -1,10 +1,6 @@
 {
   "title": "Marketplace Lending: The New Banking System?",
-  "authors": [
-    "Andrew J. Parkinson",
-    "Johan A. Veith",
-    "Andrew J. Cohen"
-  ],
+  "authors": ["Andrew J. Parkinson", "Johan A. Veith", "Andrew J. Cohen"],
   "year": 2017,
   "journal": "Journal of Financial Economics",
   "journal_tier": "FT50",
@@ -14,10 +10,7 @@
   "doi": "10.1016/j.jfineco.2018.07.001",
   "url": "https://www.sciencedirect.com/science/article/pii/S0304405X18301204",
   "abstract": "We study marketplace lending as a new banking system.",
-  "keywords": [
-    "marketplace-lending",
-    "fintech"
-  ],
+  "keywords": ["marketplace-lending", "fintech"],
   "category": "fintech",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

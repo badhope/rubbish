@@ -1,10 +1,6 @@
 {
   "title": "Kata Containers: Lightweight Virtual Machines for Containers",
-  "authors": [
-    "Samuel Ortiz",
-    "Pranav Kumar",
-    "et al."
-  ],
+  "authors": ["Samuel Ortiz", "Pranav Kumar", "et al."],
   "year": 2014,
   "journal": "USENIX HotCloud",
   "journal_tier": "USENIX",
@@ -14,10 +10,7 @@
   "doi": "10.5555/3211054.3211055",
   "url": "https://katacontainers.io/",
   "abstract": "Lightweight virtual machines for containers.",
-  "keywords": [
-    "kata",
-    "containers"
-  ],
+  "keywords": ["kata", "containers"],
   "category": "Virtualization",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

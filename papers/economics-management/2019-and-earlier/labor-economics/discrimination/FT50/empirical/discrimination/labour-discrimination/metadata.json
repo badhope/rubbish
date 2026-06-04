@@ -1,9 +1,6 @@
 {
   "title": "Labor Market Discrimination",
-  "authors": [
-    "David A. N.",
-    "William A. D."
-  ],
+  "authors": ["David A. N.", "William A. D."],
   "year": 2017,
   "journal": "Journal of Labor Economics",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1086/209964",
   "url": "https://www.journals.uchicago.edu/doi/10.1086/209964",
   "abstract": "We study labor market discrimination.",
-  "keywords": [
-    "discrimination"
-  ],
+  "keywords": ["discrimination"],
   "category": "discrimination",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

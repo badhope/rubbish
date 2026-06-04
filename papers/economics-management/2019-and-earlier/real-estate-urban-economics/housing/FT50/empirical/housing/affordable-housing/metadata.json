@@ -1,9 +1,6 @@
 {
   "title": "Affordable Housing",
-  "authors": [
-    "Edward L. Glaeser",
-    "John M. Quigley"
-  ],
+  "authors": ["Edward L. Glaeser", "John M. Quigley"],
   "year": 2017,
   "journal": "Journal of Economic Perspectives",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1257/jep.21.1.93",
   "url": "https://www.aeaweb.org/articles?id=10.1257/jep.21.1.93",
   "abstract": "We discuss affordable housing.",
-  "keywords": [
-    "affordable"
-  ],
+  "keywords": ["affordable"],
   "category": "housing",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

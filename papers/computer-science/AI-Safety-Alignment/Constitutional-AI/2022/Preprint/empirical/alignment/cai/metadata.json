@@ -1,11 +1,6 @@
 {
   "title": "Constitutional AI: Harmlessness from AI Feedback",
-  "authors": [
-    "Yuntao Bai",
-    "Saurav Kadavath",
-    "Sandipan Kundu",
-    "et al."
-  ],
+  "authors": ["Yuntao Bai", "Saurav Kadavath", "Sandipan Kundu", "et al."],
   "year": 2022,
   "journal": "arXiv",
   "journal_tier": "Preprint",
@@ -15,10 +10,7 @@
   "doi": "10.48550/arXiv.2212.08073",
   "url": "https://arxiv.org/abs/2212.08073",
   "abstract": "We present Constitutional AI a method for training a harmless AI assistant using a constitution of principles.",
-  "keywords": [
-    "constitutional ai",
-    "cai"
-  ],
+  "keywords": ["constitutional ai", "cai"],
   "category": "Constitutional-AI",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -19,10 +19,7 @@
   "doi": "10.1145/1355734.1355746",
   "url": "https://www.cs.princeton.edu/courses/archive/fall10/cos561/papers/openflow.pdf",
   "abstract": "We propose OpenFlow a way for researchers to run experimental protocols in campus networks.",
-  "keywords": [
-    "openflow",
-    "sdn"
-  ],
+  "keywords": ["openflow", "sdn"],
   "category": "SDN-NFV",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

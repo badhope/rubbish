@@ -1,10 +1,6 @@
 {
   "title": "Soft Robotic Grippers for Biological Sampling",
-  "authors": [
-    "Andrew D. Marchese",
-    "Ruslan M. Truby",
-    "Dianele Rus"
-  ],
+  "authors": ["Andrew D. Marchese", "Ruslan M. Truby", "Dianele Rus"],
   "year": 2018,
   "journal": "Science Robotics",
   "journal_tier": "Science Robotics",
@@ -14,10 +10,7 @@
   "doi": "10.1126/scirobotics.aau3359",
   "url": "https://robotics.sciencemag.org/content/3/15/eaau3359",
   "abstract": "We present soft robotic grippers for biological sampling.",
-  "keywords": [
-    "soft-gripper",
-    "bio"
-  ],
+  "keywords": ["soft-gripper", "bio"],
   "category": "Soft",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

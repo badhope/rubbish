@@ -1,8 +1,6 @@
 {
   "title": "Public Finance and Public Policy",
-  "authors": [
-    "Jonathan G."
-  ],
+  "authors": ["Jonathan G."],
   "year": 2017,
   "journal": "Worth Publishers",
   "journal_tier": "FT50",
@@ -12,9 +10,7 @@
   "doi": "10.5551/gruber-pfpp",
   "url": "https://www.macmillanlearning.com/",
   "abstract": "We discuss public finance and public policy.",
-  "keywords": [
-    "public-finance"
-  ],
+  "keywords": ["public-finance"],
   "category": "public-finance",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

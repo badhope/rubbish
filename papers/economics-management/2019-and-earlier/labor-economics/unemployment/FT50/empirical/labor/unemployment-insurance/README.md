@@ -4,13 +4,13 @@
 
 > ✓ DOI verified live
 
-| Field       | Value                                                                          |
-| ----------- | ------------------------------------------------------------------------------ |
-| ---         | ---                                                                            |
-| **Authors** | David A. Card, Raj C., & W. Craig R.                                           |
-| **Year**    | 2018                                                                           |
-| **Journal** | Handbook of Labor Economics (FT50), 2011                                       |
-| **DOI**     | [10.1016/S0169-7218(11)00414-7](https://doi.org/10.1016/S0169-7218(11)00414-7) |
+| Field       | Value                                                                            |
+| ----------- | -------------------------------------------------------------------------------- |
+| ---         | ---                                                                              |
+| **Authors** | David A. Card, Raj C., & W. Craig R.                                             |
+| **Year**    | 2018                                                                             |
+| **Journal** | Handbook of Labor Economics (FT50), 2011                                         |
+| **DOI**     | [10.1016/S0169-7218(11)00414-7](<https://doi.org/10.1016/S0169-7218(11)00414-7>) |
 
 ## Where it sits in the corpus
 
@@ -28,7 +28,7 @@
 
 ## Where to read it
 
-- [DOI landing page](https://doi.org/10.1016/S0169-7218(11)00414-7) — `10.1016/S0169-7218(11)00414-7`
+- [DOI landing page](<https://doi.org/10.1016/S0169-7218(11)00414-7>) — `10.1016/S0169-7218(11)00414-7`
 - [Publisher page](https://www.sciencedirect.com/science/article/pii/S0169721811004147)
 - [Repository folder](https://github.com/badhope/ScholarLib/tree/main/papers/economics-management/2019-and-earlier/labor-economics/unemployment/FT50/empirical/labor/unemployment-insurance)
 - [metadata.json](https://github.com/badhope/ScholarLib/tree/main/papers/economics-management/2019-and-earlier/labor-economics/unemployment/FT50/empirical/labor/unemployment-insurance/metadata.json)

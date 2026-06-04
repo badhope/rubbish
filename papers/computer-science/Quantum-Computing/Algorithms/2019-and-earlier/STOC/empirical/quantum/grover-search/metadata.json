@@ -1,8 +1,6 @@
 {
   "title": "A Fast Quantum Mechanical Algorithm for Database Search",
-  "authors": [
-    "Lov K. Grover"
-  ],
+  "authors": ["Lov K. Grover"],
   "year": 1996,
   "journal": "STOC",
   "journal_tier": "STOC",
@@ -12,10 +10,7 @@
   "doi": "10.1145/237814.237866",
   "url": "https://dl.acm.org/doi/10.1145/237814.237866",
   "abstract": "We present a quantum algorithm for searching an unsorted database in O(sqrt(N)).",
-  "keywords": [
-    "grover",
-    "search"
-  ],
+  "keywords": ["grover", "search"],
   "category": "Algorithms",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

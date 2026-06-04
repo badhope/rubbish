@@ -1,8 +1,6 @@
 {
   "title": "Mechanism Design Theory",
-  "authors": [
-    "Roger B. Myerson"
-  ],
+  "authors": ["Roger B. Myerson"],
   "year": 2008,
   "journal": "Journal of Mathematical Economics",
   "journal_tier": "FT50",
@@ -12,10 +10,7 @@
   "doi": "10.1016/j.jmateco.2005.01.005",
   "url": "https://www.sciencedirect.com/science/article/pii/S0304406805000104",
   "abstract": "We provide an overview of mechanism design theory.",
-  "keywords": [
-    "mechanism-design",
-    "micro"
-  ],
+  "keywords": ["mechanism-design", "micro"],
   "category": "industrial-organization",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,9 +1,6 @@
 {
   "title": "Nudge: The Final Edition",
-  "authors": [
-    "Richard H. Thaler",
-    "Cass R. Sunstein"
-  ],
+  "authors": ["Richard H. Thaler", "Cass R. Sunstein"],
   "year": 2017,
   "journal": "Penguin Books",
   "journal_tier": "FT50",
@@ -13,10 +10,7 @@
   "doi": "10.5555/nudge-final",
   "url": "https://www.penguinrandomhouse.com/books/56683/nudge-by-richard-h-thaler-and-cass-r-sunstein/",
   "abstract": "The final edition of Nudge.",
-  "keywords": [
-    "nudging",
-    "behavioral"
-  ],
+  "keywords": ["nudging", "behavioral"],
   "category": "nudging",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

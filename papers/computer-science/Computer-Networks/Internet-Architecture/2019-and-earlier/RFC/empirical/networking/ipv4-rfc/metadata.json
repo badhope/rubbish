@@ -1,9 +1,6 @@
 {
   "title": "Internet Protocol",
-  "authors": [
-    "Jon Postel",
-    "et al."
-  ],
+  "authors": ["Jon Postel", "et al."],
   "year": 1981,
   "journal": "RFC",
   "journal_tier": "RFC",
@@ -13,10 +10,7 @@
   "doi": "10.17487/rfc0791",
   "url": "https://www.rfc-editor.org/rfc/rfc791",
   "abstract": "This document specifies the Internet Protocol.",
-  "keywords": [
-    "ipv4",
-    "rfc"
-  ],
+  "keywords": ["ipv4", "rfc"],
   "category": "Internet-Architecture",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

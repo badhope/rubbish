@@ -1,9 +1,6 @@
 {
   "title": "Tax Evasion",
-  "authors": [
-    "James A.",
-    "Joel S."
-  ],
+  "authors": ["James A.", "Joel S."],
   "year": 2017,
   "journal": "Annual Review of Economics",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1146/annurev-economics-111610-112550",
   "url": "https://www.annualreviews.org/doi/10.1146/annurev-economics-111610-112550",
   "abstract": "We study tax evasion.",
-  "keywords": [
-    "tax-evasion"
-  ],
+  "keywords": ["tax-evasion"],
   "category": "tax-evasion",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

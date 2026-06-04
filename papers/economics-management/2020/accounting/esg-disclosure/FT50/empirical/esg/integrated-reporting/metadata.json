@@ -1,10 +1,6 @@
 {
   "title": "Integrated Reporting and Investor Clientele",
-  "authors": [
-    "Yuan Ding",
-    "Thomas R. Dyck",
-    "Ling L. Mei"
-  ],
+  "authors": ["Yuan Ding", "Thomas R. Dyck", "Ling L. Mei"],
   "year": 2020,
   "journal": "Journal of Accounting and Economics",
   "journal_tier": "FT50",
@@ -14,10 +10,7 @@
   "doi": "10.1016/j.jacceco.2018.10.005",
   "url": "https://www.sciencedirect.com/science/article/pii/S0165410118300721",
   "abstract": "We study integrated reporting and investor clientele.",
-  "keywords": [
-    "integrated-reporting",
-    "esg"
-  ],
+  "keywords": ["integrated-reporting", "esg"],
   "category": "esg-disclosure",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

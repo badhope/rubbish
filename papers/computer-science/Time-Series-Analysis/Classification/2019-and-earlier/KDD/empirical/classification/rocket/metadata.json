@@ -1,10 +1,6 @@
 {
   "title": "ROCKET: Exceptionally fast and accurate time series classification using random convolutional kernels",
-  "authors": [
-    "Angus Dempster",
-    "François Petitjean",
-    "Geoffrey I. Webb"
-  ],
+  "authors": ["Angus Dempster", "François Petitjean", "Geoffrey I. Webb"],
   "year": 2019,
   "journal": "DMKD",
   "journal_tier": "KDD",
@@ -14,10 +10,7 @@
   "doi": "10.1007/s10618-020-00701-z",
   "url": "https://arxiv.org/abs/1910.13051",
   "abstract": "We present ROCKET for time series classification.",
-  "keywords": [
-    "rocket",
-    "classification"
-  ],
+  "keywords": ["rocket", "classification"],
   "category": "Classification",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

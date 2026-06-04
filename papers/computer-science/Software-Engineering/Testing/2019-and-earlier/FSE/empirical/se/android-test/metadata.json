@@ -15,10 +15,7 @@
   "doi": "10.1007/s10664-013-9246-6",
   "url": "https://link.springer.com/article/10.1007/s10664-013-9246-6",
   "abstract": "We study API learning obstacles in software engineering.",
-  "keywords": [
-    "api-learning",
-    "se"
-  ],
+  "keywords": ["api-learning", "se"],
   "category": "Testing",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

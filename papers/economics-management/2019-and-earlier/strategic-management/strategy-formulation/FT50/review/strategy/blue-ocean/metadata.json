@@ -1,9 +1,6 @@
 {
   "title": "Blue Ocean Strategy",
-  "authors": [
-    "W. Chan Kim",
-    "Renée Mauborgne"
-  ],
+  "authors": ["W. Chan Kim", "Renée Mauborgne"],
   "year": 2017,
   "journal": "Harvard Business Review",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.5555/blue-ocean-hbr",
   "url": "https://hbr.org/2004/10/blue-ocean-strategy",
   "abstract": "We present Blue Ocean Strategy.",
-  "keywords": [
-    "blue-ocean"
-  ],
+  "keywords": ["blue-ocean"],
   "category": "strategy-formulation",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

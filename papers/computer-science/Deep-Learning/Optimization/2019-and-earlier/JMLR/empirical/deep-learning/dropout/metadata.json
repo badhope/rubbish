@@ -16,11 +16,7 @@
   "doi": "10.5555/2627435.2670313",
   "url": "https://jmlr.org/papers/v15/srivastava14a.html",
   "abstract": "Dropout is a technique for addressing overfitting in deep neural networks by randomly dropping units during training.",
-  "keywords": [
-    "dropout",
-    "regularization",
-    "deep learning"
-  ],
+  "keywords": ["dropout", "regularization", "deep learning"],
   "category": "Optimization",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

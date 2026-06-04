@@ -1,10 +1,6 @@
 {
   "title": "Deep Neural Networks for YouTube Recommendations",
-  "authors": [
-    "Paul Covington",
-    "Jay Adams",
-    "Emre Sargin"
-  ],
+  "authors": ["Paul Covington", "Jay Adams", "Emre Sargin"],
   "year": 2016,
   "journal": "RecSys",
   "journal_tier": "RecSys",
@@ -14,10 +10,7 @@
   "doi": "10.1145/2959100.2959190",
   "url": "https://research.google/pubs/deep-neural-networks-for-youtube-recommendations/",
   "abstract": "We present the deep neural network architecture used for YouTube recommendations.",
-  "keywords": [
-    "vdnn",
-    "youtube"
-  ],
+  "keywords": ["vdnn", "youtube"],
   "category": "Content",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

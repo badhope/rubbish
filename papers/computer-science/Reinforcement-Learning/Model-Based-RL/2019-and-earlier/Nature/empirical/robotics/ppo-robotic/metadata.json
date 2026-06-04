@@ -20,11 +20,7 @@
   "doi": "10.1038/s41586-019-1733-9",
   "url": "https://www.nature.com/articles/s41586-019-1733-9",
   "abstract": "We use reinforcement learning to learn dexterous in-hand manipulation policies which can be deployed on a physical robot.",
-  "keywords": [
-    "robotics",
-    "reinforcement learning",
-    "manipulation"
-  ],
+  "keywords": ["robotics", "reinforcement learning", "manipulation"],
   "category": "Model-Based-RL",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

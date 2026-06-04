@@ -15,10 +15,7 @@
   "doi": "10.5555/3001460.3001507",
   "url": "https://www.aaai.org/Papers/KDD/1996/KDD96-037.pdf",
   "abstract": "DBSCAN is a density-based clustering algorithm.",
-  "keywords": [
-    "dbscan",
-    "clustering"
-  ],
+  "keywords": ["dbscan", "clustering"],
   "category": "Clustering",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

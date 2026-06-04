@@ -1,9 +1,6 @@
 {
   "title": "Algorithmic Foundations of Differential Privacy",
-  "authors": [
-    "Cynthia Dwork",
-    "Aaron Roth"
-  ],
+  "authors": ["Cynthia Dwork", "Aaron Roth"],
   "year": 2016,
   "journal": "Foundations and Trends in Theoretical Computer Science",
   "journal_tier": "Foundations",
@@ -13,10 +10,7 @@
   "doi": "10.1561/0400000042",
   "url": "https://www.cis.upenn.edu/~aaroth/Papers/privacybook.pdf",
   "abstract": "This monograph lays out the algorithmic foundations of differential privacy.",
-  "keywords": [
-    "differential-privacy",
-    "foundations"
-  ],
+  "keywords": ["differential-privacy", "foundations"],
   "category": "Privacy",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

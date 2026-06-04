@@ -1,9 +1,6 @@
 {
   "title": "Globally Distributed Content Delivery",
-  "authors": [
-    "James K. Mers",
-    "Andrew S. Tanenbaum"
-  ],
+  "authors": ["James K. Mers", "Andrew S. Tanenbaum"],
   "year": 1999,
   "journal": "Proc. IEEE",
   "journal_tier": "Proc IEEE",
@@ -13,10 +10,7 @@
   "doi": "10.1109/5.880066",
   "url": "https://ieeexplore.ieee.org/document/880066",
   "abstract": "We discuss the design of content delivery networks.",
-  "keywords": [
-    "cdn",
-    "caching"
-  ],
+  "keywords": ["cdn", "caching"],
   "category": "CDN",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

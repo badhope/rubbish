@@ -1,9 +1,6 @@
 {
   "title": "Adam: A Method for Stochastic Optimization",
-  "authors": [
-    "Diederik P. Kingma",
-    "Jimmy Ba"
-  ],
+  "authors": ["Diederik P. Kingma", "Jimmy Ba"],
   "year": 2014,
   "journal": "arXiv",
   "journal_tier": "ICLR",
@@ -13,10 +10,7 @@
   "doi": "10.48550/arXiv.1412.6980",
   "url": "https://arxiv.org/abs/1412.6980",
   "abstract": "We introduce Adam an algorithm for first-order gradient-based optimization.",
-  "keywords": [
-    "adam",
-    "optimization"
-  ],
+  "keywords": ["adam", "optimization"],
   "category": "Non-Convex",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

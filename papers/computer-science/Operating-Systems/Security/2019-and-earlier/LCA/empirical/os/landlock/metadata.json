@@ -1,8 +1,6 @@
 {
   "title": "Landlock LSM: A New Approach to Linux Security Modules",
-  "authors": [
-    "Mickaël Salaün"
-  ],
+  "authors": ["Mickaël Salaün"],
   "year": 2019,
   "journal": "Linux Foundation",
   "journal_tier": "LCA",
@@ -12,10 +10,7 @@
   "doi": "10.5555/lf-landlock",
   "url": "https://landlock.io/",
   "abstract": "Landlock is a new Linux security module framework.",
-  "keywords": [
-    "landlock",
-    "security"
-  ],
+  "keywords": ["landlock", "security"],
   "category": "Security",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

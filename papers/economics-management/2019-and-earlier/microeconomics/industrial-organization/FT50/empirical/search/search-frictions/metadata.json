@@ -1,9 +1,6 @@
 {
   "title": "Equilibrium in Search",
-  "authors": [
-    "George J. Mailath",
-    "Lukasz Samuelson"
-  ],
+  "authors": ["George J. Mailath", "Lukasz Samuelson"],
   "year": 2017,
   "journal": "Journal of Economic Theory",
   "journal_tier": "FT50",
@@ -13,10 +10,7 @@
   "doi": "10.1016/j.jet.2008.01.006",
   "url": "https://www.sciencedirect.com/science/article/pii/S0022053108000206",
   "abstract": "We study equilibrium in search models.",
-  "keywords": [
-    "search",
-    "microeconomics"
-  ],
+  "keywords": ["search", "microeconomics"],
   "category": "industrial-organization",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

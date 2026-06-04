@@ -18,10 +18,7 @@
   "doi": "10.48550/arXiv.1804.00542",
   "url": "https://arxiv.org/abs/1804.00542",
   "abstract": "We present RawNet for text-independent speaker verification.",
-  "keywords": [
-    "rawnet",
-    "speaker"
-  ],
+  "keywords": ["rawnet", "speaker"],
   "category": "Speaker",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

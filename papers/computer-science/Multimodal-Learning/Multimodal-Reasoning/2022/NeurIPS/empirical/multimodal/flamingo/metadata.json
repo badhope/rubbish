@@ -19,10 +19,7 @@
   "doi": "10.48550/arXiv.2204.14198",
   "url": "https://arxiv.org/abs/2204.14198",
   "abstract": "We introduce Flamingo a family of Visual Language Models that can bridge pretrained vision-only and language-only models.",
-  "keywords": [
-    "flamingo",
-    "visual language model"
-  ],
+  "keywords": ["flamingo", "visual language model"],
   "category": "Multimodal-Reasoning",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

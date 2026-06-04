@@ -1,10 +1,6 @@
 {
   "title": "The Skill Premium",
-  "authors": [
-    "David H. Autor",
-    "Frank Levy",
-    "Richard J. M."
-  ],
+  "authors": ["David H. Autor", "Frank Levy", "Richard J. M."],
   "year": 2017,
   "journal": "Quarterly Journal of Economics",
   "journal_tier": "FT50",
@@ -14,9 +10,7 @@
   "doi": "10.1162/003355303773773847",
   "url": "https://academic.oup.com/qje/article/118/4/1279/1948575",
   "abstract": "We study the skill premium.",
-  "keywords": [
-    "skill-premium"
-  ],
+  "keywords": ["skill-premium"],
   "category": "human-capital",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

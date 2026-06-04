@@ -1,10 +1,6 @@
 {
   "title": "ESG and Corporate Performance",
-  "authors": [
-    "Mozaffar Khan",
-    "George Serafeim",
-    "Aaron Yoon"
-  ],
+  "authors": ["Mozaffar Khan", "George Serafeim", "Aaron Yoon"],
   "year": 2020,
   "journal": "Review of Accounting Studies",
   "journal_tier": "FT50",
@@ -14,9 +10,7 @@
   "doi": "10.1007/s11142-016-9363-1",
   "url": "https://link.springer.com/article/10.1007/s11142-016-9363-1",
   "abstract": "We study ESG and corporate performance.",
-  "keywords": [
-    "esg"
-  ],
+  "keywords": ["esg"],
   "category": "esg-disclosure",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

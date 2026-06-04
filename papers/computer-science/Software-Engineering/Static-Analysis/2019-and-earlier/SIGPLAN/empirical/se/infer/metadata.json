@@ -16,10 +16,7 @@
   "doi": "10.1145/3049832.3049876",
   "url": "https://research.fb.com/publications/infer/",
   "abstract": "Infer is an automatic program verifier for memory safety.",
-  "keywords": [
-    "infer",
-    "static"
-  ],
+  "keywords": ["infer", "static"],
   "category": "Static-Analysis",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

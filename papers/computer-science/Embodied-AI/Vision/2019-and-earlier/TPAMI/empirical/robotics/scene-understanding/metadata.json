@@ -15,10 +15,7 @@
   "doi": "10.1109/TPAMI.2020.2970684",
   "url": "https://www.cvlibs.net/publications/Geiger2012CVPR.pdf",
   "abstract": "We address the problem of holistic scene understanding.",
-  "keywords": [
-    "scene",
-    "3d"
-  ],
+  "keywords": ["scene", "3d"],
   "category": "Vision",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

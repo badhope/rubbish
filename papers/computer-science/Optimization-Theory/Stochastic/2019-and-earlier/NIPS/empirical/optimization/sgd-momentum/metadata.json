@@ -15,10 +15,7 @@
   "doi": "10.48550/arXiv.1206.6486",
   "url": "https://arxiv.org/abs/1206.6486",
   "abstract": "We investigate the role of momentum and initialization in deep learning.",
-  "keywords": [
-    "momentum",
-    "sgd"
-  ],
+  "keywords": ["momentum", "sgd"],
   "category": "Stochastic",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

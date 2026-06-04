@@ -4,13 +4,13 @@
 
 > ✓ DOI verified live
 
-| Field       | Value                                                                          |
-| ----------- | ------------------------------------------------------------------------------ |
-| ---         | ---                                                                            |
-| **Authors** | Pedro Pita Barros & Thomas G. McGuire                                          |
-| **Year**    | 2017                                                                           |
-| **Journal** | Handbook of Health Economics (FT50), 2011                                      |
-| **DOI**     | [10.1016/S1574-0064(11)00001-0](https://doi.org/10.1016/S1574-0064(11)00001-0) |
+| Field       | Value                                                                            |
+| ----------- | -------------------------------------------------------------------------------- |
+| ---         | ---                                                                              |
+| **Authors** | Pedro Pita Barros & Thomas G. McGuire                                            |
+| **Year**    | 2017                                                                             |
+| **Journal** | Handbook of Health Economics (FT50), 2011                                        |
+| **DOI**     | [10.1016/S1574-0064(11)00001-0](<https://doi.org/10.1016/S1574-0064(11)00001-0>) |
 
 ## Where it sits in the corpus
 
@@ -28,7 +28,7 @@
 
 ## Where to read it
 
-- [DOI landing page](https://doi.org/10.1016/S1574-0064(11)00001-0) — `10.1016/S1574-0064(11)00001-0`
+- [DOI landing page](<https://doi.org/10.1016/S1574-0064(11)00001-0>) — `10.1016/S1574-0064(11)00001-0`
 - [Publisher page](https://www.sciencedirect.com/science/article/pii/S1574006411000010)
 - [Repository folder](https://github.com/badhope/ScholarLib/tree/main/papers/economics-management/2019-and-earlier/health-economics/health-economics-empirical/FT50/review/health/nber-health)
 - [metadata.json](https://github.com/badhope/ScholarLib/tree/main/papers/economics-management/2019-and-earlier/health-economics/health-economics-empirical/FT50/review/health/nber-health/metadata.json)

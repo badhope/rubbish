@@ -1,9 +1,6 @@
 {
   "title": "Optimal Income Redistribution",
-  "authors": [
-    "Emmanuel Saez",
-    "Stefanie S."
-  ],
+  "authors": ["Emmanuel Saez", "Stefanie S."],
   "year": 2017,
   "journal": "Quarterly Journal of Economics",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1093/qje/qjs011",
   "url": "https://academic.oup.com/qje/article/128/1/255/2428053",
   "abstract": "We discuss optimal income redistribution.",
-  "keywords": [
-    "redistribution"
-  ],
+  "keywords": ["redistribution"],
   "category": "inequality",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

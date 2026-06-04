@@ -16,9 +16,7 @@
   "doi": "10.5555/3122009.3174821",
   "url": "https://arxiv.org/abs/1611.10291",
   "abstract": "We discuss recent advances in causal discovery and the data-famine situation.",
-  "keywords": [
-    "causal-discovery"
-  ],
+  "keywords": ["causal-discovery"],
   "category": "Causal-Discovery",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

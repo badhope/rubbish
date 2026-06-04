@@ -1,9 +1,6 @@
 {
   "title": "Improved Denoising Diffusion Probabilistic Models",
-  "authors": [
-    "Alex Nichol",
-    "Prafulla Dhariwal"
-  ],
+  "authors": ["Alex Nichol", "Prafulla Dhariwal"],
   "year": 2021,
   "journal": "ICML",
   "journal_tier": "-",
@@ -13,10 +10,7 @@
   "doi": "10.48550/arXiv.2102.09672",
   "url": "https://arxiv.org/abs/2102.09672",
   "abstract": "We show that learning variances of the reverse process is important for high sample quality.",
-  "keywords": [
-    "improved ddpm",
-    "diffusion"
-  ],
+  "keywords": ["improved ddpm", "diffusion"],
   "category": "Diffusion",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

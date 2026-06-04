@@ -16,10 +16,7 @@
   "doi": "10.48550/arXiv.2405.12213",
   "url": "https://octo-models.github.io/",
   "abstract": "Octo is an open-source generalist robot policy.",
-  "keywords": [
-    "octo",
-    "foundation"
-  ],
+  "keywords": ["octo", "foundation"],
   "category": "Foundation",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

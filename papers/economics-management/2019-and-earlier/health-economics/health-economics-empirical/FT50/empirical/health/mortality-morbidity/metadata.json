@@ -1,9 +1,6 @@
 {
   "title": "The Mortality and Morbidity Effects of Medical Care",
-  "authors": [
-    "David M. Cutler",
-    "Grant Miller"
-  ],
+  "authors": ["David M. Cutler", "Grant Miller"],
   "year": 2017,
   "journal": "American Economic Review",
   "journal_tier": "FT50",
@@ -13,10 +10,7 @@
   "doi": "10.1257/000282805774919572",
   "url": "https://www.aeaweb.org/articles?id=10.1257/000282805774919572",
   "abstract": "We study the mortality and morbidity effects of medical care.",
-  "keywords": [
-    "mortality",
-    "medical"
-  ],
+  "keywords": ["mortality", "medical"],
   "category": "health-economics-empirical",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

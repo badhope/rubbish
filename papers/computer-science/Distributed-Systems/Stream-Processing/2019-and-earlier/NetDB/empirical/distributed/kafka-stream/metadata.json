@@ -1,10 +1,6 @@
 {
   "title": "Apache Kafka: A Distributed Streaming Platform",
-  "authors": [
-    "Neha Narkhede",
-    "Gwen Shapira",
-    "Todd Palino"
-  ],
+  "authors": ["Neha Narkhede", "Gwen Shapira", "Todd Palino"],
   "year": 2014,
   "journal": "Kafka Summit",
   "journal_tier": "NetDB",
@@ -14,10 +10,7 @@
   "doi": "10.1109/MC.2017.4121228",
   "url": "https://www.kafka-summit.org/2017/",
   "abstract": "Apache Kafka is a distributed streaming platform.",
-  "keywords": [
-    "kafka",
-    "stream"
-  ],
+  "keywords": ["kafka", "stream"],
   "category": "Stream-Processing",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

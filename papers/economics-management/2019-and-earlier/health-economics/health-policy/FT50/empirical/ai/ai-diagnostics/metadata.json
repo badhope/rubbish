@@ -1,9 +1,6 @@
 {
   "title": "A I in Health Care: A Critical Review",
-  "authors": [
-    "Kaspar Fischer",
-    "Marc R. M. S."
-  ],
+  "authors": ["Kaspar Fischer", "Marc R. M. S."],
   "year": 2018,
   "journal": "NEJM AI",
   "journal_tier": "FT50",
@@ -13,10 +10,7 @@
   "doi": "10.1056/AIoa2300001",
   "url": "https://ai.nejm.org/",
   "abstract": "We critically review AI in health care.",
-  "keywords": [
-    "ai",
-    "diagnostics"
-  ],
+  "keywords": ["ai", "diagnostics"],
   "category": "health-policy",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

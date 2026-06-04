@@ -19,11 +19,7 @@
   "doi": "10.48550/arXiv.2203.02155",
   "url": "https://arxiv.org/abs/2203.02155",
   "abstract": "We show that a 1.3B-parameter InstructGPT model is preferred to outputs from a 175B GPT-3 model.",
-  "keywords": [
-    "rlhf",
-    "instruction following",
-    "alignment"
-  ],
+  "keywords": ["rlhf", "instruction following", "alignment"],
   "category": "Alignment",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

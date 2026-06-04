@@ -15,10 +15,7 @@
   "doi": "10.5555/297096.297104",
   "url": "https://www.cs.cmu.edu/~15819c/raw-attachment/wiki-data/The%20PageRank%20Citation%20Ranking.pdf",
   "abstract": "The PageRank algorithm ranks web pages by their link structure.",
-  "keywords": [
-    "pagerank",
-    "web-search"
-  ],
+  "keywords": ["pagerank", "web-search"],
   "category": "Web-Search",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

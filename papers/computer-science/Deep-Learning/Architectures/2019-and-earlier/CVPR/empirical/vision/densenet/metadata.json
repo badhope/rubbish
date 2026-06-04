@@ -15,10 +15,7 @@
   "doi": "10.1109/CVPR.2017.243",
   "url": "https://arxiv.org/abs/1608.06993",
   "abstract": "Recent work has shown that convolutional networks can be substantially deeper and achieve better performance with shortcut connections.",
-  "keywords": [
-    "densenet",
-    "image classification"
-  ],
+  "keywords": ["densenet", "image classification"],
   "category": "Architectures",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,8 +1,6 @@
 {
   "title": "Supply Chain Management",
-  "authors": [
-    "Christopher S. Tang"
-  ],
+  "authors": ["Christopher S. Tang"],
   "year": 2017,
   "journal": "Management Science",
   "journal_tier": "FT50",
@@ -12,9 +10,7 @@
   "doi": "10.1287/mnsc.1060.0530",
   "url": "https://pubsonline.informs.org/doi/10.1287/mnsc.1060.0530",
   "abstract": "We study supply chain management.",
-  "keywords": [
-    "supply-chain"
-  ],
+  "keywords": ["supply-chain"],
   "category": "supply-chain",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

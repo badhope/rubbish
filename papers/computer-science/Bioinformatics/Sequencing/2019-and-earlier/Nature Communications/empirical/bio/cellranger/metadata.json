@@ -20,10 +20,7 @@
   "doi": "10.1038/nature14383",
   "url": "https://www.nature.com/articles/nature14383",
   "abstract": "We describe a highly parallel and low cost method for single-cell RNA sequencing.",
-  "keywords": [
-    "drop-seq",
-    "single-cell"
-  ],
+  "keywords": ["drop-seq", "single-cell"],
   "category": "Sequencing",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

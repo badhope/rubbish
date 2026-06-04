@@ -1,9 +1,6 @@
 {
   "title": "Public Health Economics",
-  "authors": [
-    "Michael K. G.",
-    "David A. S."
-  ],
+  "authors": ["Michael K. G.", "David A. S."],
   "year": 2017,
   "journal": "Handbook of Health Economics",
   "journal_tier": "FT50",
@@ -13,9 +10,7 @@
   "doi": "10.1016/B978-0-444-53592-4.00017-1",
   "url": "https://www.sciencedirect.com/science/article/pii/B9780444535924000171",
   "abstract": "We discuss public health economics.",
-  "keywords": [
-    "health-policy"
-  ],
+  "keywords": ["health-policy"],
   "category": "health-policy",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -17,10 +17,7 @@
   "doi": "10.1038/nature23474",
   "url": "https://www.nature.com/articles/nature23474",
   "abstract": "We survey quantum machine learning.",
-  "keywords": [
-    "quantum-ml",
-    "survey"
-  ],
+  "keywords": ["quantum-ml", "survey"],
   "category": "ML-Quantum",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

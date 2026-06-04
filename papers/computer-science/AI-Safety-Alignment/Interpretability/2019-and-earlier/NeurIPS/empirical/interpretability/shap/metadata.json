@@ -1,9 +1,6 @@
 {
   "title": "A Unified Approach to Interpreting Model Predictions",
-  "authors": [
-    "Scott M. Lundberg",
-    "Su-In Lee"
-  ],
+  "authors": ["Scott M. Lundberg", "Su-In Lee"],
   "year": 2017,
   "journal": "NeurIPS",
   "journal_tier": "NeurIPS",
@@ -13,10 +10,7 @@
   "doi": "10.48550/arXiv.1705.07874",
   "url": "https://arxiv.org/abs/1705.07874",
   "abstract": "We present a unified framework for interpreting predictions SHAP.",
-  "keywords": [
-    "shap",
-    "interpretability"
-  ],
+  "keywords": ["shap", "interpretability"],
   "category": "Interpretability",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

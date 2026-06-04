@@ -17,10 +17,7 @@
   "doi": "10.1145/3038912.3052569",
   "url": "https://arxiv.org/abs/1708.05031",
   "abstract": "We present neural collaborative filtering.",
-  "keywords": [
-    "neumf",
-    "deep-learning"
-  ],
+  "keywords": ["neumf", "deep-learning"],
   "category": "Deep-Learning",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

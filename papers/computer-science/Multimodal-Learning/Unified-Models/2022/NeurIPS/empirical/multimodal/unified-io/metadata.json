@@ -15,10 +15,7 @@
   "doi": "10.48550/arXiv.2206.08916",
   "url": "https://arxiv.org/abs/2206.08916",
   "abstract": "We propose Unified-IO a model that performs a large variety of AI tasks.",
-  "keywords": [
-    "unified-io",
-    "multimodal"
-  ],
+  "keywords": ["unified-io", "multimodal"],
   "category": "Unified-Models",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

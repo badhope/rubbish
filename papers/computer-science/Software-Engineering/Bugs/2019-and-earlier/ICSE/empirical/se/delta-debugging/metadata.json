@@ -1,8 +1,6 @@
 {
   "title": "Automated Debugging",
-  "authors": [
-    "Andreas Zeller"
-  ],
+  "authors": ["Andreas Zeller"],
   "year": 2017,
   "journal": "IEEE Software",
   "journal_tier": "ICSE",
@@ -12,10 +10,7 @@
   "doi": "10.1109/MS.2001.919296",
   "url": "https://www.oreilly.com/library/view/why-programs-fail/9781459328916/",
   "abstract": "We discuss automated debugging techniques.",
-  "keywords": [
-    "debugging",
-    "se"
-  ],
+  "keywords": ["debugging", "se"],
   "category": "Bugs",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

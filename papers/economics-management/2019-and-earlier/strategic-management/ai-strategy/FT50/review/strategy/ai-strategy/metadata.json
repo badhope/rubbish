@@ -1,10 +1,6 @@
 {
   "title": "AI Strategy",
-  "authors": [
-    "John R. H.",
-    "Andrew M.",
-    "Erik B."
-  ],
+  "authors": ["John R. H.", "Andrew M.", "Erik B."],
   "year": 2018,
   "journal": "MIT Sloan Management Review",
   "journal_tier": "FT50",
@@ -14,9 +10,7 @@
   "doi": "10.7551/mitpress/10787.001.0001",
   "url": "https://sloanreview.mit.edu/",
   "abstract": "We discuss AI strategy.",
-  "keywords": [
-    "ai-strategy"
-  ],
+  "keywords": ["ai-strategy"],
   "category": "ai-strategy",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

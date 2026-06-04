@@ -19,10 +19,7 @@
   "doi": "10.1109/SP.2018.00057",
   "url": "https://meltdownattack.com/",
   "abstract": "We present Meltdown a powerful attack that allows reading privileged memory of other processes.",
-  "keywords": [
-    "meltdown",
-    "security"
-  ],
+  "keywords": ["meltdown", "security"],
   "category": "Systems-Security",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

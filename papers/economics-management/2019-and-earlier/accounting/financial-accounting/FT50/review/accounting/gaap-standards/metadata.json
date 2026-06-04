@@ -1,9 +1,6 @@
 {
   "title": "The Economics of Financial Reporting Standards",
-  "authors": [
-    "Christian Leuz",
-    "W. R. Landsman"
-  ],
+  "authors": ["Christian Leuz", "W. R. Landsman"],
   "year": 2018,
   "journal": "Journal of Accounting and Economics",
   "journal_tier": "FT50",
@@ -13,10 +10,7 @@
   "doi": "10.1016/j.jacceco.2017.09.001",
   "url": "https://www.sciencedirect.com/science/article/pii/S0165410117300482",
   "abstract": "We discuss the economics of financial reporting standards.",
-  "keywords": [
-    "gaap",
-    "standards"
-  ],
+  "keywords": ["gaap", "standards"],
   "category": "financial-accounting",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,8 +1,6 @@
 {
   "title": "CodeParrot: A Large-Scale Code Generation Dataset",
-  "authors": [
-    "Hugging Face"
-  ],
+  "authors": ["Hugging Face"],
   "year": 2021,
   "journal": "Hugging Face",
   "journal_tier": "-",
@@ -12,10 +10,7 @@
   "doi": "10.5555/codeparrot",
   "url": "https://huggingface.co/datasets/codeparrot",
   "abstract": "CodeParrot is a large-scale code generation dataset.",
-  "keywords": [
-    "codeparrot",
-    "code-gen"
-  ],
+  "keywords": ["codeparrot", "code-gen"],
   "category": "Code-Generation",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -1,8 +1,6 @@
 {
   "title": "Female Labor Supply",
-  "authors": [
-    "Mark R. Rosenzweig"
-  ],
+  "authors": ["Mark R. Rosenzweig"],
   "year": 2017,
   "journal": "Journal of Labor Economics",
   "journal_tier": "FT50",
@@ -12,9 +10,7 @@
   "doi": "10.1086/209880",
   "url": "https://www.journals.uchicago.edu/doi/10.1086/209880",
   "abstract": "We study female labor supply.",
-  "keywords": [
-    "female-labor"
-  ],
+  "keywords": ["female-labor"],
   "category": "labor-supply",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",

@@ -20,10 +20,7 @@
   "doi": "10.1145/1365815.1365816",
   "url": "https://dl.acm.org/doi/10.1145/1365815.1365816",
   "abstract": "We describe Bigtable a distributed storage system for managing structured data.",
-  "keywords": [
-    "bigtable",
-    "nosql"
-  ],
+  "keywords": ["bigtable", "nosql"],
   "category": "NoSQL",
   "submitted_by": "ScholarLib-RealPapers",
   "date_added": "2026-06-04",
