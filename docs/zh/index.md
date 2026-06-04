@@ -27,11 +27,11 @@ features:
     title: 即拿即引用
     details: 每篇论文都附带 BibTeX 引用 —— 复制粘贴即可继续写作。告别付费墙，不再四处寻找。
   - icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    title: 快速检索
-    details: 本地全文搜索覆盖数千篇论文，同时支持按主题浏览和按年份筛选。
+    title: 本地全文检索
+    details: 内置检索覆盖每篇已收录论文与每个主题页面，配合按主题与按年份的导航 —— 无外部服务、无追踪。
   - icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 0 20M12 2a15.3 15.3 0 0 0 0 20"/></svg>
-    title: 100% 开放获取
-    details: 本库中所有论文均为开放获取。基于 MIT 许可证发布。
+    title: 优先开放获取
+    details: 每篇已索引论文均为开放获取 —— 仓库内附带 PDF 或链接至出版方开放版。基于 MIT 许可证发布。
   - icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
     title: 持续增长
     details: 社区驱动，欢迎 PR。贡献新论文、修复元数据、提出主题建议均可。

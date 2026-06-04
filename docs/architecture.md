@@ -44,15 +44,9 @@ VitePress's built-in `locales` config, no plugin. English is at the root, `zh-CN
 
 ## Accessibility
 
-WCAG 2.1 AA. The actual fixes live in `postbuild_a11y.py` and `docs/.vitepress/theme/custom.css`:
+WCAG 2.1 AA. Most of it comes for free from VitePress 1.6's default theme (the `<main id="VPContent">` landmark, the skip-link, aria-labels on icon-only controls, focus-visible). The one thing we still patch in is decorative-SVG hygiene — see `postbuild_a11y.py` at the repo root, which runs after `vitepress build` and marks purely-decorative `<svg>` elements `aria-hidden="true" focusable="false"`. It deliberately does NOT touch SVGs that already carry a role or aria-label (those are meaningful icons).
 
-- `<main>` landmark (added post-build, since VitePress' default theme uses a `<div>`)
-- skip-link
-- aria-labels on icon-only buttons (VPSwitch, DocSearch)
-- 44px touch targets for the small theme buttons
-- focus-visible styling
-
-If the audit regresses, the postbuild script will surface it in CI before the change ships.
+If a regression sneaks in, the build will still succeed but a manual axe / Lighthouse pass is what catches it — there's no automated a11y check in CI yet.
 
 ## Security
 

@@ -67,10 +67,10 @@ If ScholarLib helps your research, consider supporting development:
 ## Tech Stack
 
 - **[VitePress 1.6](https://vitepress.dev/)** — Documentation site generator
-- **[GitHub Actions](https://github.com/features/actions)** — CI/CD
-- **[Lychee](https://github.com/lycheeverse/lychee)** — Link checker
-- **[Lighthouse CI](https://github.com/GoogleChrome/lighthouse-ci)** — Performance, a11y, SEO audits
+- **[GitHub Actions](https://github.com/features/actions)** — CI/CD (validate, test, build, deploy)
+- **[Lychee](https://github.com/lycheeverse/lychee)** — Link checker (advisory; runs on every PR)
 - **[Dependabot](https://github.com/dependabot)** — Automated dependency updates
+- **[VitePress local search](https://vitepress.dev/reference/default-theme-search)** — Full-text search, no external service
 
 ## Acknowledgments
 

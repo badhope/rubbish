@@ -232,6 +232,7 @@ export default defineConfig({
           { text: "首页", link: "/zh/" },
           { text: "计算机科学", link: "/zh/papers/computer-science/index" },
           { text: "经济与管理", link: "/zh/papers/economics-management/index" },
+          { text: "订阅 RSS", link: "/rss.xml" },
           { text: "关于", link: "/zh/about" },
         ],
         // zh has no per-topic subpages, so the topic sidebar only renders
@@ -242,7 +243,7 @@ export default defineConfig({
           "/zh/papers/computer-science/": [
             {
               text: "计算机科学",
-              collapsed: false,
+              collapsed: true,
               items: [
                 { text: "概览", link: "/zh/papers/computer-science/index" },
                 {
@@ -380,7 +381,7 @@ export default defineConfig({
           "/zh/papers/economics-management/": [
             {
               text: "经济与管理",
-              collapsed: false,
+              collapsed: true,
               items: [
                 { text: "概览", link: "/zh/papers/economics-management/index" },
                 {
@@ -461,7 +462,7 @@ export default defineConfig({
           "/zh/": [
             {
               text: "ScholarLib",
-              collapsed: false,
+              collapsed: true,
               items: [
                 { text: "首页", link: "/zh/" },
                 {
@@ -476,6 +477,34 @@ export default defineConfig({
               ],
             },
           ],
+        },
+
+        // ── zh chrome translations ────────────────────────────────────
+        // VitePress' default theme ships English UI strings; we have to
+        // override them per-locale so stub pages don't render "Next /
+        // On this page / Search / Edit this page on GitHub" in English
+        // for zh users. These keys mirror the ones exposed by the
+        // default theme's en-US locale (see VitePress default theme
+        // config reference).
+        outline: { level: [2, 3], label: "本页目录" },
+        docFooter: { prev: "上一页", next: "下一页" },
+        lastUpdated: {
+          text: "最后更新",
+          formatOptions: { dateStyle: "long", timeStyle: "short" },
+        },
+        langMenuLabel: "切换语言",
+        sidebarMenuLabel: "侧边栏",
+        returnToTopLabel: "回到顶部",
+        darkModeSwitchLabel: "外观",
+        lightModeSwitchTitle: "切换为浅色主题",
+        darkModeSwitchTitle: "切换为深色主题",
+        editLink: {
+          pattern: `${editLinkBase}${docsDir}/:path`,
+          text: "在 GitHub 上编辑此页",
+        },
+        notFound: {
+          title: "页面未找到",
+          linkText: "返回首页",
         },
       },
     },
@@ -493,6 +522,7 @@ export default defineConfig({
         link: "/papers/economics-management/index",
       },
       { text: "Citation Graph", link: "/citation-graph" },
+      { text: "RSS", link: "/rss.xml" },
       { text: "About", link: "/about" },
     ],
 
@@ -500,7 +530,7 @@ export default defineConfig({
       "/papers/computer-science/": [
         {
           text: "Computer Science",
-          collapsed: false,
+          collapsed: true,
           items: [
             { text: "Overview", link: "/papers/computer-science/index" },
             {
@@ -638,7 +668,7 @@ export default defineConfig({
       "/papers/economics-management/": [
         {
           text: "Economics & Management",
-          collapsed: false,
+          collapsed: true,
           items: [
             { text: "Overview", link: "/papers/economics-management/index" },
             {
@@ -716,7 +746,7 @@ export default defineConfig({
       "/about/": [
         {
           text: "About",
-          collapsed: false,
+          collapsed: true,
           items: [
             { text: "Overview", link: "/about" },
             { text: "License", link: "/about#license" },
@@ -761,6 +791,31 @@ export default defineConfig({
             fuzzy: 0.2,
             prefix: true,
             boost: { title: 4, text: 1 },
+          },
+        },
+        locales: {
+          zh: {
+            translations: {
+              button: {
+                buttonText: "搜索",
+                buttonAriaLabel: "搜索",
+              },
+              modal: {
+                displayDetails: "显示详细列表",
+                resetButtonTitle: "重置搜索",
+                backButtonTitle: "关闭搜索",
+                noResultsText: "没有结果",
+                footer: {
+                  selectText: "选择",
+                  selectKeyAriaLabel: "输入",
+                  navigateText: "导航",
+                  navigateUpKeyAriaLabel: "上箭头",
+                  navigateDownKeyAriaLabel: "下箭头",
+                  closeText: "关闭",
+                  closeKeyAriaLabel: "esc",
+                },
+              },
+            },
           },
         },
       },
