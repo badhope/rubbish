@@ -10,35 +10,35 @@ Scaffolded **33** topics covering the CS landscape. Papers haven't been indexed 
 | [AI for Science](/papers/computer-science/ai-for-science)                           | 8                    |
 | [Algorithms & Data Structures](/papers/computer-science/algorithms-data-structures) | 16                   |
 | [AutoML & NAS](/papers/computer-science/automl-nas)                                 | 8                    |
-| [Bioinformatics](/papers/computer-science/bioinformatics)                           | 8                    |
+| [Bioinformatics](/papers/computer-science/bioinformatics)                           | 11                   |
 | [Causal Inference](/papers/computer-science/causal-inference)                       | 8                    |
-| [Computer Networks](/papers/computer-science/computer-networks)                     | 16                   |
-| [Computer Security](/papers/computer-science/computer-security)                     | 16                   |
+| [Computer Networks](/papers/computer-science/computer-networks)                     | 17                   |
+| [Computer Security](/papers/computer-science/computer-security)                     | 21                   |
 | [Computer Vision](/papers/computer-science/computer-vision)                         | 17                   |
-| [Data Mining](/papers/computer-science/data-mining)                                 | 8                    |
-| [Database Systems](/papers/computer-science/database-systems)                       | 16                   |
-| [Deep Learning](/papers/computer-science/deep-learning)                             | 17                   |
-| [Distributed Systems](/papers/computer-science/distributed-systems)                 | 16                   |
-| [Embodied AI](/papers/computer-science/embodied-ai)                                 | 8                    |
-| [Explainable AI](/papers/computer-science/explainable-ai)                           | 8                    |
-| [Generative Models](/papers/computer-science/generative-models)                     | 16                   |
-| [Graph Neural Networks](/papers/computer-science/graph-neural-networks)             | 16                   |
-| [Human-Computer Interaction](/papers/computer-science/human-computer-interaction)   | 16                   |
-| [Information Retrieval](/papers/computer-science/information-retrieval)             | 8                    |
-| [Large Language Models](/papers/computer-science/large-language-models)             | 16                   |
-| [Machine Learning](/papers/computer-science/machine-learning)                       | 12                   |
+| [Data Mining](/papers/computer-science/data-mining)                                 | 13                   |
+| [Database Systems](/papers/computer-science/database-systems)                       | 20                   |
+| [Deep Learning](/papers/computer-science/deep-learning)                             | 19                   |
+| [Distributed Systems](/papers/computer-science/distributed-systems)                 | 22                   |
+| [Embodied AI](/papers/computer-science/embodied-ai)                                 | 14                   |
+| [Explainable AI](/papers/computer-science/explainable-ai)                           | 14                   |
+| [Generative Models](/papers/computer-science/generative-models)                     | 20                   |
+| [Graph Neural Networks](/papers/computer-science/graph-neural-networks)             | 19                   |
+| [Human-Computer Interaction](/papers/computer-science/human-computer-interaction)   | 22                   |
+| [Information Retrieval](/papers/computer-science/information-retrieval)             | 12                   |
+| [Large Language Models](/papers/computer-science/large-language-models)             | 4                    |
+| [Machine Learning](/papers/computer-science/machine-learning)                       | 14                   |
 | [Multimodal Learning](/papers/computer-science/multimodal-learning)                 | 8                    |
-| [Natural Language Processing](/papers/computer-science/natural-language-processing) | 16                   |
-| [Operating Systems](/papers/computer-science/operating-systems)                     | 16                   |
-| [Optimization Theory](/papers/computer-science/optimization-theory)                 | 9                    |
-| [Programming Languages](/papers/computer-science/programming-languages)             | 16                   |
-| [Quantum Computing](/papers/computer-science/quantum-computing)                     | 16                   |
-| [Recommender Systems](/papers/computer-science/recommender-systems)                 | 8                    |
+| [Natural Language Processing](/papers/computer-science/natural-language-processing) | 20                   |
+| [Operating Systems](/papers/computer-science/operating-systems)                     | 21                   |
+| [Optimization Theory](/papers/computer-science/optimization-theory)                 | 15                   |
+| [Programming Languages](/papers/computer-science/programming-languages)             | 22                   |
+| [Quantum Computing](/papers/computer-science/quantum-computing)                     | 22                   |
+| [Recommender Systems](/papers/computer-science/recommender-systems)                 | 13                   |
 | [Reinforcement Learning](/papers/computer-science/reinforcement-learning)           | 16                   |
-| [Robotics](/papers/computer-science/robotics)                                       | 16                   |
-| [Software Engineering](/papers/computer-science/software-engineering)               | 16                   |
-| [Speech & Audio Processing](/papers/computer-science/speech-audio-processing)       | 8                    |
-| [Time Series Analysis](/papers/computer-science/time-series-analysis)               | 8                    |
+| [Robotics](/papers/computer-science/robotics)                                       | 21                   |
+| [Software Engineering](/papers/computer-science/software-engineering)               | 21                   |
+| [Speech & Audio Processing](/papers/computer-science/speech-audio-processing)       | 14                   |
+| [Time Series Analysis](/papers/computer-science/time-series-analysis)               | 12                   |
 
 ## How Papers Are Organized
 

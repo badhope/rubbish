@@ -401,6 +401,102 @@ def write(path: Path, content: str, *, force: bool = False) -> bool:
     return True
 
 
+# ── per-paper leaf page ─────────────────────────────────────────────
+def render_paper_leaf(meta: dict, *, source_rel: str) -> str:
+    """Render a single paper as a VitePress page.
+
+    ``source_rel`` is the path to the leaf folder relative to the repo
+    root (e.g. ``papers/computer-science/.../imagenet-deep``). The page
+    is emitted under ``docs/papers/...`` so VitePress builds it.
+    """
+    title = (meta.get("title") or "Untitled").strip()
+    authors = meta.get("authors") or []
+    if isinstance(authors, str):
+        author_list = [a.strip() for a in authors.split(",") if a.strip()]
+    else:
+        author_list = [str(a).strip() for a in authors if str(a).strip()]
+    year = meta.get("year", "—")
+    journal = (meta.get("journal") or "—").strip()
+    doi = (meta.get("doi") or "").strip()
+    abstract = (meta.get("abstract") or "").strip()
+    keywords = meta.get("keywords") or []
+    publisher_url = (meta.get("publisher_url") or "").strip()
+    bib_rel = source_rel  # e.g. "papers/.../imagenet-deep"
+    paper_pdf_rel = f"{bib_rel}/paper.pdf"
+    has_pdf = bool(meta.get("has_pdf"))
+
+    author_inline = ", ".join(author_list) if author_list else "—"
+
+    # Back-link: walk up the source path and find the nearest
+    # topic page so the user can navigate back to the topic index.
+    parts = source_rel.split("/")
+    # "papers" "<field>" "<topic>" ... -> topic slug is parts[2]
+    if len(parts) >= 3 and parts[0] == "papers":
+        field = parts[1]
+        topic_slug = parts[2].lower()
+        back_href = f"/papers/{field}/{topic_slug}"
+        back_label = "← Back to topic"
+    else:
+        back_href = "/"
+        back_label = "← Home"
+
+    doi_line = (
+        f"**DOI:** [{doi}](https://doi.org/{doi})"
+        if doi
+        else "**DOI:** _not provided_"
+    )
+    publisher_line = (
+        f"**Publisher:** [{publisher_url}]({publisher_url})"
+        if publisher_url
+        else ""
+    )
+    pdf_line = (
+        f"**PDF:** [download]({paper_pdf_rel})"
+        if has_pdf
+        else ""
+    )
+
+    keywords_line = (
+        f"\n**Keywords:** {', '.join(str(k).strip() for k in keywords if str(k).strip())}\n"
+        if keywords
+        else ""
+    )
+    abstract_block = (
+        f"\n## Abstract\n\n{abstract}\n" if abstract else ""
+    )
+
+    bib_url = f"https://raw.githubusercontent.com/badhope/ScholarLib/main/{bib_rel}/paper.bib"
+    meta_url = f"https://raw.githubusercontent.com/badhope/ScholarLib/main/{bib_rel}/metadata.json"
+
+    return (
+        f"# {title}\n\n"
+        f"{GENERATED_MARKER}"
+        f"{back_label}\n\n"
+        f"**Authors:** {author_inline}  \n"
+        f"**Year:** {year}  \n"
+        f"**Journal:** {journal}  \n"
+        f"{doi_line}  \n"
+        f"{publisher_line}  \n"
+        f"{pdf_line}\n"
+        f"{keywords_line}"
+        f"{abstract_block}"
+        f"## Cite this paper\n\n"
+        f"```bibtex\n"
+        f"@misc{{{source_rel.split('/')[-1].lower().replace('-', '')}{year},\n"
+        f"  title  = {{{title}}},\n"
+        f"  author = {{{author_inline}}},\n"
+        f"  year   = {{{year}}},\n"
+        f"  journal = {{{journal}}},\n"
+        f"  doi    = {{{doi}}},\n"
+        f"  url    = {{https://doi.org/{doi}}},\n"
+        f"}}\n"
+        f"```\n\n"
+        f"## Source files\n\n"
+        f"- [`metadata.json`]({meta_url})\n"
+        f"- [`paper.bib`]({bib_url})\n"
+    )
+
+
 def main() -> int:
     import argparse
 
@@ -443,7 +539,25 @@ def main() -> int:
     else:
         skipped += 1
 
-    print(f"Wrote {written} page(s), skipped {skipped}.")
+    # Per-paper leaf pages: emit docs/papers/<full-path>/index.md for
+    # every metadata.json so each paper has a VitePress page.
+    paper_written = 0
+    paper_skipped = 0
+    for meta_path in sorted(PAPERS.glob("*/**/metadata.json")):
+        meta = read_meta(meta_path)
+        if not meta:
+            continue
+        # meta_path is .../papers/<field>/<...>/<leaf>/metadata.json
+        leaf_dir = meta_path.parent
+        # Mirror at docs/papers/<...>/<leaf>/index.md (relative to repo)
+        rel_from_papers = leaf_dir.relative_to(PAPERS)  # <field>/<...>/<leaf>
+        out = DOCS / rel_from_papers / "index.md"
+        if write(out, render_paper_leaf(meta, source_rel=str(leaf_dir.relative_to(ROOT))), force=args.force):
+            paper_written += 1
+        else:
+            paper_skipped += 1
+    print(f"Wrote {written} topic page(s), skipped {skipped}.")
+    print(f"Wrote {paper_written} per-paper page(s), skipped {paper_skipped}.")
     return 0
 
 
