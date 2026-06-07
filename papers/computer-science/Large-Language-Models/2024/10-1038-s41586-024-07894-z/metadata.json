@@ -1,0 +1,22 @@
+{
+  "title": "A pathology foundation model for cancer diagnosis and prognosis prediction",
+  "authors": [],
+  "year": 2024,
+  "venue": "Nature",
+  "venue_tier": "Unknown",
+  "doi": "10.1038/s41586-024-07894-z",
+  "url": "https://doi.org/10.1038/s41586-024-07894-z",
+  "arxiv_id": "",
+  "field": "computer-science",
+  "topic": "Large-Language-Models",
+  "subarea": "",
+  "leaf": "10-1038-s41586-024-07894-z",
+  "tier": "T1",
+  "method": "",
+  "industry": "",
+  "abstract": "",
+  "keywords": [],
+  "bib_key": "anon2024pathology",
+  "imported_from": "HR_AI_Papers_2026 bulk collection (June 2026)",
+  "local_pdf": "01_Papers/02_Computer_Science/AI_ML/LLM_Language_Models/2024/Nature/10.1038_s41586-024-07894-z_A pathology foundation model for cancer diagnosis and prognosis prediction.pdf"
+}

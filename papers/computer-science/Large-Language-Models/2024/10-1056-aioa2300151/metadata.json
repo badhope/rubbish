@@ -1,0 +1,22 @@
+{
+  "title": "Comparative Evaluation of LLMs in Clinical Oncology",
+  "authors": [],
+  "year": 2024,
+  "venue": "NEJM",
+  "venue_tier": "Unknown",
+  "doi": "10.1056/aioa2300151",
+  "url": "https://doi.org/10.1056/aioa2300151",
+  "arxiv_id": "",
+  "field": "computer-science",
+  "topic": "Large-Language-Models",
+  "subarea": "",
+  "leaf": "10-1056-aioa2300151",
+  "tier": "T1",
+  "method": "",
+  "industry": "",
+  "abstract": "",
+  "keywords": [],
+  "bib_key": "anon2024comparative",
+  "imported_from": "HR_AI_Papers_2026 bulk collection (June 2026)",
+  "local_pdf": "01_Papers/02_Computer_Science/AI_ML/LLM_Language_Models/2024/NEJM/10.1056_aioa2300151_Comparative Evaluation of LLMs in Clinical Oncology.pdf"
+}

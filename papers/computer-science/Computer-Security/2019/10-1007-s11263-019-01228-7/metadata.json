@@ -1,0 +1,22 @@
+{
+  "title": "Grad CAM Visual Explanations from Deep Networks via Gradient",
+  "authors": [],
+  "year": 2019,
+  "venue": "Springer",
+  "venue_tier": "Unknown",
+  "doi": "10.1007/s11263-019-01228-7",
+  "url": "https://doi.org/10.1007/s11263-019-01228-7",
+  "arxiv_id": "",
+  "field": "computer-science",
+  "topic": "Computer-Security",
+  "subarea": "",
+  "leaf": "10-1007-s11263-019-01228-7",
+  "tier": "T1",
+  "method": "",
+  "industry": "",
+  "abstract": "",
+  "keywords": [],
+  "bib_key": "anon2019grad",
+  "imported_from": "HR_AI_Papers_2026 bulk collection (June 2026)",
+  "local_pdf": "01_Papers/02_Computer_Science/Systems_Hardware/Networks_Security/2019/Springer/10.1007_s11263-019-01228-7_Grad-CAM Visual Explanations from Deep Networks via Gradient.pdf"
+}

@@ -1,0 +1,22 @@
+{
+  "title": "Pangenome graph construction from genome alignments with Min",
+  "authors": [],
+  "year": 2023,
+  "venue": "Nature",
+  "venue_tier": "Unknown",
+  "doi": "10.1038/s41587-023-01793-w",
+  "url": "https://doi.org/10.1038/s41587-023-01793-w",
+  "arxiv_id": "",
+  "field": "computer-science",
+  "topic": "AI-Safety-Alignment",
+  "subarea": "",
+  "leaf": "10-1038-s41587-023-01793-w",
+  "tier": "T1",
+  "method": "",
+  "industry": "",
+  "abstract": "",
+  "keywords": [],
+  "bib_key": "anon2023pangenome",
+  "imported_from": "HR_AI_Papers_2026 bulk collection (June 2026)",
+  "local_pdf": "01_Papers/02_Computer_Science/AI_Safety_Ethics/AI_Safety_Alignment/2023/Nature/10.1038_s41587-023-01793-w_Pangenome graph construction from genome alignments with Min.pdf"
+}

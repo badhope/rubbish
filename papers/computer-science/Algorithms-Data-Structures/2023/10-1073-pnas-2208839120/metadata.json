@@ -1,0 +1,22 @@
+{
+  "title": "Human heuristics for AI generated language are flawed",
+  "authors": [],
+  "year": 2023,
+  "venue": "PNAS",
+  "venue_tier": "Unknown",
+  "doi": "10.1073/pnas.2208839120",
+  "url": "https://doi.org/10.1073/pnas.2208839120",
+  "arxiv_id": "",
+  "field": "computer-science",
+  "topic": "Algorithms-Data-Structures",
+  "subarea": "",
+  "leaf": "10-1073-pnas-2208839120",
+  "tier": "T1",
+  "method": "",
+  "industry": "",
+  "abstract": "",
+  "keywords": [],
+  "bib_key": "anon2023human",
+  "imported_from": "HR_AI_Papers_2026 bulk collection (June 2026)",
+  "local_pdf": "01_Papers/02_Computer_Science/Algorithms_Theory/Algorithms_Optimization/2023/PNAS/10.1073_pnas.2208839120_Human heuristics for AI-generated language are flawed.pdf"
+}

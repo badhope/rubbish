@@ -1,0 +1,22 @@
+{
+  "title": "Dissecting cell identity via network inference and in silico",
+  "authors": [],
+  "year": 2023,
+  "venue": "Nature",
+  "venue_tier": "Unknown",
+  "doi": "10.1038/s41586-022-05688-9",
+  "url": "https://doi.org/10.1038/s41586-022-05688-9",
+  "arxiv_id": "",
+  "field": "computer-science",
+  "topic": "Computer-Security",
+  "subarea": "",
+  "leaf": "10-1038-s41586-022-05688-9",
+  "tier": "T1",
+  "method": "",
+  "industry": "",
+  "abstract": "",
+  "keywords": [],
+  "bib_key": "anon2023dissecting",
+  "imported_from": "HR_AI_Papers_2026 bulk collection (June 2026)",
+  "local_pdf": "01_Papers/02_Computer_Science/Systems_Hardware/Networks_Security/2023/Nature/10.1038_s41586-022-05688-9_Dissecting cell identity via network inference and in silico.pdf"
+}

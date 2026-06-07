@@ -1,0 +1,22 @@
+{
+  "title": "Pymoo Multi Objective Optimization in Python",
+  "authors": [],
+  "year": 2020,
+  "venue": "IEEE",
+  "venue_tier": "Unknown",
+  "doi": "10.1109/access.2020.2990567",
+  "url": "https://doi.org/10.1109/access.2020.2990567",
+  "arxiv_id": "",
+  "field": "computer-science",
+  "topic": "Algorithms-Data-Structures",
+  "subarea": "",
+  "leaf": "10-1109-access-2020-2990567",
+  "tier": "T1",
+  "method": "",
+  "industry": "",
+  "abstract": "",
+  "keywords": [],
+  "bib_key": "anon2020pymoo",
+  "imported_from": "HR_AI_Papers_2026 bulk collection (June 2026)",
+  "local_pdf": "01_Papers/02_Computer_Science/Algorithms_Theory/Algorithms_Optimization/2020/IEEE/10.1109_access.2020.2990567_Pymoo Multi-Objective Optimization in Python.pdf"
+}

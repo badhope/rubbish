@@ -1,0 +1,22 @@
+{
+  "title": "p18 1144 Chinese NER Using Lattice LSTM",
+  "authors": [],
+  "year": 2018,
+  "venue": "ACL",
+  "venue_tier": "Unknown",
+  "doi": "10.18653/v1",
+  "url": "https://doi.org/10.18653/v1",
+  "arxiv_id": "",
+  "field": "computer-science",
+  "topic": "Deep-Learning",
+  "subarea": "",
+  "leaf": "10-18653-v1",
+  "tier": "T1",
+  "method": "",
+  "industry": "",
+  "abstract": "",
+  "keywords": [],
+  "bib_key": "anon2018p",
+  "imported_from": "HR_AI_Papers_2026 bulk collection (June 2026)",
+  "local_pdf": "01_Papers/02_Computer_Science/AI_ML/Deep_Learning_Methods/2018/ACL/10.18653_v1_p18-1144_Chinese NER Using Lattice LSTM.pdf"
+}
