@@ -1,25 +1,29 @@
 cff-version: 1.2.0
-message: "If you use ScholarLib in your research, please cite it as below."
-type: software
-title: "ScholarLib"
-abstract: "A curated, open-access scholarly library of Computer Science, Economics & Management papers. Browse, search, and cite, all in one place."
+message: >-
+  If you use this software in academic work, please cite it using the
+  metadata below.
+title: ScholarLib
 authors:
-  - family-names: "badhope"
-    given-names: "badhope"
-    alias: "badhope"
-    affiliation: "Independent"
-    orcid: "https://orcid.org/"
+  - family-names: badhope
+    given-names: badhope
+    alias: badhope
+identifiers:
+  - type: url
+    value: https://github.com/badhope/ScholarLib
 license: MIT
-license-url: "https://github.com/badhope/ScholarLib/blob/main/LICENSE"
-repository-code: "https://github.com/badhope/ScholarLib"
-url: "https://badhope.github.io/ScholarLib/"
+type: software
+url: https://github.com/badhope/ScholarLib
+repository-code: https://github.com/badhope/ScholarLib
 keywords:
   - academic-papers
-  - computer-science
   - economics
   - management
   - open-access
   - research-library
   - scholarly-articles
-  - papers
-date-released: 2026-06-02
+  - algorithms
+  - computer-science
+  - deep-learning
+  - machine-learning
+abstract: >-
+  Small library of CS + economics papers I've read or want to read. 503 entries, DOIs verified, VitePress site so I can find them again. No PDFs bundled, no analytics, no comments.
