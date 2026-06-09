@@ -1,42 +1,46 @@
 # Contributing
 
-Bug reports and paper additions are the most useful contributions. Code changes to the site/scripts are welcome but please open an issue first — the surface is small and it's easy to step on each other.
+Want to send a PR? Cool. Here's the flow.
 
-## Adding a paper
+## Before you start
 
-1. Open an issue using the `new_paper` template. The form asks for the fields `validate_papers.py` will check, and a PR that skips the issue will bounce.
-2. Files per paper: `README.md`, `metadata.json`, `<key>.bib`, and ideally `paper.pdf`. There's a template at `templates/paper-template/`.
-3. Folder name is the cite key, kebab-case. The CS layout is `papers/computer-science/<Topic>/<Year>/<key>/`; the EM layout is per `.scholarlib.yaml`.
-4. Run `make validate` before opening the PR.
+- **Open an issue first** if the change is non-trivial. I don't want you
+  to spend a weekend on something I'd have asked you to do differently.
+- Read the code that's already there. I try to keep it boring and
+  consistent. If you're adding a new pattern, it should fit.
+- Look at the README for how to install / run / test. Use the lockfile
+  that's checked in; don't regenerate it.
 
-## Fixing existing entries
+## Local checks
 
-Typo, missing DOI, broken link, wrong year, missing PDF — just send a PR. If the PDF is the only thing missing, `python3 scripts/recover_pdfs.py --download` can fetch it from arXiv for you.
-
-## Changing the site or scripts
-
-- Open an issue describing the change first.
-- Touch `docs/.vitepress/config.ts` carefully — most of it is generated.
-- Add a test in `tests/` if you add a script.
-- `make ci` must pass.
+Run whatever the project has: `pnpm test`, `pytest`, `cargo test`, etc.
+If linter / formatter configs are checked in, run them too. CI will
+catch what you missed, but a green push is faster than a red one.
 
 ## Commit messages
 
-Loose Conventional Commits is fine:
+I don't enforce Conventional Commits. Subject, blank line, body, done.
+If a commit fixes an issue, mention the issue number. Don't bother with
+emoji or "WIP" prefixes.
 
-```
-papers: add Vaswani 2017 Attention
-fix: broken link in CS index
-docs: clarify contributing guide
-ci: add python 3.13 to test matrix
-```
+## Pull requests
 
-One thing per commit. The body, if any, should explain _why_.
+- Fill the PR template. One paragraph in the body is fine; screenshots
+  help for UI.
+- Keep the diff small. Squash before merging unless the history matters.
+- I'll review roughly in order of arrival. If CI is green and the change
+  does what the description says, I'll merge. I might push back on
+  architecture; that's not personal.
+- Don't commit secrets, generated build output, large binaries, or
+  someone else's code without a license.
 
-## Code of conduct
+## What I won't merge
 
-[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) — Contributor Covenant, standard.
+- Drive-by refactors that don't fix a real problem.
+- New dependencies for trivial reasons.
+- Anything that breaks the existing API without a heads-up first.
 
-## Security
+## License
 
-See [SECURITY.md](SECURITY.md). Please don't file security issues publicly.
+By contributing, you agree your contribution is licensed under the same
+license as the rest of the project. See [`LICENSE`](./LICENSE).
