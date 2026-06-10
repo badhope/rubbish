@@ -28,11 +28,11 @@
     "prepublishOnly": "npm run ci"
   },
   "devDependencies": {
-    "prettier": "^3.3.3",
-    "typescript": "^5.4.0",
+    "prettier": "^3.8.4",
+    "typescript": "^6.0.3",
     "vitepress": "^1.6.4",
-    "vitepress-plugin-llms": "^0.0.6",
-    "vue-tsc": "^2.2.12"
+    "vitepress-plugin-llms": "^1.13.1",
+    "vue-tsc": "^3.3.4"
   },
   "engines": {
     "node": ">=20"
