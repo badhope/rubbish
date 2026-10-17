@@ -66,9 +66,7 @@ class Resource(Base, TenantScopedMixin):
     download_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     external_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     # 同一 DOI 不得落到两个资源上（可空；Postgres 唯一索引允许多个 NULL）。
-    doi: Mapped[str | None] = mapped_column(
-        String(200), nullable=True, index=True, unique=True
-    )
+    doi: Mapped[str | None] = mapped_column(String(200), nullable=True, index=True, unique=True)
 
     # Optional per-author enrichment (e.g. ORCID iDs). Stored as a
     # JSON list parallel to ``authors``: each entry has at least a

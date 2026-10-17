@@ -42,6 +42,13 @@
 
 - `test_doi.py` 中固化了旧（撞号）后缀格式的断言已更新为租户维度格式。
 
+### Fixed
+
+- **CI 依赖锁同步**：`uv.lock` 未随 `pyproject.toml` 更新，导致 GitHub Actions 后端/迁移/安全/e2e 四个 job 全部失败于 `uv sync --locked`。重新生成锁定文件，`setup-uv` 升级到 0.13.1 与锁生成器一致。
+- **Ruff lint/format**：修复 `bootstrap.py` 导入排序（I001）与 `catalog/models.py`、`doi/schemas.py` 格式问题，本地 642 测试通过。
+- GitHub 分支保护规则中移除不存在的幽灵检查项 `Scan for secrets`（该检查无对应 workflow，导致直接推送死锁），替换为 CI 实际产出的 8 个检查。
+- 五平台镜像同步为 append-only/强制对齐两种模式治理：镜像（Morningstar202604、X33834、gitee）与核心 badhope 保持内容一致。
+
 ## [0.2.1] — 2026-10-18
 
 ### Changed

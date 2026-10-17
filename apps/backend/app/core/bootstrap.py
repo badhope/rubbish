@@ -26,9 +26,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.db import async_session_factory
-from app.core.tenant import TENANT_CONTEXT_VAR
 from app.core.logging import get_logger
 from app.core.security import hash_password
+from app.core.tenant import TENANT_CONTEXT_VAR
 from app.models import Role, Tenant, User, UserRole
 
 logger = get_logger("scholarhub.bootstrap")
