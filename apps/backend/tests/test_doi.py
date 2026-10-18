@@ -512,3 +512,66 @@ async def test_config_reports_not_configured(
     )
 
     assert response.json() == {"enabled": False, "prefix": "not configured"}
+
+
+async def test_register_conflict_when_suffix_collides_with_other_resource(
+    client: AsyncClient,
+    admin_user: dict,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """撞号预检：显式后缀与别的资源已铸 DOI 相同 → 409，且不打扰 DataCite。"""
+    enable_datacite(monkeypatch)
+    clients = patch_http(monkeypatch, [FakeResponse(201), FakeResponse(200)])
+
+    first = await _create_resource(client, admin_user, doi=None)
+    resp1 = await client.post(
+        "/api/doi/register",
+        json={"resource_id": first["id"], "doi_suffix": "shared-suffix"},
+        headers={"Authorization": f"Bearer {admin_user['token']}"},
+    )
+    assert resp1.status_code == 200
+    assert resp1.json()["doi"] == "10.5072/shared-suffix"
+    datacite_calls_after_first = len(clients[0].calls)
+
+    # 第二个资源复用同一后缀：必须在本地预检阶段就被拒
+    second = await _create_resource(client, admin_user, doi=None, title="Another Paper")
+    resp2 = await client.post(
+        "/api/doi/register",
+        json={"resource_id": second["id"], "doi_suffix": "shared-suffix"},
+        headers={"Authorization": f"Bearer {admin_user['token']}"},
+    )
+    assert resp2.status_code == 409
+    assert "10.5072/shared-suffix" in resp2.json()["detail"]
+    # 预检拦截，没有新的 DataCite 调用（避免污染永久标识元数据）
+    assert len(clients[0].calls) == datacite_calls_after_first
+
+
+async def test_register_conflict_when_doi_taken_concurrently(
+    client: AsyncClient,
+    admin_user: dict,
+    db_session: AsyncSession,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """并发兜底：预检漏过（如 catalog 端点直接占位）撞唯一约束 → 409 而非 500。"""
+    enable_datacite(monkeypatch)
+    patch_http(monkeypatch, [FakeResponse(201), FakeResponse(200)])
+
+    # 资源 A 经 catalog 端点直接占用 DOI 10.5072/race（不走 doi_registrations，
+    # 模拟预检查不到、只在 commit 时撞 resources.doi 唯一约束的场景）
+    occupied = await _create_resource(client, admin_user, doi="10.5072/race")
+
+    target = await _create_resource(client, admin_user, doi=None, title="Race Target")
+    resp = await client.post(
+        "/api/doi/register",
+        json={"resource_id": target["id"], "doi_suffix": "race"},
+        headers={"Authorization": f"Bearer {admin_user['token']}"},
+    )
+    assert resp.status_code == 409
+    assert "10.5072/race" in resp.json()["detail"]
+
+    # 目标资源的 doi 列必须保持未设置
+    stored = (
+        await db_session.execute(select(Resource).where(Resource.id == target["id"]))
+    ).scalar_one()
+    assert stored.doi is None
+    assert occupied["id"] != target["id"]

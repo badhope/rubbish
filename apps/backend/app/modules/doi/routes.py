@@ -10,6 +10,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, require_admin, require_tenant_id
@@ -18,7 +19,12 @@ from app.core.time import utcnow
 from app.models import User
 from app.modules.catalog.models import Resource
 from app.modules.doi.models import DOIRegistration
-from app.modules.doi.registration import datacite_enabled, mint_doi
+from app.modules.doi.registration import (
+    _build_doi,
+    _default_suffix,
+    datacite_enabled,
+    mint_doi,
+)
 from app.modules.doi.schemas import (
     DOIRegisterRequest,
     DOIRegistrationResponse,
@@ -66,6 +72,25 @@ async def register_doi(
             detail=f"Resource {payload.resource_id} already has a DOI: {resource.doi}",
         )
 
+    # 撞号预检：自定义后缀（或默认后缀）可能与**别的资源**已铸出的 DOI 相同。
+    # DOI 是学术永久标识，撞号不可撤销，且会在 DataCite 侧污染元数据 ——
+    # 本站的 doi_registrations.doi 已建唯一约束，但约束只在 commit 时才拦，
+    # 那时铸造请求已经发往 DataCite 了。因此在发请求之前先在本地登记表
+    # 查一遍。并发窗口由下方 commit 的 IntegrityError → 409 兜底。
+    suffix = payload.doi_suffix or _default_suffix(resource)
+    doi_candidate = _build_doi(suffix)
+    existing = (
+        await db.execute(select(DOIRegistration).where(DOIRegistration.doi == doi_candidate))
+    ).scalar_one_or_none()
+    if existing is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                f"DOI {doi_candidate} is already registered "
+                f"(resource {existing.resource_id}); suffixes must be unique"
+            ),
+        )
+
     # Mint the DOI via DataCite
     doi, state = await mint_doi(resource, suffix=payload.doi_suffix)
 
@@ -85,7 +110,16 @@ async def register_doi(
     if state == "completed":
         resource.doi = doi
 
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError as exc:
+        # 并发双 registration（或作者经 catalog 端点直接占用了同一 DOI）
+        # 撞上唯一约束。唯一的 DOI 已归属前者，这里明确拒绝而不是 500。
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"DOI {doi} was registered concurrently for another resource",
+        ) from exc
     await db.refresh(registration)
 
     return DOIRegistrationResponse(
