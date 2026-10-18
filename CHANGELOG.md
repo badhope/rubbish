@@ -64,6 +64,13 @@
   任一带 `resource_id` 的现有条目，若该条目为 draft/in_review，未公开稿件仍可
   经此公开端点匿名流出。查询现已加 `publication_status == "published"` 过滤，
   并补 4 个回归测试（published 200 / draft 404 / in_review 404 / 无文件 404）。
+- **存储文件清理（孤儿对象治理）**：删除 pending 稿件与替换式上传此前都不清理
+  存储后端（本地磁盘 / S3）中的旧文件，导致删除稿件后仍残留 PDF、重复上传无限
+  累积孤儿对象，既造成存储泄漏，也留下"已删数据"的残留痕迹。现在
+  `DELETE /api/submissions/{id}` 在删除记录后 best-effort 清理 `file_path` 对应
+  文件；替换式 `POST /api/submissions/{id}/files` 在覆盖 `file_path` 前清理旧文件
+  （uuid 碰撞兜底跳过自删）。清理失败仅告警、不阻断主流程。补 2 个回归测试
+  （替换上传清旧文件 / 删除稿件清文件）。
 - **CI 依赖锁同步**：`uv.lock` 未随 `pyproject.toml` 更新，导致 GitHub Actions 后端/迁移/安全/e2e 四个 job 全部失败于 `uv sync --locked`。重新生成锁定文件，`setup-uv` 升级到 0.13.1 与锁生成器一致。
 - **Ruff lint/format**：修复 `bootstrap.py` 导入排序（I001）与 `catalog/models.py`、`doi/schemas.py` 格式问题，本地 642 测试通过。
 - GitHub 分支保护规则中移除不存在的幽灵检查项 `Scan for secrets`（该检查无对应 workflow，导致直接推送死锁），替换为 CI 实际产出的 8 个检查。
