@@ -99,6 +99,16 @@ class SubmissionDecision(BaseModel):
     resource_id: int | None = Field(default=None, ge=1)
 
 
+class AnonymizedFileUpdate(BaseModel):
+    """Body for PUT /submissions/{id}/anonymized-file — editor only.
+
+    双盲评审下编辑提供给审稿人的匿名稿外链。与作者可控的 download_url
+    完全隔离：本字段只能经此编辑端点写入。传 null 表示清除。
+    """
+
+    anonymized_file_url: AnyHttpUrl | None = None
+
+
 class SubmissionResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -117,6 +127,8 @@ class SubmissionResponse(BaseModel):
     preview: str
     download_url: str | None = None
     external_url: str | None = None
+    # 双盲下编辑提供的匿名稿外链（审稿人可见）；作者视角本字段可空
+    anonymized_file_url: str | None = None
     doi: str | None = None
     corresponding_author_email: str | None = None
     status: SubmissionStatus
@@ -188,6 +200,7 @@ class SubmissionVersionListResponse(BaseModel):
 
 
 __all__ = [
+    "AnonymizedFileUpdate",
     "EditorDecision",
     "MessageResponse",
     "PaginationMeta",

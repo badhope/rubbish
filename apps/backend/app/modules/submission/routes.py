@@ -68,6 +68,7 @@ from app.modules.review.schemas import (
 )
 from app.modules.submission.models import Submission, SubmissionVersion
 from app.modules.submission.schemas import (
+    AnonymizedFileUpdate,
     MessageResponse,
     ResubmitRequest,
     SubmissionCreate,
@@ -170,6 +171,7 @@ def _to_response(entry: Submission) -> SubmissionResponse:
         preview=entry.preview,
         download_url=entry.download_url,
         external_url=entry.external_url,
+        anonymized_file_url=entry.anonymized_file_url,
         doi=entry.doi,
         corresponding_author_email=entry.corresponding_author_email,
         status=entry.status,
@@ -1017,6 +1019,57 @@ async def editor_decision(
     return _to_response(entry)
 
 
+@router.put(
+    "/{submission_id}/anonymized-file",
+    response_model=SubmissionResponse,
+)
+async def set_anonymized_file(
+    submission_id: int,
+    body: AnonymizedFileUpdate,
+    current_user: User = Depends(require_editor),
+    db: AsyncSession = Depends(get_db),
+) -> SubmissionResponse:
+    """编辑设置/清除双盲评审用的匿名稿外链。
+
+    背景（双盲绕过修复）：``download_url`` / ``external_url`` 都是**作者
+    可控**字段（创建端点与作者编辑端点均可写）。双盲下若把审稿人放行到
+    这些链接，作者填一条带身份的 URL 即可直穿双盲。因此审稿人视角只认
+    本端点写入的 ``anonymized_file_url``。
+
+    传 ``null`` 清除（例如作者补充了合规的匿名稿链接后不再需要）。
+    """
+    entry = await _get_or_404(db, submission_id)
+
+    url = str(body.anonymized_file_url) if body.anonymized_file_url else None
+    if url is not None and not url.lower().startswith(("http://", "https://")):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="anonymized_file_url must be an http(s) URL",
+        )
+
+    entry.anonymized_file_url = url
+    db.add(
+        AuditLog(
+            tenant_id=current_user.tenant_id,
+            actor_user_id=current_user.id,
+            action="submission.anonymized_file",
+            target_type="submission",
+            target_id=str(entry.id),
+            payload={"set": url is not None},
+        )
+    )
+    try:
+        await db.commit()
+    except IntegrityError as exc:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Could not update anonymized file URL (concurrent change)",
+        ) from exc
+    await db.refresh(entry)
+    return _to_response(entry)
+
+
 @router.post(
     "/{submission_id}/resubmit",
     response_model=SubmissionResponse,
@@ -1264,8 +1317,10 @@ async def download_submission_file(
     # 文件下载端点却把**原始 PDF** 直接返回给被指派的审稿人——标题页和 PDF
     # 元数据里就是作者姓名与单位，双盲在核心流程上等于不存在。
     #
-    # 现在的规则：双盲 + 审稿人（非作者/编辑）时，只放行编辑显式提供的
-    # 匿名稿外链（download_url，且必须是 http/https）；没有匿名稿则明确报错，
+    # 第二层修复（双盲绕过 v2）：重定向目标曾用 ``download_url``，但该字段
+    # **作者可控**（创建端点与作者编辑端点均可写）——作者填一条带身份的
+    # URL 即可直穿双盲（重定向目标对审稿人可见，页面内容更可直接暴露身份）。
+    # 现在只放行编辑端点写入的 ``anonymized_file_url``；没有匿名稿则明确报错，
     # 由编辑补上传。服务端不具备剥离 PDF 元数据的能力，不假装能做到。
     is_privileged = entry.submitted_by == current_user.id or await user_has_role(
         db, current_user, ROLE_EDITOR
@@ -1275,7 +1330,7 @@ async def download_submission_file(
 
         mode = await get_review_mode(db, entry.tenant_id)
         if mode == "double_blind":
-            anon_url = (entry.download_url or "").strip()
+            anon_url = (entry.anonymized_file_url or "").strip()
             if anon_url.lower().startswith(("http://", "https://")):
                 return RedirectResponse(anon_url, status_code=status.HTTP_302_FOUND)
             raise HTTPException(
@@ -1283,7 +1338,7 @@ async def download_submission_file(
                 detail=(
                     "Double-blind review is enabled: the original manuscript may reveal "
                     "author identity. Ask the editor to provide an anonymized version "
-                    "(download_url) before reviewing."
+                    "(editor: PUT /api/submissions/{id}/anonymized-file) before reviewing."
                 ),
             )
 
