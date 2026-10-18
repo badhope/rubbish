@@ -397,6 +397,23 @@ export function useUpdateSubmission() {
   })
 }
 
+// 编辑设置 / 清除双盲匿名稿外链（传 null 清除，仅编辑可写）
+export function useSetAnonymizedFile() {
+  const qc = useQueryClient()
+  return useMutation<SubmissionResponse, Error, { id: number; url: string | null }>({
+    mutationFn: async ({ id, url }) =>
+      (
+        await api.put<SubmissionResponse>(`/submissions/${id}/anonymized-file`, {
+          anonymized_file_url: url,
+        })
+      ).data,
+    onSuccess: (data, { id }) => {
+      qc.setQueryData(keys.submission.detail(id), data)
+      void qc.invalidateQueries({ queryKey: ['submissions'] })
+    },
+  })
+}
+
 // 稿件版本历史（作者 + 编辑可见）
 export function useSubmissionVersions(id: number, enabled = true) {
   return useQuery<SubmissionVersionResponse[]>({

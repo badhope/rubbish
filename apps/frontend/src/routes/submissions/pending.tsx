@@ -1,6 +1,14 @@
 import { useState } from 'react'
 import { createFileRoute, redirect, useNavigate, useSearch } from '@tanstack/react-router'
-import { ClipboardList, Download, Eye, FileText, Gavel, UserPlus } from 'lucide-react'
+import {
+  ClipboardList,
+  Download,
+  Eye,
+  FileText,
+  Gavel,
+  ShieldCheck,
+  UserPlus,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { getAuthState } from '@/lib/auth'
 import {
@@ -10,6 +18,7 @@ import {
   useAssignReviewer,
   useCancelAssignment,
   useEditorDecision,
+  useSetAnonymizedFile,
   useSubmissionAssignments,
   useSubmissionReports,
   useSubmissionVersions,
@@ -161,6 +170,10 @@ function PendingSubmissionsPage() {
   // 拒稿是终态决定，二次确认后才真正执行
   const [rejectConfirm, setRejectConfirm] = useState(false)
   const [reportsTarget, setReportsTarget] = useState<SubmissionResponse | null>(null)
+  // 双盲评审的匿名稿外链：只有编辑能写，审稿人取稿件只认这个链接
+  const [anonymizedTarget, setAnonymizedTarget] = useState<SubmissionResponse | null>(
+    null,
+  )
   const [decisionForm, setDecisionForm] = useState<DecisionFormState>(EMPTY_DECISION)
   // 做决定时内嵌审稿报告摘要：推荐 + 评分 + 编辑保密意见，编辑不必另开弹窗
   const decisionReportsQ = useSubmissionReports(decisionTarget?.id ?? 0)
@@ -291,6 +304,21 @@ function PendingSubmissionsPage() {
                   >
                     <FileText className="h-4 w-4" /> 审稿报告
                   </Button>
+                  {[
+                    'pending',
+                    'under_review',
+                    'resubmitted',
+                    'major_revision',
+                    'minor_revision',
+                  ].includes(s.status) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setAnonymizedTarget(s)}
+                    >
+                      <ShieldCheck className="h-4 w-4" /> 匿名稿
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -329,6 +357,14 @@ function PendingSubmissionsPage() {
         <AssignmentsDialog
           submission={assignmentsTarget}
           onClose={() => setAssignmentsTarget(null)}
+        />
+      )}
+
+      {/* 匿名稿外链 Dialog */}
+      {anonymizedTarget && (
+        <AnonymizedFileDialog
+          submission={anonymizedTarget}
+          onClose={() => setAnonymizedTarget(null)}
         />
       )}
 
@@ -841,6 +877,82 @@ function ReportsDialog({
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             关闭
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function AnonymizedFileDialog({
+  submission,
+  onClose,
+}: {
+  submission: SubmissionResponse
+  onClose: () => void
+}) {
+  const setAnon = useSetAnonymizedFile()
+  const [url, setUrl] = useState(submission.anonymized_file_url ?? '')
+
+  const isHttpUrl = (v: string) => /^https?:\/\/\S+/i.test(v.trim())
+
+  const onSave = async () => {
+    if (!isHttpUrl(url)) {
+      toast.error('请填写 http(s) 开头的匿名稿链接')
+      return
+    }
+    try {
+      await setAnon.mutateAsync({ id: submission.id, url: url.trim() })
+      toast.success('匿名稿链接已保存')
+      onClose()
+    } catch (err) {
+      toast.error(extractError(err, '保存失败'))
+    }
+  }
+
+  const onClear = async () => {
+    try {
+      await setAnon.mutateAsync({ id: submission.id, url: null })
+      toast.success('匿名稿链接已清除')
+      onClose()
+    } catch (err) {
+      toast.error(extractError(err, '清除失败'))
+    }
+  }
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>匿名稿 — {submission.title}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            双盲评审下审稿人只能访问这里填写的匿名稿外链；作者可控的
+            download_url / external_url 不会流向审稿人。服务端不具备剥离 PDF
+            元数据的能力，请确认上传的匿名稿本身不含作者姓名与单位。
+          </p>
+          <div className="space-y-1">
+            <Label htmlFor="anonymized-file-url">匿名稿链接（http/https）</Label>
+            <Input
+              id="anonymized-file-url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://example.org/anonymized-manuscript.pdf"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          {submission.anonymized_file_url && (
+            <Button variant="ghost" onClick={onClear} disabled={setAnon.isPending}>
+              清除
+            </Button>
+          )}
+          <Button variant="outline" onClick={onClose}>
+            取消
+          </Button>
+          <Button onClick={onSave} disabled={setAnon.isPending || !isHttpUrl(url)}>
+            保存
           </Button>
         </DialogFooter>
       </DialogContent>
