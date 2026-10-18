@@ -11,6 +11,15 @@
 
 安全加固版本，修完全部 9 项 P0（详见 `scholarhub-代码审计报告.md`）。
 
+### Added
+
+- **编辑端双盲匿名稿链接 UI**：后端 `PUT /api/submissions/{id}/anonymized-file`
+  此前只有 API、没有任何前端入口，编辑只能直接调接口才能为双盲评审提供匿名稿。
+  现在编辑工作台（`/submissions/pending`）每张卡片新增「匿名稿」按钮与弹窗：
+  可填写 http(s) 匿名稿外链或清除已有链接，并明确提示服务端不具备剥离 PDF
+  元数据的能力（需由编辑确认匿名稿本身不含作者姓名与单位）。前端类型同步补上
+  `anonymized_file_url`，并新增 `useSetAnonymizedFile` mutation。
+
 ### Security
 
 - **双盲绕过 v2 修复（P0-4 加固）**：审稿人文件端点在双盲下曾把审稿人 302 重定向到
