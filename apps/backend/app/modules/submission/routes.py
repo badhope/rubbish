@@ -100,7 +100,7 @@ async def _try_delete_storage(key: str | None) -> None:
     try:
         await get_storage().delete(key)
     except Exception:
-        logger.warning("storage_delete_failed", key=key, exc_info=True)
+        logger.warning("storage_delete_failed", extra={"key": key}, exc_info=True)
 
 
 router = APIRouter(prefix="/submissions", tags=["submissions"])
