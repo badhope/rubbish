@@ -283,9 +283,7 @@ async def test_delete_submission_removes_file(
     fp = up.json()["file_path"]
     assert await storage_mod.get_storage().exists(fp) is True
 
-    deleted = await client.delete(
-        f"/api/submissions/{sid}", headers=auth_headers(test_user)
-    )
+    deleted = await client.delete(f"/api/submissions/{sid}", headers=auth_headers(test_user))
     assert deleted.status_code == 200
     # 稿件已删，存储文件应一并清理。
     assert await storage_mod.get_storage().exists(fp) is False
