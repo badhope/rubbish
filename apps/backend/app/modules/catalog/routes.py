@@ -219,6 +219,11 @@ async def download_resource_file(
         select(Resource).where(
             Resource.id == resource_id,
             Resource.tenant_id == tenant_id,
+            # 纵深防御：只有物化为 published 的资源才允许公开取稿。编辑在
+            # "接受"决定里可以把投稿对接到任一带 resource_id 的现有条目
+            # （submission/routes.py accept 分支），若那条目处于 draft/
+            # in_review，稿件仍处于未公开状态，不得经此公开端点流出。
+            Resource.publication_status == "published",
         )
     )
     resource = result.scalar_one_or_none()

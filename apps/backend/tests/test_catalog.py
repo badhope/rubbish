@@ -3,6 +3,12 @@
 from __future__ import annotations
 
 from httpx import AsyncClient
+from sqlalchemy import select as sa_select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.storage import get_storage
+from app.models import Tenant
+from app.modules.submission.models import Submission
 
 _SAMPLE = {
     "type": "paper",
@@ -307,3 +313,89 @@ async def test_facets_returns_years_and_tags(client: AsyncClient, admin_user: di
     # Tags: ml (2) should rank first.
     ml_bucket = next(b for b in body["tags"] if b["value"] == "ml")
     assert ml_bucket["count"] == 2
+
+
+async def _create_draft_resource_with_submission(
+    client: AsyncClient, db_session: AsyncSession, admin_user: dict, *, status: str
+) -> int:
+    """Helper: published/draft 资源 + 关联带本地文件的 submission，返回 resource id。"""
+    payload = {**_SAMPLE, "title": f"Sealed {status}", "publication_status": status}
+    response = await client.post(
+        "/api/catalog", json=payload, headers={"Authorization": f"Bearer {admin_user['token']}"}
+    )
+    response.raise_for_status()
+    resource_id = response.json()["id"]
+
+    # tenant 上下文走中间件预热后的 bootstrap 租户（与 admin_user fixture 同源）
+    tenant = (
+        await db_session.execute(sa_select(Tenant).where(Tenant.slug == "default"))
+    ).scalar_one()
+
+    # 存储 key 与真实上传一致：{tenant_id}/{submission_id}/{uuid}{ext} 相对路径，
+    # 通过 storage 后端落盘（本地 root 为测试环境的 tmp uploads 目录）。
+    rel_path = f"{tenant.id}/0/sealed_manuscript_{status}.pdf"
+    await get_storage().save(rel_path, b"%PDF-1.4 test sealed payload")
+
+    db_session.add(
+        Submission(
+            tenant_id=tenant.id,
+            resource_id=resource_id,
+            submitted_by=admin_user["user_id"],
+            title="Sealed manuscript",
+            type="paper",
+            discipline="computer-science",
+            authors=["Anon Author"],
+            year=2024,
+            abstract="sealed",
+            preview="sealed preview",
+            tags=[],
+            status="accepted",
+            file_path=rel_path,
+        )
+    )
+    await db_session.commit()
+    return resource_id
+
+
+async def test_file_endpoint_serves_published_resource(
+    client: AsyncClient, db_session, admin_user
+) -> None:
+    resource_id = await _create_draft_resource_with_submission(
+        client, db_session, admin_user, status="published"
+    )
+    response = await client.get(f"/api/catalog/{resource_id}/file")
+    assert response.status_code == 200
+    assert response.content.startswith(b"%PDF")
+
+
+async def test_file_endpoint_blocks_draft_resource(
+    client: AsyncClient, db_session, admin_user
+) -> None:
+    """P1 回归：draft/in_review 资源的稿件不得经公开端点流出。"""
+    resource_id = await _create_draft_resource_with_submission(
+        client, db_session, admin_user, status="draft"
+    )
+    response = await client.get(f"/api/catalog/{resource_id}/file")
+    assert response.status_code == 404
+
+
+async def test_file_endpoint_blocks_in_review_resource(
+    client: AsyncClient, db_session, admin_user
+) -> None:
+    resource_id = await _create_draft_resource_with_submission(
+        client, db_session, admin_user, status="in_review"
+    )
+    response = await client.get(f"/api/catalog/{resource_id}/file")
+    assert response.status_code == 404
+
+
+async def test_file_endpoint_404_when_no_submission_file(client: AsyncClient, admin_user) -> None:
+    """没有关联 submission 文件时 404（不暴露内部差异）。"""
+    response = await client.post(
+        "/api/catalog",
+        json={**_SAMPLE, "title": "No File Resource"},
+        headers={"Authorization": f"Bearer {admin_user['token']}"},
+    )
+    resource_id = response.json()["id"]
+    response = await client.get(f"/api/catalog/{resource_id}/file")
+    assert response.status_code == 404
