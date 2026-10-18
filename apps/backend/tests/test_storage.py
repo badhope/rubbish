@@ -230,3 +230,62 @@ async def test_download_requires_auth(
     submission = await _submit_with_file(client, test_user, tmp_path, monkeypatch)
     resp = await client.get(f"/api/submissions/{submission['id']}/files")
     assert resp.status_code == 401
+
+
+async def test_replace_upload_removes_old_file(
+    client: AsyncClient, test_user: dict, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """替换式上传应清理被覆盖的旧文件，否则磁盘 / S3 会累积孤儿对象。"""
+    monkeypatch.setattr(settings, "storage_path", str(tmp_path), raising=False)
+    storage_mod.reset_storage_cache()
+    created = await client.post("/api/submissions", json=_PAYLOAD, headers=auth_headers(test_user))
+    assert created.status_code == 201
+    sid = created.json()["id"]
+
+    first = await client.post(
+        f"/api/submissions/{sid}/files",
+        files={"file": ("a.pdf", BytesIO(b"%PDF-1.4 first"), "application/pdf")},
+        headers=auth_headers(test_user),
+    )
+    assert first.status_code == 200
+    old_fp = first.json()["file_path"]
+    assert await storage_mod.get_storage().exists(old_fp) is True
+
+    second = await client.post(
+        f"/api/submissions/{sid}/files",
+        files={"file": ("b.pdf", BytesIO(b"%PDF-1.4 second"), "application/pdf")},
+        headers=auth_headers(test_user),
+    )
+    assert second.status_code == 200
+    new_fp = second.json()["file_path"]
+    assert new_fp != old_fp
+    # 旧文件应已被 best-effort 清理，新文件保留。
+    assert await storage_mod.get_storage().exists(old_fp) is False
+    assert await storage_mod.get_storage().exists(new_fp) is True
+
+
+async def test_delete_submission_removes_file(
+    client: AsyncClient, test_user: dict, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """删除 pending 稿件应同步清理其存储文件，避免残留 PDF 孤儿对象。"""
+    monkeypatch.setattr(settings, "storage_path", str(tmp_path), raising=False)
+    storage_mod.reset_storage_cache()
+    created = await client.post("/api/submissions", json=_PAYLOAD, headers=auth_headers(test_user))
+    assert created.status_code == 201
+    sid = created.json()["id"]
+
+    up = await client.post(
+        f"/api/submissions/{sid}/files",
+        files={"file": ("p.pdf", BytesIO(b"%PDF-1.4 del"), "application/pdf")},
+        headers=auth_headers(test_user),
+    )
+    assert up.status_code == 200
+    fp = up.json()["file_path"]
+    assert await storage_mod.get_storage().exists(fp) is True
+
+    deleted = await client.delete(
+        f"/api/submissions/{sid}", headers=auth_headers(test_user)
+    )
+    assert deleted.status_code == 200
+    # 稿件已删，存储文件应一并清理。
+    assert await storage_mod.get_storage().exists(fp) is False

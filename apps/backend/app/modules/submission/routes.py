@@ -81,6 +81,29 @@ from app.modules.submission.schemas import (
     SubmissionVersionResponse,
 )
 
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+async def _try_delete_storage(key: str | None) -> None:
+    """Best-effort storage cleanup.
+
+    A failed delete must never block the caller's primary operation
+    (e.g. deleting a submission). Orphaned objects are rare — they only
+    appear when the storage backend is momentarily unreachable — and the
+    operator can spot the warning in the logs.
+    """
+    if not key:
+        return
+    from app.core.storage import get_storage
+
+    try:
+        await get_storage().delete(key)
+    except Exception:  # noqa: BLE001 - best-effort cleanup
+        logger.warning("storage_delete_failed", key=key, exc_info=True)
+
+
 router = APIRouter(prefix="/submissions", tags=["submissions"])
 
 DEFAULT_PAGE_SIZE = 20
@@ -595,8 +618,12 @@ async def delete_submission(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot delete a reviewed submission",
         )
+    file_path = entry.file_path
     await db.delete(entry)
     await db.commit()
+    # 删除稿件时应同步清理其存储文件，否则 PDF 在磁盘 / S3 上成为孤儿对象，
+    # 既泄露删除行为的"残留"，也会让存储无限增长。
+    await _try_delete_storage(file_path)
     return MessageResponse(message="Submission deleted")
 
 
@@ -1247,10 +1274,15 @@ async def upload_submission_file(
         ext = ext[:20]
     safe_name = f"{uuid4().hex}{ext}"
     rel_path = f"{entry.tenant_id}/{entry.id}/{safe_name}"
+    old_path = entry.file_path  # 可能为 None（首次上传）
+    if old_path == rel_path:  # uuid 碰撞极不可能，但保险起见跳过自删
+        old_path = None
     await get_storage().save(rel_path, contents, content_type=file.content_type)
     entry.file_path = rel_path
     await db.commit()
     await db.refresh(entry)
+    # 替换式上传会覆盖 file_path，被替换的旧文件若不清会被丢成孤儿对象。
+    await _try_delete_storage(old_path)
     return _to_response(entry)
 
 
