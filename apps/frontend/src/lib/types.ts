@@ -268,6 +268,12 @@ export interface SubmissionResponse {
   editor_note?: string | null
   resource_id?: number | null
   file_path?: string | null
+  /**
+   * 双盲评审下编辑提供给审稿人的匿名稿外链。
+   * 与作者可控的 download_url / external_url 完全隔离：只能经编辑端点
+   * PUT /submissions/{id}/anonymized-file 写入，传 null 表示清除。
+   */
+  anonymized_file_url?: string | null
   /** 双盲评审下，审稿人视图中该字段会被置空 */
   submitted_by: number | null
   submitted_at: string
