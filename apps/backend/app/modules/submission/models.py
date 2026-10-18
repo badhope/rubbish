@@ -101,6 +101,11 @@ class Submission(Base, TenantScopedMixin):
     preview: Mapped[str] = mapped_column(Text, nullable=False)
     download_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     external_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # 编辑在双盲评审下提供的匿名稿外链（http/https）。与 download_url 的
+    # 关键区别：download_url/external_url 都是**作者可控**的（创建与作者
+    # 编辑端点均可写），双盲下直接放行等于把身份信息端点交给作者；本列
+    # 只由编辑端点 PUT /submissions/{id}/anonymized-file 写入。
+    anonymized_file_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     doi: Mapped[str | None] = mapped_column(String(200), nullable=True)
     corresponding_author_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
 

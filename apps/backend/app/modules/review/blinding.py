@@ -71,9 +71,11 @@ def anonymize_submission_fields(payload: dict[str, Any]) -> dict[str, Any]:
     - ``submitted_by``：用户 id 可反查用户资料
     - ``venue``：投稿阶段的 venue 常是作者所在机构的会议/刊物线索
     - ``doi``：预印本 DOI 一点即达作者页
-
-    刻意不隐藏 ``download_url`` / ``external_url``：编辑上传的匿名稿件
-    链接仍需可达；若链接本身泄露身份，那是编辑的匿名化职责。
+    - ``download_url`` / ``external_url``：**作者可控**字段（创建端点与
+      作者编辑端点均可写）。早期版本刻意保留它们，注释假设其为"编辑
+      上传的匿名稿件链接"——与控制面（作者）不符，作者填一条带身份的
+      链接即可直穿双盲。审稿人可见的匿名稿链接只经编辑端点写入的
+      ``anonymized_file_url`` 流转，该字段原样保留。
     """
     scrubbed = dict(payload)
     scrubbed["authors"] = [ANONYMIZED_AUTHOR]
@@ -81,4 +83,6 @@ def anonymize_submission_fields(payload: dict[str, Any]) -> dict[str, Any]:
     scrubbed["submitted_by"] = None
     scrubbed["venue"] = None
     scrubbed["doi"] = None
+    scrubbed["download_url"] = None
+    scrubbed["external_url"] = None
     return scrubbed

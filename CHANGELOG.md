@@ -13,6 +13,16 @@
 
 ### Security
 
+- **双盲绕过 v2 修复（P0-4 加固）**：审稿人文件端点在双盲下曾把审稿人 302 重定向到
+  `download_url`，但该字段**完全作者可控**（创建端点与作者编辑端点均可写）——
+  作者填一条带身份的 URL 即可直穿双盲（重定向目标对审稿人可见，页面内容更可直接
+  暴露姓名单位）；审稿人视角的 JSON 序列化同样保留了作者可控的
+  `download_url`/`external_url`（原注释假设其为"编辑提供的匿名稿"，与控制面不符）。
+  现新增**编辑专属**列 `submissions.anonymized_file_url`（迁移 `d4e5f6a7b8c9`），
+  只由编辑端点 `PUT /api/submissions/{id}/anonymized-file` 写入：
+  - 双盲 + 审稿人取稿件：只放行到编辑提供的匿名稿外链，否则 403 并提示编辑补传；
+  - 双盲审稿人 JSON：`download_url`/`external_url` 抹除，作者可控链接不再流出；
+  - 作者编辑端点的 schema 不含该字段，作者无法经编辑通道写入。
 - **P0-1 移除 `/uploads` 静态挂载**：此前投稿上传的 PDF 以零鉴权静态目录对外提供，
   任何匿名/跨租户用户拿到 `/uploads/<uuid>.pdf` 即可下载**未公开稿件**，
   完全绕开 `GET /api/submissions/{id}/files` 的作者/编辑/审稿人鉴权。
@@ -44,6 +54,11 @@
 
 ### Fixed
 
+- **DOI 撞号治理加固**：`POST /api/doi/register` 的自定义后缀此前只与**当前资源**的
+  doi 列比对，复用另一资源已铸出的后缀会把铸造请求发往 DataCite、污染永久标识元数据，
+  最后才在 commit 时撞唯一约束（500）。现在铸造前先查 `doi_registrations` 全局撞号
+  → 409 且不打扰 DataCite；并发/预检漏过场景由 commit 的 IntegrityError → 409 兜底，
+  目标资源 doi 列保持未设置。
 - **公开文件端点纵深防御**（P0-1 加固）：`GET /api/catalog/{id}/file` 此前只校验
   资源存在，未校验 `publication_status`。编辑在"接受"投稿时可以把稿件对接到
   任一带 `resource_id` 的现有条目，若该条目为 draft/in_review，未公开稿件仍可

@@ -191,6 +191,9 @@ async def get_assignment_submission(
         "preview": s.preview,
         "download_url": s.download_url,
         "external_url": s.external_url,
+        # 双盲下作者可控外链会被 anonymize 抹掉；本字段是编辑提供的
+        # 匿名稿链接，审稿人需要看到，原样透传。
+        "anonymized_file_url": s.anonymized_file_url,
         "doi": s.doi,
         "corresponding_author_email": s.corresponding_author_email,
         "status": s.status,
