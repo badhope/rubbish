@@ -26,6 +26,7 @@ Approval semantics:
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from fastapi import (
@@ -81,8 +82,6 @@ from app.modules.submission.schemas import (
     SubmissionVersionResponse,
 )
 
-import logging
-
 logger = logging.getLogger(__name__)
 
 
@@ -100,7 +99,7 @@ async def _try_delete_storage(key: str | None) -> None:
 
     try:
         await get_storage().delete(key)
-    except Exception:  # noqa: BLE001 - best-effort cleanup
+    except Exception:
         logger.warning("storage_delete_failed", key=key, exc_info=True)
 
 
