@@ -82,7 +82,11 @@
   （替换上传清旧文件 / 删除稿件清文件）。
 - **CI 依赖锁同步**：`uv.lock` 未随 `pyproject.toml` 更新，导致 GitHub Actions 后端/迁移/安全/e2e 四个 job 全部失败于 `uv sync --locked`。重新生成锁定文件，`setup-uv` 升级到 0.13.1 与锁生成器一致。
 - **Ruff lint/format**：修复 `bootstrap.py` 导入排序（I001）与 `catalog/models.py`、`doi/schemas.py` 格式问题，本地 642 测试通过。
-- GitHub 分支保护规则中移除不存在的幽灵检查项 `Scan for secrets`（该检查无对应 workflow，导致直接推送死锁），替换为 CI 实际产出的 8 个检查。
+- **GitHub 分支保护规则中移除不存在的幽灵检查项** `Scan for secrets`（该检查无对应 workflow，导致直接推送死锁），替换为 CI 实际产出的 8 个检查。
+- **存储清理 helper 的打日志方式回正**：上次修复随 PR rebase 进入核心仓库，但真源 gitcode 的原始提交漏带了 lint/mypy 两处修正——`import logging` 位置错误（I001）、`logger.warning(..., key=key)` 不是标准 logging 的合法 kwarg（存储删除失败时实际会抛 `TypeError` 盖过主流程）、无用的 `# noqa: BLE001`（RUF100）。三处修正现已 cherry-pick 回真源，与核心仓库对齐。
+- **限流器 circuit breaker 不再永久断开**：`RedisRateLimiterStore` 的熔断标志一旦置位，旧代码此后所有请求都短路到内存回退，**Redis 恢复后永远不会再被使用**——限流退化回单副本计数，与熔断注释宣称的"下次请求自动恢复"直接矛盾。现在熔断带冷却时间：冷却内走内存回退、不重复探活，冷却后首个请求探测 Redis，成功即重新 wire Redis 路径（多副本重新共享计数）。
+- **内存限流桶不再无限驻留**：`MemoryRateLimiterStore` 此前只清理单个 key 内部的过期时间戳，bucket key 本身（`IP|路径桶`）一旦创建就永久驻留——换 IP 扫描的请求会让 `_buckets` 无界增长。现在 hit_and_check 内以低频率全图清扫（默认 60s 一次，删除最新条目老于 10 分钟的 key；最长配置窗口仅 60s，活桶不可能被误删）。
+- **2FA pending token 获得密钥轮换兼容**：`create/decode_two_factor_pending_token` 此前绕过 `key_rotation` 直接用当前密钥签/验，注释却声称"hot reload 到达验签"——轮换后旧密钥签发的 pending token 立即失效，正好落在"密码步已过、验证码步失败"的登录半途。现在统一走 `encode_jwt`/`decode_jwt(expected_type=...)`：kid 头 + previous keys 回退，type 不符仍拒绝，不给攻击者猜测 type 的空间。
 - 五平台镜像同步为 append-only/强制对齐两种模式治理：镜像（Morningstar202604、X33834、gitee）与核心 badhope 保持内容一致。
 
 ## [0.2.1] — 2026-10-18
