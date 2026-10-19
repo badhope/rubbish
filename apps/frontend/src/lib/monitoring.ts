@@ -71,7 +71,8 @@ export async function initMonitoring(): Promise<void> {
       environment: import.meta.env.MODE,
       // 浏览器端 tracing 采样率保守取 10%，避免免费额度被刷爆；可按需覆盖
       tracesSampleRate: Number(import.meta.env.VITE_SENTRY_TRACES_RATE ?? 0.1),
-      sendDefaultPii: false,
+      // 注意：Sentry SDK v11 起移除了 `sendDefaultPii`——PII（IP/cookie 等）
+      // 默认即被剥离，无需（也无法）再用开关关闭；隐私立场等价于旧的 false。
     })
     setReporter((error, context) => {
       Sentry.captureException(error, { extra: context })
