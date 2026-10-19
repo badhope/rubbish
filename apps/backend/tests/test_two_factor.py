@@ -400,3 +400,40 @@ def test_pending_token_roundtrip_carries_claims() -> None:
 def test_decode_rejects_tampered_token() -> None:
     token = create_two_factor_pending_token(user_id=1, token_version=0)
     assert decode_two_factor_pending_token(token + "x") is None
+
+
+def test_pending_token_survives_hot_key_rotation(monkeypatch) -> None:
+    """A pending token minted before a key rotation still verifies.
+
+    The token is issued at the password step and redeemed at the code
+    step, so a rotation landing in between must not break the
+    half-finished login. Before M4 these functions signed and verified
+    with the current key only — a rotated-out key made every in-flight
+    pending token undecryptable until the TTL elapsed.
+    """
+    from dataclasses import dataclass
+
+    from app.core import key_rotation
+
+    @dataclass
+    class _FakeSettings:
+        secret_key: str = ""
+        previous_secret_keys: str = ""
+        algorithm: str = "HS256"
+
+    holder: dict[str, _FakeSettings] = {
+        "s": _FakeSettings(secret_key="a" * 64),
+        "previous": None,
+    }
+    monkeypatch.setattr(key_rotation, "get_settings", lambda: holder["s"])
+
+    token = create_two_factor_pending_token(user_id=42, token_version=7)
+
+    # Rotate the signing key while the token is in flight.
+    holder["s"] = _FakeSettings(secret_key="b" * 64, previous_secret_keys="a" * 64)
+
+    claims = decode_two_factor_pending_token(token)
+    assert claims is not None
+    assert claims["sub"] == "42"
+    assert claims["token_version"] == 7
+    assert claims["type"] == "2fa_pending"

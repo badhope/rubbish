@@ -41,9 +41,9 @@ import time
 from datetime import UTC, datetime, timedelta
 from typing import Any, Final, Literal
 
-import jwt
 from cryptography.fernet import Fernet, InvalidToken
-from jwt import PyJWTError
+
+from app.core.key_rotation import decode_jwt, encode_jwt
 
 # RFC 4226 section 4: 160-bit secret, 6-digit code, SHA-1 HMAC.
 _TOTP_DIGITS: Final = 6
@@ -208,8 +208,12 @@ def otpauth_uri(secret_b32: str, account: str, issuer: str) -> str:
 # /auth/login/2fa. The pending token carries ``token_version`` so a password
 # change / logout-everywhere invalidates it like any other token.
 #
-# These were relocated from the now-deleted ``app.core.twofactor`` module; they
-# bind ``get_settings()`` so hot key rotation reaches verification too.
+# These were relocated from the now-deleted ``app.core.twofactor`` module.
+# They are signed and verified through ``key_rotation`` (kid header +
+# previous-key fallback), so a hot key rotation landing between the
+# password step and the code step does not break the half-finished
+# login: a token minted under the old key still verifies until it
+# expires.
 
 
 TWO_FACTOR_PENDING_TOKEN_TYPE: Literal["2fa_pending"] = "2fa_pending"
@@ -218,9 +222,6 @@ PENDING_TOKEN_TTL_MINUTES = 5
 
 def create_two_factor_pending_token(user_id: int, token_version: int) -> str:
     """Mint a short-lived 2FA-pending token for ``user_id``."""
-    from app.core.config import get_settings
-
-    s = get_settings()
     payload: dict[str, Any] = {
         "sub": str(user_id),
         "token_version": token_version,
@@ -228,21 +229,19 @@ def create_two_factor_pending_token(user_id: int, token_version: int) -> str:
         "exp": datetime.now(UTC) + timedelta(minutes=PENDING_TOKEN_TTL_MINUTES),
         "jti": secrets.token_urlsafe(16),
     }
-    return jwt.encode(payload, s.secret_key, algorithm=s.algorithm)
+    return encode_jwt(payload)
 
 
 def decode_two_factor_pending_token(token: str) -> dict[str, Any] | None:
-    """Decode + type-check a pending token; ``None`` on any failure."""
-    from app.core.config import get_settings
+    """Decode + type-check a pending token; ``None`` on any failure.
 
-    s = get_settings()
-    try:
-        payload: dict[str, Any] = jwt.decode(token, s.secret_key, algorithms=[s.algorithm])
-    except PyJWTError:
-        return None
-    if payload.get("type") != TWO_FACTOR_PENDING_TOKEN_TYPE:
-        return None
-    return payload
+    ``decode_jwt`` rejects a signature it cannot verify on ANY active
+    key, and refuses to fall through to older keys when the ``type``
+    claim is wrong — so a real access/refresh token presented here is
+    rejected exactly like before, while rotation tolerance is gained
+    for free.
+    """
+    return decode_jwt(token, expected_type=TWO_FACTOR_PENDING_TOKEN_TYPE)
 
 
 __all__ = [
