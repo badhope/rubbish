@@ -28,14 +28,17 @@ from __future__ import annotations
 import math
 import time
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from app.core.logging import get_logger
 
-if TYPE_CHECKING:
-    pass
-
 logger = get_logger("scholarhub.rate_limit_store")
+
+# How long the breaker stays open after a Redis failure. While the
+# cooldown is running, buckets are served from the memory fallback
+# without re-hammering the dead server; the first request after it
+# elapses probes Redis again.
+_REDIS_RECOVERY_COOLDOWN_SECONDS = 5.0
 
 
 class RateLimiterStore:
@@ -62,9 +65,19 @@ class RateLimiterStore:
 class MemoryRateLimiterStore(RateLimiterStore):
     """In-process sliding window keyed by ``bucket_key``."""
 
+    # Opportunistic full-graph sweep cadence: at most one sweep per
+    # interval, run inside hit_and_check (which is a synchronous
+    # section of the event loop, so no lock is needed).
+    _SWEEP_INTERVAL_SECONDS = 60.0
+    # A bucket whose newest entry is older than this is dead weight:
+    # no configured window comes close to 10 minutes, so nothing live
+    # can ever be collected early.
+    _MAX_BUCKET_AGE_SECONDS = 600.0
+
     def __init__(self) -> None:
         # key -> sorted list of monotonic timestamps (oldest first)
         self._buckets: dict[str, list[float]] = defaultdict(list)
+        self._last_sweep: float = time.monotonic()
 
     async def hit_and_check(
         self,
@@ -75,6 +88,10 @@ class MemoryRateLimiterStore(RateLimiterStore):
     ) -> tuple[bool, int]:
         now = time.monotonic()
         cutoff = now - window_seconds
+        # Reap buckets from IPs that never came back before touching
+        # the defaultdict (otherwise every unique (ip, bucket) pair
+        # ever seen stays resident forever).
+        self._maybe_sweep(now)
         bucket = self._buckets[bucket_key]
         # Drop expired entries. We rebuild the list to keep order and
         # avoid unbounded growth (a busy key would otherwise keep every
@@ -92,6 +109,19 @@ class MemoryRateLimiterStore(RateLimiterStore):
         fresh.append(now)
         self._buckets[bucket_key] = fresh
         return (True, current_depth + 1)
+
+    def _maybe_sweep(self, now: float) -> None:
+        """At most every ``_SWEEP_INTERVAL_SECONDS``, delete buckets
+        whose newest entry has aged past ``_MAX_BUCKET_AGE_SECONDS``."""
+        if now - self._last_sweep < self._SWEEP_INTERVAL_SECONDS:
+            return
+        self._last_sweep = now
+        horizon = now - self._MAX_BUCKET_AGE_SECONDS
+        # List entries are appended in monotonic order, so the last
+        # element is the newest.
+        stale = [key for key, hits in self._buckets.items() if not hits or hits[-1] <= horizon]
+        for key in stale:
+            del self._buckets[key]
 
 
 class RedisRateLimiterStore(RateLimiterStore):
@@ -113,6 +143,15 @@ class RedisRateLimiterStore(RateLimiterStore):
     (login, register, etc.) remain in the memory fallback so an
     attacker cannot overwhelm the auth surface during a Redis
     outage either.
+
+    The breaker is *timed*, not permanent: after an outage the
+    next request inside a short cooldown still goes to the memory
+    fallback, but once the cooldown has elapsed a single request
+    probes Redis again and — if it succeeds — silently re-arms the
+    Redis path. Without that probe a recovered Redis would never
+    be used again for the life of the process (the limiter would
+    degrade to per-replica counting forever, defeating the point
+    of the shared store).
     """
 
     # KEYS[1] = bucket key
@@ -148,6 +187,10 @@ class RedisRateLimiterStore(RateLimiterStore):
         self._script_sha: str | None = None
         self._memory_fallback = MemoryRateLimiterStore()
         self._redis_failed = False  # circuit-breaker hint
+        # Monotonic deadline before which the breaker stays open and
+        # requests keep using the memory fallback; the first request
+        # after it probes Redis again.
+        self._redis_retry_at: float = 0.0
 
     async def _get_client(self) -> Any:
         if self._client is not None:
@@ -177,10 +220,12 @@ class RedisRateLimiterStore(RateLimiterStore):
         limit: int,
         window_seconds: float,
     ) -> tuple[bool, int]:
-        if self._redis_failed:
-            # Circuit-breaker: stop hammering a dead Redis. Auto-recover
-            # by re-attempting on the next request outside this guard
-            # (we re-enable on the first successful call below).
+        now = time.monotonic()
+        if self._redis_failed and now < self._redis_retry_at:
+            # Circuit-breaker open: serve from memory until the cooldown
+            # elapses instead of retrying every request against a dead
+            # server. The first request after the cooldown falls through
+            # and probes Redis again.
             return await self._memory_fallback.hit_and_check(
                 bucket_key=bucket_key,
                 limit=limit,
@@ -206,19 +251,20 @@ class RedisRateLimiterStore(RateLimiterStore):
                 else:
                     raise
             allowed_flag, depth = result
-            # Reset circuit breaker on first successful call after an outage.
-            if self._redis_failed:
-                self._redis_failed = False
+            # Probe succeeded: re-arm the Redis path for good.
+            self._redis_failed = False
             return (bool(int(allowed_flag)), int(depth))
         except Exception as exc:
-            # Fail-open: log + fall back to memory. If Redis comes back
-            # the next request will succeed and the breaker resets.
+            # Fail-open: log + fall back to memory. The breaker opens
+            # for the cooldown; when it expires a request probes Redis
+            # again and, on success, re-arms the path above.
             if not self._redis_failed:
                 logger.warning(
                     "rate_limit_redis_unavailable_falling_back_to_memory",
                     error=str(exc),
                 )
             self._redis_failed = True
+            self._redis_retry_at = now + _REDIS_RECOVERY_COOLDOWN_SECONDS
             return await self._memory_fallback.hit_and_check(
                 bucket_key=bucket_key,
                 limit=limit,
