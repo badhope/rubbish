@@ -44,35 +44,54 @@ vi.mock('@/lib/auth', () => ({
   },
 }))
 
-// 动态导入 api 模块，触发 axios.create() 调用
-const { api } = await import('@/lib/api')
-const { useAuthStore } = await import('@/lib/auth')
+// 每个用例在执行阶段独立加载 api 模块。
+// 背景（vitest 4→5 升级回归）：vitest 5 中 beforeAll 期间产生的 mock 调用
+// 不会保留到用例执行阶段（实测 beforeAll 后 calls=1，进入 it 归零），
+// 因此加载必须发生在 it 内部；vi.resetModules() 让 api.ts 模块体重新执行，
+// 产生新的 axios.create / 拦截器注册调用（mock 注册表不受影响，
+// auth mock 的 getState 实例保持不变，mockReturnValue 依然有效）。
+let api: typeof import('@/lib/api').api
+let useAuthStore: typeof import('@/lib/auth').useAuthStore
+
+async function loadApiModule(): Promise<void> {
+  vi.resetModules()
+  const apiModule = await import('@/lib/api')
+  const authModule = await import('@/lib/auth')
+  api = apiModule.api
+  useAuthStore = authModule.useAuthStore
+}
 
 describe('API client configuration', () => {
-  it('调用 axios.create 创建实例', () => {
+  it('调用 axios.create 创建实例', async () => {
+    await loadApiModule()
     expect(mockCreate).toHaveBeenCalled()
   })
 
-  it('创建时传入了配置对象', () => {
+  it('创建时传入了配置对象', async () => {
+    await loadApiModule()
     const configArg = mockCreate.mock.calls[0]
     expect(configArg).toBeDefined()
   })
 
-  it('baseURL 为 /api 或 VITE_API_URL', () => {
+  it('baseURL 为 /api 或 VITE_API_URL', async () => {
+    await loadApiModule()
     const configArg = mockCreate.mock.calls[0]
     // configArg is the first argument passed to axios.create
     expect(configArg).toBeDefined()
   })
 
-  it('withCredentials 为 true', () => {
+  it('withCredentials 为 true', async () => {
+    await loadApiModule()
     expect(mockCreate).toHaveBeenCalled()
   })
 
-  it('include credentials 配置', () => {
+  it('include credentials 配置', async () => {
+    await loadApiModule()
     expect(mockCreate).toHaveBeenCalled()
   })
 
-  it('api 实例具有 CRUD 方法', () => {
+  it('api 实例具有 CRUD 方法', async () => {
+    await loadApiModule()
     expect(typeof api.get).toBe('function')
     expect(typeof api.post).toBe('function')
     expect(typeof api.put).toBe('function')
@@ -82,16 +101,20 @@ describe('API client configuration', () => {
 })
 
 describe('request interceptor', () => {
-  it('注册了请求拦截器', () => {
+  it('注册了请求拦截器', async () => {
+    await loadApiModule()
     expect(mockRequestUse).toHaveBeenCalled()
   })
 
-  it('当 store 中有 token 时注入 Authorization header', () => {
+  it('当 store 中有 token 时注入 Authorization header', async () => {
+    await loadApiModule()
     const interceptor = mockRequestUse.mock.calls[0]?.[0] as
       | ((c: InternalAxiosRequestConfig) => InternalAxiosRequestConfig)
       | undefined
-
-    if (!interceptor) return
+    expect(interceptor).toBeTypeOf('function')
+    // 显式收窄：toBeTypeOf 只做运行期断言，不做 TS 类型收窄。
+    // 用 throw 取代旧代码的 `if (!interceptor) return` 假绿守卫。
+    if (!interceptor) throw new Error('request interceptor was not registered')
 
     vi.mocked(useAuthStore.getState).mockReturnValue({
       token: 'test-bearer-token',
@@ -106,12 +129,13 @@ describe('request interceptor', () => {
     expect(result.headers.Authorization).toBe('Bearer test-bearer-token')
   })
 
-  it('当 store 中无 token 时不添加 Authorization header', () => {
+  it('当 store 中无 token 时不添加 Authorization header', async () => {
+    await loadApiModule()
     const interceptor = mockRequestUse.mock.calls[0]?.[0] as
       | ((c: InternalAxiosRequestConfig) => InternalAxiosRequestConfig)
       | undefined
-
-    if (!interceptor) return
+    expect(interceptor).toBeTypeOf('function')
+    if (!interceptor) throw new Error('request interceptor was not registered')
 
     vi.mocked(useAuthStore.getState).mockReturnValue({
       token: null,
@@ -128,7 +152,8 @@ describe('request interceptor', () => {
 })
 
 describe('response interceptor', () => {
-  it('注册了响应拦截器（成功与错误处理函数）', () => {
+  it('注册了响应拦截器（成功与错误处理函数）', async () => {
+    await loadApiModule()
     expect(mockResponseUse).toHaveBeenCalled()
     const successHandler = mockResponseUse.mock.calls[0]?.[0]
     const errorHandler = mockResponseUse.mock.calls[0]?.[1]
@@ -136,23 +161,25 @@ describe('response interceptor', () => {
     expect(typeof errorHandler).toBe('function')
   })
 
-  it('正常响应直接透传', () => {
+  it('正常响应直接透传', async () => {
+    await loadApiModule()
     const successHandler = mockResponseUse.mock.calls[0]?.[0] as
       | ((r: AxiosResponse) => AxiosResponse)
       | undefined
-
-    if (!successHandler) return
+    expect(successHandler).toBeTypeOf('function')
+    if (!successHandler) throw new Error('response success handler was not registered')
 
     const response = { data: { ok: true }, status: 200 } as AxiosResponse
     expect(successHandler(response)).toBe(response)
   })
 
   it('非 401 错误直接 reject', async () => {
+    await loadApiModule()
     const errorHandler = mockResponseUse.mock.calls[0]?.[1] as
       | ((e: unknown) => Promise<unknown>)
       | undefined
-
-    if (!errorHandler) return
+    expect(errorHandler).toBeTypeOf('function')
+    if (!errorHandler) throw new Error('response error handler was not registered')
 
     const error = {
       response: { status: 500 },
