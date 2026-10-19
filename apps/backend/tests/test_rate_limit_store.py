@@ -12,6 +12,7 @@ Covers:
 from __future__ import annotations
 
 import asyncio
+import time
 
 import pytest
 
@@ -306,3 +307,122 @@ async def test_redis_store_fails_open_when_unreachable(monkeypatch):
         window_seconds=60.0,
     )
     assert allowed is True
+
+
+# ---------------------------------------------------------------------------
+# Circuit-breaker recovery (the "stale breaker" regression).
+# ---------------------------------------------------------------------------
+
+
+async def test_redis_store_breaker_stays_open_during_cooldown(monkeypatch):
+    """While the cooldown runs, the broken client is NOT probed."""
+    from app.core.rate_limit_store import RedisRateLimiterStore
+
+    store = RedisRateLimiterStore(redis_url="redis://nonexistent:6379/0")
+    probes = {"n": 0}
+
+    async def broken():
+        probes["n"] += 1
+        raise ConnectionError("simulated Redis outage")
+
+    monkeypatch.setattr(store, "_get_client", broken)
+
+    await store.hit_and_check(bucket_key="ip7|a", limit=10, window_seconds=60.0)
+    assert store._redis_failed is True
+    assert probes["n"] == 1
+
+    # Cooldown not elapsed yet: must NOT probe Redis again.
+    await store.hit_and_check(bucket_key="ip7|a", limit=10, window_seconds=60.0)
+    assert probes["n"] == 1
+
+
+async def test_redis_store_recovers_after_outage(monkeypatch):
+    """A transient outage must not disable Redis for the whole process.
+
+    Once the cooldown has elapsed, the next request probes Redis
+    again; on success the breaker closes and the shared bucket is
+    used for real.
+    """
+    import fakeredis.aioredis as faio
+
+    from app.core import rate_limit_store as mod
+    from app.core.rate_limit_store import RedisRateLimiterStore
+
+    fake_client = faio.FakeRedis(decode_responses=True)
+    store = RedisRateLimiterStore(redis_url="redis://test:6379/0")
+
+    calls = {"n": 0}
+
+    async def flaky_get_client():
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise ConnectionError("simulated Redis outage")
+        return fake_client
+
+    monkeypatch.setattr(store, "_get_client", flaky_get_client)
+    # Compress the cooldown so the recovery probe fires on the 2nd call.
+    monkeypatch.setattr(mod, "_REDIS_RECOVERY_COOLDOWN_SECONDS", 0.0)
+
+    # First call: outage -> memory fallback (still allowed, fail-open).
+    allowed, _ = await store.hit_and_check(bucket_key="ip6|a", limit=10, window_seconds=60.0)
+    assert allowed is True
+    assert store._redis_failed is True
+
+    # Second call: cooldown elapsed -> Redis is probed and answers.
+    allowed, depth = await store.hit_and_check(bucket_key="ip6|a", limit=10, window_seconds=60.0)
+    assert allowed is True
+    assert depth == 1
+    assert store._redis_failed is False
+
+    # The bucket now really lives in Redis (visible to a second replica).
+    other = RedisRateLimiterStore(redis_url="redis://test:6379/0")
+
+    async def _fake_get_client():
+        return fake_client
+
+    monkeypatch.setattr(other, "_get_client", _fake_get_client)
+    await _advance_clock()
+    allowed, depth = await other.hit_and_check(bucket_key="ip6|a", limit=10, window_seconds=60.0)
+    assert allowed is True
+    assert depth == 2  # the probe hit above was recorded in the shared bucket
+
+
+# ---------------------------------------------------------------------------
+# Memory store reaping (the "stale buckets" memory-growth regression).
+# ---------------------------------------------------------------------------
+
+
+async def test_memory_store_sweeps_stale_buckets(memory_store):
+    """Bucket keys from IPs that never return must not accumulate."""
+    from app.core.rate_limit_store import MemoryRateLimiterStore
+
+    await memory_store.hit_and_check(bucket_key="ip1|_global", limit=10, window_seconds=60.0)
+    assert memory_store._buckets
+
+    # Sweeping "now" keeps fresh buckets.
+    memory_store._maybe_sweep(time.monotonic())
+    assert "ip1|_global" in memory_store._buckets
+
+    # Sweeping in the far future drops them.
+    far = time.monotonic() + MemoryRateLimiterStore._MAX_BUCKET_AGE_SECONDS + 1.0
+    memory_store._maybe_sweep(far)
+    assert "ip1|_global" not in memory_store._buckets
+    assert memory_store._buckets == {}
+
+
+async def test_memory_store_auto_sweeps_during_hits(monkeypatch):
+    """The sweep also runs automatically inside hit_and_check."""
+    monkeypatch.setattr(MemoryRateLimiterStore, "_SWEEP_INTERVAL_SECONDS", 0.0)
+    store = MemoryRateLimiterStore()
+
+    await store.hit_and_check(bucket_key="ip1|_global", limit=10, window_seconds=60.0)
+    assert "ip1|_global" in store._buckets
+
+    # Simulate a bucket whose last hit is older than the max age, then
+    # let a hit on a different key trigger the opportunistic sweep.
+    store._buckets["ip1|_global"] = [
+        time.monotonic() - MemoryRateLimiterStore._MAX_BUCKET_AGE_SECONDS - 1.0
+    ]
+    await store.hit_and_check(bucket_key="ip2|_global", limit=10, window_seconds=60.0)
+    assert "ip1|_global" not in store._buckets
+    assert "ip2|_global" in store._buckets
