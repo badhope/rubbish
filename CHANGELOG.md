@@ -9,7 +9,30 @@
 
 ## [0.2.2] — 2026-10-18
 
-安全加固版本，修完全部 9 项 P0（详见 `scholarhub-代码审计报告.md`）。
+安全加固版本，修完全部 9 项 P0 级安全问题。
+
+### Changed
+
+- **依赖树全量升级到最新**：后端 `uv lock --upgrade`（websockets 17.2、typer 0.27.3、
+  mako 1.4.3、watchfiles/uvloop/wcwidth/typing-inspection 等；fastapi 0.139、
+  pydantic 2.13.4、SQLAlchemy 2.0.51、alembic 1.18.5 此前已是最新不变）；
+  前端 npm 依赖全量升级（react 19.3.1、vite 8.3.4、@sentry/react 11.8.0、
+  vitest 5.0.5、playwright 1.64.1、eslint 10.13、axios 1.20.0、radix/tailwind 系列），
+  TypeScript 保持在 5.x（TS 7 为原生编译器预览线，生态未就绪，按计划排除）。
+- **Sentry JS SDK v11 适配**：`sendDefaultPii` 配置项在 v11 中移除（PII 默认即被剥离），
+  删除 `src/lib/monitoring.ts` 中的该字段。
+- **vitest 5 测试适配**：`src/lib/__tests__/api.test.ts` 的模块加载时机调整为用例内
+  `vi.resetModules()` + 动态 import——vitest 5 中 beforeAll 期间产生的 mock 调用不会
+  保留到用例执行阶段；同时将 4 处 `if (!interceptor) return` 假绿守卫改为硬断言
+  （`expect(...).toBeTypeOf('function')` + `if (!x) throw` 类型收窄）。
+- **移除 next-themes 依赖**：其 ThemeProvider 内部无条件渲染一个 inline `<script>`
+  （ThemeScript 组件）。在纯 client-render 的 Vite SPA 中该 script 永远不会执行，
+  React 19.3 起 dev 模式还会告警 "Encountered a script tag while rendering React
+  component"，且 index.html 的 CSP `script-src 'self'` 会直接拦截 inline script
+  （线上同样报 CSP violation）。改为自研的极简 ThemeProvider
+  （localStorage 持久化 + matchMedia 系统偏好 + 多标签同步 + class 切换），
+  首屏防闪烁沿用 `public/theme-bootstrap.js` 外链脚本；修复后移动端 5 个 E2E
+  用例的 console 零报错断言恢复通过，全量 68 个 E2E 全绿。
 
 ### Added
 
@@ -117,7 +140,7 @@
 
 - 演示视频与官网截图仍为旧版（含历史遗留的大文件），待本轮问题修复完成后统一重新生成并替换。
 - 演示视频与官网截图仍为旧版（含历史遗留的大文件），待本轮打磨完成后统一重新生成并替换。
-- 代码审计发现的 P1（31 项）与 P2（约 55 项）尚未处理，详见 `scholarhub-代码审计报告.md`。
+- 代码审计发现的 P1（31 项）与 P2（约 55 项）尚未处理，后续按优先级排期。
 
 ## [0.2.0] — 2026-09-14
 
