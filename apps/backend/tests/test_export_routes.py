@@ -44,6 +44,32 @@ async def test_export_returns_404_when_no_resources_match(
     assert response.status_code == 404
 
 
+async def test_export_preflight_reports_missing_ids(client: AsyncClient, admin_user: dict) -> None:
+    create = await client.post(
+        "/api/catalog",
+        json=_SAMPLE,
+        headers={"Authorization": f"Bearer {admin_user['token']}"},
+    )
+    rid = create.json()["id"]
+
+    response = await client.get("/api/export/preflight", params={"ids": [rid, 99999]})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["requested_count"] == 2
+    assert body["resolved_count"] == 1
+    assert body["missing_ids"] == [99999]
+    assert body["warnings"] == []
+    assert body["can_export"] is True
+
+
+async def test_export_preflight_without_resources_is_not_404(client: AsyncClient) -> None:
+    response = await client.get("/api/export/preflight", params={"ids": [99998]})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["resolved_count"] == 0
+    assert body["can_export"] is False
+
+
 async def test_export_bibtex_format(client: AsyncClient, admin_user: dict) -> None:
     create = await client.post(
         "/api/catalog",

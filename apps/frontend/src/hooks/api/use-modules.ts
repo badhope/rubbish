@@ -257,8 +257,32 @@ export function useDeleteResource() {
   })
 }
 
+export type CitationExportFormat = 'bibtex' | 'ris' | 'csv' | 'json' | 'jats'
+
+export interface ExportPreflightWarning {
+  resource_id: number | string
+  title: string
+  code: 'missing_title' | 'missing_authors' | 'missing_year' | 'missing_doi' | string
+  message: string
+}
+
+export interface ExportPreflightResponse {
+  requested_count: number
+  resolved_count: number
+  missing_ids: number[]
+  warnings: ExportPreflightWarning[]
+  can_export: boolean
+}
+
+// 导出前先查字段完整性：缺标题/作者/年份/DOI 时由页面弹窗确认，
+// 不静默生成空字段的引用文件。
+export async function exportPreflight(ids: number[]): Promise<ExportPreflightResponse> {
+  const res = await api.get<ExportPreflightResponse>('/export/preflight', { params: { ids } })
+  return res.data
+}
+
 // Export 走 blob，触发浏览器下载
-export async function exportResources(ids: number[], format: 'bibtex' | 'ris' | 'csv' | 'json') {
+export async function exportResources(ids: number[], format: CitationExportFormat) {
   const res = await api.get('/export', {
     params: { ids, format },
     responseType: 'blob',

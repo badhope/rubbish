@@ -364,6 +364,67 @@ def to_jats(resources: list[Exportable]) -> str:
     return "\n".join(articles)
 
 
+# --- Preflight warnings -----------------------------------------------------
+
+
+def export_field_warnings(resources: list[Exportable]) -> list[dict[str, Any]]:
+    """Return non-fatal metadata warnings before a citation export.
+
+    The file is still generated when a field is missing; the caller must show
+    the warning rather than silently exporting an empty title/author/year/DOI.
+    ``venue`` is intentionally not required: working papers and datasets often
+    have no journal/booktitle.
+    """
+
+    warnings: list[dict[str, Any]] = []
+    for resource in resources:
+        rid = getattr(resource, "id", "")
+        title = str(getattr(resource, "title", "") or "").strip()
+        authors = _author_list(resource)
+        try:
+            year = int(getattr(resource, "year", 0) or 0)
+        except (TypeError, ValueError):
+            year = 0
+        doi = str(getattr(resource, "doi", "") or "").strip()
+        if not title:
+            warnings.append(
+                {
+                    "resource_id": rid,
+                    "title": f"资源 #{rid}",
+                    "code": "missing_title",
+                    "message": "缺标题：导出文件里会留下空 title 字段。",
+                }
+            )
+        if not authors:
+            warnings.append(
+                {
+                    "resource_id": rid,
+                    "title": title or f"资源 #{rid}",
+                    "code": "missing_authors",
+                    "message": "缺作者：导出的引用无法正确归属。",
+                }
+            )
+        if year <= 0:
+            warnings.append(
+                {
+                    "resource_id": rid,
+                    "title": title or f"资源 #{rid}",
+                    "code": "missing_year",
+                    "message": "缺年份：BibTeX/RIS 的年份字段会是空值或 0。",
+                }
+            )
+        if not doi:
+            warnings.append(
+                {
+                    "resource_id": rid,
+                    "title": title or f"资源 #{rid}",
+                    "code": "missing_doi",
+                    "message": "缺 DOI：引用仍可导出，但永久链接不完整。",
+                }
+            )
+    return warnings
+
+
 # --- Dispatch ---
 
 
@@ -408,6 +469,7 @@ __all__ = [
     "FILE_EXTENSIONS",
     "MIME_TYPES",
     "Exportable",
+    "export_field_warnings",
     "export_resources",
     "to_bibtex",
     "to_csv",

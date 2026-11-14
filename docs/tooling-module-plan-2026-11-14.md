@@ -29,7 +29,7 @@
 | 导入 | `domain/ingest/parsers.py` | BibTeX/RIS/CSV/JSON | 已支持 JSON 回导；CSV 别名仍未完全对齐；错误定位只到行号 |
 | 导入 | `domain/ingest/fetchers.py` | Crossref/arXiv/PubMed/OpenAlex/Semantic Scholar | 后端 5 个源已在前端全部可选；字段映射仍未做 |
 | 导入页 | `routes/ingest/index.tsx`（255 行） | 粘贴文本解析、文件选择/拖拽、五源查询 | 仍不能编辑解析结果、批量勾选；字段映射未做 |
-| 导出页 | `interfaces/http/export/routes.py` | 批量引用导出 5 种格式 | 注释仍写“四选一”；无导出前预览/字段校验 |
+| 导出页 | `interfaces/http/export/routes.py` | 批量引用导出 5 种格式 + 字段预检 | 已补字段警告与前端确认弹窗；多篇合并 PDF/Word、整期 ZIP 仍未做 |
 
 ## 2. 本轮 P0：先修“会丢内容 / 会出错 / 会误导”
 
@@ -105,7 +105,7 @@
 ### 3.2 查看器
 - 合并 `PdfImagePreview` / `SourcePreviewPng` / `AuthPngPreview` 为通用 `PagedPdfPreview`，统一分页、缓存、重试、键盘翻页。
 - PDF 预览支持页码跳转、缩放、适合宽度；移动端手势。
-- Markdown 查看器拆分为 `render / toc / reference / reading-prefs` 四个模块，降低 1406 行单文件风险。
+- Markdown 查看器拆分为 `view / text / render / reference / toc / reading-prefs` 六个模块，单文件从约 1380 行降到约 441 行。
 - 表格、CSV、代码、图片查看器按内容类型分流；没有对应查看器时给出明确兜底，不空白。
 
 ### 3.3 转换器
@@ -157,9 +157,10 @@
 
 - [x] 3.1 撤销/重做（Ctrl+Z / Ctrl+Shift+Z，100 步上限）、查找/替换、文档大纲、专注模式；已补 3 个前端测试。
 - [x] 3.2 抽出通用 `PagedPdfPreview`，`PdfImagePreview` 与 `AuthPngPreview` 改为薄包装；统一换稿归位、页码夹取、重试、页码跳转、缩放、键盘翻页；已补页码跳转/缩放/键盘测试。
-- [ ] 3.2 `ManuscriptView` 拆分为 render/toc/reference/reading-prefs 四模块；当前仍是单文件。
+- [x] 3.2 `ManuscriptView` 拆分为 view/text/render/reference/toc/reading-prefs 六模块；`typecheck`、`lint` 与 8 个组件测试通过。
 - [ ] 3.2 表格/CSV/代码/图片按内容类型分流查看器。
-- [ ] 3.3 批量导出、统一转换契约测试、导出前字段校验。
+- [x] 3.3 导出前字段校验：纯函数 `export_field_warnings` + `GET /api/export/preflight`；前端导出前弹窗列出缺标题/作者/年份/DOI；引用导出补 JATS 格式。
+- [ ] 3.3 多篇合并 PDF/Word、整期 ZIP；统一转换契约夹具仍待补。
 - [ ] 3.4 独立引用生成器、图表/参考文献编号检查、批量导入字段映射。
 - [x] 分页缓存键修正：`useMySubmissions` / `usePendingSubmissions` / `useMyReviewAssignments` 等把 `pageSize` 纳入 query key，避免 Dashboard 用 1 条把列表页 20 条的缓存覆盖。
 - [x] 期号页 JSON-LD `PublicationIssue`，与 canonical 路由、整期 PDF 一并落地。

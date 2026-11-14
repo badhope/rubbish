@@ -8,6 +8,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from app.domain.export.exporters import (
+    export_field_warnings,
     export_resources,
     to_bibtex,
     to_csv,
@@ -171,6 +172,23 @@ def test_json_renders_normalized_records() -> None:
     assert r["source_id"] == "test-1"
     assert r["keywords"] == ["testing", "fixtures"]
     assert r["volume"] == "10"
+
+
+def test_export_field_warnings_are_non_fatal_and_specific() -> None:
+    warnings = export_field_warnings(
+        [
+            _stub(title="", authors=[], year=0, doi=""),
+            _stub(id="ok-1", title="Complete", authors=["A"], year=2025, doi="10.1/x"),
+        ]
+    )
+    codes = {warning["code"] for warning in warnings}
+    assert codes == {"missing_title", "missing_authors", "missing_year", "missing_doi"}
+    assert all(warning["resource_id"] == "test-1" for warning in warnings)
+
+
+def test_export_field_warnings_do_not_require_venue() -> None:
+    warnings = export_field_warnings([_stub(venue=None, doi="10.1/x")])
+    assert warnings == []
 
 
 def test_dispatch_routes_by_format_name() -> None:

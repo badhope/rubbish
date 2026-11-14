@@ -1,10 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute, Link, useNavigate, useSearch } from '@tanstack/react-router'
-import { ChevronDown, Download, FileDown, Plus, RefreshCw, SlidersHorizontal, Sparkles } from 'lucide-react'
+import { AlertTriangle, ChevronDown, Download, FileDown, Plus, RefreshCw, SlidersHorizontal, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/use-auth'
 import { useIsMobile } from '@/hooks/use-is-mobile'
-import { exportResources, useCatalogStats, useResources } from '@/hooks/api/use-modules'
+import {
+  exportPreflight,
+  exportResources,
+  useCatalogStats,
+  useResources,
+  type CitationExportFormat,
+  type ExportPreflightResponse,
+} from '@/hooks/api/use-modules'
 import type { ResourceType } from '@/lib/types'
 import { extractError, formatAuthors, cn } from '@/lib/utils'
 import { contentCategoryLabel, displayTypeLabel, isScholarlyContent } from '@/lib/resource-labels'
@@ -14,6 +21,14 @@ import { Pagination } from '@/components/common/pagination'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Input } from '@/components/ui/input'
 import { ResourceCard } from '@/components/mobile/ResourceCard'
@@ -77,7 +92,7 @@ const TYPE_OPTIONS: { value: ResourceType | 'all'; label: string }[] = [
   { value: 'tutorial', label: '教程' },
 ]
 
-const EXPORT_FORMATS = ['bibtex', 'ris', 'csv', 'json'] as const
+const EXPORT_FORMATS: CitationExportFormat[] = ['bibtex', 'ris', 'csv', 'json', 'jats']
 
 /** 固定种子的 Fisher–Yates：刷新页面换 seed，同一次浏览内「换一批」也稳定。 */
 function seededShuffle<T>(items: T[], seed: number): T[] {
@@ -180,16 +195,37 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
     )
   }
 
-  const onExport = async (format: (typeof EXPORT_FORMATS)[number]) => {
-    if (selectedIds.length === 0) {
-      toast.error('请先选择资源')
-      return
-    }
+  const [preflight, setPreflight] = useState<ExportPreflightResponse | null>(null)
+  const [pendingFormat, setPendingFormat] = useState<CitationExportFormat | null>(null)
+
+  const runExport = async (format: CitationExportFormat) => {
     try {
       await exportResources(selectedIds, format)
       toast.success(`已导出 ${selectedIds.length} 条为 ${format.toUpperCase()}`)
     } catch (err) {
       toast.error(extractError(err, '导出失败'))
+    }
+  }
+
+  const onExport = async (format: CitationExportFormat) => {
+    if (selectedIds.length === 0) {
+      toast.error('请先选择资源')
+      return
+    }
+    try {
+      const result = await exportPreflight(selectedIds)
+      if (!result.can_export) {
+        toast.error('所选资源都已删除或尚未公开，无法导出')
+        return
+      }
+      if (result.warnings.length > 0 || result.missing_ids.length > 0) {
+        setPreflight(result)
+        setPendingFormat(format)
+        return
+      }
+      await runExport(format)
+    } catch (err) {
+      toast.error(extractError(err, '导出前检查失败'))
     }
   }
 
@@ -541,6 +577,62 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
           onPageChange={(p) => updateSearch({ page: p })}
         />
       )}
+
+      <Dialog
+        open={preflight !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPreflight(null)
+            setPendingFormat(null)
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-600" aria-hidden />
+              导出前检查
+            </DialogTitle>
+            <DialogDescription>
+              这些字段缺失不会阻止导出，但会让引用文件不完整。建议先补齐再导出。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-64 space-y-2 overflow-y-auto text-sm">
+            {preflight?.missing_ids.length ? (
+              <p className="rounded-md border border-amber-300/70 bg-amber-50/70 px-3 py-2 text-xs text-amber-900 dark:border-amber-500/30 dark:bg-amber-950/30 dark:text-amber-200">
+                {preflight.missing_ids.length} 条资源已删除或未公开，将被跳过。
+              </p>
+            ) : null}
+            {preflight?.warnings.map((warning, index) => (
+              <div key={`${warning.resource_id}-${warning.code}-${index}`} className="rounded-md border px-3 py-2">
+                <p className="font-medium">{warning.title}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{warning.message}</p>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setPreflight(null)
+                setPendingFormat(null)
+              }}
+            >
+              先去补齐
+            </Button>
+            <Button
+              onClick={() => {
+                const format = pendingFormat
+                setPreflight(null)
+                setPendingFormat(null)
+                if (format) void runExport(format)
+              }}
+            >
+              仍然导出
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
