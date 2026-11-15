@@ -365,7 +365,7 @@ P3 不再堆功能，目标只有三个：**可被信任、可被检索、可被
 
 ### 2026-11-15 P5 编辑器与服务端草稿上线记录
 
-- 代码：`feat(editor): add table tools, snapshots and server drafts`；五远程已推送。
+- 代码：`19fed28 feat(editor): add table tools, snapshots and server drafts`；五远程已推送。
 - 功能：Markdown 表格菜单支持行/列增删与列/整表对齐；本机版本快照支持保存、行级 diff、恢复、删除（每文档最多 8 个）；投稿向导新增服务端草稿（`submission_drafts`，每租户每用户一份，覆盖保存），本机草稿优先、云端草稿兜底恢复，1.5s 防抖同步，提交成功后清理。
 - 验证：后端 `1227 passed, 1 skipped`（672.90s）；前端 `34 files / 184 tests passed`（660.98s）；`ruff check` / `ruff format --check` / `typecheck` / `lint` / `build` 通过。
 - 迁移：`048_submission_drafts` 已在生产执行，`alembic_version = 048_submission_drafts`；`submission_drafts` 表启用 `FORCE RLS` + `tenant_isolation`，当前 0 行。
