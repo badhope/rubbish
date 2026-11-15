@@ -1,20 +1,41 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
-import { AlertCircle, ArrowRight, Upload } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRight,
+  CheckCircle2,
+  Send,
+  Upload,
+  XCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 import { getAuthState } from "@/lib/auth";
-import { useFetchIngest, useParseIngest } from "@/hooks/api/use-modules";
+import {
+  useCreateSubmissionsBatch,
+  useFetchIngest,
+  useParseIngest,
+} from "@/hooks/api/use-modules";
 import type {
   FetchSource,
   IngestResource,
   ParseFormat,
   ParseRequest,
+  SubmissionBatchResponse,
 } from "@/lib/types";
 import { PageHeader } from "@/components/common/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -30,6 +51,7 @@ import {
   CSV_IGNORE_TARGET,
   buildColumnMap,
   guessColumnMap,
+  ingestToSubmission,
   mergeDuplicateIngestResources,
   parseCsvHeader,
 } from "@/lib/ingest";
@@ -77,59 +99,85 @@ function formatFromFilename(name: string): ParseFormat | null {
   return FILE_FORMATS[ext] ?? null;
 }
 
-// 解析结果与查询结果共用同一种卡片渲染，"提交到目录" 跳 /submissions 并带 preset
+// 解析结果与查询结果共用同一种卡片渲染；批量勾选只在解析结果里出现。
 function ResourceCard({
   resource,
   onSend,
+  selectable = false,
+  selected = false,
+  onSelect,
 }: {
   resource: IngestResource;
   onSend: (r: IngestResource) => void;
+  selectable?: boolean;
+  selected?: boolean;
+  onSelect?: () => void;
 }) {
   return (
-    <Card>
+    <Card className={selected ? "border-primary/60 bg-primary/5" : undefined}>
       <CardContent className="space-y-2">
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="font-medium">{resource.title}</h3>
-          <Button size="sm" onClick={() => onSend(resource)}>
-            提交到目录
-            <ArrowRight className="h-4 w-4" />
-          </Button>
+        <div className="flex items-start gap-3">
+          {selectable && (
+            <input
+              type="checkbox"
+              checked={selected}
+              onChange={() => onSelect?.()}
+              aria-label={`选择 ${resource.title}`}
+              className="mt-1 size-4 shrink-0 accent-primary"
+            />
+          )}
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="flex items-start justify-between gap-3">
+              <h3 className="min-w-0 break-words font-medium">
+                {resource.title}
+              </h3>
+              <Button size="sm" onClick={() => onSend(resource)}>
+                完善并投稿
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <Badge variant="outline">{resource.type}</Badge>
+              {resource.year && <span>{resource.year}</span>}
+              <span>{resource.discipline}</span>
+              {resource.doi && <span>{resource.doi}</span>}
+            </div>
+            {resource.authors.length > 0 && (
+              <p className="text-sm text-muted-foreground">
+                {/* 解析结果常是 "Last, First" 形式：先规范成 "First Last" 再用顿号连接，
+                    否则 "Kingma, Diederik P, Ba, Jimmy" 看着像四个作者 */}
+                {resource.authors
+                  .map((a) => {
+                    const parts = a
+                      .split(",")
+                      .map((s) => s.trim())
+                      .filter(Boolean);
+                    return parts.length >= 2
+                      ? `${parts.slice(1).join(" ")} ${parts[0]}`
+                      : a;
+                  })
+                  .join("、")}
+              </p>
+            )}
+            {resource.abstract && (
+              <p className="line-clamp-3 text-sm">{resource.abstract}</p>
+            )}
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <Badge variant="outline">{resource.type}</Badge>
-          {resource.year && <span>{resource.year}</span>}
-          <span>{resource.discipline}</span>
-          {resource.doi && <span>{resource.doi}</span>}
-        </div>
-        {resource.authors.length > 0 && (
-          <p className="text-sm text-muted-foreground">
-            {/* 解析结果常是 "Last, First" 形式：先规范成 "First Last" 再用顿号连接，
-                否则 "Kingma, Diederik P, Ba, Jimmy" 看着像四个作者 */}
-            {resource.authors
-              .map((a) => {
-                const parts = a
-                  .split(",")
-                  .map((s) => s.trim())
-                  .filter(Boolean);
-                return parts.length >= 2
-                  ? `${parts.slice(1).join(" ")} ${parts[0]}`
-                  : a;
-              })
-              .join("、")}
-          </p>
-        )}
-        {resource.abstract && (
-          <p className="line-clamp-3 text-sm">{resource.abstract}</p>
-        )}
       </CardContent>
     </Card>
   );
+}
+
+function resourceKey(resource: IngestResource, index: number): string {
+  return `${index}:${resource.doi ?? resource.title}`;
 }
 
 function IngestPage() {
   const navigate = useNavigate();
   const parseMut = useParseIngest();
   const fetchMut = useFetchIngest();
+  const batchMut = useCreateSubmissionsBatch();
 
   const [format, setFormat] = useState<ParseFormat>("bibtex");
   const [content, setContent] = useState("");
@@ -139,6 +187,13 @@ function IngestPage() {
   const [mergeDuplicates, setMergeDuplicates] = useState(true);
   const [columnMapEdits, setColumnMapEdits] = useState<Record<string, string>>(
     {},
+  );
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
+  const [batchOpen, setBatchOpen] = useState(false);
+  const [batchDiscipline, setBatchDiscipline] = useState("");
+  const [batchYear, setBatchYear] = useState("");
+  const [batchResult, setBatchResult] = useState<SubmissionBatchResponse | null>(
+    null,
   );
   const fileRef = useRef<HTMLInputElement | null>(null);
 
@@ -167,6 +222,106 @@ function IngestPage() {
       parseMut.data ? mergeDuplicateIngestResources(parseMut.data.data) : null,
     [parseMut.data],
   );
+  const displayedResources = useMemo(() => {
+    if (!parseMut.data) return [];
+    return mergeDuplicates
+      ? (parsedPreview?.data ?? parseMut.data.data)
+      : parseMut.data.data;
+  }, [mergeDuplicates, parsedPreview, parseMut.data]);
+
+  useEffect(() => {
+    setSelectedKeys(new Set());
+    setBatchResult(null);
+  }, [parseMut.data, mergeDuplicates]);
+
+  const selectedEntries = useMemo(
+    () =>
+      displayedResources
+        .map((resource, index) => ({
+          resource,
+          key: resourceKey(resource, index),
+        }))
+        .filter(({ key }) => selectedKeys.has(key)),
+    [displayedResources, selectedKeys],
+  );
+
+  const batchYearValue = batchYear.trim() === "" ? null : Number(batchYear);
+  const validBatchYear =
+    batchYearValue !== null &&
+    Number.isInteger(batchYearValue) &&
+    batchYearValue >= -3000 &&
+    batchYearValue <= 2100
+      ? batchYearValue
+      : null;
+  const batchPreflight = useMemo(
+    () =>
+      selectedEntries.map((entry) => ({
+        ...entry,
+        ...ingestToSubmission(entry.resource, {
+          discipline: batchDiscipline.trim() || undefined,
+          year: validBatchYear,
+        }),
+      })),
+    [selectedEntries, batchDiscipline, validBatchYear],
+  );
+  const completeBatch = batchPreflight.filter((entry) => entry.payload);
+  const incompleteBatch = batchPreflight.filter((entry) => !entry.payload);
+
+  const toggleSelected = (key: string) => {
+    setSelectedKeys((current) => {
+      const next = new Set(current);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const selectAllDisplayed = () => {
+    setSelectedKeys(
+      new Set(displayedResources.map((resource, index) => resourceKey(resource, index))),
+    );
+  };
+
+  const openBatchDialog = () => {
+    setBatchResult(null);
+    setBatchOpen(true);
+  };
+
+  const submitBatch = async () => {
+    const items = completeBatch.flatMap((entry) =>
+      entry.payload ? [entry.payload] : [],
+    );
+    if (items.length === 0) return;
+    try {
+      const result = await batchMut.mutateAsync({ items });
+      setBatchResult(result);
+      const successKeys = result.results
+        .filter((item) => item.status === "created")
+        .map((item) => completeBatch[item.index]?.key)
+        .filter((key): key is string => Boolean(key));
+      setSelectedKeys((current) => {
+        const next = new Set(current);
+        for (const key of successKeys) next.delete(key);
+        return next;
+      });
+      if (result.failed_count === 0) {
+        if (incompleteBatch.length === 0) {
+          toast.success(`已提交 ${result.created_count} 条投稿，进入编辑评审队列`);
+          setBatchOpen(false);
+        } else {
+          toast.warning(
+            `已提交 ${result.created_count} 条；另有 ${incompleteBatch.length} 条缺字段，需补全后再投`,
+          );
+        }
+      } else {
+        toast.warning(
+          `已提交 ${result.created_count} 条，${result.failed_count} 条未通过，失败项保留可重试`,
+        );
+      }
+    } catch (err) {
+      toast.error(extractError(err, "批量提交失败"));
+    }
+  };
 
   const loadFile = async (file?: File | null) => {
     if (!file) return;
@@ -232,7 +387,7 @@ function IngestPage() {
     <div>
       <PageHeader
         title="导入"
-        description="读取 BibTeX / RIS / CSV / JSON 文件，或按 DOI、PubMed、arXiv、OpenAlex、Semantic Scholar 查询后导入。"
+        description="读取 BibTeX / RIS / CSV / JSON 文件，或按 DOI、PubMed、arXiv、OpenAlex、Semantic Scholar 查询；解析结果可勾选多条批量提交投稿，进入编辑评审队列。"
       />
 
       <Tabs defaultValue="parse">
@@ -398,39 +553,78 @@ function IngestPage() {
           {parseMut.data && (
             <div className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                {parseMut.data.count > 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    成功解析 {parseMut.data.count} 条
-                    {parsedPreview &&
-                    parsedPreview.merged > 0 &&
-                    mergeDuplicates
-                      ? `，合并重复 ${parsedPreview.merged} 条，展示 ${parsedPreview.data.length} 条`
-                      : ""}
-                  </p>
-                )}
-                {parseMut.data.data.length > 1 && (
-                  <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <input
-                      type="checkbox"
-                      checked={mergeDuplicates}
-                      onChange={(event) =>
-                        setMergeDuplicates(event.target.checked)
-                      }
-                    />
-                    合并重复 DOI / 标题
-                  </label>
-                )}
+                <div className="flex flex-wrap items-center gap-2">
+                  {parseMut.data.count > 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      成功解析 {parseMut.data.count} 条
+                      {parsedPreview &&
+                      parsedPreview.merged > 0 &&
+                      mergeDuplicates
+                        ? `，合并重复 ${parsedPreview.merged} 条，展示 ${parsedPreview.data.length} 条`
+                        : ""}
+                    </p>
+                  )}
+                  {selectedEntries.length > 0 && (
+                    <Badge variant="secondary">
+                      已选 {selectedEntries.length} 条
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {parseMut.data.data.length > 1 && (
+                    <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <input
+                        type="checkbox"
+                        checked={mergeDuplicates}
+                        onChange={(event) =>
+                          setMergeDuplicates(event.target.checked)
+                        }
+                      />
+                      合并重复 DOI / 标题
+                    </label>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={selectAllDisplayed}
+                    disabled={displayedResources.length === 0}
+                  >
+                    全选当前
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedKeys(new Set())}
+                    disabled={selectedEntries.length === 0}
+                  >
+                    清空选择
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={openBatchDialog}
+                    disabled={selectedEntries.length === 0}
+                  >
+                    <Send className="mr-1 h-3.5 w-3.5" />
+                    批量提交（{selectedEntries.length}）
+                  </Button>
+                </div>
               </div>
-              {(mergeDuplicates
-                ? (parsedPreview?.data ?? parseMut.data.data)
-                : parseMut.data.data
-              ).map((r, i) => (
-                <ResourceCard
-                  key={`${r.doi ?? r.title}-${i}`}
-                  resource={r}
-                  onSend={sendToSubmissions}
-                />
-              ))}
+              {displayedResources.map((r, i) => {
+                const key = resourceKey(r, i);
+                return (
+                  <ResourceCard
+                    key={key}
+                    resource={r}
+                    onSend={sendToSubmissions}
+                    selectable
+                    selected={selectedKeys.has(key)}
+                    onSelect={() => toggleSelected(key)}
+                  />
+                );
+              })}
               {parseMut.data.errors.length > 0 && (
                 <div className="space-y-2 rounded-md border border-destructive/30 bg-destructive/5 p-3">
                   <div className="flex items-center gap-2 text-sm font-medium text-destructive">
@@ -499,6 +693,143 @@ function IngestPage() {
           )}
         </TabsContent>
       </Tabs>
+
+      <Dialog
+        open={batchOpen}
+        onOpenChange={(open) => {
+          if (!batchMut.isPending) setBatchOpen(open);
+        }}
+      >
+        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>批量提交投稿</DialogTitle>
+            <DialogDescription>
+              选中的记录会创建为投稿并进入编辑评审队列，不会直接发布到目录。
+              缺字段的记录不会被偷偷提交。
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="batch-discipline">统一补充学科</Label>
+                <Input
+                  id="batch-discipline"
+                  value={batchDiscipline}
+                  onChange={(event) => setBatchDiscipline(event.target.value)}
+                  placeholder="例如：计算机科学"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="batch-year">统一补充年份</Label>
+                <Input
+                  id="batch-year"
+                  type="number"
+                  min={-3000}
+                  max={2100}
+                  value={batchYear}
+                  onChange={(event) => setBatchYear(event.target.value)}
+                  placeholder="例如：2024"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              只补缺失字段，不覆盖记录已有值；期刊 / 预印本 / 学位论文按论文类型投稿。
+            </p>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="secondary">已选 {selectedEntries.length} 条</Badge>
+              <Badge variant="outline">可提交 {completeBatch.length} 条</Badge>
+              {incompleteBatch.length > 0 && (
+                <Badge variant="outline" className="text-destructive">
+                  需补全 {incompleteBatch.length} 条
+                </Badge>
+              )}
+            </div>
+
+            {incompleteBatch.length > 0 && (
+              <div className="max-h-56 space-y-2 overflow-y-auto rounded-md border border-destructive/30 bg-destructive/5 p-2">
+                {incompleteBatch.map((entry) => (
+                  <div
+                    key={entry.key}
+                    className="flex items-start justify-between gap-2 rounded-md bg-background/70 p-2"
+                  >
+                    <div className="min-w-0 space-y-1">
+                      <p className="truncate text-sm font-medium">
+                        {entry.resource.title}
+                      </p>
+                      <p className="text-xs text-destructive">
+                        {entry.errors.join("；")}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setBatchOpen(false);
+                        sendToSubmissions(entry.resource);
+                      }}
+                    >
+                      单独补全
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {batchResult && (
+              <div className="space-y-2 rounded-md border bg-muted/30 p-3">
+                <p className="text-sm font-medium">
+                  本次结果：成功 {batchResult.created_count} 条，失败{" "}
+                  {batchResult.failed_count} 条
+                </p>
+                {batchResult.results
+                  .filter((item) => item.status === "failed")
+                  .map((item) => (
+                    <div
+                      key={`${item.index}-${item.title}`}
+                      className="flex items-start gap-2 text-xs text-destructive"
+                    >
+                      <XCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                      <span className="min-w-0 break-words">
+                        {item.title}：{item.error ?? "提交失败"}
+                      </span>
+                    </div>
+                  ))}
+                {batchResult.created_count > 0 && (
+                  <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    成功项已从选择中移除；失败项保留，可修正后重试。
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setBatchOpen(false)}
+              disabled={batchMut.isPending}
+            >
+              取消
+            </Button>
+            <Button
+              type="button"
+              onClick={() => void submitBatch()}
+              disabled={
+                completeBatch.length === 0 || batchMut.isPending
+              }
+            >
+              {batchMut.isPending
+                ? "提交中…"
+                : `提交 ${completeBatch.length} 条`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

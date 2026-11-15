@@ -3,7 +3,9 @@ import {
   CSV_IGNORE_TARGET,
   buildColumnMap,
   guessColumnMap,
+  ingestToSubmission,
   mergeDuplicateIngestResources,
+  normalizeIngestAuthorName,
   parseCsvHeader,
 } from "@/lib/ingest";
 import type { IngestResource } from "@/lib/types";
@@ -40,6 +42,60 @@ describe("CSV header mapping", () => {
       journal: CSV_IGNORE_TARGET,
       note: CSV_IGNORE_TARGET,
     });
+  });
+});
+
+describe("ingestToSubmission", () => {
+  it("reports every missing required field instead of inventing values", () => {
+    const result = ingestToSubmission(resource());
+
+    expect(result.payload).toBeNull();
+    expect(result.errors).toContain("年份缺失或非法（-3000–2100）");
+    expect(result.errors).toContain("学科为空（unknown 不算有效学科）");
+    expect(result.errors).toContain("摘要为空，需单条补全后再投");
+  });
+
+  it("uses batch overrides only for missing year/discipline and maps journal to paper", () => {
+    const result = ingestToSubmission(
+      resource({
+        type: "journal",
+        authors: ["Kingma, Diederik P"],
+        year: null,
+        abstract: "A usable abstract.",
+      }),
+      { discipline: "计算机科学", year: 2020 },
+    );
+
+    expect(result.errors).toEqual([]);
+    expect(result.payload).toMatchObject({
+      title: "A Paper",
+      type: "paper",
+      authors: ["Diederik P Kingma"],
+      year: 2020,
+      discipline: "计算机科学",
+      preview: "A usable abstract.",
+    });
+  });
+
+  it("does not overwrite a record's own year or discipline", () => {
+    const result = ingestToSubmission(
+      resource({
+        year: 2024,
+        discipline: "physics",
+        abstract: "Existing abstract.",
+      }),
+      { discipline: "计算机科学", year: 1999 },
+    );
+
+    expect(result.payload?.year).toBe(2024);
+    expect(result.payload?.discipline).toBe("physics");
+  });
+
+  it("normalizes Last, First author names", () => {
+    expect(normalizeIngestAuthorName("Kingma, Diederik P")).toBe(
+      "Diederik P Kingma",
+    );
+    expect(normalizeIngestAuthorName("Alice A")).toBe("Alice A");
   });
 });
 

@@ -51,6 +51,8 @@ import type {
   SiteSettingsResponse,
   ReviewReportResponse,
   ReviewSubmit,
+  SubmissionBatchCreate,
+  SubmissionBatchResponse,
   SubmissionCreate,
   SubmissionDecision,
   SubmissionListResponse,
@@ -427,6 +429,17 @@ export function useCreateSubmission() {
   return useMutation<SubmissionResponse, Error, SubmissionCreate>({
     mutationFn: async (body) =>
       (await api.post<SubmissionResponse>('/submissions', body)).data,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['submissions'] })
+    },
+  })
+}
+
+export function useCreateSubmissionsBatch() {
+  const qc = useQueryClient()
+  return useMutation<SubmissionBatchResponse, Error, SubmissionBatchCreate>({
+    mutationFn: async (body) =>
+      (await api.post<SubmissionBatchResponse>('/submissions/batch', body)).data,
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['submissions'] })
     },

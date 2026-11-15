@@ -1,4 +1,8 @@
-import type { IngestResource } from "@/lib/types";
+import type {
+  IngestResource,
+  SubmissionCreate,
+  SubmissionType,
+} from "@/lib/types";
 import { parseDelimitedPreview } from "@/lib/file-preview";
 
 /** CSV 列可映射到的 IngestResource 字段。 */
@@ -205,4 +209,98 @@ export function mergeDuplicateIngestResources(resources: IngestResource[]): {
     }
   }
   return { data: Array.from(byKey.values()), merged };
+}
+
+const SUBMISSION_TYPE_MAP: Record<IngestResource["type"], SubmissionType> = {
+  paper: "paper",
+  book: "book",
+  dataset: "dataset",
+  tutorial: "tutorial",
+  // 期刊、预印本、学位论文没有对应的投稿类型；按论文投稿，
+  // 保留原始 venue/DOI，编辑可在评审阶段再调整。
+  journal: "paper",
+  preprint: "paper",
+  thesis: "paper",
+};
+
+/** 把 BibTeX/Crossref 常见的 "Last, First" 规范成 "First Last"。 */
+export function normalizeIngestAuthorName(value: string): string {
+  const parts = value
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  return parts.length >= 2 ? `${parts.slice(1).join(" ")} ${parts[0]}` : value.trim();
+}
+
+export interface IngestSubmissionOptions {
+  /** 只补缺失/unknown 的学科，不覆盖已有值。 */
+  discipline?: string;
+  /** 只补缺失年份，不覆盖已有值。 */
+  year?: number | null;
+}
+
+export interface IngestSubmissionPreflight {
+  payload: SubmissionCreate | null;
+  errors: string[];
+}
+
+/**
+ * 导入记录转投稿前后的预检：投稿接口要求标题、作者、年份、学科、摘要齐全。
+ * 这里不替用户编造缺失字段，也不静默截断超长内容；缺什么就明确列出来。
+ */
+export function ingestToSubmission(
+  resource: IngestResource,
+  options: IngestSubmissionOptions = {},
+): IngestSubmissionPreflight {
+  const errors: string[] = [];
+  const title = resource.title.trim();
+  if (!title) errors.push("标题为空");
+  else if (title.length > 1000) errors.push("标题超过 1000 字");
+
+  const authors = resource.authors
+    .map(normalizeIngestAuthorName)
+    .filter(Boolean);
+  if (authors.length === 0) errors.push("作者为空");
+  else if (authors.length > 200) errors.push("作者超过 200 位");
+
+  const year = resource.year ?? options.year ?? null;
+  if (
+    year === null ||
+    !Number.isInteger(year) ||
+    year < -3000 ||
+    year > 2100
+  ) {
+    errors.push("年份缺失或非法（-3000–2100）");
+  }
+
+  const rawDiscipline = resource.discipline?.trim() ?? "";
+  const discipline =
+    rawDiscipline && rawDiscipline !== "unknown"
+      ? rawDiscipline
+      : (options.discipline?.trim() ?? "");
+  if (!discipline) errors.push("学科为空（unknown 不算有效学科）");
+  else if (discipline.length > 100) errors.push("学科超过 100 字");
+
+  const abstract = resource.abstract?.trim() ?? "";
+  if (!abstract) errors.push("摘要为空，需单条补全后再投");
+  else if (abstract.length > 20000) errors.push("摘要超过 20000 字");
+
+  if (errors.length > 0) return { payload: null, errors };
+
+  return {
+    payload: {
+      title,
+      type: SUBMISSION_TYPE_MAP[resource.type],
+      authors,
+      year: year as number,
+      venue: resource.venue,
+      discipline,
+      subdiscipline: resource.subdiscipline,
+      tags: resource.tags,
+      abstract,
+      preview: abstract.slice(0, 500),
+      doi: resource.doi,
+    },
+    errors: [],
+  };
 }

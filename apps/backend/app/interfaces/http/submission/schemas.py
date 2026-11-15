@@ -121,6 +121,34 @@ class SubmissionCreate(BaseModel):
         return self
 
 
+class SubmissionBatchCreate(BaseModel):
+    """Body for POST /submissions/batch — one request, many author submissions.
+
+    The cap is deliberately low: each item still runs moderation and site
+    similarity checks, so a 500-row batch would turn one click into a long
+    database scan.  Larger imports should be split by the client.
+    """
+
+    items: list[SubmissionCreate] = Field(min_length=1, max_length=50)
+
+
+class SubmissionBatchItemResult(BaseModel):
+    """Per-item outcome; one bad row must not hide the successful rows."""
+
+    index: int = Field(ge=0)
+    title: str
+    status: Literal["created", "failed"]
+    submission_id: int | None = None
+    error: str | None = None
+    code: str | None = None
+
+
+class SubmissionBatchResponse(BaseModel):
+    created_count: int = Field(ge=0)
+    failed_count: int = Field(ge=0)
+    results: list[SubmissionBatchItemResult]
+
+
 class SubmissionReview(BaseModel):
     """Body for PATCH /submissions/{id}/review — editor decision.
 
@@ -417,6 +445,9 @@ __all__ = [
     "ResubmitRequest",
     "ReviewerCandidate",
     "ReviewerCandidateListResponse",
+    "SubmissionBatchCreate",
+    "SubmissionBatchItemResult",
+    "SubmissionBatchResponse",
     "SubmissionCreate",
     "SubmissionDecision",
     "SubmissionDraftPayload",

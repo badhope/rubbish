@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import logging
 import mimetypes
 from pathlib import Path
 from urllib.parse import quote
@@ -45,6 +46,9 @@ from app.interfaces.http.submission.responses import _get_or_404, _list_submissi
 from app.interfaces.http.submission.schemas import (
     MessageResponse,
     ResubmitRequest,
+    SubmissionBatchCreate,
+    SubmissionBatchItemResult,
+    SubmissionBatchResponse,
     SubmissionCreate,
     SubmissionDraftPayload,
     SubmissionDraftResponse,
@@ -58,6 +62,7 @@ from app.interfaces.http.submission.schemas import (
 from app.models import Role, User, UserRole
 
 router = APIRouter(prefix="/submissions", tags=["submissions"])
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # 注册编辑/审稿侧与文件侧路由（必须在 GET /{submission_id} 之前 import：
@@ -129,22 +134,16 @@ async def delete_submission_draft(
     return MessageResponse(message="draft deleted")
 
 
-@router.post(
-    "",
-    response_model=SubmissionResponse,
-    status_code=status.HTTP_201_CREATED,
-)
-async def create_submission(
+async def _create_submission_record(
+    db: AsyncSession,
+    current_user: User,
     body: SubmissionCreate,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-) -> SubmissionResponse:
-    """Submit a record for editor review.
+) -> Submission:
+    """Validate and stage one submission; caller owns the transaction.
 
-    投稿零等级门槛：注册登录即可投（只要确认当版规范）。
-    唯一前置是确认当版《投稿规范》（rules_ack_version，见下）——这是
-    合规动作而非等级门槛；确认动作在个人中心 / gamification/onboarding/author，
-    同时授予作者引导积分。
+    Kept separate from the HTTP endpoint so the batch route can wrap each
+    row in its own savepoint: one bad import must not roll back the rows
+    that already passed moderation and similarity checks.
     """
     from app.api.levels import CURRENT_RULES_VERSION
 
@@ -202,9 +201,111 @@ async def create_submission(
     await gamification.award(
         db, current_user, "submission.create", ref_type="submission", ref_id=str(submission.id)
     )
+    return submission
+
+
+def _batch_error(exc: HTTPException) -> tuple[str, str | None]:
+    """Turn an HTTPException detail into a safe, user-readable batch result."""
+    detail = exc.detail
+    if isinstance(detail, dict):
+        message = detail.get("message") or detail.get("detail") or "提交失败"
+        code = detail.get("code")
+        return str(message), str(code) if code else None
+    return str(detail or "提交失败"), None
+
+
+@router.post(
+    "",
+    response_model=SubmissionResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_submission(
+    body: SubmissionCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> SubmissionResponse:
+    """Submit a record for editor review.
+
+    投稿零等级门槛：注册登录即可投（只要确认当版规范）。
+    唯一前置是确认当版《投稿规范》（rules_ack_version，见下）——这是
+    合规动作而非等级门槛；确认动作在个人中心 / gamification/onboarding/author，
+    同时授予作者引导积分。
+    """
+    submission = await _create_submission_record(db, current_user, body)
     await db.commit()
     await db.refresh(submission)
     return _to_response(submission)
+
+
+@router.post("/batch", response_model=SubmissionBatchResponse)
+async def create_submissions_batch(
+    payload: SubmissionBatchCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> SubmissionBatchResponse:
+    """Create up to 50 author submissions in one request.
+
+    Each row gets its own savepoint and its own moderation / similarity
+    checks.  Successes are committed together; a failed row is reported by
+    index without hiding or rolling back the rows around it.  This is the
+    same write path as ``POST /submissions`` — imports still enter the
+    normal editor review queue, never straight into the public catalog.
+    """
+    from app.api.levels import CURRENT_RULES_VERSION
+
+    if current_user.rules_ack_version != CURRENT_RULES_VERSION:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "rules_ack_required",
+                "version": CURRENT_RULES_VERSION,
+                "message": "投稿前请先阅读并确认《Rubbish 投稿与编辑规范》。",
+            },
+        )
+
+    results: list[SubmissionBatchItemResult] = []
+    created_count = 0
+    for index, item in enumerate(payload.items):
+        try:
+            async with db.begin_nested():
+                submission = await _create_submission_record(db, current_user, item)
+            created_count += 1
+            results.append(
+                SubmissionBatchItemResult(
+                    index=index,
+                    title=item.title[:200],
+                    status="created",
+                    submission_id=submission.id,
+                )
+            )
+        except HTTPException as exc:
+            message, code = _batch_error(exc)
+            results.append(
+                SubmissionBatchItemResult(
+                    index=index,
+                    title=item.title[:200],
+                    status="failed",
+                    error=message,
+                    code=code,
+                )
+            )
+        except Exception:  # one bad row must not fail the batch
+            logger.exception("Batch submission item failed", extra={"batch_index": index})
+            results.append(
+                SubmissionBatchItemResult(
+                    index=index,
+                    title=item.title[:200],
+                    status="failed",
+                    error="服务器未能保存该条，请稍后重试",
+                    code="internal_error",
+                )
+            )
+    await db.commit()
+    return SubmissionBatchResponse(
+        created_count=created_count,
+        failed_count=len(results) - created_count,
+        results=results,
+    )
 
 
 @router.get("/me", response_model=SubmissionListResponse)

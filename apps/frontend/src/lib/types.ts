@@ -515,6 +515,25 @@ export interface SubmissionCreate {
   corresponding_author_email?: string | null
 }
 
+export interface SubmissionBatchCreate {
+  items: SubmissionCreate[]
+}
+
+export interface SubmissionBatchItemResult {
+  index: number
+  title: string
+  status: 'created' | 'failed'
+  submission_id?: number | null
+  error?: string | null
+  code?: string | null
+}
+
+export interface SubmissionBatchResponse {
+  created_count: number
+  failed_count: number
+  results: SubmissionBatchItemResult[]
+}
+
 // 4-元决定（编辑终决）
 export type EditorDecision =
   | 'accept'
