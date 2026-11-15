@@ -82,9 +82,16 @@ async def test_submission_declarations_are_persisted(client: AsyncClient, admin_
     assert detail.json()["author_contributions"] == _DECLARATIONS["author_contributions"]
 
     # 录用物化：声明必须跟到目录条目，而不是只留在投稿记录里。
+    # 零审稿不能直接录用（P1 #4 闸门）：先 waive-review 记录免审理由，再 accept。
+    waived = await client.post(
+        f"/api/submissions/{body['id']}/waive-review",
+        json={"reason": "测试免审录用：验证声明字段物化到目录条目。"},
+        headers=auth_headers(admin_user),
+    )
+    assert waived.status_code == 200, waived.text
     approved = await client.patch(
-        f"/api/submissions/{body['id']}/review",
-        json={"status": "approved"},
+        f"/api/submissions/{body['id']}/decision",
+        json={"decision": "accept"},
         headers=auth_headers(admin_user),
     )
     assert approved.status_code == 200, approved.text
