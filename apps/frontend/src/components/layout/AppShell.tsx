@@ -59,7 +59,6 @@ import {
 import { AppearanceMenu } from '@/components/appearance-menu'
 import { CookieBanner } from '@/components/common/cookie-banner'
 import { PageViewTracker } from '@/components/common/page-view-tracker'
-import { LanguageToggle } from '@/components/layout/language-toggle'
 import { groupLabel, navLabel, text, useLang } from '@/lib/i18n'
 
 const NAV: NavItem[] = [
@@ -437,7 +436,6 @@ export function AppShell() {
               {text('搜索', lang)}
               <kbd className="rounded border bg-muted px-1 font-mono text-[10px] text-muted-foreground">⌘K</kbd>
             </Button>
-            <LanguageToggle />
             <AppearanceMenu />
             {isAuthenticated && user ? (
               <DropdownMenu>

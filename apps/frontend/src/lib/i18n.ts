@@ -12,6 +12,13 @@ export type Lang = 'zh' | 'en'
 const KEY = 'rubbish.lang'
 const EVENT = 'rubbish:lang'
 
+/**
+ * 全站英文化尚未完成（正文、栏目、表单、后台仍是中文）。
+ * 在词条齐备前不暴露切换入口：半翻译比不翻译更容易被当成 bug。
+ * 保留这里的所有词表，后续按页面补齐后再把开关打开。
+ */
+export const SHELL_I18N_ENABLED = false
+
 const NAV_EN: Record<string, string> = {
   '/': 'Home',
   '/papers': 'Papers',
@@ -79,10 +86,16 @@ const TEXT_EN: Record<string, string> = {
 
 export function getLang(): Lang {
   if (typeof window === 'undefined') return 'zh'
+  if (!SHELL_I18N_ENABLED) {
+    // 清掉旧版本留下的 en，否则升级后导航仍是英文、正文仍是中文。
+    window.localStorage.removeItem(KEY)
+    return 'zh'
+  }
   return window.localStorage.getItem(KEY) === 'en' ? 'en' : 'zh'
 }
 
 export function setLang(lang: Lang): void {
+  if (!SHELL_I18N_ENABLED) return
   window.localStorage.setItem(KEY, lang)
   document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN'
   window.dispatchEvent(new CustomEvent(EVENT, { detail: lang }))
