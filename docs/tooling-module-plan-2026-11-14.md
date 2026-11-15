@@ -173,4 +173,5 @@
 - [x] 3.2 通用 `FileContentPreview`：图片/ PDF / CSV / 代码文本分流；CSV 上限 100 行、20 列并标注截断；`.docx/.xlsx/.zip` 明确下载兜底；审稿附件接入预览对话框，代码附件扩展名已加入后端白名单。
 - [x] 3.4 CSV 字段映射：后端 `column_map`、洋表中英文别名、显式忽略、重复目标/未知表头校验；前端映射面板、恢复自动识别、重复 DOI/标题合并。
 - [x] 测试：后端 `1224 passed, 1 skipped`（701s）；前端 `32 files / 172 tests passed`（826s）；`ruff check` / `ruff format --check` / `typecheck` / `lint` / `build` 通过。
+- [x] 生产上线：`0f09d98`，release `/home/ubuntu/rubbish-release-20261115-1525`，镜像 `rubbish-app:p4-20261115-1530`；线上 `/ingest`、`/tools` 与附件预览入口 200。
 - [ ] 仍未做：导入结果批量勾选后一次性提交、编辑器表格行/列增删与对齐、版本快照对比、服务端草稿。

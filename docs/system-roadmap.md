@@ -355,3 +355,10 @@ P3 不再堆功能，目标只有三个：**可被信任、可被检索、可被
 - 线上：`/api/health` 200、`/tools` 200、`/desk`/`/support`/`/papers`/`/admin/finance` 200；管理员登录 200，`/api/admin/editor/today` 8 项检查全 `ok`；切换后日志无 error/exception/traceback。
 - 备份：`/home/ubuntu/backups/db-pre-nonroot-20261115-1358.dump`（924K）。
 - 仍未闭环：异地备份无 rclone remote（脚本继续 SKIP）、容器 rootfs 仍可写、远程 PAT 只是移出 `.git/config` 到 `~/.git-credentials` 未真正轮换、测试数据清理脚本生产未 dry-run。
+
+### 2026-11-15 P4 工具模块上线记录
+
+- 代码：`0f09d98 feat(tooling): preview attachment types and map CSV imports`；五远程已推送。
+- 功能：审稿附件按图片 / PDF / CSV / 代码文本分流预览，Word / Excel / ZIP / SVG 明确下载兜底；CSV 导入支持中英文表头别名、逐列映射/显式忽略、DOI/标题重复合并。
+- 验证：后端 `1224 passed, 1 skipped`（701s）；前端 `32 files / 172 tests passed`（826s）；`ruff` / `typecheck` / `lint` / `build` 通过。
+- 生产：release `/home/ubuntu/rubbish-release-20261115-1525`，标准软链已指向；镜像 `rubbish-app:p4-20261115-1530`；旧 P3 镜像 `rubbish-app:p3-20261115-1405` 保留回滚。生产 `/api/health`、`/tools`、`/desk`、`/support`、`/papers`、`/ingest` 均 200；管理员 Today 8 项 `ok`；容器仍 `user=app`、`cap_drop=ALL`、`no-new-privileges`。
