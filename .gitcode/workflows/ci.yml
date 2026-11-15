@@ -1,0 +1,26 @@
+# GitCode 流水线（极简）：main 分支 push / PR 时做构建门禁。
+# 依赖已被 lock 文件卡死（package-lock.json / uv.lock），这里只做验证，不做依赖更新。
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: checkout-action@0.0.1
+      - name: 后端测试（快速子集）
+        run: |
+          cd apps/backend
+          pip install uv
+          uv sync --group dev
+          uv run pytest -q -p no:xdist --ignore=tests/e2e
+      - name: 前端构建
+        run: |
+          cd apps/frontend
+          npm ci --registry=https://registry.npmjs.org
+          npm run lint
+          npm run typecheck
+          npm run build

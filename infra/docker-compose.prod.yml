@@ -1,0 +1,142 @@
+# Rubbish production stack — Postgres + Meilisearch + Backend + Frontend + Caddy.
+#
+# Prerequisites:
+#   1. A server with Docker + Docker Compose installed.
+#   2. DNS A record pointing your domain to the server's IP.
+#   3. A proper .env file with real secrets (see apps/backend/.env.example).
+#
+# Usage:
+#   cp .env.example .env        # fill in real secrets
+#   docker compose -f infra/docker-compose.prod.yml up -d
+#   # Caddy auto-provisions Let's Encrypt certs for your domain.
+#
+# Upgrade:
+#   docker compose -f infra/docker-compose.prod.yml pull
+#   docker compose -f infra/docker-compose.prod.yml up -d
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: rubbish
+      POSTGRES_USER: rubbish
+      POSTGRES_PASSWORD: ${RUBBISH_DB_PASSWORD:?RUBBISH_DB_PASSWORD is required — set it in repo-root .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rubbish"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.12
+    environment:
+      MEILI_MASTER_KEY: ${RUBBISH_MEILISEARCH_API_KEY:?RUBBISH_MEILISEARCH_API_KEY is required — set it in repo-root .env}
+      MEILI_NO_ANALYTICS: "true"
+    volumes:
+      - meilisearch_data:/meili_data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:7700/health | grep -q 'status.*available'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.backend
+    env_file:
+      - ../.env
+    environment:
+      RUBBISH_DATABASE_URL: postgresql+asyncpg://rubbish:${RUBBISH_DB_PASSWORD:?RUBBISH_DB_PASSWORD is required — set it in repo-root .env}@postgres:5432/rubbish
+      RUBBISH_MEILISEARCH_URL: http://meilisearch:7700
+      RUBBISH_MEILISEARCH_API_KEY: ${RUBBISH_MEILISEARCH_API_KEY:?RUBBISH_MEILISEARCH_API_KEY is required — set it in repo-root .env}
+      RUBBISH_ENVIRONMENT: production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.frontend
+    depends_on:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:80/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
+
+  # ------------------------------------------------------------------
+  # Optional observability stack — uncomment and configure when needed.
+  # ------------------------------------------------------------------
+
+  # prometheus:
+  #   image: prom/prometheus:v2.55
+  #   volumes:
+  #     - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  #     - prometheus_data:/prometheus
+  #   command:
+  #     - "--config.file=/etc/prometheus/prometheus.yml"
+  #     - "--storage.tsdb.path=/prometheus"
+  #     - "--storage.tsdb.retention.time=15d"
+  #     - "--web.enable-lifecycle"
+  #   ports:
+  #     - "9090:9090"
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "wget -q --spider http://localhost:9090/-/healthy || exit 1"]
+  #     interval: 15s
+  #     timeout: 5s
+  #     retries: 3
+
+  # grafana:
+  #   image: grafana/grafana:11.2
+  #   environment:
+  #     GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+  #     GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+  #     GF_SERVER_ROOT_URL: https://${RUBBISH_DOMAIN:-localhost}/grafana
+  #   volumes:
+  #     - grafana_data:/var/lib/grafana
+  #     - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
+  #     - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - prometheus
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/health || exit 1"]
+  #     interval: 15s
+  #     timeout: 5s
+  #     retries: 3
+
+volumes:
+  pgdata:
+  meilisearch_data:
+  caddy_data:
+  caddy_config:
+  # prometheus_data:
+  # grafana_data:

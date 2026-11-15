@@ -1,0 +1,48 @@
+# Rubbish production Caddyfile.
+#
+# Replace ``rubbish.example.com`` with your real domain. Caddy
+# issues + renews Let's Encrypt certs automatically when the host is
+# reachable on 80/443 from the public internet.
+#
+# For internal / self-hosted deployments without a public DNS entry:
+#   rubbish.internal {
+#       internal
+#       ...
+#   }
+
+rubbish.argjiemi.cn {
+	# API — reverse proxy to the backend service.
+	handle_path /api/* {
+		reverse_proxy backend:8000 {
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+
+	# SPA frontend — serve static files with fallback to index.html.
+	handle {
+		reverse_proxy frontend:80 {
+			header_up X-Real-IP {remote_host}
+		}
+	}
+
+	# Security headers.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-CSP
+	}
+
+	# Compression + timeouts.
+	encode gzip zstd
+	timeout 60s
+
+	log {
+		output stdout
+		format json
+	}
+}

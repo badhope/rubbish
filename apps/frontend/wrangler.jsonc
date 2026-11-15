@@ -1,0 +1,11 @@
+// Cloudflare Pages 配置（前端 SPA）。
+// 分离部署时把后端地址填到构建环境变量 VITE_API_URL（如
+// https://api.example.com/api）；单端口部署（后端托管静态）无需此变量。
+// CF Pages 控制台连接 Git 仓库后按本文件自动构建，构建命令
+// `npm run build`（Root directory 设为 apps/frontend），也可本地
+// `npx wrangler pages deploy dist` 手动发布。
+{
+  "name": "rubbish",
+  "compatibility_date": "2026-09-01",
+  "pages_build_output_dir": "dist"
+}

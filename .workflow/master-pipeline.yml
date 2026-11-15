@@ -1,0 +1,34 @@
+# Gitee Go 流水线（极简）：main 分支 push 时做构建门禁。
+# 依赖已被 lock 文件卡死（package-lock.json / uv.lock），只验证、不更新。
+version: '1.0'
+name: master-pipeline
+displayName: Rubbish CI
+triggers:
+  push:
+    - matchType: PRECISE
+      branch: main
+stages:
+  - stage:
+      name: build
+      displayName: 构建验证
+      failFast: true
+      steps:
+        - step: shell@agent
+          name: backend_test
+          displayName: 后端测试（快速子集）
+          script: |
+            set -e
+            cd apps/backend
+            pip install uv --quiet
+            uv sync --group dev
+            uv run pytest -q -p no:xdist --ignore=tests/e2e
+        - step: shell@agent
+          name: frontend_build
+          displayName: 前端构建
+          script: |
+            set -e
+            cd apps/frontend
+            npm ci --registry=https://registry.npmjs.org
+            npm run lint
+            npm run typecheck
+            npm run build

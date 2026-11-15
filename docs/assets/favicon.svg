@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Rubbish favicon（宣传站用）—— 圆形深蓝底 + 白色衬线 R + 金色菱形落款。
+  圆形底色保证浅色/深色浏览器标签栏、浅色/深色主题下均清晰可辨；
+  图形与 logo-mark.svg / 应用 favicon（public/favicon.svg）同基因：
+  「印章之 R」＝ 双线印章框 + 衬线 R + 出版金菱形落款。
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Rubbish">
+  <circle cx="32" cy="32" r="32" fill="#16324F"/>
+  <text x="32" y="44" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-size="32" font-weight="600" fill="#FFFFFF">R</text>
+  <path d="M 47 43 L 52 48 L 47 53 L 42 48 Z" fill="#C7A24B"/>
+</svg>

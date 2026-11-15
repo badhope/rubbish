@@ -1,0 +1,54 @@
+name: Deploy Site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "docs/assets/**"
+      - ".github/workflows/deploy-site.yml"
+  workflow_dispatch:
+
+# 最小权限：部署只用得到读仓库 + 写 Pages + OIDC 换取部署令牌。
+#
+# ⚠️ 不要在这里声明 `administration: write` —— 用户账号下的仓库不支持该权限键，
+# 会让 workflow 启动即失败（Invalid workflow file，jobs 为空）。Pages 站点的
+# 首次开启通过 REST API 的 build_type=workflow 完成，不需要 workflow 里的开关。
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/configure-pages@v6
+
+      - name: Stage site + shared assets
+        # 页面里引用的是仓库内的 docs/assets（截图/logo/演示视频）。
+        # Pages 只发布一个目录，所以先把 site/ 和 docs/assets/ 合成到 _site。
+        run: |
+          rm -rf _site
+          mkdir -p _site
+          cp -R site/. _site/
+          mkdir -p _site/docs
+          cp -R docs/assets _site/docs/assets
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

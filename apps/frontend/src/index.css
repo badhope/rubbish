@@ -1,0 +1,1536 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* 站点字符子集：只包含 274 篇题录/摘要/UI 实际用到的 2417 个汉字与基础拉丁、标点。
+   由 OFL 的 Noto Serif CJK SC 生成，避免首页加载 46 个 unicode-range 分片。 */
+@font-face {
+  font-family: "Noto Serif SC Site";
+  src: url("./assets/fonts/noto-serif-sc-site-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Noto Serif SC Site";
+  src: url("./assets/fonts/noto-serif-sc-site-700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --font-serif: "Noto Serif SC Site", "Songti SC", "Source Han Serif SC",
+    ui-serif, Georgia, "DejaVu Serif", serif;
+  /* 标题无衬线：走系统无衬线栈，不额外加载字体（中文字体包体代价高） */
+  --font-heading: "Noto Sans SC", "Source Han Sans SC",
+    ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Playfair Display Variable", "Noto Serif SC Site",
+    "Songti SC", Georgia, "DejaVu Serif", serif;
+  --font-mono: ui-monospace, "DejaVu Sans Mono", "Liberation Mono", monospace;
+  --default-mono-font-family: ui-monospace, "DejaVu Sans Mono", "Liberation Mono", monospace;
+}
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 0.625rem;
+  /* 品牌 token：纸白微绿底 / 回收墨绿主色 / 苔绿辅助
+     Rubbish = 回收与再生，绿色是刊物的身份色，不是装饰色。
+     主色取深墨绿（hue 155）保证正文链接与按钮在白底上的对比度 ≥ 4.5:1；
+     暖色只留给「警示」语义（destructive 与少量图表对比色），
+     不让它参与导航，避免整站变成双主色。 */
+  --background: oklch(0.985 0.006 120);
+  --foreground: oklch(0.21 0.02 155);
+  --card: oklch(0.995 0.004 120);
+  --card-foreground: oklch(0.21 0.02 155);
+  --popover: oklch(0.995 0.004 120);
+  --popover-foreground: oklch(0.21 0.02 155);
+  --primary: oklch(0.37 0.075 155);
+  --primary-foreground: oklch(0.985 0.01 150);
+  --secondary: oklch(0.955 0.018 150);
+  --secondary-foreground: oklch(0.30 0.045 155);
+  --muted: oklch(0.955 0.014 130);
+  --muted-foreground: oklch(0.47 0.02 150);
+  --accent: oklch(0.935 0.045 150);
+  --accent-foreground: oklch(0.33 0.06 155);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.89 0.012 145);
+  --input: oklch(0.89 0.012 145);
+  --ring: oklch(0.58 0.08 155);
+  --chart-1: oklch(0.45 0.09 155);
+  --chart-2: oklch(0.60 0.10 152);
+  --chart-3: oklch(0.73 0.10 140);
+  --chart-4: oklch(0.62 0.09 75);
+  --chart-5: oklch(0.38 0.05 200);
+  --sidebar: oklch(0.99 0.004 130);
+  --sidebar-foreground: oklch(0.21 0.02 155);
+  --sidebar-primary: oklch(0.37 0.075 155);
+  --sidebar-primary-foreground: oklch(0.985 0.01 150);
+  --sidebar-accent: oklch(0.935 0.045 150);
+  --sidebar-accent-foreground: oklch(0.33 0.06 155);
+  --sidebar-border: oklch(0.89 0.012 145);
+  --sidebar-ring: oklch(0.58 0.08 155);
+}
+
+.dark {
+  /* 深色不是纯黑：叠一层极低饱和的绿，和主色同源，截图里才不像「另一个产品」 */
+  --background: oklch(0.168 0.012 150);
+  --foreground: oklch(0.97 0.005 150);
+  --card: oklch(0.212 0.014 152);
+  --card-foreground: oklch(0.97 0.005 150);
+  --popover: oklch(0.212 0.014 152);
+  --popover-foreground: oklch(0.97 0.005 150);
+  --primary: oklch(0.72 0.10 152);
+  --primary-foreground: oklch(0.18 0.03 155);
+  --secondary: oklch(0.27 0.02 155);
+  --secondary-foreground: oklch(0.90 0.02 150);
+  --muted: oklch(0.27 0.018 150);
+  --muted-foreground: oklch(0.70 0.018 150);
+  --accent: oklch(0.29 0.045 150);
+  --accent-foreground: oklch(0.87 0.09 148);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.168 0.012 150);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.60 0.09 152);
+  --chart-1: oklch(0.55 0.10 155);
+  --chart-2: oklch(0.70 0.10 150);
+  --chart-3: oklch(0.80 0.09 140);
+  --chart-4: oklch(0.72 0.09 75);
+  --chart-5: oklch(0.50 0.06 200);
+  --sidebar: oklch(0.212 0.014 152);
+  --sidebar-foreground: oklch(0.97 0.005 150);
+  --sidebar-primary: oklch(0.72 0.10 152);
+  --sidebar-primary-foreground: oklch(0.18 0.03 155);
+  --sidebar-accent: oklch(0.29 0.045 150);
+  --sidebar-accent-foreground: oklch(0.87 0.09 148);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.60 0.09 152);
+}
+
+
+/* ── 配色方案：同一套语义 token，只换色相与纸面底色 ──
+   亮色用 :not(.dark) 限定，暗色用 .dark[data-palette] 提高优先级，
+   避免调色块把暗色值覆盖回去。 */
+[data-palette='ink']:not(.dark) {
+  --background: oklch(0.982 0.006 255);
+  --foreground: oklch(0.20 0.02 255);
+  --card: oklch(0.995 0.003 255);
+  --card-foreground: oklch(0.20 0.02 255);
+  --popover: oklch(0.995 0.003 255);
+  --popover-foreground: oklch(0.20 0.02 255);
+  --primary: oklch(0.37 0.08 258);
+  --primary-foreground: oklch(0.985 0.008 255);
+  --secondary: oklch(0.955 0.018 255);
+  --secondary-foreground: oklch(0.30 0.05 258);
+  --muted: oklch(0.955 0.012 255);
+  --muted-foreground: oklch(0.47 0.02 255);
+  --accent: oklch(0.935 0.035 255);
+  --accent-foreground: oklch(0.33 0.06 258);
+  --border: oklch(0.89 0.012 255);
+  --input: oklch(0.89 0.012 255);
+  --ring: oklch(0.58 0.08 258);
+  --chart-1: oklch(0.45 0.09 258);
+  --chart-2: oklch(0.60 0.09 250);
+  --chart-3: oklch(0.74 0.08 240);
+  --chart-4: oklch(0.62 0.09 75);
+  --chart-5: oklch(0.40 0.05 200);
+  --sidebar: oklch(0.99 0.004 255);
+  --sidebar-foreground: oklch(0.20 0.02 255);
+  --sidebar-primary: oklch(0.37 0.08 258);
+  --sidebar-primary-foreground: oklch(0.985 0.008 255);
+  --sidebar-accent: oklch(0.935 0.035 255);
+  --sidebar-accent-foreground: oklch(0.33 0.06 258);
+  --sidebar-border: oklch(0.89 0.012 255);
+  --sidebar-ring: oklch(0.58 0.08 258);
+}
+.dark[data-palette='ink'] {
+  --background: oklch(0.168 0.014 255);
+  --foreground: oklch(0.97 0.005 255);
+  --card: oklch(0.212 0.016 255);
+  --card-foreground: oklch(0.97 0.005 255);
+  --popover: oklch(0.212 0.016 255);
+  --popover-foreground: oklch(0.97 0.005 255);
+  --primary: oklch(0.72 0.09 255);
+  --primary-foreground: oklch(0.17 0.03 258);
+  --secondary: oklch(0.27 0.02 255);
+  --secondary-foreground: oklch(0.90 0.02 255);
+  --muted: oklch(0.27 0.018 255);
+  --muted-foreground: oklch(0.70 0.018 255);
+  --accent: oklch(0.29 0.04 255);
+  --accent-foreground: oklch(0.87 0.06 250);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.60 0.08 255);
+  --chart-1: oklch(0.55 0.09 258);
+  --chart-2: oklch(0.70 0.09 250);
+  --chart-3: oklch(0.80 0.08 240);
+  --chart-4: oklch(0.72 0.09 75);
+  --chart-5: oklch(0.50 0.06 200);
+  --sidebar: oklch(0.212 0.016 255);
+  --sidebar-foreground: oklch(0.97 0.005 255);
+  --sidebar-primary: oklch(0.72 0.09 255);
+  --sidebar-primary-foreground: oklch(0.17 0.03 258);
+  --sidebar-accent: oklch(0.29 0.04 255);
+  --sidebar-accent-foreground: oklch(0.87 0.06 250);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.60 0.08 255);
+}
+[data-palette='clay']:not(.dark) {
+  --background: oklch(0.98 0.008 75);
+  --foreground: oklch(0.22 0.02 60);
+  --card: oklch(0.995 0.006 80);
+  --card-foreground: oklch(0.22 0.02 60);
+  --popover: oklch(0.995 0.006 80);
+  --popover-foreground: oklch(0.22 0.02 60);
+  --primary: oklch(0.44 0.085 45);
+  --primary-foreground: oklch(0.985 0.01 70);
+  --secondary: oklch(0.955 0.02 70);
+  --secondary-foreground: oklch(0.31 0.05 50);
+  --muted: oklch(0.955 0.014 70);
+  --muted-foreground: oklch(0.47 0.022 60);
+  --accent: oklch(0.94 0.04 70);
+  --accent-foreground: oklch(0.32 0.07 50);
+  --border: oklch(0.89 0.014 70);
+  --input: oklch(0.89 0.014 70);
+  --ring: oklch(0.60 0.08 50);
+  --chart-1: oklch(0.46 0.09 45);
+  --chart-2: oklch(0.62 0.09 65);
+  --chart-3: oklch(0.76 0.08 85);
+  --chart-4: oklch(0.58 0.08 155);
+  --chart-5: oklch(0.40 0.05 15);
+  --sidebar: oklch(0.99 0.006 70);
+  --sidebar-foreground: oklch(0.22 0.02 60);
+  --sidebar-primary: oklch(0.44 0.085 45);
+  --sidebar-primary-foreground: oklch(0.985 0.01 70);
+  --sidebar-accent: oklch(0.94 0.04 70);
+  --sidebar-accent-foreground: oklch(0.32 0.07 50);
+  --sidebar-border: oklch(0.89 0.014 70);
+  --sidebar-ring: oklch(0.60 0.08 50);
+}
+.dark[data-palette='clay'] {
+  --background: oklch(0.17 0.012 60);
+  --foreground: oklch(0.97 0.006 70);
+  --card: oklch(0.215 0.014 60);
+  --card-foreground: oklch(0.97 0.006 70);
+  --popover: oklch(0.215 0.014 60);
+  --popover-foreground: oklch(0.97 0.006 70);
+  --primary: oklch(0.75 0.10 60);
+  --primary-foreground: oklch(0.18 0.03 55);
+  --secondary: oklch(0.27 0.018 60);
+  --secondary-foreground: oklch(0.91 0.02 70);
+  --muted: oklch(0.27 0.016 60);
+  --muted-foreground: oklch(0.71 0.02 65);
+  --accent: oklch(0.30 0.035 60);
+  --accent-foreground: oklch(0.88 0.07 65);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.62 0.09 60);
+  --chart-1: oklch(0.58 0.10 50);
+  --chart-2: oklch(0.70 0.09 65);
+  --chart-3: oklch(0.82 0.08 85);
+  --chart-4: oklch(0.68 0.08 155);
+  --chart-5: oklch(0.55 0.06 20);
+  --sidebar: oklch(0.215 0.014 60);
+  --sidebar-foreground: oklch(0.97 0.006 70);
+  --sidebar-primary: oklch(0.75 0.10 60);
+  --sidebar-primary-foreground: oklch(0.18 0.03 55);
+  --sidebar-accent: oklch(0.30 0.035 60);
+  --sidebar-accent-foreground: oklch(0.88 0.07 65);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.62 0.09 60);
+}
+[data-palette='celadon']:not(.dark) {
+  --background: oklch(0.982 0.006 200);
+  --foreground: oklch(0.21 0.02 205);
+  --card: oklch(0.995 0.003 200);
+  --card-foreground: oklch(0.21 0.02 205);
+  --popover: oklch(0.995 0.003 200);
+  --popover-foreground: oklch(0.21 0.02 205);
+  --primary: oklch(0.40 0.055 205);
+  --primary-foreground: oklch(0.985 0.006 200);
+  --secondary: oklch(0.955 0.016 200);
+  --secondary-foreground: oklch(0.31 0.04 205);
+  --muted: oklch(0.955 0.012 200);
+  --muted-foreground: oklch(0.47 0.018 205);
+  --accent: oklch(0.935 0.03 200);
+  --accent-foreground: oklch(0.33 0.05 205);
+  --border: oklch(0.89 0.012 200);
+  --input: oklch(0.89 0.012 200);
+  --ring: oklch(0.58 0.05 205);
+  --chart-1: oklch(0.46 0.06 205);
+  --chart-2: oklch(0.62 0.06 195);
+  --chart-3: oklch(0.76 0.05 185);
+  --chart-4: oklch(0.62 0.08 75);
+  --chart-5: oklch(0.42 0.06 260);
+  --sidebar: oklch(0.99 0.004 200);
+  --sidebar-foreground: oklch(0.21 0.02 205);
+  --sidebar-primary: oklch(0.40 0.055 205);
+  --sidebar-primary-foreground: oklch(0.985 0.006 200);
+  --sidebar-accent: oklch(0.935 0.03 200);
+  --sidebar-accent-foreground: oklch(0.33 0.05 205);
+  --sidebar-border: oklch(0.89 0.012 200);
+  --sidebar-ring: oklch(0.58 0.05 205);
+}
+.dark[data-palette='celadon'] {
+  --background: oklch(0.168 0.012 205);
+  --foreground: oklch(0.97 0.005 200);
+  --card: oklch(0.212 0.014 205);
+  --card-foreground: oklch(0.97 0.005 200);
+  --popover: oklch(0.212 0.014 205);
+  --popover-foreground: oklch(0.97 0.005 200);
+  --primary: oklch(0.74 0.06 200);
+  --primary-foreground: oklch(0.18 0.025 205);
+  --secondary: oklch(0.27 0.016 205);
+  --secondary-foreground: oklch(0.90 0.015 200);
+  --muted: oklch(0.27 0.014 205);
+  --muted-foreground: oklch(0.70 0.015 200);
+  --accent: oklch(0.29 0.03 205);
+  --accent-foreground: oklch(0.87 0.045 200);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.60 0.05 200);
+  --chart-1: oklch(0.56 0.06 205);
+  --chart-2: oklch(0.70 0.06 195);
+  --chart-3: oklch(0.82 0.05 185);
+  --chart-4: oklch(0.72 0.08 75);
+  --chart-5: oklch(0.52 0.06 260);
+  --sidebar: oklch(0.212 0.014 205);
+  --sidebar-foreground: oklch(0.97 0.005 200);
+  --sidebar-primary: oklch(0.74 0.06 200);
+  --sidebar-primary-foreground: oklch(0.18 0.025 205);
+  --sidebar-accent: oklch(0.29 0.03 205);
+  --sidebar-accent-foreground: oklch(0.87 0.045 200);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.60 0.05 200);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html {
+    /* 防横向滚动：移动端任何 100vw / 负 margin / 超长 URL 都不该把视口撑宽。
+       用 clip 而非 hidden：hidden 会让 html 成为滚动容器，破坏 iOS 上的
+       吸顶导航与地址栏收合；clip 只裁剪不改变滚动模型。 */
+    overflow-x: clip;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    overflow-x: clip;
+    /* 桌面端才预留滚动条槽；移动端预留会让左右留白不对称 */
+    scrollbar-gutter: stable;
+  }
+  /* 长单词 / 长 URL / 中文混排统一切断，避免把容器撑破 */
+  p,
+  li,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  /* 图片与内嵌内容永不超出容器（封面/图表/公式都适用） */
+  img,
+  video,
+  canvas,
+  iframe {
+    max-width: 100%;
+  }
+  table {
+    /* 桌面表格允许横向滚动，但不撑破页面 */
+    max-width: 100%;
+  }
+}
+
+/* 标题统一衬线（期刊感），正文保持无衬线 */
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-serif);
+}
+
+/* 期刊门面动效改由 motion 库驱动（MotionConfig reducedMotion="user" 自动尊重系统设置） */
+
+/* ---------------------------------------------------------------------------
+ * 在线阅读 Markdown 学术排版（manuscript-view）
+ * 正文衬线、标题无衬线分级、摘要卡片、图注/表注、三线表、文献悬挂缩进。
+ * 移动端只收紧字号与间距；宽表由 .md-table-wrap 横向滚动，不撑破页面。
+ * ------------------------------------------------------------------------- */
+.markdown-body {
+  font-family: var(--font-serif);
+  font-size: 1.0625rem;
+  line-height: 1.95;
+  letter-spacing: 0.012em;
+  word-spacing: 0.02em;
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
+  /* 中英混排：支持的浏览器自动在 CJK 与拉丁字符间补 1/4 空格 */
+  text-autospace: normal;
+  color: var(--color-foreground);
+  overflow-wrap: anywhere;
+}
+.markdown-body > *:first-child { margin-top: 0; }
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  color: var(--color-foreground);
+  scroll-margin-top: 4rem;
+}
+.markdown-body h1 {
+  font-size: 2.05rem;
+  font-weight: 800;
+  margin: 1.2em 0 1.1em;
+  padding-bottom: 0.55rem;
+  border-bottom: 2px solid color-mix(in oklab, var(--color-primary) 40%, var(--color-border));
+}
+.markdown-body h2 {
+  font-size: 1.5rem;
+  margin: 2.4em 0 0.85em;
+  padding: 0.1em 0 0.1em 0.7rem;
+  border-left: 5px solid var(--color-primary);
+}
+.markdown-body h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 2em 0 0.65em;
+  padding-left: 0.55rem;
+  border-left: 3px solid color-mix(in oklab, var(--color-primary) 48%, var(--color-border));
+  line-height: 1.4;
+}
+.markdown-body h4 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 1.6em 0 0.5em;
+}
+.markdown-body h5,
+.markdown-body h6 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  margin: 1.4em 0 0.45em;
+  color: var(--color-muted-foreground);
+}
+.markdown-body p {
+  margin: 0 0 1em;
+  text-align: justify;
+  text-indent: 2em;
+  text-justify: inter-ideograph;
+}
+.markdown-body p:last-child { margin-bottom: 0; }
+.markdown-body p:has(> img:only-child) {
+  margin: 1.8em 0 0.35em;
+  text-align: center;
+  text-indent: 0;
+}
+.markdown-body strong { font-weight: 700; }
+/* 行内语义：斜体 / 删除线 / 高亮 / 上下标，与 Word 下载件同一套口径。
+   编辑器里标了什么，阅读页就要看得见什么。 */
+.markdown-body em { font-style: italic; font-synthesis: style; }
+.markdown-body del {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  opacity: 0.72;
+}
+.markdown-body mark {
+  padding: 0 0.15em;
+  border-radius: 0.2em;
+  background: color-mix(in oklab, var(--color-primary) 20%, transparent);
+  color: var(--color-foreground);
+}
+.markdown-body sup,
+.markdown-body sub { font-size: 0.72em; line-height: 0; }
+.markdown-body sup { vertical-align: super; }
+.markdown-body sub { vertical-align: sub; }
+/* 书名号 / 中文引号：霞鹜文楷优先，未安装则回退思源宋体；不用西文斜体硬套中文。 */
+.markdown-body .md-book-title,
+.markdown-body .md-quote-cn {
+  font-family: "LXGW WenKai", "Noto Serif SC Site", "Source Han Serif SC", var(--font-serif);
+  font-style: normal;
+}
+.markdown-body .md-book-title { color: var(--color-primary); }
+.markdown-body a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklab, var(--color-primary) 45%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+}
+.markdown-body a:hover { text-decoration-color: var(--color-primary); }
+.markdown-body ul,
+.markdown-body ol { margin: 1em 0; padding-left: 1.7em; }
+.markdown-body ul { list-style: disc; }
+.markdown-body ol { list-style: decimal; }
+.markdown-body li { margin: 0.35em 0; text-indent: 0; }
+.markdown-body li::marker { color: var(--color-primary); }
+.markdown-body li > p { margin: 0.25em 0; text-indent: 0; }
+.markdown-body blockquote {
+  margin: 1.5em 0;
+  border-left: 4px solid color-mix(in oklab, var(--color-primary) 70%, var(--color-border));
+  border-radius: 0 0.5rem 0.5rem 0;
+  background: color-mix(in oklab, var(--color-primary) 5%, var(--color-muted));
+  padding: 0.85em 1.1em;
+  color: color-mix(in oklab, var(--color-foreground) 84%, var(--color-muted-foreground));
+}
+.markdown-body blockquote p { margin: 0.35em 0; text-align: left; text-indent: 0; }
+.markdown-body blockquote > :first-child { margin-top: 0; }
+.markdown-body blockquote > :last-child { margin-bottom: 0; }
+.markdown-body img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.6em auto 0.4em;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-border);
+  /* 白底只给图本身，暗色主题下不刺眼 */
+  background: white;
+}
+/* 站内学术表情包：不按正文配图占满整行，保持“表情”的尺度。 */
+/* 正文插图：点击查看原图（灯箱只做阅读放大，不改变正文排版）。 */
+.markdown-body img.md-image-zoom {
+  cursor: zoom-in;
+}
+.markdown-body img.md-image-zoom:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+.md-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+  background: rgb(8 16 12 / 88%);
+  backdrop-filter: blur(4px);
+}
+.md-lightbox img {
+  display: block;
+  max-width: 94vw;
+  max-height: 90vh;
+  width: auto;
+  height: auto;
+  border-radius: 0.5rem;
+  background: white;
+  box-shadow: 0 24px 64px rgb(0 0 0 / 45%);
+}
+.md-lightbox-close {
+  position: absolute;
+  top: max(1rem, env(safe-area-inset-top));
+  right: 1rem;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 92%);
+  padding: 0.55rem 1.1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #17281f;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 25%);
+}
+.md-lightbox-close:hover { background: white; }
+
+/* 正文文献标记 [1]：可点击跳到参考文献，并自动展开折叠区。 */
+.markdown-body .md-cite {
+  color: var(--color-primary);
+  font-size: 0.78em;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+  vertical-align: super;
+  line-height: 0;
+  white-space: nowrap;
+}
+.markdown-body .md-cite:hover { text-decoration: underline; }
+.refs-collapse .md-ref-entry {
+  scroll-margin-top: 5.5rem;
+  border-radius: 0.25rem;
+}
+.refs-collapse .md-ref-entry:target {
+  background: color-mix(in oklab, var(--color-primary) 10%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-primary) 10%, transparent);
+}
+
+.markdown-body img[src*="/stickers/"] {
+  width: 148px;
+  margin: 0.65em 0;
+  border: 0;
+  background: transparent;
+}
+/* 图注：`*图 1　…*` 整段斜体；表注：`*表 1　…*` / `**表 1　…**`。 */
+.markdown-body .md-caption {
+  max-width: 94%;
+  margin: 0.45em 0 1.6em;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--color-muted-foreground);
+  text-align: center;
+  text-indent: 0;
+}
+.markdown-body .md-caption-figure { margin-left: auto; margin-right: auto; }
+/* 超宽条图（宽高比 ≥ 4）：按 100% 宽等比缩放后只剩十几像素高，字全糊。
+   改为横向滚动 + 可读的最小宽度，读者能左右滑动看清原图。 */
+.markdown-body .md-wide-figure {
+  overflow-x: auto;
+  overflow-y: hidden;
+  margin: 1.6em -0.25rem 0.2rem;
+  padding-bottom: 0.35rem;
+  border-radius: 0.5rem;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+.markdown-body .md-wide-figure img {
+  min-width: 620px;
+  max-width: none;
+  margin: 0;
+  border-radius: 0.5rem;
+}
+.markdown-body .md-wide-figure__hint {
+  display: block;
+  margin: -0.1rem 0 0.6rem;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--color-muted-foreground);
+}
+.markdown-body .md-caption-table { max-width: 100%; }
+.markdown-body .md-caption em { font-style: normal; }
+.markdown-body .md-caption strong { color: var(--color-foreground); }
+.markdown-body .md-keywords {
+  margin: 1.1em 0 1.4em;
+  padding: 0.6em 0.8em;
+  border-left: 3px solid var(--color-accent);
+  border-radius: 0 0.35rem 0.35rem 0;
+  background: color-mix(in oklab, var(--color-accent) 12%, transparent);
+  font-size: 0.9rem;
+  line-height: 1.75;
+  color: var(--color-muted-foreground);
+  text-indent: 0;
+}
+.markdown-body .md-keywords strong { color: var(--color-foreground); }
+/* 摘要卡片：与正文拉开层次，标题用小型无衬线标签 */
+.markdown-body .md-abstract {
+  margin: 0.4rem 0 2rem;
+  padding: 1.15rem 1.35rem 1.2rem;
+  border: 1px solid color-mix(in oklab, var(--color-primary) 18%, var(--color-border));
+  border-left: 4px solid var(--color-primary);
+  border-radius: 0.75rem;
+  background: color-mix(in oklab, var(--color-primary) 4%, var(--color-card));
+  box-shadow: 0 1px 2px rgb(20 40 70 / 4%);
+  scroll-margin-top: 4rem;
+}
+.markdown-body .md-abstract h2 {
+  margin: 0 0 0.65rem;
+  padding: 0;
+  border: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0.24em;
+  color: var(--color-primary);
+}
+.markdown-body .md-abstract p {
+  margin: 0.45em 0;
+  font-size: 0.95rem;
+  line-height: 1.9;
+  text-indent: 0;
+  color: color-mix(in oklab, var(--color-foreground) 90%, var(--color-muted-foreground));
+}
+.markdown-body .md-table-wrap {
+  max-width: 100%;
+  margin: 1.4em 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.markdown-body table {
+  width: 100%;
+  min-width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  line-height: 1.65;
+  font-variant-numeric: tabular-nums;
+}
+.markdown-body thead th {
+  padding: 0.55em 0.75em;
+  border-top: 2px solid var(--color-foreground);
+  border-bottom: 1px solid var(--color-foreground);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+}
+.markdown-body tbody td {
+  padding: 0.5em 0.75em;
+  text-align: left;
+  vertical-align: top;
+}
+/* 引用上标：正文中的 [1] / [1,2] / [1-3] 按期刊惯例排成上标。
+   只作用于正文段落（不动参考文献列表本身），与 PDF 排版一致。 */
+.markdown-body p a[href^='#ref'],
+.markdown-body p sup.ref-mark {
+  font-size: 0.72em;
+  vertical-align: super;
+  line-height: 0;
+  color: var(--color-primary);
+  font-variant-numeric: tabular-nums;
+}
+/* 图注在下、表注在上——与 editorial-standards §4 一致。
+   .md-caption-figure 紧跟在图片后（默认），.md-caption-table 需要
+   出现在表格之前，用 order 在 flex 容器里无法实现，改用相邻兄弟选择器
+   把表格前的表注与表格贴合。 */
+.markdown-body .md-caption-table {
+  margin: 1.5em 0 0.25em;
+  text-align: left;
+  font-weight: 500;
+}
+.markdown-body .md-caption-table + .md-table-wrap { margin-top: 0.35em; }
+/* 公式块（KaTeX display）留出与 PDF 一致的上下留白 */
+.markdown-body .katex-display {
+  margin: 1.4em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.2em 0;
+}
+/* 三线表：顶线、表头线、底线，无竖线与行间横线 */
+.markdown-body tbody tr:last-child td { border-bottom: 2px solid var(--color-foreground); }
+.markdown-body tbody tr:hover { background: color-mix(in oklab, var(--color-primary) 3%, transparent); }
+.markdown-body code {
+  font-family: ui-monospace, "DejaVu Sans Mono", "Liberation Mono", monospace;
+  font-size: 0.875em;
+  background: color-mix(in oklab, var(--color-muted) 78%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: 0.3rem;
+  padding: 0.1em 0.38em;
+  color: color-mix(in oklab, var(--color-primary) 70%, var(--color-foreground));
+  overflow-wrap: anywhere;
+}
+.markdown-body pre {
+  background: color-mix(in oklab, var(--color-muted) 82%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 1em;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+.markdown-body pre code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+.markdown-body hr { margin: 2.2em 0; border: 0; border-top: 1px solid var(--color-border); }
+.markdown-body .katex { font-size: 1.05em; }
+.markdown-body .katex-display { margin: 1.2em 0; overflow-x: auto; overflow-y: hidden; }
+
+
+/* 参考文献折叠块（manuscript-view） */
+.refs-collapse { scroll-margin-top: 4rem; }
+.refs-collapse summary {
+  color: var(--color-foreground);
+  font-family: var(--font-heading);
+  letter-spacing: 0.02em;
+}
+.refs-collapse summary::marker {
+  color: var(--color-primary);
+}
+.refs-collapse[open] summary {
+  border-bottom: 1px solid var(--color-border);
+}
+.refs-collapse .refs-body {
+  font-family: var(--font-serif);
+  font-size: 0.85rem;
+  line-height: 1.8;
+  color: var(--color-muted-foreground);
+}
+.refs-collapse .refs-body p {
+  margin: 0.5em 0;
+  padding-left: 2.2em;
+  text-align: left;
+  text-indent: -2.2em;
+}
+.refs-collapse .refs-body a { overflow-wrap: anywhere; }
+
+/* 打印兜底：motion 初始态不阻断打印内容（0.7.1 视觉审计） */
+@media print {
+  main [style*="opacity"], section [style*="opacity"], article [style*="opacity"],
+  div[style*="opacity"] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  nav[aria-label="文章目录"], .refs-collapse summary {
+    display: none !important;
+  }
+  .refs-collapse {
+    display: block !important;
+  }
+}
+
+/* 键盘可达性：全站焦点环（0.7.2 审计发现 Tab 焦点 outline:none） */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  /* 鼠标点击不显示焦点环，仅键盘导航显示 */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+  /* 跳转主内容（读屏/键盘用户） */
+  .skip-to-content:focus {
+    position: fixed;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 100;
+    padding: 0.5rem 1rem;
+    background: var(--color-primary);
+    color: var(--color-primary-foreground);
+    border-radius: 0.375rem;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * 稳定性与动效基础（0.8.1 打磨）
+ * - 滚动条常驻：避免内容出现/消失时页面横向抖动（CLS）
+ * - 图片尺寸占位：避免加载后撑开布局
+ * - 交互元素过渡统一：hover/active 不再出现"跳变"
+ * ------------------------------------------------------------------------- */
+html {
+  scrollbar-gutter: stable;
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  text-rendering: optimizeLegibility;
+}
+/* 放进 @layer base：原先写在层外，会盖掉组件上的 h-full——
+   实测列表缩略图（容器 84px）里的图片被压成 63px，下半截留白。 */
+@layer base {
+  img,
+  svg {
+    max-width: 100%;
+  }
+  img {
+    height: auto;
+  }
+}
+/* 统一交互过渡：颜色 150ms、位移 200ms，全部走同一缓动 */
+a,
+button,
+[role='button'],
+input,
+select,
+textarea {
+  transition-property: color, background-color, border-color, opacity, transform, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* 触摸设备去掉 hover 位移（避免"点一下就跳"的抖动感） */
+@media (hover: none) {
+  .hover-lift:hover {
+    transform: none;
+  }
+}
+/* 减弱动效：所有过渡/动画降到最短，保留最终状态 */
+/* 移动端正文：正文占满 100% 宽度后，标题需按屏宽下调一级并收紧间距；
+   段落保持首行缩进，宽表交给 .md-table-wrap 横向滚动。 */
+@media (max-width: 767px) {
+  .markdown-body {
+    /* 手机正文字号：0.9688rem ≈ 15px 在 390pt 宽屏上偏小，
+       中文长文尤其吃力。跟桌面同号（≈17px），靠行距与段距控密度。 */
+    font-size: 1.0625rem;
+    line-height: 1.9;
+    letter-spacing: 0.006em;
+  }
+  .markdown-body h1 { font-size: 1.45rem; margin-bottom: 0.8em; }
+  /* 手机上一个屏幕里最多容得下两行标题，2.4em 的上边距会让
+     「1 方法」「2 结果」看着像两块玻璃牌子；收到 1.5em。 */
+  .markdown-body h2 { font-size: 1.18rem; margin: 1.5em 0 0.6em; padding-left: 0.5rem; border-left-width: 4px; }
+  .markdown-body h3 { font-size: 1.08rem; margin: 1.6em 0 0.55em; }
+  .markdown-body h4 { font-size: 1rem; }
+  .markdown-body p { margin-bottom: 0.85em; }
+  /* 摘要卡：手机上不再套一层带边框的卡（外层卡 + 内层竖线 + 阴影，
+     350px 宽里要扣掉两次内边距，正文只剩 300px）。改成「一条竖线 +
+     极浅底色」，视觉仍与正文分层，但不缩窄行宽。 */
+  .markdown-body .md-abstract {
+    margin: 0.2rem 0 1.4rem;
+    padding: 0.35rem 0 0.35rem 0.85rem;
+    border: 0;
+    border-left: 3px solid var(--color-primary);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .markdown-body .md-abstract h2 {
+    margin-bottom: 0.4rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+  }
+  .markdown-body .md-abstract p { font-size: 1rem; line-height: 1.85; }
+  .markdown-body .md-caption { max-width: 100%; font-size: 0.78rem; }
+  .markdown-body img { margin: 1.2em auto 0.35em; }
+  .markdown-body table { font-size: 0.8125rem; }
+  .markdown-body thead th { padding: 0.5em 0.65em; }
+  .markdown-body tbody td { padding: 0.45em 0.65em; }
+  .markdown-body pre { padding: 0.8em; font-size: 0.8rem; }
+  .refs-collapse .refs-body p { padding-left: 1.7em; text-indent: -1.7em; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+/* 平滑锚点跳转（目录/首页导航） */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ---------------------------------------------------------------------------
+ * 0.9.1 视觉层：把「静态页面」变成「有反馈的页面」
+ * 原则：动效只做两件事——提示可交互、掩盖加载；不做装饰性乱动。
+ * 全部在 prefers-reduced-motion 下自动关闭（见文件末尾的媒体查询）。
+ * ------------------------------------------------------------------------- */
+
+/* 卡片：轻微的抬升 + 边缘高光，只在 hover 可交互卡片上生效 */
+.card-lift {
+  transition:
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms ease;
+  will-change: transform;
+}
+.card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 1px 2px rgba(20, 40, 70, 0.04),
+    0 8px 24px -8px rgba(20, 40, 70, 0.18);
+  border-color: color-mix(in oklab, var(--color-primary) 28%, var(--color-border));
+}
+
+/* 链接下划线：从左到右生长，而不是瞬间出现 */
+.link-underline {
+  position: relative;
+}
+.link-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 1px;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+  background: currentColor;
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.link-underline:hover::after,
+.link-underline:focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* 骨架屏：比 animate-pulse 更柔和的横向扫光 */
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--color-muted) 60%, transparent) 0%,
+    color-mix(in oklab, var(--color-muted) 30%, transparent) 40%,
+    color-mix(in oklab, var(--color-muted) 60%, transparent) 80%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+/* 阅读进度：顶部一根 2px 的进度条，滚动时随页面推进 */
+.reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  z-index: 60;
+  /* 纯装饰：绝不拦截顶部边缘的点击/滑动手势 */
+  pointer-events: none;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+  transition: width 120ms linear;
+}
+
+/* 数字突出显示：tabular-nums 让滚动计数不抖动 */
+.stat-number {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* 徽章微动：hover 时轻微放大，提示可点 */
+.badge-pop {
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.badge-pop:hover {
+  transform: scale(1.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-lift,
+  .link-underline::after,
+  .badge-pop {
+    transition: none;
+  }
+  .card-lift:hover {
+    transform: none;
+  }
+  .skeleton-shimmer {
+    animation: none;
+  }
+  .reading-progress {
+    transition: none;
+  }
+}
+
+/* 宽表 / 超宽图 / 长公式是文章内唯一允许横向滚动的区域。
+   contain 阻止滚动到边界后把横向手势传给页面，避免移动端“左右滑整页抖”。 */
+.md-table-wrap,
+.md-wide-figure,
+.katex-display {
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 路由切换加载条：数据慢时也给出明确“正在跳转”的反馈 */
+@keyframes route-progress {
+  0% { transform: translateX(-100%); }
+  60% { transform: translateX(160%); }
+  100% { transform: translateX(300%); }
+}
+.route-progress {
+  animation: route-progress 0.7s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .route-progress { animation: none; width: 100%; }
+}
+
+/* ── 2026 视觉升级：玻璃卡、渐变字、几何漂浮与组件高光 ── */
+.hero-title {
+  font-family: var(--font-display);
+  text-rendering: optimizeLegibility;
+  text-shadow: 0 1px 0 color-mix(in oklab, white 65%, transparent);
+}
+
+.gradient-text {
+  background: linear-gradient(
+    100deg,
+    var(--color-primary),
+    color-mix(in oklab, var(--color-primary) 55%, var(--color-accent))
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.glass-card {
+  background: color-mix(in oklab, var(--color-card) 82%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-border) 78%, white);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.55),
+    0 10px 34px -18px rgb(24 62 48 / 0.28);
+  backdrop-filter: blur(14px);
+}
+
+.button-shine {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.button-shine::after {
+  content: '';
+  position: absolute;
+  inset: -40% auto -40% -70%;
+  width: 45%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.28), transparent);
+  transform: skewX(-18deg);
+  transition: left 520ms cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: -1;
+}
+.button-shine:hover::after { left: 125%; }
+
+@keyframes geometric-float {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(0, -10px, 0) rotate(8deg); }
+}
+.geometric-float {
+  animation: geometric-float 7s ease-in-out infinite;
+}
+
+@keyframes soft-pulse-ring {
+  0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-primary) 22%, transparent); }
+  70% { box-shadow: 0 0 0 10px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+.pulse-ring { animation: soft-pulse-ring 2.4s ease-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .button-shine::after,
+  .geometric-float,
+  .pulse-ring {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* ── 内页轻量环境背景：CSS 几何图形，不启用持续 Canvas ── */
+.ambient-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.ambient-shape {
+  position: absolute;
+  display: block;
+  opacity: 0.11;
+  border-color: color-mix(in oklab, var(--color-primary) 72%, transparent);
+}
+.ambient-circle {
+  top: 7%;
+  left: -5rem;
+  width: 14rem;
+  height: 14rem;
+  border: 1px solid currentColor;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 30%, color-mix(in oklab, var(--color-primary) 18%, transparent), transparent 68%);
+  animation: ambient-drift 19s ease-in-out infinite;
+}
+.ambient-triangle {
+  top: 24%;
+  right: 8%;
+  width: 0;
+  height: 0;
+  border-top: 4.5rem solid transparent;
+  border-bottom: 4.5rem solid transparent;
+  border-left: 7.5rem solid color-mix(in oklab, var(--color-primary) 20%, transparent);
+  animation: ambient-float 23s ease-in-out infinite;
+}
+.ambient-square {
+  top: 48%;
+  left: -2.5rem;
+  width: 8.5rem;
+  height: 8.5rem;
+  border: 1px solid currentColor;
+  border-radius: 1.4rem;
+  background: color-mix(in oklab, var(--color-accent) 38%, transparent);
+  animation: ambient-drift 24s ease-in-out infinite reverse;
+}
+.ambient-ring {
+  right: -6rem;
+  bottom: 8%;
+  width: 17rem;
+  height: 17rem;
+  border: 2px dashed currentColor;
+  border-radius: 9999px;
+  animation: ambient-spin 30s linear infinite;
+}
+@keyframes ambient-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(2.2rem, 1.4rem, 0) rotate(9deg); }
+}
+@keyframes ambient-float {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(-1.8rem, 2rem, 0) rotate(-10deg); }
+}
+@keyframes ambient-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.dark .ambient-shape { opacity: 0.16; }
+
+/* 状态面板：空态/错误态不再是裸图标，玻璃卡与柔和几何光斑保持同一视觉语言 */
+.state-panel {
+  position: relative;
+  overflow: hidden;
+  max-width: 34rem;
+  margin-inline: auto;
+  padding: 2.4rem 1.5rem;
+  border: 1px solid color-mix(in oklab, var(--color-border) 82%, white);
+  border-radius: 1.25rem;
+  background: color-mix(in oklab, var(--color-card) 86%, transparent);
+  box-shadow: 0 18px 48px -28px rgb(24 62 48 / 0.35);
+  backdrop-filter: blur(14px);
+}
+.state-panel::before {
+  content: '';
+  position: absolute;
+  top: -3.5rem;
+  right: -3.5rem;
+  width: 11rem;
+  height: 11rem;
+  border-radius: 9999px;
+  background: radial-gradient(circle, color-mix(in oklab, var(--color-primary) 22%, transparent), transparent 68%);
+}
+.state-icon {
+  position: relative;
+  display: flex;
+  width: 3.75rem;
+  height: 3.75rem;
+  align-items: center;
+  justify-content: center;
+  margin-inline: auto;
+  border: 1px solid color-mix(in oklab, var(--color-primary) 24%, var(--color-border));
+  border-radius: 9999px;
+  color: var(--color-primary);
+  background: linear-gradient(145deg, color-mix(in oklab, var(--color-card) 88%, white), color-mix(in oklab, var(--color-accent) 58%, transparent));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6), 0 12px 30px -18px rgb(24 62 48 / 0.45);
+}
+.state-title {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+}
+.loading-orb {
+  position: relative;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in oklab, var(--color-primary) 25%, var(--color-border));
+  color: var(--color-primary);
+  background: color-mix(in oklab, var(--color-accent) 48%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.section-title {
+  font-family: var(--font-display);
+  letter-spacing: -0.025em;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ambient-circle,
+  .ambient-triangle,
+  .ambient-square,
+  .ambient-ring {
+    animation: none;
+  }
+}
+
+/* ── 2026 视觉升级 · 第三批：微粒、壳层导航与组件质感 ── */
+
+/* 内页微粒：纯 CSS 光点缓慢漂移，不启用 Canvas/RAF。
+   与几何图形一起构成“环境层”，始终 pointer-events:none。 */
+.ambient-dot {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--color-primary) 45%, transparent);
+  opacity: 0.28;
+  box-shadow: 0 0 6px color-mix(in oklab, var(--color-primary) 30%, transparent);
+  animation: ambient-float var(--dot-duration, 26s) ease-in-out infinite;
+  animation-delay: var(--dot-delay, 0s);
+}
+.ambient-dot-lg {
+  width: 6px;
+  height: 6px;
+  opacity: 0.22;
+}
+
+/* 侧栏导航：活动项左侧渐变竖条 + 图标着色 + 悬停微移 */
+.nav-item {
+  position: relative;
+}
+.nav-item::before {
+  content: '';
+  position: absolute;
+  inset-block: 22%;
+  inset-inline-start: 0;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--color-primary), color-mix(in oklab, var(--color-primary) 45%, var(--color-accent)));
+  transform: scaleY(0);
+  transform-origin: center;
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.nav-item[data-active='true']::before { transform: scaleY(1); }
+.nav-item:hover { transform: translateX(2px); }
+.nav-item { transition: background-color 160ms ease, color 160ms ease, transform 160ms ease; }
+.nav-item > svg { transition: color 160ms ease, transform 160ms ease; }
+.nav-item:hover > svg { transform: translateY(-1px); }
+.nav-item[data-active='true'] > svg { color: var(--color-primary); }
+
+/* 分组标题：小字距 + 右侧渐隐细线，让长侧栏有清晰分层 */
+.nav-group-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.nav-group-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, currentColor, transparent);
+  opacity: 0.35;
+}
+
+/* 页面标题：标题上方一根短渐变规线，替代纯文字开头 */
+.page-title-rule {
+  display: block;
+  width: 2.25rem;
+  height: 3px;
+  margin-bottom: 0.55rem;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, var(--color-primary), color-mix(in oklab, var(--color-primary) 40%, var(--color-accent)));
+}
+
+/* 按钮：主按钮渐变 + 内高光 + 轻微上浮；描边按钮加纸感底 */
+[data-slot='button'][data-variant='default'] {
+  background-image: linear-gradient(
+    140deg,
+    color-mix(in oklab, var(--color-primary) 88%, white),
+    var(--color-primary) 62%
+  );
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.18),
+    0 10px 22px -16px color-mix(in oklab, var(--color-primary) 75%, transparent);
+}
+[data-slot='button'][data-variant='default']:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.22),
+    0 14px 26px -16px color-mix(in oklab, var(--color-primary) 80%, transparent);
+}
+[data-slot='button'][data-variant='default']:active { transform: translateY(0); }
+[data-slot='button'][data-variant='outline'] {
+  background-image: linear-gradient(180deg, color-mix(in oklab, var(--color-card) 96%, white), color-mix(in oklab, var(--color-muted) 42%, transparent));
+}
+[data-slot='button'][data-variant='outline']:hover {
+  border-color: color-mix(in oklab, var(--color-primary) 34%, var(--color-border));
+}
+
+/* 卡片：顶部一层极淡纸光，边线更柔和；交互卡仍走 .card-lift */
+[data-slot='card'] {
+  border-color: color-mix(in oklab, var(--color-border) 84%, white);
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in oklab, white 62%, transparent),
+    transparent 42%
+  );
+  box-shadow:
+    0 1px 2px rgb(24 62 48 / 0.04),
+    0 20px 44px -36px rgb(24 62 48 / 0.32);
+}
+.dark [data-slot='card'] {
+  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.04), transparent 46%);
+  box-shadow: 0 18px 40px -34px rgb(0 0 0 / 0.7);
+}
+
+/* 表格：表头小字距 + 底部渐变分隔；行悬停带一点品牌色 */
+[data-slot='table-head'] {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  color: var(--color-muted-foreground);
+  background-image: linear-gradient(180deg, color-mix(in oklab, var(--color-muted) 46%, transparent), transparent);
+}
+[data-slot='table-header'] tr {
+  border-bottom-color: color-mix(in oklab, var(--color-border) 78%, white);
+}
+[data-slot='table-row']:hover {
+  background-color: color-mix(in oklab, var(--color-primary) 5%, transparent);
+}
+
+/* 表单：输入框内阴影纸感，聚焦时外圈柔和光晕 */
+[data-slot='input'],
+[data-slot='textarea'] {
+  background-color: color-mix(in oklab, var(--color-card) 94%, white);
+  box-shadow: inset 0 1px 2px rgb(24 62 48 / 0.05);
+}
+[data-slot='input']:focus-visible,
+[data-slot='textarea']:focus-visible {
+  box-shadow:
+    inset 0 1px 2px rgb(24 62 48 / 0.04),
+    0 0 0 3px color-mix(in oklab, var(--color-ring) 18%, transparent);
+}
+
+/* 页签：活动项用纸张底色 + 极淡渐变，非活动项悬停加深 */
+[data-slot='tabs-trigger'][data-state='active'] {
+  background-image: linear-gradient(180deg, #fff, color-mix(in oklab, var(--color-accent) 28%, transparent));
+  color: var(--color-foreground);
+}
+.dark [data-slot='tabs-trigger'][data-state='active'] {
+  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.08), transparent);
+}
+
+/* 徽章：细描边 + 内高光，避免纯色块过于扁平 */
+[data-slot='badge'][data-variant='outline'] {
+  background-image: linear-gradient(180deg, color-mix(in oklab, white 60%, transparent), transparent);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.5);
+}
+
+/* 顶栏底部：一条渐隐细线，和侧栏形成 L 形结构 */
+.app-header-rule {
+  position: relative;
+}
+.app-header-rule::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--color-border) 85%, transparent) 18%, color-mix(in oklab, var(--color-border) 85%, transparent) 82%, transparent);
+}
+
+/* 移动端底部 Tab：活动项上方一枚短渐变条 */
+.mobile-tab {
+  position: relative;
+}
+.mobile-tab[data-active='true']::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1.5rem;
+  height: 2px;
+  transform: translateX(-50%);
+  border-radius: 9999px;
+  background: linear-gradient(90deg, color-mix(in oklab, var(--color-primary) 55%, transparent), var(--color-primary));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-dot { animation: none; }
+  .nav-item,
+  .nav-item > svg,
+  .nav-item::before { transition: none; }
+  [data-slot='button'][data-variant='default']:hover { transform: none; }
+}
+
+/* ── 2026 视觉升级 · 第四批：跨页面一致性 ── */
+
+/* 图标胶囊：社区版块、制度条目统一用同一枚小图标底座，替代各页自带的彩色圆点 */
+.icon-chip {
+  display: inline-flex;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.625rem;
+  border: 1px solid color-mix(in oklab, var(--color-primary) 18%, var(--color-border));
+  background: linear-gradient(
+    145deg,
+    color-mix(in oklab, var(--color-card) 92%, white),
+    color-mix(in oklab, var(--color-accent) 52%, transparent)
+  );
+  color: var(--color-primary);
+}
+.icon-chip-sm {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.5rem;
+}
+
+/* 段式导航：关于本刊 / 投稿指南顶部那几个入口，统一成同一套形状与激活态 */
+.seg-link {
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  background: color-mix(in oklab, var(--color-card) 94%, white);
+  color: var(--color-muted-foreground);
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+.seg-link:hover {
+  border-color: color-mix(in oklab, var(--color-primary) 28%, var(--color-border));
+  color: var(--color-foreground);
+  transform: translateY(-1px);
+}
+.seg-link[data-active='true'] {
+  border-color: color-mix(in oklab, var(--color-primary) 70%, transparent);
+  background-image: linear-gradient(140deg, color-mix(in oklab, var(--color-primary) 88%, white), var(--color-primary) 62%);
+  color: var(--color-primary-foreground);
+  box-shadow: 0 10px 22px -18px color-mix(in oklab, var(--color-primary) 75%, transparent);
+}
+.seg-link[data-active='true']:hover {
+  transform: none;
+  color: var(--color-primary-foreground);
+}
+.seg-link-desc {
+  color: var(--color-muted-foreground);
+}
+.seg-link[data-active='true'] .seg-link-desc {
+  color: color-mix(in oklab, var(--color-primary-foreground) 78%, transparent);
+}
+
+/* 小节标题：显示体只留给页面 h1，二级标题回到无衬线并统一字距 */
+.subhead {
+  font-family: var(--font-heading);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.subhead-icon {
+  color: color-mix(in oklab, var(--color-primary) 88%, var(--color-foreground));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seg-link { transition: none; }
+  .seg-link:hover { transform: none; }
+}
+
+@media (max-width: 767px) {
+  body { scrollbar-gutter: auto; }
+}

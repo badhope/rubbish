@@ -1,0 +1,20 @@
+# Grafana datasource configuration for Prometheus
+# Mount this file at /etc/grafana/provisioning/datasources/ in the Grafana container.
+
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    uid: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      timeInterval: 15s
+      queryTimeout: 60s
+      httpMethod: POST
+      exemplarTraceIdDestinations:
+        - name: trace_id
+          datasourceUid: prometheus

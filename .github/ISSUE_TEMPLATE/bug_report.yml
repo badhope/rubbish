@@ -1,0 +1,76 @@
+name: Bug report
+description: Report something broken or behaving unexpectedly
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug. Please fill in the
+        details below — the version and environment questions matter
+        because Rubbish behaves differently across dev/test/production
+        modes (RLS is bypassed in test, weak-secret rejection is
+        dev/production only, etc.).
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug, including what you expected to happen instead.
+      placeholder: "Clicking '新建提交' on /submissions does nothing and the console shows …"
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Sign in as …
+        2. Go to …
+        3. Click …
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - backend (API / modules)
+        - frontend (UI / SPA)
+        - auth (login / 2FA / OIDC)
+        - reader (PDF / progress)
+        - submission / review workflow
+        - catalog / search / export
+        - deployment (Docker / Caddy / migrations)
+        - other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Rubbish version
+      description: "`GET /api/health` → `version`, or the git tag you deployed."
+      placeholder: "0.2.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: How is it deployed?
+      options:
+        - docker-compose.prod.yml
+        - dev stack (scripts/dev.sh)
+        - bare metal (uv + local PG)
+        - other
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Backend log lines, browser console errors, or a Playwright trace link. Redact secrets.
+      render: shell

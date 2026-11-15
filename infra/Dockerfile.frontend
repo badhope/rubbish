@@ -1,0 +1,36 @@
+# syntax=docker/dockerfile:1.7
+# Frontend image for Rubbish.
+#
+# Multi-stage: Node.js builder compiles the Vite/React app, then a minimal
+# nginx runtime serves the static output. Build context is the repo root
+# (see ``infra/docker-compose.prod.yml``).
+
+# --- builder ----------------------------------------------------------------
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy dependency manifests first so this layer is cached across source-only
+# changes. ``npm ci`` respects the lockfile and is faster than ``npm install``.
+COPY apps/frontend/package.json apps/frontend/package-lock.json ./
+RUN npm ci --registry=https://registry.npmjs.org
+
+# Copy the rest of the frontend source and build for production.
+COPY apps/frontend/ ./
+RUN npm run build
+
+# --- runtime ----------------------------------------------------------------
+FROM nginx:alpine AS runtime
+
+# Copy static assets from the builder stage.
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Use our nginx config with SPA fallback and caching headers.
+COPY infra/nginx.frontend.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+# NOTE: nginx:alpine's MASTER process runs as root (so it can bind :80),
+# but its WORKER processes drop to the unprivileged ``nginx`` user. Runtime
+# behavior here is unchanged; this comment only corrects a prior inaccuracy.
+CMD ["nginx", "-g", "daemon off;"]

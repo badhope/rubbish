@@ -1,0 +1,53 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python
+**/__pycache__
+**/*.py[cod]
+**/*$py.class
+*.so
+**/.pytest_cache
+**/.ruff_cache
+**/.mypy_cache
+htmlcov
+**/.coverage
+**/.venv
+**/venv
+**/*.egg-info
+
+# Node
+**/node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Build outputs
+**/dist
+**/build
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+**/*.md
+# 例外：预构建静态里的 Markdown 模板/规范必须进镜像（否则 /templates/*.md 404）
+!apps/backend/prebuilt-static/**/*.md
+.github
+.trae
+screenshots

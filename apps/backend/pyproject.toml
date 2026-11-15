@@ -1,0 +1,180 @@
+[project]
+name = "rubbish-backend"
+version = "1.15.0"
+description = "Rubbish backend — modular multi-tenant academic platform base"
+# Python 版本锁定在 3.12 系列：与 .python-version、Dockerfile、CI 完全一致
+requires-python = ">=3.12,<3.13"
+license = "PolyForm-Noncommercial-1.0.0"
+authors = [{ name = "Rubbish Contributors" }]
+# 依赖全部 == 精确锁定（版本来自 uv.lock，与 lock 文件双保险）。
+# 升级方式：改这里 + `uv lock` 刷新 lock 后提交，禁止单独漂移。
+dependencies = [
+    "fastapi[standard]==0.139.0",
+    "uvicorn[standard]==0.51.0",
+    "sqlalchemy[asyncio]==2.0.51",
+    "asyncpg==0.31.0",
+    "alembic==1.18.5",
+    "pydantic[email]==2.13.4",
+    "pydantic-settings==2.14.2",
+    "PyJWT==2.15.0",
+    "bcrypt==5.0.0",
+    "structlog==26.1.0",
+    "httpx==0.28.1",
+    # 直接钉住 certifi：它由 httpx 传递引入，安全审计要求 >=2026.10.19
+    # （PYSEC-2026-4320）；显式声明避免下一次被动升级又落后一版。
+    "certifi==2026.10.19",
+    "h2==4.4.1",
+    "tenacity==9.1.4",
+    "authlib==1.9.1",
+    "bibtexparser==1.4.4",
+    "rispy==0.10.0",
+    "pyotp==2.10.0",
+    "webauthn==2.8.0",
+    "defusedxml==0.7.1",
+    "prometheus-client==0.26.0",
+    "cryptography==50.0.0",
+    # 传递依赖下限：uv.lock 里 botocore/requests 会带 urllib3，
+    # 2.7.x 有 3 条 PYSEC 通告（PYSEC-2026-4175/4176/4177），锁到 2.8+。
+    "urllib3>=2.8.0",
+    "pymupdf>=1.25",
+    "pymupdf4llm>=0.0.20",
+    "mammoth>=1.9",
+    "markdownify>=0.14",
+    "python-docx>=1.1",
+    "docxcompose>=2.2.0",
+]
+
+[project.optional-dependencies]
+# 可选：错误监控。不安装也能正常运行 —— app/core/monitoring.py 对
+# ImportError 有降级处理，未配置 DSN 时更是完全不 import。
+# 启用：uv sync --extra monitoring
+monitoring = [
+    "sentry-sdk[fastapi]==2.64.0",
+]
+# 可选：全文搜索。未配置 RUBBISH_MEILISEARCH_URL 时目录搜索走内置
+# DB ILIKE；配置后由 Meilisearch 提供容错拼写 + 相关性排序。
+# 启用：uv sync --extra search
+search = [
+    "meilisearch-python-sdk==4.11.0",
+]
+# 可选：S3 兼容对象存储（AWS S3 / MinIO / R2 / OSS）。默认 local
+# 文件系统零依赖；RUBBISH_STORAGE_BACKEND=s3 时需要本组。
+# 启用：uv sync --extra s3
+s3 = [
+    "boto3==1.43.60",
+]
+
+[dependency-groups]
+dev = [
+    "ruff==0.15.21",
+    "mypy==1.20.2",
+    "pytest==9.1.1",
+    "pytest-asyncio==1.4.0",
+    "pytest-cov==7.1.0",
+    "pytest-xdist==3.8.0",
+    "aiosqlite==0.22.1",
+    "asgi-lifespan==2.1.0",
+    "pip-audit==2.10.1",
+    "pip-licenses==5.5.5",
+    "bandit[toml]==1.9.4",
+    "fakeredis[lua]==2.37.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[[tool.uv.index]]
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+default = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+# --strict-markers: 拼错的 marker 直接报错而不是静默通过（测试被误跳过是
+# 最难发现的一类"假绿"）。
+# addopts 里不放 -n：本地默认串行，CI 用 `-n auto` 显式并行。
+addopts = "--strict-markers --strict-config"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
+
+[tool.coverage.run]
+source = ["app"]
+branch = true
+# SQLAlchemy async 用 greenlet 执行同步 DBAPI 调用；不声明 concurrency，
+# coverage 的 tracer 会在 greenlet 切回后丢帧，导致 async 处理函数在
+# 第一个 await 之后的整段代码被误判为"未覆盖"（实测 review/routes.py 虚低 20+ 个点）。
+concurrency = ["greenlet", "thread"]
+# 迁移脚本与 E2E 引导脚本不是被测对象
+omit = [
+    "*/alembic/*",
+    "*/tests/*",
+    "e2e_run_server.py",
+    "app/modules/*/models.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@overload",
+    "if __name__ == .__main__.:",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "ASYNC", "RUF"]
+# B008: FastAPI 的 Depends/Query 在默认参数中调用是官方推荐模式
+# RUF001/002/003: 中文 docstring/注释/字符串中的全角标点（（）等）被标为歧义，
+#                 但项目允许中文注释，这些是中文标点正常用法
+ignore = ["E501", "B008", "RUF001", "RUF002", "RUF003"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["B017"]  # 允许测试中对 Exception 通用断言
+# E402: 该脚本必须在 import app 之前设置环境变量（config 在 import 时读取 env），
+# import 后置是刻意设计，非疏漏。
+"e2e_run_server.py" = ["E402"]
+
+[tool.mypy]
+untyped_calls_exclude = ["pymupdf", "pymupdf4llm", "mammoth", "markdownify"]
+python_version = "3.12"
+strict = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+disallow_untyped_defs = true
+plugins = ["pydantic.mypy"]
+
+# 第三方库无 py.typed / stubs —— 跳过类型检查（仅在 import 处忽略）
+[[tool.mypy.overrides]]
+module = ["bibtexparser.*", "rispy.*"]
+ignore_missing_imports = true
+
+# 运行时可选的集成依赖（Redis / S3 / Meilisearch）不一定随测试安装，
+# 且均无 py.typed 类型标注，允许缺失 stub 并放宽其返回类型
+[[tool.mypy.overrides]]
+module = ["redis", "redis.*", "boto3", "boto3.*", "meilisearch_python_sdk", "meilisearch_python_sdk.*", "defusedxml"]
+ignore_missing_imports = true
+follow_untyped_imports = true
+
+# 稿件转换依赖（0.6.2）：均无 py.typed；其未标注函数不触发严格调用检查
+[[tool.mypy.overrides]]
+module = ["pymupdf4llm", "pymupdf4llm.*", "mammoth", "mammoth.*", "markdownify", "markdownify.*"]
+ignore_missing_imports = true
+follow_untyped_imports = true
+
+[tool.bandit]
+exclude_dirs = ["tests", "alembic"]
+level = "MEDIUM"
+confidence = "MEDIUM"
+
+[tool.bandit.assert_used]
+skips = ["app/core/config.py"]

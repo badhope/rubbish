@@ -1,0 +1,71 @@
+# Caddy 自动 HTTPS 反代。域名从环境变量 SITE_DOMAIN 读取（docker-compose.yml 注入）。
+# 没有域名时 SITE_DOMAIN=localhost，Caddy 用自签证书，仅适合本机验证。
+{
+	# 邮箱留空则用 Caddy 内部 ACME 账户签 Let's Encrypt 证书。
+	# email: you@example.com
+}
+
+
+www.rubbish.argjiemi.cn, argjiemi.cn, www.argjiemi.cn {
+	redir https://rubbish.argjiemi.cn{uri} 301
+}
+
+{$SITE_DOMAIN} {
+	encode zstd gzip
+
+	# 访问日志：出事后能查到源 IP、路径、状态码；100MB 自动轮转，保留 5 份。
+	log {
+		output file /var/log/caddy/access.log {
+			roll_size 100MiB
+			roll_keep 5
+		}
+		format json
+	}
+
+	# 一次性拦截常见漏洞扫描/后门探测路径，减少无效流量与误报噪音。
+	@probes path /.env* /.git* /.svn* /.aws* /.ssh* /wp-admin* /wp-login* /xmlrpc.php* /phpmyadmin* /pma* /vendor* /server-status* /actuator* /config.json /config.yml /docker-compose.yml
+	respond @probes 404
+
+	# 全站请求体上限：投稿 PDF 最大 50MB，留 10MB 余量；超过直接 413，不进应用内存。
+	request_body {
+		max_size 60MB
+	}
+
+	# 安全响应头（补齐根 Caddyfile 此前完全缺失的部分，与 infra/Caddyfile 对齐）。
+	# 应用层中间件也会下发一份，这里是边缘层的第二道，防止反向代理配置被
+	# 误改后整站裸奔。
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "geolocation=(), microphone=(), camera=()"
+		X-Permitted-Cross-Domain-Policies "none"
+		-Server
+		-Via
+	}
+
+	# 旧投稿地址永久跳转到当前投稿页。
+	@legacySubmit path /submit /submit/
+	redir @legacySubmit /submissions/new 301
+
+	# 健康检查直通，便于平台探活与 uptime 监控。
+	handle /api/health* {
+		reverse_proxy app:8080
+	}
+
+	# Vite 产物带内容哈希，可长期缓存；封面图按周缓存。
+	# 只对静态路径生效，API 与 HTML 不套长缓存，避免发布后拿到旧页面。
+	handle /assets/* {
+		header Cache-Control "public, max-age=31536000, immutable"
+		reverse_proxy app:8080
+	}
+	handle /covers/* {
+		header Cache-Control "public, max-age=604800"
+		reverse_proxy app:8080
+	}
+
+	handle {
+		reverse_proxy app:8080
+	}
+}

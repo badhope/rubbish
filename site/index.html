@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title data-i18n-attr="title">Rubbish — 收录全球学术垃圾的开放获取期刊</title>
+<meta name="description" data-i18n-attr="description" content="Rubbish 是一份开放获取期刊，也是一套开源出版系统：投稿、盲审、裁决、发表、阅读全流程在线完成，全文免费开放。在线站点 rubbish.argjiemi.cn。" />
+<meta name="keywords" content="学术出版, peer review, 期刊系统, FastAPI, React, 开源, DOI, 多租户, Rubbish" />
+<meta property="og:type" content="website" />
+<meta property="og:title" data-i18n-attr="og-title" content="Rubbish — 收录全球学术垃圾的开放获取期刊" />
+<meta property="og:description" data-i18n-attr="og-desc" content="一套开箱即用的开源学术出版基座：投稿 → 审稿 → 发表 → 阅读，跑在一个代码库里。" />
+<meta property="og:image" content="docs/assets/screenshots-overview.png" />
+<link rel="icon" type="image/svg+xml" href="docs/assets/favicon.svg" />
+<style>
+  :root{
+    --bg:#0a0c10; --bg2:#11151c; --bg3:#171c26;
+    --line:#232b38; --line2:#2e3849;
+    --fg:#e8edf5; --fg2:#9aa7bd; --fg3:#69768c;
+    --acc:#4f8cff; --acc2:#7c5cff; --ok:#28c76f; --warn:#f0a52a;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg); color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    line-height:1.65; -webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(79,140,255,.13),transparent),
+                     radial-gradient(ellipse 60% 50% at 90% 10%,rgba(124,92,255,.09),transparent);
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  a{color:var(--acc);text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  /* ---------- nav ---------- */
+  nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);
+      background:rgba(10,12,16,.8);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;gap:20px;height:58px}
+  nav .brand{display:flex;align-items:center;gap:9px;font-weight:700;letter-spacing:-.2px;color:var(--fg)}
+  nav .brand img{width:24px;height:24px}
+  nav .links{margin-left:auto;display:flex;gap:22px;font-size:14px}
+  nav .links a{color:var(--fg2)}
+  nav .links a:hover{color:var(--fg);text-decoration:none}
+  @media(max-width:860px){nav .links{display:none}}
+  .lang-switch{display:flex;gap:4px;margin-left:auto;border:1px solid var(--line2);border-radius:8px;padding:3px}
+  @media(max-width:860px){.lang-switch{margin-left:auto}}
+  .lang-switch button{background:transparent;border:none;color:var(--fg3);font-size:12.5px;
+    font-weight:700;padding:3px 10px;border-radius:6px;cursor:pointer;transition:.15s}
+  .lang-switch button.on{background:var(--bg3);color:var(--fg)}
+
+  /* ---------- hero ---------- */
+  header{padding:76px 0 52px;text-align:center}
+  header .logo{width:96px;height:96px;margin-bottom:22px;filter:drop-shadow(0 8px 32px rgba(79,140,255,.35))}
+  h1{font-size:clamp(34px,5.5vw,54px);line-height:1.12;letter-spacing:-1.4px;font-weight:800}
+  h1 .grad{background:linear-gradient(100deg,var(--acc),var(--acc2) 60%,#38bdf8);
+            -webkit-background-clip:text;background-clip:text;color:transparent}
+  .tag{margin-top:18px;font-size:clamp(16px,2.1vw,20px);color:var(--fg2);font-weight:500}
+  .tag b{color:var(--fg)}
+  .cta{margin-top:30px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border-radius:9px;
+       font-size:14.5px;font-weight:600;border:1px solid transparent;transition:.16s}
+  .btn.p{background:var(--acc);color:#fff}
+  .btn.p:hover{background:#3d7bf0;text-decoration:none;transform:translateY(-1px)}
+  .btn.s{border-color:var(--line2);color:var(--fg)}
+  .btn.s:hover{background:var(--bg3);text-decoration:none}
+  .stats{margin-top:46px;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+         background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .stats div{background:var(--bg2);padding:20px 12px}
+  .stats .n{font-size:26px;font-weight:800;letter-spacing:-.6px;color:var(--fg)}
+  .stats .l{font-size:12.5px;color:var(--fg3);margin-top:3px}
+  @media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}}
+
+  /* ---------- section ---------- */
+  section{padding:62px 0;border-top:1px solid var(--line)}
+  h2{font-size:clamp(23px,3.4vw,31px);letter-spacing:-.7px;font-weight:750;margin-bottom:10px}
+  .sub{color:var(--fg2);font-size:16px;margin-bottom:32px;max-width:760px}
+  .sub b{color:var(--fg)}
+
+  /* ---------- 数据条 ---------- */
+  .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+  .metric{background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:18px 20px}
+  .metric .k{font-size:12px;color:var(--fg3);text-transform:uppercase;letter-spacing:.7px}
+  .metric .v{font-size:22px;font-weight:750;margin-top:5px;font-family:var(--mono)}
+  .metric .v small{font-size:13px;color:var(--fg2);font-weight:500;font-family:inherit}
+
+  /* ---------- 流程 ---------- */
+  .flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;margin-top:6px}
+  .step{flex:1;min-width:150px;background:var(--bg2);border:1px solid var(--line);
+        border-radius:11px;padding:18px;position:relative}
+  .step:not(:last-child){margin-right:26px}
+  .step:not(:last-child)::after{content:"→";position:absolute;right:-21px;top:50%;
+        transform:translateY(-50%);color:var(--fg3);font-size:17px}
+  .step .ico{font-size:20px}
+  .step .t{font-weight:700;margin-top:7px;font-size:15px}
+  .step .d{font-size:13px;color:var(--fg2);margin-top:4px;line-height:1.55}
+  @media(max-width:760px){.flow{flex-direction:column}.step:not(:last-child){margin:0 0 30px}
+    .step:not(:last-child)::after{right:auto;left:50%;top:auto;bottom:-22px;transform:translateX(-50%) rotate(90deg)}}
+
+  /* ---------- 卡片 ---------- */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+  .card{background:var(--bg2);border:1px solid var(--line);border-radius:13px;padding:22px;transition:.18s}
+  .card:hover{border-color:var(--line2);transform:translateY(-2px)}
+  .card h3{font-size:17px;font-weight:700;margin-bottom:9px;display:flex;align-items:center;gap:8px}
+  .card p{color:var(--fg2);font-size:14.5px}
+  .card p+p{margin-top:8px}
+  .card code{font-family:var(--mono);font-size:12.5px;background:var(--bg3);
+             padding:1.5px 6px;border-radius:5px;border:1px solid var(--line);color:#93c5fd}
+
+  /* ---------- 截图 ---------- */
+  .shot{border:1px solid var(--line);border-radius:13px;overflow:hidden;background:var(--bg2)}
+  .shot img{width:100%;display:block}
+  .shot .cap{padding:11px 15px;font-size:13px;color:var(--fg2);border-top:1px solid var(--line)}
+  .shot .cap b{color:var(--fg)}
+  .gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:16px}
+  .gallery figure{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg2)}
+  .gallery img{width:100%;display:block;aspect-ratio:16/10;object-fit:cover;object-position:top}
+  .gallery figcaption{padding:9px 12px;font-size:12.5px;color:var(--fg2)}
+  .gallery figcaption b{color:var(--fg);font-weight:650}
+
+  /* ---------- 表格 ---------- */
+  .tbl{border:1px solid var(--line);border-radius:11px;overflow:hidden;overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:14.5px;min-width:520px}
+  th,td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--line)}
+  th{background:var(--bg3);font-weight:650;font-size:13px;color:var(--fg2);
+     text-transform:uppercase;letter-spacing:.5px}
+  tr:last-child td{border-bottom:none}
+  td:first-child{font-weight:650;white-space:nowrap}
+  tbody tr:hover{background:rgba(79,140,255,.045)}
+
+  /* ---------- 代码 ---------- */
+  pre{background:var(--bg2);border:1px solid var(--line);border-radius:11px;
+      padding:17px 19px;overflow-x:auto;font-family:var(--mono);font-size:13.2px;
+      line-height:1.72;color:#cbd5e1;margin-top:14px}
+  pre .c{color:#5b6b82}
+  pre .k{color:#c792ea}
+
+  /* ---------- 防御卡片 ---------- */
+  .def{background:linear-gradient(135deg,rgba(79,140,255,.09),rgba(124,92,255,.05));
+       border:1px solid var(--line2);border-radius:12px;padding:20px 22px}
+  .def h3{font-size:16px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .def p{color:var(--fg2);font-size:14.5px}
+
+  /* ---------- 下载 ---------- */
+  .dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:8px}
+  .dl a{display:block;background:var(--bg2);border:1px solid var(--line);border-radius:11px;
+        padding:17px 19px;color:var(--fg);transition:.16s}
+  .dl a:hover{border-color:var(--acc);background:var(--bg3);text-decoration:none;transform:translateY(-2px)}
+  .dl .p{font-size:12px;color:var(--fg3);text-transform:uppercase;letter-spacing:.7px}
+  .dl .n{font-weight:700;margin-top:4px;font-size:15px}
+  .dl .d{font-size:12.5px;color:var(--fg2);margin-top:2px}
+
+  footer{padding:44px 0 60px;border-top:1px solid var(--line);text-align:center;
+         color:var(--fg3);font-size:13.5px}
+  footer a{color:var(--fg2)}
+  .badge{display:inline-block;padding:2.5px 9px;border-radius:20px;font-size:11.5px;
+         font-weight:650;background:rgba(240,165,42,.13);color:var(--warn);
+         border:1px solid rgba(240,165,42,.3);vertical-align:middle}
+  .badge.g{background:rgba(40,199,111,.13);color:var(--ok);border-color:rgba(40,199,111,.3)}
+  .note{background:rgba(79,140,255,.07);border-left:3px solid var(--acc);
+        border-radius:0 8px 8px 0;padding:13px 17px;color:var(--fg2);font-size:14px;margin-top:18px}
+  .note b{color:var(--fg)}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <span class="brand">
+      <img src="docs/assets/logo-white.svg" alt="" />
+      Rubbish
+    </span>
+    <span class="links">
+      <a href="#why" data-i18n="nav-why">为什么</a>
+      <a href="#flow" data-i18n="nav-flow">全流程</a>
+      <a href="#shots" data-i18n="nav-shots">界面实拍</a>
+      <a href="#usable" data-i18n="nav-usable">核心能力</a>
+      <a href="#arch" data-i18n="nav-arch">架构</a>
+      <a href="#start" data-i18n="nav-start">快速开始</a>
+      <a href="brand.html" data-i18n="nav-brand">品牌规范</a>
+      <a href="https://github.com/X33834/rubbish" target="_blank" rel="noopener">GitHub ↗</a>
+    </span>
+    <span class="lang-switch" id="langSwitch">
+      <button data-lang="zh" class="on">中文</button>
+      <button data-lang="en">EN</button>
+    </span>
+  </div>
+</nav>
+
+<header class="wrap">
+  <img class="logo" src="docs/assets/logo-white.svg" alt="Rubbish" />
+  <h1><span data-i18n="hero-h1a">把学术垃圾，</span><span class="grad" data-i18n="hero-h1b">也认真发表出来</span></h1>
+  <p class="tag"><span data-i18n="hero-tag1">一份开放获取期刊 + 一套开源出版系统——</span><b data-i18n="hero-tag2">投稿 → 审稿 → 录用 → 发表 → 阅读 → 订阅</b><span data-i18n="hero-tag3">，一个代码库跑通全流程。</span></p>
+
+  <div class="cta">
+    <a class="btn p" href="#start" data-i18n="cta-start">5 分钟跑起来 →</a>
+    <a class="btn p" href="https://rubbish.argjiemi.cn" target="_blank" rel="noopener">打开期刊 ↗</a>
+    <a class="btn s" href="https://github.com/X33834/rubbish" target="_blank" rel="noopener" data-i18n="cta-src">⭐ 去看源码</a>
+    <a class="btn s" href="docs/assets/demo/Rubbish-promo.webm" data-i18n="cta-demo">▶ 60 秒演示</a>
+  </div>
+
+  <div class="stats">
+    <div><div class="n">11</div><div class="l" data-i18n="stat-modules">后端领域模块</div></div>
+    <div><div class="n">687</div><div class="l" data-i18n="stat-tests">后端测试用例</div></div>
+    <div><div class="n">84%</div><div class="l" data-i18n="stat-cov">行覆盖率（硬门槛 80%）</div></div>
+    <div><div class="n">68</div><div class="l" data-i18n="stat-e2e">Playwright 端到端用例</div></div>
+  </div>
+</header>
+
+<section id="why" class="wrap">
+  <h2 data-i18n="why-h2">为什么会有这个项目</h2>
+  <p class="sub"><span data-i18n="why-sub1">大多数团队都在反复从头搭同一套期刊脚手架——投稿表单、审稿人分配、一个装已发表文章的 CMS。</span><br/><span data-i18n="why-sub2">Rubbish 把它打包成一个</span> <b data-i18n="why-sub3">真正的多角色产品</b><span data-i18n="why-sub4">，而不是又一次定制 CMS 的重复劳动。</span></p>
+
+  <div class="cards">
+    <div class="card">
+      <h3 data-i18n="card1-t">👥 一个平台，四种身份</h3>
+      <p data-i18n="card1-d">作者投稿、编辑分配并裁决、审稿人出意见、读者浏览关注——它们在同一个系统里，不再需要胶水代码互相缝。</p>
+    </div>
+    <div class="card">
+      <h3 data-i18n="card2-t">🔁 完整闭环，不是 demo</h3>
+      <p data-i18n="card2-d">稿件元数据、单盲/双盲审稿、带版本的修改稿、DOI 注册、卷期目录、浏览器内阅读且进度跨设备同步、订阅、推荐——全部打通并落到测试里。</p>
+    </div>
+    <div class="card">
+      <h3 data-i18n="card3-t">🔒 默认安全</h3>
+      <p data-i18n="card3-d">Passkey（WebAuthn）+ TOTP 双因素、带服务端 denylist 且可在线轮换的 JWT、注册验证码、逐操作审计日志。安全是默认值，不是 checklist。</p>
+    </div>
+    <div class="card">
+      <h3 data-i18n="card4-t">⏱️ 几分钟自托管</h3>
+      <p data-i18n="card4-d">一条 <code>docker compose up</code> 单节点起全栈。生产用 PostgreSQL 17，开发/CI 用 SQLite——不需要为本地开发准备重型环境。</p>
+    </div>
+  </div>
+</section>
+
+<section id="flow" class="wrap">
+  <h2 data-i18n="flow-h2">一张图看懂全流程</h2>
+  <p class="sub" data-i18n="flow-sub">从作者点"提交"到读者点"收藏"，中间每一环都是真实可用的界面，不是流程图上的箭头。</p>
+
+  <div class="flow">
+    <div class="step"><div class="ico">📝</div><div class="t" data-i18n="step1-t">投稿</div><div class="d" data-i18n="step1-d">完整元数据录入、文件上传、状态可见</div></div>
+    <div class="step"><div class="ico">⚖️</div><div class="t" data-i18n="step2-t">审稿</div><div class="d" data-i18n="step2-d">单盲/双盲、审稿人分配、带版本修改稿</div></div>
+    <div class="step"><div class="ico">✅</div><div class="t" data-i18n="step3-t">录用</div><div class="d" data-i18n="step3-d">编辑裁决、终态守卫、卷期编排</div></div>
+    <div class="step"><div class="ico">🔗</div><div class="t" data-i18n="step4-t">发表</div><div class="d" data-i18n="step4-d">DataCite 注册 DOI、进入可检索目录</div></div>
+    <div class="step"><div class="ico">📖</div><div class="t" data-i18n="step5-t">阅读</div><div class="d" data-i18n="step5-d">浏览器内 PDF、进度跨设备同步、订阅与推荐</div></div>
+  </div>
+
+  <div class="note">
+    <b data-i18n="flow-note1">端到端可验证：</b><span data-i18n="flow-note2">68 个 Playwright 用例跑的正是这条完整旅程——不是对着 mock 断言，而是在 Playwright 自己拉起的真实前后端上走一遍（SQLite + test 模式，注入 dev-only email-outbox 以走通注册验证链路）。</span>
+  </div>
+</section>
+
+<section id="shots" class="wrap">
+  <h2 data-i18n="shots-h2">界面实拍</h2>
+  <p class="sub"><span data-i18n="shots-sub1">全部是</span><b data-i18n="shots-sub2">真实运行截图</b><span data-i18n="shots-sub3">，桌面 1440×900、移动端 390×844，没有设计稿占位。</span></p>
+
+  <div class="shot">
+    <img src="docs/assets/screenshots-overview.png"
+         alt="Rubbish 界面总览：目录、审稿工作台、发表、推荐、阅读列表与阅读器" loading="lazy" data-i18n-alt="shots-overview" />
+    <div class="cap"><b data-i18n="shots-cap1">界面总览</b><span data-i18n="shots-cap2"> —— 目录 · 审稿工作台 · 发表 · 推荐 · 阅读列表 · 阅读器，共 19 张截图</span></div>
+  </div>
+
+  <div class="gallery">
+    <figure><img src="docs/assets/screenshots/rubbish-catalog.png" alt="资源目录" loading="lazy" data-i18n-alt="shots-g1a" /><figcaption><b data-i18n="shots-g1b">资源目录</b><span data-i18n="shots-g1c"> — 对已发表作品的分类检索</span></figcaption></figure>
+    <figure><img src="docs/assets/screenshots/rubbish-detail.png" alt="资源详情" loading="lazy" data-i18n-alt="shots-g2a" /><figcaption><b data-i18n="shots-g2b">资源详情</b><span data-i18n="shots-g2c"> — 元数据、DOI、摘要、附件</span></figcaption></figure>
+    <figure><img src="docs/assets/screenshots/rubbish-reader.png" alt="在线阅读器" loading="lazy" data-i18n-alt="shots-g3a" /><figcaption><b data-i18n="shots-g3b">在线阅读器</b><span data-i18n="shots-g3c"> — 浏览器内 PDF，进度跨设备同步</span></figcaption></figure>
+    <figure><img src="docs/assets/screenshots/07-my-submissions.png" alt="我的提交" loading="lazy" data-i18n-alt="shots-g4a" /><figcaption><b data-i18n="shots-g4b">作者视角</b><span data-i18n="shots-g4c"> — 投稿、修改稿与状态流转</span></figcaption></figure>
+    <figure><img src="docs/assets/screenshots/rubbish-editor.png" alt="编辑工作台" loading="lazy" data-i18n-alt="shots-g5a" /><figcaption><b data-i18n="shots-g5b">编辑工作台</b><span data-i18n="shots-g5c"> — 分配审稿人、裁决、发表</span></figcaption></figure>
+    <figure><img src="docs/assets/screenshots/06-reviewer-workbench.png" alt="审稿工作台" loading="lazy" data-i18n-alt="shots-g6a" /><figcaption><b data-i18n="shots-g6b">审稿工作台</b><span data-i18n="shots-g6c"> — 阅读稿件、提交审稿意见</span></figcaption></figure>
+    <figure><img src="docs/assets/screenshots/11-recommendations.png" alt="个性化推荐" loading="lazy" data-i18n-alt="shots-g7a" /><figcaption><b data-i18n="shots-g7b">个性化推荐</b><span data-i18n="shots-g7c"> — 按阅读历史排序</span></figcaption></figure>
+    <figure><img src="docs/assets/screenshots/08-admin-users.png" alt="后台管理" loading="lazy" data-i18n-alt="shots-g8a" /><figcaption><b data-i18n="shots-g8b">后台管理</b><span data-i18n="shots-g8c"> — 用户、角色与审计日志</span></figcaption></figure>
+  </div>
+</section>
+
+<section id="usable" class="wrap">
+  <h2 data-i18n="usable-h2">核心能力</h2>
+  <p class="sub" data-i18n="usable-sub">每个领域能力都是独立模块，可以单独启用、替换或扩展，不需要碰 core。</p>
+
+  <div class="tbl">
+    <table>
+      <thead><tr><th data-i18n="tbl1-h1">能力</th><th data-i18n="tbl1-h2">亮点</th></tr></thead>
+      <tbody>
+        <tr><td data-i18n="tbl1-r1c1">投稿与审稿</td><td data-i18n="tbl1-r1c2">完整元数据录入、单盲/双盲工作流、审稿人分配、带版本管理的修改稿、编辑裁决、终态守卫</td></tr>
+        <tr><td data-i18n="tbl1-r2c1">发表与目录</td><td data-i18n="tbl1-r2c2">卷期管理、可检索的已发表目录、通过 DataCite 注册 DOI</td></tr>
+        <tr><td data-i18n="tbl1-r3c1">元数据抓取</td><td data-i18n="tbl1-r3c2">从 Crossref、arXiv、PubMed、OpenAlex、Semantic Scholar 拉取权威记录，外加 BibTeX / RIS / CSV 导入</td></tr>
+        <tr><td data-i18n="tbl1-r4c1">阅读体验</td><td data-i18n="tbl1-r4c2">浏览器内 PDF 阅读、跨设备阅读进度同步、个人阅读列表、关注作者与学科</td></tr>
+        <tr><td data-i18n="tbl1-r5c1">鉴权与安全</td><td data-i18n="tbl1-r5c2">WebAuthn Passkey、TOTP 双因素、JWT denylist + 密钥轮换、验证码、RBAC（作者/编辑/审稿人/读者/admin）</td></tr>
+        <tr><td data-i18n="tbl1-r6c1">多租户</td><td data-i18n="tbl1-r6c2">一个部署托管多个期刊，基于 host 解析租户并带路由缓存</td></tr>
+        <tr><td data-i18n="tbl1-r7c1">发现</td><td data-i18n="tbl1-r7c2">关注关系图、个性化推荐、邮件 + 站内通知、引用导出（BibTeX / RIS / CSL）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 style="margin-top:46px;font-size:21px" data-i18n="role-h2">默认角色</h2>
+  <p class="sub" style="margin-bottom:18px" data-i18n="role-sub">启动时 core 自动创建，之后可在 admin 后台再分配。</p>
+  <div class="tbl">
+    <table>
+      <thead><tr><th data-i18n="tbl2-h1">角色</th><th data-i18n="tbl2-h2">范围</th></tr></thead>
+      <tbody>
+        <tr><td><code>admin</code></td><td data-i18n="tbl2-r1c2">全部权限——admin 后台、用户管理、审计日志</td></tr>
+        <tr><td><code>editor</code></td><td data-i18n="tbl2-r2c2">分配审稿人、组织卷期、录用/拒稿、推到「已发表」</td></tr>
+        <tr><td><code>reviewer</code></td><td data-i18n="tbl2-r3c2">查看分配给自己的稿件、提交审稿意见</td></tr>
+        <tr><td><code>author</code></td><td data-i18n="tbl2-r4c2">投递稿件、查看自己稿件状态、上传修改稿</td></tr>
+        <tr><td><code>member</code></td><td data-i18n="tbl2-r5c2">阅读、收藏、订阅、查看推荐</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="arch" class="wrap">
+  <h2 data-i18n="arch-h2">系统架构</h2>
+  <p class="sub" data-i18n="arch-sub">FastAPI async 后端 + React 19 前端，全程严格类型，模块化到 core 几乎不动。</p>
+
+  <div class="shot">
+    <img src="docs/assets/architecture.svg"
+         alt="Rubbish 系统架构" loading="lazy" data-i18n-alt="arch-alt" />
+    <div class="cap"><b data-i18n="arch-cap1">系统架构</b><span data-i18n="arch-cap2"> —— 模块注册表驱动的后端 + 端到端类型安全的前端</span></div>
+  </div>
+
+  <div class="cards" style="margin-top:20px">
+    <div class="def">
+      <h3 data-i18n="arch-c1-t">🛡️ 双层租户隔离</h3>
+      <p data-i18n="arch-c1-d">每个领域表都带 <code>tenant_id</code>：应用层在每条查询上追加过滤，PostgreSQL 行级安全（RLS）即使应用层漏写也会拒掉跨租户行。是纵深防御，不是靠祈祷。</p>
+    </div>
+    <div class="def">
+      <h3 data-i18n="arch-c2-t">🧩 模块注册表</h3>
+      <p data-i18n="arch-c2-d"><code>app.core.modules.load_all()</code> 按依赖顺序加载模块、注册 ORM 表、挂载路由、加入健康检查。新能力 = 一处注册，core 零改动。</p>
+    </div>
+  </div>
+</section>
+
+<section id="start" class="wrap">
+  <h2 data-i18n="start-h2">快速开始</h2>
+  <p class="sub"><span data-i18n="start-sub1">三种方式，按你的场景挑一种。</span><b data-i18n="start-sub2">推荐第一条</b><span data-i18n="start-sub3">——一条命令起全栈。</span></p>
+
+  <div class="cards">
+    <div class="card">
+      <h3 data-i18n="start-c1-t">🐳 Docker Compose <span class="badge g" data-i18n="start-badge">推荐</span></h3>
+      <p data-i18n="start-c1-d">Postgres + 后端 + 前端全部拉起来，包含自动 TLS 的 Caddy。</p>
+      <pre><span class="c" data-i18n="start-c1-code1"># 生成强密钥</span>
+<span class="k">echo</span> "RUBBISH_SECRET_KEY=$(openssl rand -hex 32)" > .env
+<span class="k">echo</span> "RUBBISH_ADMIN_PASSWORD=$(openssl rand -base64 18)" >> .env
+
+<span class="c" data-i18n="start-c1-code2"># 启动 dev 栈</span>
+docker compose -f infra/docker-compose.yml up --build</pre>
+    </div>
+    <div class="card">
+      <h3 data-i18n="start-c2-t">💻 本地裸跑</h3>
+      <p data-i18n="start-c2-d">需要 Python 3.12+、Node 20+，以及一个 PostgreSQL 17 实例。</p>
+      <pre><span class="c" data-i18n="start-c2-code1"># 后端</span>
+<span class="k">cd</span> apps/backend && uv sync
+uv run alembic upgrade head
+uv run uvicorn app.main:app --reload
+
+<span class="c" data-i18n="start-c2-code2"># 前端（另开一个终端）</span>
+<span class="k">cd</span> apps/frontend && npm install && npm run dev</pre>
+    </div>
+  </div>
+
+  <h2 style="margin-top:44px;font-size:21px" data-i18n="dl-h2">下载与镜像</h2>
+  <p class="sub" style="margin-bottom:18px" data-i18n="dl-sub">四个远端保持同步（分支、标签、HEAD 均一致）。</p>
+  <div class="dl">
+    <a href="https://github.com/X33834/rubbish" target="_blank" rel="noopener">
+      <div class="p" data-i18n="dl1-p">GitHub · 主仓库</div><div class="n">X33834/rubbish</div>
+      <div class="d" data-i18n="dl1-d">Issues / PR 都在这里</div>
+    </a>
+    <a href="https://github.com/Morningstar202604/rubbish" target="_blank" rel="noopener">
+      <div class="p" data-i18n="dl2-p">GitHub · 镜像</div><div class="n">Morningstar202604/rubbish</div>
+      <div class="d" data-i18n="dl2-d">同内容镜像</div>
+    </a>
+    <a href="https://gitcode.com/badhope/rubbish" target="_blank" rel="noopener">
+      <div class="p">GitCode</div><div class="n">badhope/rubbish</div>
+      <div class="d" data-i18n="dl3-d">国内访问更快</div>
+    </a>
+    <a href="https://gitee.com/badhope/rubbish" target="_blank" rel="noopener">
+      <div class="p">Gitee</div><div class="n">badhope/rubbish</div>
+      <div class="d" data-i18n="dl4-d">国内访问更快</div>
+    </a>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2 data-i18n="qa-h2">质量与安全</h2>
+  <p class="sub" data-i18n="qa-sub">由 CI 兜底，不是嘴上说说。</p>
+
+  <div class="cards">
+    <div class="card">
+      <h3 data-i18n="qa-c1-t">🧪 测试</h3>
+      <p data-i18n="qa-c1-d1"><b>后端</b> —— 687 个 pytest 用例，行覆盖率 <b>84%</b>，硬性门槛 <code>--cov-fail-under=80</code>；<code>mypy --strict</code> 与 <code>ruff</code> 全绿。</p>
+      <p data-i18n="qa-c1-d2"><b>前端</b> —— vitest 单元 + 组件测试，严格 <code>tsc</code> 下 100 个用例。</p>
+      <p data-i18n="qa-c1-d3"><b>E2E</b> —— 68 个 Playwright 用例跑完整业务旅程。</p>
+      <p data-i18n="qa-c1-d4"><b>迁移</b> —— 独立 job 在真实 PostgreSQL 17 上跑迁移并用 <code>alembic check</code> 比对元数据，专门抓单元测试（内存 SQLite）永远抓不到的模型/迁移漂移。</p>
+    </div>
+    <div class="card">
+      <h3 data-i18n="qa-c2-t">🔐 安全</h3>
+      <p data-i18n="qa-c2-d1"><b>认证</b> —— bcrypt 哈希；短有效期 JWT access + httpOnly 刷新 Cookie + 每用户 <code>token_version</code>。</p>
+      <p data-i18n="qa-c2-d2"><b>双因素</b> —— RFC 6238 TOTP，每用户密钥 Fernet 加密存储，10 个一次性备份码。</p>
+      <p data-i18n="qa-c2-d3"><b>Passkey</b> —— WebAuthn 注册/认证状态机，挑战一次性且带 TTL。</p>
+      <p data-i18n="qa-c2-d4"><b>密钥轮换</b> —— 有序密钥链，<code>POST /api/admin/reload-secret-keys</code> 零停机轮换。</p>
+      <p data-i18n="qa-c2-d5"><b>扫描门禁</b> —— bandit 以 LOW+ 为门槛（历史 9 处 LOW 已清零），依赖漏洞走 pip-audit 审计锁定的依赖集。</p>
+    </div>
+  </div>
+
+  <div class="note">
+    <b data-i18n="qa-note1">版本一致性守卫：</b><span data-i18n="qa-note2">CI 里有个脚本四路比对 <code>VERSION</code> / <code>pyproject</code> / <code>package.json</code> / <code>__version__</code>，任何一处漂移都会直接失败 —— 避免"文档说 0.2.0、实际装的是 0.1.0"这种事。</span>
+  </div>
+</section>
+
+<footer class="wrap">
+  <p>
+    <a href="https://github.com/X33834/rubbish">GitHub</a> ·
+    <a href="https://gitcode.com/badhope/rubbish">GitCode</a> ·
+    <a href="https://gitee.com/badhope/rubbish">Gitee</a> ·
+    <a href="https://github.com/X33834/rubbish/blob/main/docs/ARCHITECTURE.md" data-i18n="footer-doc">架构文档</a> ·
+    <a href="https://github.com/X33834/rubbish/blob/main/SECURITY.md" data-i18n="footer-sec">安全策略</a>
+  </p>
+  <p style="margin-top:12px">
+    Rubbish <span class="badge">pre-alpha</span> · PolyForm Noncommercial 1.0.0（仅限学习与非商业用途） · Copyright © 2026 Morningstar202604
+  </p>
+  <p style="margin-top:10px;font-size:12.5px;color:var(--fg3)" data-i18n="footer-note">
+    核心出版主流程可用且经过测试；API 仍在稳定中，暂不建议作为正式出版的唯一系统。
+  </p>
+</footer>
+
+<script>
+/* ---- 中英文切换（i18n）---- */
+var I18N = {
+  "zh": {
+    "title": "Rubbish — 收录全球学术垃圾的开放获取期刊",
+    "description": "Rubbish 是一份开放获取期刊，也是一套开源出版系统：投稿、盲审、裁决、发表、阅读全流程在线完成，全文免费开放。在线站点 rubbish.argjiemi.cn。",
+    "og-title": "Rubbish — 收录全球学术垃圾的开放获取期刊",
+    "og-desc": "一套开箱即用的开源学术出版基座：投稿 → 审稿 → 发表 → 阅读，跑在一个代码库里。",
+    "nav-why": "为什么", "nav-flow": "全流程", "nav-shots": "界面实拍",
+    "nav-usable": "核心能力", "nav-arch": "架构", "nav-start": "快速开始", "nav-brand": "品牌规范",
+    "hero-h1a": "把学术垃圾，", "hero-h1b": "也认真发表出来",
+    "hero-tag1": "一份开放获取期刊 + 一套开源出版系统——", "hero-tag2": "投稿 → 审稿 → 录用 → 发表 → 阅读 → 订阅", "hero-tag3": "，一个代码库跑通全流程。",
+    "cta-start": "5 分钟跑起来 →", "cta-src": "⭐ 去看源码", "cta-demo": "▶ 60 秒演示",
+    "stat-modules": "后端领域模块", "stat-tests": "后端测试用例", "stat-cov": "行覆盖率（硬门槛 80%）", "stat-e2e": "Playwright 端到端用例",
+    "why-h2": "为什么会有这个项目",
+    "why-sub1": "大多数团队都在反复从头搭同一套期刊脚手架——投稿表单、审稿人分配、一个装已发表文章的 CMS。",
+    "why-sub2": "Rubbish 把它打包成一个", "why-sub3": "真正的多角色产品", "why-sub4": "，而不是又一次定制 CMS 的重复劳动。",
+    "card1-t": "👥 一个平台，四种身份",
+    "card1-d": "作者投稿、编辑分配并裁决、审稿人出意见、读者浏览关注——它们在同一个系统里，不再需要胶水代码互相缝。",
+    "card2-t": "🔁 完整闭环，不是 demo",
+    "card2-d": "稿件元数据、单盲/双盲审稿、带版本的修改稿、DOI 注册、卷期目录、浏览器内阅读且进度跨设备同步、订阅、推荐——全部打通并落到测试里。",
+    "card3-t": "🔒 默认安全",
+    "card3-d": "Passkey（WebAuthn）+ TOTP 双因素、带服务端 denylist 且可在线轮换的 JWT、注册验证码、逐操作审计日志。安全是默认值，不是 checklist。",
+    "card4-t": "⏱️ 几分钟自托管",
+    "card4-d": "一条 <code>docker compose up</code> 单节点起全栈。生产用 PostgreSQL 17，开发/CI 用 SQLite——不需要为本地开发准备重型环境。",
+    "flow-h2": "一张图看懂全流程",
+    "flow-sub": "从作者点\"提交\"到读者点\"收藏\"，中间每一环都是真实可用的界面，不是流程图上的箭头。",
+    "step1-t": "投稿", "step1-d": "完整元数据录入、文件上传、状态可见",
+    "step2-t": "审稿", "step2-d": "单盲/双盲、审稿人分配、带版本修改稿",
+    "step3-t": "录用", "step3-d": "编辑裁决、终态守卫、卷期编排",
+    "step4-t": "发表", "step4-d": "DataCite 注册 DOI、进入可检索目录",
+    "step5-t": "阅读", "step5-d": "浏览器内 PDF、进度跨设备同步、订阅与推荐",
+    "flow-note1": "端到端可验证：",
+    "flow-note2": "68 个 Playwright 用例跑的正是这条完整旅程——不是对着 mock 断言，而是在 Playwright 自己拉起的真实前后端上走一遍（SQLite + test 模式，注入 dev-only email-outbox 以走通注册验证链路）。",
+    "shots-h2": "界面实拍",
+    "shots-sub1": "全部是", "shots-sub2": "真实运行截图", "shots-sub3": "，桌面 1440×900、移动端 390×844，没有设计稿占位。",
+    "shots-overview": "Rubbish 界面总览：目录、审稿工作台、发表、推荐、阅读列表与阅读器",
+    "shots-cap1": "界面总览", "shots-cap2": " —— 目录 · 审稿工作台 · 发表 · 推荐 · 阅读列表 · 阅读器，共 19 张截图",
+    "shots-g1a": "资源目录", "shots-g1b": "资源目录", "shots-g1c": " — 对已发表作品的分类检索",
+    "shots-g2a": "资源详情", "shots-g2b": "资源详情", "shots-g2c": " — 元数据、DOI、摘要、附件",
+    "shots-g3a": "在线阅读器", "shots-g3b": "在线阅读器", "shots-g3c": " — 浏览器内 PDF，进度跨设备同步",
+    "shots-g4a": "我的提交", "shots-g4b": "作者视角", "shots-g4c": " — 投稿、修改稿与状态流转",
+    "shots-g5a": "编辑工作台", "shots-g5b": "编辑工作台", "shots-g5c": " — 分配审稿人、裁决、发表",
+    "shots-g6a": "审稿工作台", "shots-g6b": "审稿工作台", "shots-g6c": " — 阅读稿件、提交审稿意见",
+    "shots-g7a": "个性化推荐", "shots-g7b": "个性化推荐", "shots-g7c": " — 按阅读历史排序",
+    "shots-g8a": "后台管理", "shots-g8b": "后台管理", "shots-g8c": " — 用户、角色与审计日志",
+    "usable-h2": "核心能力",
+    "usable-sub": "每个领域能力都是独立模块，可以单独启用、替换或扩展，不需要碰 core。",
+    "tbl1-h1": "能力", "tbl1-h2": "亮点",
+    "tbl1-r1c1": "投稿与审稿", "tbl1-r1c2": "完整元数据录入、单盲/双盲工作流、审稿人分配、带版本管理的修改稿、编辑裁决、终态守卫",
+    "tbl1-r2c1": "发表与目录", "tbl1-r2c2": "卷期管理、可检索的已发表目录、通过 DataCite 注册 DOI",
+    "tbl1-r3c1": "元数据抓取", "tbl1-r3c2": "从 Crossref、arXiv、PubMed、OpenAlex、Semantic Scholar 拉取权威记录，外加 BibTeX / RIS / CSV 导入",
+    "tbl1-r4c1": "阅读体验", "tbl1-r4c2": "浏览器内 PDF 阅读、跨设备阅读进度同步、个人阅读列表、关注作者与学科",
+    "tbl1-r5c1": "鉴权与安全", "tbl1-r5c2": "WebAuthn Passkey、TOTP 双因素、JWT denylist + 密钥轮换、验证码、RBAC（作者/编辑/审稿人/读者/admin）",
+    "tbl1-r6c1": "多租户", "tbl1-r6c2": "一个部署托管多个期刊，基于 host 解析租户并带路由缓存",
+    "tbl1-r7c1": "发现", "tbl1-r7c2": "关注关系图、个性化推荐、邮件 + 站内通知、引用导出（BibTeX / RIS / CSL）",
+    "role-h2": "默认角色",
+    "role-sub": "启动时 core 自动创建，之后可在 admin 后台再分配。",
+    "tbl2-h1": "角色", "tbl2-h2": "范围",
+    "tbl2-r1c2": "全部权限——admin 后台、用户管理、审计日志",
+    "tbl2-r2c2": "分配审稿人、组织卷期、录用/拒稿、推到「已发表」",
+    "tbl2-r3c2": "查看分配给自己的稿件、提交审稿意见",
+    "tbl2-r4c2": "投递稿件、查看自己稿件状态、上传修改稿",
+    "tbl2-r5c2": "阅读、收藏、订阅、查看推荐",
+    "arch-h2": "系统架构",
+    "arch-sub": "FastAPI async 后端 + React 19 前端，全程严格类型，模块化到 core 几乎不动。",
+    "arch-alt": "Rubbish 系统架构",
+    "arch-cap1": "系统架构", "arch-cap2": " —— 模块注册表驱动的后端 + 端到端类型安全的前端",
+    "arch-c1-t": "🛡️ 双层租户隔离",
+    "arch-c1-d": "每个领域表都带 <code>tenant_id</code>：应用层在每条查询上追加过滤，PostgreSQL 行级安全（RLS）即使应用层漏写也会拒掉跨租户行。是纵深防御，不是靠祈祷。",
+    "arch-c2-t": "🧩 模块注册表",
+    "arch-c2-d": "<code>app.core.modules.load_all()</code> 按依赖顺序加载模块、注册 ORM 表、挂载路由、加入健康检查。新能力 = 一处注册，core 零改动。",
+    "start-h2": "快速开始",
+    "start-sub1": "三种方式，按你的场景挑一种。", "start-sub2": "推荐第一条", "start-sub3": "——一条命令起全栈。",
+    "start-c1-t": "🐳 Docker Compose ", "start-badge": "推荐",
+    "start-c1-d": "Postgres + 后端 + 前端全部拉起来，包含自动 TLS 的 Caddy。",
+    "start-c1-code1": "# 生成强密钥", "start-c1-code2": "# 启动 dev 栈",
+    "start-c2-t": "💻 本地裸跑",
+    "start-c2-d": "需要 Python 3.12+、Node 20+，以及一个 PostgreSQL 17 实例。",
+    "start-c2-code1": "# 后端", "start-c2-code2": "# 前端（另开一个终端）",
+    "dl-h2": "下载与镜像",
+    "dl-sub": "四个远端保持同步（分支、标签、HEAD 均一致）。",
+    "dl1-p": "GitHub · 主仓库", "dl1-d": "Issues / PR 都在这里",
+    "dl2-p": "GitHub · 镜像", "dl2-d": "同内容镜像",
+    "dl3-d": "国内访问更快", "dl4-d": "国内访问更快",
+    "qa-h2": "质量与安全",
+    "qa-sub": "由 CI 兜底，不是嘴上说说。",
+    "qa-c1-t": "🧪 测试",
+    "qa-c1-d1": "<b>后端</b> —— 687 个 pytest 用例，行覆盖率 <b>84%</b>，硬性门槛 <code>--cov-fail-under=80</code>；<code>mypy --strict</code> 与 <code>ruff</code> 全绿。",
+    "qa-c1-d2": "<b>前端</b> —— vitest 单元 + 组件测试，严格 <code>tsc</code> 下 100 个用例。",
+    "qa-c1-d3": "<b>E2E</b> —— 68 个 Playwright 用例跑完整业务旅程。",
+    "qa-c1-d4": "<b>迁移</b> —— 独立 job 在真实 PostgreSQL 17 上跑迁移并用 <code>alembic check</code> 比对元数据，专门抓单元测试（内存 SQLite）永远抓不到的模型/迁移漂移。",
+    "qa-c2-t": "🔐 安全",
+    "qa-c2-d1": "<b>认证</b> —— bcrypt 哈希；短有效期 JWT access + httpOnly 刷新 Cookie + 每用户 <code>token_version</code>。",
+    "qa-c2-d2": "<b>双因素</b> —— RFC 6238 TOTP，每用户密钥 Fernet 加密存储，10 个一次性备份码。",
+    "qa-c2-d3": "<b>Passkey</b> —— WebAuthn 注册/认证状态机，挑战一次性且带 TTL。",
+    "qa-c2-d4": "<b>密钥轮换</b> —— 有序密钥链，<code>POST /api/admin/reload-secret-keys</code> 零停机轮换。",
+    "qa-c2-d5": "<b>扫描门禁</b> —— bandit 以 LOW+ 为门槛（历史 9 处 LOW 已清零），依赖漏洞走 pip-audit 审计锁定的依赖集。",
+    "qa-note1": "版本一致性守卫：",
+    "qa-note2": "CI 里有个脚本四路比对 <code>VERSION</code> / <code>pyproject</code> / <code>package.json</code> / <code>__version__</code>，任何一处漂移都会直接失败 —— 避免\"文档说 0.2.0、实际装的是 0.1.0\"这种事。",
+    "footer-doc": "架构文档", "footer-sec": "安全策略",
+    "footer-note": "核心出版主流程可用且经过测试；API 仍在稳定中，暂不建议作为正式出版的唯一系统。"
+  },
+  "en": {
+    "title": "Rubbish — Scholarly publishing, without starting from zero",
+    "description": "Rubbish is an open-access journal for the world’s academic rubbish, and the open-source publishing system behind it: submit, blind review, decide, publish, read. Live at rubbish.argjiemi.cn.",
+    "og-title": "Rubbish — Scholarly publishing, without starting from zero",
+    "og-desc": "An open-source scholarly publishing base: submit → review → publish → read, running in one codebase.",
+    "nav-why": "Why", "nav-flow": "Workflow", "nav-shots": "Screenshots",
+    "nav-usable": "Capabilities", "nav-arch": "Architecture", "nav-start": "Quick Start", "nav-brand": "Brand",
+    "hero-h1a": "Publishing academic rubbish,", "hero-h1b": "properly.",
+    "hero-tag1": "An out-of-the-box open-source base — ", "hero-tag2": "submit → review → accept → publish → read → subscribe", "hero-tag3": ", one codebase end to end.",
+    "cta-start": "Run in 5 minutes →", "cta-src": "⭐ View source", "cta-demo": "▶ 60s demo",
+    "stat-modules": "Backend modules", "stat-tests": "Backend tests", "stat-cov": "Line coverage (hard gate 80%)", "stat-e2e": "Playwright E2E cases",
+    "why-h2": "Why this project exists",
+    "why-sub1": "Most teams keep re-building the same journal scaffolding from scratch — submission forms, reviewer assignment, a CMS for published papers.",
+    "why-sub2": "Rubbish packages it into a", "why-sub3": "true multi-role product", "why-sub4": ", not another custom-CMS rework.",
+    "card1-t": "👥 One platform, four roles",
+    "card1-d": "Authors submit, editors assign and decide, reviewers give opinions, readers browse and follow — all in one system, no glue code stitching them together.",
+    "card2-t": "🔁 Complete loop, not a demo",
+    "card2-d": "Manuscript metadata, single/double-blind review, versioned revisions, DOI registration, issue catalogs, in-browser reading with cross-device progress, subscriptions, recommendations — all wired and covered by tests.",
+    "card3-t": "🔒 Secure by default",
+    "card3-d": "Passkey (WebAuthn) + TOTP 2FA, server-side JWT denylist with online rotation, sign-up captcha, per-action audit logs. Security is a default, not a checklist.",
+    "card4-t": "⏱️ Self-host in minutes",
+    "card4-d": "One <code>docker compose up</code> brings up the whole stack. PostgreSQL 17 for production, SQLite for dev/CI — no heavy local setup required.",
+    "flow-h2": "The whole workflow in one picture",
+    "flow-sub": "From an author clicking \"submit\" to a reader clicking \"save\", every step is a real usable screen, not an arrow on a diagram.",
+    "step1-t": "Submit", "step1-d": "Full metadata entry, file upload, visible status",
+    "step2-t": "Review", "step2-d": "Single/double-blind, reviewer assignment, versioned revisions",
+    "step3-t": "Accept", "step3-d": "Editor decision, terminal-state guards, issue scheduling",
+    "step4-t": "Publish", "step4-d": "DOI registration via DataCite, searchable catalog",
+    "step5-t": "Read", "step5-d": "In-browser PDF, cross-device progress, subscriptions & recommendations",
+    "flow-note1": "End-to-end verifiable: ",
+    "flow-note2": "66 Playwright cases run exactly this journey — not asserting against mocks, but walking through real front and back ends that Playwright spins up itself (SQLite + test mode, with a dev-only email outbox to complete the sign-up verification flow).",
+    "shots-h2": "Screenshots",
+    "shots-sub1": "All are ", "shots-sub2": "real running screenshots", "shots-sub3": ", desktop 1440×900 and mobile 390×844 — no mockups.",
+    "shots-overview": "Rubbish overview: catalog, review workbench, publish, recommendations, reading list and reader",
+    "shots-cap1": "Overview", "shots-cap2": " — catalog · review workbench · publish · recommendations · reading list · reader, 19 screenshots",
+    "shots-g1a": "Resource catalog", "shots-g1b": "Resource catalog", "shots-g1c": " — categorized search of published works",
+    "shots-g2a": "Resource detail", "shots-g2b": "Resource detail", "shots-g2c": " — metadata, DOI, abstract, attachments",
+    "shots-g3a": "Online reader", "shots-g3b": "Online reader", "shots-g3c": " — in-browser PDF, cross-device progress",
+    "shots-g4a": "My submissions", "shots-g4b": "Author view", "shots-g4c": " — submissions, revisions and status flow",
+    "shots-g5a": "Editor workbench", "shots-g5b": "Editor workbench", "shots-g5c": " — assign reviewers, decide, publish",
+    "shots-g6a": "Reviewer workbench", "shots-g6b": "Reviewer workbench", "shots-g6c": " — read manuscripts, submit review opinions",
+    "shots-g7a": "Recommendations", "shots-g7b": "Recommendations", "shots-g7c": " — ranked by reading history",
+    "shots-g8a": "Admin panel", "shots-g8b": "Admin panel", "shots-g8c": " — users, roles and audit logs",
+    "usable-h2": "Core capabilities",
+    "usable-sub": "Every domain capability is an independent module — enable, replace or extend it without touching core.",
+    "tbl1-h1": "Capability", "tbl1-h2": "Highlights",
+    "tbl1-r1c1": "Submission & review", "tbl1-r1c2": "Full metadata entry, single/double-blind workflow, reviewer assignment, versioned revisions, editor decisions, terminal-state guards",
+    "tbl1-r2c1": "Publishing & catalog", "tbl1-r2c2": "Issue management, searchable published catalog, DOI registration via DataCite",
+    "tbl1-r3c1": "Metadata harvesting", "tbl1-r3c2": "Pull authoritative records from Crossref, arXiv, PubMed, OpenAlex, Semantic Scholar, plus BibTeX / RIS / CSV import",
+    "tbl1-r4c1": "Reading experience", "tbl1-r4c2": "In-browser PDF reading, cross-device reading progress, personal reading lists, following authors & fields",
+    "tbl1-r5c1": "Auth & security", "tbl1-r5c2": "WebAuthn Passkey, TOTP 2FA, JWT denylist + key rotation, captcha, RBAC (author/editor/reviewer/reader/admin)",
+    "tbl1-r6c1": "Multi-tenancy", "tbl1-r6c2": "One deployment hosts multiple journals, tenant resolved by host with route caching",
+    "tbl1-r7c1": "Discovery", "tbl1-r7c2": "Follow graph, personalized recommendations, email + in-app notifications, citation export (BibTeX / RIS / CSL)",
+    "role-h2": "Default roles",
+    "role-sub": "Created automatically by core at startup; assign more later in the admin panel.",
+    "tbl2-h1": "Role", "tbl2-h2": "Scope",
+    "tbl2-r1c2": "Everything — admin panel, user management, audit logs",
+    "tbl2-r2c2": "Assign reviewers, organize issues, accept/reject, move to \"Published\"",
+    "tbl2-r3c2": "View manuscripts assigned to me, submit review opinions",
+    "tbl2-r4c2": "Submit manuscripts, track my submissions, upload revisions",
+    "tbl2-r5c2": "Read, save, subscribe, view recommendations",
+    "arch-h2": "System architecture",
+    "arch-sub": "FastAPI async backend + React 19 frontend, strictly typed throughout, modular so core barely moves.",
+    "arch-alt": "Rubbish system architecture",
+    "arch-cap1": "System architecture", "arch-cap2": " — registry-driven backend + end-to-end type-safe frontend",
+    "arch-c1-t": "🛡️ Two-layer tenant isolation",
+    "arch-c1-d": "Every domain table carries <code>tenant_id</code>: the app layer appends filters to every query, and PostgreSQL row-level security (RLS) rejects cross-tenant rows even if the app layer misses one. Defense in depth, not hope.",
+    "arch-c2-t": "🧩 Module registry",
+    "arch-c2-d": "<code>app.core.modules.load_all()</code> loads modules in dependency order, registers ORM tables, mounts routes and joins health checks. New capability = one registration, zero core changes.",
+    "start-h2": "Quick start",
+    "start-sub1": "Three ways — pick what fits.", "start-sub2": "First one recommended", "start-sub3": " — one command for the whole stack.",
+    "start-c1-t": "🐳 Docker Compose ", "start-badge": "Recommended",
+    "start-c1-d": "Postgres + backend + frontend all brought up, including Caddy with automatic TLS.",
+    "start-c1-code1": "# Generate strong secrets", "start-c1-code2": "# Start the dev stack",
+    "start-c2-t": "💻 Run locally",
+    "start-c2-d": "Requires Python 3.12+, Node 20+, and a PostgreSQL 17 instance.",
+    "start-c2-code1": "# Backend", "start-c2-code2": "# Frontend (another terminal)",
+    "dl-h2": "Downloads & mirrors",
+    "dl-sub": "All four remotes stay in sync (branches, tags and HEAD identical).",
+    "dl1-p": "GitHub · Primary", "dl1-d": "Issues / PRs live here",
+    "dl2-p": "GitHub · Mirror", "dl2-d": "Identical mirror",
+    "dl3-d": "Faster in mainland China", "dl4-d": "Faster in mainland China",
+    "qa-h2": "Quality & security",
+    "qa-sub": "Enforced by CI, not just talk.",
+    "qa-c1-t": "🧪 Testing",
+    "qa-c1-d1": "<b>Backend</b> — 644 pytest cases, <b>84%</b> line coverage, hard gate <code>--cov-fail-under=80</code>; <code>mypy --strict</code> and <code>ruff</code> all green.",
+    "qa-c1-d2": "<b>Frontend</b> — vitest unit + component tests, 100 cases under strict <code>tsc</code>.",
+    "qa-c1-d3": "<b>E2E</b> — 66 Playwright cases covering the full business journey.",
+    "qa-c1-d4": "<b>Migrations</b> — a dedicated job runs migrations on real PostgreSQL 17 and compares metadata with <code>alembic check</code>, catching model/migration drift that unit tests (in-memory SQLite) can never see.",
+    "qa-c2-t": "🔐 Security",
+    "qa-c2-d1": "<b>Auth</b> — bcrypt hashing; short-lived JWT access + httpOnly refresh cookie + per-user <code>token_version</code>.",
+    "qa-c2-d2": "<b>2FA</b> — RFC 6238 TOTP, per-user secrets stored Fernet-encrypted, 10 one-time backup codes.",
+    "qa-c2-d3": "<b>Passkey</b> — WebAuthn registration/auth state machine, challenges one-time with TTL.",
+    "qa-c2-d4": "<b>Key rotation</b> — ordered key chain, <code>POST /api/admin/reload-secret-keys</code> rotates with zero downtime.",
+    "qa-c2-d5": "<b>Scan gates</b> — bandit gates on LOW+ (all 9 historical LOW findings cleared); dependency vulns audited via pip-audit on the locked set.",
+    "qa-note1": "Version consistency guard: ",
+    "qa-note2": "CI runs a script comparing <code>VERSION</code> / <code>pyproject</code> / <code>package.json</code> / <code>__version__</code> across four places — any drift fails the build, so \"docs say 0.2.0 but you installed 0.1.0\" cannot happen.",
+    "footer-doc": "Architecture docs", "footer-sec": "Security policy",
+    "footer-note": "The core publishing workflow is usable and tested; the API is still stabilizing and is not yet recommended as the sole system for formal publishing."
+  }
+};
+
+(function () {
+  var saved = null;
+  try { saved = localStorage.getItem("sh-lang"); } catch (e) {}
+  var lang = (saved === "en" || saved === "zh") ? saved : "zh";
+
+  function apply(l) {
+    var dict = I18N[l];
+    document.documentElement.lang = (l === "zh") ? "zh-CN" : "en";
+    var nodes = document.querySelectorAll("[data-i18n]");
+    for (var i = 0; i < nodes.length; i++) {
+      var k = nodes[i].getAttribute("data-i18n");
+      if (dict[k] !== undefined) nodes[i].innerHTML = dict[k];
+    }
+    var alts = document.querySelectorAll("[data-i18n-alt]");
+    for (var j = 0; j < alts.length; j++) {
+      var ka = alts[j].getAttribute("data-i18n-alt");
+      if (dict[ka] !== undefined) alts[j].setAttribute("alt", dict[ka]);
+    }
+    var attrs = document.querySelectorAll("[data-i18n-attr]");
+    for (var k2 = 0; k2 < attrs.length; k2++) {
+      var t = attrs[k2].getAttribute("data-i18n-attr");
+      var kv = attrs[k2].getAttribute("data-i18n-attr");
+      if (dict[kv] !== undefined) {
+        if (kv === "title") document.title = dict[kv];
+        else attrs[k2].setAttribute("content", dict[kv]);
+      }
+      void t;
+    }
+    var btns = document.querySelectorAll("#langSwitch button");
+    for (var b = 0; b < btns.length; b++) {
+      btns[b].className = (btns[b].getAttribute("data-lang") === l) ? "on" : "";
+    }
+    try { localStorage.setItem("sh-lang", l); } catch (e) {}
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    apply(lang);
+    var btns = document.querySelectorAll("#langSwitch button");
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].addEventListener("click", function () {
+        apply(this.getAttribute("data-lang"));
+      });
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

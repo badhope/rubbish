@@ -1,0 +1,405 @@
+# Rubbish 系统深化路线（2026-11-12）
+
+## 总判断
+
+Rubbish 现在缺的不是“再加一个功能”，而是把一张内容网站变成一家**可运营的期刊**。
+
+四条线必须分开：
+
+1. **发布**：从“改一个字段”变成“可验证、可回滚、可追责的交付”。
+2. **评审**：从“填一张评分表”变成“找到合适的人、处理利益冲突、让判断可校准”。
+3. **移动端**：从“把桌面端缩小”变成“让每种角色在手机上完成今天该做的事”。
+4. **品牌与资助**：把“期刊品牌”和“个人品牌”拆开，把“资助基础设施”和“赞助观点”拆开。
+
+排序也应当如此：先发布，再评审，再移动端，最后品牌与资助。发布是所有内容的出口，出口不稳，后面的运营都是空转。
+
+---
+
+## 一、发布系统：下一阶段不是脚本，是“交付协议”
+
+### 已经完成的底座
+
+- `release_manifests` 不可变快照：期号、状态、内容哈希、资源数、错误/警告数、完整 payload。
+- 状态机：`blocked → ready → scheduled / published`，内容变化后 `ready → superseded`。
+- 五类门禁：期内容、元数据、文件、唯一性、展示。
+- 发布前重新跑门禁，哈希不一致直接 `409 manifest_stale`。
+- 后台 `/admin/releases`：选卷、选期、跑门禁、看 error/warning、发布/排期、看历史。
+- 生产已用 `Vol.1 / Issue 06` 跑通：9 篇、0 error、9 warning（PDF 已清理，回退 Markdown）。
+
+### 下一阶段要补的四件事
+
+**1. Manifest 要能“签名”，而不只是哈希。**
+
+`content_hash` 解决“内容有没有变”，但解决不了“这份 Manifest 是不是编辑批准的”。下一版加：
+
+- `approved_by`、`approved_at`、`approval_note`
+- `manifest_signature`：对 `content_hash + approved_by + approved_at` 做服务端签名
+- 发布接口校验签名，后台显示“谁在什么时候批准了哪一版”
+
+这样发布记录才具备审计意义上的“批准”，而不是“某个人点了按钮”。
+
+**2. 发布要支持“回滚到上一期”，而不是“再跑一次脚本”。**
+
+每次发布生成一份不可变 Manifest，天然就是回滚点。补：
+
+- `POST /api/admin/releases/rollback`，指定目标 Manifest
+- 回滚只恢复 `publish_at` 与 `publication_status`，不回滚文件
+- 回滚也写 Manifest 与审计，不允许“无记录回滚”
+
+**3. 定时发布要由服务端调度，不靠人守夜。**
+
+当前 `publish_at` 是资源字段，未来时间只会让 Manifest 变成 `scheduled`，但真正到点由谁执行？下一版：
+
+- 增加 `release_jobs` 或复用现有调度器，扫描 `scheduled` Manifest
+- 到点前 10 分钟再跑一次门禁；失败则告警，不自动发布
+- 发布成功后写 `release.published` 事件，触发 RSS、sitemap、首页缓存刷新
+- 发布失败必须留下可读原因，不允许静默跳过
+
+**4. 发布要产出“期号页”，而不只是改状态。**
+
+一期发布后，读者应该得到一个稳定的入口：
+
+- `/issues/1/06`：本期目录、编者按、发布时间、DOI 前缀、下载整期
+- 整期 PDF 由各篇 PDF 合并生成，封面与目录单独排版
+- 每篇带 `issue`, `volume`, `publish_at`, `doi`，引用格式一键复制
+- 期号页是静态可缓存页，不依赖后台登录
+
+### 发布系统的验收标准
+
+- 任何一期发布，都能回答：谁批准、批准了哪一版、包含哪些资源、每篇文件哈希是多少。
+- 任何一次内容变更，旧 Manifest 必须自动 `superseded`，发布接口必须拒绝旧哈希。
+- 任何一次发布，都能在 5 分钟内回滚到上一份 Manifest。
+- 任何一个 `scheduled` 期，到点要么成功发布，要么告警并保持未发布，不允许“半发布”。
+
+---
+
+## 二、评审系统：真正缺的是“匹配与校准”，不是评分表
+
+### 现状的问题
+
+评分表已经足够细，五维两段式也稳定。继续改表，收益很低。真正拖慢评审的是：
+
+- 稿子来了，不知道该给谁审。
+- 审稿人可能有利益冲突，但系统不知道。
+- 编辑每天在“哪些稿该送审、哪些该直接退”之间反复判断。
+- 不同审稿人的 70 分不是同一个 70 分。
+- 审稿人要在电脑前才能完成一次评审。
+
+### 建议按四步做
+
+**1. 审稿人池：把“谁审过什么”变成可查询的能力图谱。**
+
+- 每位审稿人维护：学科、子领域、方法标签、语言、历史审稿数、平均周期、接受率、评分偏差
+- 每篇稿子自动抽取：学科、方法、关键词、引用圈层
+- 匹配分数 = 领域重合 + 方法重合 - 冲突风险 - 当前负载
+- 后台显示“推荐 5 人”，编辑可一键发出邀请，也可手动改派
+
+**2. 利益冲突：先声明，再分派。**
+
+- 审稿人年度声明：同机构、合作者、师生、项目伙伴、近期合著
+- 投稿时作者填写机构与近期合作者（可选但鼓励）
+- 分派前做冲突检查，命中则阻止并提示原因
+- 审稿人接受邀请时再次确认“无冲突”
+
+没有这一层，双盲只是“看不见名字”，不是“真的独立”。
+
+**3. 两段式 triage：把编辑的时间留给值得审的稿。**
+
+- 第一段：48 小时内完成“范围/完整性/明显不成立”的快速判断，只做 desk review
+- 第二段：通过 triage 才进入外审，减少无效邀请
+- triage 结论只有三种：送外审、作者补材料、直接拒（附具体理由）
+- 所有 triage 也计入审稿人贡献，不白干
+
+**4. 审稿人校准：让 70 分可比较。**
+
+- 每季度抽取 5 篇已定稿，发给所有审稿人盲评
+- 比较个人分数与编辑部共识分的偏差，生成校准报告
+- 偏差过大不惩罚，但用于分派权重与培训
+- 对外只公布“校准后分数”，不公布个人偏差
+
+### 移动端评审：只做“快速审”，不做“手机全文编辑器”
+
+评审在手机上真正需要的是：
+
+- 今天有几篇待处理、截止哪天
+- 一屏读完摘要、关键图表、审稿重点
+- 五维滑杆 + 三段短评（给作者、给编辑、给编辑部）
+- 语音转文字，转完可改
+- 接受 / 拒绝 / 申请延期，三个按钮
+- 离线草稿，联网自动同步
+
+不需要：手机端排版、批注 PDF、长篇修订。那些留在桌面端。
+
+---
+
+## 三、移动端：按角色做 Today，不按页面做缩小版
+
+移动端首页现在更像“网站的手机版”。应该改成**角色化 Today**：
+
+### 作者 Today
+- 我的稿到哪一步了
+- 审稿意见回来了吗
+- 需要我补什么材料
+- 最近一篇的阅读/引用/评论
+
+### 审稿人 Today
+- 待接受邀请
+- 待完成评审 + 倒计时
+- 本周审稿贡献
+- 快速评审入口
+
+### 编辑 Today
+- 待 triage
+- 待分派
+- 超期未回
+- 本期发布门禁状态
+- 待处理申诉/更正
+
+### 主编 Today
+- 全站异常：门禁 blocked、备份失败、健康检查失败
+- 本期进度
+- 审稿周期与积压
+- 资助与成本
+
+**原则：** 手机端不是“所有功能都能用”，而是“今天必须做的事都能在两分钟内完成”。桌面端负责深度编辑，移动端负责决策与响应。
+
+---
+
+## 四、个人品牌与期刊品牌：必须分开
+
+### 期刊品牌
+
+Rubbish 是作品集，不是个人简历。它应该有：
+
+- 稳定的刊名、期号、栏目、评审标准
+- 独立的关于页、编辑团队、评审流程、更正政策
+- 可引用的 DOI、期号页、作者指南
+- 不随个人情绪和热点频繁改定位
+
+### 个人品牌
+
+个人品牌是“一个人，一套编辑部”。它不应该寄生在期刊首页，而应该有独立入口：
+
+- `/desk` 或独立域名：主编写作、编辑手记、选题判断、审稿观察
+- 内容支柱：**为什么做这本刊、一篇稿是怎么被决定的、我如何看一个学术问题、我犯过什么错**
+- 形式：短评、长文、邮件通讯、播客/视频，不做日更
+- 目标：让读者记住“这个人在认真做一件事”，而不是“这个网站有很多文章”
+
+### 两者关系
+
+- 期刊是“公共产品”，个人品牌是“信任入口”
+- 个人文章可以导流到期号与投稿，但期刊不替个人观点背书
+- 个人品牌不参与评审，避免“主编喜欢什么，作者就写什么”
+- 对外署名严格区分：`Rubbish 编辑部` vs `主编个人`
+
+---
+
+## 五、资助者体系：不赞助观点，只赞助基础设施
+
+### 命名
+
+不要叫“赞助商/Sponsor”，叫 **资助者 / Supporters**。赞助商暗示“买位置”，资助者强调“支持公共基础设施”。
+
+### 原则
+
+- 资助不影响评审、选题、评分、分区、发布
+- 资助页明确写：不接受以“影响内容”为条件的资助
+- 资助者名单按档位公开，不按金额排序
+- 不接受烟草、赌博、成人内容、政治宣传类资助
+- 单笔大额资助需要披露来源，避免“一个金主决定一本刊”
+
+### 档位建议
+
+- **读者**：每月一杯咖啡，名字上墙（可匿名）
+- **同行**：支持服务器与 DOI 注册，季度感谢
+- **机构**：支持一期专题的编辑成本，但不指定内容
+- **基础设施伙伴**：提供存储、CDN、邮件、备份，实物或服务折算
+
+### 钱花在哪
+
+公开一张“成本表”：
+
+- 服务器与存储
+- 域名、证书、邮件
+- DOI 注册与长期归档
+- 审稿系统与备份
+- 编辑与排版人工（如果有）
+
+每季度发一次“钱从哪来、花到哪去”，比任何“赞助方案”都更能建立信任。
+
+---
+
+## 六、90 天执行顺序
+
+### P0（先做，直接影响可信度）
+
+1. ✅ 发布 Manifest 签名与批准记录（2026-11-12 已落地：HMAC 签名 + 后台批准）
+2. ✅ 发布回滚 API 与后台入口（2026-11-12 已落地：只恢复发布时间线，不覆盖正文）
+3. ✅ 定时发布调度 + 失败审计 + 失败告警（2026-11-15：30 秒轮询；失败时按偏好发站内通知与邮件摘要，并写 email digest 记录）
+4. ✅ 期号页 `/issues/{volume}/{issue}`：canonical 入口、archive 旧入口保留、JSON-LD；整期 PDF 沿用 `/api/catalog/issues/{volume}-{issue}/export`。
+5. ✅ 移动端审稿人 Today + 极简快速评审：Dashboard 显示待回应/已接受/最近截止；新增 `/review/quick/$id`，支持接受邀请、在线读稿、Word/PDF 下载、五维评分、附件与移动端粘底提交。
+6. ✅ 测试数据清理脚本：`scripts/cleanup-test-data.py` 支持 dry-run、预览计数、`--delete --confirm DELETE_TEST_DATA`、删后复核；已在 E2E 库副本干跑 6 个账号、验证删除后仅剩 admin，生产库仍未试跑。
+
+### P1（评审效率）
+
+7. ✅ 审稿人推荐与邀请：候选接口按学科/子领域/关键词/能力标签重合、历史审稿量、当前负载给出可解释 0–100 分；资料页可维护能力标签，候选支持“一键邀请 · 14 天”。
+8. ✅ 利益冲突年度声明、机构级匹配与分派拦截：审稿人每年声明冲突对象；投稿保存作者单位；单篇、批量、第三方裁决分派对声明命中与机构重合均 409 拦截并审计；候选池显示冲突原因；接受邀请时再核一次。
+9. ✅ 两段式 triage：初筛队列与三决定之外，新增“补材料”独立状态、作者通知与重投回队列；48 小时自动提醒（只提醒一次、写审计）由 6 小时调度任务执行。
+10. ✅ 审稿人季度校准：个人平均偏移/绝对偏移、录用倾向与偏严/偏宽/波动大/样本不足标记；新增季度盲评样本（每季度从至少 2 份评分的稿件抽最多 5 篇），保存匿名 A/B/C 快照、共识分与极差。
+
+### P2（品牌与资助）
+
+11. ✅ `/desk` 个人品牌入口：三根内容支柱、真实卷首手记、邮件订阅（双确认/退订/后台导出）已上线；独立域名仍待 DNS，不在代码范围。
+12. ✅ 资助者页、成本表、季度公开信：`/support` 已有公开账本、成本表与季度信渲染；后台可录草稿/发布，已发布不可直接删除。真实成本数字仍以编辑部台账为准，未用估算数据填充。
+13. ✅ 期号页 SEO（canonical + JSON-LD）、引用格式（GB/T、APA、MLA）、文章 DOI 展示、DataCite 适配器与后台就绪检查已上线；真实 DOI 注册待生产凭据。
+14. ✅ 移动端作者/编辑 Today + 主编 Today（异常/备份/迁移/磁盘/邮件）已上线，备份目录只读挂载并纳入 36 小时新鲜度检查。
+
+---
+
+### 2026-11-15 续批记录
+
+- 新增迁移 `042_reviewer_conflict_declarations`、`043_submission_triage`；测试库由 `Base.metadata.create_all` 自动建表，生产需按序执行迁移。
+- 2026-11-15 续批新增迁移 `044_p1_reviewer_match`、`045_p1_triage_reminders`、`046_p1_calibration_samples`；已在真实生产备份副本完成 upgrade → downgrade 043 → upgrade 演练，046 表已启用 FORCE RLS，045 回填按租户设置 GUC，历史待初筛稿从迁移时刻重新计时。
+- 新增 `POST /review/conflicts/me` / `GET /review/conflicts/me`、`/submissions/triage` 初筛队列、`/review/calibration` 季度校准；前端新增 `/editor/triage`、`/editor/calibration`。
+- 分派拦截覆盖单篇分派、批量分派、工作台批量分派、第三方裁决四条写入口。
+- 已闭环：P2-12 成本台账与季度公开信（页面、后台录入与公开渲染已上线，真实成本数字仍以编辑部台账为准）；主编 Today（8 项检查全 `ok`）；SMTP 已配置且 `configured/reachable/outbound` 均实测为 `true`。
+- 仍未闭环：P2-11 独立域名（DNS 未解析）、P2-13 DataCite 实际注册（生产 URL/prefix/API key 为空）、异地备份 remote、容器非 root、远程 PAT/SSH 轮换、全站英文与全量无障碍。
+
+## 七、不要做的事
+
+- 不要继续加评分维度。评分表已经够复杂，缺的是匹配与校准。
+- 不要做手机全文编辑器。投入大、使用低、维护贵。
+- 不要把个人品牌做成期刊首页的“主编专栏”。会污染期刊的中立性。
+- 不要把资助做成“赞助商 logo 墙”。会破坏学术信任。
+- 不要用脚本代替发布状态机。脚本能部署，但不能证明“谁批准了什么”。
+
+---
+
+## 追加：工具模块专项（2026-11-14）
+
+编辑器、查看器、转换器、导入导出不属于以上四条主线，单独见
+[`docs/tooling-module-plan-2026-11-14.md`](tooling-module-plan-2026-11-14.md)。
+本专项先修渲染/转换/预览正确性，再按市面常见能力补齐；不与发布/评审路线混排。
+
+## 八、P3 路线（草案，2026-11-16 → 2027-Q1）
+
+P3 不再堆功能，目标只有三个：**可被信任、可被检索、可被接手**。P2 已把品牌与资助面做出来，P3 要把“声称”变成“可核验的记录”。
+
+### P3-1 信任链（最高优先）
+
+- 评审来源公开标签：历史稿区分 `editorial_import` / `editorial_review` / `peer_reviewed`，副刊 `not_applicable`；不伪造评审报告、不公开审稿人身份。（2026-11-15 已上线，生产实测 298 显示“同行评审 · 1 份报告”，132 显示“编辑审稿 · 未外审”）
+- 逐篇可见 DOI / ISSN / 卷期 / 页码 / 许可证；没有 DOI 的稿件明确标“未注册”，不用空白冒充。（2026-11-15 已上线逐篇 `license` 字段，文章页按真实值显示，不再硬编码 CC BY-NC 4.0）
+- 作者贡献（CRediT）、单位、ORCID、基金、COI、数据可用性声明逐篇结构化，不再只存在 PDF 里。（2026-11-15 已上线：投稿向导可填、资源可编辑、录用物化到目录、文章页按真实字段展示）
+- 更正 / 撤稿 / 署名变更公开日志；文章版本历史与作者状态时间线打通。（2026-11-15 已上线：`resource_public_events` 公开事件表 + 文章页“版本与公开记录” + 撤稿标记；版本历史只公开版本号、作者说明与时间，不下发审稿内容）
+- 外部查重与第三方图片审核：先接一个可核验的外部账号，拿不到账号就不上线假“查重通过”。
+
+### P3-2 内容分发
+
+- 全站英文：范围先拍板（建议先 UI 壳层 + 公开页面，后台与正文后置），不一次机翻全站。
+- 每篇 OG 图、citation meta、JSON-LD、sitemap 完整性；分享卡片不再只有站点默认图。
+- 轻量 Analytics + 错误追踪（优先可自托管、国内可达），不再靠 `docker logs` 当监控。
+- 邮件简报：复用现有订阅确认链路，先做月度精选，不做日推。
+
+### P3-3 安全与运维
+
+- 异地备份：对象存储 + 加密 + 保留策略 + 季度恢复演练；没有 remote 之前，`ops/offsite-backup.sh` 继续诚实 SKIP，不伪装成功。
+- 容器非 root：处理 `/data/uploads` 卷属主、LibreOffice 临时目录与 `uv` 运行权限，先在演练库/临时容器验证再切生产。
+- 远程 PAT 全部轮换为 SSH deploy key；容器镜像固定 digest；CSP 去掉 `style-src 'unsafe-inline'` 与过宽 `img-src`。
+- uptime 外部探针 + 备份/迁移/磁盘/邮件告警统一到一条值班链路。
+
+### P3-4 产品收敛
+
+- 冻结商城、R 币、签到、等级、徽章；不再开新一级入口，39 路由 / 289 端点不再增长。
+- 合并双代码树与双 Dockerfile，部署只保留一个构建入口；测试数据清理脚本先在生产 dry-run，再由人工确认删除。
+- 工具模块 3.2 / 3.4 收尾：内容类型分流查看器、批量导入字段映射（编号检查、引用生成、附件按类型预览、CSV 映射与重复合并已上线；编辑器表格操作、版本对比、服务端草稿已上线；导入结果批量勾选提交、文献查询结果累积后批量勾选提交已上线）。
+
+### P3 验收门槛
+
+1. 任一“已评审/已注册/已备份”标签都能点到真实记录或真实文件；点不到就不展示。
+2. 生产回滚、迁移、异地恢复三条链路各至少演练一次并留时间戳。
+3. 新增页面有 E2E 或页面级测试；后端新增端点有权限与租户隔离测试。
+4. 没有真实数据/凭据的功能保持“未启用”，不以占位数字或假成功代替。
+
+## 一句话
+
+**发布要像交付，评审要像编辑，移动端要像助手，品牌要像一个人，资助要像公共基础设施。**
+
+### 2026-11-15 P0/P1 上线记录
+
+- 代码：`94b44f8 feat(review): close P0/P1 release and review workflows`；`9874825 fix(routing): allow /desk SPA deep link`；五远程均已推送。
+- 验证：后端 `1210 passed, 1 skipped`；前端 `28 files / 157 tests passed`；`ruff check` / `ruff format --check` / `typecheck` / `lint` / `build` 通过。
+- 迁移：生产备份副本完成 `043 → 044 → 045 → 046`、`046 → 043 → 046` 演练；真实库回填后 `triage_started_at IS NULL = 0`，历史待初筛稿只有 2 篇从上线时刻重新计时。
+- 生产：发布目录 `/home/ubuntu/rubbish-release-20261115-112125`；应用镜像 `rubbish-app:latest 876e0d4855ef`；回滚镜像 `rubbish-app:rollback-20261115-1127 04e66560248c`；线上迁移版本 `046_p1_calibration_samples`。
+- 备份：`/home/ubuntu/backups/db-pre-p1-20261115-112053.dump`、`uploads-pre-p1-20261115-112053.tar.gz`。
+- 线上：`ops/site-health.sh` 退出码 0；首页静态 `index-iYAs1KHK.js` 及全部引用 assets 200；`/desk`、`/review/quick/1`、`/editor/triage`、`/editor/calibration` 均返回 200；新增接口未登录返回 401。
+- 注意：生产使用 `docker-compose.override.yml` + `apps/backend/Dockerfile.cn`，镜像构建只带 `prebuilt-static` 公共壳；完整 Vite `dist` 需在构建前覆盖到 `apps/backend/prebuilt-static`，或构建后执行 `ops/deploy.sh`，否则首页会引用不存在的 assets。
+
+### 2026-11-15 P2 上线记录
+
+- 代码：`e72d0cc feat(p2): ship brand accountability surfaces`；五远程均已推送。
+- 验证：后端 `1219 passed, 1 skipped`；前端 `28 files / 157 tests passed`；`typecheck` / `lint` / `build` 通过；P2 定向 `9 passed`。
+- 迁移：`047_p2_public_accountability` 在生产临时库完成 `046 → 047`、`047 → 046 → 047` 演练；`desk_subscribers` / `finance_reports` 均启用 `FORCE RLS` + `tenant_isolation`。
+- 生产：发布目录 `/home/ubuntu/rubbish-release-20261115-1215`，标准软链 `/home/ubuntu/rubbish` 已指向；镜像 `rubbish-app:latest 6dfac1a430f1`；精确回滚镜像 `rubbish-app:rollback-p2-exact 702700657d50`。
+- 线上迁移版本 `047_p2_public_accountability`；`/api/health` 200；`/desk`、`/support`、`/admin/finance`、`/admin/desk-subscribers` 均 200；首页静态 `index-BekJrzUi.js` 与 assets 200。
+- 备份：`db-pre-p2-20261115-121257.dump`、`uploads-pre-p2-20261115-121257.tar.gz`；管理员密码修复前另备份 `db-pre-admin-reset-20261115-130539.dump`。
+- 管理员登录：生产 `rubbish_ai_admin` 的密码哈希与 `.env` 不一致，已按环境配置同步（租户上下文内单条更新）并重启；登录 200，`/api/admin/editor/today` 返回 8 项检查全 `ok`，备份 `ok`（DB 0.0h / uploads 0.9h）。
+- 仍受外部条件限制：P2-11 独立域名需 DNS；P2-12 公开数字需真实台账；P2-13 DataCite 实际注册需 URL/prefix/API key。代码与页面均已就绪，不伪造数据或注册结果。
+
+### 2026-11-15 P7 内容信任链上线记录
+
+- 代码：`050_content_declarations`、`051_resource_public_events`；五远程已推送（`d4c2b77`）。
+- 内容侧：逐篇 `license / author_contributions / funding / coi_statement / data_availability`；投稿向导、资源编辑、录用物化、文章页展示全链路打通；文章页只在真实有值时显示声明，不拿全站默认许可冒充逐篇许可。
+- 公开记录：`resource_public_events` 支持更正 / 撤稿 / 署名变更 / 关注声明 / 版本说明；文章页显示撤稿标记与公开说明；`GET /api/catalog/{id}/history` 同时返回公开事件和 `submission_versions` 的版本号/作者说明/时间，不返回审稿 payload。
+- 导入：文献 ID 查询结果不再查一条投一条，可累积到待投稿队列、勾选多条、批量提交；解析结果原有批量能力不变。
+- 边界：批量直写目录仍不做——那会绕过评审状态机；全站英文、外部查重/图片审核、轻量错误追踪仍待做，不以占位功能冒充完成。
+
+### 2026-11-15 P3 先行落地记录
+
+- 代码：`54e0a23 feat(review): expose honest review provenance and add writing tools`、`c434f9a fix(spa): allow /tools deep link`；五远程已推送。
+- 验证：后端 `1219 passed, 1 skipped`（10m58s）；前端 `29 files / 161 tests passed`（9m35s）；`ruff check` / `ruff format --check` / `typecheck` / `lint` / `build` 通过。
+- 新增：`/tools` 引用生成（GB/T 7714、APA、MLA、BibTeX、RIS）与 Markdown 编校检查（图/表/参考文献编号、重复段落、占位符）；文章详情按真实 `submissions/review_reports` 显示评审来源，不写库、不伪造报告。
+- 非 root：生产镜像改为 `USER app`（uid/gid 999），compose 新增 `app-init` 一次性修正 `/data/uploads` 属主，`app` 加 `cap_drop: ALL` 与 `no-new-privileges`；生产容器实测 `user=app`、`running_as=999:999`、`CapDrop=["ALL"]`。
+- 生产：发布目录 `/home/ubuntu/rubbish-release-20261115-1359`，标准软链 `/home/ubuntu/rubbish` 已指向；镜像 `rubbish-app:p3-20261115-1405`（latest 同步）；旧 P2 镜像 `rubbish-app:p2-20261115-1215` 保留作回滚。
+- 线上：`/api/health` 200、`/tools` 200、`/desk`/`/support`/`/papers`/`/admin/finance` 200；管理员登录 200，`/api/admin/editor/today` 8 项检查全 `ok`；切换后日志无 error/exception/traceback。
+- 备份：`/home/ubuntu/backups/db-pre-nonroot-20261115-1358.dump`（924K）。
+- 仍未闭环：异地备份无 rclone remote（脚本继续 SKIP）、容器 rootfs 仍可写、远程 PAT 只是移出 `.git/config` 到 `~/.git-credentials` 未真正轮换、测试数据清理脚本生产未 dry-run。
+
+### 2026-11-15 P4 工具模块上线记录
+
+- 代码：`0f09d98 feat(tooling): preview attachment types and map CSV imports`、`a2ec7a3 fix(ingest): avoid merging same-title records by different authors`；五远程已推送。
+- 功能：审稿附件按图片 / PDF / CSV / 代码文本分流预览，Word / Excel / ZIP / SVG 明确下载兜底；CSV 导入支持中英文表头别名、逐列映射/显式忽略、DOI/标题重复合并。
+- 验证：后端 `1224 passed, 1 skipped`（701s）；前端 `32 files / 172 tests passed`（826s）；`ruff` / `typecheck` / `lint` / `build` 通过。
+- 生产：release `/home/ubuntu/rubbish-release-20261115-1525`，标准软链已指向；镜像 `rubbish-app:p4-20261115-1535`（含去重修正）；旧 P3 镜像 `rubbish-app:p3-20261115-1405` 保留回滚。生产 `/api/health`、`/tools`、`/desk`、`/support`、`/papers`、`/ingest` 均 200；管理员 Today 8 项 `ok`；容器仍 `user=app`、`cap_drop=ALL`、`no-new-privileges`。
+
+### 2026-11-15 P5 编辑器与服务端草稿上线记录
+
+- 代码：`19fed28 feat(editor): add table tools, snapshots and server drafts`；五远程已推送。
+- 功能：Markdown 表格菜单支持行/列增删与列/整表对齐；本机版本快照支持保存、行级 diff、恢复、删除（每文档最多 8 个）；投稿向导新增服务端草稿（`submission_drafts`，每租户每用户一份，覆盖保存），本机草稿优先、云端草稿兜底恢复，1.5s 防抖同步，提交成功后清理。
+- 验证：后端 `1227 passed, 1 skipped`（672.90s）；前端 `34 files / 184 tests passed`（660.98s）；`ruff check` / `ruff format --check` / `typecheck` / `lint` / `build` 通过。
+- 迁移：`048_submission_drafts` 已在生产执行，`alembic_version = 048_submission_drafts`；`submission_drafts` 表启用 `FORCE RLS` + `tenant_isolation`，当前 0 行。
+- 生产：release `/home/ubuntu/rubbish-release-20261115-1718`，标准软链已指向；镜像 `rubbish-app:p5-20261115-1722`；旧 P4 镜像 `rubbish-app:p4-20261115-1535` 保留回滚。首页引用 `assets/index-DlOLoa1J.js`，`/api/health` 200，`/api/submissions/draft` 未登录 401。
+- 接口冒烟：管理员登录后 `GET` 返回 `draft: null` → `PUT` 200 → `GET` 回读标题一致 → `DELETE` 200 → `GET` 再次 `draft: null`；测试草稿已删除。
+- 备份：`/home/ubuntu/backups/db-pre-editor-p1-20261115-1710.dump`（927K，custom dump，容器内 `pg_restore --list` 通过）。
+- 仍未做：版本快照仍只存本机；服务端草稿只保留最新一份，不做多版本历史。
+
+### 2026-11-15 P6 导入批量提交上线记录
+
+- 代码：`241a110 feat(ingest): batch selected imports into submissions`。
+- 功能：解析结果支持逐条勾选、全选当前、清空选择；批量确认弹窗区分“可提交/需补全”，可统一补充缺失学科与年份（只补缺失、不覆盖已有值），逐条显示后端失败原因，成功项移除、失败项保留可重试；缺摘要等无法批量补全的记录可跳转单条投稿向导。批量提交语义是创建投稿并进入编辑评审队列，不绕过评审直写目录。
+- 接口：新增 `POST /api/submissions/batch`，最多 50 条；每条用独立 savepoint，风控/站内相似度失败只影响自身；返回 `created_count/failed_count/results`；未确认当版投稿规范返回 403 `rules_ack_required`。
+- 验证：后端 `1232 passed, 1 skipped`（846.76s）；前端 `34 files / 188 tests passed`（685.86s）；`ruff check` / `ruff format --check` / `typecheck` / `lint` / `build` 通过。
+- 生产：release `/home/ubuntu/rubbish-release-20261115-1819`，标准软链已指向；镜像 `rubbish-app:p6-20261115-1824`；上一版 P5 镜像 `rubbish-app:p5-20261115-1722` 保留回滚。`/ingest`、`/api/health` 200，当前入口引用 `assets/index-D5oFL-oe.js`。
+- 接口冒烟：未登录批量 401；空 items 422；管理员确认当前规范 1.1 后提交 2 条测试投稿，返回 `created_count=2/failed_count=0`，随即删除两条（原 ID 367/368），DB 复核残留 0。
+- 备份：`/home/ubuntu/backups/db-pre-ingest-batch-20261115-1819.dump`（934K，custom dump）。
+- 仍未做：文献查询结果一次只查一条，不做批量勾选；批量只能统一补学科/年份，摘要缺失仍需单条补全；若确需管理员批量直写目录，需另做 admin-only 路径。
+
+### 2026-11-15 P8 内容信任链生产上线记录
+
+- 代码：`d4c2b77 feat(content): structure declarations and publish correction log`；`gh-badhope` / `gh-morning` / `gh-x` / `gitee` / `gitcode` 五个远程均已推送。
+- 验证：后端 `1240 passed, 1 skipped`（685s）；前端 `34 files / 188 tests passed`（659s）；`ruff check` / `ruff format --check` / `typecheck` / `lint` / `npm run build` 通过。
+- 迁移：生产 `049_review_drafts → 050_content_declarations → 051_resource_public_events` 已执行；`resources` 五个声明列、`resource_public_events` 表与 `tenant_isolation` 策略已核验。
+- 生产：release `/home/ubuntu/rubbish-release-20261115-2205`，标准软链 `/home/ubuntu/rubbish` 已指向；镜像 `rubbish-app:p8-20261115-2158`（ID `68b628dc016b`，`latest` 同步）。
+- 线上：首页已引用新入口 `assets/index-Dqg4fUls.js` 且资源 200；`/`、`/papers`、`/fun`、`/desk`、`/tools`、`/ingest`、`/catalog/298`、`/catalog/132`、`/submissions/new` 均 200；`/api/catalog/updates` 返回空列表，`/api/catalog/298/history`、`/api/catalog/132/history` 均 200。
+- 数据：迁移前备份 `/home/ubuntu/backups/db-pre-content-20261115-2159.dump`（946K，`pg_restore --list` 通过，798 TOC entries）。
+- 服务器：运行目录只保留 compose / Caddyfile / `.env` / `VERSION` / `ops` / `logs`（76K），不再保留源代码、docs、review-pack、pending-orig 或旧静态；代码只在五个平台仓库。
+- 部署注意：镜像重建后 Caddy 可能缓存旧 app 容器 IP，重启一次 `rubbish-caddy-1` 即恢复；本次已执行并验证 200。

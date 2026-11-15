@@ -1,0 +1,139 @@
+name: rubbish
+
+# Rubbish 单机全家桶：数据库 + 后端(含前端静态) + 自动 HTTPS，一条命令上线。
+# 适用：任意 VPS（Hetzner/腾讯云轻量等，1C2G 起步）。前提：装好 Docker + Compose v2。
+#
+# 使用：
+#   1. cp .env.example .env  然后填好（必填项见文件内注释与 DEPLOY.md checklist）
+#   2. 在 .env 里设置 SITE_DOMAIN=你的域名（DNS A 记录指到本机），Caddy 自动签发 HTTPS
+#   3. docker compose up -d --build
+#   4. 验证: curl https://$SITE_DOMAIN/api/health
+#
+# 功能完整性：真 PostgreSQL（RLS/pg_trgm/UUID 全生效）+ 本地持久卷（上传的 PDF
+# 重启不丢）+ 无冷启动 + 无平台配额。这是"功能不打折"的最小平台数方案。
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      # 用变量兜住旧部署：已有数据卷的库用户名/库名是 rubbish，
+      # 直接改名会让容器初始化跳过后连不上。新部署走默认值 rubbish。
+      POSTGRES_USER: ${POSTGRES_USER:-rubbish}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in repo-root .env}
+      POSTGRES_DB: ${POSTGRES_DB:-rubbish}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-rubbish} -d ${POSTGRES_DB:-rubbish}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # 命名卷首次挂载时属主是 root；应用镜像以 app 用户运行，不能自己 chown。
+  # 用同镜像的 root 一次性 init 修正属主，再让 app 启动，避免把容器跑成 root。
+  app-init:
+    image: rubbish-app:latest
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    user: "0:0"
+    entrypoint: ["sh", "-c", "chown -R app:app /data/uploads && chmod 775 /data/uploads"]
+    volumes:
+      - uploads:/data/uploads
+    restart: "no"
+
+  app:
+    image: rubbish-app:latest
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      app-init:
+        condition: service_completed_successfully
+    environment:
+      RUBBISH_ENVIRONMENT: production
+      # 容器网络内直连 db 服务； Neon 等外部库时替换此值即可。
+      RUBBISH_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-rubbish}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-rubbish}
+      RUBBISH_SECRET_KEY: ${RUBBISH_SECRET_KEY:?set in repo-root .env}
+      RUBBISH_FERNET_KEY: ${RUBBISH_FERNET_KEY:?set in repo-root .env}
+      RUBBISH_ADMIN_EMAIL: ${RUBBISH_ADMIN_EMAIL:-admin@rubbish.local}
+      RUBBISH_ADMIN_USERNAME: ${RUBBISH_ADMIN_USERNAME:-admin}
+      RUBBISH_ADMIN_PASSWORD: ${RUBBISH_ADMIN_PASSWORD:?set in repo-root .env}
+      RUBBISH_ALLOWED_HOSTS: ${SITE_DOMAIN},localhost
+      RUBBISH_CORS_ORIGINS: https://${SITE_DOMAIN}
+      RUBBISH_STORAGE_BACKEND: local
+      RUBBISH_STORAGE_PATH: /data/uploads
+      RUBBISH_STATIC_DIR: /app/static
+      RUBBISH_LOG_LEVEL: WARNING
+      RUBBISH_JSON_LOGS: "false"
+      # 公开站点根地址：sitemap、OAI-PMH 与邮件深链都靠它拼绝对 URL。
+      # 反向代理后应用只看到 http://app:8080，不设置就会产出错误协议。
+      RUBBISH_PUBLIC_BASE_URL: ${RUBBISH_PUBLIC_BASE_URL:-}
+      # /metrics 默认关闭：无鉴权端点，开着等于公开路由表与流量规模。
+      RUBBISH_METRICS_PUBLIC: ${RUBBISH_METRICS_PUBLIC:-false}
+      # 事务邮件：SMTP 账号池与深链前缀。全部从 .env 透传，
+      # 未配置时自动降级为日志输出，注册/找回密码等流程不会中断。
+      RUBBISH_EMAIL_BACKEND: ${RUBBISH_EMAIL_BACKEND:-console}
+      # 外发总闸默认关闭：容器化部署同样受护栏保护，需显式开启才真发信。
+      RUBBISH_EMAIL_OUTBOUND_ENABLED: ${RUBBISH_EMAIL_OUTBOUND_ENABLED:-false}
+      # 录用恭喜邮件独立开关（主编授权：发布成功要发祝贺邮件）。
+      RUBBISH_EMAIL_CONGRAT_ENABLED: ${RUBBISH_EMAIL_CONGRAT_ENABLED:-false}
+      RUBBISH_EMAIL_SMTP_ACCOUNTS: ${RUBBISH_EMAIL_SMTP_ACCOUNTS:-}
+      RUBBISH_EMAIL_SMTP_HOST: ${RUBBISH_EMAIL_SMTP_HOST:-}
+      RUBBISH_EMAIL_SMTP_PORT: ${RUBBISH_EMAIL_SMTP_PORT:-465}
+      RUBBISH_EMAIL_SMTP_USER: ${RUBBISH_EMAIL_SMTP_USER:-}
+      RUBBISH_EMAIL_SMTP_PASSWORD: ${RUBBISH_EMAIL_SMTP_PASSWORD:-}
+      RUBBISH_EMAIL_SMTP_USE_TLS: ${RUBBISH_EMAIL_SMTP_USE_TLS:-true}
+      RUBBISH_EMAIL_SMTP_STARTTLS: ${RUBBISH_EMAIL_SMTP_STARTTLS:-false}
+      RUBBISH_EMAIL_FROM_ADDRESS: ${RUBBISH_EMAIL_FROM_ADDRESS:-}
+      RUBBISH_EMAIL_FROM_NAME: ${RUBBISH_EMAIL_FROM_NAME:-Rubbish}
+      RUBBISH_EMAIL_PER_ADDRESS_COOLDOWN: ${RUBBISH_EMAIL_PER_ADDRESS_COOLDOWN:-45}
+      RUBBISH_EMAIL_PER_ADDRESS_LIMIT: ${RUBBISH_EMAIL_PER_ADDRESS_LIMIT:-6}
+      RUBBISH_FRONTEND_BASE_URL: ${RUBBISH_FRONTEND_BASE_URL:-}
+      RUBBISH_SITE_NAME: ${RUBBISH_SITE_NAME:-Rubbish}
+      # Caddy 在同一个容器网络里，X-Forwarded-For 只有一跳；
+      # 打开后限流按真实客户端 IP 计数，而不是按代理 IP（否则全站共用一个桶）。
+      RUBBISH_TRUSTED_PROXIES_COUNT: ${RUBBISH_TRUSTED_PROXIES_COUNT:-1}
+    volumes:
+      - uploads:/data/uploads
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    # 必须先跑迁移再启动：RLS 策略只存在于 alembic 迁移里，
+    # ORM create_all 不会生成（见 tests/test_rls_coverage.py 的守门逻辑）。
+    command: >
+      sh -c "uv run --no-sync alembic upgrade head
+      && uv run --no-sync python deploy_server.py"
+    expose:
+      - "8080"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./logs/caddy:/var/log/caddy
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  pgdata:
+    name: rubbish_pgdata
+  uploads:
+    name: rubbish_uploads
+  caddy_data:
+    name: rubbish_caddy_data
+  caddy_config:
+    name: rubbish_caddy_config

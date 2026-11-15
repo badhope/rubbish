@@ -1,0 +1,547 @@
+"""ORM models for the base spine.
+
+All models inherit from ``Base`` (defined here). Domain-specific tables
+(submissions, publications, etc.) live in module packages under
+``app.modules.<name>.models`` and contribute their own ``Base.metadata``
+via the module registry.
+
+Every multi-tenant table MUST carry ``tenant_id`` (UUID, non-null, indexed)
+and rely on PostgreSQL RLS for isolation. See ARCHITECTURE.md §Tenancy.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Any
+from uuid import UUID, uuid4
+
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+from app.core.time import utcnow
+
+# JSONB falls back to JSON on SQLite so in-memory tests can run.
+JSONBVariant = JSONB().with_variant(JSON(), "sqlite")
+
+
+class Base(DeclarativeBase):
+    """Declarative base for the core models. Modules declare their own
+    ``Base`` subclasses; the registry merges their metadata into the
+    Alembic target_metadata (see alembic/env.py).
+    """
+
+    pass
+
+
+class TenantScopedMixin:
+    """Q-4 统一 tenant_id 列声明。
+
+    所有多租户表共享的 ``tenant_id`` 列定义：UUID + FK→tenants.id +
+    non-null + indexed。各模块模型通过混入此 Mixin 获得该列，避免
+    22 处重复声明（旧代码里每个模型都手写一遍 5 行 mapped_column）。
+
+    Mixin 不声明 ``__tablename__``，不声明主键——只做"列注入"。
+    使用方::
+
+        class MyModel(Base, TenantScopedMixin):
+            __tablename__ = "my_table"
+            id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+            ...
+    """
+
+    tenant_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+
+class Tenant(Base):
+    """A tenant = one journal/press/server/etc. on the platform.
+
+    In single mode, exactly one row exists (created lazily on first
+    startup). In multi mode, one row per tenant. All domain tables carry
+    ``tenant_id`` referencing this table.
+    """
+
+    __tablename__ = "tenants"
+    # Named constraint (not `unique=True` on the column) so the metadata
+    # matches what the migration created and `alembic check` stays clean.
+    __table_args__ = (UniqueConstraint("slug", name="uq_tenants_slug"),)
+
+    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
+    slug: Mapped[str] = mapped_column(String(64), index=True)
+    name: Mapped[str] = mapped_column(String(255))
+    # Type enables future expansion: 'journal' | 'press' | 'server' | 'institution'.
+    tenant_type: Mapped[str] = mapped_column(String(32), default="journal")
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    # Arbitrary key/value settings — replaces OJS-style ``*_settings`` tables.
+    settings: Mapped[dict[str, Any] | None] = mapped_column(JSONBVariant, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=utcnow,
+        onupdate=utcnow,
+        nullable=False,
+    )
+
+    users: Mapped[list[User]] = relationship(back_populates="tenant", cascade="all, delete-orphan")
+    hosts: Mapped[list[TenantHost]] = relationship(
+        back_populates="tenant", cascade="all, delete-orphan"
+    )
+
+
+class TenantHost(Base, TenantScopedMixin):
+    """Maps a host-header domain name to a tenant.
+
+    Used in multi-tenant mode to resolve which tenant a request belongs to
+    based on the ``Host`` header. One tenant can have multiple hostnames
+    (e.g. ``journal-a.example.com`` and ``www.journal-a.org``).
+    """
+
+    __tablename__ = "tenant_hosts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    host: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+
+    tenant: Mapped[Tenant] = relationship(back_populates="hosts")
+
+
+class User(Base, TenantScopedMixin):
+    """A platform user. Belongs to one tenant; role assignments are M:N.
+
+    ``token_version`` is bumped on logout/password change to
+    invalidate all outstanding access tokens.
+
+    ``refresh_token_version`` is a separate counter bumped on each
+    ``/auth/refresh`` call. It invalidates only the consumed refresh
+    token (and any other refresh tokens issued before this refresh) —
+    access tokens and the user's other devices are not affected.
+    This is OAuth2-standard refresh token rotation: a stolen refresh
+    token becomes useless the moment the legitimate holder refreshes.
+    """
+
+    __tablename__ = "users"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "email", name="uq_users_tenant_email"),
+        UniqueConstraint("tenant_id", "username", name="uq_users_tenant_username"),
+        # Composite lookup used by ORCID attribution search; created by
+        # migration 014 but previously missing here, which made
+        # `alembic check` report a spurious drift.
+        Index("ix_users_tenant_orcid", "tenant_id", "orcid"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False)
+    username: Mapped[str] = mapped_column(String(100), nullable=False)
+    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    # --- 权限轴（五层收敛，v1.14） ---
+    # 单一权限档位：user < reviewer < editor < editor_in_chief。
+    # 大身份包含小身份全部权限；主编不叠加小身份。访客不入库。
+    # 历史 is_admin 与 user_roles 在迁移 20261107_role_axis 中收敛进此列；
+    # require_role() 以本列为准，is_admin 仅作过渡兜底（= editor_in_chief）。
+    role: Mapped[str] = mapped_column(
+        String(32), nullable=False, default="user", server_default="user"
+    )
+    is_email_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    token_version: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    # Independent from token_version so refresh rotation does not log out
+    # every device the way logout / password change do.
+    refresh_token_version: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    # --- TOTP two-factor auth (opt-in per user) ---
+    # TOTP 2FA secret encrypted at rest with Fernet; used by app/api/two_factor.py
+    # via core/totp.py. 2FA takes effect once ``totp_enabled_at`` is stamped
+    # (i.e. after the user has proven they can produce a valid code).
+    # The legacy plaintext ``two_factor_*`` column group was dropped by
+    # migration 021_unify_two_factor.
+    totp_secret_encrypted: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    # JSON array of SHA-256 hashes of the one-time backup codes.
+    totp_backup_codes_hashed: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    # Timestamp when 2FA was enabled (used for the privacy audit log).
+    totp_enabled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Highest TOTP counter (30s window index) ever accepted for this user.
+    # Replay protection: verify_totp rejects any counter <= this value, so a
+    # captured code cannot be reused within its window. See migration 022.
+    totp_last_used_counter: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # --- WebAuthn / Passkeys ---
+    # JSON array of registered credential dicts:
+    #   [{"id": "...", "public_key": "...", "sign_count": 0, "name": "...", "created_at": "..."}]
+    webauthn_credentials: Mapped[list[dict[str, Any]] | None] = mapped_column(
+        JSONBVariant, nullable=True
+    )
+    # OpenID Connect ORCID iD linked to this user (optional).
+    orcid: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    # 用户自定义一句话简介（个人中心展示；迁移 012）。
+    bio: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    # --- 通知偏好（迁移 040） ---
+    # 只存用户显式改过的键；缺省值由 notifications.services.default_prefs
+    # 在读取时合并，避免存量用户补数据。站内默认开、邮件默认关。
+    notification_prefs: Mapped[dict[str, Any] | None] = mapped_column(JSONBVariant, nullable=True)
+    # --- 可扩展的个人资料（迁移 026） ---
+    # 全部可空：存量用户不需要补数据；PATCH /users/me 仅在字段出现时写入。
+    display_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    real_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    affiliation: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    department: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    academic_title: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    research_interests: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # 审稿能力标签（P1-7）：自由文本短标签，参与候选匹配；空数组表示未填写。
+    # 与 research_interests 分开：后者是主页展示的研究兴趣，前者是可用于
+    # 分派解释的能力标签，编辑不会因为一句简介就被当成专家。
+    reviewer_tags: Mapped[list[str]] = mapped_column(
+        JSONBVariant, nullable=False, default=list, server_default="[]"
+    )
+    website: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    google_scholar: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    location: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    # --- 公开主页自定义（迁移 033） ---
+    avatar_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    banner_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    accent_color: Mapped[str] = mapped_column(
+        String(7), nullable=False, default="#2f5d46", server_default="#2f5d46"
+    )
+    # 用户主动公开的联系邮箱；账号 email 永不对外。
+    contact_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    profile_visibility: Mapped[str] = mapped_column(
+        String(16), nullable=False, default="public", server_default="public"
+    )
+    # --- R 币（迁移 033）：可消费的社区货币，与 XP/等级完全分开 ---
+    coin_balance: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
+    accent_unlocked: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
+    # Soft-delete timestamp. Set when the user requests account deletion
+    # (GDPR right-to-erasure). The row is anonymised in place, and a
+    # background job hard-deletes it after the grace window.
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True
+    )
+    # --- 等级体系（gamification 模块） ---
+    # 运行中的 XP 总分：ledger（user_xp_events）是事实源，这里是热路径快照。
+    xp: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    # 投稿规范确认：作者必须读过当前版本的《投稿规范》才能提交。
+    # 版本号与 docs/editorial-standards.md 的 front-matter 对齐。
+    rules_ack_version: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    rules_ack_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=utcnow,
+        onupdate=utcnow,
+        nullable=False,
+    )
+
+    tenant: Mapped[Tenant] = relationship(back_populates="users")
+    roles: Mapped[list[UserRole]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+
+
+class Role(Base, TenantScopedMixin):
+    """Pre-defined role labels per tenant. Roles are NOT user-defined yet —
+    a fixed enum is enough for the base spine.
+
+    The base ships with: editor / section_editor / author / reviewer /
+    reader. Modules may add their own roles by inserting rows here.
+    """
+
+    __tablename__ = "roles"
+    __table_args__ = (UniqueConstraint("tenant_id", "name", name="uq_roles_tenant_name"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(32), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+
+    assignments: Mapped[list[UserRole]] = relationship(
+        back_populates="role", cascade="all, delete-orphan"
+    )
+
+
+class UserRole(Base, TenantScopedMixin):
+    """M:N between User and Role, scoped per tenant.
+
+    Both User and Role already carry tenant_id; this junction table
+    repeats it for RLS coverage and easier per-tenant queries.
+    """
+
+    __tablename__ = "user_roles"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "user_id", "role_id", name="uq_user_roles_tenant_user_role"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    role_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("roles.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    granted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+
+    user: Mapped[User] = relationship(back_populates="roles")
+    role: Mapped[Role] = relationship(back_populates="assignments")
+
+
+class AuditLog(Base):
+    """Immutable record of destructive operations (user delete, role change,
+    module enable/disable, schema migration).
+
+    Append-only: never UPDATE or DELETE rows. The admin UI exposes this
+    read-only; the cleanup policy is a separate operational concern.
+    """
+
+    __tablename__ = "audit_logs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    tenant_id: Mapped[UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    actor_user_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    action: Mapped[str] = mapped_column(String(64), nullable=False)
+    target_type: Mapped[str | None] = mapped_column(String(64))
+    target_id: Mapped[str | None] = mapped_column(String(128))
+    # Arbitrary structured payload (before/after/diff).
+    payload: Mapped[dict[str, Any] | None] = mapped_column(JSONBVariant, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=utcnow,
+        nullable=False,
+        index=True,
+    )
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        # S-3 租户隔离收口：audit 表 tenant_id 允许 None（ondelete=SET NULL），
+        # 但所有 15+ 写点都应绑定租户。001 的 RLS policy
+        # `WITH CHECK (tenant_id IS NULL OR ...)` 还放行 NULL 写入，这是
+        # 多租户下"审计行漂移到无主租户"的潜在泄漏面。这里在模型层兜底：
+        # 任何无租户上下文（如系统级 cleanup）的写点必须显式传入
+        # `audit_tenant_exempt=True` kwarg 才能写 None，否则直接抛错，
+        # 把"分散 15 处都要查 tenant 非空"的风险收敛到这一处模型级断言。
+        tenant_id = kwargs.get("tenant_id", getattr(self, "tenant_id", None))
+        if tenant_id is None and not kwargs.pop("audit_tenant_exempt", False):
+            raise ValueError(
+                "AuditLog.tenant_id must be non-null in tenant context; "
+                "pass audit_tenant_exempt=True for system-level (no-tenant) writes"
+            )
+
+
+class EmailLoginCode(Base, TenantScopedMixin):
+    """一次性邮箱登录验证码（哈希存储，10 分钟有效）。
+
+    为什么做：读者记不住密码，「输邮箱收个码就进」是内容站的标准期待。
+    码只存 SHA-256 哈希；同邮箱重新请求即作废旧码；每码最多 5 次校验
+    尝试，防 6 位数字空间被在线爆破。
+    """
+
+    __tablename__ = "email_login_codes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    # SHA-256(email:code:server_secret) 的 hex——库里泄露也不可回用
+    code_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    # 每码最多 5 次尝试；超过即作废（校验时删除）
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class ContentReport(Base, TenantScopedMixin):
+    """通用内容举报：评论与投稿。
+
+    论坛帖子/回复继续用历史 ``forum_reports``（已有外键与幂等逻辑），
+    本表只承接后接入的评论与投稿，后台把两类记录合并成同一队列展示。
+    ``target_type`` 目前限定 ``comment`` / ``submission``；``status``
+    与论坛举报一致：open / resolved / rejected。
+    """
+
+    __tablename__ = "content_reports"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    reporter_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    target_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    target_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    reason: Mapped[str] = mapped_column(String(200), nullable=False, default="")
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="open")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (
+        Index("ix_content_reports_tenant_status", "tenant_id", "status", "created_at"),
+        Index("ix_content_reports_target", "tenant_id", "target_type", "target_id"),
+    )
+
+
+class ApiToken(Base, TenantScopedMixin):
+    """个人 API Token，供 MCP / 脚本以用户身份投稿。
+
+    只存 SHA-256 哈希，明文仅在创建时返回一次；撤销立即生效。
+    作用域目前只有 ``submission:write`` 与 ``profile:read``，避免一个
+    token 意外获得管理权限。``last_used_at`` / ``request_count`` 用于
+    后台审计和异常频率观察。
+    """
+
+    __tablename__ = "api_tokens"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    name: Mapped[str] = mapped_column(String(60), nullable=False)
+    token_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    token_prefix: Mapped[str] = mapped_column(String(16), nullable=False)
+    scopes: Mapped[str] = mapped_column(
+        String(200), nullable=False, default="submission:write profile:read"
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    request_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # 投稿小时窗：最多 10 篇/小时，防止自动化刷稿。
+    window_started_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    window_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+    __table_args__ = (Index("ix_api_tokens_tenant_user", "tenant_id", "user_id", "created_at"),)
+
+
+class DeskSubscriber(Base, TenantScopedMixin):
+    """主编桌邮件订阅人。
+
+    只存 token 的 SHA-256 哈希，明文 token 仅出现在确认/退订邮件里。
+    状态机：pending → confirmed → unsubscribed；重复订阅会轮换 token，
+    避免旧的确认链接长期有效。
+    """
+
+    __tablename__ = "desk_subscribers"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(String(320), nullable=False)
+    token_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    token_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending")
+    source: Mapped[str] = mapped_column(String(40), nullable=False, default="desk")
+    last_email_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    unsubscribed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "email", name="uq_desk_subscriber_email"),
+        Index("ix_desk_subscribers_tenant_status", "tenant_id", "status", "created_at"),
+    )
+
+
+class FinanceReport(Base, TenantScopedMixin):
+    """季度财务公开：成本台账 + 主编公开信。
+
+    ``income_items`` / ``expense_items`` 是对象数组，金额以“分”存整数，
+    避免浮点误差；前台按人民币元展示。未发布的草稿只有管理员可见。
+    """
+
+    __tablename__ = "finance_reports"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    year: Mapped[int] = mapped_column(Integer, nullable=False)
+    quarter: Mapped[int] = mapped_column(Integer, nullable=False)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    summary_md: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    income_items: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONBVariant, nullable=False, default=list
+    )
+    expense_items: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONBVariant, nullable=False, default=list
+    )
+    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="CNY")
+    published: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_by: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
+    )
+
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "year", "quarter", name="uq_finance_report_period"),
+        Index("ix_finance_reports_tenant_published", "tenant_id", "published", "published_at"),
+    )
+
+
+__all__ = [
+    "ApiToken",
+    "AuditLog",
+    "Base",
+    "ContentReport",
+    "DeskSubscriber",
+    "EmailLoginCode",
+    "FinanceReport",
+    "Role",
+    "Tenant",
+    "TenantHost",
+    "TenantScopedMixin",
+    "User",
+    "UserRole",
+]

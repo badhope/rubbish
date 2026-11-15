@@ -1,0 +1,16 @@
+# 本地覆盖配置：使用国内网络版 Dockerfile（不覆盖仓库原有文件，git pull 不受影响）
+services:
+  app:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile.cn
+    environment:
+      # 只读挂载备份目录，供主编 Today 读取最近 DB/upload 备份年龄。
+      RUBBISH_BACKUP_DIR: /backups
+    volumes:
+      - ${BACKUP_HOST_DIR:-/home/ubuntu/backups}:/backups:ro
+  # 一次性卷属主 init 与 app 用同一镜像/同一构建入口。
+  app-init:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile.cn

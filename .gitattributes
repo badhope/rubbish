@@ -1,0 +1,25 @@
+* text=auto eol=lf
+
+# Binary files
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.webp   binary
+*.ico    binary
+*.svg    text
+*.pdf    binary
+*.zip    binary
+*.woff   binary
+*.woff2  binary
+*.ttf    binary
+*.eot    binary
+*.mov    binary
+*.mp4    binary
+*.webm   binary
+
+# Generated files (reduce PR diff noise)
+package-lock.json  linguist-generated=true
+uv.lock            linguist-generated=true
+pnpm-lock.yaml     linguist-generated=true
+yarn.lock          linguist-generated=true

@@ -1,0 +1,63 @@
+# Gitleaks config — block any high-confidence secret from leaving the repo.
+# Detection is tuned to the Rubbish stack (FastAPI backend, Vite frontend).
+# Lower entropy thresholds catch accidental test-token commits.
+
+[extend]
+# Use built-in ruleset as a base; extend rather than replace so we still
+# catch AWS, GCP, Slack, GitHub, Stripe, OpenAI keys etc.
+useDefault = true
+
+[[rules]]
+id = "rubbish-jwt-secret"
+description = "Backend JWT secret key (RUBBISH_SECRET_KEY / JWT_SECRET)"
+regex = '''(?i)(?:rubbish_)?secret_key\s*[:=]\s*["']?[A-Za-z0-9_\-+/=]{32,}["']?'''
+keywords = ["secret_key", "rubbish"]
+entropy = 3.5
+
+[[rules]]
+id = "rubbish-admin-password"
+description = "Backend bootstrap admin password"
+regex = '''(?i)(?:rubbish_)?admin_password\s*[:=]\s*["']?[^\s"']{12,}["']?'''
+keywords = ["admin_password"]
+
+[[rules]]
+id = "rubbish-database-url"
+description = "Database URL containing real credentials"
+regex = '''(?i)(?:postgres(?:ql)?|mysql)://[^\s:@/]+:[^\s:@/]+@[^\s/]+/[^\s/?]+'''
+entropy = 3.5
+
+[[rules]]
+id = "rubbish-redis-url"
+description = "Redis URL containing real password"
+regex = '''redis://:[^\s:@/]+@'''
+entropy = 3.0
+
+[[rules]]
+id = "rubbish-oidc-client-secret"
+description = "OIDC client secret"
+regex = '''(?i)(?:rubbish_)?oidc.*client_secret\s*[:=]\s*["']?[A-Za-z0-9_\-]{16,}["']?'''
+keywords = ["oidc"]
+
+[allowlist]
+description = "Permit the obvious cases (test/example, generated mocks)"
+paths = [
+  '''(^|/)tests?/.*\.py$''',
+  '''(^|/)tests?/.*\.ts$''',
+  '''(^|/)tests?/.*\.tsx$''',
+  '''(^|/)testdata/.*''',
+  '''(^|/)fixtures/.*''',
+  '''\.env\.example$''',
+  '''\.env\.sample$''',
+  '''README\.md$''',
+  '''README\.zh\.md$''',
+  '''README\.ja\.md$''',
+]
+regexes = [
+  '''(?i)example\.com''',
+  '''(?i)test[-_]?key''',
+  '''(?i)ci-test-''',
+  '''\*{4,}''',  # already-redacted
+  # Explicitly-labelled test/dev placeholders (never real credentials)
+  '''(?i)test_only_do_not_use_in_production''',
+  '''rubbish_dev''',
+]

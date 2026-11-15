@@ -1,0 +1,185 @@
+# Dependencies
+node_modules/
+vendor/
+.pnp/
+.pnp.js
+
+# Build output
+dist/
+build/
+out/
+.next/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+env/
+*.sqlite
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+
+# Dev preview scripts (local only — not for production)
+apps/backend/_dev_*.py
+apps/backend/dev.db
+
+# Local Postgres data (when running compose with a bind mount)
+pgdata/
+postgres-data/
+
+# Local Caddy data (when running prod compose locally)
+infra/caddy_data/
+infra/caddy_config/
+
+# Backup / temp files
+*.bak
+*.tmp
+*.orig
+# 一次性脚本（xxx.tmp.py / audit-shots.tmp.mjs）：上面的 *.tmp 只匹配
+# 以 .tmp 结尾的文件，捕获不到 `.tmp.<ext>` 形式，故单独列出。
+*.tmp.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.trae/*
+!.trae/documents/
+.claude/
+.aider*
+.cursor/
+
+# Coverage
+coverage/
+# coverage.py 数据库文件（pytest-cov 运行时产物）
+.coverage
+.coverage.*
+.nyc_output/
+
+# Cache
+.cache/
+.eslintcache
+
+# Agent workspace (developer-specific, not part of the project)
+.qclaw/
+.qclaw-*
+.qclaw-*.md
+AGENTS.md
+provenance/
+
+# Diagnostic scripts (keep in scripts/ but never commit into repo)
+scripts/scan_secrets.py
+
+# Work artifacts (auto-generated during development)
+*artifact*.md
+rubbish_*.md
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Vite cache
+.vite/
+
+# Local screenshots (committed screenshots in /screenshots are tracked separately)
+screenshots/local/
+
+# Credentials (never commit tokens/keys)
+.git-credentials
+*.token
+*.secret
+.env.keys
+
+# Secrets / private key material (PEM, OpenSSH, PKCS#12, etc.)
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+*.kdbx
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+id_ecdsa
+id_ecdsa.pub
+id_dsa
+id_dsa.pub
+
+# Cloud / package manager credentials
+.aws/credentials
+.aws/config
+.netrc
+.npmrc
+.pypirc
+.docker/config.json
+.config/gcloud/credentials.db
+
+# Local dev runtime written by scripts/dev.sh (logs + pid files)
+.run/
+
+# 原始录屏（体积大、可重新生成；成品在 docs/assets/demo/）
+media/raw/
+
+# Runtime data (never commit)
+apps/backend/uploads/
+apps/backend/_conv_test.db
+apps/backend/_migrate_test.db
+apps/backend/e2e_run_server.db
+
+# Dev audits / backup dirs
+.audit/
+versions_backup*/
+.aqg/
+apps/frontend/dist/
+apps/frontend/test-results/
+apps/backend/.coverage
+apps/backend/e2e_test*.db
+apps/backend/deploy_demo.db*
+apps/backend/prebuilt-static/assets/
+dist.tar.gz
+.tmp-*.log
+dist.tgz
+
+# 旧静态备份/构建产物与用户实物（不得入库）
+apps/backend/prebuilt-static.bak*/
+apps/backend/prebuilt-static.old/
+apps/backend/prebuilt-static/covers/
+apps/backend/prebuilt-static/templates/
+*.docx
+*.pdf
+.env
+.env.*
+!.env.example
+
+# TanStack Router generated route tree cache
+apps/frontend/.tanstack/
+*.bak-*
+
+# Caddy access logs (runtime)
+/logs/caddy/*.log
+/logs/caddy/*.log.gz

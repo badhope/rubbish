@@ -1,0 +1,42 @@
+name: Feature request
+description: Suggest an idea or an improvement for Rubbish
+labels: ["enhancement", "triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: What are you trying to achieve, and what is missing or awkward today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What should happen instead? Sketches, API shapes and UI references are all welcome.
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: Which module?
+      description: See README → Modules for the full list.
+      options:
+        - core (tenants / users / admin)
+        - catalog
+        - submission / review
+        - reader
+        - library / follows
+        - notifications
+        - ingest / export
+        - recommendations
+        - doi
+        - infra / deployment
+        - not sure yet
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Contribution
+      options:
+        - label: I am willing to help implement this feature (see CONTRIBUTING.md)

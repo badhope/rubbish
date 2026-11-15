@@ -1,0 +1,55 @@
+# Pre-commit hooks — run locally before pushing.
+# Install: uv tool install pre-commit && pre-commit install
+# Bypass (sparingly): git commit --no-verify
+
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.0
+    hooks:
+      - id: gitleaks
+        args: ['--config', '.gitleaks.toml']
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+        files: '\.ya?ml$'
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+      - id: detect-private-key
+
+  # NOTE: backend ruff lint/format is intentionally absent here — the CI
+  # backend job runs `uv run ruff check .` + `ruff format --check .` from
+  # apps/backend (the isort project root). pre-commit runs at the repo root,
+  # where isort classifies tests/conftest differently, producing a
+  # mutually-exclusive diff. Dev-env and CI stay the single authority.
+
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v10.4.1
+    hooks:
+      - id: eslint
+        files: '^apps/frontend/src/.*\.(ts|tsx)$'
+        additional_dependencies:
+          - eslint@10.4.1
+
+  # --- zcode 治理对齐：把 zcode 代理钩子的守卫效果落到 git 层 ---
+  # cleanup-check.js → no-junk-files；guard-write.js → no-secret-files。
+  # 二者均为纯 stdlib 脚本（scripts/hooks/），通过 pre-commit/action 在 CI 强制。
+  - repo: local
+    hooks:
+      - id: no-junk-files
+        name: 禁止提交临时/备份文件 (zcode cleanup-check 等效)
+        entry: scripts/hooks/no_junk_files.py
+        language: script
+        description: 拦截 .tmp/.bak/.orig/.rej/~/.swp/.log 等临时文件进入版本库
+      - id: no-secret-files
+        name: 禁止提交密钥/凭据文件 (zcode guard-write 等效)
+        entry: scripts/hooks/no_secret_files.py
+        language: script
+        description: 按文件名拦截 .env/.pem/.key/id_rsa/.npmrc/credentials 等密钥文件
