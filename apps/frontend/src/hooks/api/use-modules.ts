@@ -701,24 +701,6 @@ export function usePendingSubmissions(
   })
 }
 
-export function useReviewSubmission() {
-  const qc = useQueryClient()
-  return useMutation<
-    MessageResponse,
-    Error,
-    {
-      id: number
-      body: { status: 'approved' | 'rejected'; admin_note?: string; resource_id?: number }
-    }
-  >({
-    mutationFn: async ({ id, body }) =>
-      (await api.patch<MessageResponse>(`/submissions/${id}/review`, body)).data,
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['submissions'] })
-    },
-  })
-}
-
 export function useDeleteSubmission() {
   const qc = useQueryClient()
   return useMutation<MessageResponse, Error, number>({
