@@ -1581,3 +1581,112 @@ html {
 @container (min-width: 1080px) {
   .catalog-cover { aspect-ratio: 4 / 3; }
 }
+
+/* 论文排版预览（Studio）：白纸黑字，不受暗色主题影响——纸张就是纸张。 */
+.paper-proof {
+  background: #eef0ec;
+  padding: 18px;
+  border-radius: 12px;
+}
+.paper-proof-sheet {
+  width: 100%;
+  max-width: 740px;
+  margin: 0 auto;
+  padding: 46px 54px 34px;
+  background: #ffffff;
+  color: #1b211d;
+  border: 1px solid rgba(31, 42, 36, 0.1);
+  border-radius: 3px;
+  box-shadow: 0 10px 28px rgba(24, 32, 26, 0.14);
+  font-family: var(--font-serif);
+}
+.proof-running-head {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 9px;
+  margin-bottom: 26px;
+  border-bottom: 1px solid #d6ddd4;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  color: #5d6b60;
+}
+.paper-proof-title {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-serif);
+  font-size: 26px;
+  line-height: 1.34;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #24312a;
+}
+.paper-proof-subtitle {
+  margin-top: 7px;
+  text-align: center;
+  font-size: 14.5px;
+  color: #44514a;
+}
+.paper-proof-authors {
+  margin-top: 18px;
+  text-align: center;
+  font-size: 13.5px;
+  color: #24312a;
+}
+.paper-proof-affs {
+  margin-top: 5px;
+  text-align: center;
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: #5d6b60;
+}
+.paper-proof-block {
+  margin: 18px 0 10px;
+  padding: 12px 15px;
+  border-left: 3px solid #2e5e4a;
+  background: #f5f7f3;
+}
+.paper-proof-block h2 { color: #2e5e4a; }
+.paper-proof-keywords {
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.9;
+  color: #33413a;
+}
+.paper-proof-body { margin-top: 18px; }
+.paper-proof-text {
+  font-size: 13.5px;
+  line-height: 2;
+  color: #1b211d;
+}
+.paper-proof-text :where(p, li) { margin-block: 0.55em; }
+.paper-proof-text :where(h1, h2, h3) {
+  font-family: var(--font-heading);
+  color: #24312a;
+  margin-block: 1.1em 0.5em;
+  line-height: 1.45;
+}
+.paper-proof .paper-proof-text h1,
+.paper-proof .paper-proof-text h2,
+.paper-proof .paper-proof-text h3 {
+  border: 0;
+  padding-left: 0;
+  background: none;
+}
+.paper-proof-text h1 { font-size: 16px; }
+.paper-proof-text h2 { font-size: 15px; }
+.paper-proof-text h3 { font-size: 14px; }
+.paper-proof-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 34px;
+  padding-top: 9px;
+  border-top: 1px solid #dbe2da;
+  font-size: 10.5px;
+  color: #6b7a6f;
+}
+@media (max-width: 640px) {
+  .paper-proof { padding: 10px; }
+  .paper-proof-sheet { padding: 26px 20px 22px; }
+  .paper-proof-title { font-size: 21px; }
+}

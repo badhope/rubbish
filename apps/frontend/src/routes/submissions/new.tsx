@@ -9,6 +9,7 @@ import {
 import {
   AlertCircle,
   Check,
+  Eye,
   ChevronLeft,
   ChevronRight,
   FileText,
@@ -35,7 +36,7 @@ import {
   previewUploadedSourcePages,
 } from '@/hooks/api/use-modules'
 import { MarkdownEditor } from '@/components/common/markdown-editor'
-import { ArticlePreview } from '@/components/common/article-preview'
+import { PaperProof } from '@/components/submission/paper-proof'
 import { uploadMediaImage } from '@/lib/media'
 import AuthPngPreview from '@/components/auth-png-preview'
 import {
@@ -480,6 +481,8 @@ function SubmissionWizardPage() {
   ).join(',')
 
   const [step, setStep] = useState(0)
+  // Studio 排版预览抽屉：任何时候都能看一眼“印出来是什么样”
+  const [proofOpen, setProofOpen] = useState(false)
   // 用户已访问过的步骤：进入过 / 点过「上一步/下一步」的步骤才显示红框，
   // 避免刚打开页面就满屏红字。
   const [visited, setVisited] = useState<boolean[]>([true, false, false, false])
@@ -875,6 +878,15 @@ function SubmissionWizardPage() {
             </span>
           )}
           <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => setProofOpen(true)}
+          >
+            <Eye className="h-4 w-4" />
+            排版预览
+          </Button>
+          <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate({ to: '/submissions' })}
@@ -1079,6 +1091,27 @@ function SubmissionWizardPage() {
           </div>
         </div>
       </div>
+
+      <Dialog open={proofOpen} onOpenChange={setProofOpen}>
+        <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto p-0">
+          <DialogHeader className="sr-only">
+            <DialogTitle>论文排版预览</DialogTitle>
+          </DialogHeader>
+          <PaperProof
+            title={form.title}
+            authors={parseListField(form.authors)}
+            affiliations={form.affiliations}
+            abstract={form.abstract}
+            keywords={parseListField(form.keywords)}
+            body={form.body}
+            doi={form.doi}
+            funding={form.funding}
+            clc={form.clc}
+            license={form.license}
+            track={form.type === 'paper' ? 'paper' : 'essay'}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -1945,12 +1978,18 @@ function StepReview({
       </div>
 
       {form.body.trim() ? (
-        <ArticlePreview
+        <PaperProof
           title={form.title}
           authors={authors}
+          affiliations={form.affiliations}
           abstract={form.abstract}
           keywords={keywords}
           body={form.body}
+          doi={form.doi}
+          funding={form.funding}
+          clc={form.clc}
+          license={form.license}
+          track={form.type === 'paper' ? 'paper' : 'essay'}
         />
       ) : (
         <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
