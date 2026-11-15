@@ -28,12 +28,32 @@ const queryClient = new QueryClient({
   },
 })
 
+// 首屏骨架之后还有一段“路由已切换、数据未到”的空窗：这里补统一占位，
+// 避免每个页面各写一套 loading，也避免切页时出现纯白闪屏。
+function RoutePending() {
+  return (
+    <div className="mx-auto w-full max-w-5xl px-4 py-8" aria-busy="true" aria-live="polite">
+      <div className="mb-4 h-7 w-40 animate-pulse rounded bg-muted" />
+      <div className="mb-6 h-4 w-72 animate-pulse rounded bg-muted/70" />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="h-40 animate-pulse rounded-xl border bg-card" />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 const router = createRouter({
   routeTree,
   defaultPreload: 'intent',
   defaultPreloadStaleTime: 0,
   scrollRestoration: true,
   context: { queryClient },
+  defaultPendingComponent: RoutePending,
+  // 120ms 内完成的切换不闪骨架；真要等，至少显示 400ms 免得闪烁。
+  defaultPendingMs: 120,
+  defaultPendingMinMs: 400,
 })
 
 declare module '@tanstack/react-router' {

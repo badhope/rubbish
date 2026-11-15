@@ -26,9 +26,76 @@
     </script>
     <!-- Loaded as an external script so it satisfies CSP script-src 'self'. -->
     <script src="/theme-bootstrap.js"></script>
+    <style>
+      /* 首屏骨架：JS 解析完之前先给结构，不让读者对着白屏猜。
+         React createRoot 会整体替换 #root 的子节点，挂载后自动消失。 */
+      .boot-skeleton {
+        display: flex;
+        min-height: 100vh;
+        background: #f7f6f2;
+        font-family: system-ui, -apple-system, "Noto Sans SC", sans-serif;
+      }
+      .boot-rail {
+        width: 232px;
+        flex: none;
+        border-right: 1px solid rgba(0, 0, 0, 0.06);
+        padding: 20px 16px;
+      }
+      .boot-body { flex: 1; min-width: 0; padding: 20px 24px; }
+      .boot-bar {
+        height: 40px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        background: linear-gradient(90deg, #eceae3 25%, #f3f1ea 37%, #eceae3 63%);
+        background-size: 400% 100%;
+        animation: boot-shimmer 1.4s ease infinite;
+      }
+      .boot-grid { display: grid; gap: 14px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .boot-card {
+        height: 210px;
+        border-radius: 12px;
+        background: linear-gradient(90deg, #eceae3 25%, #f3f1ea 37%, #eceae3 63%);
+        background-size: 400% 100%;
+        animation: boot-shimmer 1.4s ease infinite;
+      }
+      .boot-card:nth-child(2) { animation-delay: 0.08s; }
+      .boot-card:nth-child(3) { animation-delay: 0.16s; }
+      .boot-card:nth-child(4) { animation-delay: 0.24s; }
+      @keyframes boot-shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+      @media (prefers-color-scheme: dark) {
+        .boot-skeleton { background: #14161c; }
+        .boot-rail { border-color: rgba(255, 255, 255, 0.08); }
+        .boot-bar, .boot-card {
+          background: linear-gradient(90deg, #1f2229 25%, #262a33 37%, #1f2229 63%);
+          background-size: 400% 100%;
+        }
+      }
+      @media (max-width: 767px) {
+        .boot-rail { display: none; }
+        .boot-grid { grid-template-columns: 1fr; }
+        .boot-card { height: 148px; }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="boot-skeleton" role="status" aria-label="正在加载页面">
+        <div class="boot-rail"></div>
+        <div class="boot-body">
+          <div class="boot-bar"></div>
+          <div class="boot-grid">
+            <div class="boot-card"></div>
+            <div class="boot-card"></div>
+            <div class="boot-card"></div>
+            <div class="boot-card"></div>
+            <div class="boot-card"></div>
+            <div class="boot-card"></div>
+            <div class="boot-card"></div>
+            <div class="boot-card"></div>
+          </div>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
