@@ -98,6 +98,12 @@ async def _materialize_resource_from_submission(
         download_url=submission.download_url,
         external_url=submission.external_url,
         doi=submission.doi,
+        # P3-1：声明与许可跟随物化，前台不再把全站许可硬编码到每一篇。
+        license=getattr(submission, "license", None),
+        author_contributions=getattr(submission, "author_contributions", None),
+        funding=getattr(submission, "funding", None),
+        coi_statement=getattr(submission, "coi_statement", None),
+        data_availability=getattr(submission, "data_availability", None),
         # 物化时把 submission 的 keywords 带过去，与 catalog.Resource 对齐。
         # jel_codes 不在此物化——catalog.Resource 没有该列（功能未落地），
         # 此处不声称不存在的字段对齐。
@@ -162,6 +168,11 @@ _VERSIONED_FIELDS = (
     "external_url",
     "doi",
     "corresponding_author_email",
+    "license",
+    "author_contributions",
+    "funding",
+    "coi_statement",
+    "data_availability",
 )
 
 

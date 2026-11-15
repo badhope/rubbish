@@ -99,6 +99,12 @@ class SubmissionCreate(BaseModel):
     external_url: AnyHttpUrl | None = None
     doi: str | None = Field(default=None, max_length=200)
     corresponding_author_email: str | None = Field(default=None, max_length=255)
+    # P3-1：投稿阶段即结构化，录用后物化到目录条目，前台逐篇展示。
+    license: str | None = Field(default=None, max_length=100)
+    author_contributions: str | None = Field(default=None, max_length=5000)
+    funding: str | None = Field(default=None, max_length=5000)
+    coi_statement: str | None = Field(default=None, max_length=5000)
+    data_availability: str | None = Field(default=None, max_length=5000)
 
     @field_validator("author_affiliations")
     @classmethod
@@ -269,6 +275,11 @@ class SubmissionResponse(BaseModel):
     anonymized_file_url: str | None = None
     doi: str | None = None
     corresponding_author_email: str | None = None
+    license: str | None = None
+    author_contributions: str | None = None
+    funding: str | None = None
+    coi_statement: str | None = None
+    data_availability: str | None = None
     status: SubmissionStatus
     admin_note: str | None = None
     editor_note: str | None = None
@@ -391,6 +402,11 @@ class SubmissionUpdate(BaseModel):
     external_url: AnyHttpUrl | None = None
     doi: str | None = Field(default=None, max_length=200)
     corresponding_author_email: str | None = Field(default=None, max_length=255)
+    license: str | None = Field(default=None, max_length=100)
+    author_contributions: str | None = Field(default=None, max_length=5000)
+    funding: str | None = Field(default=None, max_length=5000)
+    coi_statement: str | None = Field(default=None, max_length=5000)
+    data_availability: str | None = Field(default=None, max_length=5000)
 
     @field_validator("track", mode="before")
     @classmethod

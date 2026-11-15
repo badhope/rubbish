@@ -190,6 +190,11 @@ async def _create_submission_record(
         external_url=str(body.external_url) if body.external_url else None,
         doi=body.doi,
         corresponding_author_email=body.corresponding_author_email,
+        license=body.license,
+        author_contributions=body.author_contributions,
+        funding=body.funding,
+        coi_statement=body.coi_statement,
+        data_availability=body.data_availability,
         similarity_score=similarity_score,
         similarity_matches=similarity_matches,
     )

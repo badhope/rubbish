@@ -151,6 +151,12 @@ interface WizardForm {
   declOriginal: boolean
   declConfidential: boolean
   declCopyright: boolean
+  // P3-1：声明与许可逐篇结构化，提交后随稿件物化到目录条目。
+  license: string
+  authorContributions: string
+  funding: string
+  coiStatement: string
+  dataAvailability: string
 }
 
 const EMPTY_FORM: WizardForm = {
@@ -178,6 +184,11 @@ const EMPTY_FORM: WizardForm = {
   declOriginal: false,
   declConfidential: false,
   declCopyright: false,
+  license: 'CC BY-NC 4.0',
+  authorContributions: '',
+  funding: '',
+  coiStatement: '',
+  dataAvailability: '',
 }
 
 const DRAFT_STRING_FIELDS = [
@@ -198,6 +209,11 @@ const DRAFT_STRING_FIELDS = [
   'doi',
   'externalUrl',
   'downloadUrl',
+  'license',
+  'authorContributions',
+  'funding',
+  'coiStatement',
+  'dataAvailability',
 ] as const
 
 const DRAFT_BOOLEAN_FIELDS = [
@@ -752,6 +768,11 @@ function SubmissionWizardPage() {
       doi: form.doi.trim() || undefined,
       download_url: form.downloadUrl.trim() || undefined,
       external_url: form.externalUrl.trim() || undefined,
+      license: form.license.trim() || undefined,
+      author_contributions: form.authorContributions.trim() || undefined,
+      funding: form.funding.trim() || undefined,
+      coi_statement: form.coiStatement.trim() || undefined,
+      data_availability: form.dataAvailability.trim() || undefined,
     }
 
     try {
@@ -1723,6 +1744,64 @@ function StepAuthors({
         <p className="text-xs text-muted-foreground">
           审稿意见与录用通知会发到这个邮箱；留空则用账号注册邮箱。
         </p>
+      </div>
+
+      <div className="space-y-3 rounded-lg border p-4">
+        <div>
+          <div className="text-sm font-medium">声明与许可</div>
+          <p className="text-xs text-muted-foreground">
+            逐篇保存并在文章页公开展示；没有的内容写“无”，不要留空冒充已声明。
+          </p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="w-license">许可</Label>
+          <Input
+            id="w-license"
+            value={form.license}
+            onChange={(e) => set('license', e.target.value)}
+            placeholder="CC BY-NC 4.0"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="w-contributions">作者贡献（CRediT，选填）</Label>
+          <Textarea
+            id="w-contributions"
+            value={form.authorContributions}
+            onChange={(e) => set('authorContributions', e.target.value)}
+            placeholder="概念化、方法学、软件、验证、写作……"
+            rows={3}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="w-funding">基金与资助（选填）</Label>
+          <Textarea
+            id="w-funding"
+            value={form.funding}
+            onChange={(e) => set('funding', e.target.value)}
+            placeholder="资助方、项目编号；无则写“无”"
+            rows={2}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="w-coi">利益冲突声明（选填）</Label>
+          <Textarea
+            id="w-coi"
+            value={form.coiStatement}
+            onChange={(e) => set('coiStatement', e.target.value)}
+            placeholder="作者声明无利益冲突"
+            rows={2}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="w-data">数据可用性（选填）</Label>
+          <Textarea
+            id="w-data"
+            value={form.dataAvailability}
+            onChange={(e) => set('dataAvailability', e.target.value)}
+            placeholder="数据位置、获取方式或受限说明"
+            rows={2}
+          />
+        </div>
       </div>
 
       <div className="space-y-3 rounded-lg border p-4">

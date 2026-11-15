@@ -179,6 +179,8 @@ function IngestPage() {
   const fetchMut = useFetchIngest();
   const batchMut = useCreateSubmissionsBatch();
 
+  const [activeTab, setActiveTab] = useState<"parse" | "fetch">("parse");
+  const [fetchedResources, setFetchedResources] = useState<IngestResource[]>([]);
   const [format, setFormat] = useState<ParseFormat>("bibtex");
   const [content, setContent] = useState("");
   const [source, setSource] = useState<FetchSource>("crossref");
@@ -234,15 +236,32 @@ function IngestPage() {
     setBatchResult(null);
   }, [parseMut.data, mergeDuplicates]);
 
+  // 文献 ID 查询一次查一条，但结果进入待投稿队列后可累积、勾选、批量提交，
+  // 不再逼用户查一条就立刻投一条。同一 DOI / 标题不重复入队。
+  useEffect(() => {
+    if (!fetchMut.data) return;
+    const incoming = fetchMut.data;
+    setFetchedResources((current) => {
+      const duplicate = current.some((row) =>
+        incoming.doi
+          ? row.doi === incoming.doi
+          : row.title.trim() === incoming.title.trim(),
+      );
+      return duplicate ? current : [...current, incoming];
+    });
+  }, [fetchMut.data]);
+
+  const activeResources = activeTab === "parse" ? displayedResources : fetchedResources;
+
   const selectedEntries = useMemo(
     () =>
-      displayedResources
+      activeResources
         .map((resource, index) => ({
           resource,
           key: resourceKey(resource, index),
         }))
         .filter(({ key }) => selectedKeys.has(key)),
-    [displayedResources, selectedKeys],
+    [activeResources, selectedKeys],
   );
 
   const batchYearValue = batchYear.trim() === "" ? null : Number(batchYear);
@@ -276,9 +295,9 @@ function IngestPage() {
     });
   };
 
-  const selectAllDisplayed = () => {
+  const selectAllActive = () => {
     setSelectedKeys(
-      new Set(displayedResources.map((resource, index) => resourceKey(resource, index))),
+      new Set(activeResources.map((resource, index) => resourceKey(resource, index))),
     );
   };
 
@@ -390,7 +409,14 @@ function IngestPage() {
         description="读取 BibTeX / RIS / CSV / JSON 文件，或按 DOI、PubMed、arXiv、OpenAlex、Semantic Scholar 查询；解析结果可勾选多条批量提交投稿，进入编辑评审队列。"
       />
 
-      <Tabs defaultValue="parse">
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => {
+          setActiveTab(value as "parse" | "fetch");
+          setSelectedKeys(new Set());
+          setBatchResult(null);
+        }}
+      >
         <TabsList>
           <TabsTrigger value="parse">解析文件</TabsTrigger>
           <TabsTrigger value="fetch">文献 ID 查询</TabsTrigger>
@@ -587,7 +613,7 @@ function IngestPage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={selectAllDisplayed}
+                    onClick={selectAllActive}
                     disabled={displayedResources.length === 0}
                   >
                     全选当前
@@ -688,8 +714,66 @@ function IngestPage() {
             </CardContent>
           </Card>
 
-          {fetchMut.data && (
-            <ResourceCard resource={fetchMut.data} onSend={sendToSubmissions} />
+          {fetchedResources.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm text-muted-foreground">
+                    待投稿队列 {fetchedResources.length} 条
+                  </p>
+                  {selectedEntries.length > 0 && (
+                    <Badge variant="secondary">已选 {selectedEntries.length} 条</Badge>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={selectAllActive}>
+                    全选队列
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedKeys(new Set())}
+                    disabled={selectedEntries.length === 0}
+                  >
+                    清空选择
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setFetchedResources([]);
+                      setSelectedKeys(new Set());
+                    }}
+                  >
+                    清空队列
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={openBatchDialog}
+                    disabled={selectedEntries.length === 0}
+                  >
+                    <Send className="mr-1 h-3.5 w-3.5" />
+                    批量提交（{selectedEntries.length}）
+                  </Button>
+                </div>
+              </div>
+              {fetchedResources.map((r, i) => {
+                const key = resourceKey(r, i);
+                return (
+                  <ResourceCard
+                    key={key}
+                    resource={r}
+                    onSend={sendToSubmissions}
+                    selectable
+                    selected={selectedKeys.has(key)}
+                    onSelect={() => toggleSelected(key)}
+                  />
+                );
+              })}
+            </div>
           )}
         </TabsContent>
       </Tabs>

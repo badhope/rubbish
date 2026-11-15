@@ -144,6 +144,12 @@ class ResourceBase(BaseModel):
     download_url: str | None = None
     external_url: str | None = None
     doi: str | None = Field(default=None, max_length=200)
+    # P3-1：逐篇结构化声明与许可。空值代表未声明，不由服务端编造。
+    license: str | None = Field(default=None, max_length=100)
+    author_contributions: str | None = Field(default=None, max_length=5000)
+    funding: str | None = Field(default=None, max_length=5000)
+    coi_statement: str | None = Field(default=None, max_length=5000)
+    data_availability: str | None = Field(default=None, max_length=5000)
 
     @field_validator("download_url", "external_url")
     @classmethod
@@ -241,6 +247,11 @@ class ResourceUpdate(BaseModel):
     download_url: str | None = None
     external_url: str | None = None
     doi: str | None = Field(default=None, max_length=200)
+    license: str | None = Field(default=None, max_length=100)
+    author_contributions: str | None = Field(default=None, max_length=5000)
+    funding: str | None = Field(default=None, max_length=5000)
+    coi_statement: str | None = Field(default=None, max_length=5000)
+    data_availability: str | None = Field(default=None, max_length=5000)
     volume: str | None = Field(default=None, max_length=50)
     issue: str | None = Field(default=None, max_length=50)
     pages: str | None = Field(default=None, max_length=50)
@@ -488,6 +499,49 @@ class ResourceFacets(BaseModel):
     tags: list[FacetBucket]
 
 
+PublicEventType = Literal[
+    "correction",
+    "retraction",
+    "author_change",
+    "expression_of_concern",
+    "version",
+]
+
+
+class ResourcePublicEventCreate(BaseModel):
+    event_type: PublicEventType
+    title: str = Field(min_length=1, max_length=300)
+    body: str = Field(min_length=1, max_length=10000)
+    effective_at: datetime | None = None
+
+
+class ResourcePublicEventResponse(BaseModel):
+    id: int
+    resource_id: int
+    event_type: str
+    title: str
+    body: str
+    effective_at: datetime | None = None
+    created_at: datetime
+
+
+class ResourcePublicEventListItem(ResourcePublicEventResponse):
+    resource_title: str
+    resource_slug: str | None = None
+
+
+class ResourceVersionItem(BaseModel):
+    version: int
+    note: str | None = None
+    created_at: datetime
+
+
+class ResourceHistoryResponse(BaseModel):
+    events: list[ResourcePublicEventResponse]
+    versions: list[ResourceVersionItem]
+    retracted: bool = False
+
+
 __all__ = [
     "AuthorMeta",
     "EssayGenre",
@@ -499,11 +553,16 @@ __all__ = [
     "ResourceBase",
     "ResourceCreate",
     "ResourceFacets",
+    "ResourceHistoryResponse",
     "ResourceListResponse",
+    "ResourcePublicEventCreate",
+    "ResourcePublicEventListItem",
+    "ResourcePublicEventResponse",
     "ResourceResponse",
     "ResourceStats",
     "ResourceType",
     "ResourceUpdate",
+    "ResourceVersionItem",
     "VolumeSummary",
     "VolumeSummaryList",
 ]

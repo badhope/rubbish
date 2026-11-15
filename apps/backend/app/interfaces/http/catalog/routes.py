@@ -44,7 +44,7 @@ from app.core.schemas import PaginationMeta
 from app.core.time import utcnow
 from app.domain.catalog.engagement import compute_engagement, journal_metrics
 from app.domain.catalog.genre import classify_essay_genre
-from app.domain.catalog.models import Appeal, AuthorClaim, Resource
+from app.domain.catalog.models import Appeal, AuthorClaim, Resource, ResourcePublicEvent
 from app.domain.catalog.visibility import as_aware, is_public, public_conditions
 from app.interfaces.http.catalog.ontology_routes import router as ontology_router
 from app.interfaces.http.catalog.schemas import (
@@ -53,10 +53,15 @@ from app.interfaces.http.catalog.schemas import (
     JournalMetrics,
     ResourceCreate,
     ResourceFacets,
+    ResourceHistoryResponse,
     ResourceListResponse,
+    ResourcePublicEventCreate,
+    ResourcePublicEventListItem,
+    ResourcePublicEventResponse,
     ResourceResponse,
     ResourceStats,
     ResourceUpdate,
+    ResourceVersionItem,
     VolumeSummary,
     VolumeSummaryList,
 )
@@ -2610,6 +2615,205 @@ async def _peer_review_provenance(
     return ("peer_reviewed" if report_count else "editorial_review"), report_count
 
 
+@router.get("/updates", response_model=list[ResourcePublicEventListItem])
+async def public_resource_updates(
+    limit: int = Query(default=30, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    tenant_id: int = Depends(require_tenant_id),
+) -> list[ResourcePublicEventListItem]:
+    """公开的内容变更记录（更正 / 撤稿 / 署名变更 / 版本说明）。
+
+    只返回公开可见文章的记录：草稿、未到刊期或已删除文章不能借事件表
+    泄露存在性。按生效时间倒序，补记的历史事件也按真实生效时间排。
+    """
+    stmt = (
+        select(ResourcePublicEvent, Resource.title, Resource.slug)
+        .join(Resource, Resource.id == ResourcePublicEvent.resource_id)
+        .where(ResourcePublicEvent.tenant_id == tenant_id)
+    )
+    for condition in public_conditions():
+        stmt = stmt.where(condition)
+    rows = (
+        await db.execute(
+            stmt.order_by(
+                desc(
+                    func.coalesce(ResourcePublicEvent.effective_at, ResourcePublicEvent.created_at)
+                )
+            ).limit(limit)
+        )
+    ).all()
+    return [
+        ResourcePublicEventListItem(
+            id=event.id,
+            resource_id=event.resource_id,
+            event_type=event.event_type,
+            title=event.title,
+            body=event.body,
+            effective_at=event.effective_at,
+            created_at=event.created_at,
+            resource_title=title,
+            resource_slug=slug,
+        )
+        for event, title, slug in rows
+    ]
+
+
+@router.get("/{resource_id}/history", response_model=ResourceHistoryResponse)
+async def get_resource_history(
+    resource_id: int,
+    db: AsyncSession = Depends(get_db),
+    tenant_id: int = Depends(require_tenant_id),
+) -> ResourceHistoryResponse:
+    """文章公开版本历史 + 内容变更记录，供读者核对“这篇稿子发生了什么”。
+
+    versions 来自 ``submission_versions``：只暴露版本号、作者修改说明与
+    时间，不下发完整 payload（里面可能有审稿过程与未公开内容）。
+    """
+    from app.domain.submission.models import Submission, SubmissionVersion
+
+    resource_stmt = select(Resource.id).where(
+        Resource.id == resource_id,
+        Resource.tenant_id == tenant_id,
+    )
+    for condition in public_conditions():
+        resource_stmt = resource_stmt.where(condition)
+    if (await db.execute(resource_stmt)).scalar_one_or_none() is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
+
+    event_rows = (
+        (
+            await db.execute(
+                select(ResourcePublicEvent)
+                .where(
+                    ResourcePublicEvent.tenant_id == tenant_id,
+                    ResourcePublicEvent.resource_id == resource_id,
+                )
+                .order_by(
+                    desc(
+                        func.coalesce(
+                            ResourcePublicEvent.effective_at, ResourcePublicEvent.created_at
+                        )
+                    ),
+                    desc(ResourcePublicEvent.id),
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+
+    submission_ids = (
+        (
+            await db.execute(
+                select(Submission.id).where(
+                    Submission.tenant_id == tenant_id,
+                    Submission.resource_id == resource_id,
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+    versions: list[ResourceVersionItem] = []
+    if submission_ids:
+        version_rows = (
+            (
+                await db.execute(
+                    select(SubmissionVersion)
+                    .where(
+                        SubmissionVersion.tenant_id == tenant_id,
+                        SubmissionVersion.submission_id.in_(submission_ids),
+                    )
+                    .order_by(SubmissionVersion.version.asc())
+                )
+            )
+            .scalars()
+            .all()
+        )
+        versions = [
+            ResourceVersionItem(
+                version=row.version,
+                note=row.note,
+                created_at=row.created_at,
+            )
+            for row in version_rows
+        ]
+
+    return ResourceHistoryResponse(
+        events=[
+            ResourcePublicEventResponse(
+                id=row.id,
+                resource_id=row.resource_id,
+                event_type=row.event_type,
+                title=row.title,
+                body=row.body,
+                effective_at=row.effective_at,
+                created_at=row.created_at,
+            )
+            for row in event_rows
+        ],
+        versions=versions,
+        retracted=any(row.event_type == "retraction" for row in event_rows),
+    )
+
+
+@router.post(
+    "/{resource_id}/events",
+    response_model=ResourcePublicEventResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_resource_public_event(
+    resource_id: int,
+    body: ResourcePublicEventCreate,
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(require_admin),
+    tenant_id: int = Depends(require_tenant_id),
+) -> ResourcePublicEventResponse:
+    """编辑部登记公开变更；事件只追加，不覆盖历史。"""
+    resource = (
+        await db.execute(
+            select(Resource).where(
+                Resource.id == resource_id,
+                Resource.tenant_id == tenant_id,
+            )
+        )
+    ).scalar_one_or_none()
+    if resource is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
+    event = ResourcePublicEvent(
+        tenant_id=tenant_id,
+        resource_id=resource_id,
+        event_type=body.event_type,
+        title=body.title.strip(),
+        body=body.body.strip(),
+        effective_at=body.effective_at,
+        created_by=current_admin.id,
+    )
+    db.add(event)
+    await db.flush()
+    db.add(
+        AuditLog(
+            tenant_id=tenant_id,
+            actor_user_id=current_admin.id,
+            action=f"catalog.public_event.{body.event_type}",
+            target_type="resource",
+            target_id=str(resource_id),
+            payload={"event_id": event.id, "title": body.title.strip()},
+        )
+    )
+    await db.commit()
+    await db.refresh(event)
+    return ResourcePublicEventResponse(
+        id=event.id,
+        resource_id=event.resource_id,
+        event_type=event.event_type,
+        title=event.title,
+        body=event.body,
+        effective_at=event.effective_at,
+        created_at=event.created_at,
+    )
+
+
 @router.get("/{resource_id}", response_model=ResourceResponse)
 async def get_resource(
     resource_id: int,
@@ -2762,6 +2966,11 @@ async def create_resource(
         download_url=str(payload.download_url) if payload.download_url else None,
         external_url=str(payload.external_url) if payload.external_url else None,
         doi=payload.doi,
+        license=payload.license,
+        author_contributions=payload.author_contributions,
+        funding=payload.funding,
+        coi_statement=payload.coi_statement,
+        data_availability=payload.data_availability,
         volume=payload.volume,
         issue=payload.issue,
         pages=payload.pages,

@@ -232,6 +232,12 @@ export interface ResourceBase {
   download_url?: string | null
   external_url?: string | null
   doi?: string | null
+  /** P3-1：逐篇结构化声明；空值表示未声明，不用全站默认值冒充。 */
+  license?: string | null
+  author_contributions?: string | null
+  funding?: string | null
+  coi_statement?: string | null
+  data_availability?: string | null
   volume?: string | null
   issue?: string | null
   pages?: string | null
@@ -513,6 +519,11 @@ export interface SubmissionCreate {
   external_url?: string | null
   doi?: string | null
   corresponding_author_email?: string | null
+  license?: string | null
+  author_contributions?: string | null
+  funding?: string | null
+  coi_statement?: string | null
+  data_availability?: string | null
 }
 
 export interface SubmissionBatchCreate {
@@ -590,6 +601,11 @@ export interface SubmissionResponse {
   external_url?: string | null
   doi?: string | null
   corresponding_author_email?: string | null
+  license?: string | null
+  author_contributions?: string | null
+  funding?: string | null
+  coi_statement?: string | null
+  data_availability?: string | null
   status: SubmissionStatus
   admin_note?: string | null
   editor_note?: string | null
@@ -1367,4 +1383,20 @@ export interface ReleaseIssueSummary {
   scheduled: number
   publish_at: string | null
   state: 'draft' | 'live' | 'scheduled' | 'empty'
+}
+
+export interface ResourcePublicEvent {
+  id: number
+  resource_id: number
+  event_type: string
+  title: string
+  body: string
+  effective_at: string | null
+  created_at: string
+}
+
+export interface ResourceHistory {
+  events: ResourcePublicEvent[]
+  versions: { version: number; note: string | null; created_at: string }[]
+  retracted: boolean
 }

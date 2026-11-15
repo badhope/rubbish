@@ -163,6 +163,14 @@ class Resource(Base, TenantScopedMixin):
     article_section: Mapped[str | None] = mapped_column(String(40), nullable=True, index=True)
     # 期次内分部分（Editorial / Features / Articles / Reviews / Corrections…）。
     issue_part: Mapped[str | None] = mapped_column(String(40), nullable=True, index=True)
+    # 学术声明与许可（P3-1）：不再只埋在 PDF/正文里，逐篇结构化存字段。
+    # 作者贡献用 CRediT 文本；基金写资助方与编号；COI/数据可用性保留原文。
+    # license 是单篇许可，避免前台把全站默认许可硬编码到每一篇。
+    license: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    author_contributions: Mapped[str | None] = mapped_column(Text, nullable=True)
+    funding: Mapped[str | None] = mapped_column(Text, nullable=True)
+    coi_statement: Mapped[str | None] = mapped_column(Text, nullable=True)
+    data_availability: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False
@@ -320,7 +328,39 @@ class AuthorClaim(Base, TenantScopedMixin):
     decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
-__all__ = ["AuthorClaim", "Discipline", "Resource", "Subdiscipline"]
+class ResourcePublicEvent(Base, TenantScopedMixin):
+    """公开的内容变更记录：更正 / 撤稿 / 署名变更 / 版本说明。
+
+    与内部 ``AuditLog`` 分开：审计日志回答“谁在后台改了什么”，本表回答
+    “读者需要知道这篇稿子发生过什么”。事件只追加，不覆盖历史；撤稿不
+    删除文章，而是保留原文并在页面顶部给出可点开的记录。
+    """
+
+    __tablename__ = "resource_public_events"
+    __table_args__ = (
+        Index("ix_resource_public_events_resource", "resource_id", "created_at"),
+        Index("ix_resource_public_events_tenant_type", "tenant_id", "event_type"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    resource_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("resources.id", ondelete="CASCADE"), nullable=False
+    )
+    # correction / retraction / author_change / expression_of_concern / version
+    event_type: Mapped[str] = mapped_column(String(30), nullable=False)
+    title: Mapped[str] = mapped_column(String(300), nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    # 生效时间可早于录入时间（补记历史更正），公开页按此排序。
+    effective_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_by: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+
+
+__all__ = ["AuthorClaim", "Discipline", "Resource", "ResourcePublicEvent", "Subdiscipline"]
 
 
 class Appeal(Base, TenantScopedMixin):

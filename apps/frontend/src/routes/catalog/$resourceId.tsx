@@ -32,7 +32,12 @@ import {
   useUpdateResource,
 } from '@/hooks/api/use-modules'
 import { api } from '@/lib/api'
-import type { AuthorDetail, ResourceUpdate } from '@/lib/types'
+import type {
+  AuthorDetail,
+  ResourceHistory,
+  ResourceResponse,
+  ResourceUpdate,
+} from '@/lib/types'
 import { normalizeAbstract } from '@/lib/abstract'
 import { extractError, parseListField, sanitizeAuthors } from '@/lib/utils'
 import { formatCitation, type CitationStyle } from '@/lib/citation'
@@ -99,6 +104,11 @@ function CatalogDetailPage() {
     enabled: Number.isFinite(id) && id > 0,
   })
   const discussCount: number = forumQ.data?.meta?.total ?? 0
+  const historyQ = useQuery<ResourceHistory>({
+    queryKey: ['catalog', 'history', id],
+    queryFn: async () => (await api.get(`/catalog/${id}/history`)).data,
+    enabled: Number.isFinite(id) && id > 0,
+  })
   const navigate = useNavigate()
   const { isAdmin, isAuthenticated, user } = useAuth()
 
@@ -118,6 +128,7 @@ function CatalogDetailPage() {
 
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [eventOpen, setEventOpen] = useState(false)
   const [listOpen, setListOpen] = useState(false)
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false)
   const claimStatus = useClaimStatus(id, true)
@@ -304,8 +315,18 @@ function CatalogDetailPage() {
               {data.publication_status !== 'published' && (
                 <Badge variant="outline">{statusLabel(data.publication_status)}</Badge>
               )}
+              {historyQ.data?.retracted && (
+                <Badge variant="destructive" title="本文已撤稿，原文保留用于记录，撤稿说明见下方公开日志。">
+                  已撤稿
+                </Badge>
+              )}
             </div>
             <h1 className="text-xl font-semibold leading-snug tracking-tight sm:text-2xl">{data.title}</h1>
+            {historyQ.data?.retracted && (
+              <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs leading-relaxed text-destructive">
+                本文已被撤稿。原文保留用于学术记录，撤稿原因与时间见“版本与公开记录”。
+              </div>
+            )}
             {/* 作者行：优先用 authors_detail（v5）；未认领者邮箱/单位为 null，绝不展示 PDF 抓出来的私人邮箱。 */}
             <AuthorRow detail={data.authors_detail ?? null} fallbackNames={cleanAuthors} />
             {/* 移动端：桌面右栏在 xl 以下整块隐藏，这里补回“规范 PDF / 作者原件”入口，
@@ -714,12 +735,12 @@ function CatalogDetailPage() {
               {isPaperTrack && data.r_factor != null && (
                 <MetaItem label="站内热度" value={data.r_factor.toFixed(1)} />
               )}
-              <p className="pt-2 text-[11px] leading-relaxed text-muted-foreground">
-                本文以 CC BY-NC 4.0 许可发布；转载需注明出处并保持非商业用途。
-              </p>
             </CardContent>
           </Card>
           )}
+
+          <DeclarationsCard data={data} />
+          {historyQ.data && <PublicHistoryCard history={historyQ.data} />}
 
           {isAuthenticated ? (
             <Button variant="outline" size="sm" className="w-full" onClick={() => setListOpen(true)}>
@@ -748,6 +769,10 @@ function CatalogDetailPage() {
                 <DropdownMenuItem onClick={() => setEditOpen(true)}>
                   <Pencil className="h-4 w-4" />
                   编辑题录
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setEventOpen(true)}>
+                  <FileText className="h-4 w-4" />
+                  记录更正 / 撤稿
                 </DropdownMenuItem>
                 {data.publication_status === 'draft' && (
                   <DropdownMenuItem
@@ -820,6 +845,15 @@ function CatalogDetailPage() {
         />
       )}
 
+      {isAdmin && eventOpen && (
+        <PublicEventDialog
+          open={eventOpen}
+          onOpenChange={setEventOpen}
+          resourceId={id}
+          onCreated={() => void historyQ.refetch()}
+        />
+      )}
+
       {isAuthenticated && (
         <AddToListDialog resourceId={id} open={listOpen} onOpenChange={setListOpen} />
       )}
@@ -834,6 +868,102 @@ function CatalogDetailPage() {
         onConfirm={onDelete}
       />
     </div>
+  )
+}
+
+// 管理员登记公开变更：事件只追加，读者能在文章页看到完整记录。
+function PublicEventDialog({
+  open,
+  onOpenChange,
+  resourceId,
+  onCreated,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  resourceId: number
+  onCreated: () => void
+}) {
+  const [eventType, setEventType] = useState('correction')
+  const [title, setTitle] = useState('')
+  const [body, setBody] = useState('')
+  const [pending, setPending] = useState(false)
+
+  const submit = async () => {
+    if (!title.trim() || !body.trim()) {
+      toast.error('标题与说明都必须填写')
+      return
+    }
+    setPending(true)
+    try {
+      await api.post(`/catalog/${resourceId}/events`, {
+        event_type: eventType,
+        title: title.trim(),
+        body: body.trim(),
+      })
+      toast.success('已记录并公开')
+      setTitle('')
+      setBody('')
+      onCreated()
+      onOpenChange(false)
+    } catch (err) {
+      toast.error(extractError(err, '记录失败'))
+    } finally {
+      setPending(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>记录更正 / 撤稿 / 署名变更</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>类型</Label>
+            <Select value={eventType} onValueChange={setEventType}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="correction">更正</SelectItem>
+                <SelectItem value="retraction">撤稿</SelectItem>
+                <SelectItem value="author_change">署名变更</SelectItem>
+                <SelectItem value="expression_of_concern">关注声明</SelectItem>
+                <SelectItem value="version">版本说明</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="public-event-title">标题</Label>
+            <Input
+              id="public-event-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="例如：更正图 2 的样本量标注"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="public-event-body">公开说明</Label>
+            <Textarea
+              id="public-event-body"
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              placeholder="说明改了什么、为什么改、影响哪些结论。撤稿请写清原因。"
+              rows={5}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            取消
+          </Button>
+          <Button onClick={submit} disabled={pending}>
+            {pending ? '提交中…' : '公开记录'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -859,6 +989,87 @@ function ScannedPdfFallback({ resourceId, hasFile }: { resourceId: number; hasFi
   )
 }
 
+// 公开的版本与变更记录：更正、撤稿、署名变更、作者修回版本。
+// 只展示真实存在的事件；没有记录就不渲染“已核验”之类的空壳。
+const PUBLIC_EVENT_LABELS: Record<string, string> = {
+  correction: '更正',
+  retraction: '撤稿',
+  author_change: '署名变更',
+  expression_of_concern: '关注声明',
+  version: '版本说明',
+}
+
+function formatPublicDate(value: string | null): string {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })
+}
+
+function PublicHistoryCard({ history }: { history: ResourceHistory }) {
+  if (history.events.length === 0 && history.versions.length === 0) return null
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-sm">版本与公开记录</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4 text-xs">
+        {history.events.map((event) => (
+          <div key={event.id} className="space-y-1 border-l-2 border-primary/30 pl-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant={event.event_type === 'retraction' ? 'destructive' : 'outline'}>
+                {PUBLIC_EVENT_LABELS[event.event_type] ?? event.event_type}
+              </Badge>
+              <span className="font-medium">{event.title}</span>
+              <span className="text-muted-foreground">
+                {formatPublicDate(event.effective_at ?? event.created_at)}
+              </span>
+            </div>
+            <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground">{event.body}</p>
+          </div>
+        ))}
+        {history.versions.map((version) => (
+          <div key={version.version} className="flex flex-wrap gap-x-3 gap-y-1">
+            <span className="font-medium">v{version.version}</span>
+            <span className="text-muted-foreground">{formatPublicDate(version.created_at)}</span>
+            <span className="w-full text-muted-foreground">
+              {version.note?.trim() || (version.version === 1 ? '首次提交版本' : '作者修回版本')}
+            </span>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  )
+}
+
+// 声明与许可：逐篇结构化字段，不再用全站默认许可覆盖每一篇。
+// 只有真实存在字段时才渲染；没有声明就不假装“已声明”。
+function DeclarationsCard({ data }: { data: ResourceResponse }) {
+  const rows = [
+    { label: '许可', value: data.license },
+    { label: '作者贡献（CRediT）', value: data.author_contributions },
+    { label: '基金与资助', value: data.funding },
+    { label: '利益冲突', value: data.coi_statement },
+    { label: '数据可用性', value: data.data_availability },
+  ].filter((row): row is { label: string; value: string } => Boolean(row.value?.trim()))
+  if (rows.length === 0) return null
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-sm">声明与许可</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3 text-xs">
+        {rows.map((row) => (
+          <div key={row.label} className="space-y-1">
+            <div className="font-medium text-muted-foreground">{row.label}</div>
+            <p className="whitespace-pre-wrap leading-relaxed">{row.value}</p>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  )
+}
+
 // 编辑表单字段精简
 interface EditFormState {
   title: string
@@ -869,6 +1080,11 @@ interface EditFormState {
   tags: string
   preview: string
   publication_status: 'published' | 'in_review' | 'draft'
+  license: string
+  author_contributions: string
+  funding: string
+  coi_statement: string
+  data_availability: string
 }
 
 function EditDialog({
@@ -888,6 +1104,11 @@ function EditDialog({
     tags: string[]
     preview: string
     publication_status: 'published' | 'in_review' | 'draft'
+    license?: string | null
+    author_contributions?: string | null
+    funding?: string | null
+    coi_statement?: string | null
+    data_availability?: string | null
   }
   onSubmit: (body: ResourceUpdate) => Promise<void>
 }) {
@@ -900,6 +1121,11 @@ function EditDialog({
     tags: initial.tags.join(', '),
     preview: initial.preview,
     publication_status: initial.publication_status,
+    license: initial.license ?? '',
+    author_contributions: initial.author_contributions ?? '',
+    funding: initial.funding ?? '',
+    coi_statement: initial.coi_statement ?? '',
+    data_availability: initial.data_availability ?? '',
   })
 
   const onSubmitForm = async (e: React.FormEvent) => {
@@ -913,6 +1139,11 @@ function EditDialog({
       tags: parseListField(form.tags),
       preview: form.preview,
       publication_status: form.publication_status,
+      license: form.license.trim() || null,
+      author_contributions: form.author_contributions.trim() || null,
+      funding: form.funding.trim() || null,
+      coi_statement: form.coi_statement.trim() || null,
+      data_availability: form.data_availability.trim() || null,
     }
     await onSubmit(body)
   }
@@ -986,6 +1217,59 @@ function EditDialog({
               value={form.preview}
               onChange={(e) => setForm({ ...form, preview: e.target.value })}
             />
+          </div>
+          <div className="space-y-3 rounded-lg border p-3">
+            <div>
+              <div className="text-sm font-medium">声明与许可</div>
+              <p className="text-xs text-muted-foreground">
+                逐篇保存，不再只埋在 PDF 里；留空显示“未声明”。
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-license">许可</Label>
+              <Input
+                id="edit-license"
+                value={form.license}
+                onChange={(e) => setForm({ ...form, license: e.target.value })}
+                placeholder="CC BY-NC 4.0"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-contributions">作者贡献（CRediT）</Label>
+              <Textarea
+                id="edit-contributions"
+                value={form.author_contributions}
+                onChange={(e) => setForm({ ...form, author_contributions: e.target.value })}
+                placeholder="概念化、方法学、写作……"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-funding">基金与资助</Label>
+              <Textarea
+                id="edit-funding"
+                value={form.funding}
+                onChange={(e) => setForm({ ...form, funding: e.target.value })}
+                placeholder="资助方、项目编号；无则写“无”"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-coi">利益冲突声明</Label>
+              <Textarea
+                id="edit-coi"
+                value={form.coi_statement}
+                onChange={(e) => setForm({ ...form, coi_statement: e.target.value })}
+                placeholder="作者声明无利益冲突"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-data">数据可用性</Label>
+              <Textarea
+                id="edit-data"
+                value={form.data_availability}
+                onChange={(e) => setForm({ ...form, data_availability: e.target.value })}
+                placeholder="数据位置、获取方式或受限说明"
+              />
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="edit-pubstatus">刊出状态</Label>

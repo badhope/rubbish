@@ -118,6 +118,13 @@ class Submission(Base, TenantScopedMixin):
     anonymized_file_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     doi: Mapped[str | None] = mapped_column(String(200), nullable=True)
     corresponding_author_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # P3-1 学术声明：投稿时即结构化，录用物化到 Resource 后前台逐篇展示。
+    # 空值表示作者未填，不用默认文案冒充声明。
+    license: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    author_contributions: Mapped[str | None] = mapped_column(Text, nullable=True)
+    funding: Mapped[str | None] = mapped_column(Text, nullable=True)
+    coi_statement: Mapped[str | None] = mapped_column(Text, nullable=True)
+    data_availability: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # 站内相似度（0–100）：提交时与本站已发表 Resource / 已有投稿比对。
     # 仅作编辑与作者的提示，不是外部查重库结论，不自动拒稿。
