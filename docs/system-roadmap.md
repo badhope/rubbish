@@ -347,7 +347,7 @@ P3 不再堆功能，目标只有三个：**可被信任、可被检索、可被
 
 ### 2026-11-15 P7 内容信任链上线记录
 
-- 代码：`050_content_declarations`、`051_resource_public_events`；五远程待推送。
+- 代码：`050_content_declarations`、`051_resource_public_events`；五远程已推送（`d4c2b77`）。
 - 内容侧：逐篇 `license / author_contributions / funding / coi_statement / data_availability`；投稿向导、资源编辑、录用物化、文章页展示全链路打通；文章页只在真实有值时显示声明，不拿全站默认许可冒充逐篇许可。
 - 公开记录：`resource_public_events` 支持更正 / 撤稿 / 署名变更 / 关注声明 / 版本说明；文章页显示撤稿标记与公开说明；`GET /api/catalog/{id}/history` 同时返回公开事件和 `submission_versions` 的版本号/作者说明/时间，不返回审稿 payload。
 - 导入：文献 ID 查询结果不再查一条投一条，可累积到待投稿队列、勾选多条、批量提交；解析结果原有批量能力不变。
@@ -392,3 +392,14 @@ P3 不再堆功能，目标只有三个：**可被信任、可被检索、可被
 - 接口冒烟：未登录批量 401；空 items 422；管理员确认当前规范 1.1 后提交 2 条测试投稿，返回 `created_count=2/failed_count=0`，随即删除两条（原 ID 367/368），DB 复核残留 0。
 - 备份：`/home/ubuntu/backups/db-pre-ingest-batch-20261115-1819.dump`（934K，custom dump）。
 - 仍未做：文献查询结果一次只查一条，不做批量勾选；批量只能统一补学科/年份，摘要缺失仍需单条补全；若确需管理员批量直写目录，需另做 admin-only 路径。
+
+### 2026-11-15 P8 内容信任链生产上线记录
+
+- 代码：`d4c2b77 feat(content): structure declarations and publish correction log`；`gh-badhope` / `gh-morning` / `gh-x` / `gitee` / `gitcode` 五个远程均已推送。
+- 验证：后端 `1240 passed, 1 skipped`（685s）；前端 `34 files / 188 tests passed`（659s）；`ruff check` / `ruff format --check` / `typecheck` / `lint` / `npm run build` 通过。
+- 迁移：生产 `049_review_drafts → 050_content_declarations → 051_resource_public_events` 已执行；`resources` 五个声明列、`resource_public_events` 表与 `tenant_isolation` 策略已核验。
+- 生产：release `/home/ubuntu/rubbish-release-20261115-2205`，标准软链 `/home/ubuntu/rubbish` 已指向；镜像 `rubbish-app:p8-20261115-2158`（ID `68b628dc016b`，`latest` 同步）。
+- 线上：首页已引用新入口 `assets/index-Dqg4fUls.js` 且资源 200；`/`、`/papers`、`/fun`、`/desk`、`/tools`、`/ingest`、`/catalog/298`、`/catalog/132`、`/submissions/new` 均 200；`/api/catalog/updates` 返回空列表，`/api/catalog/298/history`、`/api/catalog/132/history` 均 200。
+- 数据：迁移前备份 `/home/ubuntu/backups/db-pre-content-20261115-2159.dump`（946K，`pg_restore --list` 通过，798 TOC entries）。
+- 服务器：运行目录只保留 compose / Caddyfile / `.env` / `VERSION` / `ops` / `logs`（76K），不再保留源代码、docs、review-pack、pending-orig 或旧静态；代码只在五个平台仓库。
+- 部署注意：镜像重建后 Caddy 可能缓存旧 app 容器 IP，重启一次 `rubbish-caddy-1` 即恢复；本次已执行并验证 200。
