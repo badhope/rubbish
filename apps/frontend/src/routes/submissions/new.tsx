@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   createFileRoute,
   redirect,
- useNavigate,
+  useNavigate,
   useRouterState,
   useSearch,
 } from '@tanstack/react-router'
@@ -23,7 +23,10 @@ import { HelpTip } from '@/components/common/help-tip'
 import { useCapabilities } from '@/hooks/use-capabilities'
 import {
   useCreateSubmission,
+  useDeleteSubmissionDraft,
+  useSaveSubmissionDraft,
   useSaveSubmissionMarkdown,
+  useSubmissionDraft,
   useSubmission,
   useSubmissionMarkdown,
   useUpdateSubmission,
@@ -177,6 +180,65 @@ const EMPTY_FORM: WizardForm = {
   declCopyright: false,
 }
 
+const DRAFT_STRING_FIELDS = [
+  'title',
+  'year',
+  'discipline',
+  'subdiscipline',
+  'articleSection',
+  'issuePart',
+  'abstract',
+  'preview',
+  'keywords',
+  'clc',
+  'authors',
+  'affiliations',
+  'correspondingAuthorEmail',
+  'venue',
+  'doi',
+  'externalUrl',
+  'downloadUrl',
+] as const
+
+const DRAFT_BOOLEAN_FIELDS = [
+  'declOriginal',
+  'declConfidential',
+  'declCopyright',
+] as const
+
+/** 服务端草稿不包含本地 File；正文单独存 body，避免同一份 Markdown 存两遍。 */
+function formToDraftPayload(form: WizardForm): Record<string, unknown> {
+  const { file: _file, body: _body, ...rest } = form
+  return rest
+}
+
+function draftPayloadToForm(
+  payload: Record<string, unknown>,
+  body: string,
+): WizardForm {
+  const next: WizardForm = { ...EMPTY_FORM, body }
+  for (const field of DRAFT_STRING_FIELDS) {
+    const value = payload[field]
+    if (typeof value === 'string') next[field] = value
+  }
+  for (const field of DRAFT_BOOLEAN_FIELDS) {
+    const value = payload[field]
+    if (typeof value === 'boolean') next[field] = value
+  }
+  if (
+    payload.type === 'paper' ||
+    payload.type === 'book' ||
+    payload.type === 'dataset' ||
+    payload.type === 'tutorial'
+  ) {
+    next.type = payload.type
+  }
+  if (payload.paperKind === 'serious' || payload.paperKind === 'absurd') {
+    next.paperKind = payload.paperKind
+  }
+  return next
+}
+
 function submissionToForm(s: SubmissionResponse, body: string): WizardForm {
   const validTypes: SubmissionType[] = ['paper', 'book', 'dataset', 'tutorial']
   const type = validTypes.includes(s.type as SubmissionType)
@@ -220,7 +282,10 @@ function presetToForm(p: IngestResource): WizardForm {
     type,
     authors: p.authors
       .map((a) => {
-        const parts = a.split(',').map((s) => s.trim()).filter(Boolean)
+        const parts = a
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
         return parts.length >= 2 ? `${parts.slice(1).join(' ')} ${parts[0]}` : a
       })
       .join(', '),
@@ -247,7 +312,8 @@ declare module '@tanstack/history' {
 //   参考文献：正文 Markdown 出现「参考文献/References」标题，或已选择上传文件
 //   （上传后由后端 format_report 复核，前端只能做启发式判定）。
 // ---------------------------------------------------------------------------
-const RE_REFS_HEADING = /^#{1,6}\s*(参考文献|参考资料|References|Bibliography)\s*$/m
+const RE_REFS_HEADING =
+  /^#{1,6}\s*(参考文献|参考资料|References|Bibliography)\s*$/m
 
 // 上传文件识别后的轻量元数据：只做“能填就填”，解析不出来不阻塞。
 // 正文仍以 Markdown 为准；标题/摘要/关键词只是给作者省手工录入。
@@ -261,7 +327,9 @@ function extractMarkdownMeta(markdown: string): {
     const trimmed = line.trim()
     if (!/^#\s+\S/.test(trimmed)) return false
     const heading = trimmed.replace(/^#\s+/, '').trim()
-    return !/^(摘\s*要|关键词|关键字|Abstract|Keywords?|参考文献|References?|中图分类号|CLC)$/i.test(heading)
+    return !/^(摘\s*要|关键词|关键字|Abstract|Keywords?|参考文献|References?|中图分类号|CLC)$/i.test(
+      heading,
+    )
   })
   const title = titleLine?.replace(/^#\s+/, '').trim()
   const section = (names: string) => {
@@ -281,12 +349,15 @@ function extractMarkdownMeta(markdown: string): {
   const boldLead = firstNonEmpty.match(/^\*\*([^*]{2,120})\*\*/)?.[1]?.trim()
   let abstract = section('摘\\s*要|Abstract')
   if (!abstract) {
-    const inline = markdown.match(/\*\*摘\s*要[：:]\*\*\s*([\s\S]*?)(?=\*\*关键词|\*\*关键字|\n#{1,6}\s|$)/i)
+    const inline = markdown.match(
+      /\*\*摘\s*要[：:]\*\*\s*([\s\S]*?)(?=\*\*关键词|\*\*关键字|\n#{1,6}\s|$)/i,
+    )
     abstract = inline?.[1]?.trim() ?? ''
   }
   let keywordsRaw = section('关键词|关键字|Keywords?')
   if (!keywordsRaw) {
-    keywordsRaw = markdown.match(/\*\*关键词[：:]\*\*\s*([^\n]+)/i)?.[1]?.trim() ?? ''
+    keywordsRaw =
+      markdown.match(/\*\*关键词[：:]\*\*\s*([^\n]+)/i)?.[1]?.trim() ?? ''
   }
   const keywords = keywordsRaw
     .split(/[；;，,、]/)
@@ -312,7 +383,12 @@ function computeGates(f: WizardForm): GateResult[] {
   const hasFile = f.file !== null
   return [
     { key: 'title', label: '标题', step: 0, ok: f.title.trim().length > 0 },
-    { key: 'abstract', label: '摘要', step: 0, ok: f.abstract.trim().length > 0 },
+    {
+      key: 'abstract',
+      label: '摘要',
+      step: 0,
+      ok: f.abstract.trim().length > 0,
+    },
     {
       key: 'keywords',
       label: '关键词',
@@ -397,6 +473,9 @@ function SubmissionWizardPage() {
   }))
   const [savedAt, setSavedAt] = useState<Date | null>(null)
   const [draftLoaded, setDraftLoaded] = useState(false)
+  const [cloudSavedAt, setCloudSavedAt] = useState<Date | null>(null)
+  const serverDraftApplied = useRef(false)
+  const lastDraftSignature = useRef('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // ingest 页跳转过来的预填数据（router state）
@@ -435,7 +514,11 @@ function SubmissionWizardPage() {
         // 只要当前表单已有任何用户输入，就保留现状，只补空缺字段。
         setForm((prev) => {
           const hasUserInput = Boolean(
-            prev.title || prev.abstract || prev.keywords || prev.authors || prev.body,
+            prev.title ||
+            prev.abstract ||
+            prev.keywords ||
+            prev.authors ||
+            prev.body,
           )
           if (hasUserInput) return prev
           return {
@@ -478,11 +561,71 @@ function SubmissionWizardPage() {
     return () => clearTimeout(t)
   }, [form, editId, draftLoaded])
 
+  // --- 服务端草稿：登录账号跨设备恢复；本地草稿优先，避免同机旧数据被云端盖掉 ---
+  const serverDraftQ = useSubmissionDraft(editId === undefined)
+  useEffect(() => {
+    if (
+      editId !== undefined ||
+      !draftLoaded ||
+      !serverDraftQ.isFetched ||
+      serverDraftApplied.current
+    ) {
+      return
+    }
+    serverDraftApplied.current = true
+    const draft = serverDraftQ.data?.draft
+    if (!draft) return
+    setForm((prev) => {
+      const hasUserInput = Boolean(
+        prev.title ||
+        prev.abstract ||
+        prev.keywords ||
+        prev.authors ||
+        prev.body,
+      )
+      if (hasUserInput) return prev
+      return draftPayloadToForm(draft.payload, draft.body)
+    })
+    setCloudSavedAt(new Date(draft.updated_at))
+  }, [editId, draftLoaded, serverDraftQ.isFetched, serverDraftQ.data])
+
   // --- mutations ---
   const createMut = useCreateSubmission()
   const updateMut = useUpdateSubmission()
   const saveBodyMut = useSaveSubmissionMarkdown()
+  const saveDraftMut = useSaveSubmissionDraft()
+  const deleteDraftMut = useDeleteSubmissionDraft()
+  const saveDraft = saveDraftMut.mutate
   const uploadMut = useUploadSubmissionFile()
+
+  // --- 服务端草稿自动保存（防抖 1.5s）；编辑模式不写 ---
+  useEffect(() => {
+    if (editId !== undefined || !draftLoaded) return
+    const isBlank =
+      !form.title &&
+      !form.abstract &&
+      !form.keywords &&
+      !form.authors &&
+      !form.body &&
+      !form.file
+    if (isBlank) return
+    const payload = formToDraftPayload(form)
+    const signature = `${JSON.stringify(payload)}\n${form.body}`
+    if (signature === lastDraftSignature.current) return
+    const t = setTimeout(() => {
+      saveDraft(
+        { payload, body: form.body },
+        {
+          onSuccess: (state) => {
+            lastDraftSignature.current = signature
+            setCloudSavedAt(new Date(state.draft?.updated_at ?? Date.now()))
+          },
+        },
+      )
+    }, 1500)
+    return () => clearTimeout(t)
+  }, [form, editId, draftLoaded, saveDraft])
+
   const convertMut = useConvertSubmissionPreview()
   const [converting, setConverting] = useState(false)
 
@@ -541,22 +684,37 @@ function SubmissionWizardPage() {
       try {
         const result = await convertMut.mutateAsync(f)
         if (!result.markdown) {
-          toast.error(result.reason || '未能从文件中识别出正文，请另存为 .docx 后重试')
+          toast.error(
+            result.reason || '未能从文件中识别出正文，请另存为 .docx 后重试',
+          )
           return
         }
-        if (form.body.trim() && !window.confirm('当前正文已有内容，是否用识别结果替换？')) {
+        if (
+          form.body.trim() &&
+          !window.confirm('当前正文已有内容，是否用识别结果替换？')
+        ) {
           toast.info('已保留当前正文；文件仍会随稿件上传')
           return
         }
         set('body', result.markdown)
         const meta = extractMarkdownMeta(result.markdown)
         if (!form.title.trim() && meta.title) set('title', meta.title)
-        if (!form.abstract.trim() && meta.abstract) set('abstract', meta.abstract)
-        if (!form.keywords.trim() && meta.keywords) set('keywords', meta.keywords)
-        if (result.warnings.length > 0) toast.warning(result.warnings.join('；'))
-        toast.success(`已识别 ${result.markdown.replace(/\s/g, '').length} 字，正文已填入编辑器`)
+        if (!form.abstract.trim() && meta.abstract)
+          set('abstract', meta.abstract)
+        if (!form.keywords.trim() && meta.keywords)
+          set('keywords', meta.keywords)
+        if (result.warnings.length > 0)
+          toast.warning(result.warnings.join('；'))
+        toast.success(
+          `已识别 ${result.markdown.replace(/\s/g, '').length} 字，正文已填入编辑器`,
+        )
       } catch (err) {
-        toast.error(extractError(err, '文件识别失败，可先提交文件，服务器会在上传后再解析'))
+        toast.error(
+          extractError(
+            err,
+            '文件识别失败，可先提交文件，服务器会在上传后再解析',
+          ),
+        )
       } finally {
         setConverting(false)
       }
@@ -567,7 +725,9 @@ function SubmissionWizardPage() {
     if (missingCount > 0) {
       // 把所有步骤都 visited，让红框一次性全部亮出来
       setVisited([true, true, true, true])
-      toast.error(`还有 ${missingCount} 项未完成：${missing.map((m) => m.label).join('、')}`)
+      toast.error(
+        `还有 ${missingCount} 项未完成：${missing.map((m) => m.label).join('、')}`,
+      )
       return
     }
     const body: SubmissionCreate = {
@@ -586,7 +746,8 @@ function SubmissionWizardPage() {
       tags: [],
       keywords: parseListField(form.keywords),
       jel_codes: parseListField(form.clc),
-      corresponding_author_email: form.correspondingAuthorEmail.trim() || undefined,
+      corresponding_author_email:
+        form.correspondingAuthorEmail.trim() || undefined,
       venue: form.venue.trim() || undefined,
       doi: form.doi.trim() || undefined,
       download_url: form.downloadUrl.trim() || undefined,
@@ -624,12 +785,13 @@ function SubmissionWizardPage() {
         if (form.body.trim() !== '') {
           await saveBodyMut.mutateAsync({ id: created.id, content: form.body })
         }
-        // 草稿已落地为正式投稿，清掉本地草稿
+        // 草稿已落地为正式投稿，清掉本地和云端草稿
         try {
           localStorage.removeItem(DRAFT_KEY)
         } catch {
           // ignore
         }
+        void deleteDraftMut.mutate()
         toast.success('已提交，等待编辑处理')
       }
       // 回到列表页；列表会自动 invalidate，新提交出现在第一行
@@ -647,7 +809,9 @@ function SubmissionWizardPage() {
         void navigate({ to: '/authors' })
         return
       }
-      toast.error(extractError(err, editId !== undefined ? '更新失败' : '提交失败'))
+      toast.error(
+        extractError(err, editId !== undefined ? '更新失败' : '提交失败'),
+      )
     }
   }
 
@@ -668,18 +832,32 @@ function SubmissionWizardPage() {
             {editId !== undefined ? '修改稿件' : '新建投稿'}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            分四步完成：题录 → 正文 → 作者与声明 → 预览提交。草稿会自动保存在本机。
-            <HelpTip className="ml-1" text="论文轨进入评审并按严格细则计分；副刊轨独立成刊，不走论文评审、不计分，只做编辑格式审读。" />
+            分四步完成：题录 → 正文 → 作者与声明 →
+            预览提交。草稿会自动保存在本机和登录账号。
+            <HelpTip
+              className="ml-1"
+              text="论文轨进入评审并按严格细则计分；副刊轨独立成刊，不走论文评审、不计分，只做编辑格式审读。"
+            />
           </p>
         </div>
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           {savedAt && editId === undefined && (
             <span className="inline-flex items-center gap-1">
               <Save className="h-3.5 w-3.5" />
-              已保存 · {savedAt.toLocaleTimeString()}
+              本机 · {savedAt.toLocaleTimeString()}
             </span>
           )}
-          <Button variant="ghost" size="sm" onClick={() => navigate({ to: '/submissions' })}>
+          {cloudSavedAt && editId === undefined && (
+            <span className="inline-flex items-center gap-1">
+              <Save className="h-3.5 w-3.5" />
+              云端 · {cloudSavedAt.toLocaleTimeString()}
+            </span>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate({ to: '/submissions' })}
+          >
             <ChevronLeft className="h-4 w-4" />
             返回列表
           </Button>
@@ -687,23 +865,40 @@ function SubmissionWizardPage() {
       </div>
 
       <div className="mb-4 rounded-md border border-dashed bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
-        <span className="mr-2 font-medium text-foreground">投稿前先看规格与版式：</span>
-        <a className="font-medium text-primary hover:underline" href="/templates/rubbish-submission-template.docx" download>
+        <span className="mr-2 font-medium text-foreground">
+          投稿前先看规格与版式：
+        </span>
+        <a
+          className="font-medium text-primary hover:underline"
+          href="/templates/rubbish-submission-template.docx"
+          download
+        >
           Word 模板（推荐）
         </a>
         <span className="mx-2">·</span>
-        <a className="font-medium text-primary hover:underline" href="/templates/rubbish-submission-template-word.md" download>
+        <a
+          className="font-medium text-primary hover:underline"
+          href="/templates/rubbish-submission-template-word.md"
+          download
+        >
           Word 排版要求
         </a>
         <span className="mx-2">·</span>
-        <a className="font-medium text-primary hover:underline" href="/templates/rubbish-editorial-standards.md" download>
+        <a
+          className="font-medium text-primary hover:underline"
+          href="/templates/rubbish-editorial-standards.md"
+          download
+        >
           编辑规范
         </a>
         <span className="mx-2">·</span>
         <a className="font-medium text-primary hover:underline" href="/authors">
           投稿指南
         </a>
-        <div className="mt-1">推荐提交 Word（.docx）：系统识别、排版和送审最稳；PDF 也可上传，下载时会自动转成 Word。</div>
+        <div className="mt-1">
+          推荐提交 Word（.docx）：系统识别、排版和送审最稳；PDF
+          也可上传，下载时会自动转成 Word。
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_1fr]">
@@ -784,18 +979,33 @@ function SubmissionWizardPage() {
                 fileInputRef={fileInputRef}
                 onPickFile={onPickFile}
                 converting={converting}
+                snapshotKey={
+                  editId !== undefined
+                    ? `submission-${editId}`
+                    : 'submission-wizard-new'
+                }
               />
             )}
-            {step === 2 && <StepAuthors form={form} set={set} fieldError={fieldError} />}
+            {step === 2 && (
+              <StepAuthors form={form} set={set} fieldError={fieldError} />
+            )}
             {step === 3 && (
-              <StepReview form={form} missing={missing} uploadMaxMb={uploadMaxMb} />
+              <StepReview
+                form={form}
+                missing={missing}
+                uploadMaxMb={uploadMaxMb}
+              />
             )}
 
             {/* 底部按钮区 */}
             <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
               <div className="text-xs text-muted-foreground">
                 {step > 0 ? (
-                  <Button variant="ghost" size="sm" onClick={() => goTo(step - 1)}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => goTo(step - 1)}
+                  >
                     <ChevronLeft className="h-4 w-4" />
                     上一步
                   </Button>
@@ -807,11 +1017,15 @@ function SubmissionWizardPage() {
                 {missingCount > 0 && step === 3 && (
                   <span className="inline-flex items-center gap-1 text-xs text-destructive">
                     <AlertCircle className="h-3.5 w-3.5" />
-                    还差 {missingCount} 项：{missing.map((m) => m.label).join('、')}
+                    还差 {missingCount} 项：
+                    {missing.map((m) => m.label).join('、')}
                   </span>
                 )}
                 {step < 3 ? (
-                  <Button onClick={() => goTo(step + 1)} disabled={!canProceed && visited[step]}>
+                  <Button
+                    onClick={() => goTo(step + 1)}
+                    disabled={!canProceed && visited[step]}
+                  >
                     下一步
                     <ChevronRight className="h-4 w-4" />
                   </Button>
@@ -878,7 +1092,10 @@ function StepBibliography({
         <div className="grid max-w-2xl grid-cols-1 gap-2 sm:grid-cols-3">
           <button
             type="button"
-            onClick={() => { set('type', 'paper'); set('paperKind', 'serious') }}
+            onClick={() => {
+              set('type', 'paper')
+              set('paperKind', 'serious')
+            }}
             className={[
               'rounded-lg border px-4 py-3 text-left text-sm transition-colors',
               form.type === 'paper' && form.paperKind === 'serious'
@@ -893,7 +1110,10 @@ function StepBibliography({
           </button>
           <button
             type="button"
-            onClick={() => { set('type', 'paper'); set('paperKind', 'absurd') }}
+            onClick={() => {
+              set('type', 'paper')
+              set('paperKind', 'absurd')
+            }}
             className={[
               'rounded-lg border px-4 py-3 text-left text-sm transition-colors',
               form.type === 'paper' && form.paperKind === 'absurd'
@@ -961,7 +1181,9 @@ function StepBibliography({
               </option>
             ))}
           </datalist>
-          {fieldError('discipline') && <FieldError>请选择或填写学科</FieldError>}
+          {fieldError('discipline') && (
+            <FieldError>请选择或填写学科</FieldError>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="w-subdiscipline">子学科（选填）</Label>
@@ -1050,7 +1272,8 @@ function StepBibliography({
         </div>
         <div className="space-y-2">
           <Label htmlFor="w-clc">
-            中图分类号（CLC，逗号分隔） <span className="text-destructive">*</span>
+            中图分类号（CLC，逗号分隔）{' '}
+            <span className="text-destructive">*</span>
           </Label>
           <Input
             id="w-clc"
@@ -1101,7 +1324,9 @@ function StepBibliography({
         </div>
         {doiEntryEnabled ? (
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="w-doi">官方 DOI（选填，作者自行决定是否注册）</Label>
+            <Label htmlFor="w-doi">
+              官方 DOI（选填，作者自行决定是否注册）
+            </Label>
             <Input
               id="w-doi"
               value={form.doi}
@@ -1109,7 +1334,8 @@ function StepBibliography({
               placeholder="例如：10.12345/rubbish.2026.001；没有就留空"
             />
             <p className="text-xs text-muted-foreground">
-              本站会为每篇录用稿生成底刊编号；官方 DOI 由作者决定是否另行注册，不强制。
+              本站会为每篇录用稿生成底刊编号；官方 DOI
+              由作者决定是否另行注册，不强制。
             </p>
           </div>
         ) : null}
@@ -1127,6 +1353,7 @@ function StepUpload({
   fileInputRef,
   onPickFile,
   converting,
+  snapshotKey,
 }: {
   form: WizardForm
   set: <K extends keyof WizardForm>(key: K, value: WizardForm[K]) => void
@@ -1136,10 +1363,14 @@ function StepUpload({
   fileInputRef: React.RefObject<HTMLInputElement | null>
   onPickFile: (f: File) => void
   converting: boolean
+  snapshotKey: string
 }) {
   const hasRefsHeading = RE_REFS_HEADING.test(form.body)
   const [sourcePreviewOpen, setSourcePreviewOpen] = useState(false)
-  const [sourcePreview, setSourcePreview] = useState<{ token: string; pages: number } | null>(null)
+  const [sourcePreview, setSourcePreview] = useState<{
+    token: string
+    pages: number
+  } | null>(null)
   const [sourcePreviewLoading, setSourcePreviewLoading] = useState(false)
 
   const openSourcePreview = async () => {
@@ -1153,7 +1384,9 @@ function StepUpload({
       setSourcePreview(preview)
       setSourcePreviewOpen(true)
     } catch (err) {
-      toast.error(extractError(err, '原件预览失败；可先提交，服务器会在上传后解析'))
+      toast.error(
+        extractError(err, '原件预览失败；可先提交，服务器会在上传后解析'),
+      )
     } finally {
       setSourcePreviewLoading(false)
     }
@@ -1164,7 +1397,8 @@ function StepUpload({
       <div>
         <h2 className="text-lg font-semibold">正文与文件</h2>
         <p className="text-sm text-muted-foreground">
-          先上传 Word / PDF，系统识别后自动填到下面的正文；也可以直接在线写。两条都保留时，以你在编辑器里最终改定的正文为准。
+          先上传 Word /
+          PDF，系统识别后自动填到下面的正文；也可以直接在线写。两条都保留时，以你在编辑器里最终改定的正文为准。
         </p>
       </div>
 
@@ -1177,10 +1411,13 @@ function StepUpload({
                 1
               </span>
               <h3 className="text-sm font-semibold">上传 Word / PDF</h3>
-              <Badge variant="secondary" className="text-[10px]">可选 · 推荐</Badge>
+              <Badge variant="secondary" className="text-[10px]">
+                可选 · 推荐
+              </Badge>
             </div>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              选完文件就会自动识别并回填正文，不需要先提交。DOCX 识别最稳；PDF 识别后会转成可编辑正文。
+              选完文件就会自动识别并回填正文，不需要先提交。DOCX 识别最稳；PDF
+              识别后会转成可编辑正文。
             </p>
           </div>
           {form.file && (
@@ -1191,7 +1428,11 @@ function StepUpload({
               disabled={sourcePreviewLoading}
               onClick={() => void openSourcePreview()}
             >
-              {sourcePreviewLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+              {sourcePreviewLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <FileText className="h-4 w-4" />
+              )}
               原件预览
             </Button>
           )}
@@ -1214,10 +1455,14 @@ function StepUpload({
               <div className="flex min-w-0 flex-1 items-center gap-3">
                 <FileText className="h-7 w-7 shrink-0 text-primary" />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium">{form.file.name}</div>
+                  <div className="truncate text-sm font-medium">
+                    {form.file.name}
+                  </div>
                   <div className="text-xs text-muted-foreground">
                     {(form.file.size / 1024).toFixed(0)} KB ·
-                    {converting ? ' 正在识别并回填正文…' : ' 已识别，可在下方正文继续修改'}
+                    {converting
+                      ? ' 正在识别并回填正文…'
+                      : ' 已识别，可在下方正文继续修改'}
                   </div>
                 </div>
                 <Button
@@ -1235,9 +1480,12 @@ function StepUpload({
               <div className="flex min-w-0 flex-1 items-start gap-3">
                 <Upload className="h-7 w-7 shrink-0 text-muted-foreground" />
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm font-medium text-foreground">还没有选择文件</div>
+                  <div className="text-sm font-medium text-foreground">
+                    还没有选择文件
+                  </div>
                   <div className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                    支持 DOCX / PDF 等 {acceptAttr.split(',').length} 种格式，单文件 ≤ {uploadMaxMb} MB
+                    支持 DOCX / PDF 等 {acceptAttr.split(',').length}{' '}
+                    种格式，单文件 ≤ {uploadMaxMb} MB
                   </div>
                 </div>
               </div>
@@ -1250,7 +1498,11 @@ function StepUpload({
               className="w-full sm:w-auto"
               onClick={() => fileInputRef.current?.click()}
             >
-              {converting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+              {converting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="h-4 w-4" />
+              )}
               {form.file ? '替换文件' : '选择文件'}
             </Button>
           </div>
@@ -1274,14 +1526,24 @@ function StepUpload({
               <h3 className="text-sm font-semibold">在线正文（Markdown）</h3>
             </div>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              这里就是最终发表与 Word/PDF 下载使用的正文。上方识别结果会自动填进来。
+              这里就是最终发表与 Word/PDF
+              下载使用的正文。上方识别结果会自动填进来。
             </p>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {hasRefsHeading ? (
-              <Badge className="bg-emerald-500/15 text-emerald-700">已检测到参考文献</Badge>
+              <Badge className="bg-emerald-500/15 text-emerald-700">
+                已检测到参考文献
+              </Badge>
             ) : (
-              <Badge variant="outline" className={fieldError('references') ? 'border-destructive/50 text-destructive' : ''}>
+              <Badge
+                variant="outline"
+                className={
+                  fieldError('references')
+                    ? 'border-destructive/50 text-destructive'
+                    : ''
+                }
+              >
                 未检测到参考文献
               </Badge>
             )}
@@ -1295,6 +1557,7 @@ function StepUpload({
             '# 1 引言\n\n# 2 方法\n\n# 3 结果\n\n# 4 结论\n\n# 参考文献\n\n[1] …'
           }
           testId="wizard-body-editor"
+          snapshotKey={snapshotKey}
           onUploadImage={(file) => uploadMediaImage(file, 'submission')}
         />
         {fieldError('references') && (
@@ -1310,19 +1573,37 @@ function StepUpload({
           格式要求与模板（点击展开）
         </summary>
         <ul className="mt-2 list-inside list-disc space-y-1 leading-relaxed">
-          <li>允许格式：{acceptAttr.split(',').join(' / ')} 等；单文件 ≤ {uploadMaxMb} MB。</li>
-          <li>正文内请包含「摘要」「关键词」段落，并在文末给出「参考文献 / References」章节。</li>
+          <li>
+            允许格式：{acceptAttr.split(',').join(' / ')} 等；单文件 ≤{' '}
+            {uploadMaxMb} MB。
+          </li>
+          <li>
+            正文内请包含「摘要」「关键词」段落，并在文末给出「参考文献 /
+            References」章节。
+          </li>
           <li>
             版式：先下载
-            <a className="mx-1 font-medium text-primary hover:underline" href="/templates/rubbish-submission-template.docx" download>
+            <a
+              className="mx-1 font-medium text-primary hover:underline"
+              href="/templates/rubbish-submission-template.docx"
+              download
+            >
               Word 模板（推荐）
             </a>
             照着改；逐项设置见
-            <a className="mx-1 font-medium text-primary hover:underline" href="/templates/rubbish-submission-template-word.md" download>
+            <a
+              className="mx-1 font-medium text-primary hover:underline"
+              href="/templates/rubbish-submission-template-word.md"
+              download
+            >
               Word 排版要求
             </a>
             ，完整细则见
-            <a className="mx-1 font-medium text-primary hover:underline" href="/templates/rubbish-editorial-standards.md" download>
+            <a
+              className="mx-1 font-medium text-primary hover:underline"
+              href="/templates/rubbish-editorial-standards.md"
+              download
+            >
               编辑规范
             </a>
             。
@@ -1333,7 +1614,9 @@ function StepUpload({
       <Dialog open={sourcePreviewOpen} onOpenChange={setSourcePreviewOpen}>
         <DialogContent className="flex h-[100dvh] max-h-[100dvh] w-screen max-w-none flex-col overflow-hidden rounded-none p-0 sm:h-[86vh] sm:max-h-[86vh] sm:w-full sm:max-w-5xl sm:rounded-lg">
           <DialogHeader className="border-b px-4 py-3">
-            <DialogTitle className="text-sm">原件预览 · {form.file?.name ?? ''}</DialogTitle>
+            <DialogTitle className="text-sm">
+              原件预览 · {form.file?.name ?? ''}
+            </DialogTitle>
           </DialogHeader>
           <div className="min-h-0 flex-1 p-2">
             {sourcePreview ? (
@@ -1402,7 +1685,8 @@ function StepAuthors({
 
       <div className="space-y-2">
         <Label htmlFor="w-authors">
-          作者（逗号分隔，顺序即署名顺序） <span className="text-destructive">*</span>
+          作者（逗号分隔，顺序即署名顺序）{' '}
+          <span className="text-destructive">*</span>
         </Label>
         <Input
           id="w-authors"
@@ -1517,7 +1801,13 @@ function StepReview({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <div className="text-xs text-muted-foreground">类型</div>
-            <div>{form.type === 'tutorial' ? '副刊' : form.paperKind === 'absurd' ? '荒诞论文' : '学术论文'}</div>
+            <div>
+              {form.type === 'tutorial'
+                ? '副刊'
+                : form.paperKind === 'absurd'
+                  ? '荒诞论文'
+                  : '学术论文'}
+            </div>
           </div>
           <div>
             <div className="text-xs text-muted-foreground">学科/栏目</div>
@@ -1556,12 +1846,15 @@ function StepReview({
           <div className="mt-0.5">
             {form.file ? (
               <span>
-                {form.file.name} · {(form.file.size / 1024).toFixed(0)} KB（≤ {uploadMaxMb} MB）
+                {form.file.name} · {(form.file.size / 1024).toFixed(0)} KB（≤{' '}
+                {uploadMaxMb} MB）
               </span>
             ) : form.body.trim() ? (
               <span>使用在线正文（{form.body.length} 字）</span>
             ) : (
-              <span className="text-destructive">未上传文件，也未填写在线正文</span>
+              <span className="text-destructive">
+                未上传文件，也未填写在线正文
+              </span>
             )}
           </div>
         </div>
@@ -1626,7 +1919,9 @@ function DeclCheckbox({
       />
       <span>
         <span className="block text-sm font-medium">{label}</span>
-        <span className="block text-xs text-muted-foreground">{description}</span>
+        <span className="block text-xs text-muted-foreground">
+          {description}
+        </span>
       </span>
     </label>
   )

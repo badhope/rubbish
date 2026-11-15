@@ -4,9 +4,21 @@ import { useState } from 'react'
 import { describe, expect, it } from 'vitest'
 import { MarkdownEditor } from '@/components/common/markdown-editor'
 
-function Harness({ initial }: { initial: string }) {
+function Harness({
+  initial,
+  snapshotKey,
+}: {
+  initial: string
+  snapshotKey?: string
+}) {
   const [value, setValue] = useState(initial)
-  return <MarkdownEditor value={value} onChange={setValue} />
+  return (
+    <MarkdownEditor
+      value={value}
+      onChange={setValue}
+      snapshotKey={snapshotKey}
+    />
+  )
 }
 
 describe('MarkdownEditor', () => {
@@ -82,4 +94,42 @@ it('builds an outline from headings and enters focus mode', () => {
   expect(screen.getByText('小节')).toBeInTheDocument()
   fireEvent.click(screen.getByLabelText('专注模式'))
   expect(screen.getByTestId('markdown-editor').className).toContain('fixed')
+})
+
+it('adds a table row from the table menu', async () => {
+  const table = '| 项目 | 数值 |\n| --- | --- |\n| 甲 | 1 |\n| 乙 | 2 |'
+  render(<Harness initial={table} />)
+  const area = screen.getByLabelText('Markdown 正文') as HTMLTextAreaElement
+  const cursor = table.indexOf('甲')
+  area.setSelectionRange(cursor, cursor)
+  await userEvent.click(screen.getByLabelText('表格操作'))
+  await userEvent.click(screen.getByText('下方插入行'))
+  expect(area.value).toContain('| 甲 | 1 |\n|  |  |\n| 乙 | 2 |')
+})
+
+it('aligns the current table column from the table menu', async () => {
+  const table = '| 项目 | 数值 |\n| --- | --- |\n| 甲 | 1 |\n| 乙 | 2 |'
+  render(<Harness initial={table} />)
+  const area = screen.getByLabelText('Markdown 正文') as HTMLTextAreaElement
+  const cursor = table.indexOf('1')
+  area.setSelectionRange(cursor, cursor)
+  await userEvent.click(screen.getByLabelText('表格操作'))
+  await userEvent.click(screen.getByText('当前列右对齐'))
+  expect(area.value).toContain('| --- | ---: |')
+})
+
+it('saves and compares a local editor version', async () => {
+  localStorage.clear()
+  const initial = '第一版\n旧行'
+  render(<Harness initial={initial} snapshotKey="editor-test-doc" />)
+  await userEvent.click(screen.getByLabelText('版本快照'))
+  await userEvent.click(screen.getByText('保存当前版本'))
+  expect(screen.getByText('本机共 1 个快照')).toBeInTheDocument()
+
+  fireEvent.change(screen.getByLabelText('Markdown 正文'), {
+    target: { value: '第一版\n新行' },
+  })
+  await userEvent.click(screen.getByText('对比当前'))
+  expect(screen.getByTestId('md-version-diff')).toHaveTextContent('新行')
+  expect(screen.getByTestId('md-version-diff')).toHaveTextContent('旧行')
 })

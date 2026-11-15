@@ -39,13 +39,16 @@ from app.domain.submission._helpers import (
     _snapshot_submission,
     _try_delete_storage,
 )
-from app.domain.submission.models import Submission, SubmissionVersion
+from app.domain.submission.models import Submission, SubmissionDraft, SubmissionVersion
 from app.domain.submission.similarity import check_against_site
 from app.interfaces.http.submission.responses import _get_or_404, _list_submissions, _to_response
 from app.interfaces.http.submission.schemas import (
     MessageResponse,
     ResubmitRequest,
     SubmissionCreate,
+    SubmissionDraftPayload,
+    SubmissionDraftResponse,
+    SubmissionDraftState,
     SubmissionListResponse,
     SubmissionResponse,
     SubmissionUpdate,
@@ -68,6 +71,62 @@ from importlib import import_module as _import_module  # noqa: E402
 # 静态检查当成未使用导入删除。
 _import_module("app.interfaces.http.submission.routes_editor")
 _import_module("app.interfaces.http.submission.routes_files")
+
+
+@router.get("/draft", response_model=SubmissionDraftState)
+async def get_submission_draft(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> SubmissionDraftState:
+    """作者当前的向导草稿；没有则返回 ``draft: null``，不 404。"""
+    draft = (
+        await db.execute(select(SubmissionDraft).where(SubmissionDraft.user_id == current_user.id))
+    ).scalar_one_or_none()
+    return SubmissionDraftState(
+        draft=SubmissionDraftResponse.model_validate(draft) if draft else None
+    )
+
+
+@router.put("/draft", response_model=SubmissionDraftState)
+async def save_submission_draft(
+    body: SubmissionDraftPayload,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> SubmissionDraftState:
+    """覆盖保存草稿（同一作者只保留一份，不产生版本噪音）。"""
+    draft = (
+        await db.execute(select(SubmissionDraft).where(SubmissionDraft.user_id == current_user.id))
+    ).scalar_one_or_none()
+    if draft is None:
+        draft = SubmissionDraft(
+            tenant_id=current_user.tenant_id,
+            user_id=current_user.id,
+            payload=body.payload,
+            body=body.body,
+        )
+        db.add(draft)
+    else:
+        draft.payload = body.payload
+        draft.body = body.body
+        draft.updated_at = utcnow()
+    await db.commit()
+    await db.refresh(draft)
+    return SubmissionDraftState(draft=SubmissionDraftResponse.model_validate(draft))
+
+
+@router.delete("/draft", response_model=MessageResponse)
+async def delete_submission_draft(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> MessageResponse:
+    """删除草稿；幂等，没有草稿也返回成功。"""
+    draft = (
+        await db.execute(select(SubmissionDraft).where(SubmissionDraft.user_id == current_user.id))
+    ).scalar_one_or_none()
+    if draft is not None:
+        await db.delete(draft)
+        await db.commit()
+    return MessageResponse(message="draft deleted")
 
 
 @router.post(

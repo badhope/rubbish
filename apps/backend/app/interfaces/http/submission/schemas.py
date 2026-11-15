@@ -370,6 +370,25 @@ class ResubmitRequest(BaseModel):
     note: str | None = Field(default=None, max_length=5000)
 
 
+class SubmissionDraftPayload(BaseModel):
+    """Wizard state written by the author.  No manuscript status implied."""
+
+    payload: dict[str, Any] = Field(default_factory=dict)
+    body: str = Field(default="", max_length=2_000_000)
+
+
+class SubmissionDraftResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    payload: dict[str, Any]
+    body: str
+    updated_at: datetime
+
+
+class SubmissionDraftState(BaseModel):
+    draft: SubmissionDraftResponse | None = None
+
+
 class SubmissionVersionResponse(BaseModel):
     """One immutable snapshot in a submission's version history."""
 
@@ -400,6 +419,9 @@ __all__ = [
     "ReviewerCandidateListResponse",
     "SubmissionCreate",
     "SubmissionDecision",
+    "SubmissionDraftPayload",
+    "SubmissionDraftResponse",
+    "SubmissionDraftState",
     "SubmissionListResponse",
     "SubmissionResponse",
     "SubmissionReview",

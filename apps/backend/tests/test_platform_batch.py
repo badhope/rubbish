@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
+from alembic.config import Config
+from alembic.script import ScriptDirectory
 from conftest import auth_headers
 from httpx import AsyncClient
 from sqlalchemy import update
@@ -10,6 +14,13 @@ from sqlalchemy import update
 from app.domain.catalog.models import Resource
 from tests.test_catalog import _SAMPLE
 from tests.test_submission import _PAYLOAD
+
+# 迁移图里有元组 down_revision 与重复 revision id，健康页必须用
+# Alembic 自己的图取 head，不能靠正则差集；测试也从同一张图取，
+# 避免每加一个迁移就要手改断言。
+_ALEMBIC_HEAD = ScriptDirectory.from_config(
+    Config(str(Path(__file__).resolve().parents[1] / "alembic.ini"))
+).get_current_head()
 
 
 @pytest.mark.asyncio
@@ -151,9 +162,7 @@ async def test_system_health_requires_admin(
     body = ok.json()
     assert body["status"] in {"ok", "warn", "fail"}
     assert any(c["key"] == "database" for c in body["checks"])
-    # 迁移图里有元组 down_revision 与重复 revision id，健康页必须用
-    # Alembic 自己的图取 head，不能靠正则差集。
-    assert body["code_revision"] == "047_p2_public_accountability"
+    assert body["code_revision"] == _ALEMBIC_HEAD
 
 
 @pytest.mark.asyncio

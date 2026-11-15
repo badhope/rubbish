@@ -174,4 +174,9 @@
 - [x] 3.4 CSV 字段映射：后端 `column_map`、洋表中英文别名、显式忽略、重复目标/未知表头校验；前端映射面板、恢复自动识别、重复 DOI/标题合并。
 - [x] 测试：后端 `1224 passed, 1 skipped`（701s）；前端 `32 files / 172 tests passed`（826s）；`ruff check` / `ruff format --check` / `typecheck` / `lint` / `build` 通过。
 - [x] 生产上线：`0f09d98` + `a2ec7a3`（同名不同作者不再误合并），release `/home/ubuntu/rubbish-release-20261115-1525`，镜像 `rubbish-app:p4-20261115-1535`；线上 `/ingest`、`/tools` 与附件预览入口 200。
-- [ ] 仍未做：导入结果批量勾选后一次性提交、编辑器表格行/列增删与对齐、版本快照对比、服务端草稿。
+- [x] 3.1 表格操作：编辑器新增「表格」菜单，支持当前行上/下插入、删行、当前列左/右插入、删列、当前列左/中/右对齐、整表对齐；纯函数 `lib/markdown-table.ts` 负责定位、切分、转义竖线与重建，看不懂光标不在表内时明确报错。
+- [x] 3.1 版本快照：`lib/editor-snapshots.ts` 按文档 key 存本机 8 个快照，支持保存、行级 diff 对比、恢复和删除；投稿正文编辑器通过 `snapshotKey` 接入，恢复后仍可 Ctrl+Z。
+- [x] 3.1 服务端草稿：新增 `submission_drafts` 表（每租户每用户一份，覆盖保存，不堆版本）、RLS、迁移 `048_submission_drafts`；`GET/PUT/DELETE /api/submissions/draft`；投稿页本机草稿优先、云端草稿兜底恢复，1.5s 防抖同步，提交后删除云端草稿。
+- [x] 测试：新增 `markdown-table.test.ts`、`editor-snapshots.test.ts`、编辑器菜单/快照交互测试、`test_submission_draft.py`（覆盖保存、用户隔离、幂等删除）。
+- [x] 全量回归与生产上线：后端 `1227 passed, 1 skipped`（672.90s）；前端 `34 files / 184 tests passed`（660.98s）；迁移 `048_submission_drafts` 已执行并启用 `FORCE RLS`；release `/home/ubuntu/rubbish-release-20261115-1718`，镜像 `rubbish-app:p5-20261115-1722`，线上草稿 `GET/PUT/GET/DELETE/GET` 冒烟通过。
+- [ ] 仍未做：导入结果批量勾选后一次性提交。

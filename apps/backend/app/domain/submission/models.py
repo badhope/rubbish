@@ -268,4 +268,33 @@ class SubmissionVersion(Base, TenantScopedMixin):
     )
 
 
-__all__ = ["Submission", "SubmissionVersion"]
+class SubmissionDraft(Base, TenantScopedMixin):
+    """Author's in-progress submission wizard, stored server-side.
+
+    One row per (tenant, user).  It is deliberately separate from
+    ``submissions``: a draft is not a manuscript yet, has no review
+    status, and must never appear in editor queues.  ``payload`` mirrors
+    the wizard's bibliographic fields (minus the local ``File`` object);
+    ``body`` holds the Markdown draft.  The row is overwritten in place
+    so a draft cannot silently accumulate or resurrect old versions —
+    submitted manuscripts use ``SubmissionVersion`` instead.
+    """
+
+    __tablename__ = "submission_drafts"
+    __table_args__ = (UniqueConstraint("tenant_id", "user_id", name="uq_submission_draft_user"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    payload: Mapped[dict[str, Any]] = mapped_column(JSONBVariant, nullable=False, default=dict)
+    body: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
+    )
+
+
+__all__ = ["Submission", "SubmissionDraft", "SubmissionVersion"]

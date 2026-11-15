@@ -311,7 +311,7 @@ P3 不再堆功能，目标只有三个：**可被信任、可被检索、可被
 
 - 冻结商城、R 币、签到、等级、徽章；不再开新一级入口，39 路由 / 289 端点不再增长。
 - 合并双代码树与双 Dockerfile，部署只保留一个构建入口；测试数据清理脚本先在生产 dry-run，再由人工确认删除。
-- 工具模块 3.2 / 3.4 收尾：内容类型分流查看器、批量导入字段映射（编号检查、引用生成、附件按类型预览、CSV 映射与重复合并已上线；仍缺批量勾选提交、编辑器表格操作/版本对比/服务端草稿）。
+- 工具模块 3.2 / 3.4 收尾：内容类型分流查看器、批量导入字段映射（编号检查、引用生成、附件按类型预览、CSV 映射与重复合并已上线；编辑器表格操作、版本对比、服务端草稿已上线；仍缺导入结果批量勾选提交）。
 
 ### P3 验收门槛
 
@@ -362,3 +362,14 @@ P3 不再堆功能，目标只有三个：**可被信任、可被检索、可被
 - 功能：审稿附件按图片 / PDF / CSV / 代码文本分流预览，Word / Excel / ZIP / SVG 明确下载兜底；CSV 导入支持中英文表头别名、逐列映射/显式忽略、DOI/标题重复合并。
 - 验证：后端 `1224 passed, 1 skipped`（701s）；前端 `32 files / 172 tests passed`（826s）；`ruff` / `typecheck` / `lint` / `build` 通过。
 - 生产：release `/home/ubuntu/rubbish-release-20261115-1525`，标准软链已指向；镜像 `rubbish-app:p4-20261115-1535`（含去重修正）；旧 P3 镜像 `rubbish-app:p3-20261115-1405` 保留回滚。生产 `/api/health`、`/tools`、`/desk`、`/support`、`/papers`、`/ingest` 均 200；管理员 Today 8 项 `ok`；容器仍 `user=app`、`cap_drop=ALL`、`no-new-privileges`。
+
+### 2026-11-15 P5 编辑器与服务端草稿上线记录
+
+- 代码：`feat(editor): add table tools, snapshots and server drafts`；五远程已推送。
+- 功能：Markdown 表格菜单支持行/列增删与列/整表对齐；本机版本快照支持保存、行级 diff、恢复、删除（每文档最多 8 个）；投稿向导新增服务端草稿（`submission_drafts`，每租户每用户一份，覆盖保存），本机草稿优先、云端草稿兜底恢复，1.5s 防抖同步，提交成功后清理。
+- 验证：后端 `1227 passed, 1 skipped`（672.90s）；前端 `34 files / 184 tests passed`（660.98s）；`ruff check` / `ruff format --check` / `typecheck` / `lint` / `build` 通过。
+- 迁移：`048_submission_drafts` 已在生产执行，`alembic_version = 048_submission_drafts`；`submission_drafts` 表启用 `FORCE RLS` + `tenant_isolation`，当前 0 行。
+- 生产：release `/home/ubuntu/rubbish-release-20261115-1718`，标准软链已指向；镜像 `rubbish-app:p5-20261115-1722`；旧 P4 镜像 `rubbish-app:p4-20261115-1535` 保留回滚。首页引用 `assets/index-DlOLoa1J.js`，`/api/health` 200，`/api/submissions/draft` 未登录 401。
+- 接口冒烟：管理员登录后 `GET` 返回 `draft: null` → `PUT` 200 → `GET` 回读标题一致 → `DELETE` 200 → `GET` 再次 `draft: null`；测试草稿已删除。
+- 备份：`/home/ubuntu/backups/db-pre-editor-p1-20261115-1710.dump`（927K，custom dump，容器内 `pg_restore --list` 通过）。
+- 仍未做：导入结果批量勾选后一次性提交；版本快照仍只存本机；服务端草稿只保留最新一份，不做多版本历史。

@@ -377,6 +377,51 @@ export function useRemoveFromHistory() {
 }
 
 // --- Submission ---
+export interface SubmissionDraft {
+  payload: Record<string, unknown>
+  body: string
+  updated_at: string
+}
+
+interface SubmissionDraftState {
+  draft: SubmissionDraft | null
+}
+
+export function useSubmissionDraft(enabled = true) {
+  return useQuery<SubmissionDraftState>({
+    queryKey: ['submissions', 'draft'],
+    queryFn: async () =>
+      (await api.get<SubmissionDraftState>('/submissions/draft')).data,
+    enabled,
+  })
+}
+
+export function useSaveSubmissionDraft() {
+  const qc = useQueryClient()
+  return useMutation<
+    SubmissionDraftState,
+    Error,
+    { payload: Record<string, unknown>; body: string }
+  >({
+    mutationFn: async (body) =>
+      (await api.put<SubmissionDraftState>('/submissions/draft', body)).data,
+    onSuccess: (data) => {
+      qc.setQueryData(['submissions', 'draft'], data)
+    },
+  })
+}
+
+export function useDeleteSubmissionDraft() {
+  const qc = useQueryClient()
+  return useMutation<MessageResponse, Error, void>({
+    mutationFn: async () =>
+      (await api.delete<MessageResponse>('/submissions/draft')).data,
+    onSuccess: () => {
+      qc.setQueryData(['submissions', 'draft'], { draft: null })
+    },
+  })
+}
+
 export function useCreateSubmission() {
   const qc = useQueryClient()
   return useMutation<SubmissionResponse, Error, SubmissionCreate>({

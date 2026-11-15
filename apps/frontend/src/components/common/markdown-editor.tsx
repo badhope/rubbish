@@ -2,9 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ChevronDown,
   Focus,
+  History,
   ImagePlus,
   ListTree,
   Search,
+  Table2,
   X,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -19,8 +21,29 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { EmojiStickerPicker } from '@/components/common/emoji-sticker-picker'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { MarkdownContent } from '@/components/common/markdown-content'
 import { cn, extractError } from '@/lib/utils'
+import {
+  TableEditError,
+  editMarkdownTable,
+  type TableOperation,
+} from '@/lib/markdown-table'
+import {
+  deleteEditorSnapshot,
+  diffEditorLines,
+  loadEditorSnapshots,
+  saveEditorSnapshot,
+  type EditorSnapshot,
+} from '@/lib/editor-snapshots'
+import { formatDateTime } from '@/lib/utils'
 
 /**
  * 在线 Word 级 Markdown 编辑器。
@@ -39,6 +62,8 @@ export interface MarkdownEditorProps {
   testId?: string
   /** 传入后显示「图片」按钮；返回可直接放进 Markdown 的 URL。 */
   onUploadImage?: (file: File) => Promise<string>
+  /** 传入后显示「版本」按钮；快照只存本机，按此 key 隔离。 */
+  snapshotKey?: string
 }
 
 interface ToolAction {
@@ -157,7 +182,6 @@ const INSERT_TOOLS = [
   INLINE_CODE,
   FORMULA,
   FORMULA_BLOCK,
-  TABLE,
   CODE,
   HIGHLIGHT,
   UNDERLINE,
@@ -176,6 +200,7 @@ export function MarkdownEditor({
   disabled,
   testId,
   onUploadImage,
+  snapshotKey,
 }: MarkdownEditorProps) {
   const areaRef = useRef<HTMLTextAreaElement | null>(null)
   const imageRef = useRef<HTMLInputElement | null>(null)
@@ -186,6 +211,9 @@ export function MarkdownEditor({
   const [focusMode, setFocusMode] = useState(false)
   const [findTerm, setFindTerm] = useState('')
   const [replaceTerm, setReplaceTerm] = useState('')
+  const [versionsOpen, setVersionsOpen] = useState(false)
+  const [snapshots, setSnapshots] = useState<EditorSnapshot[]>([])
+  const [compareId, setCompareId] = useState<string | null>(null)
   const history = useRef({ past: [] as string[], future: [] as string[] })
   const lastValue = useRef(value)
   const applyingHistory = useRef(false)
@@ -351,6 +379,71 @@ export function MarkdownEditor({
       area.focus()
       area.setSelectionRange(caretStart, caretEnd)
     })
+  }
+
+  const openVersions = () => {
+    if (!snapshotKey) return
+    setSnapshots(loadEditorSnapshots(snapshotKey))
+    setCompareId(null)
+    setVersionsOpen(true)
+  }
+
+  const saveVersion = () => {
+    if (!snapshotKey) return
+    try {
+      saveEditorSnapshot(snapshotKey, value)
+      setSnapshots(loadEditorSnapshots(snapshotKey))
+      toast.success('已保存当前版本')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '保存版本失败')
+    }
+  }
+
+  const restoreVersion = (snapshot: EditorSnapshot) => {
+    if (
+      !window.confirm(
+        '恢复会替换当前正文，仍可用 Ctrl+Z 撤销。确定恢复这个版本吗？',
+      )
+    ) {
+      return
+    }
+    commit(snapshot.content)
+    setVersionsOpen(false)
+    setCompareId(null)
+    toast.success('已恢复版本，可用 Ctrl+Z 撤销')
+  }
+
+  const removeVersion = (snapshot: EditorSnapshot) => {
+    if (!snapshotKey) return
+    setSnapshots(deleteEditorSnapshot(snapshotKey, snapshot.id))
+    if (compareId === snapshot.id) setCompareId(null)
+  }
+
+  const compareSnapshot =
+    snapshots.find((item) => item.id === compareId) ?? null
+  const compareDiff = useMemo(
+    () =>
+      compareSnapshot ? diffEditorLines(compareSnapshot.content, value) : [],
+    [compareSnapshot, value],
+  )
+  const addedLines = compareDiff.filter((row) => row.type === 'add').length
+  const removedLines = compareDiff.filter((row) => row.type === 'remove').length
+
+  const applyTableEdit = (operation: TableOperation) => {
+    const area = areaRef.current
+    if (!area || disabled) return
+    try {
+      const result = editMarkdownTable(value, area.selectionStart, operation)
+      commit(result.value)
+      requestAnimationFrame(() => {
+        area.focus()
+        area.setSelectionRange(result.selectionStart, result.selectionStart)
+      })
+    } catch (error) {
+      toast.error(
+        error instanceof TableEditError ? error.message : '表格操作失败',
+      )
+    }
   }
 
   const changeIndent = (outdent: boolean) => {
@@ -534,6 +627,11 @@ export function MarkdownEditor({
           disabled={disabled}
           onPick={applyTool}
         />
+        <TableMenu
+          disabled={disabled}
+          onInsert={() => applyTool(TABLE)}
+          onEdit={applyTableEdit}
+        />
         <ToolButton
           tool={{ label: '↶', title: '撤销（Ctrl+Z）' }}
           disabled={disabled || !canUndo}
@@ -571,6 +669,20 @@ export function MarkdownEditor({
         )}
 
         <div className="ml-auto flex flex-wrap items-center gap-2">
+          {snapshotKey && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              aria-label="版本快照"
+              title="版本快照（只存本机）"
+              onClick={openVersions}
+              className="h-7 gap-1 px-1.5 text-xs text-muted-foreground"
+            >
+              <History className="h-3.5 w-3.5" />
+              版本
+            </Button>
+          )}
           <Button
             type="button"
             variant="ghost"
@@ -789,6 +901,137 @@ export function MarkdownEditor({
           )}
         </div>
       )}
+      {snapshotKey && (
+        <Dialog open={versionsOpen} onOpenChange={setVersionsOpen}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>版本快照</DialogTitle>
+              <DialogDescription>
+                只存当前浏览器本机，不会上传服务器；最多保留 8 个。恢复后可用
+                Ctrl+Z 撤销。
+              </DialogDescription>
+            </DialogHeader>
+            {compareSnapshot ? (
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+                  <span>
+                    对比{' '}
+                    {formatDateTime(new Date(compareSnapshot.at).toISOString())}
+                  </span>
+                  <span className="font-mono">
+                    +{addedLines} / -{removedLines}
+                  </span>
+                </div>
+                <div
+                  className="max-h-[55vh] overflow-auto rounded-md border bg-muted/20 p-2 font-mono text-xs leading-5"
+                  data-testid="md-version-diff"
+                >
+                  {compareDiff.map((row, index) => (
+                    <div
+                      key={`${row.type}-${index}-${row.oldLine ?? ''}-${row.newLine ?? ''}`}
+                      className={cn(
+                        'whitespace-pre-wrap break-words rounded px-1',
+                        row.type === 'add' &&
+                          'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+                        row.type === 'remove' &&
+                          'bg-rose-500/10 text-rose-700 line-through dark:text-rose-300',
+                      )}
+                    >
+                      <span className="mr-2 select-none text-muted-foreground">
+                        {row.type === 'add'
+                          ? '+'
+                          : row.type === 'remove'
+                            ? '-'
+                            : ' '}
+                      </span>
+                      {row.text || ' '}
+                    </div>
+                  ))}
+                </div>
+                <DialogFooter className="gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setCompareId(null)}
+                  >
+                    返回列表
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => restoreVersion(compareSnapshot)}
+                  >
+                    恢复此版本
+                  </Button>
+                </DialogFooter>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs text-muted-foreground">
+                    {snapshots.length > 0
+                      ? `本机共 ${snapshots.length} 个快照`
+                      : '还没有快照。先保存一个再继续改，才有可回退的版本。'}
+                  </p>
+                  <Button type="button" size="sm" onClick={saveVersion}>
+                    保存当前版本
+                  </Button>
+                </div>
+                {snapshots.length > 0 && (
+                  <ul className="space-y-2">
+                    {snapshots.map((snapshot) => (
+                      <li
+                        key={snapshot.id}
+                        className="flex flex-wrap items-center justify-between gap-2 rounded-md border px-3 py-2"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-sm">
+                            {formatDateTime(
+                              new Date(snapshot.at).toISOString(),
+                            )}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {snapshot.content.replace(/\s/g, '').length} 字
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() => setCompareId(snapshot.id)}
+                          >
+                            对比当前
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() => restoreVersion(snapshot)}
+                          >
+                            恢复
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-1.5 text-xs text-muted-foreground"
+                            aria-label="删除这个版本"
+                            onClick={() => removeVersion(snapshot)}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }
@@ -816,6 +1059,122 @@ function ToolButton({
     >
       {tool.label}
     </Button>
+  )
+}
+
+const TABLE_ROW_ACTIONS: {
+  label: string
+  title: string
+  operation: TableOperation
+}[] = [
+  { label: '↑', title: '上方插入行', operation: 'rowAbove' },
+  { label: '↓', title: '下方插入行', operation: 'rowBelow' },
+  { label: '×', title: '删除当前行', operation: 'deleteRow' },
+]
+
+const TABLE_COLUMN_ACTIONS: {
+  label: string
+  title: string
+  operation: TableOperation
+}[] = [
+  { label: '←', title: '左侧插入列', operation: 'colLeft' },
+  { label: '→', title: '右侧插入列', operation: 'colRight' },
+  { label: '×', title: '删除当前列', operation: 'deleteCol' },
+]
+
+const TABLE_ALIGN_ACTIONS: {
+  label: string
+  title: string
+  operation: TableOperation
+}[] = [
+  { label: ':---', title: '当前列左对齐', operation: 'alignLeft' },
+  { label: ':---:', title: '当前列居中', operation: 'alignCenter' },
+  { label: '---:', title: '当前列右对齐', operation: 'alignRight' },
+  { label: '全左', title: '整表左对齐', operation: 'allLeft' },
+  { label: '全中', title: '整表居中', operation: 'allCenter' },
+  { label: '全右', title: '整表右对齐', operation: 'allRight' },
+]
+
+function TableMenu({
+  disabled,
+  onInsert,
+  onEdit,
+}: {
+  disabled?: boolean
+  onInsert: () => void
+  onEdit: (operation: TableOperation) => void
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={disabled}
+          aria-label="表格操作"
+          className="h-7 gap-0.5 px-1.5 text-xs font-medium text-muted-foreground"
+        >
+          <Table2 className="h-3.5 w-3.5" />
+          表格
+          <ChevronDown className="h-3 w-3" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-56">
+        <DropdownMenuItem onSelect={onInsert} className="gap-2 text-xs">
+          <span className="min-w-10 font-mono text-muted-foreground">+</span>
+          插入三线表
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel className="text-xs text-muted-foreground">
+          当前行
+        </DropdownMenuLabel>
+        {TABLE_ROW_ACTIONS.map((action) => (
+          <DropdownMenuItem
+            key={action.operation}
+            onSelect={() => onEdit(action.operation)}
+            className="gap-2 text-xs"
+          >
+            <span className="min-w-10 font-mono text-muted-foreground">
+              {action.label}
+            </span>
+            {action.title}
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel className="text-xs text-muted-foreground">
+          当前列
+        </DropdownMenuLabel>
+        {TABLE_COLUMN_ACTIONS.map((action) => (
+          <DropdownMenuItem
+            key={action.operation}
+            onSelect={() => onEdit(action.operation)}
+            className="gap-2 text-xs"
+          >
+            <span className="min-w-10 font-mono text-muted-foreground">
+              {action.label}
+            </span>
+            {action.title}
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel className="text-xs text-muted-foreground">
+          对齐
+        </DropdownMenuLabel>
+        {TABLE_ALIGN_ACTIONS.map((action) => (
+          <DropdownMenuItem
+            key={action.operation}
+            onSelect={() => onEdit(action.operation)}
+            className="gap-2 text-xs"
+          >
+            <span className="min-w-10 font-mono text-muted-foreground">
+              {action.label}
+            </span>
+            {action.title}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
