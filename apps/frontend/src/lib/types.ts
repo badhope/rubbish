@@ -954,6 +954,8 @@ export interface IngestResource {
 export interface ParseRequest {
   format: ParseFormat
   content: string
+  /** 仅 CSV：原始表头 -> 字段名，`__ignore__` 表示显式忽略。 */
+  column_map?: Record<string, string>
 }
 
 export interface FetchRequest {

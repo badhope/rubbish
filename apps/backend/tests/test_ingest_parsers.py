@@ -321,3 +321,62 @@ def test_parse_csv_accepts_every_allowed_type(resource_type: str) -> None:
 
     assert errors == []
     assert resources[0].type == resource_type
+
+
+def test_parse_csv_accepts_chinese_and_common_header_aliases() -> None:
+    content = (
+        "标题,作者,年份,期刊,类型,关键词,摘要,DOI,卷,期,页码\n"
+        "中文表头论文,张三 and 李四,2025,测试期刊,paper,机器学习; 传播,摘要正文,10.1000/zh,12,3,45-58\n"
+    )
+
+    resources, errors = parse_csv(content)
+
+    assert errors == []
+    resource = resources[0]
+    assert resource.title == "中文表头论文"
+    assert resource.authors == ["张三", "李四"]
+    assert resource.year == 2025
+    assert resource.venue == "测试期刊"
+    assert resource.tags == ["机器学习", "传播"]
+    assert resource.doi == "10.1000/zh"
+    assert resource.volume == "12"
+    assert resource.issue == "3"
+    assert resource.pages == "45-58"
+
+
+def test_parse_csv_explicit_column_map_overrides_aliases() -> None:
+    content = "题目,写手,发表年,刊物\n映射论文,Alice A,2024,映射期刊\n"
+
+    resources, errors = parse_csv(
+        content,
+        {"题目": "title", "写手": "authors", "发表年": "year", "刊物": "venue"},
+    )
+
+    assert errors == []
+    assert resources[0].title == "映射论文"
+    assert resources[0].authors == ["Alice A"]
+    assert resources[0].year == 2024
+    assert resources[0].venue == "映射期刊"
+
+
+def test_parse_csv_rejects_duplicate_or_unknown_column_map() -> None:
+    content = "a,b,c\nT,Alice,2024\n"
+
+    resources, errors = parse_csv(content, {"a": "title", "b": "title"})
+    assert resources == []
+    assert errors[0].line == 1
+    assert "多个表头映射到同一字段" in errors[0].error
+
+    resources, errors = parse_csv(content, {"a": "not_a_field"})
+    assert resources == []
+    assert errors[0].line == 1
+    assert "不支持的目标字段" in errors[0].error
+
+
+def test_parse_csv_explicit_ignore_blocks_alias_fallback() -> None:
+    content = "title,authors,journal,note\nA Paper,Alice A,Journal of CSV,ignore me\n"
+
+    resources, errors = parse_csv(content, {"journal": "__ignore__"})
+
+    assert errors == []
+    assert resources[0].venue is None

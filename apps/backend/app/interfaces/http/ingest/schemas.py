@@ -33,6 +33,8 @@ class ParseRequest(BaseModel):
 
     format: ParseFormat
     content: str = Field(min_length=1, max_length=2_000_000)
+    # 仅 CSV 使用：原始表头 -> IngestResource 字段名。
+    column_map: dict[str, str] = Field(default_factory=dict, max_length=100)
 
 
 class FetchRequest(BaseModel):

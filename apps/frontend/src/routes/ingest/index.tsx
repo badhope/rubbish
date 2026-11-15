@@ -1,59 +1,80 @@
-import { useRef, useState } from 'react'
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
-import { AlertCircle, ArrowRight, Upload } from 'lucide-react'
-import { toast } from 'sonner'
-import { getAuthState } from '@/lib/auth'
-import { useFetchIngest, useParseIngest } from '@/hooks/api/use-modules'
-import type { FetchSource, IngestResource, ParseFormat } from '@/lib/types'
-import { PageHeader } from '@/components/common/page-header'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
+import { useMemo, useRef, useState } from "react";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { AlertCircle, ArrowRight, Upload } from "lucide-react";
+import { toast } from "sonner";
+import { getAuthState } from "@/lib/auth";
+import { useFetchIngest, useParseIngest } from "@/hooks/api/use-modules";
+import type {
+  FetchSource,
+  IngestResource,
+  ParseFormat,
+  ParseRequest,
+} from "@/lib/types";
+import { PageHeader } from "@/components/common/page-header";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Textarea } from '@/components/ui/textarea'
-import { extractError } from '@/lib/utils'
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { extractError } from "@/lib/utils";
+import {
+  CSV_FIELD_OPTIONS,
+  CSV_IGNORE_TARGET,
+  buildColumnMap,
+  guessColumnMap,
+  mergeDuplicateIngestResources,
+  parseCsvHeader,
+} from "@/lib/ingest";
 
-export const Route = createFileRoute('/ingest/')({
+export const Route = createFileRoute("/ingest/")({
   beforeLoad: () => {
-    if (!getAuthState().isAuthenticated) throw redirect({ to: '/login' })
+    if (!getAuthState().isAuthenticated) throw redirect({ to: "/login" });
   },
   component: IngestPage,
-})
+});
 
 const FORMAT_OPTIONS: { value: ParseFormat; label: string }[] = [
-  { value: 'bibtex', label: 'BibTeX' },
-  { value: 'ris', label: 'RIS' },
-  { value: 'csv', label: 'CSV' },
-  { value: 'json', label: 'JSON' },
-]
+  { value: "bibtex", label: "BibTeX" },
+  { value: "ris", label: "RIS" },
+  { value: "csv", label: "CSV" },
+  { value: "json", label: "JSON" },
+];
 
 const SOURCE_OPTIONS: { value: FetchSource; label: string; hint: string }[] = [
-  { value: 'crossref', label: 'Crossref', hint: 'DOI，例如 10.1000/xyz123' },
-  { value: 'arxiv', label: 'arXiv', hint: 'arXiv ID，例如 2401.00001' },
-  { value: 'pubmed', label: 'PubMed', hint: 'PMID，例如 12345678' },
-  { value: 'openalex', label: 'OpenAlex', hint: 'DOI 或 OpenAlex ID，例如 W2741809807' },
-  { value: 'semantic_scholar', label: 'Semantic Scholar', hint: 'DOI 或 S2 paper ID' },
-]
+  { value: "crossref", label: "Crossref", hint: "DOI，例如 10.1000/xyz123" },
+  { value: "arxiv", label: "arXiv", hint: "arXiv ID，例如 2401.00001" },
+  { value: "pubmed", label: "PubMed", hint: "PMID，例如 12345678" },
+  {
+    value: "openalex",
+    label: "OpenAlex",
+    hint: "DOI 或 OpenAlex ID，例如 W2741809807",
+  },
+  {
+    value: "semantic_scholar",
+    label: "Semantic Scholar",
+    hint: "DOI 或 S2 paper ID",
+  },
+];
 
 const FILE_FORMATS: Record<string, ParseFormat> = {
-  bib: 'bibtex',
-  bibtex: 'bibtex',
-  ris: 'ris',
-  csv: 'csv',
-  json: 'json',
-}
+  bib: "bibtex",
+  bibtex: "bibtex",
+  ris: "ris",
+  csv: "csv",
+  json: "json",
+};
 
 function formatFromFilename(name: string): ParseFormat | null {
-  const ext = name.split('.').pop()?.toLowerCase() ?? ''
-  return FILE_FORMATS[ext] ?? null
+  const ext = name.split(".").pop()?.toLowerCase() ?? "";
+  return FILE_FORMATS[ext] ?? null;
 }
 
 // 解析结果与查询结果共用同一种卡片渲染，"提交到目录" 跳 /submissions 并带 preset
@@ -61,8 +82,8 @@ function ResourceCard({
   resource,
   onSend,
 }: {
-  resource: IngestResource
-  onSend: (r: IngestResource) => void
+  resource: IngestResource;
+  onSend: (r: IngestResource) => void;
 }) {
   return (
     <Card>
@@ -87,14 +108,14 @@ function ResourceCard({
             {resource.authors
               .map((a) => {
                 const parts = a
-                  .split(',')
+                  .split(",")
                   .map((s) => s.trim())
-                  .filter(Boolean)
+                  .filter(Boolean);
                 return parts.length >= 2
-                  ? `${parts.slice(1).join(' ')} ${parts[0]}`
-                  : a
+                  ? `${parts.slice(1).join(" ")} ${parts[0]}`
+                  : a;
               })
-              .join('、')}
+              .join("、")}
           </p>
         )}
         {resource.abstract && (
@@ -102,71 +123,110 @@ function ResourceCard({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function IngestPage() {
-  const navigate = useNavigate()
-  const parseMut = useParseIngest()
-  const fetchMut = useFetchIngest()
+  const navigate = useNavigate();
+  const parseMut = useParseIngest();
+  const fetchMut = useFetchIngest();
 
-  const [format, setFormat] = useState<ParseFormat>('bibtex')
-  const [content, setContent] = useState('')
-  const [source, setSource] = useState<FetchSource>('crossref')
-  const [id, setId] = useState('')
-  const [fileName, setFileName] = useState<string | null>(null)
-  const fileRef = useRef<HTMLInputElement | null>(null)
+  const [format, setFormat] = useState<ParseFormat>("bibtex");
+  const [content, setContent] = useState("");
+  const [source, setSource] = useState<FetchSource>("crossref");
+  const [id, setId] = useState("");
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [mergeDuplicates, setMergeDuplicates] = useState(true);
+  const [columnMapEdits, setColumnMapEdits] = useState<Record<string, string>>(
+    {},
+  );
+  const fileRef = useRef<HTMLInputElement | null>(null);
+
+  const csvHeaders = useMemo(
+    () => (format === "csv" ? parseCsvHeader(content) : []),
+    [content, format],
+  );
+  const defaultColumnMap = useMemo(
+    () => guessColumnMap(csvHeaders),
+    [csvHeaders],
+  );
+  const effectiveColumnMap = useMemo(
+    () =>
+      Object.fromEntries(
+        csvHeaders.map((header) => [
+          header,
+          columnMapEdits[header] ??
+            defaultColumnMap[header] ??
+            CSV_IGNORE_TARGET,
+        ]),
+      ) as Record<string, string>,
+    [columnMapEdits, csvHeaders, defaultColumnMap],
+  );
+  const parsedPreview = useMemo(
+    () =>
+      parseMut.data ? mergeDuplicateIngestResources(parseMut.data.data) : null,
+    [parseMut.data],
+  );
 
   const loadFile = async (file?: File | null) => {
-    if (!file) return
+    if (!file) return;
     if (file.size > 2 * 1024 * 1024) {
-      toast.error('文件不能超过 2MB')
-      return
+      toast.error("文件不能超过 2MB");
+      return;
     }
     try {
-      const text = await file.text()
+      const text = await file.text();
       if (!text.trim()) {
-        toast.error('文件是空的')
-        return
+        toast.error("文件是空的");
+        return;
       }
-      setContent(text)
-      setFileName(file.name)
-      const detected = formatFromFilename(file.name)
-      if (detected) setFormat(detected)
-      toast.success(`已读取 ${file.name}${detected ? `，按 ${detected.toUpperCase()} 解析` : ''}`)
+      setContent(text);
+      setFileName(file.name);
+      const detected = formatFromFilename(file.name);
+      if (detected) setFormat(detected);
+      toast.success(
+        `已读取 ${file.name}${detected ? `，按 ${detected.toUpperCase()} 解析` : ""}`,
+      );
     } catch {
-      toast.error('读取文件失败，请确认文件编码为 UTF-8')
+      toast.error("读取文件失败，请确认文件编码为 UTF-8");
     }
-  }
+  };
 
   const onPickFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    await loadFile(file)
-  }
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    await loadFile(file);
+  };
 
   const sendToSubmissions = (r: IngestResource) => {
-    void navigate({ to: '/submissions/new', state: { preset: r } })
-  }
+    void navigate({ to: "/submissions/new", state: { preset: r } });
+  };
 
   const onParse = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     try {
-      const res = await parseMut.mutateAsync({ format, content })
-      toast.success(`解析完成，成功 ${res.count} 条`)
+      const body: ParseRequest = { format, content };
+      if (format === "csv" && csvHeaders.length > 0) {
+        body.column_map = buildColumnMap(csvHeaders, effectiveColumnMap);
+      }
+      const res = await parseMut.mutateAsync(body);
+      const mergedCount = mergeDuplicateIngestResources(res.data).merged;
+      toast.success(
+        `解析完成，成功 ${res.count} 条${mergeDuplicates && mergedCount > 0 ? `，合并重复 ${mergedCount} 条` : ""}`,
+      );
     } catch (err) {
-      toast.error(extractError(err, '解析失败'))
+      toast.error(extractError(err, "解析失败"));
     }
-  }
+  };
 
   const onFetch = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     try {
-      await fetchMut.mutateAsync({ source, id })
+      await fetchMut.mutateAsync({ source, id });
     } catch (err) {
-      toast.error(extractError(err, '查询失败'))
+      toast.error(extractError(err, "查询失败"));
     }
-  }
+  };
 
   return (
     <div>
@@ -205,10 +265,15 @@ function IngestPage() {
                 </div>
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <label className="text-xs text-muted-foreground">内容</label>
+                    <label className="text-xs text-muted-foreground">
+                      内容
+                    </label>
                     <div className="flex items-center gap-2">
                       {fileName && (
-                        <span className="max-w-48 truncate text-xs text-muted-foreground" title={fileName}>
+                        <span
+                          className="max-w-48 truncate text-xs text-muted-foreground"
+                          title={fileName}
+                        >
                           {fileName}
                         </span>
                       )}
@@ -234,8 +299,8 @@ function IngestPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => {
-                            setContent('')
-                            setFileName(null)
+                            setContent("");
+                            setFileName(null);
                           }}
                         >
                           清空
@@ -246,42 +311,125 @@ function IngestPage() {
                   <Textarea
                     value={content}
                     onChange={(e) => {
-                      setContent(e.target.value)
-                      setFileName(null)
+                      setContent(e.target.value);
+                      setFileName(null);
                     }}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={(e) => {
-                      e.preventDefault()
-                      const file = e.dataTransfer.files?.[0]
-                      if (file) void loadFile(file)
+                      e.preventDefault();
+                      const file = e.dataTransfer.files?.[0];
+                      if (file) void loadFile(file);
                     }}
                     rows={12}
                     placeholder="粘贴 BibTeX / RIS / CSV 内容…"
                     required
                   />
                   <p className="text-xs text-muted-foreground">
-                    支持 UTF-8 的 .bib / .bibtex / .ris / .csv / .json，最大 2MB；读取后仍可手工修改再解析。
+                    支持 UTF-8 的 .bib / .bibtex / .ris / .csv / .json，最大
+                    2MB；读取后仍可手工修改再解析。
                   </p>
                 </div>
-                <Button
-                  type="submit"
-                  disabled={parseMut.isPending || !content}
-                >
-                  {parseMut.isPending ? '解析中…' : '解析'}
+                <Button type="submit" disabled={parseMut.isPending || !content}>
+                  {parseMut.isPending ? "解析中…" : "解析"}
                 </Button>
               </form>
             </CardContent>
           </Card>
 
+          {format === "csv" && csvHeaders.length > 0 && (
+            <Card>
+              <CardContent className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-medium">CSV 字段映射</h3>
+                    <Badge variant="outline">{csvHeaders.length} 列</Badge>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setColumnMapEdits({})}
+                  >
+                    恢复自动识别
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                  {csvHeaders.map((header) => (
+                    <div
+                      key={header}
+                      className="grid grid-cols-[minmax(0,1fr)_11rem] items-center gap-2"
+                    >
+                      <span
+                        className="truncate text-xs text-muted-foreground"
+                        title={header}
+                      >
+                        {header || "（空表头）"}
+                      </span>
+                      <Select
+                        value={effectiveColumnMap[header] ?? CSV_IGNORE_TARGET}
+                        onValueChange={(value) =>
+                          setColumnMapEdits((current) => ({
+                            ...current,
+                            [header]: value,
+                          }))
+                        }
+                      >
+                        <SelectTrigger className="h-8 w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CSV_FIELD_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  未识别的列默认“忽略此列”。显式忽略会压住后端别名自动识别，避免把备注、索引等杂列偷偷导入。
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
           {parseMut.data && (
             <div className="space-y-4">
-              {parseMut.data.count > 0 && (
-                <p className="text-sm text-muted-foreground">
-                  成功解析 {parseMut.data.count} 条
-                </p>
-              )}
-              {parseMut.data.data.map((r, i) => (
-                <ResourceCard key={i} resource={r} onSend={sendToSubmissions} />
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                {parseMut.data.count > 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    成功解析 {parseMut.data.count} 条
+                    {parsedPreview &&
+                    parsedPreview.merged > 0 &&
+                    mergeDuplicates
+                      ? `，合并重复 ${parsedPreview.merged} 条，展示 ${parsedPreview.data.length} 条`
+                      : ""}
+                  </p>
+                )}
+                {parseMut.data.data.length > 1 && (
+                  <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <input
+                      type="checkbox"
+                      checked={mergeDuplicates}
+                      onChange={(event) =>
+                        setMergeDuplicates(event.target.checked)
+                      }
+                    />
+                    合并重复 DOI / 标题
+                  </label>
+                )}
+              </div>
+              {(mergeDuplicates
+                ? (parsedPreview?.data ?? parseMut.data.data)
+                : parseMut.data.data
+              ).map((r, i) => (
+                <ResourceCard
+                  key={`${r.doi ?? r.title}-${i}`}
+                  resource={r}
+                  onSend={sendToSubmissions}
+                />
               ))}
               {parseMut.data.errors.length > 0 && (
                 <div className="space-y-2 rounded-md border border-destructive/30 bg-destructive/5 p-3">
@@ -308,7 +456,9 @@ function IngestPage() {
               <form onSubmit={onFetch} className="space-y-4">
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <label className="text-xs text-muted-foreground">来源</label>
+                    <label className="text-xs text-muted-foreground">
+                      来源
+                    </label>
                     <Select
                       value={source}
                       onValueChange={(v) => setSource(v as FetchSource)}
@@ -330,13 +480,15 @@ function IngestPage() {
                     <Input
                       value={id}
                       onChange={(e) => setId(e.target.value)}
-                      placeholder={SOURCE_OPTIONS.find((o) => o.value === source)?.hint}
+                      placeholder={
+                        SOURCE_OPTIONS.find((o) => o.value === source)?.hint
+                      }
                       required
                     />
                   </div>
                 </div>
                 <Button type="submit" disabled={fetchMut.isPending || !id}>
-                  {fetchMut.isPending ? '查询中…' : '查询'}
+                  {fetchMut.isPending ? "查询中…" : "查询"}
                 </Button>
               </form>
             </CardContent>
@@ -348,5 +500,5 @@ function IngestPage() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

@@ -284,18 +284,140 @@ _CSV_ALLOWED_TYPES = {
 }
 
 
-def parse_csv(content: str) -> tuple[list[IngestResource], list[ParseError]]:
-    """Parse a CSV string (header row + one entry per row)."""
+CSV_IGNORE_TARGET = "__ignore__"
+
+CSV_FIELD_TARGETS = {
+    "title",
+    "type",
+    "authors",
+    "year",
+    "venue",
+    "discipline",
+    "subdiscipline",
+    "tags",
+    "abstract",
+    "doi",
+    "publisher",
+    "volume",
+    "issue",
+    "pages",
+    "issn",
+    "short_container_title",
+}
+
+# 常见导出/手工表头的别名。键统一按 _normalize_header() 归一化。
+CSV_HEADER_ALIASES = {
+    "title": "title",
+    "标题": "title",
+    "题名": "title",
+    "name": "title",
+    "authors": "authors",
+    "author": "authors",
+    "作者": "authors",
+    "作者列表": "authors",
+    "year": "year",
+    "年份": "year",
+    "年": "year",
+    "type": "type",
+    "类型": "type",
+    "venue": "venue",
+    "journal": "venue",
+    "期刊": "venue",
+    "来源": "venue",
+    "刊物": "venue",
+    "discipline": "discipline",
+    "学科": "discipline",
+    "领域": "discipline",
+    "subdiscipline": "subdiscipline",
+    "子学科": "subdiscipline",
+    "tags": "tags",
+    "keywords": "tags",
+    "关键词": "tags",
+    "标签": "tags",
+    "abstract": "abstract",
+    "摘要": "abstract",
+    "doi": "doi",
+    "publisher": "publisher",
+    "出版方": "publisher",
+    "出版社": "publisher",
+    "volume": "volume",
+    "卷": "volume",
+    "issue": "issue",
+    "期": "issue",
+    "pages": "pages",
+    "页码": "pages",
+    "issn": "issn",
+    "short_container_title": "short_container_title",
+    "journal_abbrev": "short_container_title",
+    "简称": "short_container_title",
+}
+
+
+def _normalize_header(name: str) -> str:
+    return name.strip().lstrip("\ufeff").lower().replace("-", "_").replace(" ", "_")
+
+
+def _resolve_column_map(
+    fieldnames: list[str],
+    column_map: Mapping[str, str] | None,
+) -> dict[str, str]:
+    """把原始表头映射到 IngestResource 字段，拒绝未知字段和重复目标。"""
+    resolved: dict[str, str] = {}
+    used: set[str] = set()
+
+    if column_map:
+        unknown_headers = [raw for raw in column_map if raw not in fieldnames]
+        if unknown_headers:
+            raise ValueError(f"column_map 指向不存在的表头: {', '.join(unknown_headers)}")
+        for raw, target in column_map.items():
+            if target == CSV_IGNORE_TARGET:
+                # 显式忽略的列必须压住别名回退，否则用户选了“忽略”仍会被自动映射。
+                resolved[raw] = ""
+                continue
+            if target not in CSV_FIELD_TARGETS:
+                raise ValueError(f"不支持的目标字段: {target}")
+            if target in used:
+                raise ValueError(f"多个表头映射到同一字段: {target}")
+            resolved[raw] = target
+            used.add(target)
+
+    for raw in fieldnames:
+        if raw in resolved:
+            continue
+        target = CSV_HEADER_ALIASES.get(_normalize_header(raw))
+        if target is None or target in used:
+            continue
+        resolved[raw] = target
+        used.add(target)
+
+    return resolved
+
+
+def parse_csv(
+    content: str,
+    column_map: Mapping[str, str] | None = None,
+) -> tuple[list[IngestResource], list[ParseError]]:
+    """Parse a CSV string (header row + one entry per row).
+
+    ``column_map`` maps raw header names to canonical IngestResource fields.
+    Headers omitted from an explicit map still get the built-in alias fallback,
+    so a partial user map does not silently drop obvious columns.
+    """
     reader = csv.DictReader(io.StringIO(content))
     if reader.fieldnames is None:
         return [], [ParseError(line=1, error="empty CSV: no header row")]
+
+    try:
+        resolved = _resolve_column_map(reader.fieldnames, column_map)
+    except ValueError as exc:
+        return [], [ParseError(line=1, error=str(exc))]
 
     resources: list[IngestResource] = []
     errors: list[ParseError] = []
     # Header is line 1, so the first data row is line 2.
     for line_no, row in enumerate(reader, start=2):
         try:
-            resources.append(_csv_row_to_resource(row))
+            resources.append(_csv_row_to_resource(row, resolved))
         except ValidationError as exc:
             errors.append(ParseError(line=line_no, error=_format_validation_error(exc)))
         except ValueError as exc:
@@ -303,9 +425,19 @@ def parse_csv(content: str) -> tuple[list[IngestResource], list[ParseError]]:
     return resources, errors
 
 
-def _csv_row_to_resource(row: Mapping[str, str | None]) -> IngestResource:
+def _csv_row_to_resource(
+    row: Mapping[str, str | None],
+    column_map: Mapping[str, str] | None = None,
+) -> IngestResource:
+    mapping = column_map or {}
+    by_target: dict[str, str] = {}
+    for raw, target in mapping.items():
+        value = (row.get(raw) or "").strip()
+        if value and target:
+            by_target[target] = value
+
     def get(name: str) -> str:
-        return (row.get(name) or "").strip()
+        return by_target.get(name) or (row.get(name) or "").strip()
 
     title = get("title")
     if not title:
@@ -320,10 +452,7 @@ def _csv_row_to_resource(row: Mapping[str, str | None]) -> IngestResource:
         raise ValueError(f"invalid type: {type_str}")
 
     tag_text = get("tags")
-    tags = [t.strip() for t in tag_text.split(TAG_SEP) if t.strip()] if tag_text else []
-
-    discipline = get("discipline") or "unknown"
-    subdiscipline = get("subdiscipline") or None
+    tags = _split_tags(tag_text) if tag_text else []
 
     return IngestResource(
         title=title,
@@ -331,17 +460,26 @@ def _csv_row_to_resource(row: Mapping[str, str | None]) -> IngestResource:
         authors=authors,
         year=_parse_year(get("year")),
         venue=get("venue") or None,
-        discipline=discipline,
-        subdiscipline=subdiscipline,
+        discipline=get("discipline") or "unknown",
+        subdiscipline=get("subdiscipline") or None,
         tags=tags,
         abstract=get("abstract"),
         doi=get("doi") or None,
+        publisher=get("publisher") or None,
+        volume=get("volume") or None,
+        issue=get("issue") or None,
+        pages=get("pages") or None,
+        issn=get("issn") or None,
+        short_container_title=get("short_container_title") or None,
     )
 
 
 __all__ = [
     "AUTHOR_SEP",
     "BIBTEX_TYPE_MAP",
+    "CSV_FIELD_TARGETS",
+    "CSV_HEADER_ALIASES",
+    "CSV_IGNORE_TARGET",
     "DEFAULT_TYPE",
     "RIS_TYPE_MAP",
     "TAG_SEP",

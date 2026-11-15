@@ -477,6 +477,21 @@ _REVIEW_ATTACHMENT_EXTS = {
     ".jpeg",
     ".xlsx",
     ".csv",
+    # 代码/数据脚本：只作为附件下载或纯文本预览，不执行。
+    ".py",
+    ".ipynb",
+    ".r",
+    ".do",
+    ".sql",
+    ".sh",
+    ".js",
+    ".ts",
+    ".tsx",
+    ".jsx",
+    ".json",
+    ".yaml",
+    ".yml",
+    ".tex",
 }
 
 
@@ -627,7 +642,7 @@ async def upload_review_attachment(
     if suffix not in _REVIEW_ATTACHMENT_EXTS:
         raise HTTPException(
             status_code=400,
-            detail="附件仅支持 PDF / Word / Markdown / 图片 / ZIP / Excel / CSV",
+            detail="附件仅支持 PDF / Word / Markdown / 图片 / ZIP / Excel / CSV / 代码文本",
         )
     contents = await file.read()
     if len(contents) > _REVIEW_ATTACHMENT_MAX_BYTES:

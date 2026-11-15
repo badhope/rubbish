@@ -56,7 +56,10 @@ async def parse_endpoint(
     # bibtexparser is synchronous; a 2MB malformed input would block the
     # event loop. Offload to a threadpool so the loop keeps serving other
     # requests while the parse runs.
-    resources, errors = await run_in_threadpool(parser, payload.content)
+    if payload.format == "csv" and payload.column_map:
+        resources, errors = await run_in_threadpool(parse_csv, payload.content, payload.column_map)
+    else:
+        resources, errors = await run_in_threadpool(parser, payload.content)
     return ParseResponse(
         data=resources,
         count=len(resources),

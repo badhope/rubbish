@@ -27,8 +27,8 @@
 | 转换 | `domain/submission/export_docs.py`（465 行） | MD→HTML→PDF、MD→DOCX、整期 PDF、DOCX→PDF | PDF 字体/图片压缩有兜底；LibreOffice 缺失时回退路径需可观测；公式在 PDF 中可能丢失 |
 | 转换 | `domain/submission/docx_template.py`（1199 行） | 品牌 Word 模板、题录、表格、图注、页眉 | 单文件巨大；表格跨页、图注孤页、图片尺寸规则散落；缺独立回归夹具 |
 | 导入 | `domain/ingest/parsers.py` | BibTeX/RIS/CSV/JSON | 已支持 JSON 回导；CSV 别名仍未完全对齐；错误定位只到行号 |
-| 导入 | `domain/ingest/fetchers.py` | Crossref/arXiv/PubMed/OpenAlex/Semantic Scholar | 后端 5 个源已在前端全部可选；字段映射仍未做 |
-| 导入页 | `routes/ingest/index.tsx`（255 行） | 粘贴文本解析、文件选择/拖拽、五源查询 | 仍不能编辑解析结果、批量勾选；字段映射未做 |
+| 导入 | `domain/ingest/fetchers.py` | Crossref/arXiv/PubMed/OpenAlex/Semantic Scholar | 后端 5 个源已在前端全部可选；CSV 已补显式映射与重复合并 |
+| 导入页 | `routes/ingest/index.tsx` | 粘贴文本解析、文件选择/拖拽、五源查询、CSV 逐列映射与重复合并 | 可视化映射/合并已做；仍不能批量勾选一次性提交 |
 | 导出页 | `interfaces/http/export/routes.py` | 批量引用导出 5 种格式 + 字段预检 + 正文合集 | 已补字段警告/确认弹窗、合并 PDF/Word、逐篇 ZIP、整期全文 ZIP |
 
 ## 2. 本轮 P0：先修“会丢内容 / 会出错 / 会误导”
@@ -158,12 +158,19 @@
 - [x] 3.1 撤销/重做（Ctrl+Z / Ctrl+Shift+Z，100 步上限）、查找/替换、文档大纲、专注模式；已补 3 个前端测试。
 - [x] 3.2 抽出通用 `PagedPdfPreview`，`PdfImagePreview` 与 `AuthPngPreview` 改为薄包装；统一换稿归位、页码夹取、重试、页码跳转、缩放、键盘翻页；已补页码跳转/缩放/键盘测试。
 - [x] 3.2 `ManuscriptView` 拆分为 view/text/render/reference/toc/reading-prefs 六模块；`typecheck`、`lint` 与 8 个组件测试通过。
-- [ ] 3.2 表格/CSV/代码/图片按内容类型分流查看器。
+- [x] 3.2 审稿附件查看器按内容类型分流：图片、PDF、CSV、代码/文本分别渲染；Word/Excel/ZIP 明确提示浏览器不能内联预览并保留下载入口，不空白。
 - [x] 3.3 导出前字段校验：纯函数 `export_field_warnings` + `GET /api/export/preflight`；前端导出前弹窗列出缺标题/作者/年份/DOI；引用导出补 JATS 格式。
 - [x] 3.3 多篇合并 PDF/Word、逐篇 ZIP、整期全文 ZIP：`/api/export/documents` 与 `/api/export/issue`；前端已接「合并 PDF / 合并 Word / 逐篇 ZIP / 整期全文 ZIP」。
 - [x] 3.3 统一转换契约：同一份 Markdown 的标题/作者/摘要/关键词/正文/表格在 PDF 与 DOCX 两个出口均有断言。
 - [x] 3.4 独立引用生成器（GB/T 7714、APA、MLA、BibTeX、RIS，一键复制）与图/表编号、参考文献序号、重复段落检查：新增公开 `/tools`，全部浏览器本地计算。
-- [ ] 3.4 批量导入预览后的字段映射与冲突合并（当前导入仍按固定别名解析，未做可视化映射）。
+- [x] 3.4 批量导入预览后的字段映射与冲突合并：CSV 表头支持中英文别名自动识别、逐列改映射/显式忽略（`__ignore__` 压住后端别名回退）、DOI/标题重复合并；后端 `ParseRequest.column_map` 与测试已补。
 - [x] 分页缓存键修正：`useMySubmissions` / `usePendingSubmissions` / `useMyReviewAssignments` 等把 `pageSize` 纳入 query key，避免 Dashboard 用 1 条把列表页 20 条的缓存覆盖。
 - [x] 期号页 JSON-LD `PublicationIssue`，与 canonical 路由、整期 PDF 一并落地。
 - [x] P2-11 第一版 `/desk`：主编桌，三根内容支柱 + 真实卷首手记，不伪造个人头衔或数据；尚未接入独立域名/邮件订阅。
+
+## 9. 2026-11-15 续批状态
+
+- [x] 3.2 通用 `FileContentPreview`：图片/ PDF / CSV / 代码文本分流；CSV 上限 100 行、20 列并标注截断；`.docx/.xlsx/.zip` 明确下载兜底；审稿附件接入预览对话框，代码附件扩展名已加入后端白名单。
+- [x] 3.4 CSV 字段映射：后端 `column_map`、洋表中英文别名、显式忽略、重复目标/未知表头校验；前端映射面板、恢复自动识别、重复 DOI/标题合并。
+- [x] 测试：后端 `1224 passed, 1 skipped`（701s）；前端 `32 files / 172 tests passed`（826s）；`ruff check` / `ruff format --check` / `typecheck` / `lint` / `build` 通过。
+- [ ] 仍未做：导入结果批量勾选后一次性提交、编辑器表格行/列增删与对齐、版本快照对比、服务端草稿。

@@ -251,6 +251,32 @@ async def test_parse_csv_success(client: AsyncClient, test_user: dict[str, Any])
     assert book["authors"] == ["Carol Author"]
 
 
+async def test_parse_csv_accepts_explicit_column_map(
+    client: AsyncClient, test_user: dict[str, Any]
+) -> None:
+    content = "题目,写手,发表年,刊物\n映射论文,Alice A,2024,映射期刊\n"
+    response = await client.post(
+        "/api/ingest/parse",
+        json={
+            "format": "csv",
+            "content": content,
+            "column_map": {
+                "题目": "title",
+                "写手": "authors",
+                "发表年": "year",
+                "刊物": "venue",
+            },
+        },
+        headers=auth_headers(test_user),
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["count"] == 1
+    assert body["errors"] == []
+    assert body["data"][0]["title"] == "映射论文"
+    assert body["data"][0]["authors"] == ["Alice A"]
+
+
 async def test_parse_csv_records_line_number_in_errors(
     client: AsyncClient, test_user: dict[str, Any]
 ) -> None:
