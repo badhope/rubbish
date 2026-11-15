@@ -40,6 +40,8 @@ class NotificationPrefsPatch(BaseModel):
     email_forum: bool | None = None
     email_review: bool | None = None
     email_submission: bool | None = None
+    in_app_release: bool | None = None
+    email_release: bool | None = None
 
 
 class ChangePasswordRequest(BaseModel):
@@ -109,6 +111,7 @@ async def update_me(
         "department",
         "academic_title",
         "research_interests",
+        "reviewer_tags",
         "website",
         "google_scholar",
         "location",

@@ -83,6 +83,7 @@ import { Route as AdminIssuesIndexRouteImport } from './routes/admin/issues/inde
 import { Route as AuthOidcCallbackRouteImport } from './routes/auth/oidc/callback'
 import { Route as CatalogTrackTrackRouteImport } from './routes/catalog/track.$track'
 import { Route as IssuesVolumeIssueRouteImport } from './routes/issues.$volume.$issue'
+import { Route as ReviewQuickIdRouteImport } from './routes/review/quick.$id'
 import { Route as AdminIssuesVolumeIssueRouteImport } from './routes/admin/issues.$volume.$issue'
 
 const IndexRoute = IndexRouteImport.update({
@@ -455,6 +456,11 @@ const IssuesVolumeIssueRoute = IssuesVolumeIssueRouteImport.update({
   path: '/issues/$volume/$issue',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReviewQuickIdRoute = ReviewQuickIdRouteImport.update({
+  id: '/review/quick/$id',
+  path: '/review/quick/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIssuesVolumeIssueRoute = AdminIssuesVolumeIssueRouteImport.update({
   id: '/admin/issues/$volume/$issue',
   path: '/admin/issues/$volume/$issue',
@@ -535,6 +541,7 @@ export interface FileRoutesByFullPath {
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
   '/catalog/track/$track': typeof CatalogTrackTrackRoute
   '/issues/$volume/$issue': typeof IssuesVolumeIssueRoute
+  '/review/quick/$id': typeof ReviewQuickIdRoute
   '/admin/issues/': typeof AdminIssuesIndexRoute
   '/admin/issues/$volume/$issue': typeof AdminIssuesVolumeIssueRoute
 }
@@ -612,6 +619,7 @@ export interface FileRoutesByTo {
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
   '/catalog/track/$track': typeof CatalogTrackTrackRoute
   '/issues/$volume/$issue': typeof IssuesVolumeIssueRoute
+  '/review/quick/$id': typeof ReviewQuickIdRoute
   '/admin/issues': typeof AdminIssuesIndexRoute
   '/admin/issues/$volume/$issue': typeof AdminIssuesVolumeIssueRoute
 }
@@ -690,6 +698,7 @@ export interface FileRoutesById {
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
   '/catalog/track/$track': typeof CatalogTrackTrackRoute
   '/issues/$volume/$issue': typeof IssuesVolumeIssueRoute
+  '/review/quick/$id': typeof ReviewQuickIdRoute
   '/admin/issues/': typeof AdminIssuesIndexRoute
   '/admin/issues/$volume/$issue': typeof AdminIssuesVolumeIssueRoute
 }
@@ -769,6 +778,7 @@ export interface FileRouteTypes {
     | '/auth/oidc/callback'
     | '/catalog/track/$track'
     | '/issues/$volume/$issue'
+    | '/review/quick/$id'
     | '/admin/issues/'
     | '/admin/issues/$volume/$issue'
   fileRoutesByTo: FileRoutesByTo
@@ -846,6 +856,7 @@ export interface FileRouteTypes {
     | '/auth/oidc/callback'
     | '/catalog/track/$track'
     | '/issues/$volume/$issue'
+    | '/review/quick/$id'
     | '/admin/issues'
     | '/admin/issues/$volume/$issue'
   id:
@@ -923,6 +934,7 @@ export interface FileRouteTypes {
     | '/auth/oidc/callback'
     | '/catalog/track/$track'
     | '/issues/$volume/$issue'
+    | '/review/quick/$id'
     | '/admin/issues/'
     | '/admin/issues/$volume/$issue'
   fileRoutesById: FileRoutesById
@@ -1001,6 +1013,7 @@ export interface RootRouteChildren {
   AuthOidcCallbackRoute: typeof AuthOidcCallbackRoute
   CatalogTrackTrackRoute: typeof CatalogTrackTrackRoute
   IssuesVolumeIssueRoute: typeof IssuesVolumeIssueRoute
+  ReviewQuickIdRoute: typeof ReviewQuickIdRoute
   AdminIssuesIndexRoute: typeof AdminIssuesIndexRoute
   AdminIssuesVolumeIssueRoute: typeof AdminIssuesVolumeIssueRoute
 }
@@ -1525,6 +1538,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IssuesVolumeIssueRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/review/quick/$id': {
+      id: '/review/quick/$id'
+      path: '/review/quick/$id'
+      fullPath: '/review/quick/$id'
+      preLoaderRoute: typeof ReviewQuickIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/issues/$volume/$issue': {
       id: '/admin/issues/$volume/$issue'
       path: '/admin/issues/$volume/$issue'
@@ -1609,6 +1629,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthOidcCallbackRoute: AuthOidcCallbackRoute,
   CatalogTrackTrackRoute: CatalogTrackTrackRoute,
   IssuesVolumeIssueRoute: IssuesVolumeIssueRoute,
+  ReviewQuickIdRoute: ReviewQuickIdRoute,
   AdminIssuesIndexRoute: AdminIssuesIndexRoute,
   AdminIssuesVolumeIssueRoute: AdminIssuesVolumeIssueRoute,
 }

@@ -88,6 +88,11 @@ class Submission(Base, TenantScopedMixin):
     title: Mapped[str] = mapped_column(Text, nullable=False)
     type: Mapped[str] = mapped_column(String(50), nullable=False)
     authors: Mapped[list[str]] = mapped_column(JSONBVariant, nullable=False)
+    # 作者单位（P1-8）：逐行/逐项自由文本。用于机构级利益冲突匹配；
+    # 可空数组不阻塞投稿，作者未填时只做姓名/邮箱匹配。
+    author_affiliations: Mapped[list[str]] = mapped_column(
+        JSONBVariant, nullable=False, default=list, server_default="[]"
+    )
     year: Mapped[int] = mapped_column(Integer, nullable=False)
     venue: Mapped[str | None] = mapped_column(Text, nullable=True)
     discipline: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -166,6 +171,17 @@ class Submission(Base, TenantScopedMixin):
     triaged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     triaged_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    # P1-9 初筛 48 小时提醒：最近一次自动提醒时间与累计次数。只提醒一次，
+    # 避免每 6 小时给编辑重复发同一篇的催促。
+    triage_started_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=True
+    )
+    triage_reminded_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    triage_reminder_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
     )
     # 封面图（作者上传 / 编辑指定）。存储 key 与 file_path 同族，
     # 物化到 catalog.resources.cover_image 时原样带过去。

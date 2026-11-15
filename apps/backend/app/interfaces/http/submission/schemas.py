@@ -48,6 +48,28 @@ EditorDecision = Literal[
 ]
 
 
+def _normalize_affiliations(values: list[str] | None) -> list[str] | None:
+    """Trim, de-duplicate, cap each affiliation and the list length.
+
+    Shared by create and update so a direct API PATCH cannot bypass the same
+    institution-level COI hygiene applied to the submission form.
+    """
+    if values is None:
+        return None
+    out: list[str] = []
+    seen: set[str] = set()
+    for raw in values:
+        text = " ".join(str(raw).split()).strip()
+        if not text:
+            continue
+        key = text.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(text[:300])
+    return out[:20]
+
+
 class SubmissionCreate(BaseModel):
     """Body for POST /submissions — author submits a record for review."""
 
@@ -57,6 +79,8 @@ class SubmissionCreate(BaseModel):
     # 旧客户端传 absurd 等值由 before-validator 归一为 serious，不 422。
     track: Track = "serious"
     authors: Authors = Field(min_length=1, max_length=200)
+    # 作者单位（P1-8）：用于机构级 COI 匹配；可空，最多 20 条。
+    author_affiliations: list[str] = Field(default_factory=list, max_length=20)
     year: int = Field(ge=-3000, le=2100)
     venue: str | None = Field(default=None, max_length=500)
     discipline: str = Field(min_length=1, max_length=100)
@@ -75,6 +99,11 @@ class SubmissionCreate(BaseModel):
     external_url: AnyHttpUrl | None = None
     doi: str | None = Field(default=None, max_length=200)
     corresponding_author_email: str | None = Field(default=None, max_length=255)
+
+    @field_validator("author_affiliations")
+    @classmethod
+    def _clean_author_affiliations(cls, values: list[str] | None) -> list[str]:
+        return _normalize_affiliations(values) or []
 
     @field_validator("track", mode="before")
     @classmethod
@@ -139,9 +168,9 @@ class AnonymizedFileUpdate(BaseModel):
 
 
 class TriageRequest(BaseModel):
-    """P1-9 初筛决定：送外审 / 退回修改 / 直接拒稿。"""
+    """P1-9 初筛决定：送外审 / 退回修改 / 补材料 / 直接拒稿。"""
 
-    decision: Literal["send_to_review", "return_for_revision", "desk_reject"]
+    decision: Literal["send_to_review", "return_for_revision", "desk_reject", "request_materials"]
     note: str = Field(default="", max_length=2000)
 
 
@@ -194,6 +223,7 @@ class SubmissionResponse(BaseModel):
     # 赛道：历史字段（已下线），库中恒为 serious，仅为兼容保留。
     track: Track = "serious"
     authors: list[str]
+    author_affiliations: list[str] = Field(default_factory=list)
     year: int
     venue: str | None = None
     discipline: str
@@ -232,11 +262,15 @@ class SubmissionResponse(BaseModel):
     submitted_at: datetime
     reviewed_by: int | None = None
     reviewed_at: datetime | None = None
-    # P1-9 两段式初筛：pending/passed/rework/rejected。
+    # P1-9 两段式初筛：pending/passed/rework/rejected/materials。
     triage_status: str | None = None
     triage_note: str | None = None
     triaged_at: datetime | None = None
     triaged_by: int | None = None
+    # 初筛 48 小时计时起点与提醒状态；补材料重投会重置起点。
+    triage_started_at: datetime | None = None
+    triage_reminded_at: datetime | None = None
+    triage_reminder_count: int = 0
     # 结构报告：仅上传文件端点返回（详情/列表不返回，避免重复计算）
     format_report: FormatReport | None = None
     # 上传结果提示（P0）：扩展名与实际格式不一致、needs_docx 原因、
@@ -271,6 +305,8 @@ class ReviewerCandidate(BaseModel):
     completed_reviews: int = 0
     matched_keywords: list[str] = Field(default_factory=list)
     match_reasons: list[str] = Field(default_factory=list)
+    # P1-7：审稿人自填能力标签；候选理由里展示重合项。
+    reviewer_tags: list[str] = Field(default_factory=list)
     # P1-8：年度利益冲突声明。未声明不拦分派，但编辑能看见；声明命中
     # 作者姓名/通讯邮箱时 conflict=True，分派接口会 409。
     coi_declared: bool = False
@@ -296,7 +332,14 @@ class SubmissionUpdate(BaseModel):
     # 赛道：历史字段，已下线。None = 不修改；非 serious 输入归一为 serious。
     track: Track | None = None
     authors: Authors | None = Field(default=None, min_length=1, max_length=200)
+    author_affiliations: list[str] | None = Field(default=None, max_length=20)
     year: int | None = Field(default=None, ge=-3000, le=2100)
+
+    @field_validator("author_affiliations")
+    @classmethod
+    def _clean_update_author_affiliations(cls, values: list[str] | None) -> list[str] | None:
+        return _normalize_affiliations(values)
+
     venue: str | None = Field(default=None, max_length=500)
     discipline: str | None = Field(default=None, min_length=1, max_length=100)
     subdiscipline: str | None = Field(default=None, max_length=100)

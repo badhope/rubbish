@@ -594,6 +594,11 @@ function EditorWorkbenchPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span>{c.username}</span>
+                        {(c.reviewer_tags ?? []).slice(0, 3).map((tag) => (
+                          <Badge key={tag} variant="secondary" className="text-[10px]">
+                            {tag}
+                          </Badge>
+                        ))}
                         {warned && (
                           <Badge variant="outline" className="text-amber-700">
                             <AlertTriangle className="h-3 w-3" /> 冲突

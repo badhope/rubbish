@@ -290,3 +290,58 @@ def decision_notice(
         + _button("查看稿件详情", link),
     )
     return subject, text, html
+
+
+def triage_overdue_digest(
+    editor: str, items: list[tuple[str, int]], link: str
+) -> tuple[str, str, str]:
+    """One digest for the editor team when triage items pass 48 hours."""
+    count = len(items)
+    subject = f"{settings.site_name}：初筛队列有 {count} 篇超过 48 小时"
+    lines = "\n".join(f"- 《{title}》（已等待 {hours} 小时）" for title, hours in items)
+    text = (
+        f"你好，{editor}：\n\n"
+        f"初筛队列有 {count} 篇稿件超过 48 小时未处理：\n{lines}\n\n"
+        f"请打开以下链接处理：\n{link}\n"
+    )
+    lis = "".join(
+        f"<li>《{escape(title)}》已等待 <strong>{hours} 小时</strong></li>"
+        for title, hours in items
+    )
+    html = _shell(
+        f"初筛队列有 {count} 篇超过 48 小时",
+        f"<p>你好，{escape(editor)}：</p>"
+        f"<p>以下稿件进入初筛队列已超过 <strong>48 小时</strong>：</p>"
+        f"<ul>{lis}</ul>" + _button("打开初筛队列", link),
+    )
+    return subject, text, html
+
+
+def release_failure(
+    target: str, reason: str, link: str, detail: dict[str, object] | None = None
+) -> tuple[str, str, str]:
+    """Editor alert when a scheduled issue release fails."""
+    subject = f"{settings.site_name}：定时发布失败 {target}"
+    extra = ""
+    if detail:
+        extra = "\n" + "\n".join(f"- {escape(str(k))}: {escape(str(v))}" for k, v in detail.items())
+    text = (
+        f"期次 {target} 的定时发布失败。\n\n原因：{reason}{extra}\n\n"
+        f"请打开期次编排重新核对并重新排期：\n{link}\n"
+    )
+    html = _shell(
+        f"定时发布失败：{target}",
+        f"<p>期次 <strong>{escape(target)}</strong> 的定时发布失败。</p>"
+        f"<p>原因：{escape(reason)}</p>"
+        + (
+            "<ul>"
+            + "".join(
+                f"<li>{escape(str(k))}：{escape(str(v))}</li>" for k, v in (detail or {}).items()
+            )
+            + "</ul>"
+            if detail
+            else ""
+        )
+        + _button("打开期次编排", link),
+    )
+    return subject, text, html

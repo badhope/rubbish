@@ -211,6 +211,8 @@ class UserResponse(BaseModel):
     department: str | None = None
     academic_title: str | None = None
     research_interests: str | None = None
+    # P1-7 审稿能力标签（空列表 = 未填写）
+    reviewer_tags: list[str] = Field(default_factory=list)
     website: str | None = None
     google_scholar: str | None = None
     location: str | None = None
@@ -259,6 +261,7 @@ class UserResponse(BaseModel):
                 "department": data.department,
                 "academic_title": data.academic_title,
                 "research_interests": data.research_interests,
+                "reviewer_tags": list(getattr(data, "reviewer_tags", None) or []),
                 "website": data.website,
                 "google_scholar": data.google_scholar,
                 "location": data.location,
@@ -366,6 +369,7 @@ class UserUpdate(BaseModel):
     department: str | None = Field(default=None, max_length=200)
     academic_title: str | None = Field(default=None, max_length=100)
     research_interests: str | None = Field(default=None, max_length=500)
+    reviewer_tags: list[str] | None = Field(default=None, max_length=20)
     website: str | None = Field(default=None, max_length=300)
     google_scholar: str | None = Field(default=None, max_length=300)
     location: str | None = Field(default=None, max_length=100)
@@ -422,6 +426,24 @@ class UserUpdate(BaseModel):
         if parsed.scheme not in {"http", "https"} or not parsed.netloc:
             raise ValueError("个人主页必须是 http(s) 链接")
         return cleaned
+
+    @field_validator("reviewer_tags")
+    @classmethod
+    def _clean_reviewer_tags(cls, values: list[str] | None) -> list[str] | None:
+        if values is None:
+            return None
+        out: list[str] = []
+        seen: set[str] = set()
+        for raw in values:
+            text = " ".join(str(raw).split()).strip()
+            if not text:
+                continue
+            key = text.casefold()
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append(text[:40])
+        return out[:20]
 
     @field_validator("bio")
     @classmethod

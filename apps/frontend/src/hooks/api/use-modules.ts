@@ -424,6 +424,8 @@ export interface ReviewerCandidate {
   completed_reviews?: number
   matched_keywords?: string[]
   match_reasons?: string[]
+  /** P1-7：审稿人自填能力标签。 */
+  reviewer_tags?: string[]
   /** P1-8：是否已提交当前年度利益冲突声明。 */
   coi_declared?: boolean
   coi_year?: number
@@ -533,9 +535,63 @@ export function useReviewerCalibration(year?: number, quarter?: number) {
   })
 }
 
+
+
+export interface CalibrationSampleScore {
+  label: string
+  score: number
+  recommendation: string
+}
+
+export interface CalibrationSample {
+  id: number
+  year: number
+  quarter: number
+  submission_id: number
+  title: string
+  abstract: string
+  discipline: string
+  reviewer_scores: CalibrationSampleScore[]
+  consensus_score: number | null
+  score_spread: number | null
+  review_count: number
+  created_at: string
+}
+
+export interface CalibrationSampleListResponse {
+  year: number
+  quarter: number
+  period_start: string
+  period_end: string
+  samples: CalibrationSample[]
+}
+
+export function useCalibrationSamples(year?: number, quarter?: number) {
+  return useQuery<CalibrationSampleListResponse>({
+    queryKey: ['review', 'calibration-samples', year ?? 'current', quarter ?? 'current'] as const,
+    queryFn: async () =>
+      (
+        await api.get<CalibrationSampleListResponse>('/review/calibration/samples', {
+          params: { ...(year ? { year } : {}), ...(quarter ? { quarter } : {}) },
+        })
+      ).data,
+  })
+}
+
+export function useCreateCalibrationSamples() {
+  const qc = useQueryClient()
+  return useMutation<CalibrationSampleListResponse, Error, { year: number; quarter: number }>({
+    mutationFn: async ({ year, quarter }) =>
+      (await api.post<CalibrationSampleListResponse>('/review/calibration/samples', { year, quarter })).data,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['review', 'calibration-samples'] })
+    },
+  })
+}
+
 export interface TriageDecisionInput {
   id: number
-  decision: 'send_to_review' | 'return_for_revision' | 'desk_reject'
+  decision: 'send_to_review' | 'return_for_revision' | 'desk_reject' | 'request_materials'
   note?: string
 }
 

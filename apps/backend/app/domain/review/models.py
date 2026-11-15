@@ -24,6 +24,7 @@ from typing import Any
 from sqlalchemy import (
     Boolean,
     DateTime,
+    Float,
     ForeignKey,
     Integer,
     String,
@@ -191,4 +192,59 @@ class ReviewReport(Base, TenantScopedMixin):
     assignment = relationship("ReviewAssignment", back_populates="report")
 
 
-__all__ = ["ReviewAssignment", "ReviewReport", "ReviewerConflictDeclaration"]
+class ReviewCalibrationSample(Base, TenantScopedMixin):
+    """季度盲评校准样本（P1-10）。
+
+    编辑每季度从“至少两位审稿人完成报告”的稿件中抽取最多 5 篇，
+    保存当时的匿名分数快照：只留 A/B/C 标签，不留审稿人姓名/ID，
+    用于季度校准会上对照同稿分歧。样本是快照，不随审稿人后续改稿
+    或报告更新而变化；重新抽取会命中 (year, quarter, submission_id)
+    唯一约束，保持同一季度样本集稳定。
+    """
+
+    __tablename__ = "review_calibration_samples"
+    __table_args__ = (
+        UniqueConstraint(
+            "tenant_id",
+            "year",
+            "quarter",
+            "submission_id",
+            name="uq_review_calibration_sample_period_submission",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    year: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    quarter: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    submission_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("submissions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    title: Mapped[str] = mapped_column(Text, nullable=False)
+    abstract: Mapped[str] = mapped_column(Text, nullable=False)
+    discipline: Mapped[str] = mapped_column(String(100), nullable=False, default="")
+    # [{"label":"A","score":82.5,"recommendation":"minor_revision"}, ...]
+    reviewer_scores: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONBVariant, nullable=False, default=list
+    )
+    consensus_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    score_spread: Mapped[float | None] = mapped_column(Float, nullable=True)
+    review_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_by: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+
+
+__all__ = [
+    "ReviewAssignment",
+    "ReviewCalibrationSample",
+    "ReviewReport",
+    "ReviewerConflictDeclaration",
+]

@@ -158,3 +158,66 @@ async def test_author_without_reviewer_role_cannot_declare(
 ) -> None:
     r = await client.get("/api/review/conflicts/me", headers=auth_headers(test_user))
     assert r.status_code == 403
+
+
+async def test_institution_overlap_blocks_assignment(
+    client: AsyncClient, admin_user: dict, test_user: dict
+) -> None:
+    reviewer = await register_reviewer(
+        client, admin_user, "coi-institution", "coi-institution@example.com"
+    )
+    r = await client.patch(
+        "/api/users/me",
+        json={"affiliation": "Example University"},
+        headers=auth_headers(reviewer),
+    )
+    assert r.status_code == 200, r.text
+
+    payload = dict(_PAYLOAD)
+    payload["doi"] = "10.1234/test.coi.institution"
+    payload["author_affiliations"] = ["Example University, Department of Computer Science"]
+    r = await client.post("/api/submissions", json=payload, headers=auth_headers(test_user))
+    assert r.status_code == 201, r.text
+    sub = r.json()
+
+    r = await client.post(
+        f"/api/submissions/{sub['id']}/assignments",
+        json={"reviewer_id": reviewer["user_id"]},
+        headers=auth_headers(admin_user),
+    )
+    assert r.status_code == 409, r.text
+    detail = r.json()["detail"]
+    assert detail["code"] == "reviewer_institution_conflict"
+    assert any("Example University" in term for term in detail["matched_terms"])
+
+    candidates = await client.get(
+        f"/api/submissions/reviewer-candidates?submission_id={sub['id']}",
+        headers=auth_headers(admin_user),
+    )
+    assert candidates.status_code == 200
+    candidate = next(c for c in candidates.json()["data"] if c["username"] == "coi-institution")
+    assert candidate["conflict"] is True
+    assert candidate["conflict_reasons"]
+
+
+async def test_author_affiliations_normalized_on_create_and_patch(
+    client: AsyncClient, test_user: dict
+) -> None:
+    """直接走 API 也必须 trim/去重/截断，不能绕过投稿表单的清洗。"""
+    payload = dict(_PAYLOAD)
+    payload["doi"] = "10.1234/test.coi.affiliations"
+    payload["author_affiliations"] = ["  Example University  ", "example university", "B" * 400]
+    r = await client.post("/api/submissions", json=payload, headers=auth_headers(test_user))
+    assert r.status_code == 201, r.text
+    sub = r.json()
+    assert sub["author_affiliations"][0] == "Example University"
+    assert len(sub["author_affiliations"]) == 2
+    assert len(sub["author_affiliations"][1]) == 300
+
+    r = await client.patch(
+        f"/api/submissions/{sub['id']}",
+        json={"author_affiliations": ["  Another Lab  ", "another lab", "Third Lab"]},
+        headers=auth_headers(test_user),
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["author_affiliations"] == ["Another Lab", "Third Lab"]

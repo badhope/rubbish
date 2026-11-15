@@ -13,15 +13,20 @@ from statistics import mean
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import require_editor, require_tenant_id
 from app.core.db import get_db
 from app.core.time import utcnow
-from app.domain.review.models import ReviewAssignment, ReviewReport
-from app.models import User
+from app.domain.review.models import (
+    ReviewAssignment,
+    ReviewCalibrationSample,
+    ReviewReport,
+)
+from app.domain.submission.models import Submission
+from app.models import AuditLog, User
 
 router = APIRouter(prefix="/calibration", tags=["review-calibration"])
 
@@ -187,4 +192,238 @@ async def reviewer_calibration(
         submission_count=len(by_submission),
         reviewers=result,
         generated_at=now,
+    )
+
+
+class CalibrationSampleScore(BaseModel):
+    label: str
+    score: float
+    recommendation: str
+
+
+class CalibrationSampleResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    year: int
+    quarter: int
+    submission_id: int
+    title: str
+    abstract: str
+    discipline: str
+    reviewer_scores: list[CalibrationSampleScore]
+    consensus_score: float | None = None
+    score_spread: float | None = None
+    review_count: int
+    created_at: datetime
+
+
+class CalibrationSampleListResponse(BaseModel):
+    year: int
+    quarter: int
+    period_start: datetime
+    period_end: datetime
+    samples: list[CalibrationSampleResponse]
+
+
+class CalibrationSampleCreate(BaseModel):
+    year: int | None = Field(default=None, ge=2000, le=2100)
+    quarter: int | None = Field(default=None, ge=1, le=4)
+
+
+async def _existing_samples(
+    db: AsyncSession, *, tenant_id: Any, year: int, quarter: int
+) -> list[ReviewCalibrationSample]:
+    return list(
+        (
+            await db.execute(
+                select(ReviewCalibrationSample)
+                .where(
+                    ReviewCalibrationSample.tenant_id == tenant_id,
+                    ReviewCalibrationSample.year == year,
+                    ReviewCalibrationSample.quarter == quarter,
+                )
+                .order_by(ReviewCalibrationSample.id.asc())
+            )
+        )
+        .scalars()
+        .all()
+    )
+
+
+def _sample_payload(
+    sample: ReviewCalibrationSample,
+) -> CalibrationSampleResponse:
+    return CalibrationSampleResponse(
+        id=sample.id,
+        year=sample.year,
+        quarter=sample.quarter,
+        submission_id=sample.submission_id,
+        title=sample.title,
+        abstract=sample.abstract,
+        discipline=sample.discipline or "",
+        reviewer_scores=[
+            CalibrationSampleScore(
+                label=str(item.get("label", "A")),
+                score=float(item.get("score", 0)),
+                recommendation=str(item.get("recommendation", "")),
+            )
+            for item in (sample.reviewer_scores or [])
+            if isinstance(item, dict)
+        ],
+        consensus_score=sample.consensus_score,
+        score_spread=sample.score_spread,
+        review_count=sample.review_count,
+        created_at=sample.created_at,
+    )
+
+
+@router.get("/samples", response_model=CalibrationSampleListResponse)
+async def list_calibration_samples(
+    year: int | None = Query(default=None, ge=2000, le=2100),
+    quarter: int | None = Query(default=None, ge=1, le=4),
+    _: User = Depends(require_editor),
+    db: AsyncSession = Depends(get_db),
+) -> CalibrationSampleListResponse:
+    tenant_id = require_tenant_id()
+    now = utcnow()
+    target_year = year or now.year
+    target_quarter = quarter or ((now.month - 1) // 3 + 1)
+    start, end = _quarter_bounds(target_year, target_quarter)
+    samples = await _existing_samples(
+        db, tenant_id=tenant_id, year=target_year, quarter=target_quarter
+    )
+    return CalibrationSampleListResponse(
+        year=target_year,
+        quarter=target_quarter,
+        period_start=start,
+        period_end=end,
+        samples=[_sample_payload(item) for item in samples],
+    )
+
+
+@router.post("/samples", response_model=CalibrationSampleListResponse)
+async def create_calibration_samples(
+    body: CalibrationSampleCreate,
+    current_user: User = Depends(require_editor),
+    db: AsyncSession = Depends(get_db),
+) -> CalibrationSampleListResponse:
+    """Idempotently take up to five blind samples for a quarter.
+
+    A sample is only eligible when at least two reviewers submitted a score
+    in that quarter. Re-running the endpoint returns the original snapshot
+    rather than silently replacing a calibration set mid-quarter.
+    """
+    tenant_id = require_tenant_id()
+    now = utcnow()
+    target_year = body.year or now.year
+    target_quarter = body.quarter or ((now.month - 1) // 3 + 1)
+    start, end = _quarter_bounds(target_year, target_quarter)
+    existing = await _existing_samples(
+        db, tenant_id=tenant_id, year=target_year, quarter=target_quarter
+    )
+    if existing:
+        return CalibrationSampleListResponse(
+            year=target_year,
+            quarter=target_quarter,
+            period_start=start,
+            period_end=end,
+            samples=[_sample_payload(item) for item in existing],
+        )
+
+    rows = (
+        await db.execute(
+            select(
+                Submission.id,
+                Submission.title,
+                Submission.abstract,
+                Submission.discipline,
+                ReviewAssignment.reviewer_id,
+                ReviewReport.scores,
+                ReviewReport.recommendation,
+            )
+            .join(ReviewAssignment, ReviewAssignment.submission_id == Submission.id)
+            .join(ReviewReport, ReviewReport.assignment_id == ReviewAssignment.id)
+            .where(
+                Submission.tenant_id == tenant_id,
+                Submission.status.in_(("accepted", "approved", "under_review", "resubmitted")),
+                ReviewAssignment.tenant_id == tenant_id,
+                ReviewAssignment.status == "completed",
+                ReviewAssignment.completed_at.is_not(None),
+                ReviewAssignment.completed_at >= start,
+                ReviewAssignment.completed_at < end,
+                ReviewReport.tenant_id == tenant_id,
+            )
+        )
+    ).all()
+
+    by_submission: dict[int, dict[str, Any]] = {}
+    for row in rows:
+        score = _overall_score(row.scores)
+        if score is None:
+            continue
+        entry = by_submission.setdefault(
+            int(row.id),
+            {
+                "title": row.title,
+                "abstract": row.abstract,
+                "discipline": row.discipline,
+                "scores": [],
+            },
+        )
+        entry["scores"].append((score, row.recommendation))
+
+    eligible = [(sid, data) for sid, data in by_submission.items() if len(data["scores"]) >= 2]
+    eligible.sort(key=lambda item: (-len(item[1]["scores"]), item[0]))
+    created = 0
+    for submission_id, data in eligible[:5]:
+        scores = [score for score, _ in data["scores"]]
+        reviewer_scores = [
+            {
+                "label": chr(ord("A") + index),
+                "score": round(score, 1),
+                "recommendation": recommendation,
+            }
+            for index, (score, recommendation) in enumerate(
+                sorted(data["scores"], key=lambda pair: pair[0])
+            )
+        ]
+        db.add(
+            ReviewCalibrationSample(
+                tenant_id=tenant_id,
+                year=target_year,
+                quarter=target_quarter,
+                submission_id=submission_id,
+                title=data["title"],
+                abstract=data["abstract"],
+                discipline=data["discipline"] or "",
+                reviewer_scores=reviewer_scores,
+                consensus_score=round(mean(scores), 1),
+                score_spread=round(max(scores) - min(scores), 1),
+                review_count=len(scores),
+                created_by=current_user.id,
+                created_at=now,
+            )
+        )
+        created += 1
+    db.add(
+        AuditLog(
+            tenant_id=tenant_id,
+            actor_user_id=current_user.id,
+            action="review.calibration_samples",
+            target_type="calibration_period",
+            target_id=f"{target_year}Q{target_quarter}",
+            payload={"created": created, "eligible": len(eligible)},
+        )
+    )
+    await db.commit()
+    samples = await _existing_samples(
+        db, tenant_id=tenant_id, year=target_year, quarter=target_quarter
+    )
+    return CalibrationSampleListResponse(
+        year=target_year,
+        quarter=target_quarter,
+        period_start=start,
+        period_end=end,
+        samples=[_sample_payload(item) for item in samples],
     )

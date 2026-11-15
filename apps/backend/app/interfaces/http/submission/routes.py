@@ -31,6 +31,7 @@ from app.api.deps import (
 from app.core.db import get_db
 from app.core.moderation import rejection_detail
 from app.core.storage import get_storage
+from app.core.time import utcnow
 from app.domain.notifications import services as notifications
 from app.domain.submission._helpers import (
     DEFAULT_PAGE_SIZE,
@@ -114,6 +115,7 @@ async def create_submission(
         type=body.type,
         track=body.track,
         authors=body.authors,
+        author_affiliations=body.author_affiliations,
         year=body.year,
         venue=body.venue,
         discipline=body.discipline,
@@ -491,6 +493,13 @@ async def author_resubmit(
         )
     note = body.note if body else None
     entry.status = "under_review"
+    # 补材料后重投：回到初筛队列，而不是直接进入已送外审状态。
+    if (entry.triage_status or "") == "materials":
+        entry.status = "resubmitted"
+        entry.triage_status = "pending"
+        entry.triaged_at = None
+        entry.triaged_by = None
+        entry.triage_started_at = utcnow()
     # 作者修回后，上一轮的审稿意见不能再计入新一轮闸门；否则“大修后
     # 重投”会拿旧录用意见直接放行。旧报告保留在 review_reports 里供
     # 追溯，但本轮 assignment 置 cancelled，必须重新送审。

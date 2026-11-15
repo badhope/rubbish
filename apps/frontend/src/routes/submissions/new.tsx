@@ -135,6 +135,7 @@ interface WizardForm {
   keywords: string
   clc: string
   authors: string
+  affiliations: string
   correspondingAuthorEmail: string
   body: string
   file: File | null
@@ -163,6 +164,7 @@ const EMPTY_FORM: WizardForm = {
   keywords: '',
   clc: '',
   authors: '',
+  affiliations: '',
   correspondingAuthorEmail: '',
   body: '',
   file: null,
@@ -196,6 +198,7 @@ function submissionToForm(s: SubmissionResponse, body: string): WizardForm {
     keywords: s.keywords.join(', '),
     clc: s.jel_codes.join(', '),
     authors: s.authors.join(', '),
+    affiliations: (s.author_affiliations ?? []).join(', '),
     correspondingAuthorEmail: s.corresponding_author_email ?? '',
     body,
     venue: s.venue ?? '',
@@ -572,6 +575,7 @@ function SubmissionWizardPage() {
       type: form.type,
       track: form.type === 'paper' ? form.paperKind : undefined,
       authors: parseListField(form.authors),
+      author_affiliations: parseListField(form.affiliations),
       year: Number(form.year) || new Date().getFullYear(),
       discipline: form.discipline.trim(),
       subdiscipline: form.subdiscipline.trim() || undefined,
@@ -1408,6 +1412,19 @@ function StepAuthors({
           className={fieldError('authors') ? 'border-destructive' : ''}
         />
         {fieldError('authors') && <FieldError>至少填写一位作者</FieldError>}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="w-affiliations">作者单位（逗号分隔，选填）</Label>
+        <Input
+          id="w-affiliations"
+          value={form.affiliations}
+          onChange={(e) => set('affiliations', e.target.value)}
+          placeholder="清华大学计算机系, 北京大学信息学院"
+        />
+        <p className="text-xs text-muted-foreground">
+          用于机构级利益冲突检查：审稿人与作者单位重合时，分派会被拦截。多位作者可按署名顺序对应填写；留空只按姓名/邮箱匹配。
+        </p>
       </div>
 
       <div className="space-y-2">

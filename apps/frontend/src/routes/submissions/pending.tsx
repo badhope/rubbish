@@ -29,6 +29,7 @@ import {
   useReviewMatrix,
   useReviewerCandidates,
   usePutAuthors,
+  type ReviewerCandidate,
 } from '@/hooks/api/use-modules'
 import type {
   AssignmentResponse,
@@ -780,7 +781,7 @@ function SubmissionDetailBody({ sub }: { sub: SubmissionResponse }) {
   const [authors, setAuthors] = useState<AuthorEditInput[]>(() =>
     sub.authors.map((name, i) => ({
       name,
-      affiliation: '',
+      affiliation: sub.author_affiliations?.[i] ?? '',
       email: '',
       roles: i === 0 ? ['first'] : [],
       order: i + 1,
@@ -814,6 +815,11 @@ function SubmissionDetailBody({ sub }: { sub: SubmissionResponse }) {
         <span className="text-muted-foreground">{sub.year}</span>
         {sub.subdiscipline && (
           <span className="text-muted-foreground">{sub.subdiscipline}</span>
+        )}
+        {(sub.author_affiliations ?? []).length > 0 && (
+          <span className="text-xs text-muted-foreground">
+            作者单位：{(sub.author_affiliations ?? []).join('；')}
+          </span>
         )}
       </div>
 
@@ -962,6 +968,7 @@ function AssignReviewerDialog({
   const [dueDays, setDueDays] = useState('14')
   const [isExternal, setIsExternal] = useState(false)
   const [externalAffiliation, setExternalAffiliation] = useState('')
+  const [invitingId, setInvitingId] = useState<number | null>(null)
 
   const toggle = (id: number) => {
     const candidate = candidates.find((item) => item.id === id)
@@ -972,6 +979,30 @@ function AssignReviewerDialog({
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : prev.length >= 3 ? prev : [...prev, id],
     )
+  }
+
+  const onQuickInvite = async (candidate: ReviewerCandidate) => {
+    if (candidate.conflict) {
+      toast.error('该审稿人与作者存在可核验的利益冲突，请更换人选')
+      return
+    }
+    setInvitingId(candidate.id)
+    try {
+      const res = await assignMut.mutateAsync({
+        id: submission.id,
+        body: {
+          reviewer_ids: [candidate.id],
+          due_days: 14,
+          is_external: false,
+        },
+      })
+      toast.success(`已发送邀请，默认 14 天截止（指派 ${res.assigned} 名）`)
+      onClose()
+    } catch (err) {
+      toast.error(extractError(err, '邀请失败'))
+    } finally {
+      setInvitingId(null)
+    }
   }
 
   const onConfirm = async () => {
@@ -1035,6 +1066,11 @@ function AssignReviewerDialog({
                         匹配 {u.score}
                       </Badge>
                     ) : null}
+                    {(u.reviewer_tags ?? []).slice(0, 3).map((tag) => (
+                      <Badge key={tag} variant="secondary" className="text-[10px]">
+                        {tag}
+                      </Badge>
+                    ))}
                     {u.conflict ? (
                       <Badge variant="destructive" className="text-[10px]" title={(u.conflict_reasons ?? []).join('、')}>
                         利益冲突
@@ -1044,6 +1080,22 @@ function AssignReviewerDialog({
                         未声明
                       </Badge>
                     ) : null}
+                    {!u.conflict && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="ml-auto h-6 px-2 text-[10px]"
+                        disabled={assignMut.isPending || invitingId === u.id}
+                        onClick={(event) => {
+                          event.preventDefault()
+                          event.stopPropagation()
+                          void onQuickInvite(u)
+                        }}
+                      >
+                        {invitingId === u.id ? '邀请中…' : '一键邀请 · 14 天'}
+                      </Button>
+                    )}
                     {selected.includes(u.id) && (
                       <span className="ml-auto text-xs text-primary">已选</span>
                     )}

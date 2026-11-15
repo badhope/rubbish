@@ -206,6 +206,12 @@ class User(Base, TenantScopedMixin):
     department: Mapped[str | None] = mapped_column(String(200), nullable=True)
     academic_title: Mapped[str | None] = mapped_column(String(100), nullable=True)
     research_interests: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # 审稿能力标签（P1-7）：自由文本短标签，参与候选匹配；空数组表示未填写。
+    # 与 research_interests 分开：后者是主页展示的研究兴趣，前者是可用于
+    # 分派解释的能力标签，编辑不会因为一句简介就被当成专家。
+    reviewer_tags: Mapped[list[str]] = mapped_column(
+        JSONBVariant, nullable=False, default=list, server_default="[]"
+    )
     website: Mapped[str | None] = mapped_column(String(300), nullable=True)
     google_scholar: Mapped[str | None] = mapped_column(String(300), nullable=True)
     location: Mapped[str | None] = mapped_column(String(100), nullable=True)

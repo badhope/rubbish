@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { createFileRoute, redirect, useNavigate, useSearch } from '@tanstack/react-router'
-import { Check, Download, Eye, FileText, X } from 'lucide-react'
+import { createFileRoute, Link, redirect, useNavigate, useSearch } from '@tanstack/react-router'
+import { Check, Download, Eye, FileText, X, Zap } from 'lucide-react'
 import { toast } from 'sonner'
 import { getAuthState } from '@/lib/auth'
 import {
@@ -369,9 +369,16 @@ function ReviewWorkbenchPage() {
                     </>
                   )}
                   {a.status === 'accepted' && (
-                    <Button size="sm" onClick={() => openReviewForm(a.id)}>
-                      <FileText className="h-4 w-4" /> 填写审稿报告
-                    </Button>
+                    <>
+                      <Button size="sm" onClick={() => openReviewForm(a.id)}>
+                        <FileText className="h-4 w-4" /> 填写审稿报告
+                      </Button>
+                      <Link to="/review/quick/$id" params={{ id: String(a.id) }}>
+                        <Button size="sm" variant="outline">
+                          <Zap className="h-4 w-4" /> 手机快速评审
+                        </Button>
+                      </Link>
+                    </>
                   )}
                   {a.status === 'completed' && (
                     <Badge variant="outline" className="gap-1">

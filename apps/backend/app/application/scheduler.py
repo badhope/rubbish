@@ -62,10 +62,26 @@ async def _run_review_reminders() -> dict[str, int]:
     return totals
 
 
+async def _run_triage_reminders() -> dict[str, int]:
+    from app.core.tenant import TENANT_CONTEXT_VAR
+    from app.domain.submission.triage_reminders import run_triage_reminders
+
+    totals = {"checked": 0, "reminded": 0, "emailed": 0, "tenants": 0}
+    for tenant_id in await _tenant_ids():
+        TENANT_CONTEXT_VAR.set(tenant_id)
+        async with async_session_factory() as session:
+            stats = await run_triage_reminders(session, tenant_id=tenant_id)
+        totals["tenants"] += 1
+        for key in ("checked", "reminded", "emailed"):
+            totals[key] += stats.get(key, 0)
+    return totals
+
+
 Job = tuple[str, Callable[[], Awaitable[dict[str, int]]]]
 
 JOBS: list[Job] = [
     ("review_reminders", _run_review_reminders),
+    ("triage_reminders", _run_triage_reminders),
 ]
 
 

@@ -38,6 +38,7 @@ type ProfileForm = {
   academic_title: string
   location: string
   research_interests: string
+  reviewer_tags: string
   website: string
   google_scholar: string
   bio: string
@@ -57,6 +58,7 @@ function toForm(user?: UserResponse | null): ProfileForm {
     academic_title: user?.academic_title ?? '',
     location: user?.location ?? '',
     research_interests: user?.research_interests ?? '',
+    reviewer_tags: (user?.reviewer_tags ?? []).join(', '),
     website: user?.website ?? '',
     google_scholar: user?.google_scholar ?? '',
     bio: user?.bio ?? '',
@@ -147,6 +149,14 @@ export function ProfileDetailsCard({ initial }: { initial?: UserResponse | null 
       }
       if (key === 'accent_color') {
         body.accent_color = form.accent_color
+        continue
+      }
+      if (key === 'reviewer_tags') {
+        body.reviewer_tags = form.reviewer_tags
+          .split(/[,，;；\n]/)
+          .map((tag) => tag.trim())
+          .filter(Boolean)
+          .slice(0, 20)
         continue
       }
       // 空串提交 = 清除该字段；后端会把空串归一为 None。
@@ -359,6 +369,20 @@ export function ProfileDetailsCard({ initial }: { initial?: UserResponse | null 
             onChange={(e) => set('research_interests', e.target.value)}
           />
           <p className="text-xs text-muted-foreground">用顿号或逗号分隔均可，最多 500 字。</p>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="profile-reviewer_tags">审稿能力标签（选填）</Label>
+          <Input
+            id="profile-reviewer_tags"
+            value={form.reviewer_tags}
+            maxLength={400}
+            placeholder="如：多智能体、知识图谱、因果推断、科学计量"
+            onChange={(e) => set('reviewer_tags', e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">
+            逗号分隔，最多 20 个；编辑分派审稿人时会在候选列表展示并参与匹配。只有你具备审稿人角色时才会实际用于分派。
+          </p>
         </div>
 
         <div className="space-y-1.5">

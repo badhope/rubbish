@@ -5,7 +5,7 @@ import {
   redirect,
   useNavigate,
 } from "@tanstack/react-router";
-import { ArrowRight, Clock, Send, Undo2, XCircle } from "lucide-react";
+import { ArrowRight, Clock, FilePlus2, Send, Undo2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { getAuthState } from "@/lib/auth";
 import { useTriageQueue, useTriageSubmission } from "@/hooks/api/use-modules";
@@ -48,7 +48,7 @@ export const Route = createFileRoute("/editor/triage")({
   component: TriagePage,
 });
 
-type Action = "return_for_revision" | "desk_reject";
+type Action = "return_for_revision" | "desk_reject" | "request_materials";
 
 function ageLabel(iso: string): string {
   const hours = Math.max(0, (Date.now() - new Date(iso).getTime()) / 3_600_000);
@@ -171,7 +171,7 @@ function TriagePage() {
                             {item.authors.join("、")}
                           </span>
                           <span>·</span>
-                          <span>投稿 {ageLabel(item.submitted_at)}前</span>
+                          <span>投稿 {ageLabel(item.triage_started_at ?? item.submitted_at)}前</span>
                           {overdue ? (
                             <Badge variant="destructive">超 48 小时</Badge>
                           ) : null}
@@ -208,6 +208,15 @@ function TriagePage() {
                       <Button
                         size="sm"
                         variant="outline"
+                        onClick={() => openDialog(item, "request_materials")}
+                        disabled={triage.isPending}
+                      >
+                        <FilePlus2 className="mr-1 h-4 w-4" aria-hidden />
+                        补材料
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
                         onClick={() => openDialog(item, "desk_reject")}
                         disabled={triage.isPending}
                       >
@@ -239,13 +248,17 @@ function TriagePage() {
             <DialogTitle>
               {dialog?.action === "return_for_revision"
                 ? "退回修改"
-                : "直接拒稿"}{" "}
+                : dialog?.action === "request_materials"
+                  ? "要求补材料"
+                  : "直接拒稿"}{" "}
               — {dialog?.item.title}
             </DialogTitle>
             <DialogDescription>
               {dialog?.action === "return_for_revision"
                 ? "稿件会进入 major_revision，作者可修改后重投；请写清必须改什么。"
-                : "稿件直接进入 rejected，不进入同行评审；请写清范围/格式/规范上的硬性原因。"}
+                : dialog?.action === "request_materials"
+                  ? "稿件进入补材料状态；作者补齐后重投，会重新回到初筛队列。请逐项列明缺什么材料。"
+                  : "稿件直接进入 rejected，不进入同行评审；请写清范围/格式/规范上的硬性原因。"}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">

@@ -6,6 +6,8 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 from fastapi import Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
@@ -41,6 +43,7 @@ from app.interfaces.http.review.coi import (
     declaration_matches,
     declarations_for_reviewers,
     ensure_no_declared_conflict,
+    institution_matches,
 )
 from app.interfaces.http.review.schemas import (
     AssignmentCreate,
@@ -79,7 +82,7 @@ async def list_triage_queue(
     tenant_id = require_tenant_id()
     base = select(Submission).where(
         Submission.tenant_id == tenant_id,
-        Submission.status == "pending",
+        Submission.status.in_(("pending", "resubmitted")),
         Submission.triage_status == "pending",
     )
     total = int(
@@ -87,7 +90,7 @@ async def list_triage_queue(
             await db.execute(
                 select(func.count(Submission.id)).where(
                     Submission.tenant_id == tenant_id,
-                    Submission.status == "pending",
+                    Submission.status.in_(("pending", "resubmitted")),
                     Submission.triage_status == "pending",
                 )
             )
@@ -142,10 +145,13 @@ async def triage_submission(
             detail=f"Submission already triaged as '{entry.triage_status}'",
         )
     note = body.note.strip()
-    if body.decision in ("return_for_revision", "desk_reject") and len(note) < 10:
+    if (
+        body.decision in ("return_for_revision", "desk_reject", "request_materials")
+        and len(note) < 10
+    ):
         raise HTTPException(
             status_code=422,
-            detail="退回修改或直接拒稿必须写至少 10 字理由，作者需要知道下一步怎么做。",
+            detail="退回修改、补材料或直接拒稿必须写至少 10 字理由，作者需要知道下一步怎么做。",
         )
 
     now = utcnow()
@@ -160,6 +166,14 @@ async def triage_submission(
         entry.editor_note = note
         entry.reviewed_by = current_user.id
         entry.reviewed_at = now
+    elif body.decision == "request_materials":
+        # 补材料是独立的初筛状态：作者补齐后重投，稿件重新进入初筛队列，
+        # 不与“退回修改”的大修语义混在一起。
+        entry.triage_status = "materials"
+        entry.status = "major_revision"
+        entry.editor_note = note
+        entry.reviewed_by = current_user.id
+        entry.reviewed_at = now
     else:
         entry.triage_status = "rejected"
         entry.status = "rejected"
@@ -167,26 +181,36 @@ async def triage_submission(
         entry.reviewed_by = current_user.id
         entry.reviewed_at = now
 
-    if body.decision in ("return_for_revision", "desk_reject"):
+    if body.decision in ("return_for_revision", "desk_reject", "request_materials"):
+        if body.decision == "return_for_revision":
+            type_ = "submission.triage_rework"
+            title = f"稿件需要修改：{entry.title}"
+            body_text = (
+                f"稿件 #{entry.id} 已完成编辑部初筛。\n"
+                "修改后可在「我的提交」中重新提交。\n"
+                f"编辑部说明：{note}"
+            )
+        elif body.decision == "request_materials":
+            type_ = "submission.triage_materials"
+            title = f"稿件需要补充材料：{entry.title}"
+            body_text = (
+                f"稿件 #{entry.id} 初筛时发现材料不完整。\n"
+                "请按编辑部说明补齐材料后在「我的提交」中重新提交；补齐后稿件会重新进入初筛队列。\n"
+                f"编辑部说明：{note}"
+            )
+        else:
+            type_ = "submission.triage_rejected"
+            title = f"稿件未通过初筛：{entry.title}"
+            body_text = (
+                f"稿件 #{entry.id} 已完成编辑部初筛。\n本次不进入同行评审。\n编辑部说明：{note}"
+            )
         await notifications.create(
             db,
             tenant_id=entry.tenant_id,
             user_id=entry.submitted_by,
-            type_=(
-                "submission.triage_rework"
-                if body.decision == "return_for_revision"
-                else "submission.triage_rejected"
-            ),
-            title=(
-                f"稿件需要修改：{entry.title}"
-                if body.decision == "return_for_revision"
-                else f"稿件未通过初筛：{entry.title}"
-            ),
-            body=(
-                f"稿件 #{entry.id} 已完成编辑部初筛。\n"
-                f"{'修改后可在「我的提交」中重新提交。' if body.decision == 'return_for_revision' else '本次不进入同行评审。'}\n"
-                f"编辑部说明：{note}"
-            ),
+            type_=type_,
+            title=title,
+            body=body_text,
             related_type="submission",
             related_id=str(entry.id),
         )
@@ -236,6 +260,7 @@ def _candidate_score(
     current: Submission | None,
     history: list[Submission],
     active_count: int,
+    reviewer_tags: list[str] | None = None,
 ) -> tuple[int, list[str], list[str]]:
     """A transparent, explainable 0–100 match score.
 
@@ -266,6 +291,13 @@ def _candidate_score(
             score += min(30, len(overlap) * 6)
             matched = overlap[:5]
             reasons.append(f"关键词重合：{', '.join(matched)}")
+
+        tag_overlap = sorted(current_terms & _norm_terms(reviewer_tags))
+        if tag_overlap:
+            score += min(25, len(tag_overlap) * 8)
+            if not matched:
+                matched = tag_overlap[:5]
+            reasons.append(f"能力标签重合：{', '.join(tag_overlap[:5])}")
 
     completed = len(history)
     if completed:
@@ -298,7 +330,14 @@ async def list_reviewer_candidates(
     tenant_id = require_tenant_id()
     rows = (
         await db.execute(
-            select(User.id, User.username, User.email)
+            select(
+                User.id,
+                User.username,
+                User.email,
+                User.affiliation,
+                User.department,
+                User.reviewer_tags,
+            )
             .join(UserRole, UserRole.user_id == User.id)
             .join(Role, Role.id == UserRole.role_id)
             .where(
@@ -374,6 +413,7 @@ async def list_reviewer_candidates(
             current=current,
             history=history,
             active_count=active_count,
+            reviewer_tags=list(getattr(row, "reviewer_tags", None) or []),
         )
         declaration = declarations.get(row.id)
         conflict_reasons = (
@@ -381,6 +421,15 @@ async def list_reviewer_candidates(
             if current is not None and declaration is not None
             else []
         )
+        if current is not None:
+            candidate_user = SimpleNamespace(
+                affiliation=getattr(row, "affiliation", None),
+                department=getattr(row, "department", None),
+            )
+            conflict_reasons = [
+                *conflict_reasons,
+                *institution_matches(candidate_user, current),
+            ]
         candidates.append(
             ReviewerCandidate(
                 id=row.id,
@@ -391,6 +440,7 @@ async def list_reviewer_candidates(
                 completed_reviews=len(history),
                 matched_keywords=matched,
                 match_reasons=reasons,
+                reviewer_tags=list(getattr(row, "reviewer_tags", None) or []),
                 coi_declared=declaration is not None,
                 coi_year=coi_year,
                 conflict=bool(conflict_reasons),

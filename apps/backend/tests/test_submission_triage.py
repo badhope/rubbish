@@ -135,3 +135,66 @@ async def test_assignment_implicitly_passes_triage(
     assert r.status_code == 200
     assert r.json()["triage_status"] == "passed"
     assert r.json()["status"] == "under_review"
+
+
+async def test_request_materials_then_resubmit_returns_to_queue(
+    client: AsyncClient, db_session, admin_user: dict, test_user: dict
+) -> None:
+    from sqlalchemy import select
+
+    from app.domain.notifications.models import Notification
+
+    sub = await _submission(client, test_user, "10.1234/test.triage.materials")
+    r = await client.post(
+        f"/api/submissions/{sub['id']}/triage",
+        json={
+            "decision": "request_materials",
+            "note": "缺伦理审批编号与原始问卷，请补齐后重新提交。",
+        },
+        headers=auth_headers(admin_user),
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["triage_status"] == "materials"
+    assert body["status"] == "major_revision"
+
+    notes = (
+        (
+            await db_session.execute(
+                select(Notification).where(
+                    Notification.user_id == test_user["user_id"],
+                    Notification.type == "submission.triage_materials",
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+    assert notes, "作者应收到补材料通知"
+
+    r = await client.post(
+        f"/api/submissions/{sub['id']}/resubmit",
+        json={"note": "已补伦理审批与问卷。"},
+        headers=auth_headers(test_user),
+    )
+    assert r.status_code == 200, r.text
+    refreshed = r.json()
+    assert refreshed["status"] == "resubmitted"
+    assert refreshed["triage_status"] == "pending"
+    assert refreshed["triaged_at"] is None
+    assert refreshed["triage_started_at"] is not None
+
+    queue = await client.get("/api/submissions/triage", headers=auth_headers(admin_user))
+    assert any(item["id"] == sub["id"] for item in queue.json()["data"])
+
+
+async def test_request_materials_requires_reason(
+    client: AsyncClient, admin_user: dict, test_user: dict
+) -> None:
+    sub = await _submission(client, test_user, "10.1234/test.triage.materials.short")
+    r = await client.post(
+        f"/api/submissions/{sub['id']}/triage",
+        json={"decision": "request_materials", "note": "缺材料"},
+        headers=auth_headers(admin_user),
+    )
+    assert r.status_code == 422

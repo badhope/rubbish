@@ -1,8 +1,8 @@
 """Reviewer annual conflict-of-interest declarations.
 
-P1-8：每位审稿人每年声明一次冲突对象（作者姓名、邮箱、机构、项目等）。
-分派时只做可解释匹配：投稿表里有作者姓名与通讯邮箱，因此能证明的冲突
-直接 409 拦截；机构等投稿表没有的字段不猜测，只在声明里留档。
+P1-8：每位审稿人每年声明一次冲突对象（作者姓名、邮箱、机构、项目等），
+并新增机构级匹配：审稿人资料中的单位与投稿作者单位重合时直接 409 拦截。
+声明项命中作者姓名/邮箱/单位，或机构重合，都会给出可解释的 matched_terms。
 
 没有声明不阻止分派，编辑侧会显示“未声明”。这样既不会让存量审稿流程
 因为一次迁移集体停摆，也不会假装平台已经知道所有人的利益关系。
@@ -92,7 +92,11 @@ def declaration_matches(
     guard into a false-positive machine.
     """
 
-    haystacks = [*(submission.authors or []), submission.corresponding_author_email or ""]
+    haystacks = [
+        *(submission.authors or []),
+        *(getattr(submission, "author_affiliations", None) or []),
+        submission.corresponding_author_email or "",
+    ]
     haystacks = [_norm(item) for item in haystacks if item]
     matches: list[str] = []
     for term in declaration.conflicts or []:
@@ -102,6 +106,50 @@ def declaration_matches(
         if any(needle in hay for hay in haystacks):
             matches.append(term)
     return matches
+
+
+def institution_matches(reviewer: User, submission: Submission) -> list[str]:
+    """Return reviewer affiliation/department values that overlap author units.
+
+    This is a deliberately narrow guard: only the reviewer's institution
+    (falling back to department when institution is blank) is compared, only
+    values at least four characters long participate, and only equality or
+    containment counts.  A university name therefore blocks a same-school
+    reviewer, while a generic department alone does not match every CS paper.
+    """
+
+    # 只把“单位”作为主匹配项；院系单独出现（如“计算机系”）过于宽泛，
+    # 仅在审稿人没有填写单位时作为兜底，避免把同院系所有投稿都误判为冲突。
+    reviewer_terms = [text for text in (reviewer.affiliation,) if text and len(_norm(text)) >= 4]
+    if not reviewer_terms and reviewer.department and len(_norm(reviewer.department)) >= 4:
+        reviewer_terms = [reviewer.department]
+    author_terms = [
+        text
+        for text in (getattr(submission, "author_affiliations", None) or [])
+        if text and len(_norm(text)) >= 4
+    ]
+    matches: list[str] = []
+    for reviewer_text in reviewer_terms:
+        needle = _norm(reviewer_text)
+        for author_text in author_terms:
+            hay = _norm(author_text)
+            if needle and hay and (needle in hay or hay in needle):
+                matched = f"{reviewer_text} ↔ {author_text}"
+                if matched not in matches:
+                    matches.append(matched)
+                break
+    return matches
+
+
+async def reviewer_institution_matches(
+    db: AsyncSession, *, tenant_id: Any, reviewer_id: int, submission: Submission
+) -> list[str]:
+    reviewer = (
+        await db.execute(select(User).where(User.id == reviewer_id, User.tenant_id == tenant_id))
+    ).scalar_one_or_none()
+    if reviewer is None:
+        return []
+    return institution_matches(reviewer, submission)
 
 
 async def declarations_for_reviewers(
@@ -143,21 +191,24 @@ async def ensure_no_declared_conflict(
     db: AsyncSession, *, tenant_id: Any, reviewer_id: int, submission: Submission
 ) -> None:
     declaration = await latest_declaration(db, tenant_id=tenant_id, user_id=reviewer_id)
-    if declaration is None:
-        return
-    matches = declaration_matches(declaration, submission)
+    declared_matches = declaration_matches(declaration, submission) if declaration else []
+    institution_matches_list = await reviewer_institution_matches(
+        db, tenant_id=tenant_id, reviewer_id=reviewer_id, submission=submission
+    )
+    matches = [*declared_matches, *institution_matches_list]
     if not matches:
         return
+    code = "reviewer_declared_conflict" if declared_matches else "reviewer_institution_conflict"
     raise HTTPException(
         status_code=status.HTTP_409_CONFLICT,
         detail={
-            "code": "reviewer_declared_conflict",
+            "code": code,
             "message": (
-                f"审稿人已申报与作者存在利益冲突：{', '.join(matches)}。"
-                "请更换审稿人，或先由主编在声明中解除该冲突。"
+                f"审稿人与作者存在可核验的利益冲突：{', '.join(matches)}。"
+                "请更换审稿人；如属误判，请先在审稿人资料中修正单位。"
             ),
             "matched_terms": matches,
-            "year": declaration.year,
+            "year": declaration.year if declaration else None,
         },
     )
 

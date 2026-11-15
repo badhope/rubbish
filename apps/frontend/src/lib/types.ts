@@ -48,6 +48,7 @@ export interface UserResponse {
   department?: string | null
   academic_title?: string | null
   research_interests?: string | null
+  reviewer_tags?: string[] | null
   website?: string | null
   google_scholar?: string | null
   location?: string | null
@@ -78,6 +79,7 @@ export type UserProfileUpdate = Partial<
     | 'department'
     | 'academic_title'
     | 'research_interests'
+    | 'reviewer_tags'
     | 'website'
     | 'google_scholar'
     | 'location'
@@ -219,6 +221,7 @@ export interface ResourceBase {
   track?: Track
   title: string
   authors: string[]
+  author_affiliations?: string[]
   year: number
   venue?: string | null
   discipline: string
@@ -484,6 +487,7 @@ export interface SubmissionCreate {
   /** 赛道：历史字段，已下线。后端会把任意值归一为 serious，前端不再发送。 */
   track?: Track
   authors: string[]
+  author_affiliations?: string[]
   year: number
   venue?: string | null
   discipline: string
@@ -542,6 +546,7 @@ export interface SubmissionResponse {
   /** 赛道：历史字段（已下线），恒为 serious，仅为兼容保留。 */
   track: Track
   authors: string[]
+  author_affiliations?: string[]
   year: number
   venue?: string | null
   discipline: string
@@ -583,10 +588,14 @@ export interface SubmissionResponse {
   reviewed_by?: number | null
   reviewed_at?: string | null
   /** P1-9 两段式初筛：pending/passed/rework/rejected */
-  triage_status?: 'pending' | 'passed' | 'rework' | 'rejected' | null
+  triage_status?: 'pending' | 'passed' | 'rework' | 'rejected' | 'materials' | null
   triage_note?: string | null
   triaged_at?: string | null
   triaged_by?: number | null
+  /** 初筛计时起点；补材料重投会重置 */
+  triage_started_at?: string | null
+  triage_reminded_at?: string | null
+  triage_reminder_count?: number
   /** 结构报告：仅上传文件端点返回 */
   format_report?: FormatReport | null
   /** 质量评分（物化后的资源上读取；投稿阶段可能为空） */

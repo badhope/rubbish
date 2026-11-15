@@ -1,10 +1,16 @@
 import { useState } from 'react'
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
-import { ArrowLeft, BarChart3 } from 'lucide-react'
+import { ArrowLeft, BarChart3, Layers, RefreshCw } from 'lucide-react'
+import { toast } from 'sonner'
 import { getAuthState } from '@/lib/auth'
-import { useReviewerCalibration } from '@/hooks/api/use-modules'
+import {
+  useCalibrationSamples,
+  useCreateCalibrationSamples,
+  useReviewerCalibration,
+} from '@/hooks/api/use-modules'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState, LoadingSkeleton } from '@/components/common/state'
+import { extractError } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -43,8 +49,11 @@ function CalibrationPage() {
   const [year, setYear] = useState(currentYear)
   const [quarter, setQuarter] = useState(currentQuarter)
   const { data, isLoading, isError, refetch } = useReviewerCalibration(year, quarter)
+  const samplesQuery = useCalibrationSamples(year, quarter)
+  const createSamples = useCreateCalibrationSamples()
 
   const rows = data?.reviewers ?? []
+  const samples = samplesQuery.data?.samples ?? []
   const years = Array.from({ length: 5 }, (_, i) => currentYear - i)
 
   return (
@@ -180,6 +189,83 @@ function CalibrationPage() {
           </p>
         </>
       )}
+
+      <div className="mt-8 space-y-3">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="flex items-center gap-2 text-base font-semibold">
+              <Layers className="h-4 w-4" aria-hidden /> 季度盲评样本
+            </h2>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              每季度从至少两位审稿人完成评分的稿件中抽最多 5 篇，保存匿名分数快照；
+              只显示 A/B/C 标签，不含审稿人姓名和 ID，用于校准会对照同稿分歧。
+            </p>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={createSamples.isPending || samplesQuery.isLoading}
+            onClick={() =>
+              createSamples.mutate(
+                { year, quarter },
+                {
+                  onSuccess: () => toast.success('本季度盲评样本已就绪'),
+                  onError: (err) => toast.error(extractError(err, '抽取失败')),
+                },
+              )
+            }
+          >
+            <RefreshCw className={`mr-1 h-4 w-4 ${createSamples.isPending ? 'animate-spin' : ''}`} aria-hidden />
+            {samples.length ? '检查/保留本季度样本' : '抽取本季度 5 篇'}
+          </Button>
+        </div>
+
+        {samplesQuery.isLoading ? (
+          <LoadingSkeleton rows={3} />
+        ) : samples.length === 0 ? (
+          <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+            本季度还没有盲评样本。等有至少 2 份同稿评分后，点击右上角抽取；样本一旦生成会在本季度内保持稳定。
+          </div>
+        ) : (
+          <div className="grid gap-3 lg:grid-cols-2">
+            {samples.map((sample, index) => (
+              <Card key={sample.id}>
+                <CardContent className="space-y-3 p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="text-xs text-muted-foreground">样本 {index + 1} · #{sample.submission_id}</div>
+                      <h3 className="mt-1 line-clamp-2 font-medium">{sample.title}</h3>
+                      <div className="mt-1 flex flex-wrap gap-1.5">
+                        <Badge variant="outline">{sample.discipline || '未分类'}</Badge>
+                        <Badge variant="secondary">{sample.review_count} 份评分</Badge>
+                      </div>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <div className="text-xs text-muted-foreground">共识</div>
+                      <div className="text-lg font-semibold tabular-nums">
+                        {sample.consensus_score === null ? '—' : sample.consensus_score.toFixed(1)}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">
+                        极差 {sample.score_spread === null ? '—' : sample.score_spread.toFixed(1)}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="line-clamp-3 text-xs leading-relaxed text-muted-foreground">
+                    {sample.abstract}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {sample.reviewer_scores.map((score) => (
+                      <Badge key={score.label} variant="outline" className="gap-1">
+                        {score.label} · {score.score.toFixed(1)} · {score.recommendation || '—'}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

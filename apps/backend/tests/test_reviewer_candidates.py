@@ -45,6 +45,7 @@ async def test_candidates_include_reviewer_role_holders(
         "completed_reviews",
         "matched_keywords",
         "match_reasons",
+        "reviewer_tags",
         "coi_declared",
         "coi_year",
         "conflict",
@@ -150,3 +151,41 @@ def test_candidate_score_is_explainable_and_load_penalized() -> None:
     assert "machine learning" in matched
     assert any("同子领域" in reason for reason in reasons)
     assert any("当前在审 1 篇" in reason for reason in reasons)
+
+
+async def test_candidate_reviewer_tags_raise_match_score(
+    client: AsyncClient, admin_user: dict, test_user: dict
+) -> None:
+    await _assign(client, admin_user, int(test_user["user_id"]), "reviewer")
+    r = await client.patch(
+        "/api/users/me",
+        json={"reviewer_tags": ["multi-agent", "knowledge graph"]},
+        headers=auth_headers(test_user),
+    )
+    assert r.status_code == 200, r.text
+
+    r = await client.post(
+        "/api/submissions",
+        json={
+            "title": "Tag Matching Test",
+            "type": "paper",
+            "authors": ["Tag Author"],
+            "year": 2026,
+            "discipline": "computer science",
+            "keywords": ["Multi-Agent"],
+            "abstract": "用于验证能力标签参与候选评分。",
+        },
+        headers=auth_headers(test_user),
+    )
+    assert r.status_code == 201, r.text
+    sid = r.json()["id"]
+
+    r = await client.get(
+        f"/api/submissions/reviewer-candidates?submission_id={sid}",
+        headers=auth_headers(admin_user),
+    )
+    assert r.status_code == 200, r.text
+    candidate = next(c for c in r.json()["data"] if c["username"] == "testuser")
+    assert candidate["reviewer_tags"] == ["multi-agent", "knowledge graph"]
+    assert candidate["score"] >= 8
+    assert any("能力标签重合" in reason for reason in candidate["match_reasons"])

@@ -36,11 +36,13 @@ DEFAULT_PREFS: dict[str, bool] = {
     "in_app_forum": True,
     "in_app_review": True,
     "in_app_submission": True,
+    "in_app_release": True,
     # 邮件：默认关——SMTP 未配置时也不假装已发；用户主动开才尝试。
     "email_comment": False,
     "email_forum": False,
     "email_review": False,
     "email_submission": False,
+    "email_release": False,
 }
 
 

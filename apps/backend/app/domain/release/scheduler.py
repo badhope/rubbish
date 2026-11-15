@@ -22,6 +22,7 @@ from app.core.db import async_session_factory
 from app.core.logging import get_logger
 from app.core.tenant import TENANT_CONTEXT_VAR
 from app.core.time import utcnow
+from app.domain.release.alerts import alert_release_failure
 from app.domain.release.gate import check_issue
 from app.domain.release.models import ReleaseManifest
 from app.models import AuditLog, Tenant
@@ -88,6 +89,16 @@ async def publish_due_manifests() -> dict[str, int]:
                             },
                         )
                     )
+                    await alert_release_failure(
+                        session,
+                        tenant_id=tenant_id,
+                        manifest=manifest,
+                        reason="content_changed",
+                        detail={
+                            "manifest_hash": manifest.content_hash,
+                            "current_hash": current["content_hash"],
+                        },
+                    )
                     totals["failed"] += 1
                     continue
                 if current["status"] != "ready":
@@ -110,6 +121,13 @@ async def publish_due_manifests() -> dict[str, int]:
                                 "errors": current["error_count"],
                             },
                         )
+                    )
+                    await alert_release_failure(
+                        session,
+                        tenant_id=tenant_id,
+                        manifest=manifest,
+                        reason="gate_blocked",
+                        detail={"errors": current["error_count"]},
                     )
                     totals["failed"] += 1
                     continue
