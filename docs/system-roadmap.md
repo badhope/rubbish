@@ -287,7 +287,7 @@ P3 不再堆功能，目标只有三个：**可被信任、可被检索、可被
 
 ### P3-1 信任链（最高优先）
 
-- 评审来源公开标签：历史稿区分 `editorial_import` / `editorial_review` / `peer_reviewed`，副刊 `not_applicable`；不伪造评审报告、不公开审稿人身份。（本次已落代码，待部署验收）
+- 评审来源公开标签：历史稿区分 `editorial_import` / `editorial_review` / `peer_reviewed`，副刊 `not_applicable`；不伪造评审报告、不公开审稿人身份。（2026-11-15 已上线，生产实测 298 显示“同行评审 · 1 份报告”，132 显示“编辑审稿 · 未外审”）
 - 逐篇可见 DOI / ISSN / 卷期 / 页码 / 许可证；没有 DOI 的稿件明确标“未注册”，不用空白冒充。
 - 作者贡献（CRediT）、单位、ORCID、基金、COI、数据可用性声明逐篇结构化，不再只存在 PDF 里。
 - 更正 / 撤稿 / 署名变更公开日志；文章版本历史与作者状态时间线打通。
@@ -311,7 +311,7 @@ P3 不再堆功能，目标只有三个：**可被信任、可被检索、可被
 
 - 冻结商城、R 币、签到、等级、徽章；不再开新一级入口，39 路由 / 289 端点不再增长。
 - 合并双代码树与双 Dockerfile，部署只保留一个构建入口；测试数据清理脚本先在生产 dry-run，再由人工确认删除。
-- 工具模块 3.2 / 3.4 收尾：内容类型分流查看器、批量导入字段映射、图表/参考文献编号检查（编号检查与引用生成已落 `/tools`，批量映射仍未做）。
+- 工具模块 3.2 / 3.4 收尾：内容类型分流查看器、批量导入字段映射（编号检查与引用生成已上线 `/tools`，批量映射仍未做）。
 
 ### P3 验收门槛
 
@@ -344,3 +344,14 @@ P3 不再堆功能，目标只有三个：**可被信任、可被检索、可被
 - 备份：`db-pre-p2-20261115-121257.dump`、`uploads-pre-p2-20261115-121257.tar.gz`；管理员密码修复前另备份 `db-pre-admin-reset-20261115-130539.dump`。
 - 管理员登录：生产 `rubbish_ai_admin` 的密码哈希与 `.env` 不一致，已按环境配置同步（租户上下文内单条更新）并重启；登录 200，`/api/admin/editor/today` 返回 8 项检查全 `ok`，备份 `ok`（DB 0.0h / uploads 0.9h）。
 - 仍受外部条件限制：P2-11 独立域名需 DNS；P2-12 公开数字需真实台账；P2-13 DataCite 实际注册需 URL/prefix/API key。代码与页面均已就绪，不伪造数据或注册结果。
+
+### 2026-11-15 P3 先行落地记录
+
+- 代码：`54e0a23 feat(review): expose honest review provenance and add writing tools`、`c434f9a fix(spa): allow /tools deep link`；五远程已推送。
+- 验证：后端 `1219 passed, 1 skipped`（10m58s）；前端 `29 files / 161 tests passed`（9m35s）；`ruff check` / `ruff format --check` / `typecheck` / `lint` / `build` 通过。
+- 新增：`/tools` 引用生成（GB/T 7714、APA、MLA、BibTeX、RIS）与 Markdown 编校检查（图/表/参考文献编号、重复段落、占位符）；文章详情按真实 `submissions/review_reports` 显示评审来源，不写库、不伪造报告。
+- 非 root：生产镜像改为 `USER app`（uid/gid 999），compose 新增 `app-init` 一次性修正 `/data/uploads` 属主，`app` 加 `cap_drop: ALL` 与 `no-new-privileges`；生产容器实测 `user=app`、`running_as=999:999`、`CapDrop=["ALL"]`。
+- 生产：发布目录 `/home/ubuntu/rubbish-release-20261115-1359`，标准软链 `/home/ubuntu/rubbish` 已指向；镜像 `rubbish-app:p3-20261115-1405`（latest 同步）；旧 P2 镜像 `rubbish-app:p2-20261115-1215` 保留作回滚。
+- 线上：`/api/health` 200、`/tools` 200、`/desk`/`/support`/`/papers`/`/admin/finance` 200；管理员登录 200，`/api/admin/editor/today` 8 项检查全 `ok`；切换后日志无 error/exception/traceback。
+- 备份：`/home/ubuntu/backups/db-pre-nonroot-20261115-1358.dump`（924K）。
+- 仍未闭环：异地备份无 rclone remote（脚本继续 SKIP）、容器 rootfs 仍可写、远程 PAT 只是移出 `.git/config` 到 `~/.git-credentials` 未真正轮换、测试数据清理脚本生产未 dry-run。
