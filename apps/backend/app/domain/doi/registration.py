@@ -27,15 +27,37 @@ HTTP_TIMEOUT = 15.0
 
 
 def datacite_enabled() -> bool:
-    """True when a DataCite API URL is configured."""
-    return bool(settings.datacite_api_url) and bool(settings.datacite_prefix)
+    """True when the DataCite base URL, prefix and credential are present."""
+    return bool(
+        settings.datacite_api_url and settings.datacite_prefix and settings.datacite_api_key
+    )
+
+
+def _api_base() -> str:
+    """Resolve the configured API base instead of silently using api.datacite.org."""
+    return (settings.datacite_api_url or DATACITE_API_URL).rstrip("/")
 
 
 def _auth_headers() -> dict[str, str]:
+    # ``RUBBISH_DATACITE_API_KEY`` is documented as a base64-encoded
+    # "username:password" pair. Do not double-encode it here; operators who
+    # paste the raw pair should use the documented generation command.
     return {
         "Content-Type": "application/vnd.api+json",
-        "Authorization": f"Basic {settings.datacite_api_key}",
+        "Authorization": f"Basic {settings.datacite_api_key.strip()}",
     }
+
+
+def _landing_url(resource: Any, doi: str) -> str:
+    """Public landing page for the DOI.
+
+    DataCite metadata must point at the article, not back at ``doi.org``:
+    a self-referential URL sends readers into a redirect loop.
+    """
+    base = (settings.public_base_url or settings.frontend_base_url or "").strip().rstrip("/")
+    if base:
+        return f"{base}/catalog/{getattr(resource, 'id', '')}"
+    return f"https://doi.org/{doi}"
 
 
 def _build_doi(suffix: str) -> str:
@@ -45,19 +67,32 @@ def _build_doi(suffix: str) -> str:
 
 def _build_datacite_metadata(resource: Any, doi: str) -> dict[str, Any]:
     """Build a DataCite 4.x JSON metadata payload from a Resource model."""
+    from app.core.time import utcnow
+
     authors_list = []
     for author in resource.authors or []:
         if isinstance(author, dict):
-            authors_list.append(
-                {
-                    "name": author.get("name", str(author)),
-                    "nameType": "Personal",
-                    "givenName": author.get("given_name", ""),
-                    "familyName": author.get("family_name", ""),
-                }
-            )
-        else:
-            authors_list.append({"name": str(author), "nameType": "Personal"})
+            name = str(author.get("name") or "").strip()
+            if not name:
+                continue
+            creator = {
+                "name": name,
+                "nameType": "Personal",
+                "givenName": author.get("given_name", ""),
+                "familyName": author.get("family_name", ""),
+            }
+            orcid = str(author.get("orcid") or "").strip()
+            if orcid:
+                creator["nameIdentifiers"] = [
+                    {
+                        "nameIdentifier": orcid,
+                        "nameIdentifierScheme": "ORCID",
+                        "schemeUri": "https://orcid.org",
+                    }
+                ]
+            authors_list.append(creator)
+        elif str(author).strip():
+            authors_list.append({"name": str(author).strip(), "nameType": "Personal"})
 
     return {
         "data": {
@@ -67,7 +102,7 @@ def _build_datacite_metadata(resource: Any, doi: str) -> dict[str, Any]:
                 "creators": authors_list,
                 "titles": [{"title": resource.title}],
                 "publisher": resource.publisher or "Rubbish",
-                "publicationYear": str(resource.year or "2026"),
+                "publicationYear": str(resource.year or utcnow().year),
                 "types": {
                     "resourceTypeGeneral": "Text",
                     "resourceType": resource.type or "JournalArticle",
@@ -77,7 +112,7 @@ def _build_datacite_metadata(resource: Any, doi: str) -> dict[str, Any]:
                     if resource.abstract
                     else []
                 ),
-                "url": f"https://doi.org/{doi}",
+                "url": _landing_url(resource, doi),
                 "subjects": ([{"subject": tag} for tag in (resource.tags or [])[:10]]),
             },
         }
@@ -108,8 +143,8 @@ async def mint_doi(
     Returns (doi, state) where state is "completed" or "failed".
 
     Steps:
-    1. POST metadata XML to DataCite MDS.
-    2. POST DOI registration to DataCite MDS.
+    1. Look up the DOI (retry-safe) and create/update metadata.
+    2. Publish (make findable) via DataCite REST.
     """
     if not datacite_enabled():
         return "", "failed"
@@ -122,35 +157,66 @@ async def mint_doi(
 
     try:
         async with httpx.AsyncClient(timeout=HTTP_TIMEOUT) as client:
-            # Step 1: POST metadata
+            base = _api_base()
+            headers = _auth_headers()
             metadata = _build_datacite_metadata(resource, doi)
-            meta_resp = await client.post(
-                f"{DATACITE_API_URL}/dois",
-                headers=_auth_headers(),
-                json=metadata,
-            )
-            if meta_resp.status_code >= 400:
+            landing_url = _landing_url(resource, doi)
+
+            # Retry-safe: a previous attempt may have created the DOI and
+            # failed on the publish step. GET first so a retry does not
+            # attempt to create the same DOI twice.
+            existing = await client.get(f"{base}/dois/{doi}", headers=headers)
+            if existing.status_code >= 400 and existing.status_code != 404:
                 logger.warning(
-                    "DataCite metadata POST failed: %s %s",
-                    meta_resp.status_code,
-                    meta_resp.text[:500],
+                    "DataCite DOI lookup failed: %s %s",
+                    existing.status_code,
+                    existing.text[:500],
                 )
                 return doi, "failed"
 
-            # Step 2: Register the DOI (make it findable)
+            if existing.status_code == 404:
+                meta_resp = await client.post(
+                    f"{base}/dois",
+                    headers=headers,
+                    json=metadata,
+                )
+                if meta_resp.status_code >= 400:
+                    logger.warning(
+                        "DataCite metadata POST failed: %s %s",
+                        meta_resp.status_code,
+                        meta_resp.text[:500],
+                    )
+                    return doi, "failed"
+            else:
+                # Metadata may have changed since the draft was created.
+                update_resp = await client.put(
+                    f"{base}/dois/{doi}",
+                    headers=headers,
+                    json=metadata,
+                )
+                if update_resp.status_code >= 400:
+                    logger.warning(
+                        "DataCite metadata update failed: %s %s",
+                        update_resp.status_code,
+                        update_resp.text[:500],
+                    )
+                    return doi, "failed"
+
+            # DataCite REST uses an ``event`` attribute to transition a
+            # draft DOI to findable.
             register_payload = {
                 "data": {
                     "type": "dois",
                     "attributes": {
                         "doi": doi,
-                        "url": f"https://doi.org/{doi}",
+                        "url": landing_url,
                         "event": "publish",
                     },
                 }
             }
             reg_resp = await client.put(
-                f"{DATACITE_API_URL}/dois/{doi}",
-                headers=_auth_headers(),
+                f"{base}/dois/{doi}",
+                headers=headers,
                 json=register_payload,
             )
             if reg_resp.status_code >= 400:

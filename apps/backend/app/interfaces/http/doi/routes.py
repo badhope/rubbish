@@ -48,7 +48,7 @@ async def register_doi(
     if not datacite_enabled():
         raise HTTPException(
             status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail="DOI registration is not configured. Set RUBBISH_DATACITE_API_URL and RUBBISH_DATACITE_PREFIX.",
+            detail="DOI registration is not configured. Set RUBBISH_DATACITE_API_URL, RUBBISH_DATACITE_PREFIX and RUBBISH_DATACITE_API_KEY.",
         )
 
     tenant_id = require_tenant_id()
@@ -81,7 +81,23 @@ async def register_doi(
     suffix = payload.doi_suffix or _default_suffix(resource)
     doi_candidate = _build_doi(suffix)
     existing = (
-        await db.execute(select(DOIRegistration).where(DOIRegistration.doi == doi_candidate))
+        await db.execute(
+            select(DOIRegistration).where(
+                DOIRegistration.doi == doi_candidate,
+                DOIRegistration.state == "completed",
+            )
+        )
+    ).scalar_one_or_none()
+    failed = (
+        await db.execute(
+            select(DOIRegistration)
+            .where(
+                DOIRegistration.doi == doi_candidate,
+                DOIRegistration.state == "failed",
+            )
+            .order_by(DOIRegistration.created_at.desc(), DOIRegistration.id.desc())
+            .limit(1)
+        )
     ).scalar_one_or_none()
     if existing is not None:
         raise HTTPException(
@@ -95,17 +111,25 @@ async def register_doi(
     # Mint the DOI via DataCite
     doi, state = await mint_doi(resource, suffix=payload.doi_suffix)
 
-    # Record the registration event in the local audit table
-    registration = DOIRegistration(
-        tenant_id=tenant_id,
-        resource_id=resource.id,
-        doi=doi,
-        state=state,
-        message=None,
-        registered_by=current_user.id,
-        created_at=utcnow(),
-    )
-    db.add(registration)
+    # A failed attempt keeps the same DOI row and is retried in place. The
+    # DOI string is globally unique, so inserting a second row would fail —
+    # and deleting the failed row would erase the audit trail.
+    if failed is not None:
+        registration = failed
+        registration.state = state
+        registration.registered_by = current_user.id
+        registration.created_at = utcnow()
+    else:
+        registration = DOIRegistration(
+            tenant_id=tenant_id,
+            resource_id=resource.id,
+            doi=doi,
+            state=state,
+            message=None,
+            registered_by=current_user.id,
+            created_at=utcnow(),
+        )
+        db.add(registration)
 
     # If minting succeeded, update the resource's DOI column
     if state == "completed":
@@ -192,6 +216,26 @@ async def doi_config(
     return {
         "enabled": datacite_enabled(),
         "prefix": settings.datacite_prefix or "not configured",
+    }
+
+
+@router.get("/readiness", response_model=dict)
+async def doi_readiness(
+    _admin: User = Depends(require_admin),
+) -> dict[str, Any]:
+    """Admin-only readiness check without exposing the API key."""
+    base = (settings.public_base_url or settings.frontend_base_url or "").rstrip("/")
+    return {
+        "enabled": datacite_enabled(),
+        "api_url": (settings.datacite_api_url or "").rstrip("/") or None,
+        "prefix": settings.datacite_prefix or None,
+        "api_key_configured": bool(settings.datacite_api_key),
+        "landing_base_url": base or None,
+        "error": (
+            None
+            if datacite_enabled() and base
+            else "缺少 DataCite URL / 前缀 / API Key，或未配置公开站点 URL"
+        ),
     }
 
 

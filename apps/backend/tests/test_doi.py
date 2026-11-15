@@ -119,9 +119,10 @@ class FakeResource:
 # ---------------------------------------------------------------------------
 
 
-def test_datacite_enabled_requires_both_url_and_prefix(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_datacite_enabled_requires_url_prefix_and_key(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "datacite_api_url", "")
     monkeypatch.setattr(settings, "datacite_prefix", "10.5072")
+    monkeypatch.setattr(settings, "datacite_api_key", "dXNlcjpwYXNz")
     assert registration.datacite_enabled() is False
 
     monkeypatch.setattr(settings, "datacite_api_url", "https://api.test.datacite.org")
@@ -129,6 +130,10 @@ def test_datacite_enabled_requires_both_url_and_prefix(monkeypatch: pytest.Monke
     assert registration.datacite_enabled() is False
 
     monkeypatch.setattr(settings, "datacite_prefix", "10.5072")
+    monkeypatch.setattr(settings, "datacite_api_key", "")
+    assert registration.datacite_enabled() is False
+
+    monkeypatch.setattr(settings, "datacite_api_key", "dXNlcjpwYXNz")
     assert registration.datacite_enabled() is True
 
 
@@ -192,6 +197,7 @@ def test_build_datacite_metadata_caps_subjects_at_ten(monkeypatch: pytest.Monkey
 async def test_mint_doi_noop_when_disabled(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "datacite_api_url", "")
     monkeypatch.setattr(settings, "datacite_prefix", "")
+    monkeypatch.setattr(settings, "datacite_api_key", "")
     clients = patch_http(monkeypatch, [])
 
     doi, state = await registration.mint_doi(FakeResource())
@@ -202,28 +208,33 @@ async def test_mint_doi_noop_when_disabled(monkeypatch: pytest.MonkeyPatch) -> N
 
 async def test_mint_doi_success(monkeypatch: pytest.MonkeyPatch) -> None:
     enable_datacite(monkeypatch)
-    clients = patch_http(monkeypatch, [FakeResponse(201), FakeResponse(200)])
+    clients = patch_http(monkeypatch, [FakeResponse(404), FakeResponse(201), FakeResponse(200)])
 
     doi, state = await registration.mint_doi(FakeResource(id=42))
 
     assert doi == "10.5072/42"
     assert state == "completed"
     assert [c for c in clients[0].calls] == [
-        ("POST", f"{registration.DATACITE_API_URL}/dois"),
-        ("PUT", f"{registration.DATACITE_API_URL}/dois/10.5072/42"),
+        ("GET", f"{settings.datacite_api_url}/dois/10.5072/42"),
+        ("POST", f"{settings.datacite_api_url}/dois"),
+        ("PUT", f"{settings.datacite_api_url}/dois/10.5072/42"),
     ]
 
 
 async def test_mint_doi_uses_explicit_suffix(monkeypatch: pytest.MonkeyPatch) -> None:
     enable_datacite(monkeypatch)
-    clients = patch_http(monkeypatch, [FakeResponse(201), FakeResponse(200)])
+    clients = patch_http(monkeypatch, [FakeResponse(404), FakeResponse(201), FakeResponse(200)])
 
     doi, _state = await registration.mint_doi(FakeResource(id=42), suffix="custom-slug")
 
     assert doi == "10.5072/custom-slug"
     assert clients[0].calls[1] == (
+        "POST",
+        f"{settings.datacite_api_url}/dois",
+    )
+    assert clients[0].calls[2] == (
         "PUT",
-        f"{registration.DATACITE_API_URL}/dois/10.5072/custom-slug",
+        f"{settings.datacite_api_url}/dois/10.5072/custom-slug",
     )
 
 
@@ -231,23 +242,28 @@ async def test_mint_doi_metadata_rejected_does_not_register(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     enable_datacite(monkeypatch)
-    clients = patch_http(monkeypatch, [FakeResponse(422, text="validation error")])
+    clients = patch_http(
+        monkeypatch, [FakeResponse(404), FakeResponse(422, text="validation error")]
+    )
 
     doi, state = await registration.mint_doi(FakeResource(id=7))
 
     assert (doi, state) == ("10.5072/7", "failed")
     # 元数据都没写进去，不能继续注册 DOI
-    assert [m for m, _ in clients[0].calls] == ["POST"]
+    assert [m for m, _ in clients[0].calls] == ["GET", "POST"]
 
 
 async def test_mint_doi_register_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
     enable_datacite(monkeypatch)
-    clients = patch_http(monkeypatch, [FakeResponse(201), FakeResponse(403, text="forbidden")])
+    clients = patch_http(
+        monkeypatch,
+        [FakeResponse(404), FakeResponse(201), FakeResponse(403, text="forbidden")],
+    )
 
     doi, state = await registration.mint_doi(FakeResource(id=7))
 
     assert (doi, state) == ("10.5072/7", "failed")
-    assert len(clients[0].calls) == 2
+    assert len(clients[0].calls) == 3
 
 
 async def test_mint_doi_timeout_degrades_to_failed(monkeypatch: pytest.MonkeyPatch) -> None:

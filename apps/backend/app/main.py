@@ -322,9 +322,11 @@ app.include_router(admin.router, prefix="/api")
 app.include_router(tenant_hosts.router, prefix="/api")
 app.include_router(modules.router, prefix="/api")
 
-from app.api import telemetry  # noqa: E402
+from app.api import support, telemetry  # noqa: E402
 
 app.include_router(telemetry.router, prefix="/api")
+app.include_router(support.router, prefix="/api")
+app.include_router(support.admin_router, prefix="/api")
 # OAI-PMH 2.0 元数据收割端点（DOAJ/CNKI/图书馆联盟索引对接，根路径挂载）。
 app.include_router(oai.router)
 # WebAuthn / Passkeys as an alternative to TOTP 2FA.

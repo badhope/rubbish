@@ -262,6 +262,12 @@ class Settings(BaseSettings):
     #   echo -n "username:password" | base64
     datacite_api_key: str = ""
 
+    # --- 主编 Today 备份新鲜度 ---
+    # 生产 compose 把宿主机备份目录只读挂到容器内（默认 /backups）。
+    # 留空 = 不检查备份，健康页显示“未配置”，不会假装备份正常。
+    backup_dir: str = ""
+    backup_max_age_hours: int = 36
+
     # --- 本站刊号 ---
     # 六位刊物代码：站内编号 R-<code>-<YYYYMMDD>-<四位流水>。
     # 这不是 DOI；官方 DOI 仍由作者决定是否另行注册。

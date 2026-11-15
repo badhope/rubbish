@@ -3,6 +3,7 @@ import { ArrowRight, Feather, Gavel, ReceiptText } from 'lucide-react'
 import { PageHeader } from '@/components/common/page-header'
 import { RevealSection } from '@/components/common/reveal-section'
 import { Card, CardContent } from '@/components/ui/card'
+import { DeskSubscribeCard } from '@/components/desk/subscribe-card'
 
 export const Route = createFileRoute('/desk')({
   component: DeskPage,
@@ -140,6 +141,8 @@ function DeskPage() {
           ))}
         </div>
       </section>
+
+      <DeskSubscribeCard />
 
       <section className="mt-10 rounded-lg border border-dashed bg-muted/20 p-5">
         <h2 className="font-serif text-lg font-medium">编辑部的边界</h2>

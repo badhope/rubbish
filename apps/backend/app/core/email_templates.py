@@ -345,3 +345,30 @@ def release_failure(
         + _button("打开期次编排", link),
     )
     return subject, text, html
+
+
+def desk_subscribe_confirm(
+    confirm_url: str, unsubscribe_url: str, expire_days: int
+) -> tuple[str, str, str]:
+    """Double opt-in email for the editor's desk newsletter."""
+    subject = f"确认订阅 {settings.site_name} 主编桌邮件"
+    text = (
+        "感谢你想订阅 Rubbish 的主编桌邮件。\n\n"
+        f"请打开以下链接确认订阅：\n{confirm_url}\n\n"
+        f"链接 {expire_days} 天内有效。确认后只会在季度公开信、"
+        "编辑部重要更新时发信，不会推送每篇论文。\n"
+        f"如果不想订阅，可直接退订：\n{unsubscribe_url}\n"
+        "若不是你本人操作，请忽略本邮件，不会产生订阅。\n"
+    )
+    html = _shell(
+        "确认订阅主编桌邮件",
+        "<p>感谢你想订阅 <strong>Rubbish 主编桌邮件</strong>。</p>"
+        "<p>我们只会发送季度公开信与编辑部重要更新，不推送每篇论文，"
+        "也不把邮箱用于赞助或营销。</p>"
+        + _button("确认订阅", confirm_url)
+        + f'<p style="margin-top:16px;font-size:12px;color:{MUTED};">'
+        f"链接 {expire_days} 天内有效。若不想订阅，"
+        f'<a href="{escape(unsubscribe_url)}" style="color:{MUTED};">点此退订</a>；'
+        "若不是你本人操作，忽略本邮件即可。</p>",
+    )
+    return subject, text, html

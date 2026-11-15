@@ -47,6 +47,8 @@ import { Route as AdminAnnouncementsRouteImport } from './routes/admin/announcem
 import { Route as AdminAuditLogsRouteImport } from './routes/admin/audit-logs'
 import { Route as AdminClaimsRouteImport } from './routes/admin/claims'
 import { Route as AdminCommentsRouteImport } from './routes/admin/comments'
+import { Route as AdminDeskSubscribersRouteImport } from './routes/admin/desk-subscribers'
+import { Route as AdminFinanceRouteImport } from './routes/admin/finance'
 import { Route as AdminForumBoardsRouteImport } from './routes/admin/forum-boards'
 import { Route as AdminJournalRouteImport } from './routes/admin/journal'
 import { Route as AdminReleasesRouteImport } from './routes/admin/releases'
@@ -62,6 +64,7 @@ import { Route as CatalogIndexRouteImport } from './routes/catalog/index'
 import { Route as CatalogResourceIdRouteImport } from './routes/catalog/$resourceId'
 import { Route as CatalogNewRouteImport } from './routes/catalog/new'
 import { Route as ClaimResourceIdRouteImport } from './routes/claim/$resourceId'
+import { Route as DeskSubscribeRouteImport } from './routes/desk_.subscribe'
 import { Route as EditorCalibrationRouteImport } from './routes/editor/calibration'
 import { Route as EditorTriageRouteImport } from './routes/editor/triage'
 import { Route as EditorWorkbenchRouteImport } from './routes/editor/workbench'
@@ -276,6 +279,16 @@ const AdminCommentsRoute = AdminCommentsRouteImport.update({
   path: '/admin/comments',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminDeskSubscribersRoute = AdminDeskSubscribersRouteImport.update({
+  id: '/admin/desk-subscribers',
+  path: '/admin/desk-subscribers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminFinanceRoute = AdminFinanceRouteImport.update({
+  id: '/admin/finance',
+  path: '/admin/finance',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminForumBoardsRoute = AdminForumBoardsRouteImport.update({
   id: '/admin/forum-boards',
   path: '/admin/forum-boards',
@@ -349,6 +362,11 @@ const CatalogNewRoute = CatalogNewRouteImport.update({
 const ClaimResourceIdRoute = ClaimResourceIdRouteImport.update({
   id: '/claim/$resourceId',
   path: '/claim/$resourceId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeskSubscribeRoute = DeskSubscribeRouteImport.update({
+  id: '/desk_/subscribe',
+  path: '/desk/subscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EditorCalibrationRoute = EditorCalibrationRouteImport.update({
@@ -505,6 +523,8 @@ export interface FileRoutesByFullPath {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/claims': typeof AdminClaimsRoute
   '/admin/comments': typeof AdminCommentsRoute
+  '/admin/desk-subscribers': typeof AdminDeskSubscribersRoute
+  '/admin/finance': typeof AdminFinanceRoute
   '/admin/forum-boards': typeof AdminForumBoardsRoute
   '/admin/journal': typeof AdminJournalRoute
   '/admin/releases': typeof AdminReleasesRoute
@@ -519,6 +539,7 @@ export interface FileRoutesByFullPath {
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
   '/catalog/new': typeof CatalogNewRoute
   '/claim/$resourceId': typeof ClaimResourceIdRoute
+  '/desk/subscribe': typeof DeskSubscribeRoute
   '/editor/calibration': typeof EditorCalibrationRoute
   '/editor/triage': typeof EditorTriageRoute
   '/editor/workbench': typeof EditorWorkbenchRoute
@@ -583,6 +604,8 @@ export interface FileRoutesByTo {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/claims': typeof AdminClaimsRoute
   '/admin/comments': typeof AdminCommentsRoute
+  '/admin/desk-subscribers': typeof AdminDeskSubscribersRoute
+  '/admin/finance': typeof AdminFinanceRoute
   '/admin/forum-boards': typeof AdminForumBoardsRoute
   '/admin/journal': typeof AdminJournalRoute
   '/admin/releases': typeof AdminReleasesRoute
@@ -597,6 +620,7 @@ export interface FileRoutesByTo {
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
   '/catalog/new': typeof CatalogNewRoute
   '/claim/$resourceId': typeof ClaimResourceIdRoute
+  '/desk/subscribe': typeof DeskSubscribeRoute
   '/editor/calibration': typeof EditorCalibrationRoute
   '/editor/triage': typeof EditorTriageRoute
   '/editor/workbench': typeof EditorWorkbenchRoute
@@ -662,6 +686,8 @@ export interface FileRoutesById {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/claims': typeof AdminClaimsRoute
   '/admin/comments': typeof AdminCommentsRoute
+  '/admin/desk-subscribers': typeof AdminDeskSubscribersRoute
+  '/admin/finance': typeof AdminFinanceRoute
   '/admin/forum-boards': typeof AdminForumBoardsRoute
   '/admin/journal': typeof AdminJournalRoute
   '/admin/releases': typeof AdminReleasesRoute
@@ -676,6 +702,7 @@ export interface FileRoutesById {
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
   '/catalog/new': typeof CatalogNewRoute
   '/claim/$resourceId': typeof ClaimResourceIdRoute
+  '/desk_/subscribe': typeof DeskSubscribeRoute
   '/editor/calibration': typeof EditorCalibrationRoute
   '/editor/triage': typeof EditorTriageRoute
   '/editor/workbench': typeof EditorWorkbenchRoute
@@ -742,6 +769,8 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/claims'
     | '/admin/comments'
+    | '/admin/desk-subscribers'
+    | '/admin/finance'
     | '/admin/forum-boards'
     | '/admin/journal'
     | '/admin/releases'
@@ -756,6 +785,7 @@ export interface FileRouteTypes {
     | '/catalog/$resourceId'
     | '/catalog/new'
     | '/claim/$resourceId'
+    | '/desk/subscribe'
     | '/editor/calibration'
     | '/editor/triage'
     | '/editor/workbench'
@@ -820,6 +850,8 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/claims'
     | '/admin/comments'
+    | '/admin/desk-subscribers'
+    | '/admin/finance'
     | '/admin/forum-boards'
     | '/admin/journal'
     | '/admin/releases'
@@ -834,6 +866,7 @@ export interface FileRouteTypes {
     | '/catalog/$resourceId'
     | '/catalog/new'
     | '/claim/$resourceId'
+    | '/desk/subscribe'
     | '/editor/calibration'
     | '/editor/triage'
     | '/editor/workbench'
@@ -898,6 +931,8 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/claims'
     | '/admin/comments'
+    | '/admin/desk-subscribers'
+    | '/admin/finance'
     | '/admin/forum-boards'
     | '/admin/journal'
     | '/admin/releases'
@@ -912,6 +947,7 @@ export interface FileRouteTypes {
     | '/catalog/$resourceId'
     | '/catalog/new'
     | '/claim/$resourceId'
+    | '/desk_/subscribe'
     | '/editor/calibration'
     | '/editor/triage'
     | '/editor/workbench'
@@ -977,6 +1013,8 @@ export interface RootRouteChildren {
   AdminAuditLogsRoute: typeof AdminAuditLogsRoute
   AdminClaimsRoute: typeof AdminClaimsRoute
   AdminCommentsRoute: typeof AdminCommentsRoute
+  AdminDeskSubscribersRoute: typeof AdminDeskSubscribersRoute
+  AdminFinanceRoute: typeof AdminFinanceRoute
   AdminForumBoardsRoute: typeof AdminForumBoardsRoute
   AdminJournalRoute: typeof AdminJournalRoute
   AdminReleasesRoute: typeof AdminReleasesRoute
@@ -991,6 +1029,7 @@ export interface RootRouteChildren {
   CatalogResourceIdRoute: typeof CatalogResourceIdRoute
   CatalogNewRoute: typeof CatalogNewRoute
   ClaimResourceIdRoute: typeof ClaimResourceIdRoute
+  DeskSubscribeRoute: typeof DeskSubscribeRoute
   EditorCalibrationRoute: typeof EditorCalibrationRoute
   EditorTriageRoute: typeof EditorTriageRoute
   EditorWorkbenchRoute: typeof EditorWorkbenchRoute
@@ -1286,6 +1325,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCommentsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/desk-subscribers': {
+      id: '/admin/desk-subscribers'
+      path: '/admin/desk-subscribers'
+      fullPath: '/admin/desk-subscribers'
+      preLoaderRoute: typeof AdminDeskSubscribersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/finance': {
+      id: '/admin/finance'
+      path: '/admin/finance'
+      fullPath: '/admin/finance'
+      preLoaderRoute: typeof AdminFinanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/forum-boards': {
       id: '/admin/forum-boards'
       path: '/admin/forum-boards'
@@ -1389,6 +1442,13 @@ declare module '@tanstack/react-router' {
       path: '/claim/$resourceId'
       fullPath: '/claim/$resourceId'
       preLoaderRoute: typeof ClaimResourceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/desk_/subscribe': {
+      id: '/desk_/subscribe'
+      path: '/desk/subscribe'
+      fullPath: '/desk/subscribe'
+      preLoaderRoute: typeof DeskSubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/editor/calibration': {
@@ -1593,6 +1653,8 @@ const rootRouteChildren: RootRouteChildren = {
   AdminAuditLogsRoute: AdminAuditLogsRoute,
   AdminClaimsRoute: AdminClaimsRoute,
   AdminCommentsRoute: AdminCommentsRoute,
+  AdminDeskSubscribersRoute: AdminDeskSubscribersRoute,
+  AdminFinanceRoute: AdminFinanceRoute,
   AdminForumBoardsRoute: AdminForumBoardsRoute,
   AdminJournalRoute: AdminJournalRoute,
   AdminReleasesRoute: AdminReleasesRoute,
@@ -1607,6 +1669,7 @@ const rootRouteChildren: RootRouteChildren = {
   CatalogResourceIdRoute: CatalogResourceIdRoute,
   CatalogNewRoute: CatalogNewRoute,
   ClaimResourceIdRoute: ClaimResourceIdRoute,
+  DeskSubscribeRoute: DeskSubscribeRoute,
   EditorCalibrationRoute: EditorCalibrationRoute,
   EditorTriageRoute: EditorTriageRoute,
   EditorWorkbenchRoute: EditorWorkbenchRoute,

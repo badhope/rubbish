@@ -4,3 +4,8 @@ services:
     build:
       context: .
       dockerfile: apps/backend/Dockerfile.cn
+    environment:
+      # 只读挂载备份目录，供主编 Today 读取最近 DB/upload 备份年龄。
+      RUBBISH_BACKUP_DIR: /backups
+    volumes:
+      - ${BACKUP_HOST_DIR:-/home/ubuntu/backups}:/backups:ro

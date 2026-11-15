@@ -24,7 +24,7 @@ from sqlalchemy import desc, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import __version__
-from app.api.deps import require_admin, require_tenant_id
+from app.api.deps import require_admin, require_editor, require_tenant_id
 from app.core.config import settings
 from app.core.db import get_db
 from app.core.email import get_email_sender
@@ -1206,6 +1206,19 @@ def _alembic_head() -> str | None:
         return None
 
 
+@router.get("/editor/today")
+async def editor_today(
+    _editor: User = Depends(require_editor),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """Editor-in-chief Today: reuse the aggregate health snapshot.
+
+    ``require_admin`` remains on the full management page; this route gives
+    editors the same read-only aggregate without granting user management.
+    """
+    return await system_health(_admin=_editor, db=db)
+
+
 @router.get("/system/health")
 async def system_health(
     _admin: User = Depends(require_admin),
@@ -1295,7 +1308,50 @@ async def system_health(
     except Exception:
         smtp_ok = False
 
+    backup_status = "warn"
+    backup_detail = "未配置 RUBBISH_BACKUP_DIR"
+    backup_dir = (settings.backup_dir or "").strip()
+    if backup_dir:
+        try:
+            entries = [entry for entry in os.scandir(backup_dir) if entry.is_file()]
+            db_files = sorted(
+                (
+                    entry
+                    for entry in entries
+                    if entry.name.startswith("db-") and entry.name.endswith(".dump")
+                ),
+                key=lambda entry: entry.stat().st_mtime,
+            )
+            upload_files = sorted(
+                (
+                    entry
+                    for entry in entries
+                    if entry.name.startswith("uploads-") and entry.name.endswith(".tar.gz")
+                ),
+                key=lambda entry: entry.stat().st_mtime,
+            )
+            if not db_files or not upload_files:
+                backup_detail = "备份目录缺少 DB dump 或 uploads 归档"
+            else:
+                now_ts = time.time()
+                db_age = (now_ts - db_files[-1].stat().st_mtime) / 3600
+                up_age = (now_ts - upload_files[-1].stat().st_mtime) / 3600
+                max_age = max(db_age, up_age)
+                backup_status = "ok" if max_age <= settings.backup_max_age_hours else "warn"
+                backup_detail = (
+                    f"DB {db_files[-1].name}（{db_age:.1f}h） · "
+                    f"uploads {upload_files[-1].name}（{up_age:.1f}h）"
+                )
+        except Exception:
+            backup_detail = "备份目录无法读取"
+
     checks = [
+        {
+            "key": "backup",
+            "label": "最近备份",
+            "status": backup_status,
+            "detail": backup_detail,
+        },
         {
             "key": "database",
             "label": "数据库",

@@ -460,12 +460,84 @@ class ApiToken(Base, TenantScopedMixin):
     __table_args__ = (Index("ix_api_tokens_tenant_user", "tenant_id", "user_id", "created_at"),)
 
 
+class DeskSubscriber(Base, TenantScopedMixin):
+    """主编桌邮件订阅人。
+
+    只存 token 的 SHA-256 哈希，明文 token 仅出现在确认/退订邮件里。
+    状态机：pending → confirmed → unsubscribed；重复订阅会轮换 token，
+    避免旧的确认链接长期有效。
+    """
+
+    __tablename__ = "desk_subscribers"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(String(320), nullable=False)
+    token_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    token_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending")
+    source: Mapped[str] = mapped_column(String(40), nullable=False, default="desk")
+    last_email_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    unsubscribed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "email", name="uq_desk_subscriber_email"),
+        Index("ix_desk_subscribers_tenant_status", "tenant_id", "status", "created_at"),
+    )
+
+
+class FinanceReport(Base, TenantScopedMixin):
+    """季度财务公开：成本台账 + 主编公开信。
+
+    ``income_items`` / ``expense_items`` 是对象数组，金额以“分”存整数，
+    避免浮点误差；前台按人民币元展示。未发布的草稿只有管理员可见。
+    """
+
+    __tablename__ = "finance_reports"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    year: Mapped[int] = mapped_column(Integer, nullable=False)
+    quarter: Mapped[int] = mapped_column(Integer, nullable=False)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    summary_md: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    income_items: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONBVariant, nullable=False, default=list
+    )
+    expense_items: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONBVariant, nullable=False, default=list
+    )
+    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="CNY")
+    published: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_by: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
+    )
+
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "year", "quarter", name="uq_finance_report_period"),
+        Index("ix_finance_reports_tenant_published", "tenant_id", "published", "published_at"),
+    )
+
+
 __all__ = [
     "ApiToken",
     "AuditLog",
     "Base",
     "ContentReport",
+    "DeskSubscriber",
     "EmailLoginCode",
+    "FinanceReport",
     "Role",
     "Tenant",
     "TenantHost",
