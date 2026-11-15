@@ -7,12 +7,30 @@ import type { ReactNode } from 'react'
  * value 用 min-w-0 + truncate 保证超长 DOI / 时间戳截断而不是撑破卡片右缘。
  * （flex 子项默认 min-width:auto，没有 min-w-0 时 truncate 完全不生效）
  */
-export function MetaItem({ label, value }: { label: string; value?: ReactNode }) {
+export function MetaItem({
+  label,
+  value,
+  hint,
+}: {
+  label: string
+  value?: ReactNode
+  /** 悬停解释：像“R 31.2”这种只有老编辑才懂的缩写，必须在界面上自解释。 */
+  hint?: string
+}) {
   // 空值整行不渲染，避免出现只有标签没有内容的空行
   if (!value) return null
   return (
     <div className="flex justify-between gap-4 py-1.5 text-sm">
-      <span className="shrink-0 text-muted-foreground">{label}</span>
+      <span
+        className={
+          hint
+            ? 'shrink-0 cursor-help border-b border-dotted border-muted-foreground/50 text-muted-foreground'
+            : 'shrink-0 text-muted-foreground'
+        }
+        title={hint}
+      >
+        {label}
+      </span>
       <span className="min-w-0 truncate text-right font-medium">{value}</span>
     </div>
   )

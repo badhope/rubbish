@@ -42,7 +42,7 @@ export function OnboardingTour() {
       <button
         type="button"
         onClick={() => setExpanded(true)}
-        className="fixed bottom-[calc(5.2rem+env(safe-area-inset-bottom))] right-4 z-[70] inline-flex items-center gap-1.5 rounded-full border bg-background/95 px-3 py-1.5 text-xs font-medium shadow-md backdrop-blur transition-colors hover:bg-muted"
+        className="fixed bottom-[calc(9rem+env(safe-area-inset-bottom))] left-3 z-[70] sm:left-auto sm:right-6 sm:bottom-20 inline-flex items-center gap-1.5 rounded-full border bg-background/95 px-3 py-1.5 text-xs font-medium shadow-md backdrop-blur transition-colors hover:bg-muted"
         aria-label="打开新手指引"
       >
         <Compass className="h-3.5 w-3.5" />
@@ -55,7 +55,7 @@ export function OnboardingTour() {
   }
 
   return (
-    <div className="fixed inset-x-3 bottom-[calc(5.2rem+env(safe-area-inset-bottom))] z-[80] rounded-xl border bg-background p-4 shadow-xl sm:inset-x-auto sm:right-6 sm:bottom-20 sm:w-80">
+    <div className="fixed inset-x-3 bottom-[calc(9rem+env(safe-area-inset-bottom))] z-[80] rounded-xl border bg-background p-4 shadow-xl sm:inset-x-auto sm:right-6 sm:bottom-20 sm:w-80">
       <button className="absolute right-3 top-3 text-muted-foreground" onClick={close} aria-label="关闭引导"><X className="h-4 w-4" /></button>
       <p className="text-xs text-muted-foreground">首次使用 · {step + 1}/{steps.length}</p>
       <h3 className="mt-1 text-base font-semibold">{current.title}</h3>

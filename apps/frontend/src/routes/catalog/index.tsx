@@ -283,7 +283,7 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
         }
         description={
           search.q
-            ? '跨论文与副刊检索；点卡片进入对应版式。'
+            ? `在全站论文与副刊中检索“${search.q}”，命中 ${data?.meta.total ?? '…'} 条。`
             : fixedTrack === 'essay'
               ? '小说、随笔、评论、诗歌与吐槽；独立成刊，不用论文体、不参与学术计分。'
               : fixedTrack === 'paper'
@@ -414,7 +414,7 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
 
       {/* 栏目（学科）快捷筛选：点击即切换，免去展开下拉的两步操作 */}
       {!isMobile && (
-        <DisciplineChips search={search} updateSearch={updateSearch} track={statsTrack} />
+        <DisciplineChips search={search} updateSearch={updateSearch} track={statsTrack} resultTotal={data?.meta.total} />
       )}
 
       {/* 桌面端：筛选常驻卡片（md 及以上） */}
@@ -423,7 +423,7 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
       )}
 
       {/* 移动端：筛选收进可折叠面板，默认收起，避免挤占浏览空间 */}
-      {isMobile && <MobileFilters search={search} updateSearch={updateSearch} track={statsTrack} />}
+      {isMobile && <MobileFilters search={search} updateSearch={updateSearch} track={statsTrack} resultTotal={data?.meta.total} />}
 
       {/* 批量选择/导出是桌面管理操作，移动端隐藏以保持浏览专注 */}
       {!isMobile && selectedIds.length > 0 && (
@@ -464,8 +464,14 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
         <ErrorState message="加载资源失败" onRetry={() => refetch()} />
       ) : !data || data.data.length === 0 ? (
         <EmptyState
-          title="这一区还空着"
-          description={fixedTrack === 'paper' ? '换个筛选条件，或切到另一个论文分区看看。' : '还没有匹配的副刊，换个筛选条件。'}
+          title={search.q ? '没有找到匹配的内容' : '这一区还空着'}
+          description={
+            search.q
+              ? '换个更短的关键词，或点上方“清除搜索”回到全刊目录。'
+              : fixedTrack === 'paper'
+                ? '换个筛选条件，或切到另一个论文分区看看。'
+                : '还没有匹配的副刊，换个筛选条件。'
+          }
         />
       ) : viewMode === 'grid' ? (
         // 手机端单列：390px 下两列会把中文标题压成半行，读者必须先猜标题；
@@ -475,7 +481,7 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
           data-testid="catalog-resource-list"
         >
           {data.data.map((r) => (
-            <CatalogGridCard key={r.id} resource={r} />
+            <CatalogGridCard key={r.id} resource={r} query={search.q} />
           ))}
         </div>
       ) : isMobile ? (
@@ -972,10 +978,12 @@ function MobileFilters({
   search,
   updateSearch,
   track,
+  resultTotal,
 }: {
   search: CatalogSearch
   updateSearch: (patch: Partial<CatalogSearch>) => void
   track?: 'paper' | 'essay'
+  resultTotal?: number
 }) {
   const [open, setOpen] = useState(false)
   const activeCount = [
@@ -1018,7 +1026,7 @@ function MobileFilters({
 
       {open && (
         <div className="mt-3 rounded-lg border bg-muted/30 p-3">
-          <DisciplineChips search={search} updateSearch={updateSearch} track={track} />
+          <DisciplineChips search={search} updateSearch={updateSearch} track={track} resultTotal={resultTotal} />
           <CatalogFilterFields
             search={search}
             updateSearch={updateSearch}
@@ -1101,10 +1109,12 @@ function DisciplineChips({
   search,
   updateSearch,
   track,
+  resultTotal,
 }: {
   search: CatalogSearch
   updateSearch: (patch: Partial<CatalogSearch>) => void
   track?: 'paper' | 'essay'
+  resultTotal?: number
 }) {
   const { data: stats } = useCatalogStats(track)
   const [expanded, setExpanded] = useState(false)
@@ -1112,6 +1122,26 @@ function DisciplineChips({
     () => Object.entries(stats?.by_discipline ?? {}).sort((a, b) => b[1] - a[1]),
     [stats],
   )
+  // 搜索态下学科 chip 的计数是“全站存量”，与命中数无关，
+  // 继续展示会让人以为“心理学 38 条”就是搜索结果。这里换成结果摘要。
+  if (search.q) {
+    return (
+      <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="搜索结果摘要">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-primary bg-primary px-3 py-1 text-xs text-primary-foreground">
+          结果
+          <span className="tabular-nums">{resultTotal ?? 0}</span>
+        </span>
+        <button
+          type="button"
+          onClick={() => updateSearch({ q: undefined, page: 1 })}
+          className="inline-flex items-center gap-1 rounded-full border border-dashed px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+        >
+          清除搜索
+        </button>
+      </div>
+    )
+  }
+
   if (disciplines.length === 0) return null
 
   const collapsed = !expanded && disciplines.length > CHIP_COLLAPSE_AT

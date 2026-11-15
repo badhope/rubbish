@@ -178,6 +178,10 @@ function CatalogDetailPage() {
   const isEssayTrack = data.content_track === 'essay'
   const isPaperTrack = data.content_track === 'paper'
   const cleanAuthors = sanitizeAuthors(data.authors)
+  // 与 PDF 同一套规则：长标题里的“——副标题”单独成行，避免连接号被挤到行尾。
+  const titleParts = (data.title || '').split(/\s*——\s*/)
+  const titleMain = titleParts[0]
+  const titleSub = titleParts.slice(1).join('——')
   const currentUsername = user?.username?.trim().toLowerCase() ?? ''
   const isAuthor =
     !!currentUsername &&
@@ -307,8 +311,12 @@ function CatalogDetailPage() {
               isScholarly &&
               data.r_index != null &&
               (data.reads ?? 0) + (data.downloads ?? 0) + (data.saves ?? 0) >= 3 ? (
-                <Badge variant="outline" className="tabular-nums">
-                  R {data.r_index.toFixed(1)}
+                <Badge
+                  variant="outline"
+                  className="tabular-nums"
+                  title="站内热度（R 值）：阅读、下载、收藏的站内加权，不是学术评分。"
+                >
+                  热度 {data.r_index.toFixed(1)}
                   {canSeeScores && data.quartile ? ` · ${data.quartile}` : ''}
                 </Badge>
               ) : null}
@@ -321,7 +329,14 @@ function CatalogDetailPage() {
                 </Badge>
               )}
             </div>
-            <h1 className="text-xl font-semibold leading-snug tracking-tight sm:text-2xl">{data.title}</h1>
+            <h1 className="text-xl font-semibold leading-snug tracking-tight sm:text-2xl">
+              {titleMain}
+              {titleSub ? (
+                <span className="mt-1 block text-base font-normal text-muted-foreground sm:text-lg">
+                  {titleSub}
+                </span>
+              ) : null}
+            </h1>
             {historyQ.data?.retracted && (
               <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs leading-relaxed text-destructive">
                 本文已被撤稿。原文保留用于学术记录，撤稿原因与时间见“版本与公开记录”。
@@ -466,11 +481,29 @@ function CatalogDetailPage() {
                   {canSeeScores && data.quality_score != null && (
                     <MetaItem
                       label="评分"
-                      value={`${data.quality_score.toFixed(1)}${data.quality_grade ? `（${data.quality_grade}）` : ''}`}
+                      hint="百分制：90+ 顶刊级；80+ Q1；70+ Q2；60+ Q3；50+ Q4；低于 50 记为 R（未达发表线）。"
+                      value={
+                        <>
+                          {data.quality_score.toFixed(1)}
+                          <span className="ml-1 text-xs font-normal text-muted-foreground">/ 100</span>
+                          {(() => {
+                            const g = qualityGrade(data.quality_grade, data.quality_score)
+                            return g ? (
+                              <span className="ml-1.5 text-xs font-normal text-muted-foreground" title={g.description}>
+                                {g.label}
+                              </span>
+                            ) : null
+                          })()}
+                        </>
+                      }
                     />
                   )}
                   {data.r_factor != null && (
-                    <MetaItem label="站内热度" value={data.r_factor.toFixed(1)} />
+                    <MetaItem
+                      label="站内热度"
+                      hint="R 值：阅读、收藏、评论的站内加权，只反映站内关注度，不是学术评分。"
+                      value={data.r_factor.toFixed(1)}
+                    />
                   )}
                   <MetaItem label="ISSN（选填）" value={data.issn || '—'} />
                   <MetaItem label="ISBN" value={data.isbn} />

@@ -36,6 +36,7 @@ import { Route as RecommendationsRouteImport } from './routes/recommendations'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RulesRouteImport } from './routes/rules'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as SectionsRouteImport } from './routes/sections'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ShopRouteImport } from './routes/shop'
@@ -223,6 +224,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const RulesRoute = RulesRouteImport.update({
   id: '/rules',
   path: '/rules',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SectionsRoute = SectionsRouteImport.update({
@@ -519,6 +525,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rules': typeof RulesRoute
+  '/search': typeof SearchRoute
   '/sections': typeof SectionsRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
@@ -601,6 +608,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rules': typeof RulesRoute
+  '/search': typeof SearchRoute
   '/sections': typeof SectionsRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
@@ -684,6 +692,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/rules': typeof RulesRoute
+  '/search': typeof SearchRoute
   '/sections': typeof SectionsRoute
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
@@ -768,6 +777,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/rules'
+    | '/search'
     | '/sections'
     | '/settings'
     | '/shop'
@@ -850,6 +860,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/rules'
+    | '/search'
     | '/sections'
     | '/settings'
     | '/shop'
@@ -932,6 +943,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/rules'
+    | '/search'
     | '/sections'
     | '/settings'
     | '/shop'
@@ -1015,6 +1027,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RulesRoute: typeof RulesRoute
+  SearchRoute: typeof SearchRoute
   SectionsRoute: typeof SectionsRoute
   SettingsRoute: typeof SettingsRoute
   ShopRoute: typeof ShopRoute
@@ -1259,6 +1272,13 @@ declare module '@tanstack/react-router' {
       path: '/rules'
       fullPath: '/rules'
       preLoaderRoute: typeof RulesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sections': {
@@ -1663,6 +1683,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RulesRoute: RulesRoute,
+  SearchRoute: SearchRoute,
   SectionsRoute: SectionsRoute,
   SettingsRoute: SettingsRoute,
   ShopRoute: ShopRoute,

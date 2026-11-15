@@ -4,6 +4,7 @@ import type { ResourceResponse } from '@/lib/types'
 import { formatAuthors, cn } from '@/lib/utils'
 import { isScholarlyContent } from '@/lib/resource-labels'
 import { DISCIPLINE_STYLE, DEFAULT_DISCIPLINE_STYLE } from '@/lib/discipline-style'
+import { Highlight } from '@/components/common/highlight'
 
 // 目录九宫格封面卡（v1.15）：一眼分轨道。
 //
@@ -16,9 +17,11 @@ import { DISCIPLINE_STYLE, DEFAULT_DISCIPLINE_STYLE } from '@/lib/discipline-sty
 
 interface CatalogGridCardProps {
   resource: ResourceResponse
+  /** 当前检索词：只用于标题高亮，不参与筛选。 */
+  query?: string
 }
 
-export function CatalogGridCard({ resource }: CatalogGridCardProps) {
+export function CatalogGridCard({ resource, query }: CatalogGridCardProps) {
   const scholarly = isScholarlyContent(resource.content_category, resource.content_track)
   const authors = formatAuthors(resource.authors)
   const style = DISCIPLINE_STYLE[resource.discipline] ?? DEFAULT_DISCIPLINE_STYLE
@@ -83,7 +86,7 @@ export function CatalogGridCard({ resource }: CatalogGridCardProps) {
 
       {/* 信息区：标题 + 一行轨道/学术元信息 + 作者 */}
       <div className="flex flex-1 flex-col gap-1.5 p-3">
-        <p className="line-clamp-2 text-sm font-medium leading-snug">{resource.title}</p>
+        <p className="line-clamp-2 text-sm font-medium leading-snug"><Highlight text={resource.title} query={query} /></p>
 
         {scholarly ? (
           // 论文卡：CLC + 学术信息一行；没有 CLC 时只给学科/年，不渲染空占位
