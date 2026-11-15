@@ -283,3 +283,13 @@ Rubbish 是作品集，不是个人简历。它应该有：
 ## 一句话
 
 **发布要像交付，评审要像编辑，移动端要像助手，品牌要像一个人，资助要像公共基础设施。**
+
+### 2026-11-15 P0/P1 上线记录
+
+- 代码：`94b44f8 feat(review): close P0/P1 release and review workflows`；`9874825 fix(routing): allow /desk SPA deep link`；五远程均已推送。
+- 验证：后端 `1210 passed, 1 skipped`；前端 `28 files / 157 tests passed`；`ruff check` / `ruff format --check` / `typecheck` / `lint` / `build` 通过。
+- 迁移：生产备份副本完成 `043 → 044 → 045 → 046`、`046 → 043 → 046` 演练；真实库回填后 `triage_started_at IS NULL = 0`，历史待初筛稿只有 2 篇从上线时刻重新计时。
+- 生产：发布目录 `/home/ubuntu/rubbish-release-20261115-112125`；应用镜像 `rubbish-app:latest 876e0d4855ef`；回滚镜像 `rubbish-app:rollback-20261115-1127 04e66560248c`；线上迁移版本 `046_p1_calibration_samples`。
+- 备份：`/home/ubuntu/backups/db-pre-p1-20261115-112053.dump`、`uploads-pre-p1-20261115-112053.tar.gz`。
+- 线上：`ops/site-health.sh` 退出码 0；首页静态 `index-iYAs1KHK.js` 及全部引用 assets 200；`/desk`、`/review/quick/1`、`/editor/triage`、`/editor/calibration` 均返回 200；新增接口未登录返回 401。
+- 注意：生产使用 `docker-compose.override.yml` + `apps/backend/Dockerfile.cn`，镜像构建只带 `prebuilt-static` 公共壳；完整 Vite `dist` 需在构建前覆盖到 `apps/backend/prebuilt-static`，或构建后执行 `ops/deploy.sh`，否则首页会引用不存在的 assets。
