@@ -242,9 +242,40 @@ class ReviewCalibrationSample(Base, TenantScopedMixin):
     )
 
 
+class ReviewDraft(Base, TenantScopedMixin):
+    """审稿报告的未提交草稿（每个 assignment 至多一份）。
+
+    ``payload`` 原样保存前端 ``ReviewFormValue``：推荐结论、赛道、七维
+    打分与作者/编辑意见。草稿不是正式报告，不参与审稿矩阵/录用闸门；
+    审稿人提交报告时删除本行，避免旧草稿继续被加载。
+    """
+
+    __tablename__ = "review_drafts"
+    __table_args__ = (UniqueConstraint("assignment_id", name="uq_review_draft_assignment"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    assignment_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("review_assignments.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    reviewer_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    payload: Mapped[dict[str, Any]] = mapped_column(JSONBVariant, nullable=False, default=dict)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
+    )
+
+
 __all__ = [
     "ReviewAssignment",
     "ReviewCalibrationSample",
+    "ReviewDraft",
     "ReviewReport",
     "ReviewerConflictDeclaration",
 ]

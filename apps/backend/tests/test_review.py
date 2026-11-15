@@ -362,6 +362,8 @@ async def test_reviewer_submit_report_full(
     assert body["recommendation"] == "minor_revision"
     assert body["comments_to_editor"] == "Need minor revisions to methodology."
     assert body["comments_to_author"] == "Please clarify section 3.2."
+    # 逐维「修改意见」随 scores 落库，不丢字段。
+    assert body["scores"]["dimensions"]["question"]["suggestion"].startswith("修改意见：")
 
     # Assignment should now be completed
     listing = await client.get(
@@ -895,3 +897,105 @@ async def test_reviewer_view_submission_after_complete(
     )
     assert resp.status_code == 200
     assert resp.json()["abstract"] == setup["submission"]["abstract"]
+
+
+# ---------------------------------------------------------------------------
+# Review drafts + author response to reviewers
+# ---------------------------------------------------------------------------
+
+
+async def test_review_draft_saved_and_cleared_on_submit(
+    client: AsyncClient, admin_user: dict, test_user: dict
+) -> None:
+    """审稿意见草稿可保存、可跨请求读回，提交正式报告后清空。"""
+    setup = await _setup_assignment(client, admin_user, test_user)
+    assignment_id = setup["assignment"]["id"]
+    await client.post(
+        f"/api/review/assignments/{assignment_id}/accept",
+        headers=auth_headers(admin_user),
+    )
+    payload = {
+        "recommendation": "major_revision",
+        "track": "academic",
+        "dimensions": {"originality": {"score": 3, "reason": "draft"}},
+        "comments_to_editor": "未完成草稿",
+        "comments_to_author": "先保存，稍后续写",
+        "special_issue": False,
+        "special_issue_reason": "",
+    }
+    saved = await client.put(
+        f"/api/review/assignments/{assignment_id}/draft",
+        json={"payload": payload},
+        headers=auth_headers(admin_user),
+    )
+    assert saved.status_code == 200, saved.text
+
+    got = await client.get(
+        f"/api/review/assignments/{assignment_id}/draft",
+        headers=auth_headers(admin_user),
+    )
+    assert got.status_code == 200
+    assert got.json()["payload"]["comments_to_author"] == "先保存，稍后续写"
+    assert got.json()["updated_at"] is not None
+
+    report = await client.post(
+        f"/api/review/assignments/{assignment_id}/submit",
+        json={
+            "recommendation": "major_revision",
+            "scores": review_scores(58),
+            "comments_to_author": "正式意见",
+        },
+        headers=auth_headers(admin_user),
+    )
+    assert report.status_code == 201
+    cleared = await client.get(
+        f"/api/review/assignments/{assignment_id}/draft",
+        headers=auth_headers(admin_user),
+    )
+    assert cleared.status_code == 200
+    assert cleared.json()["payload"] is None
+
+
+async def test_author_response_to_reviewers(
+    client: AsyncClient, admin_user: dict, test_user: dict
+) -> None:
+    """作者在收到至少一份完成报告后可逐条回复；编辑详情可见。"""
+    setup = await _setup_assignment(client, admin_user, test_user)
+    assignment_id = setup["assignment"]["id"]
+    await client.post(
+        f"/api/review/assignments/{assignment_id}/accept",
+        headers=auth_headers(admin_user),
+    )
+    await client.post(
+        f"/api/review/assignments/{assignment_id}/submit",
+        json={
+            "recommendation": "minor_revision",
+            "scores": review_scores(72),
+            "comments_to_author": "请补充 3.2 节。",
+        },
+        headers=auth_headers(admin_user),
+    )
+
+    resp = await client.put(
+        f"/api/submissions/{setup['submission']['id']}/response",
+        json={"response": "审稿人 1 意见：已在 3.2 节补充稳健性检验。"},
+        headers=auth_headers(test_user),
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["author_response"].startswith("审稿人 1 意见")
+    assert body["author_response_at"] is not None
+
+    editor_view = await client.get(
+        f"/api/submissions/{setup['submission']['id']}", headers=auth_headers(admin_user)
+    )
+    assert editor_view.json()["author_response"].startswith("审稿人 1 意见")
+
+    timeline = await client.get(
+        f"/api/submissions/{setup['submission']['id']}/timeline",
+        headers=auth_headers(admin_user),
+    )
+    assert timeline.status_code == 200
+    kinds = {e["kind"] for e in timeline.json()["events"]}
+    assert "review_report" in kinds
+    assert "author_response" in kinds

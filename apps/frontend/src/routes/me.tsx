@@ -1,6 +1,6 @@
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Award, ExternalLink, Pencil, Shield, Flame } from 'lucide-react'
+import { Award, ClipboardCheck, ExternalLink, Pencil, Shield, Flame } from 'lucide-react'
 import { getAuthState } from '@/lib/auth'
 import { PageHeader } from '@/components/common/page-header'
 import { ErrorState, Loading } from '@/components/common/state'
@@ -174,6 +174,25 @@ function MePage() {
           <Ledger identity={owned[0]} />
         </div>
       )}
+
+      <Card>
+        <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4 text-sm">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="icon-chip">
+              <ClipboardCheck className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <p className="font-medium">如何成为审稿人</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                审稿人（L5）要求至少 1 篇稿件被录用且最高质量分 RQS ≥ 60；满足后在「等级与申请」页提交申请，编辑部审批即授角色。资深审稿人需先成为审稿人并完成 5 份审稿。
+              </p>
+            </div>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/levels">去申请 / 查看资格</Link>
+          </Button>
+        </CardContent>
+      </Card>
 
       <p className="text-xs text-muted-foreground">
         等级只在同一身份内比较，不跨身份、不换权限；积分是荣誉与晋升信号。{account?.coin_balance !== undefined ? ` R 币余额 ${account.coin_balance}。` : ''}

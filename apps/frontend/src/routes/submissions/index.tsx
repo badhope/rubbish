@@ -20,6 +20,10 @@ import {
   Upload,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import {
+  REVIEW_DIMENSION_LABELS as SCORE_LABELS,
+  reviewDimensionEntries,
+} from '@/lib/review-dimensions'
 import { getAuthState } from '@/lib/auth'
 import {
   downloadSubmissionFile,
@@ -29,6 +33,7 @@ import {
   useResubmitSubmission,
   useSubmissionReports,
   useSubmissionVersions,
+  useSaveAuthorResponse,
   useUploadSubmissionFile,
   useMeProfile,
 } from '@/hooks/api/use-modules'
@@ -127,9 +132,9 @@ function statusBadge(status: SubmissionStatus) {
 const STATUS_HINTS: Record<string, string> = {
   pending: '编辑部尚未处理。编辑会初审并决定是否送外审，通常 3–7 天内更新。',
   under_review: '外审进行中：审稿人正在评审你的稿件，请耐心等待审稿意见。',
-  major_revision: '审稿人要求大修：请按修改意见修改稿件，然后使用「重投」提交新版本。',
-  minor_revision: '审稿人要求小修：小幅调整后即可「重投」，通常无需再次外审。',
-  resubmitted: '修改稿已提交，等待编辑部重新审理。',
+  major_revision: '审稿人要求大修：按逐维修改意见改稿，在详情里逐条回复审稿人，再用「重投」提交新版本。',
+  minor_revision: '审稿人要求小修：小幅调整后可「重投」；建议在详情里逐条回复审稿人，通常无需再次外审。',
+  resubmitted: '修改稿已提交，等待编辑部重新审理；如还有未尽事项，可在详情补充逐条回复。',
   accepted: '已录用！稿件已进入目录（或刊前整理阶段），感谢你的投稿。',
   rejected: '本次未录用。欢迎根据审稿意见完善后另投。',
 }
@@ -159,8 +164,10 @@ function SubmissionsPage() {
   const deleteMut = useDeleteSubmission()
   const uploadMut = useUploadSubmissionFile()
   const resubmitMut = useResubmitSubmission()
+  const saveResponseMut = useSaveAuthorResponse()
 
   const [detail, setDetail] = useState<SubmissionResponse | null>(null)
+  const [authorResponseDraft, setAuthorResponseDraft] = useState('')
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [resubmitOpen, setResubmitOpen] = useState(false)
   const [resubmitNote, setResubmitNote] = useState('')
@@ -168,6 +175,24 @@ function SubmissionsPage() {
   // 必须放在 detail useState 之后，否则 TS2448/2454 报"使用先于声明"。
   const reportsQ = useSubmissionReports(detail?.id ?? 0)
   const versionsQ = useSubmissionVersions(detail?.id ?? 0, detail !== null)
+
+  useEffect(() => {
+    setAuthorResponseDraft(detail?.author_response ?? '')
+  }, [detail?.id, detail?.author_response])
+
+  const onSaveAuthorResponse = async () => {
+    if (!detail) return
+    try {
+      const updated = await saveResponseMut.mutateAsync({
+        id: detail.id,
+        response: authorResponseDraft,
+      })
+      setDetail(updated)
+      toast.success('已保存逐条回复，编辑裁决时可看到')
+    } catch (err) {
+      toast.error(extractError(err, '回复保存失败'))
+    }
+  }
 
   const onUploadFile = async (file: File) => {
     if (!detail) return
@@ -681,11 +706,64 @@ function SubmissionsPage() {
                             审稿人未给作者意见
                           </p>
                         )}
+                        {reviewDimensionEntries(r.scores).some(([, v]) =>
+                          (v.suggestion ?? '').trim(),
+                        ) && (
+                          <div className="mt-2 space-y-0.5 border-t pt-1.5 text-xs">
+                            <div className="font-medium text-muted-foreground">逐维修改意见</div>
+                            {reviewDimensionEntries(r.scores)
+                              .filter(([, v]) => (v.suggestion ?? '').trim())
+                              .map(([k, v]) => (
+                                <p key={k}>
+                                  <strong>{SCORE_LABELS[k] ?? k}</strong>：{v.suggestion}
+                                </p>
+                              ))}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
                 </div>
               )}
+              {/* 作者逐条回复审稿人：仅在有已完成报告且处于修回/再审状态时开放 */}
+              {reportsQ.data &&
+                reportsQ.data.length > 0 &&
+                ['under_review', 'major_revision', 'minor_revision', 'resubmitted', 'rework_requested'].includes(
+                  detail.status,
+                ) && (
+                  <div className="rounded-md border border-primary/20 bg-primary/5 p-3">
+                    <div className="mb-2 flex flex-wrap items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      <span className="font-medium">回复审稿人</span>
+                      <span className="text-xs text-muted-foreground">
+                        逐条回应审稿意见，随稿件保存给编辑查看
+                      </span>
+                    </div>
+                    <Textarea
+                      rows={6}
+                      value={authorResponseDraft}
+                      onChange={(e) => setAuthorResponseDraft(e.target.value.slice(0, 20000))}
+                      placeholder="例如：
+审稿人 1 意见 1：已在 3.2 节补充稳健性检验（表 4）。
+审稿人 1 意见 2：已补充样本量说明，见第 4 页。
+审稿人 2 意见 1：该处表述已改写，并补充了两条文献。"
+                    />
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {detail.author_response_at
+                          ? `上次保存 ${new Date(detail.author_response_at).toLocaleString()}`
+                          : '尚未保存'}
+                      </span>
+                      <Button
+                        size="sm"
+                        onClick={() => void onSaveAuthorResponse()}
+                        disabled={saveResponseMut.isPending}
+                      >
+                        {saveResponseMut.isPending ? '保存中…' : '保存回复'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
               {/* 版本历史：v1 = 初次提交，之后每次重投一个版本 */}
               {versionsQ.data && versionsQ.data.length > 0 && (
                 <div className="rounded-md border p-3">

@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { AlertTriangle, CheckCircle2, FileSearch, Info } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, FileSearch, Info, PencilLine } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -12,6 +12,8 @@ export interface DimensionReview {
   score: number | null
   reason: string
   evidence: string
+  /** 逐维给作者的修改意见：证据右侧独立输入，避免和评分理由混在一起。 */
+  suggestion: string
 }
 
 export type DimensionReviews = Record<string, DimensionReview>
@@ -138,8 +140,21 @@ export function anchorFor(track: ReviewTrack, score: number | null): string {
 
 export function emptyDimensionReviews(track: ReviewTrack): DimensionReviews {
   return Object.fromEntries(
-    TRACK_DIMENSIONS[track].map((d) => [d.key, { score: null, reason: '', evidence: '' }]),
+    TRACK_DIMENSIONS[track].map((d) => [d.key, { score: null, reason: '', evidence: '', suggestion: '' }]),
   )
+}
+
+export function mergeDimensionReviews(
+  track: ReviewTrack,
+  raw: Partial<Record<string, Partial<DimensionReview>>> | null | undefined,
+): DimensionReviews {
+  const base = emptyDimensionReviews(track)
+  return Object.fromEntries(
+    TRACK_DIMENSIONS[track].map((d) => [
+      d.key,
+      { ...base[d.key], ...(raw?.[d.key] ?? {}), suggestion: raw?.[d.key]?.suggestion ?? '' },
+    ]),
+  ) as DimensionReviews
 }
 
 export function dimensionIssue(_dim: DimensionMeta, value: DimensionReview | undefined): string | null {
@@ -298,7 +313,7 @@ export function RubricScoreFields({
               {anchorFor(track, value.score)}
             </p>
             <p className="mt-1.5 text-[11px] leading-5 text-muted-foreground">{dim.watch}</p>
-            <div className="mt-2 grid gap-2 lg:grid-cols-2">
+            <div className="mt-2 grid gap-2 lg:grid-cols-3">
               <div className="space-y-1">
                 <p className="flex items-center gap-1 text-[11px] font-medium">
                   <FileSearch className="h-3.5 w-3.5" /> 为什么给这个分
@@ -327,13 +342,27 @@ export function RubricScoreFields({
                   aria-label={`${dim.label}正文证据`}
                 />
               </div>
+              <div className="space-y-1">
+                <p className="flex items-center gap-1 text-[11px] font-medium">
+                  <PencilLine className="h-3.5 w-3.5" /> 修改意见
+                </p>
+                <Textarea
+                  value={value.suggestion}
+                  disabled={disabled}
+                  onChange={(e) => update(dim.key, { suggestion: e.target.value })}
+                  placeholder="例：§1 补 2023 年后的同类工作对比；§4 表 2 扩到 30 个样本并说明抽样标准。"
+                  rows={3}
+                  className="text-xs"
+                  aria-label={`${dim.label}修改意见`}
+                />
+              </div>
             </div>
             <div className="mt-1.5 flex items-center justify-between text-[10px]">
               <span className={cn('text-muted-foreground', issue && 'text-amber-700 dark:text-amber-300')}>
                 {issue ? `待补：${issue}` : '本维度已可提交'}
               </span>
               <span className="text-muted-foreground tabular-nums">
-                理由 {value.reason.trim().length} 字 · 证据 {value.evidence.trim().length} 字
+                理由 {value.reason.trim().length} 字 · 证据 {value.evidence.trim().length} 字 · 修改意见 {value.suggestion.trim().length} 字
               </span>
             </div>
           </div>

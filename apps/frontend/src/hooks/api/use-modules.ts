@@ -49,8 +49,11 @@ import type {
   ReviewMode,
   ReviewModeResponse,
   SiteSettingsResponse,
+  ReviewDraftResponse,
   ReviewReportResponse,
   ReviewSubmit,
+  SubmissionTimelineResponse,
+  EditorReportSearchResponse,
   SubmissionBatchCreate,
   SubmissionBatchResponse,
   SubmissionCreate,
@@ -822,6 +825,8 @@ export function useCancelAssignment() {
       )).data,
     onSuccess: (_, { submissionId }) => {
       void qc.invalidateQueries({ queryKey: keys.submission.assignments(submissionId) })
+      // 主编工作台的「在审」栏也必须立刻刷新，否则取消后仍挂着旧审稿人。
+      void qc.invalidateQueries({ queryKey: ['workbench'] })
     },
   })
 }
@@ -1104,6 +1109,73 @@ export function useSubmissionReports(id: number) {
     queryFn: async () =>
       (await api.get<ReviewReportResponse[]>(`/submissions/${id}/reports`)).data,
     enabled: id > 0,
+  })
+}
+
+// 审稿意见草稿（服务端持久化，跨设备可续写）
+export function useReviewDraft(assignmentId: number) {
+  return useQuery<ReviewDraftResponse>({
+    queryKey: ['review', 'draft', assignmentId],
+    queryFn: async () =>
+      (await api.get<ReviewDraftResponse>(`/review/assignments/${assignmentId}/draft`)).data,
+    enabled: assignmentId > 0,
+  })
+}
+
+export function useSaveReviewDraft() {
+  const qc = useQueryClient()
+  return useMutation<ReviewDraftResponse, Error, { id: number; payload: Record<string, unknown> }>({
+    mutationFn: async ({ id, payload }) =>
+      (await api.put<ReviewDraftResponse>(`/review/assignments/${id}/draft`, { payload })).data,
+    onSuccess: (_, { id }) => {
+      void qc.invalidateQueries({ queryKey: ['review', 'draft', id] })
+    },
+  })
+}
+
+export function useDeleteReviewDraft() {
+  const qc = useQueryClient()
+  return useMutation<MessageResponse, Error, number>({
+    mutationFn: async (id) =>
+      (await api.delete<MessageResponse>(`/review/assignments/${id}/draft`)).data,
+    onSuccess: (_, id) => {
+      void qc.invalidateQueries({ queryKey: ['review', 'draft', id] })
+    },
+  })
+}
+
+// 论文全流程时间线（编辑/作者）
+export function useSubmissionTimeline(id: number, enabled = true) {
+  return useQuery<SubmissionTimelineResponse>({
+    queryKey: ['submission', 'timeline', id],
+    queryFn: async () =>
+      (await api.get<SubmissionTimelineResponse>(`/submissions/${id}/timeline`)).data,
+    enabled: id > 0 && enabled,
+  })
+}
+
+// 作者逐条回复审稿人
+export function useSaveAuthorResponse() {
+  const qc = useQueryClient()
+  return useMutation<SubmissionResponse, Error, { id: number; response: string }>({
+    mutationFn: async ({ id, response }) =>
+      (await api.put<SubmissionResponse>(`/submissions/${id}/response`, { response })).data,
+    onSuccess: (data, { id }) => {
+      qc.setQueryData(keys.submission.detail(id), data)
+      void qc.invalidateQueries({ queryKey: ['submissions'] })
+    },
+  })
+}
+
+// 主编检索所有已完成审稿意见
+export function useEditorReportSearch(q: string) {
+  return useQuery<EditorReportSearchResponse>({
+    queryKey: ['editor', 'workbench', 'reports', q],
+    queryFn: async () =>
+      (await api.get<EditorReportSearchResponse>('/editor/workbench/reports', {
+        params: { q, limit: 80 },
+      })).data,
+    enabled: true,
   })
 }
 
@@ -2199,6 +2271,9 @@ export interface ReviewerWorkbenchRow {
   reviewer_id: number
   reviewer_username: string | null
   status: string
+  status_label?: string
+  round?: number
+  slot?: number
   invited_at: string
   due_date: string | null
   due_label: string | null
@@ -2224,11 +2299,20 @@ export interface EditorColumnItem {
   submitted_by: number
   status: string
   submitted_at: string
+  current_round?: number
   assignments?: EditorAssignmentRow[]
   active_count?: number
   completed_count?: number
+  declined_count?: number
+  needs_reassign?: boolean
+  reassign_reason?: string | null
   is_overdue?: boolean
-  recommendations?: { reviewer_id: number; recommendation: string | null }[]
+  recommendations?: {
+    reviewer_id: number
+    reviewer_username?: string | null
+    recommendation: string | null
+    report_id?: number | null
+  }[]
 }
 
 export interface EmailDigestSummary {

@@ -47,7 +47,7 @@ from app.domain.review.blinding import (
     redact_manuscript_identity,
     reviewer_facing_payload,
 )
-from app.domain.review.models import ReviewAssignment, ReviewReport
+from app.domain.review.models import ReviewAssignment, ReviewDraft, ReviewReport
 from app.domain.submission.models import Submission
 from app.interfaces.http.review.calibration import router as calibration_router
 from app.interfaces.http.review.coi import ensure_no_declared_conflict
@@ -55,6 +55,8 @@ from app.interfaces.http.review.coi import router as coi_router
 from app.interfaces.http.review.schemas import (
     AssignmentListResponse,
     AssignmentResponse,
+    ReviewDraftIn,
+    ReviewDraftResponse,
     ReviewReportResponse,
     ReviewSubmit,
 )
@@ -101,6 +103,7 @@ def _normalize_review_scores(scores: dict[str, Any]) -> dict[str, Any]:
             raise HTTPException(status_code=422, detail=f"{key}: score 必须在 0–100")
         reason = str(item.get("reason") or "").strip()
         evidence = str(item.get("evidence") or "").strip()
+        suggestion = str(item.get("suggestion") or "").strip()
         # 分越高，证据门槛越高：90+ 是“顶刊范本”，不能用一句“写得不错”
         # 换一个高分。80+ 也要求能定位到正文位置，而不是泛泛而谈。
         if score >= 90:
@@ -137,7 +140,11 @@ def _normalize_review_scores(scores: dict[str, Any]) -> dict[str, Any]:
                     "不能只写主观印象"
                 ),
             )
-        parsed.append(DimensionScore(key=key, score=score, reason=reason, evidence=evidence))
+        parsed.append(
+            DimensionScore(
+                key=key, score=score, reason=reason, evidence=evidence, suggestion=suggestion
+            )
+        )
     result = evaluate(parsed, track=track)
     return {
         "rubric_version": RUBRIC_VERSION,
@@ -147,6 +154,7 @@ def _normalize_review_scores(scores: dict[str, Any]) -> dict[str, Any]:
                 "score": d.score,
                 "reason": d.reason,
                 "evidence": d.evidence,
+                "suggestion": d.suggestion,
                 "label": result["breakdown"][d.key]["label"],  # type: ignore[index]
                 "points": result["breakdown"][d.key]["points"],  # type: ignore[index]
             }
@@ -233,6 +241,82 @@ async def _get_assignment_for_reviewer(
             detail="This assignment belongs to another reviewer",
         )
     return a
+
+
+_REVIEW_DRAFT_MAX_BYTES = 256 * 1024
+
+
+async def _get_draft(db: AsyncSession, assignment_id: int) -> ReviewDraft | None:
+    return (
+        await db.execute(select(ReviewDraft).where(ReviewDraft.assignment_id == assignment_id))
+    ).scalar_one_or_none()
+
+
+@router.get("/assignments/{assignment_id}/draft", response_model=ReviewDraftResponse)
+async def get_review_draft(
+    assignment_id: int,
+    current_user: User = Depends(require_reviewer),
+    db: AsyncSession = Depends(get_db),
+) -> ReviewDraftResponse:
+    """读取当前审稿人未提交的草稿；没有草稿时返回 null payload。"""
+    a = await _get_assignment_for_reviewer(db, assignment_id, current_user.id)
+    if a.status not in ("accepted", "completed"):
+        raise HTTPException(status_code=400, detail="Assignment is not editable")
+    row = await _get_draft(db, a.id)
+    return ReviewDraftResponse(
+        payload=row.payload if row else None,
+        updated_at=row.updated_at if row else None,
+    )
+
+
+@router.put("/assignments/{assignment_id}/draft", response_model=ReviewDraftResponse)
+async def save_review_draft(
+    assignment_id: int,
+    body: ReviewDraftIn,
+    current_user: User = Depends(require_reviewer),
+    db: AsyncSession = Depends(get_db),
+) -> ReviewDraftResponse:
+    """保存审稿意见草稿（同一 assignment 仅一份，覆盖写）。"""
+    import json
+
+    if len(json.dumps(body.payload, ensure_ascii=False)) > _REVIEW_DRAFT_MAX_BYTES:
+        raise HTTPException(status_code=413, detail="Draft is too large")
+    a = await _get_assignment_for_reviewer(db, assignment_id, current_user.id)
+    if a.status != "accepted":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Assignment must be 'accepted' to save a draft (currently '{a.status}')",
+        )
+    row = await _get_draft(db, a.id)
+    if row is None:
+        row = ReviewDraft(
+            tenant_id=current_user.tenant_id,
+            assignment_id=a.id,
+            reviewer_id=current_user.id,
+            payload=body.payload,
+        )
+        db.add(row)
+    else:
+        row.payload = body.payload
+        row.updated_at = utcnow()
+    await db.commit()
+    await db.refresh(row)
+    return ReviewDraftResponse(payload=row.payload, updated_at=row.updated_at)
+
+
+@router.delete("/assignments/{assignment_id}/draft", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_review_draft(
+    assignment_id: int,
+    current_user: User = Depends(require_reviewer),
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    """丢弃草稿（审稿人主动清空）。"""
+    a = await _get_assignment_for_reviewer(db, assignment_id, current_user.id)
+    row = await _get_draft(db, a.id)
+    if row is not None:
+        await db.delete(row)
+        await db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/assignments/me", response_model=AssignmentListResponse)
@@ -538,6 +622,10 @@ async def submit_review_report(
             detail="A report has already been submitted for this assignment",
         )
     normalized_scores = _normalize_review_scores(body.scores)
+    # 草稿已转正式报告，删除草稿行，避免下次打开时把旧内容又灌回表单。
+    draft_row = await _get_draft(db, a.id)
+    if draft_row is not None:
+        await db.delete(draft_row)
     report = ReviewReport(
         tenant_id=current_user.tenant_id,
         assignment_id=a.id,
@@ -905,7 +993,7 @@ async def review_matrix(
         if a.due_date and a.status in ("pending", "accepted") and a.due_date < now:
             status = "overdue"
         rec = None
-        if a.report:
+        if a.report and (a.round or 1) == current_round:
             rec = a.report[0].recommendation if a.report else None
             recommendations.append(rec)
         # reviewer username

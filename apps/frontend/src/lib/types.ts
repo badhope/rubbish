@@ -593,6 +593,9 @@ export interface SubmissionResponse {
   status: SubmissionStatus
   admin_note?: string | null
   editor_note?: string | null
+  /** 作者逐条回复审稿人（Response to Reviewers） */
+  author_response?: string | null
+  author_response_at?: string | null
   /** 关联目录条目的刊出状态（published/draft/in_review）；无关联时为 null。前端据此区分「已发表」与「刊前预览」 */
   resource_publication_status?: string | null
   resource_id?: number | null
@@ -772,8 +775,51 @@ export interface ReviewReportResponse {
   scores: Record<string, unknown>
   comments_to_editor?: string | null
   comments_to_author?: string | null
+  /** 审稿人身份：编辑可见，作者/审稿人接口会裁剪为 undefined */
+  reviewer_id?: number | null
+  reviewer_username?: string | null
   attachments?: ReviewAttachment[]
   submitted_at: string
+}
+
+export interface ReviewDraftResponse {
+  payload: Record<string, unknown> | null
+  updated_at: string | null
+}
+
+export interface SubmissionTimelineEvent {
+  at: string
+  kind: string
+  title: string
+  detail?: string | null
+}
+
+export interface SubmissionTimelineResponse {
+  submission_id: number
+  title: string
+  status: string
+  events: SubmissionTimelineEvent[]
+}
+
+export interface EditorReportSearchItem {
+  report_id: number
+  submission_id: number
+  submission_title: string
+  submission_status: string
+  reviewer_id: number
+  reviewer_username: string | null
+  round: number
+  slot: number
+  recommendation: Recommendation
+  score?: number | null
+  comments_to_editor?: string | null
+  comments_to_author?: string | null
+  submitted_at: string
+}
+
+export interface EditorReportSearchResponse {
+  count: number
+  items: EditorReportSearchItem[]
 }
 
 // --- Library ---

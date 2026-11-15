@@ -160,6 +160,13 @@ class Submission(Base, TenantScopedMixin):
     # 编辑 4 元决定（accept/minor_revision/major_revision/reject）的备注，
     # 区别于 admin_note（兼容旧 review 端点的备注字段）
     editor_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # 作者逐条回复审稿人（Response to Reviewers）。与重投时的
+    # SubmissionVersion.note 分开：后者是版本变更说明，这里是作者对
+    # 审稿意见的正式回应，编辑在裁决/查看稿件时直接可见。
+    author_response: Mapped[str | None] = mapped_column(Text, nullable=True)
+    author_response_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     # P1-9 两段式初筛：编辑先做 triage（送外审 / 退回修改 / 直接拒稿），
     # 之后才进入分派与同行评审。旧库迁移时按 status 回填，避免把已在外审
     # 的稿件重新排进初筛队列。

@@ -272,6 +272,9 @@ class SubmissionResponse(BaseModel):
     status: SubmissionStatus
     admin_note: str | None = None
     editor_note: str | None = None
+    # 作者逐条回复审稿人；与版本修改说明分开，编辑可见。
+    author_response: str | None = None
+    author_response_at: datetime | None = None
     # 关联目录条目的刊出状态（published/draft/in_review）；无关联时为 None。
     # 前端据此区分「已发表」与「刊前预览（暂存草稿）」。
     resource_publication_status: str | None = None
@@ -345,6 +348,12 @@ class ReviewerCandidate(BaseModel):
 
 class ReviewerCandidateListResponse(BaseModel):
     data: list[ReviewerCandidate]
+
+
+class AuthorResponseUpdate(BaseModel):
+    """Body for PUT /submissions/{id}/response — 作者逐条回复审稿人."""
+
+    response: str = Field(default="", max_length=20000)
 
 
 class SubmissionUpdate(BaseModel):

@@ -68,6 +68,8 @@ def _to_response(
         status=entry.status,
         admin_note=entry.admin_note,
         editor_note=entry.editor_note,
+        author_response=getattr(entry, "author_response", None),
+        author_response_at=getattr(entry, "author_response_at", None),
         resource_id=entry.resource_id,
         similarity_score=getattr(entry, "similarity_score", None),
         similarity_matches=getattr(entry, "similarity_matches", None) or [],

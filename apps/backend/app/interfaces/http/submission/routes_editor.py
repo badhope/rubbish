@@ -37,7 +37,7 @@ from app.domain.submission._helpers import (
     MAX_PAGE_SIZE,
     _materialize_resource_from_submission,
 )
-from app.domain.submission.models import Submission
+from app.domain.submission.models import Submission, SubmissionVersion
 from app.interfaces.http.review.coi import (
     current_coi_year,
     declaration_matches,
@@ -871,8 +871,9 @@ async def list_review_reports(
 
     rows = (
         await db.execute(
-            select(ReviewReport, ReviewAssignment.reviewer_id)
+            select(ReviewReport, ReviewAssignment.reviewer_id, User.username)
             .join(ReviewAssignment, ReviewReport.assignment_id == ReviewAssignment.id)
+            .join(User, User.id == ReviewAssignment.reviewer_id)
             .where(
                 ReviewAssignment.submission_id == entry.id,
                 ReviewReport.tenant_id == entry.tenant_id,
@@ -882,7 +883,7 @@ async def list_review_reports(
     ).all()
 
     out: list[ReviewReportResponse] = []
-    for r, reviewer_id in rows:
+    for r, reviewer_id, reviewer_username in rows:
         # 审稿人（非编辑非作者）：只能看**自己**那一份报告。
         # 修复前的代码让任何有 assignment 的人落进 else 分支，把该稿件全部
         # 已完成报告的 comments_to_editor（编辑机密）原样返回——甚至包括
@@ -913,10 +914,121 @@ async def list_review_reports(
                     comments_to_editor=r.comments_to_editor,
                     comments_to_author=r.comments_to_author,
                     attachments=r.attachments or [],
+                    reviewer_id=reviewer_id,
+                    reviewer_username=reviewer_username,
                     submitted_at=r.submitted_at,
                 )
             )
     return out
+
+
+@router.get("/{submission_id}/timeline")
+async def submission_timeline(
+    submission_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """论文全流程时间线：投稿、版本、邀请/拒审、报告、作者回复、裁决。
+
+    编辑可看全部稿件；作者只能看自己的稿件。审稿人不在本端点暴露
+    其他审稿人的意见，避免绕过单盲。时间线用于主编追溯「从投稿到
+    录用」的每一步，不替代审计日志。
+    """
+    entry = await _get_or_404(db, submission_id)
+    is_editor = current_user.is_admin or await user_has_role(db, current_user, ROLE_EDITOR)
+    if not is_editor and entry.submitted_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    events: list[dict] = []
+
+    def add(at, kind: str, title: str, detail: str | None = None) -> None:
+        if at is not None:
+            events.append({"at": at, "kind": kind, "title": title, "detail": detail})
+
+    add(entry.submitted_at, "submitted", "作者提交稿件", f"状态 {entry.status}")
+
+    versions = (
+        (
+            await db.execute(
+                select(SubmissionVersion)
+                .where(
+                    SubmissionVersion.submission_id == entry.id,
+                    SubmissionVersion.tenant_id == entry.tenant_id,
+                )
+                .order_by(SubmissionVersion.version)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    for v in versions:
+        if v.version > 1:
+            add(
+                v.created_at,
+                "version",
+                f"重投 v{v.version}",
+                v.note or "作者提交了新版本",
+            )
+
+    assignments = (
+        (
+            await db.execute(
+                select(ReviewAssignment)
+                .where(
+                    ReviewAssignment.submission_id == entry.id,
+                    ReviewAssignment.tenant_id == entry.tenant_id,
+                )
+                .options(
+                    selectinload(ReviewAssignment.reviewer),
+                    selectinload(ReviewAssignment.report),
+                )
+                .order_by(ReviewAssignment.invited_at)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    for a in assignments:
+        who = a.reviewer.username if a.reviewer else f"#{a.reviewer_id}"
+        add(
+            a.invited_at,
+            "assignment",
+            f"邀请审稿人 {who}",
+            f"第 {a.round or 1} 轮 · 槽位 {a.slot} · 当前状态 {a.status}",
+        )
+        if a.responded_at and a.status in ("accepted", "completed"):
+            add(a.responded_at, "assignment_response", f"{who} 接受审稿邀请", None)
+        if a.status == "declined":
+            add(a.responded_at or a.invited_at, "assignment_declined", f"{who} 拒绝审稿", "需改派")
+        if a.status == "cancelled":
+            add(a.responded_at or a.invited_at, "assignment_cancelled", f"{who} 的邀请已撤销", None)
+        if a.completed_at:
+            add(a.completed_at, "review_completed", f"{who} 提交审稿报告", None)
+        for report in a.report or []:
+            add(
+                report.submitted_at,
+                "review_report",
+                f"{who} 的审稿意见",
+                f"推荐：{report.recommendation}；给作者意见：{(report.comments_to_author or '无')[:80]}",
+            )
+
+    if entry.author_response_at:
+        add(
+            entry.author_response_at,
+            "author_response",
+            "作者逐条回复审稿人",
+            (entry.author_response or "")[:120],
+        )
+    if entry.reviewed_at:
+        add(entry.reviewed_at, "decision", "编辑作出决定", entry.status)
+
+    events.sort(key=lambda e: e["at"])
+    return {
+        "submission_id": entry.id,
+        "title": entry.title,
+        "status": entry.status,
+        "events": events,
+    }
 
 
 @router.patch(

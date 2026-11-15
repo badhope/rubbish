@@ -44,6 +44,7 @@ from app.domain.submission.models import Submission, SubmissionDraft, Submission
 from app.domain.submission.similarity import check_against_site
 from app.interfaces.http.submission.responses import _get_or_404, _list_submissions, _to_response
 from app.interfaces.http.submission.schemas import (
+    AuthorResponseUpdate,
     MessageResponse,
     ResubmitRequest,
     SubmissionBatchCreate,
@@ -620,6 +621,64 @@ async def delete_submission(
     # 既泄露删除行为的"残留"，也会让存储无限增长。
     await _try_delete_storage(file_path)
     return MessageResponse(message="Submission deleted")
+
+
+@router.put(
+    "/{submission_id}/response",
+    response_model=SubmissionResponse,
+)
+async def author_response(
+    submission_id: int,
+    body: AuthorResponseUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> SubmissionResponse:
+    """作者逐条回复审稿人（Response to Reviewers）。
+
+    与重投时的版本修改说明分开保存：编辑在裁决/查看稿件时直接可见。
+    仅作者本人、且稿件至少有一份已完成审稿报告时可写。
+    """
+    entry = await _get_or_404(db, submission_id)
+    if entry.submitted_by != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the submitter can respond to reviewers",
+        )
+    if entry.status not in (
+        "under_review",
+        "major_revision",
+        "minor_revision",
+        "resubmitted",
+        "rework_requested",
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot respond to reviewers in status '{entry.status}'",
+        )
+    from app.domain.review.models import ReviewAssignment as _RA
+
+    completed = (
+        await db.execute(
+            select(func.count())
+            .select_from(_RA)
+            .where(
+                _RA.submission_id == entry.id,
+                _RA.tenant_id == entry.tenant_id,
+                _RA.status == "completed",
+            )
+        )
+    ).scalar_one()
+    if completed == 0:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="No completed review report to respond to yet",
+        )
+    text = (body.response or "").strip()
+    entry.author_response = text or None
+    entry.author_response_at = utcnow() if text else None
+    await db.commit()
+    await db.refresh(entry)
+    return _to_response(entry)
 
 
 @router.post(

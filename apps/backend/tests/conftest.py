@@ -322,6 +322,7 @@ def review_scores(score: int = 82) -> dict[str, object]:
                 if high
                 else f"证据：正文 §3 第 2 段与表 1（{key}）"
             ),
+            "suggestion": f"修改意见：请围绕 {key} 维度补充对应正文位置与可复核说明。",
         }
         for key in ("question", "argument", "method", "evidence", "integrity")
     }

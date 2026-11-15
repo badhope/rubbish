@@ -41,6 +41,10 @@ import type {
   SubmissionStatus,
 } from '@/lib/types'
 import { typeLabel } from '@/lib/resource-labels'
+import {
+  REVIEW_DIMENSION_LABELS as SCORE_LABELS,
+  reviewDimensionEntries as reportDimensionEntries,
+} from '@/lib/review-dimensions'
 import { extractError, formatDateTime } from '@/lib/utils'
 import { PageHeader } from '@/components/common/page-header'
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
@@ -96,44 +100,7 @@ const DECISION_OPTIONS: { value: EditorDecision; label: string; hint?: string }[
   { value: 'reject', label: '拒稿（Reject）' },
 ]
 
-// 审稿评分维度显示用中文（与 评审质量分 七维口径一致，见 quality/rubric.py；
-// 旧四维 originality/methodology/clarity/significance 已废弃，编辑在新维度
-// key 上不再回退显示英文原文）
-const SCORE_LABELS: Record<string, string> = {
-  question: '选题与真问题',
-  argument: '论证与自洽',
-  method: '方法与可复现',
-  evidence: '证据与结论',
-  integrity: '规范与诚信',
-  concept: '荒诞设定与原创',
-  coherence: '内部自洽',
-  execution: '一本正经的执行',
-  material: '材料与梗的可核查',
-  voice: '文风与节奏',
-  problem: '问题价值',
-  novelty: '创新与定位',
-  presentation: '表达清晰度',
-  // 历史数据兜底：老报告里存的旧四维 key 仍能显示中文
-  originality: '原创性（旧）',
-  methodology: '方法学（旧）',
-  clarity: '清晰度（旧）',
-  significance: '重要性（旧）',
-}
-
-
-type ReportDimensionView = { score?: number; reason?: string; evidence?: string }
-
-/** 兼容 v5 结构（scores.dimensions）与旧报告（scores 直接是数字）。 */
-function reportDimensionEntries(scores: Record<string, unknown>): [string, ReportDimensionView][] {
-  const dims = scores?.dimensions
-  if (dims && typeof dims === 'object' && !Array.isArray(dims)) {
-    return Object.entries(dims as Record<string, ReportDimensionView>)
-  }
-  return Object.entries(scores ?? {})
-    .filter(([, value]) => typeof value === 'number')
-    .map(([key, value]) => [key, { score: value as number }])
-}
-
+// 维度中文口径统一在 @/lib/review-dimensions，旧四维作为历史数据兜底。
 // 初筛工作台状态 tab：全部 + 7 种 submission status
 type StatusTab = SubmissionStatus | 'all'
 const STATUS_TABS: { value: StatusTab; label: string }[] = [
@@ -421,7 +388,7 @@ function PendingSubmissionsPage() {
                       size="sm"
                       onClick={() => setAssignmentsTarget(s)}
                     >
-                      <ClipboardList className="h-4 w-4" /> 查看分配
+                      <ClipboardList className="h-4 w-4" /> 改派 / 查看分配
                     </Button>
                   )}
                   {['pending', 'under_review', 'resubmitted'].includes(s.status) &&
@@ -556,6 +523,7 @@ function PendingSubmissionsPage() {
                               {reportDimensionEntries(r.scores).map(([k, v]) => (
                                 <p key={k}>
                                   <strong>{SCORE_LABELS[k] ?? k}</strong>：{v.reason || '无理由'} · 证据：{v.evidence || '无'}
+                                  {v.suggestion ? <> · 修改意见：{v.suggestion}</> : null}
                                 </p>
                               ))}
                             </div>
@@ -1172,6 +1140,7 @@ function AssignmentsDialog({
   )
   const matrixQ = useReviewMatrix(submission.id)
   const [adjOpen, setAdjOpen] = useState(false)
+  const [assignOpen, setAssignOpen] = useState(false)
   const cancelMut = useCancelAssignment()
 
   const onCancel = async (assignmentId: number) => {
@@ -1288,12 +1257,21 @@ function AssignmentsDialog({
             </div>
           </div>
         )}
-        <DialogFooter>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => setAssignOpen(true)}>
+            <UserPlus className="mr-1 h-4 w-4" /> 追加 / 改派审稿人
+          </Button>
           <Button variant="outline" onClick={onClose}>
             关闭
           </Button>
         </DialogFooter>
       </DialogContent>
+      {assignOpen && (
+        <AssignReviewerDialog
+          submission={submission}
+          onClose={() => setAssignOpen(false)}
+        />
+      )}
       {adjOpen && matrixQ.data && (
         <AdjudicateDialog
           submission={submission}
@@ -1466,6 +1444,7 @@ function ReportsDialog({
                     {reportDimensionEntries(r.scores).map(([k, v]) => (
                       <p key={k}>
                         <strong>{SCORE_LABELS[k] ?? k}</strong>：{v.reason || '无理由'} · 证据：{v.evidence || '无'}
+                        {v.suggestion ? <> · 修改意见：{v.suggestion}</> : null}
                       </p>
                     ))}
                   </div>

@@ -290,6 +290,8 @@ class DimensionScore:
     score: float  # 0–100
     reason: str
     evidence: str = ""
+    # 逐维修改意见（审稿人写给作者的可执行修改建议，可选）
+    suggestion: str = ""
 
     def __post_init__(self) -> None:
         if self.evidence.strip() and not self.reason.strip():

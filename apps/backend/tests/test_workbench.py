@@ -530,3 +530,108 @@ async def test_batch_assign_handles_long_submission_title(
     invited = [n for n in notes.json()["data"] if n["type"] == "review.invited"]
     assert len(invited) == 1
     assert len(invited[0]["title"]) <= 200
+
+
+# ---------------------------------------------------------------------------
+# Decline → needs reassign; editor report search
+# ---------------------------------------------------------------------------
+
+
+async def test_declined_reviewer_moves_back_to_assign_and_can_reassign(
+    client: AsyncClient, admin_user: dict, test_user: dict, db_session: AsyncSession
+) -> None:
+    """审稿人拒审后：不能继续显示为「在审未交」；回到待指派并可改派。"""
+    await client.get("/api/health")
+    tenant = (await db_session.execute(select(Tenant).where(Tenant.slug == "default"))).scalar_one()
+    reviewer_a = await _register_reviewer(client, db_session, tenant, "decl_a")
+    reviewer_b = await _register_reviewer(client, db_session, tenant, "decl_b")
+
+    sub = await _create_submission(client, test_user, "WB decline reassign")
+    assign = await client.post(
+        "/api/editor/workbench/batch-assign",
+        json={
+            "items": [{"submission_id": sub["id"], "reviewer_ids": [reviewer_a["user_id"]]}],
+            "due_days": 7,
+        },
+        headers=auth_headers(admin_user),
+    )
+    assert assign.status_code == 201
+    assignment_id = assign.json()["created"][0]["assignment_id"]
+
+    declined = await client.post(
+        f"/api/review/assignments/{assignment_id}/decline",
+        json={"reason": "方向不匹配"},
+        headers=auth_headers(reviewer_a),
+    )
+    assert declined.status_code == 200
+
+    wb = await client.get("/api/editor/workbench", headers=auth_headers(admin_user))
+    assert wb.status_code == 200
+    cols = wb.json()["columns"]
+    in_review_ids = [i["submission_id"] for i in cols["in_review"]["items"]]
+    assert sub["id"] not in in_review_ids
+    row = next(i for i in cols["to_assign"]["items"] if i["submission_id"] == sub["id"])
+    assert row["needs_reassign"] is True
+    assert row["declined_count"] == 1
+    assert row["assignments"][0]["status"] == "declined"
+
+    # 改派另一位审稿人：同一稿件应恢复评审中，而不是被重复检查误拦。
+    reassign = await client.post(
+        "/api/editor/workbench/batch-assign",
+        json={
+            "items": [{"submission_id": sub["id"], "reviewer_ids": [reviewer_b["user_id"]]}],
+            "due_days": 7,
+        },
+        headers=auth_headers(admin_user),
+    )
+    assert reassign.status_code == 201
+    assert reassign.json()["created_count"] == 1
+    wb2 = await client.get("/api/editor/workbench", headers=auth_headers(admin_user))
+    cols2 = wb2.json()["columns"]
+    row2 = next(i for i in cols2["in_review"]["items"] if i["submission_id"] == sub["id"])
+    assert row2["active_count"] == 1
+
+
+async def test_editor_report_search_returns_review_content(
+    client: AsyncClient, admin_user: dict, test_user: dict, db_session: AsyncSession
+) -> None:
+    """主编可按标题/意见正文检索所有已完成报告，且能看到审稿人身份。"""
+    await client.get("/api/health")
+    tenant = (await db_session.execute(select(Tenant).where(Tenant.slug == "default"))).scalar_one()
+    reviewer = await _register_reviewer(client, db_session, tenant, "search")
+
+    sub = await _create_submission(client, test_user, "WB searchable review")
+    assign = await client.post(
+        "/api/editor/workbench/batch-assign",
+        json={
+            "items": [{"submission_id": sub["id"], "reviewer_ids": [reviewer["user_id"]]}],
+            "due_days": 7,
+        },
+        headers=auth_headers(admin_user),
+    )
+    assignment_id = assign.json()["created"][0]["assignment_id"]
+    await client.post(
+        f"/api/review/assignments/{assignment_id}/accept",
+        headers=auth_headers(reviewer),
+    )
+    await client.post(
+        f"/api/review/assignments/{assignment_id}/submit",
+        json={
+            "recommendation": "minor_revision",
+            "scores": review_scores(71),
+            "comments_to_editor": "样本量需要补充说明。",
+            "comments_to_author": "请在 4.1 节补充样本量。",
+        },
+        headers=auth_headers(reviewer),
+    )
+
+    search = await client.get(
+        "/api/editor/workbench/reports?q=样本量",
+        headers=auth_headers(admin_user),
+    )
+    assert search.status_code == 200
+    body = search.json()
+    assert body["count"] >= 1
+    item = next(i for i in body["items"] if i["submission_id"] == sub["id"])
+    assert item["reviewer_username"] == "reviewer_search"
+    assert "样本量" in (item["comments_to_editor"] or "")

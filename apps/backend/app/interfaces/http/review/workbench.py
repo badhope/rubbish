@@ -23,7 +23,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
-from sqlalchemy import desc, func, select
+from sqlalchemy import desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -103,6 +103,29 @@ def _assignment_row(a: ReviewAssignment, now: datetime) -> dict[str, Any]:
         "report_id": a.report[0].id if a.report else None,
         "attachments": (a.report[0].attachments or []) if a.report else [],
     }
+
+
+ASSIGNMENT_STATUS_LABELS = {
+    "pending": "待回应",
+    "accepted": "已接受",
+    "declined": "已拒审",
+    "completed": "已交报告",
+    "cancelled": "已撤销",
+}
+
+
+def _current_round(assignments: list[ReviewAssignment]) -> int:
+    rounds = [a.round or 1 for a in assignments]
+    return max(rounds) if rounds else 1
+
+
+def _assignment_row_editor(a: ReviewAssignment, now: datetime) -> dict[str, Any]:
+    row = _assignment_row(a, now)
+    row["status_label"] = ASSIGNMENT_STATUS_LABELS.get(a.status, a.status)
+    row["round"] = a.round or 1
+    row["slot"] = a.slot
+    row["is_current"] = True
+    return row
 
 
 # ---------------------------------------------------------------------------
@@ -283,31 +306,19 @@ async def editor_workbench(
         .all()
     )
 
-    # 一次性取所有 report，避免 N+1
-    sub_ids = [s.id for s in submissions]
-    reports_by_submission: dict[int, list[ReviewReport]] = {}
-    if sub_ids:
-        rep_rows = (
-            await db.execute(
-                select(ReviewReport, ReviewAssignment.submission_id, ReviewAssignment.reviewer_id)
-                .join(ReviewAssignment, ReviewReport.assignment_id == ReviewAssignment.id)
-                .where(
-                    ReviewAssignment.submission_id.in_(sub_ids),
-                    ReviewReport.tenant_id == tenant_id,
-                )
-            )
-        ).all()
-        for rep, sid, _rid in rep_rows:
-            reports_by_submission.setdefault(sid, []).append(rep)
-
     to_assign: list[dict[str, Any]] = []
     in_review: list[dict[str, Any]] = []
     to_decide: list[dict[str, Any]] = []
     decided: list[dict[str, Any]] = []
 
     for s in submissions:
-        active = [a for a in s.review_assignments if a.status in ACTIVE_ASSIGNMENT_STATUSES]
-        done = [a for a in s.review_assignments if a.status == "completed"]
+        # 只认当前轮：重投后旧轮 assignment 保留追溯，但绝不能继续出现在
+        # 评审中或「未交」状态里，否则拒审/旧轮会把主编误导成还在审。
+        current_round = _current_round(s.review_assignments)
+        round_rows = [a for a in s.review_assignments if (a.round or 1) == current_round]
+        active = [a for a in round_rows if a.status in ACTIVE_ASSIGNMENT_STATUSES]
+        done = [a for a in round_rows if a.status == "completed"]
+        declined = [a for a in round_rows if a.status == "declined"]
         distinct_done = {a.reviewer_id for a in done}
 
         base = {
@@ -317,6 +328,10 @@ async def editor_workbench(
             "submitted_by": s.submitted_by,
             "status": s.status,
             "submitted_at": s.submitted_at,
+            "current_round": current_round,
+            "active_count": len(active),
+            "completed_count": len(done),
+            "declined_count": len(declined),
         }
 
         if s.status in DECIDED_STATUSES:
@@ -328,21 +343,30 @@ async def editor_workbench(
             continue
 
         if s.status == "under_review":
-            assignment_items = []
-            has_overdue = False
-            for a in s.review_assignments:
-                row = _assignment_row(a, now)
-                assignment_items.append(row)
-                if row["is_overdue"]:
-                    has_overdue = True
+            assignment_items = [_assignment_row_editor(a, now) for a in round_rows]
+            has_overdue = any(row["is_overdue"] for row in assignment_items)
             bucket = dict(base)
             bucket["assignments"] = assignment_items
-            bucket["active_count"] = len(active)
-            bucket["completed_count"] = len(done)
             bucket["is_overdue"] = has_overdue
+            # 拒审/撤销后没有任何在途审稿人：必须回到「待指派」，并明确
+            # 告诉主编是改派还是补派，而不是继续挂在「评审中/未交」。
+            if not active and len(distinct_done) < 2:
+                bucket["needs_reassign"] = True
+                bucket["reassign_reason"] = (
+                    "审稿人已拒审，请改派" if declined else "暂无在途审稿人，请补派"
+                )
+                to_assign.append(bucket)
+                continue
             if len(distinct_done) >= 2:
-                # 汇总各审稿意见供裁决
-                recs = [{"reviewer_id": a.reviewer_id, "recommendation": _rec_of(a)} for a in done]
+                recs = [
+                    {
+                        "reviewer_id": a.reviewer_id,
+                        "reviewer_username": a.reviewer.username if a.reviewer else None,
+                        "recommendation": _rec_of(a),
+                        "report_id": a.report[0].id if a.report else None,
+                    }
+                    for a in done
+                ]
                 bucket["recommendations"] = recs
                 to_decide.append(bucket)
             else:
@@ -351,7 +375,9 @@ async def editor_workbench(
 
         # major/minor revision / resubmitted 等中间态归到评审中（仍需推进）
         if s.status in ("major_revision", "minor_revision", "resubmitted"):
-            in_review.append(base)
+            bucket = dict(base)
+            bucket["assignments"] = [_assignment_row_editor(a, now) for a in round_rows]
+            in_review.append(bucket)
 
     email_digest = await _email_digest_summary(db, tenant_id, now)
 
@@ -379,6 +405,68 @@ def _rec_of(a: ReviewAssignment) -> str | None:
     if a.report:
         return a.report[0].recommendation
     return None
+
+
+@router.get("/editor/workbench/reports")
+async def search_editor_reports(
+    q: str = Query(default="", max_length=200),
+    limit: int = Query(default=50, ge=1, le=200),
+    current_user: User = Depends(require_editor),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """主编按标题/审稿意见全文检索所有已完成报告。
+
+    单盲只对作者成立：主编需要看到审稿人身份才能追溯与改派，因此本
+    端点返回 reviewer_username。``round`` 保留历史轮次，避免重投后
+    旧意见被误认为当前轮。
+    """
+    tenant_id = require_tenant_id()
+    stmt = (
+        select(ReviewReport, ReviewAssignment, Submission, User.username)
+        .join(ReviewAssignment, ReviewReport.assignment_id == ReviewAssignment.id)
+        .join(Submission, Submission.id == ReviewAssignment.submission_id)
+        .join(User, User.id == ReviewAssignment.reviewer_id)
+        .where(
+            ReviewReport.tenant_id == tenant_id,
+            ReviewAssignment.tenant_id == tenant_id,
+            ReviewAssignment.status == "completed",
+        )
+    )
+    term = q.strip()
+    if term:
+        like = f"%{term}%"
+        stmt = stmt.where(
+            or_(
+                Submission.title.ilike(like),
+                ReviewReport.comments_to_editor.ilike(like),
+                ReviewReport.comments_to_author.ilike(like),
+                User.username.ilike(like),
+            )
+        )
+    rows = (await db.execute(stmt.order_by(desc(ReviewReport.submitted_at)).limit(limit))).all()
+    items = []
+    for report, assignment, submission, username in rows:
+        score = None
+        if isinstance(report.scores, dict):
+            score = report.scores.get("score")
+        items.append(
+            {
+                "report_id": report.id,
+                "submission_id": submission.id,
+                "submission_title": submission.title,
+                "submission_status": submission.status,
+                "reviewer_id": assignment.reviewer_id,
+                "reviewer_username": username,
+                "round": assignment.round or 1,
+                "slot": assignment.slot,
+                "recommendation": report.recommendation,
+                "score": score,
+                "comments_to_editor": report.comments_to_editor,
+                "comments_to_author": report.comments_to_author,
+                "submitted_at": report.submitted_at,
+            }
+        )
+    return {"count": len(items), "items": items}
 
 
 # ---------------------------------------------------------------------------
@@ -602,11 +690,32 @@ async def batch_assign(
                 )
                 continue
 
+            existing_all = (
+                (
+                    await db.execute(
+                        select(ReviewAssignment).where(
+                            ReviewAssignment.submission_id == sub.id,
+                            ReviewAssignment.tenant_id == tenant_id,
+                        )
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            last_round = max((a.round or 1 for a in existing_all), default=1)
+            last_rows = [a for a in existing_all if (a.round or 1) == last_round]
+            round_no = (
+                last_round + 1
+                if last_rows and all(a.status in ("cancelled", "declined") for a in last_rows)
+                else last_round
+            )
+            used_slots = {a.slot for a in existing_all if (a.round or 1) == round_no and a.slot}
             dup = (
                 await db.execute(
                     select(ReviewAssignment).where(
                         ReviewAssignment.submission_id == sub.id,
                         ReviewAssignment.reviewer_id == rid,
+                        ReviewAssignment.round == round_no,
                         ReviewAssignment.tenant_id == tenant_id,
                     )
                 )
@@ -617,6 +726,10 @@ async def batch_assign(
                 )
                 continue
 
+            next_slot = 1
+            while next_slot in used_slots:
+                next_slot += 1
+            used_slots.add(next_slot)
             a = ReviewAssignment(
                 tenant_id=tenant_id,
                 submission_id=sub.id,
@@ -624,8 +737,8 @@ async def batch_assign(
                 assigned_by=current_user.id,
                 status="pending",
                 due_date=due,
-                round=1,
-                slot=1,
+                round=round_no,
+                slot=next_slot,
             )
             db.add(a)
             await db.flush()

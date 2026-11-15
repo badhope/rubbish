@@ -9,7 +9,9 @@ import {
   Eye,
   FileText,
   Gavel,
+  History,
   MailWarning,
+  Search,
   Send,
   UserPlus,
   Users,
@@ -19,6 +21,7 @@ import { toast } from 'sonner'
 import { getAuthState } from '@/lib/auth'
 import {
   useBatchAssign,
+  useCancelAssignment,
   useCheckConflicts,
   useEditorDecision,
   useEditorEmailDigestRecords,
@@ -26,12 +29,17 @@ import {
   useRemindReviewers,
   useReviewerCandidates,
   useReviewerWorkload,
+  useEditorReportSearch,
+  useSubmissionReports,
+  useSubmissionTimeline,
   useSubmission,
   useSubmissionDownloadTicket,
   useSubmissionMarkdown,
   type ConflictCandidate,
 } from '@/hooks/api/use-modules'
+import { REVIEW_DIMENSION_LABELS, reviewDimensionEntries } from '@/lib/review-dimensions'
 import { extractError } from '@/lib/utils'
+import { ConfirmDialog } from '@/components/common/confirm-dialog'
 import { MarkdownContent } from '@/components/common/markdown-content'
 import { PageHeader } from '@/components/common/page-header'
 import { HelpTip } from '@/components/common/help-tip'
@@ -83,6 +91,7 @@ function EditorWorkbenchPage() {
   const candidates = useReviewerCandidates(200)
   const workload = useReviewerWorkload()
   const batchMut = useBatchAssign()
+  const cancelAssignMut = useCancelAssignment()
   const conflictsMut = useCheckConflicts()
   const remindMut = useRemindReviewers()
   const decisionMut = useEditorDecision()
@@ -103,6 +112,15 @@ function EditorWorkbenchPage() {
 
   // 邮件摘要状态条：展开查看投递记录
   const [digestOpen, setDigestOpen] = useState(false)
+  // 主编全文检索审稿意见
+  const [reportsOpen, setReportsOpen] = useState(false)
+  const [reportsQuery, setReportsQuery] = useState('')
+  // 更换审稿人：先撤回在途邀请，再打开指派弹窗选新人。
+  const [replaceTarget, setReplaceTarget] = useState<{
+    submissionId: number
+    assignmentIds: number[]
+    names: string
+  } | null>(null)
 
   const columns = data?.columns
   const digest = data?.email_digest
@@ -156,6 +174,24 @@ function EditorWorkbenchPage() {
         // 冲突接口失败不阻塞指派，仅静默降级
         console.warn('conflicts check failed', err)
       }
+    }
+  }
+
+  const onConfirmReplace = async () => {
+    if (!replaceTarget) return
+    const target = replaceTarget
+    setReplaceTarget(null)
+    try {
+      for (const assignmentId of target.assignmentIds) {
+        await cancelAssignMut.mutateAsync({
+          submissionId: target.submissionId,
+          assignmentId,
+        })
+      }
+      toast.success('已撤回旧邀请，请选择新的审稿人')
+      await openAssignDialog([target.submissionId])
+    } catch (err) {
+      toast.error(extractError(err, '更换审稿人失败'))
     }
   }
 
@@ -238,6 +274,10 @@ function EditorWorkbenchPage() {
                 季度校准
               </Button>
             </Link>
+            <Button variant="outline" size="sm" onClick={() => setReportsOpen(true)}>
+              <Search className="mr-1 h-4 w-4" aria-hidden />
+              审稿意见检索
+            </Button>
           </>
         }
       />
@@ -471,12 +511,12 @@ function EditorWorkbenchPage() {
                                   className="mt-1 h-6 px-1 text-[11px] text-muted-foreground"
                                   onClick={() => setViewingId(item.submission_id)}
                                 >
-                                  <Eye className="h-3 w-3" /> 查看稿件
+                                  <Eye className="h-3 w-3" /> 查看正文与审稿意见
                                 </Button>
                               </div>
                             </div>
 
-                            {col.key === 'in_review' && item.assignments && (
+                            {(col.key === 'in_review' || col.key === 'to_assign') && item.assignments && (
                               <div className="space-y-1 border-t pt-2 text-xs">
                                 {item.assignments.map((a) => (
                                   <div
@@ -487,9 +527,10 @@ function EditorWorkbenchPage() {
                                         : ''
                                     }`}
                                   >
-                                    <span className="truncate">
+                                    <span className={`truncate ${a.status === 'declined' ? 'text-red-600' : ''}`}>
                                       {a.reviewer_username ?? `#${a.reviewer_id}`}
-                                      {a.status === 'completed' ? ' · 已交' : ' · 未交'}
+                                      {' · '}
+                                      {a.status_label ?? (a.status === 'completed' ? '已交报告' : a.status === 'declined' ? '已拒审' : '未交')}
                                     </span>
                                     <span className="flex shrink-0 items-center gap-1">
                                       {a.due_label && (
@@ -520,6 +561,46 @@ function EditorWorkbenchPage() {
                               </div>
                             )}
 
+                            {col.key === 'in_review' && item.assignments && item.assignments.some(
+                              (a) => a.status === 'pending' || a.status === 'accepted',
+                            ) && (
+                              <div className="grid grid-cols-2 gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="w-full"
+                                  onClick={() => void openAssignDialog([item.submission_id])}
+                                >
+                                  <UserPlus className="h-3 w-3" /> 追加审稿人
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="w-full"
+                                  onClick={() => {
+                                    const active = (item.assignments ?? []).filter(
+                                      (a) => a.status === 'pending' || a.status === 'accepted',
+                                    )
+                                    setReplaceTarget({
+                                      submissionId: item.submission_id,
+                                      assignmentIds: active.map((a) => a.assignment_id),
+                                      names: active
+                                        .map((a) => a.reviewer_username ?? `#${a.reviewer_id}`)
+                                        .join('、'),
+                                    })
+                                  }}
+                                >
+                                  更换审稿人
+                                </Button>
+                              </div>
+                            )}
+
+                            {col.key === 'to_assign' && item.needs_reassign && (
+                              <p className="rounded bg-amber-50 px-2 py-1 text-xs text-amber-700 dark:bg-amber-950/20">
+                                {item.reassign_reason ?? '需要改派审稿人'}
+                                {item.declined_count ? ` · 已拒审 ${item.declined_count} 人` : ''}
+                              </p>
+                            )}
                             {col.key === 'to_assign' && (
                               <Button
                                 size="sm"
@@ -527,7 +608,7 @@ function EditorWorkbenchPage() {
                                 className="w-full"
                                 onClick={() => openAssignDialog([item.submission_id])}
                               >
-                                <UserPlus className="h-3 w-3" /> 指派审稿人
+                                <UserPlus className="h-3 w-3" /> {item.needs_reassign ? '改派 / 补派审稿人' : '指派审稿人'}
                               </Button>
                             )}
 
@@ -536,10 +617,18 @@ function EditorWorkbenchPage() {
                                 {item.recommendations.map((r) => (
                                   <div key={r.reviewer_id} className="flex items-center gap-2">
                                     <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                                    <span>审稿人 #{r.reviewer_id}</span>
+                                    <span>审稿人 {r.reviewer_username ?? `#${r.reviewer_id}`}</span>
                                     <Badge variant="outline">{r.recommendation ?? '—'}</Badge>
                                   </div>
                                 ))}
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="mt-1 w-full"
+                                  onClick={() => setViewingId(item.submission_id)}
+                                >
+                                  <FileText className="h-3 w-3" /> 查看正文与审稿意见
+                                </Button>
                                 <Button
                                   size="sm"
                                   className="mt-1 w-full"
@@ -643,6 +732,17 @@ function EditorWorkbenchPage() {
         </DialogContent>
       </Dialog>
 
+      <EditorReportSearchDialog
+        open={reportsOpen}
+        query={reportsQuery}
+        onQuery={setReportsQuery}
+        onOpenSubmission={(sid) => {
+          setReportsOpen(false)
+          setViewingId(sid)
+        }}
+        onClose={() => setReportsOpen(false)}
+      />
+
       {/* 查看稿件弹层：主编裁决前先读完整正文 */}
       <EditorManuscriptDialog
         submissionId={viewingId}
@@ -659,7 +759,13 @@ function EditorWorkbenchPage() {
             <DialogTitle>编辑裁决</DialogTitle>
             <DialogDescription>稿件 #{decidingId}</DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
+          <div className="max-h-[40vh] space-y-3 overflow-y-auto pr-1">
+            {decidingId !== null && (
+              <>
+                <SubmissionAuthorResponsePanel submissionId={decidingId} />
+                <SubmissionReportsPanel submissionId={decidingId} />
+              </>
+            )}
             <div className="space-y-1">
               <Label>决定</Label>
               <Select
@@ -697,10 +803,229 @@ function EditorWorkbenchPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={replaceTarget !== null}
+        title="更换审稿人"
+        description={
+          replaceTarget
+            ? `将撤回 ${replaceTarget.names || '当前审稿人'} 的在途邀请，再重新选择审稿人。已提交的审稿报告不会被删除。`
+            : undefined
+        }
+        confirmText="撤回并重新指派"
+        destructive
+        onConfirm={() => void onConfirmReplace()}
+        onOpenChange={(o) => !o && setReplaceTarget(null)}
+      />
     </div>
   )
 }
 
+
+const RECOMMENDATION_LABELS: Record<string, string> = {
+  accept: '录用',
+  minor_revision: '小修',
+  major_revision: '大修',
+  reject: '拒稿',
+}
+
+function reportScore(scores: Record<string, unknown>): string | null {
+  const raw = scores?.score
+  if (typeof raw === 'number') return raw.toFixed(1)
+  if (typeof raw === 'string' && raw.trim()) return raw
+  return null
+}
+
+function SubmissionReportsPanel({ submissionId }: { submissionId: number }) {
+  const { data, isLoading, isError, refetch } = useSubmissionReports(submissionId)
+  if (isLoading) return <LoadingSkeleton rows={2} />
+  if (isError)
+    return (
+      <ErrorState message="审稿意见加载失败" onRetry={() => void refetch()} />
+    )
+  if (!data || data.length === 0) {
+    return (
+      <p className="rounded-md border border-dashed bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+        尚无已完成的审稿报告；裁决前应先等至少两份意见。
+      </p>
+    )
+  }
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2 text-sm font-medium">
+        <FileText className="h-4 w-4" /> 审稿意见
+        <Badge variant="secondary">{data.length} 份</Badge>
+      </div>
+      {data.map((r, index) => (
+        <div key={r.id} className="rounded-md border bg-card p-3 text-sm">
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <span className="font-medium">
+              审稿人 {r.reviewer_username ?? `#${r.reviewer_id ?? index + 1}`}
+            </span>
+            <Badge variant="outline">
+              {RECOMMENDATION_LABELS[r.recommendation] ?? r.recommendation}
+            </Badge>
+            {reportScore(r.scores) && (
+              <Badge variant="secondary">总分 {reportScore(r.scores)}</Badge>
+            )}
+            <span className="ml-auto text-xs text-muted-foreground">
+              {new Date(r.submitted_at).toLocaleString()}
+            </span>
+          </div>
+          {r.comments_to_editor?.trim() ? (
+            <div>
+              <div className="text-xs text-muted-foreground">给编辑的机密意见</div>
+              <p className="whitespace-pre-wrap leading-relaxed">{r.comments_to_editor}</p>
+            </div>
+          ) : null}
+          {r.comments_to_author?.trim() ? (
+            <div className="mt-2">
+              <div className="text-xs text-muted-foreground">给作者的意见</div>
+              <p className="whitespace-pre-wrap leading-relaxed">{r.comments_to_author}</p>
+            </div>
+          ) : null}
+          {reviewDimensionEntries(r.scores).some(([, v]) => (v.suggestion ?? '').trim()) ? (
+            <div className="mt-2 space-y-0.5 rounded bg-muted/40 p-2 text-xs">
+              <div className="font-medium text-muted-foreground">逐维修改意见</div>
+              {reviewDimensionEntries(r.scores)
+                .filter(([, v]) => (v.suggestion ?? '').trim())
+                .map(([k, v]) => (
+                  <p key={k}>
+                    <strong>{REVIEW_DIMENSION_LABELS[k] ?? k}</strong>：{v.suggestion}
+                  </p>
+                ))}
+            </div>
+          ) : null}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function SubmissionAuthorResponsePanel({ submissionId }: { submissionId: number }) {
+  const { data } = useSubmission(submissionId)
+  const text = data?.author_response?.trim()
+  if (!text) return null
+  return (
+    <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-sm">
+      <div className="mb-2 flex flex-wrap items-center gap-2 font-medium">
+        <FileText className="h-4 w-4" /> 作者逐条回复审稿人
+        {data?.author_response_at && (
+          <span className="text-xs font-normal text-muted-foreground">
+            {new Date(data.author_response_at).toLocaleString()}
+          </span>
+        )}
+      </div>
+      <p className="whitespace-pre-wrap leading-relaxed">{text}</p>
+    </div>
+  )
+}
+
+function SubmissionTimelinePanel({ submissionId }: { submissionId: number }) {
+  const { data, isLoading } = useSubmissionTimeline(submissionId, submissionId > 0)
+  if (isLoading) return <LoadingSkeleton rows={2} />
+  if (!data || data.events.length === 0) return null
+  return (
+    <div className="space-y-2 border-t pt-3">
+      <div className="flex items-center gap-2 text-sm font-medium">
+        <History className="h-4 w-4" /> 全流程追溯
+        <span className="text-xs text-muted-foreground">投稿 → 版本 → 邀请/拒审 → 报告 → 裁决</span>
+      </div>
+      <ol className="space-y-1.5 border-l pl-3 text-xs">
+        {data.events.map((e, i) => (
+          <li key={`${e.at}-${i}`} className="relative">
+            <span className="absolute -left-[17px] top-1.5 h-2 w-2 rounded-full bg-primary" />
+            <div className="flex flex-wrap gap-2">
+              <span className="text-muted-foreground">{new Date(e.at).toLocaleString()}</span>
+              <span className="font-medium">{e.title}</span>
+            </div>
+            {e.detail ? <p className="mt-0.5 text-muted-foreground">{e.detail}</p> : null}
+          </li>
+        ))}
+      </ol>
+    </div>
+  )
+}
+
+function EditorReportSearchDialog({
+  open,
+  query,
+  onQuery,
+  onOpenSubmission,
+  onClose,
+}: {
+  open: boolean
+  query: string
+  onQuery: (value: string) => void
+  onOpenSubmission: (submissionId: number) => void
+  onClose: () => void
+}) {
+  const { data, isLoading } = useEditorReportSearch(query)
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>审稿意见检索</DialogTitle>
+          <DialogDescription>
+            按论文标题、审稿人用户名或意见正文搜索全部已完成报告；只返回编辑可见内容。
+          </DialogDescription>
+        </DialogHeader>
+        <Input
+          value={query}
+          onChange={(e) => onQuery(e.target.value)}
+          placeholder="例如：稳健性检验 / 张三 / 样本量"
+          autoFocus
+        />
+        {isLoading ? (
+          <LoadingSkeleton rows={3} />
+        ) : !data || data.items.length === 0 ? (
+          <EmptyState title="没有匹配的审稿意见" description="换一个标题关键词或审稿人用户名。" />
+        ) : (
+          <div className="max-h-[60vh] space-y-2 overflow-y-auto pr-1">
+            <p className="text-xs text-muted-foreground">命中 {data.count} 条</p>
+            {data.items.map((item) => (
+              <div key={item.report_id} className="rounded-md border p-3 text-sm">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium">{item.submission_title}</span>
+                  <Badge variant="outline">
+                    {RECOMMENDATION_LABELS[item.recommendation] ?? item.recommendation}
+                  </Badge>
+                  <Badge variant="secondary">第 {item.round} 轮</Badge>
+                  {item.score != null && <Badge variant="outline">总分 {item.score}</Badge>}
+                  <span className="ml-auto text-xs text-muted-foreground">
+                    {item.reviewer_username ?? `#${item.reviewer_id}`} ·{' '}
+                    {new Date(item.submitted_at).toLocaleString()}
+                  </span>
+                </div>
+                {item.comments_to_editor?.trim() && (
+                  <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-xs text-muted-foreground">
+                    给编辑：{item.comments_to_editor}
+                  </p>
+                )}
+                {item.comments_to_author?.trim() && (
+                  <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-xs">
+                    给作者：{item.comments_to_author}
+                  </p>
+                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="mt-2"
+                  onClick={() => onOpenSubmission(item.submission_id)}
+                >
+                  打开稿件与全部意见
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>关闭</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
 
 function EditorManuscriptDialog({
   submissionId,
@@ -791,6 +1116,21 @@ function EditorManuscriptDialog({
                 <span className="text-xs text-muted-foreground">该稿件暂无可打开的原件。</span>
               ) : null}
             </div>
+            {data.author_response?.trim() ? (
+              <div className="rounded-md border border-primary/20 bg-primary/5 p-3">
+                <div className="mb-2 flex items-center gap-2 text-sm font-medium">
+                  <FileText className="h-4 w-4" /> 作者逐条回复审稿人
+                  {data.author_response_at && (
+                    <span className="text-xs font-normal text-muted-foreground">
+                      {new Date(data.author_response_at).toLocaleString()}
+                    </span>
+                  )}
+                </div>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed">{data.author_response}</p>
+              </div>
+            ) : null}
+            <SubmissionReportsPanel submissionId={data.id} />
+            <SubmissionTimelinePanel submissionId={data.id} />
           </div>
         )}
         <DialogFooter>

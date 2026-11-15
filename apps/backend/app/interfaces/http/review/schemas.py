@@ -84,6 +84,9 @@ class ReviewReportResponse(BaseModel):
     comments_to_editor: str | None = None
     # 单盲模式：作者只看作者评论 + 推荐，看不到审稿人身份 + editor-only 评论
     comments_to_author: str | None = None
+    # 审稿人身份：仅编辑可见（单盲对作者隐藏，接口按调用者裁剪）。
+    reviewer_id: int | None = None
+    reviewer_username: str | None = None
     # 审稿附件元数据：filename / path / content_type / size。
     attachments: list[dict[str, Any]] = Field(default_factory=list)
     submitted_at: datetime
@@ -97,6 +100,19 @@ __all__ = [
     "MessageResponse",
     "PaginationMeta",
     "Recommendation",
+    "ReviewDraftIn",
+    "ReviewDraftResponse",
     "ReviewReportResponse",
     "ReviewSubmit",
 ]
+
+
+class ReviewDraftIn(BaseModel):
+    """审稿意见草稿正文；payload 是前端 ReviewFormValue 的 JSON。"""
+
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class ReviewDraftResponse(BaseModel):
+    payload: dict[str, Any] | None = None
+    updated_at: datetime | None = None

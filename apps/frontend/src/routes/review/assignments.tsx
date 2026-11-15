@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createFileRoute, Link, redirect, useNavigate, useSearch } from '@tanstack/react-router'
 import { Check, Download, Eye, FileText, X, Zap } from 'lucide-react'
 import { toast } from 'sonner'
@@ -10,6 +10,8 @@ import {
   useMyReviewAssignments,
   useReviewSubmissionDetail,
   useSubmissionDownloadTicket,
+  useReviewDraft,
+  useSaveReviewDraft,
   useSubmitReview,
   useUploadReviewAttachment,
 } from '@/hooks/api/use-modules'
@@ -35,6 +37,7 @@ import {
 import {
   TRACK_DIMENSIONS,
   dimensionIssue,
+  mergeDimensionReviews,
   scoreReviewTotal,
 } from '@/components/review/rubric-score-fields'
 import { Badge } from '@/components/ui/badge'
@@ -138,6 +141,7 @@ function ReviewWorkbenchPage() {
   const declineMut = useDeclineAssignment()
   const submitMut = useSubmitReview()
   const uploadAttachmentMut = useUploadReviewAttachment()
+  const saveDraftMut = useSaveReviewDraft()
 
   const [reviewTargetId, setReviewTargetId] = useState<number | null>(null)
   const [mobilePane, setMobilePane] = useState<'manuscript' | 'form'>('manuscript')
@@ -146,6 +150,8 @@ function ReviewWorkbenchPage() {
   const [declineTargetId, setDeclineTargetId] = useState<number | null>(null)
   // 查看稿件详情的 assignmentId（仅 pending/accepted/completed 可查）
   const [submissionViewId, setSubmissionViewId] = useState<number | null>(null)
+  const draftQ = useReviewDraft(reviewTargetId ?? 0)
+  const draftAppliedRef = useRef<number | null>(null)
 
   const updateSearch = (patch: Partial<ReviewSearch>) => {
     void navigate({
@@ -177,10 +183,39 @@ function ReviewWorkbenchPage() {
   }
 
   const openReviewForm = (id: number) => {
+    draftAppliedRef.current = null
     setReviewForm(EMPTY_REVIEW_FORM)
     setReviewAttachments([])
     setMobilePane('manuscript')
     setReviewTargetId(id)
+  }
+
+  // 草稿只覆盖一次：保存后 query 失效重取，不能把用户正在改的内容冲掉。
+  useEffect(() => {
+    if (reviewTargetId === null) return
+    if (draftAppliedRef.current === reviewTargetId) return
+    const payload = draftQ.data?.payload
+    if (!payload) return
+    const loaded = payload as unknown as ReviewFormValue
+    // 旧草稿没有 suggestion 字段：补齐默认值，避免 value.suggestion.trim() 崩。
+    setReviewForm({
+      ...loaded,
+      dimensions: mergeDimensionReviews(loaded.track, loaded.dimensions),
+    })
+    draftAppliedRef.current = reviewTargetId
+  }, [draftQ.data, reviewTargetId])
+
+  const onSaveDraft = async () => {
+    if (reviewTargetId === null) return
+    try {
+      await saveDraftMut.mutateAsync({
+        id: reviewTargetId,
+        payload: reviewForm as unknown as Record<string, unknown>,
+      })
+      toast.success('审稿草稿已保存，下次打开会自动续写')
+    } catch (err) {
+      toast.error(extractError(err, '草稿保存失败'))
+    }
   }
 
   const onSubmitReview = async (e: React.FormEvent) => {
@@ -422,7 +457,7 @@ function ReviewWorkbenchPage() {
             <DialogHeader className="shrink-0 border-b px-5 py-4">
               <DialogTitle>审稿工作台</DialogTitle>
               <DialogDescription>
-                电脑端左侧读稿、右侧打分；手机端在下方切换「读稿件 / 写评审」。
+                电脑端左侧读稿、右侧打分；手机端在下方切换「读稿件 / 写评审」。草稿保存在服务端，换设备也能续写。
               </DialogDescription>
             </DialogHeader>
             <Tabs
@@ -470,6 +505,14 @@ function ReviewWorkbenchPage() {
                     onClick={() => setReviewTargetId(null)}
                   >
                     取消
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void onSaveDraft()}
+                    disabled={saveDraftMut.isPending || submitMut.isPending}
+                  >
+                    {saveDraftMut.isPending ? '保存中…' : '保存草稿'}
                   </Button>
                   <Button
                     type="submit"
