@@ -84,7 +84,7 @@ def md_to_html(md: str) -> str:
 # --- HTML → PDF（pymupdf Story） ---------------------------------------------
 
 _CSS = """
-body { font-family: china-s; font-size: 11pt; line-height: 1.7; }
+body { font-family: "Noto Serif CJK SC", china-s; font-size: 11pt; line-height: 1.7; }
 h1 { font-size: 20pt; text-align: center; margin: 6pt 0 14pt 0; }
 h2 { font-size: 15pt; margin: 14pt 0 6pt 0; }
 h3 { font-size: 12.5pt; margin: 10pt 0 5pt 0; }
@@ -350,7 +350,7 @@ def merge_docx(parts: list[bytes], *, title: str = "Rubbish 合集") -> bytes:
 # --- 整期版面（封面 + 编后记 + 目录 + 版权页） -----------------------------
 
 _ISSUE_CSS = """
-body { font-family: china-s; font-size: 10.5pt; line-height: 1.65; color: #1f2a24; }
+body { font-family: "Noto Serif CJK SC", china-s; font-size: 10.5pt; line-height: 1.65; color: #1f2a24; }
 .kicker { font-size: 8pt; letter-spacing: 2pt; color: #6b7a70; text-transform: uppercase; }
 .masthead img { width: 300pt; margin: 2pt 0 6pt 0; }
 .issue-no { font-size: 72pt; line-height: 0.95; margin: 18pt 0 4pt 0; }
@@ -454,6 +454,46 @@ def issue_front_matter_pdf(
     out = io.BytesIO()
     doc.save(out, deflate=True, garbage=4, deflate_images=True, deflate_fonts=True)
     return out.getvalue()
+
+
+def stamp_pdf_metadata(
+    pdf_bytes: bytes,
+    *,
+    title: str = "",
+    authors: list[str] | None = None,
+    keywords: list[str] | None = None,
+    subject: str = "",
+) -> bytes:
+    """给 LibreOffice 产物盖章：Creator 不该是 “Writer”。
+
+    LibreOffice 只填 Title/Author/Subject，Creator 固定写成 Writer，
+    读者在阅读器里看到的是「Writer」而不是这本刊。这里用 PyMuPDF 重写
+    文档信息字典，顺手把关键字与刊名补上；不改动页面内容流。
+    """
+    try:
+        import pymupdf
+    except Exception:
+        return pdf_bytes
+    try:
+        doc = pymupdf.open(stream=pdf_bytes, filetype="pdf")
+        meta = doc.metadata or {}
+        meta.update(
+            {
+                "title": title or meta.get("title") or "",
+                "author": "、".join(authors or []) or meta.get("author") or "",
+                "subject": subject or meta.get("subject") or "Rubbish Journal",
+                "keywords": "；".join(keywords or []) or meta.get("keywords") or "",
+                "creator": "Rubbish Typeset",
+                "producer": "Rubbish PDF Pipeline",
+            }
+        )
+        doc.set_metadata(meta)
+        out = io.BytesIO()
+        doc.save(out, deflate=True, garbage=3)
+        doc.close()
+        return out.getvalue()
+    except Exception:
+        return pdf_bytes
 
 
 def docx_to_pdf(docx_bytes: bytes, *, timeout: int = 90) -> bytes:

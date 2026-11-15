@@ -42,11 +42,12 @@ from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
 
 # 全站统一使用 OFL 免费字体，不引用任何商业字库：
-# 正文与图表题注 Noto Serif SC（思源宋体）、标题 Noto Sans SC（思源黑体）、
-# 作者与书名号 LXGW WenKai（霞鹜文楷）、西文 DejaVu Serif。
-BODY_FONT = "Noto Serif SC"
-HEAD_FONT = "Noto Sans SC"
-AUTHOR_FONT = "LXGW WenKai"
+# 正文与图表题注 Noto Serif CJK SC（思源宋体）、标题 Noto Sans CJK SC（思源黑体）
+# 注意：TTC 里的 family 名是 “Noto Serif CJK SC”，少了 “CJK” 会静默回退成文泉驿。、
+# 作者行 Noto Serif SC（与正文同族，避免字体回退）、西文 DejaVu Serif。
+BODY_FONT = "Noto Serif CJK SC"
+HEAD_FONT = "Noto Sans CJK SC"
+AUTHOR_FONT = "Noto Serif CJK SC"
 LATIN_FONT = "DejaVu Serif"
 
 # 品牌色：Rubbish = 回收与再生，绿色是身份色。深墨绿用于正文标题与表格线，
@@ -127,19 +128,32 @@ def _para(
     return p
 
 
+def _field_run(paragraph: Any, instruction: str) -> Any:
+    """插入一个 Word 域（PAGE / NUMPAGES），LibreOffice 转 PDF 时会求值。"""
+    run = paragraph.add_run()
+    begin = OxmlElement("w:fldChar")
+    begin.set(qn("w:fldCharType"), "begin")
+    instr = OxmlElement("w:instrText")
+    instr.set(qn("xml:space"), "preserve")
+    instr.text = f" {instruction} "
+    end = OxmlElement("w:fldChar")
+    end.set(qn("w:fldCharType"), "end")
+    run._element.append(begin)
+    run._element.append(instr)
+    run._element.append(end)
+    _set_font(run, name=BODY_FONT, size=CAPTION_PT)
+    return run
+
+
 def _page_number_footer(section: Any) -> None:
+    """页脚：第 x 页 / 共 n 页 —— 学术件必须给出总页数，读者才知道有没有漏页。"""
     p = section.footer.paragraphs[0]
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = p.add_run()
-    for instr in ("begin", "PAGE", "end"):
-        el = OxmlElement("w:fldChar") if instr != "PAGE" else OxmlElement("w:instrText")
-        if instr == "PAGE":
-            el.set(qn("xml:space"), "preserve")
-            el.text = " PAGE "
-        else:
-            el.set(qn("w:fldCharType"), instr)
-        run._element.append(el)
-    _set_font(run, name=BODY_FONT, size=CAPTION_PT)
+    _set_font(p.add_run("第\u3000"), name=BODY_FONT, size=CAPTION_PT)
+    _field_run(p, "PAGE")
+    _set_font(p.add_run("\u3000页\u3000/\u3000共\u3000"), name=BODY_FONT, size=CAPTION_PT)
+    _field_run(p, "NUMPAGES")
+    _set_font(p.add_run("\u3000页"), name=BODY_FONT, size=CAPTION_PT)
 
 
 def _green_rule(paragraph: Any, *, size: str = "8") -> None:
@@ -153,6 +167,36 @@ def _green_rule(paragraph: Any, *, size: str = "8") -> None:
     bottom.set(qn("w:color"), BRAND_HEX)
     borders.append(bottom)
     ppr.append(borders)
+
+
+
+def _split_title(title: str) -> tuple[str, str]:
+    """把“主标题——副标题”拆成两行；没有副标题就原样返回。"""
+    t = (title or "").strip()
+    for sep in ("——", " — ", "—"):
+        i = t.find(sep)
+        if 0 < i < len(t) - 2:
+            return t[:i].strip(), t[i + len(sep):].strip()
+    return t, ""
+
+
+def _running_title(title: str) -> str:
+    """页眉用短标题：优先在主标题的问号/感叹号处截断，其次副标题分隔符，
+    最后才按字数硬截。硬截会把“无法收敛”切成“无法收…”，是最难看的一种。"""
+    t = (title or "").strip()
+    if not t:
+        return ""
+    for sep in ("？", "?", "！", "!", "：", ":"):
+        i = t.find(sep)
+        if i >= 6:
+            return t[: i + 1]
+    for sep in ("——", "—", " - "):
+        i = t.find(sep)
+        if i >= 6:
+            return t[:i].strip()
+    if len(t) > 24:
+        return t[:24].rstrip("，。、；：,.") + "…"
+    return t
 
 
 def _brand_header(section: Any, title: str) -> None:
@@ -172,9 +216,7 @@ def _brand_header(section: Any, title: str) -> None:
     hr.font.color.rgb = BRAND_GREEN
     # 页眉只做“认出是哪篇”的短标识：过长会顶到右边距，在 PDF 里被裁成
     # 半句话（实测 303 的长标题）。正文首屏已有完整篇名，无需重复。
-    short_title = (title or "").strip()
-    if len(short_title) > 22:
-        short_title = short_title[:22] + "…"
+    short_title = _running_title(title)
     hr2 = p.add_run("　" + short_title)
     _set_font(hr2, name=BODY_FONT, size=8.5)
     hr2.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
@@ -888,9 +930,17 @@ def build(md: str, meta: Meta, *, base_dir: Path | None = None) -> bytes:
     # --- 篇名 / 作者 / 单位 ---
     if meta.title:
         p = _para(doc, align=WD_ALIGN_PARAGRAPH.CENTER, before=12, after=10, line=1.2)
-        r = p.add_run(meta.title)
+        main, sub = _split_title(meta.title)
+        r = p.add_run(main)
         _set_font(r, name=HEAD_FONT, size=TITLE_PT, bold=True)
         r.font.color.rgb = BRAND_DARK
+        if sub:
+            # 副标题单独一行、降一号字：主标题不再被“——”挤到第二行断词。
+            br = p.add_run()
+            br.add_break()
+            r2 = p.add_run(sub)
+            _set_font(r2, name=BODY_FONT, size=13, bold=False)
+            r2.font.color.rgb = BRAND_DARK
         _green_rule(p, size="12")
 
     if meta.authors:

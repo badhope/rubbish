@@ -14,6 +14,7 @@ RUN sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list.d/debia
     && apt-get update \
     && apt-get install -y --no-install-recommends \
        libreoffice-writer fonts-wqy-zenhei fonts-wqy-microhei gosu \
+       fonts-noto-cjk \
     && rm -rf /var/lib/apt/lists/*
 
 # 非 root 运行：系统用户 app 只拥有应用目录与上传卷；入口脚本在卷挂载后

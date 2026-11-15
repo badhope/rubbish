@@ -23,7 +23,7 @@ RUN uv sync --frozen --no-dev
 
 # 非 root 运行：与国内版一致，由 compose app-init 修正命名卷属主。
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends gosu \
+    && apt-get install -y --no-install-recommends gosu fonts-noto-cjk fonts-wqy-zenhei \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --system app \
     && useradd --system --gid app --create-home --home-dir /home/app app
