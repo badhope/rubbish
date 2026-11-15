@@ -5,12 +5,13 @@ import { toast } from 'sonner'
 import { useAuth } from '@/hooks/use-auth'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import {
+  exportDocuments,
   exportPreflight,
   exportResources,
   useCatalogStats,
   useResources,
-  type CitationExportFormat,
   type ExportPreflightResponse,
+  type AnyExportFormat,
 } from '@/hooks/api/use-modules'
 import type { ResourceType } from '@/lib/types'
 import { extractError, formatAuthors, cn } from '@/lib/utils'
@@ -92,7 +93,16 @@ const TYPE_OPTIONS: { value: ResourceType | 'all'; label: string }[] = [
   { value: 'tutorial', label: '教程' },
 ]
 
-const EXPORT_FORMATS: CitationExportFormat[] = ['bibtex', 'ris', 'csv', 'json', 'jats']
+const EXPORT_FORMATS: { format: AnyExportFormat; label: string }[] = [
+  { format: 'bibtex', label: 'BibTeX' },
+  { format: 'ris', label: 'RIS' },
+  { format: 'csv', label: 'CSV' },
+  { format: 'json', label: 'JSON' },
+  { format: 'jats', label: 'JATS' },
+  { format: 'pdf', label: '合并 PDF（多篇）' },
+  { format: 'docx', label: '合并 Word（多篇）' },
+  { format: 'zip', label: '逐篇 ZIP' },
+]
 
 /** 固定种子的 Fisher–Yates：刷新页面换 seed，同一次浏览内「换一批」也稳定。 */
 function seededShuffle<T>(items: T[], seed: number): T[] {
@@ -196,18 +206,22 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
   }
 
   const [preflight, setPreflight] = useState<ExportPreflightResponse | null>(null)
-  const [pendingFormat, setPendingFormat] = useState<CitationExportFormat | null>(null)
+  const [pendingFormat, setPendingFormat] = useState<AnyExportFormat | null>(null)
 
-  const runExport = async (format: CitationExportFormat) => {
+  const runExport = async (format: AnyExportFormat) => {
     try {
-      await exportResources(selectedIds, format)
+      if (format === 'pdf' || format === 'docx' || format === 'zip') {
+        await exportDocuments(selectedIds, format)
+      } else {
+        await exportResources(selectedIds, format)
+      }
       toast.success(`已导出 ${selectedIds.length} 条为 ${format.toUpperCase()}`)
     } catch (err) {
       toast.error(extractError(err, '导出失败'))
     }
   }
 
-  const onExport = async (format: CitationExportFormat) => {
+  const onExport = async (format: AnyExportFormat) => {
     if (selectedIds.length === 0) {
       toast.error('请先选择资源')
       return
@@ -423,9 +437,9 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {EXPORT_FORMATS.map((f) => (
-                <DropdownMenuItem key={f} onClick={() => onExport(f)}>
-                  {f.toUpperCase()}
+              {EXPORT_FORMATS.map((item) => (
+                <DropdownMenuItem key={item.format} onClick={() => onExport(item.format)}>
+                  {item.label}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>

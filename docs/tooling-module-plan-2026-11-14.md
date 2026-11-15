@@ -29,7 +29,7 @@
 | 导入 | `domain/ingest/parsers.py` | BibTeX/RIS/CSV/JSON | 已支持 JSON 回导；CSV 别名仍未完全对齐；错误定位只到行号 |
 | 导入 | `domain/ingest/fetchers.py` | Crossref/arXiv/PubMed/OpenAlex/Semantic Scholar | 后端 5 个源已在前端全部可选；字段映射仍未做 |
 | 导入页 | `routes/ingest/index.tsx`（255 行） | 粘贴文本解析、文件选择/拖拽、五源查询 | 仍不能编辑解析结果、批量勾选；字段映射未做 |
-| 导出页 | `interfaces/http/export/routes.py` | 批量引用导出 5 种格式 + 字段预检 | 已补字段警告与前端确认弹窗；多篇合并 PDF/Word、整期 ZIP 仍未做 |
+| 导出页 | `interfaces/http/export/routes.py` | 批量引用导出 5 种格式 + 字段预检 + 正文合集 | 已补字段警告/确认弹窗、合并 PDF/Word、逐篇 ZIP、整期全文 ZIP |
 
 ## 2. 本轮 P0：先修“会丢内容 / 会出错 / 会误导”
 
@@ -160,7 +160,8 @@
 - [x] 3.2 `ManuscriptView` 拆分为 view/text/render/reference/toc/reading-prefs 六模块；`typecheck`、`lint` 与 8 个组件测试通过。
 - [ ] 3.2 表格/CSV/代码/图片按内容类型分流查看器。
 - [x] 3.3 导出前字段校验：纯函数 `export_field_warnings` + `GET /api/export/preflight`；前端导出前弹窗列出缺标题/作者/年份/DOI；引用导出补 JATS 格式。
-- [ ] 3.3 多篇合并 PDF/Word、整期 ZIP；统一转换契约夹具仍待补。
+- [x] 3.3 多篇合并 PDF/Word、逐篇 ZIP、整期全文 ZIP：`/api/export/documents` 与 `/api/export/issue`；前端已接「合并 PDF / 合并 Word / 逐篇 ZIP / 整期全文 ZIP」。
+- [x] 3.3 统一转换契约：同一份 Markdown 的标题/作者/摘要/关键词/正文/表格在 PDF 与 DOCX 两个出口均有断言。
 - [ ] 3.4 独立引用生成器、图表/参考文献编号检查、批量导入字段映射。
 - [x] 分页缓存键修正：`useMySubmissions` / `usePendingSubmissions` / `useMyReviewAssignments` 等把 `pageSize` 纳入 query key，避免 Dashboard 用 1 条把列表页 20 条的缓存覆盖。
 - [x] 期号页 JSON-LD `PublicationIssue`，与 canonical 路由、整期 PDF 一并落地。

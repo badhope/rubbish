@@ -426,7 +426,15 @@ export function IssuePageContent({
                 className="inline-flex"
               >
                 <Button variant="outline" size="sm">
-                  <Download className="mr-1 h-3.5 w-3.5" /> 整期下载
+                  <Download className="mr-1 h-3.5 w-3.5" /> 整期版面
+                </Button>
+              </a>
+              <a
+                href={`/api/export/issue?volume=${issueVolume ?? '1'}&issue=${issue}`}
+                className="inline-flex"
+              >
+                <Button variant="outline" size="sm">
+                  <Download className="mr-1 h-3.5 w-3.5" /> 整期全文 ZIP
                 </Button>
               </a>
             </div>

@@ -116,6 +116,15 @@ wheels = [
 ]
 
 [[package]]
+name = "babel"
+version = "2.18.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/7d/b2/51899539b6ceeeb420d40ed3cd4b7a40519404f9baf3d4ac99dc413a834b/babel-2.18.0.tar.gz", hash = "sha256:b80b99a14bd085fcacfa15c9165f651fbb3406e66cc603abf11c5750937c992d", size = 9959554, upload-time = "2026-02-01T12:30:56.078Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/77/f5/21d2de20e8b8b0408f0681956ca2c69f1320a3848ac50e6e7f39c6159675/babel-2.18.0-py3-none-any.whl", hash = "sha256:e2b422b277c2b9a9630c1d7903c2a00d0830c409c59ac8cae9081c92f1aeba35", size = 10196845, upload-time = "2026-02-01T12:30:53.445Z" },
+]
+
+[[package]]
 name = "bandit"
 version = "1.9.4"
 source = { registry = "https://pypi.org/simple" }
@@ -477,6 +486,20 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/76/49/900383b471c645a3c397f47b3211d1fcecb3a540c98f683494cdf86b33de/dnspython-2.9.2.tar.gz", hash = "sha256:8d4d39a513e649d634004ce4d39ade2352efcea472a0247535a5c2d18a9d7ba9", size = 455484, upload-time = "2026-11-03T23:56:53.601Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/1e/0c/5346358b3a20275d256978c35203ddc2c8617f78c1b23795b79ba22ced6d/dnspython-2.9.2-py3-none-any.whl", hash = "sha256:af15f7d385a6ae2fb35a796fde2138004c8c42c7389090e2addc83e3b3340fd8", size = 360455, upload-time = "2026-11-03T23:56:52.088Z" },
+]
+
+[[package]]
+name = "docxcompose"
+version = "2.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "babel" },
+    { name = "lxml" },
+    { name = "python-docx" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0d/10/d0941047b177c0b6eb95138b15949ca59a8ddb1d7266d10dc384d0dba681/docxcompose-2.2.0.tar.gz", hash = "sha256:e2c69703a2fefad4471aad82861a1c5d7b3f4a669510de504bb36f41f66f6d3e", size = 22036, upload-time = "2026-06-02T12:18:11.083Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e4/70/121090145cb543e48da7421e64036e6484bfbbc40fc619d73599dc22eb2e/docxcompose-2.2.0-py3-none-any.whl", hash = "sha256:fcfec8b0ba7d341bd3280cb92b571ed2f9e868bbd0d6750ea9539e0ab0bb49a1", size = 25738, upload-time = "2026-06-02T12:18:09.963Z" },
 ]
 
 [[package]]
@@ -1669,6 +1692,7 @@ dependencies = [
     { name = "certifi" },
     { name = "cryptography" },
     { name = "defusedxml" },
+    { name = "docxcompose" },
     { name = "fastapi", extra = ["standard"] },
     { name = "h2" },
     { name = "httpx" },
@@ -1729,6 +1753,7 @@ requires-dist = [
     { name = "certifi", specifier = "==2026.10.19" },
     { name = "cryptography", specifier = "==50.0.0" },
     { name = "defusedxml", specifier = "==0.7.1" },
+    { name = "docxcompose", specifier = ">=2.2.0" },
     { name = "fastapi", extras = ["standard"], specifier = "==0.139.0" },
     { name = "h2", specifier = "==4.4.1" },
     { name = "httpx", specifier = "==0.28.1" },

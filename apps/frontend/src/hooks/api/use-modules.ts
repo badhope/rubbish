@@ -258,6 +258,8 @@ export function useDeleteResource() {
 }
 
 export type CitationExportFormat = 'bibtex' | 'ris' | 'csv' | 'json' | 'jats'
+export type DocumentExportFormat = 'pdf' | 'docx' | 'zip'
+export type AnyExportFormat = CitationExportFormat | DocumentExportFormat
 
 export interface ExportPreflightWarning {
   resource_id: number | string
@@ -279,6 +281,16 @@ export interface ExportPreflightResponse {
 export async function exportPreflight(ids: number[]): Promise<ExportPreflightResponse> {
   const res = await api.get<ExportPreflightResponse>('/export/preflight', { params: { ids } })
   return res.data
+}
+
+export async function exportDocuments(ids: number[], format: DocumentExportFormat) {
+  const res = await api.get('/export/documents', {
+    params: { ids, format },
+    responseType: 'blob',
+    timeout: 200000,
+  })
+  const fallback = `rubbish-collection.${format}`
+  downloadBlob(res.data, res.headers['content-disposition'] ?? '', fallback)
 }
 
 // Export 走 blob，触发浏览器下载

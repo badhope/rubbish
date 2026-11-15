@@ -305,6 +305,48 @@ def md_to_docx(md: str, title: str, byline: str | None = None) -> bytes:
     return build(md, meta)
 
 
+# --- 多篇合并（批量导出） ---------------------------------------------------
+
+
+def merge_pdfs(parts: list[bytes], *, title: str = "Rubbish 合集") -> bytes:
+    """把多篇规范化 PDF 合成一本，保留每篇原分页与字体子集。"""
+    if not parts:
+        raise ValueError("merge_pdfs requires at least one document")
+    import pymupdf
+
+    merged = pymupdf.open()
+    try:
+        for blob in parts:
+            with pymupdf.open(stream=blob, filetype="pdf") as source:
+                merged.insert_pdf(source)
+        merged.set_metadata({"title": title, "author": "Rubbish", "creator": "Rubbish"})
+        out = io.BytesIO()
+        merged.save(out, deflate=True, garbage=4, deflate_images=True, deflate_fonts=True)
+        return out.getvalue()
+    finally:
+        merged.close()
+
+
+def merge_docx(parts: list[bytes], *, title: str = "Rubbish 合集") -> bytes:
+    """把多篇规范化 Word 合成一本，保留分页、样式、图片与页眉关系。"""
+    if not parts:
+        raise ValueError("merge_docx requires at least one document")
+    from docx import Document
+    from docxcompose.composer import Composer
+
+    first = Document(io.BytesIO(parts[0]))
+    composer = Composer(first)
+    for blob in parts[1:]:
+        composer.doc.add_page_break()
+        composer.append(Document(io.BytesIO(blob)))
+    core = composer.doc.core_properties
+    core.title = title
+    core.author = "Rubbish"
+    out = io.BytesIO()
+    composer.doc.save(out)
+    return out.getvalue()
+
+
 # --- 整期版面（封面 + 编后记 + 目录 + 版权页） -----------------------------
 
 _ISSUE_CSS = """

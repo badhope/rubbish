@@ -46,3 +46,44 @@ def test_parse_clc_valid_invalid_and_absent() -> None:
     assert clc_status_of(None) == "absent"
     assert clc_status_of("TP3") == "valid"
     assert clc_status_of("bad") == "needs_correction"
+
+
+def test_md_pdf_docx_contract_keeps_core_fields() -> None:
+    """统一转换契约：标题、作者、摘要、关键词、正文与表格必须进入两个出口。"""
+    from io import BytesIO
+
+    import pymupdf
+    from docx import Document
+
+    from app.domain.submission.export_docs import html_to_pdf, md_to_docx
+
+    md = (
+        "# 转换契约测试\n\n"
+        "**作者：** 张三、李四\n\n"
+        "## 摘要\n\n"
+        "这是摘要正文，必须完整保留。\n\n"
+        "**关键词：** 转换；契约；排版\n\n"
+        "## 1 引言\n\n"
+        "正文第一段。\n\n"
+        "| 指标 | 数值 |\n"
+        "|---|---|\n"
+        "| 通过率 | 100% |\n"
+    )
+    pdf = html_to_pdf(md_to_html(md), "转换契约测试", "张三、李四 · 2026")
+    with pymupdf.open(stream=pdf, filetype="pdf") as doc:
+        text = "\n".join(page.get_text("text", sort=True) for page in doc)
+    assert "转换契约测试" in text
+    assert "这是摘要正文" in text
+    assert "关键词" in text
+    assert "通过率" in text
+
+    docx = md_to_docx(md, "转换契约测试", "张三、李四 · 2026")
+    document = Document(BytesIO(docx))
+    doc_text = "\n".join(p.text for p in document.paragraphs)
+    assert "转换契约测试" in doc_text
+    assert "这是摘要正文" in doc_text
+    assert "关键词" in doc_text
+    table_text = "\n".join(
+        cell.text for table in document.tables for row in table.rows for cell in row.cells
+    )
+    assert "通过率" in table_text
