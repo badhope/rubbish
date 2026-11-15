@@ -7,7 +7,7 @@
   其余保持 pending，避免迁移后把历史稿件重新排进初筛队列。
 
 Revision ID: 043_submission_triage
-Revises: 042_reviewer_conflict_declarations
+Revises: 042_reviewer_conflict
 Create Date: 2026-11-15
 """
 
@@ -18,7 +18,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision = "043_submission_triage"
-down_revision = "042_reviewer_conflict_declarations"
+down_revision = "042_reviewer_conflict"
 branch_labels = None
 depends_on = None
 

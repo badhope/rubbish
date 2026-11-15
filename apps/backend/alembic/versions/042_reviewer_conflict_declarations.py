@@ -5,7 +5,7 @@
 - 没有声明不阻止分派，但编辑侧会提示“未声明”；有声明且命中则 409 拦截。
   机构字段暂不在投稿表中，不做猜测式拦截。
 
-Revision ID: 042_reviewer_conflict_declarations
+Revision ID: 042_reviewer_conflict
 Revises: 041_content_reports_api_tokens
 Create Date: 2026-11-15
 """
@@ -17,7 +17,7 @@ from sqlalchemy.dialects import postgresql
 
 from alembic import op
 
-revision = "042_reviewer_conflict_declarations"
+revision = "042_reviewer_conflict"
 down_revision = "041_content_reports_api_tokens"
 branch_labels = None
 depends_on = None
