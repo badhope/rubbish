@@ -249,10 +249,10 @@ Rubbish 是作品集，不是个人简历。它应该有：
 
 ### P2（品牌与资助）
 
-11. ◐ 个人品牌独立入口 `/desk` 第一版：三根内容支柱 + 真实卷首手记；独立域名与订阅未做。
-12. 资助者页、成本表、季度公开信（`/support` 已有赞助去向与渠道；成本数字/季度信仍待真实台账）
-13. ◐ 期号页 SEO（canonical + JSON-LD）、引用格式（GB/T、APA、MLA）、文章 DOI 展示已落地；DOI 注册未接。
-14. ✅ 移动端作者/编辑 Today：Dashboard 新增作者卡（待修改/在审/最近投稿）与编辑卡（待初筛/待指派/待裁决），与审稿人 Today 同壳；主编 Today（异常/备份/健康）未做。
+11. ✅ `/desk` 个人品牌入口：三根内容支柱、真实卷首手记、邮件订阅（双确认/退订/后台导出）已上线；独立域名仍待 DNS，不在代码范围。
+12. ✅ 资助者页、成本表、季度公开信：`/support` 已有公开账本、成本表与季度信渲染；后台可录草稿/发布，已发布不可直接删除。真实成本数字仍以编辑部台账为准，未用估算数据填充。
+13. ✅ 期号页 SEO（canonical + JSON-LD）、引用格式（GB/T、APA、MLA）、文章 DOI 展示、DataCite 适配器与后台就绪检查已上线；真实 DOI 注册待生产凭据。
+14. ✅ 移动端作者/编辑 Today + 主编 Today（异常/备份/迁移/磁盘/邮件）已上线，备份目录只读挂载并纳入 36 小时新鲜度检查。
 
 ---
 
@@ -293,3 +293,14 @@ Rubbish 是作品集，不是个人简历。它应该有：
 - 备份：`/home/ubuntu/backups/db-pre-p1-20261115-112053.dump`、`uploads-pre-p1-20261115-112053.tar.gz`。
 - 线上：`ops/site-health.sh` 退出码 0；首页静态 `index-iYAs1KHK.js` 及全部引用 assets 200；`/desk`、`/review/quick/1`、`/editor/triage`、`/editor/calibration` 均返回 200；新增接口未登录返回 401。
 - 注意：生产使用 `docker-compose.override.yml` + `apps/backend/Dockerfile.cn`，镜像构建只带 `prebuilt-static` 公共壳；完整 Vite `dist` 需在构建前覆盖到 `apps/backend/prebuilt-static`，或构建后执行 `ops/deploy.sh`，否则首页会引用不存在的 assets。
+
+### 2026-11-15 P2 上线记录
+
+- 代码：`e72d0cc feat(p2): ship brand accountability surfaces`；五远程均已推送。
+- 验证：后端 `1219 passed, 1 skipped`；前端 `28 files / 157 tests passed`；`typecheck` / `lint` / `build` 通过；P2 定向 `9 passed`。
+- 迁移：`047_p2_public_accountability` 在生产临时库完成 `046 → 047`、`047 → 046 → 047` 演练；`desk_subscribers` / `finance_reports` 均启用 `FORCE RLS` + `tenant_isolation`。
+- 生产：发布目录 `/home/ubuntu/rubbish-release-20261115-1215`，标准软链 `/home/ubuntu/rubbish` 已指向；镜像 `rubbish-app:latest 6dfac1a430f1`；精确回滚镜像 `rubbish-app:rollback-p2-exact 702700657d50`。
+- 线上迁移版本 `047_p2_public_accountability`；`/api/health` 200；`/desk`、`/support`、`/admin/finance`、`/admin/desk-subscribers` 均 200；首页静态 `index-BekJrzUi.js` 与 assets 200。
+- 备份：`db-pre-p2-20261115-121257.dump`、`uploads-pre-p2-20261115-121257.tar.gz`；管理员密码修复前另备份 `db-pre-admin-reset-20261115-130539.dump`。
+- 管理员登录：生产 `rubbish_ai_admin` 的密码哈希与 `.env` 不一致，已按环境配置同步（租户上下文内单条更新）并重启；登录 200，`/api/admin/editor/today` 返回 8 项检查全 `ok`，备份 `ok`（DB 0.0h / uploads 0.9h）。
+- 仍受外部条件限制：P2-11 独立域名需 DNS；P2-12 公开数字需真实台账；P2-13 DataCite 实际注册需 URL/prefix/API key。代码与页面均已就绪，不伪造数据或注册结果。
