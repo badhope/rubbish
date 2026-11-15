@@ -358,7 +358,7 @@ P3 不再堆功能，目标只有三个：**可被信任、可被检索、可被
 
 ### 2026-11-15 P4 工具模块上线记录
 
-- 代码：`0f09d98 feat(tooling): preview attachment types and map CSV imports`；五远程已推送。
+- 代码：`0f09d98 feat(tooling): preview attachment types and map CSV imports`、`a2ec7a3 fix(ingest): avoid merging same-title records by different authors`；五远程已推送。
 - 功能：审稿附件按图片 / PDF / CSV / 代码文本分流预览，Word / Excel / ZIP / SVG 明确下载兜底；CSV 导入支持中英文表头别名、逐列映射/显式忽略、DOI/标题重复合并。
 - 验证：后端 `1224 passed, 1 skipped`（701s）；前端 `32 files / 172 tests passed`（826s）；`ruff` / `typecheck` / `lint` / `build` 通过。
-- 生产：release `/home/ubuntu/rubbish-release-20261115-1525`，标准软链已指向；镜像 `rubbish-app:p4-20261115-1530`；旧 P3 镜像 `rubbish-app:p3-20261115-1405` 保留回滚。生产 `/api/health`、`/tools`、`/desk`、`/support`、`/papers`、`/ingest` 均 200；管理员 Today 8 项 `ok`；容器仍 `user=app`、`cap_drop=ALL`、`no-new-privileges`。
+- 生产：release `/home/ubuntu/rubbish-release-20261115-1525`，标准软链已指向；镜像 `rubbish-app:p4-20261115-1535`（含去重修正）；旧 P3 镜像 `rubbish-app:p3-20261115-1405` 保留回滚。生产 `/api/health`、`/tools`、`/desk`、`/support`、`/papers`、`/ingest` 均 200；管理员 Today 8 项 `ok`；容器仍 `user=app`、`cap_drop=ALL`、`no-new-privileges`。
