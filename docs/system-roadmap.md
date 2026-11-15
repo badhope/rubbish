@@ -311,7 +311,7 @@ P3 不再堆功能，目标只有三个：**可被信任、可被检索、可被
 
 - 冻结商城、R 币、签到、等级、徽章；不再开新一级入口，39 路由 / 289 端点不再增长。
 - 合并双代码树与双 Dockerfile，部署只保留一个构建入口；测试数据清理脚本先在生产 dry-run，再由人工确认删除。
-- 工具模块 3.2 / 3.4 收尾：内容类型分流查看器、批量导入字段映射（编号检查、引用生成、附件按类型预览、CSV 映射与重复合并已上线；编辑器表格操作、版本对比、服务端草稿已上线；仍缺导入结果批量勾选提交）。
+- 工具模块 3.2 / 3.4 收尾：内容类型分流查看器、批量导入字段映射（编号检查、引用生成、附件按类型预览、CSV 映射与重复合并已上线；编辑器表格操作、版本对比、服务端草稿已上线；导入结果批量勾选提交已上线）。
 
 ### P3 验收门槛
 
@@ -372,4 +372,15 @@ P3 不再堆功能，目标只有三个：**可被信任、可被检索、可被
 - 生产：release `/home/ubuntu/rubbish-release-20261115-1718`，标准软链已指向；镜像 `rubbish-app:p5-20261115-1722`；旧 P4 镜像 `rubbish-app:p4-20261115-1535` 保留回滚。首页引用 `assets/index-DlOLoa1J.js`，`/api/health` 200，`/api/submissions/draft` 未登录 401。
 - 接口冒烟：管理员登录后 `GET` 返回 `draft: null` → `PUT` 200 → `GET` 回读标题一致 → `DELETE` 200 → `GET` 再次 `draft: null`；测试草稿已删除。
 - 备份：`/home/ubuntu/backups/db-pre-editor-p1-20261115-1710.dump`（927K，custom dump，容器内 `pg_restore --list` 通过）。
-- 仍未做：导入结果批量勾选后一次性提交；版本快照仍只存本机；服务端草稿只保留最新一份，不做多版本历史。
+- 仍未做：版本快照仍只存本机；服务端草稿只保留最新一份，不做多版本历史。
+
+### 2026-11-15 P6 导入批量提交上线记录
+
+- 代码：`241a110 feat(ingest): batch selected imports into submissions`。
+- 功能：解析结果支持逐条勾选、全选当前、清空选择；批量确认弹窗区分“可提交/需补全”，可统一补充缺失学科与年份（只补缺失、不覆盖已有值），逐条显示后端失败原因，成功项移除、失败项保留可重试；缺摘要等无法批量补全的记录可跳转单条投稿向导。批量提交语义是创建投稿并进入编辑评审队列，不绕过评审直写目录。
+- 接口：新增 `POST /api/submissions/batch`，最多 50 条；每条用独立 savepoint，风控/站内相似度失败只影响自身；返回 `created_count/failed_count/results`；未确认当版投稿规范返回 403 `rules_ack_required`。
+- 验证：后端 `1232 passed, 1 skipped`（846.76s）；前端 `34 files / 188 tests passed`（685.86s）；`ruff check` / `ruff format --check` / `typecheck` / `lint` / `build` 通过。
+- 生产：release `/home/ubuntu/rubbish-release-20261115-1819`，标准软链已指向；镜像 `rubbish-app:p6-20261115-1824`；上一版 P5 镜像 `rubbish-app:p5-20261115-1722` 保留回滚。`/ingest`、`/api/health` 200，当前入口引用 `assets/index-D5oFL-oe.js`。
+- 接口冒烟：未登录批量 401；空 items 422；管理员确认当前规范 1.1 后提交 2 条测试投稿，返回 `created_count=2/failed_count=0`，随即删除两条（原 ID 367/368），DB 复核残留 0。
+- 备份：`/home/ubuntu/backups/db-pre-ingest-batch-20261115-1819.dump`（934K，custom dump）。
+- 仍未做：文献查询结果一次只查一条，不做批量勾选；批量只能统一补学科/年份，摘要缺失仍需单条补全；若确需管理员批量直写目录，需另做 admin-only 路径。

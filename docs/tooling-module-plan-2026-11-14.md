@@ -28,7 +28,7 @@
 | 转换 | `domain/submission/docx_template.py`（1199 行） | 品牌 Word 模板、题录、表格、图注、页眉 | 单文件巨大；表格跨页、图注孤页、图片尺寸规则散落；缺独立回归夹具 |
 | 导入 | `domain/ingest/parsers.py` | BibTeX/RIS/CSV/JSON | 已支持 JSON 回导；CSV 别名仍未完全对齐；错误定位只到行号 |
 | 导入 | `domain/ingest/fetchers.py` | Crossref/arXiv/PubMed/OpenAlex/Semantic Scholar | 后端 5 个源已在前端全部可选；CSV 已补显式映射与重复合并 |
-| 导入页 | `routes/ingest/index.tsx` | 粘贴文本解析、文件选择/拖拽、五源查询、CSV 逐列映射与重复合并 | 可视化映射/合并已做；仍不能批量勾选一次性提交 |
+| 导入页 | `routes/ingest/index.tsx` | 粘贴文本解析、文件选择/拖拽、五源查询、CSV 逐列映射与重复合并 | 可视化映射/合并已做；解析结果可勾选多条批量提交投稿（进入编辑评审，不直写目录） |
 | 导出页 | `interfaces/http/export/routes.py` | 批量引用导出 5 种格式 + 字段预检 + 正文合集 | 已补字段警告/确认弹窗、合并 PDF/Word、逐篇 ZIP、整期全文 ZIP |
 
 ## 2. 本轮 P0：先修“会丢内容 / 会出错 / 会误导”
@@ -178,5 +178,6 @@
 - [x] 3.1 版本快照：`lib/editor-snapshots.ts` 按文档 key 存本机 8 个快照，支持保存、行级 diff 对比、恢复和删除；投稿正文编辑器通过 `snapshotKey` 接入，恢复后仍可 Ctrl+Z。
 - [x] 3.1 服务端草稿：新增 `submission_drafts` 表（每租户每用户一份，覆盖保存，不堆版本）、RLS、迁移 `048_submission_drafts`；`GET/PUT/DELETE /api/submissions/draft`；投稿页本机草稿优先、云端草稿兜底恢复，1.5s 防抖同步，提交后删除云端草稿。
 - [x] 测试：新增 `markdown-table.test.ts`、`editor-snapshots.test.ts`、编辑器菜单/快照交互测试、`test_submission_draft.py`（覆盖保存、用户隔离、幂等删除）。
-- [x] 全量回归与生产上线：后端 `1227 passed, 1 skipped`（672.90s）；前端 `34 files / 184 tests passed`（660.98s）；迁移 `048_submission_drafts` 已执行并启用 `FORCE RLS`；release `/home/ubuntu/rubbish-release-20261115-1718`，镜像 `rubbish-app:p5-20261115-1722`，线上草稿 `GET/PUT/GET/DELETE/GET` 冒烟通过。
-- [ ] 仍未做：导入结果批量勾选后一次性提交。
+- [x] 全量回归与生产上线：后端 `1232 passed, 1 skipped`（846.76s）；前端 `34 files / 188 tests passed`（685.86s）；release `/home/ubuntu/rubbish-release-20261115-1819`，镜像 `rubbish-app:p6-20261115-1824`。
+- [x] 3.4 导入结果批量提交：解析结果逐条勾选/全选/清空；批量弹窗区分可提交与需补全，统一补充缺失学科/年份（不覆盖已有值），逐条返回失败原因，成功项移除、失败项保留；缺摘要可跳单条投稿。后端 `POST /api/submissions/batch` 最多 50 条，逐条 savepoint，403 `rules_ack_required` 门禁；语义为创建投稿进入编辑评审，不直写目录。
+- [ ] 仍未做：文献查询结果一次只查一条，不做批量勾选；摘要缺失无法批量补全；管理员批量直写目录未做。
