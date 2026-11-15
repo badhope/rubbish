@@ -40,6 +40,20 @@ async def _create_submission(client: AsyncClient, user: dict, payload: dict | No
     return response.json()
 
 
+async def _waive_review(client: AsyncClient, admin: dict, submission_id: int) -> None:
+    """P1 #4：遗留 /review 别名零审稿录用前必须先 waive-review。
+
+    waive 保持 status=pending（别名只处理 pending）；走完评审会转
+    under_review，反而让别名返回 400，所以这里用免审而非补审。
+    """
+    resp = await client.post(
+        f"/api/submissions/{submission_id}/waive-review",
+        json={"reason": "测试免审录用：跳过同行评审直接验证编辑流程。"},
+        headers=auth_headers(admin),
+    )
+    resp.raise_for_status()
+
+
 # ---------------------------------------------------------------------------
 # Author side
 # ---------------------------------------------------------------------------
@@ -107,6 +121,7 @@ async def test_list_my_submissions_filter_by_status(
     # test_user submits two; admin approves one.
     s1 = await _create_submission(client, test_user, {**_PAYLOAD, "title": "S1"})
     s2 = await _create_submission(client, test_user, {**_PAYLOAD, "title": "S2"})
+    await _waive_review(client, admin_user, s1["id"])
     review = await client.patch(
         f"/api/submissions/{s1['id']}/review",
         json={"status": "approved"},
@@ -190,6 +205,7 @@ async def test_admin_pending_list(client: AsyncClient, admin_user: dict, test_us
     await _create_submission(client, test_user, {**_PAYLOAD, "title": "P2"})
 
     # Approve s1 — pending list should now contain only P2.
+    await _waive_review(client, admin_user, s1["id"])
     review = await client.patch(
         f"/api/submissions/{s1['id']}/review",
         json={"status": "approved"},
@@ -227,6 +243,7 @@ async def test_approve_materializes_resource(
 ) -> None:
     """Approving without resource_id creates a catalog Resource and links it."""
     created = await _create_submission(client, test_user)
+    await _waive_review(client, admin_user, created["id"])
     review = await client.patch(
         f"/api/submissions/{created['id']}/review",
         json={"status": "approved"},
@@ -270,6 +287,7 @@ async def test_approve_links_to_existing_resource(
 
     # Submit a record and approve it with the existing resource_id.
     created = await _create_submission(client, test_user)
+    await _waive_review(client, admin_user, created["id"])
     review = await client.patch(
         f"/api/submissions/{created['id']}/review",
         json={"status": "approved", "resource_id": existing_rid},
@@ -341,6 +359,7 @@ async def test_approve_with_nonexistent_resource_id_400(
     client: AsyncClient, admin_user: dict, test_user: dict
 ) -> None:
     created = await _create_submission(client, test_user)
+    await _waive_review(client, admin_user, created["id"])
     review = await client.patch(
         f"/api/submissions/{created['id']}/review",
         json={"status": "approved", "resource_id": 99999},
@@ -417,6 +436,7 @@ async def test_submitter_cannot_delete_reviewed(
     client: AsyncClient, admin_user: dict, test_user: dict
 ) -> None:
     created = await _create_submission(client, test_user)
+    await _waive_review(client, admin_user, created["id"])
     await client.patch(
         f"/api/submissions/{created['id']}/review",
         json={"status": "approved"},

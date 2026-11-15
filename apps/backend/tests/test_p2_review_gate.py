@@ -18,6 +18,28 @@ async def _default_tenant(db: AsyncSession) -> Tenant:
     return (await db.execute(select(Tenant).where(Tenant.slug == "default"))).scalar_one()
 
 
+async def _pending_submission(db: AsyncSession, tenant: Tenant, submitted_by: int) -> Submission:
+    """建一篇 pending 投稿：遗留 /review 别名只处理 pending 状态。"""
+    sub = Submission(
+        tenant_id=tenant.id,
+        title="遗留别名稿件",
+        type="paper",
+        year=2026,
+        authors=["A"],
+        discipline="physics",
+        abstract="x",
+        preview="x",
+        tags=[],
+        file_path="x.pdf",
+        markdown_path="x.md",
+        submitted_by=submitted_by,
+        status="pending",
+    )
+    db.add(sub)
+    await db.commit()
+    return sub
+
+
 @pytest.mark.asyncio
 async def test_version_is_current(client: AsyncClient) -> None:
     """版本号与 app 包一致，/api/health 返回。"""
@@ -178,3 +200,75 @@ async def test_admin_claims_non_admin_403(client: AsyncClient, test_user: dict) 
         headers={"Authorization": f"Bearer {test_user['token']}"},
     )
     assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_legacy_review_approved_zero_reviews_409(
+    client: AsyncClient, db_session: AsyncSession, admin_user: dict, test_user: dict
+) -> None:
+    """遗留 /review 别名：零审稿 approved → 409（与 /decision 共用闸门）。"""
+    tenant = await _default_tenant(db_session)
+    sub = await _pending_submission(db_session, tenant, test_user["user_id"])
+    resp = await client.patch(
+        f"/api/submissions/{sub.id}/review",
+        json={"status": "approved"},
+        headers={"Authorization": f"Bearer {admin_user['token']}"},
+    )
+    assert resp.status_code == 409, resp.text
+
+
+@pytest.mark.asyncio
+async def test_legacy_review_approved_after_waive_materializes(
+    client: AsyncClient, db_session: AsyncSession, admin_user: dict, test_user: dict
+) -> None:
+    """遗留 /review 别名：waive-review 后 approved → 200 且物化目录条目。"""
+    tenant = await _default_tenant(db_session)
+    sub = await _pending_submission(db_session, tenant, test_user["user_id"])
+    waived = await client.post(
+        f"/api/submissions/{sub.id}/waive-review",
+        json={"reason": "测试免审录用：遗留别名闸门放行验证。"},
+        headers={"Authorization": f"Bearer {admin_user['token']}"},
+    )
+    assert waived.status_code == 200, waived.text
+    resp = await client.patch(
+        f"/api/submissions/{sub.id}/review",
+        json={"status": "approved"},
+        headers={"Authorization": f"Bearer {admin_user['token']}"},
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["status"] == "approved"
+    assert body["resource_id"] is not None
+    resource = await client.get(f"/api/catalog/{body['resource_id']}")
+    assert resource.status_code == 200, resource.text
+
+
+@pytest.mark.asyncio
+async def test_legacy_review_non_chief_403(
+    client: AsyncClient, db_session: AsyncSession, admin_user: dict, test_user: dict
+) -> None:
+    """遗留 /review 别名：非主编（普通用户）→ 403。"""
+    tenant = await _default_tenant(db_session)
+    sub = await _pending_submission(db_session, tenant, admin_user["user_id"])
+    resp = await client.patch(
+        f"/api/submissions/{sub.id}/review",
+        json={"status": "approved"},
+        headers={"Authorization": f"Bearer {test_user['token']}"},
+    )
+    assert resp.status_code == 403, resp.text
+
+
+@pytest.mark.asyncio
+async def test_legacy_review_self_review_403(
+    client: AsyncClient, db_session: AsyncSession, admin_user: dict
+) -> None:
+    """遗留 /review 别名：主编审自己的稿 → 403。"""
+    tenant = await _default_tenant(db_session)
+    sub = await _pending_submission(db_session, tenant, admin_user["user_id"])
+    resp = await client.patch(
+        f"/api/submissions/{sub.id}/review",
+        json={"status": "approved"},
+        headers={"Authorization": f"Bearer {admin_user['token']}"},
+    )
+    assert resp.status_code == 403, resp.text
+    assert "own submission" in resp.json()["detail"]

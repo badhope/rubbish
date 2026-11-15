@@ -19,7 +19,6 @@ from app.api.deps import (
     ROLE_REVIEWER,
     ROLE_SENIOR_REVIEWER,
     get_current_user,
-    require_admin,
     require_chief_editor,
     require_editor,
     require_tenant_id,
@@ -472,6 +471,82 @@ async def list_submissions(
     return await _list_submissions(db, query, page, page_size)
 
 
+async def _ensure_accept_gate(db: AsyncSession, entry: Submission) -> None:
+    """录用闸门：免审留痕，或当前轮 ≥2 名不同审稿人给出录用推荐。
+
+    ``/decision`` 与遗留 ``/review`` 别名共用此闸门，确保任何录用路径
+    都不能绕过同行评审。意见冲突（录用 vs 拒稿/大修）须先经第三方裁决。
+    不满足时抛 ``HTTPException(409)``；已 waive-review 的稿件直接放行。
+    """
+    if entry.review_waived_at:
+        return
+    current_round = (
+        await db.execute(
+            select(func.max(ReviewAssignment.round)).where(
+                ReviewAssignment.submission_id == entry.id,
+                ReviewAssignment.tenant_id == entry.tenant_id,
+            )
+        )
+    ).scalar() or 1
+    rows = (
+        await db.execute(
+            select(
+                ReviewAssignment.reviewer_id,
+                ReviewAssignment.is_adjudicator,
+                ReviewReport.recommendation,
+            )
+            .join(ReviewReport, ReviewReport.assignment_id == ReviewAssignment.id)
+            .where(
+                ReviewAssignment.submission_id == entry.id,
+                ReviewAssignment.tenant_id == entry.tenant_id,
+                ReviewAssignment.status == "completed",
+                ReviewAssignment.round == current_round,
+            )
+        )
+    ).all()
+    accept_ids = {rid for rid, _adj, rec in rows if rec == "accept"}
+    reject_count = sum(1 for _rid, _adj, rec in rows if rec == "reject")
+    major_count = sum(1 for _rid, _adj, rec in rows if rec == "major_revision")
+    adjudicator_accept = any(rec == "accept" and bool(adj) for _rid, adj, rec in rows)
+    completed_reviews = len(rows)
+
+    if len(accept_ids) < 2:
+        _code = "no_completed_reviews" if completed_reviews == 0 else "insufficient_accept_reviews"
+        _message = (
+            "该稿件尚无已完成的审稿意见，不能直接录用。"
+            "请先分配审稿人并等待意见返回；如确需免评审录用，请先调用 waive-review 记录理由。"
+            if completed_reviews == 0
+            else (
+                f"发表需要至少 2 名不同审稿人给出录用推荐，当前只有 "
+                f"{len(accept_ids)} 名（已完成报告 {completed_reviews} 份）。"
+                "请继续送审，或在意见冲突时指定第三方裁决人。"
+            )
+        )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": _code,
+                "message": _message,
+                "accept_recommendations": len(accept_ids),
+                "completed_reviews": completed_reviews,
+            },
+        )
+    if (reject_count or major_count) and not adjudicator_accept:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "review_conflict_requires_adjudication",
+                "message": (
+                    "审稿意见存在冲突（录用 vs 拒稿/大修），不能直接录用。"
+                    "请先指定第三方裁决人，并等待其给出录用意见。"
+                ),
+                "accept_recommendations": len(accept_ids),
+                "reject_recommendations": reject_count,
+                "major_revision_recommendations": major_count,
+            },
+        )
+
+
 @router.patch(
     "/{submission_id}/review",
     response_model=SubmissionResponse,
@@ -479,11 +554,14 @@ async def list_submissions(
 async def review_submission(
     submission_id: int,
     body: SubmissionReview,
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_chief_editor),
     db: AsyncSession = Depends(get_db),
 ) -> SubmissionResponse:
-    """Approve or reject a pending submission (admin only).
+    """遗留录用/拒稿端点——``/decision`` 的受闸门别名（已弃用）。
 
+    历史上此端点允许 admin 零审稿直接 approved，绕过整个评审环节。
+    现与 ``/decision`` 共用 ``_ensure_accept_gate``：approved 必须满足
+    ≥2 名录用审稿人或已 waive-review。新代码请用 ``PATCH /{id}/decision``。
     Terminal: once reviewed, a submission cannot be re-reviewed.
     """
     entry = await _get_or_404(db, submission_id)
@@ -494,6 +572,10 @@ async def review_submission(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Submission has already been reviewed",
         )
+
+    # 录用闸门先于任何状态变更：零审稿/冲突意见不得直接 approved。
+    if body.status == "approved":
+        await _ensure_accept_gate(db, entry)
 
     now = utcnow()
     entry.status = body.status
@@ -538,6 +620,7 @@ async def review_submission(
                 "status": entry.status,
                 "resource_id": entry.resource_id,
                 "admin_note_present": bool(entry.admin_note),
+                "via": "legacy_review_alias",
             },
         )
     )
@@ -1088,87 +1171,12 @@ async def editor_decision(
     elif decision == "rejected":
         decision = "reject"
 
-    # 录用必须有至少一份已完成的审稿意见。
-    #
-    # 此前 pending（尚未分配任何审稿人）就在允许决断的状态集合里，于是
-    # "零审稿直接录用"是 API 的正常路径——只有前端按钮的显隐在拦。对一家
-    # 声称"同行评审"的期刊，这是流程完整性的根本缺口：任何拿到编辑权限的
-    # 账号（或被接管的账号）可以绕过整个评审环节直接发文。
-    #
-    # desk accept（编辑直接录用）在真实期刊里确实存在，但它是一个需要
-    # 明确声明的例外，而不是沉默的默认路径。确需直接录用时，先走
-    # POST /{id}/waive-review 记录理由与审计，再裁决。
-    if decision == "accept" and not entry.review_waived_at:
-        # 发表闸门：至少 2 名不同审稿人提交"录用"推荐，才允许 accept。
-        # 只有 1 份意见、或 1 录用 + 1 拒稿/大修时，必须先走第三方裁决
-        # （POST /review/submissions/{id}/adjudicate），不能由编辑直接放行。
-        current_round = (
-            await db.execute(
-                select(func.max(ReviewAssignment.round)).where(
-                    ReviewAssignment.submission_id == entry.id,
-                    ReviewAssignment.tenant_id == entry.tenant_id,
-                )
-            )
-        ).scalar() or 1
-        rows = (
-            await db.execute(
-                select(
-                    ReviewAssignment.reviewer_id,
-                    ReviewAssignment.is_adjudicator,
-                    ReviewReport.recommendation,
-                )
-                .join(ReviewReport, ReviewReport.assignment_id == ReviewAssignment.id)
-                .where(
-                    ReviewAssignment.submission_id == entry.id,
-                    ReviewAssignment.tenant_id == entry.tenant_id,
-                    ReviewAssignment.status == "completed",
-                    ReviewAssignment.round == current_round,
-                )
-            )
-        ).all()
-        accept_ids = {rid for rid, _adj, rec in rows if rec == "accept"}
-        reject_count = sum(1 for _rid, _adj, rec in rows if rec == "reject")
-        major_count = sum(1 for _rid, _adj, rec in rows if rec == "major_revision")
-        adjudicator_accept = any(rec == "accept" and bool(adj) for _rid, adj, rec in rows)
-        completed_reviews = len(rows)
-
-        if len(accept_ids) < 2:
-            _code = (
-                "no_completed_reviews" if completed_reviews == 0 else "insufficient_accept_reviews"
-            )
-            _message = (
-                "该稿件尚无已完成的审稿意见，不能直接录用。"
-                "请先分配审稿人并等待意见返回；如确需免评审录用，请先调用 waive-review 记录理由。"
-                if completed_reviews == 0
-                else (
-                    f"发表需要至少 2 名不同审稿人给出录用推荐，当前只有 "
-                    f"{len(accept_ids)} 名（已完成报告 {completed_reviews} 份）。"
-                    "请继续送审，或在意见冲突时指定第三方裁决人。"
-                )
-            )
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail={
-                    "code": _code,
-                    "message": _message,
-                    "accept_recommendations": len(accept_ids),
-                    "completed_reviews": completed_reviews,
-                },
-            )
-        if (reject_count or major_count) and not adjudicator_accept:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail={
-                    "code": "review_conflict_requires_adjudication",
-                    "message": (
-                        "审稿意见存在冲突（录用 vs 拒稿/大修），不能直接录用。"
-                        "请先指定第三方裁决人，并等待其给出录用意见。"
-                    ),
-                    "accept_recommendations": len(accept_ids),
-                    "reject_recommendations": reject_count,
-                    "major_revision_recommendations": major_count,
-                },
-            )
+    # 录用闸门（与遗留 /review 别名共用 _ensure_accept_gate）：至少 2 名
+    # 不同审稿人提交"录用"推荐才允许 accept；只有 1 份、或录用 vs 拒稿/大修
+    # 冲突时须先经第三方裁决。desk accept 是需明确声明的例外——先走
+    # POST /{id}/waive-review 记录理由与审计，再裁决。详见 helper docstring。
+    if decision == "accept":
+        await _ensure_accept_gate(db, entry)
 
     now = utcnow()
     _editor_note = (body.editor_note or "").strip()
