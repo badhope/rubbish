@@ -330,6 +330,14 @@ class ResourceResponse(ResourceBase):
     quartile: str | None = None
     # P1：作者位明细（含认领状态）。未认领位 email 强制 null。
     authors_detail: list[AuthorDetail] | None = None
+    # 评审来源（公开口径，只描述事实，不冒充评审记录）：
+    # peer_reviewed=有至少一份评审报告；editorial_review=有投稿记录但无外审报告；
+    # editorial_import=无关联投稿的历史导入；not_applicable=副刊/娱乐轨不走评审。
+    # 详情接口按 submissions/review_reports 实时计算；列表接口不下发。
+    peer_review_status: (
+        Literal["peer_reviewed", "editorial_review", "editorial_import", "not_applicable"] | None
+    ) = None
+    peer_review_reports: int = 0
 
     @field_validator("content_genre", mode="before")
     @classmethod

@@ -9,3 +9,8 @@ services:
       RUBBISH_BACKUP_DIR: /backups
     volumes:
       - ${BACKUP_HOST_DIR:-/home/ubuntu/backups}:/backups:ro
+  # 一次性卷属主 init 与 app 用同一镜像/同一构建入口。
+  app-init:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile.cn

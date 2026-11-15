@@ -40,6 +40,7 @@ import { Route as SectionsRouteImport } from './routes/sections'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as SupportRouteImport } from './routes/support'
+import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AccountSecurityRouteImport } from './routes/account/security'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
@@ -242,6 +243,11 @@ const ShopRoute = ShopRouteImport.update({
 const SupportRoute = SupportRouteImport.update({
   id: '/support',
   path: '/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolsRoute = ToolsRouteImport.update({
+  id: '/tools',
+  path: '/tools',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
@@ -517,6 +523,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
   '/support': typeof SupportRoute
+  '/tools': typeof ToolsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/account/security': typeof AccountSecurityRoute
   '/admin/announcements': typeof AdminAnnouncementsRoute
@@ -598,6 +605,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
   '/support': typeof SupportRoute
+  '/tools': typeof ToolsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/account/security': typeof AccountSecurityRoute
   '/admin/announcements': typeof AdminAnnouncementsRoute
@@ -680,6 +688,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/shop': typeof ShopRoute
   '/support': typeof SupportRoute
+  '/tools': typeof ToolsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/account/security': typeof AccountSecurityRoute
   '/admin/announcements': typeof AdminAnnouncementsRoute
@@ -763,6 +772,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/shop'
     | '/support'
+    | '/tools'
     | '/verify-email'
     | '/account/security'
     | '/admin/announcements'
@@ -844,6 +854,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/shop'
     | '/support'
+    | '/tools'
     | '/verify-email'
     | '/account/security'
     | '/admin/announcements'
@@ -925,6 +936,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/shop'
     | '/support'
+    | '/tools'
     | '/verify-email'
     | '/account/security'
     | '/admin/announcements'
@@ -1007,6 +1019,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   ShopRoute: typeof ShopRoute
   SupportRoute: typeof SupportRoute
+  ToolsRoute: typeof ToolsRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   AccountSecurityRoute: typeof AccountSecurityRoute
   AdminAnnouncementsRoute: typeof AdminAnnouncementsRoute
@@ -1274,6 +1287,13 @@ declare module '@tanstack/react-router' {
       path: '/support'
       fullPath: '/support'
       preLoaderRoute: typeof SupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools': {
+      id: '/tools'
+      path: '/tools'
+      fullPath: '/tools'
+      preLoaderRoute: typeof ToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/verify-email': {
@@ -1647,6 +1667,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   ShopRoute: ShopRoute,
   SupportRoute: SupportRoute,
+  ToolsRoute: ToolsRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   AccountSecurityRoute: AccountSecurityRoute,
   AdminAnnouncementsRoute: AdminAnnouncementsRoute,

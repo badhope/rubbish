@@ -21,14 +21,25 @@ WORKDIR /app
 COPY apps/backend/pyproject.toml apps/backend/uv.lock ./
 RUN uv sync --frozen --no-dev
 
+# 非 root 运行：与国内版一致，由 compose app-init 修正命名卷属主。
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gosu \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --system app \
+    && useradd --system --gid app --create-home --home-dir /home/app app
+
 COPY apps/backend/app ./app
 COPY apps/backend/alembic ./alembic
 COPY apps/backend/alembic.ini ./
 COPY apps/backend/deploy_server.py ./
+COPY apps/backend/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh && chown -R app:app /app /home/app
 COPY --from=frontend-build /build/dist ./static
 
 ENV RUBBISH_STATIC_DIR=/app/static \
     RUBBISH_STORAGE_PATH=/data/uploads \
+    HOME=/home/app \
+    PYTHONDONTWRITEBYTECODE=1 \
     PORT=8080
 VOLUME ["/data/uploads"]
 EXPOSE 8080
@@ -37,4 +48,6 @@ EXPOSE 8080
 # ADMIN_PASSWORD / ALLOWED_HOSTS（见 DEPLOY.md）。
 # 启动前自动 alembic upgrade head：RLS 策略只存在于迁移里，create_all
 # 不会生成；PaaS（Render 等）没有交互 shell，必须在镜像内自动完成。
+USER app
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["sh", "-c", "uv run --no-sync alembic upgrade head && uv run --no-sync python deploy_server.py"]

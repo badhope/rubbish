@@ -115,3 +115,63 @@ export function formatCitation(resource: CitationResource, style: CitationStyle)
 
   return `${gbtAuthors(resource.authors)}：${title}[${typeMark}]．${source}${suffix ? ` ${suffix}` : ''}`.trim()
 }
+
+// --- 学术工具页使用的 BibTeX / RIS 导出 ---
+
+function bibKey(resource: CitationResource): string {
+  const first = authorList(resource.authors)[0] ?? 'anon'
+  const surname = first.includes(',') ? first.split(',')[0].trim() : first.split(/\s+/).pop() || 'anon'
+  const word =
+    clean(resource.title)
+      .replace(/[^\p{L}\p{N}]+/gu, ' ')
+      .trim()
+      .split(/\s+/)[0] ?? 'untitled'
+  return `${surname}${resource.year || 'nd'}${word}`.replace(/[^\p{L}\p{N}]+/gu, '')
+}
+
+function bibType(type: string): string {
+  if (type === 'book') return 'book'
+  if (type === 'dataset') return 'misc'
+  return 'article'
+}
+
+/** 单条 BibTeX；字段只写有值的项，避免生成空字段。 */
+export function formatBibtex(resource: CitationResource): string {
+  const authors = authorList(resource.authors).join(' and ')
+  const fields: [string, string][] = [
+    ['title', clean(resource.title)],
+    ['author', authors],
+    ['year', resource.year ? String(resource.year) : ''],
+    ['journal', clean(resource.venue) || clean(resource.publisher)],
+    ['volume', clean(resource.volume)],
+    ['number', clean(resource.issue)],
+    ['pages', clean(resource.pages)],
+    ['doi', clean(resource.doi).replace(/^https?:\/\/doi\.org\//i, '')],
+    ['url', clean(resource.external_url) || (clean(resource.site_id) ? `${clean(resource.site_id)}` : '')],
+  ]
+  return `@${bibType(resource.type)}{${bibKey(resource)},\n${fields
+    .filter(([, value]) => value)
+    .map(([key, value]) => `  ${key} = {${value.replace(/[{}]/g, '')}}`)
+    .join(',\n')}\n}`
+}
+
+/** 单条 RIS；每条 tag 只占一行，换行会拆坏记录。 */
+export function formatRis(resource: CitationResource): string {
+  const type = resource.type === 'book' ? 'BOOK' : resource.type === 'dataset' ? 'DATA' : 'JOUR'
+  const pages = clean(resource.pages).split('-')
+  const lines = [
+    `TY  - ${type}`,
+    ...authorList(resource.authors).map((name) => `AU  - ${name}`),
+    `TI  - ${clean(resource.title)}`,
+    `JO  - ${clean(resource.venue) || clean(resource.publisher)}`,
+    `PY  - ${resource.year ? String(resource.year) : ''}`,
+    `VL  - ${clean(resource.volume)}`,
+    `IS  - ${clean(resource.issue)}`,
+    `SP  - ${pages[0] ?? ''}`,
+    `EP  - ${pages[1] ?? ''}`,
+    `DO  - ${clean(resource.doi).replace(/^https?:\/\/doi\.org\//i, '')}`,
+    `UR  - ${clean(resource.external_url) || clean(resource.site_id)}`,
+    'ER  -',
+  ]
+  return lines.filter((line) => !line.endsWith('  - ')).join('\n')
+}

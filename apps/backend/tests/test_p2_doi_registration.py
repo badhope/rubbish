@@ -111,7 +111,7 @@ async def test_mint_doi_retry_skips_create_when_draft_exists(monkeypatch) -> Non
         "AsyncClient",
         lambda *_args, **_kwargs: _FakeClient(responses, calls),
     )
-    doi, state = await registration.mint_doi(_resource(), suffix="7")
+    _doi, state = await registration.mint_doi(_resource(), suffix="7")
     assert state == "completed"
     # GET existing draft -> PUT metadata -> PUT publish, no POST create.
     assert [call[0] for call in calls] == ["GET", "PUT", "PUT"]

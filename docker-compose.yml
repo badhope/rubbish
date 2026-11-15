@@ -30,7 +30,21 @@ services:
       timeout: 3s
       retries: 10
 
+  # 命名卷首次挂载时属主是 root；应用镜像以 app 用户运行，不能自己 chown。
+  # 用同镜像的 root 一次性 init 修正属主，再让 app 启动，避免把容器跑成 root。
+  app-init:
+    image: rubbish-app:latest
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    user: "0:0"
+    entrypoint: ["sh", "-c", "chown -R app:app /data/uploads && chmod 775 /data/uploads"]
+    volumes:
+      - uploads:/data/uploads
+    restart: "no"
+
   app:
+    image: rubbish-app:latest
     build:
       context: .
       dockerfile: apps/backend/Dockerfile
@@ -38,6 +52,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      app-init:
+        condition: service_completed_successfully
     environment:
       RUBBISH_ENVIRONMENT: production
       # 容器网络内直连 db 服务； Neon 等外部库时替换此值即可。
@@ -84,6 +100,10 @@ services:
       RUBBISH_TRUSTED_PROXIES_COUNT: ${RUBBISH_TRUSTED_PROXIES_COUNT:-1}
     volumes:
       - uploads:/data/uploads
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     # 必须先跑迁移再启动：RLS 策略只存在于 alembic 迁移里，
     # ORM create_all 不会生成（见 tests/test_rls_coverage.py 的守门逻辑）。
     command: >

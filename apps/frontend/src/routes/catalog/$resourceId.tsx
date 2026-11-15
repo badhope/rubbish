@@ -274,6 +274,24 @@ function CatalogDetailPage() {
                   {contentCategoryLabel(data.content_category)}
                 </Badge>
               ) : null}
+              {!isEssayTrack && data.peer_review_status && data.peer_review_status !== 'not_applicable' ? (
+                <Badge
+                  variant="outline"
+                  title={
+                    data.peer_review_status === 'peer_reviewed'
+                      ? `已收到 ${data.peer_review_reports ?? 0} 份评审报告；审稿人身份不公开。`
+                      : data.peer_review_status === 'editorial_import'
+                        ? '历史导入稿件，未经过外审；不以“同行评审”名义展示。'
+                        : '有投稿与编辑审稿记录，但暂无外审报告；不以“同行评审”名义展示。'
+                  }
+                >
+                  {data.peer_review_status === 'peer_reviewed'
+                    ? `同行评审 · ${data.peer_review_reports ?? 0} 份报告`
+                    : data.peer_review_status === 'editorial_import'
+                      ? '历史导入 · 未外审'
+                      : '编辑审稿 · 未外审'}
+                </Badge>
+              ) : null}
               {!isEssayTrack &&
               isScholarly &&
               data.r_index != null &&

@@ -13,8 +13,13 @@ RUN pip install --no-cache-dir -i https://pypi.tuna.tsinghua.edu.cn/simple uv
 RUN sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
-       libreoffice-writer fonts-wqy-zenhei fonts-wqy-microhei \
+       libreoffice-writer fonts-wqy-zenhei fonts-wqy-microhei gosu \
     && rm -rf /var/lib/apt/lists/*
+
+# 非 root 运行：系统用户 app 只拥有应用目录与上传卷；入口脚本在卷挂载后
+# 修正属主，再由 compose 的 app-init 一次性 chown 命名卷。
+RUN groupadd --system app \
+    && useradd --system --gid app --create-home --home-dir /home/app app
 
 # 先拷依赖清单，利用 Docker 层缓存
 COPY apps/backend/pyproject.toml apps/backend/uv.lock ./
@@ -25,14 +30,20 @@ COPY apps/backend/app ./app
 COPY apps/backend/alembic ./alembic
 COPY apps/backend/alembic.ini ./
 COPY apps/backend/deploy_server.py ./
+COPY apps/backend/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh && chown -R app:app /app /home/app
 
 # 前端构建产物（本地已构建）
 COPY apps/backend/prebuilt-static ./static
 
 ENV RUBBISH_STATIC_DIR=/app/static \
     RUBBISH_STORAGE_PATH=/data/uploads \
+    HOME=/home/app \
+    PYTHONDONTWRITEBYTECODE=1 \
     PORT=8080
 VOLUME ["/data/uploads"]
 EXPOSE 8080
 
+USER app
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["sh", "-c", "uv run --no-sync alembic upgrade head && uv run --no-sync python deploy_server.py"]

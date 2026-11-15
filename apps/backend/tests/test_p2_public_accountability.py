@@ -62,9 +62,7 @@ async def test_desk_subscribe_invalid_email(client: AsyncClient) -> None:
     assert r.json()["status"] == "invalid"
 
 
-async def test_finance_report_draft_then_publish(
-    client: AsyncClient, admin_user: dict
-) -> None:
+async def test_finance_report_draft_then_publish(client: AsyncClient, admin_user: dict) -> None:
     payload = {
         "year": 2026,
         "quarter": 4,

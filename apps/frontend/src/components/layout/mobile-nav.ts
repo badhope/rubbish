@@ -24,6 +24,7 @@ import {
   Megaphone,
   MessagesSquare,
   Library,
+  Wrench,
   type LucideIcon,
   User,
 } from 'lucide-react'
@@ -83,6 +84,7 @@ export const MOBILE_MORE: MobileMoreItem[] = [
   { to: '/archive', label: '卷期归档', icon: CalendarDays, group: '期刊' },
   { to: '/about', label: '关于与指标', icon: Building2, group: '期刊' },
   { to: '/guide', label: '投稿与操作指南', icon: PenLine, group: '期刊' },
+  { to: '/tools', label: '写作工具', icon: Wrench, group: '期刊' },
   { to: '/notifications', label: '通知', icon: Bell, auth: true, group: '消息' },
   { to: '/settings', label: '账号设置', icon: Settings, auth: true, group: '设置' },
   { to: '/admin/users', label: '用户管理', icon: Users, auth: true, adminOnly: true, group: '用户与权限' },

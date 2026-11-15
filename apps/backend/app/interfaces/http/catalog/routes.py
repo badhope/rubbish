@@ -2561,6 +2561,55 @@ async def list_appeals(
     }
 
 
+async def _peer_review_provenance(
+    db: AsyncSession, resource: Resource, tenant_id: UUID
+) -> tuple[str, int]:
+    """Return (public review provenance, submitted report count).
+
+    This is deliberately derived from real rows, not a curated badge:
+    - no linked submission -> ``editorial_import`` (historical import);
+    - linked submission but no report -> ``editorial_review``;
+    - at least one report -> ``peer_reviewed``.
+    Essays bypass peer review by design and are marked ``not_applicable``.
+    """
+    if (resource.content_track or "").lower() == "essay":
+        return "not_applicable", 0
+
+    from app.domain.review.models import ReviewAssignment, ReviewReport
+    from app.domain.submission.models import Submission
+
+    submission_id = (
+        await db.execute(
+            select(Submission.id)
+            .where(
+                Submission.resource_id == resource.id,
+                Submission.tenant_id == tenant_id,
+            )
+            .limit(1)
+        )
+    ).scalar_one_or_none()
+    if submission_id is None:
+        return "editorial_import", 0
+    report_count = int(
+        (
+            await db.execute(
+                select(func.count(ReviewReport.id))
+                .join(
+                    ReviewAssignment,
+                    ReviewReport.assignment_id == ReviewAssignment.id,
+                )
+                .where(
+                    ReviewAssignment.submission_id == submission_id,
+                    ReviewAssignment.tenant_id == tenant_id,
+                    ReviewReport.tenant_id == tenant_id,
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+    return ("peer_reviewed" if report_count else "editorial_review"), report_count
+
+
 @router.get("/{resource_id}", response_model=ResourceResponse)
 async def get_resource(
     resource_id: int,
@@ -2615,6 +2664,9 @@ async def get_resource(
         )
     ).scalar_one_or_none()
     response.has_markdown = has_markdown is not None
+    response.peer_review_status, response.peer_review_reports = await _peer_review_provenance(
+        db, resource, tenant_id
+    )
     engagement = (await compute_engagement(db, [resource])).get(resource.id)
     if engagement is not None:
         response.reads = engagement.reads

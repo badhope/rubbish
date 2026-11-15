@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatCitation } from '@/lib/citation'
+import { formatBibtex, formatCitation, formatRis } from '@/lib/citation'
 
 const paper = {
   title: '中文标题：一个测试',
@@ -36,5 +36,14 @@ describe('formatCitation', () => {
     expect(formatCitation(paper, 'apa')).toContain('https://doi.org/10.1000/test')
     expect(formatCitation(book, 'mla')).toContain('"一本测试书."')
     expect(formatCitation(book, 'mla')).toContain('R-000001-20200101-0001')
+  })
+
+  it('formats BibTeX and RIS without empty fields', () => {
+    expect(formatBibtex(paper)).toContain('@article{')
+    expect(formatBibtex(paper)).toContain('doi = {10.1000/test}')
+    expect(formatBibtex(book)).toContain('@book{')
+    expect(formatRis(paper)).toContain('TY  - JOUR')
+    expect(formatRis(paper)).toContain('SP  - 45')
+    expect(formatRis(paper)).not.toContain('VL  - \n')
   })
 })

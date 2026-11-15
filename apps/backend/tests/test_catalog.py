@@ -196,6 +196,9 @@ async def test_get_by_id(client: AsyncClient, admin_user: dict) -> None:
     body = response.json()
     assert body["id"] == rid
     assert body["title"] == "A Test Paper"
+    # 直接创建、没有关联投稿的历史记录，不能冒充“同行评审”。
+    assert body["peer_review_status"] == "editorial_import"
+    assert body["peer_review_reports"] == 0
 
 
 async def test_get_returns_404_for_missing(client: AsyncClient) -> None:

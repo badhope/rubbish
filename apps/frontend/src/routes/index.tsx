@@ -1273,6 +1273,14 @@ function HomePage() {
                   </a>
                 </li>
                 <li>
+                  <Link
+                    to="/tools"
+                    className="text-primary-foreground/75 transition-colors hover:text-primary-foreground"
+                  >
+                    写作工具
+                  </Link>
+                </li>
+                <li>
                   <a
                     href="/help"
                     className="text-primary-foreground/75 transition-colors hover:text-primary-foreground"

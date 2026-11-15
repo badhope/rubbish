@@ -34,6 +34,7 @@ import {
   Megaphone,
   MessagesSquare,
   X,
+  Wrench,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { OnboardingTour } from '@/components/common/onboarding-tour'
@@ -104,6 +105,7 @@ const NAV: NavItem[] = [
   { to: '/archive', label: '卷期归档', icon: CalendarDays, group: '期刊' },
   { to: '/about', label: '关于与指标', icon: Building2, group: '期刊' },
   { to: '/guide', label: '投稿指南', icon: PenLine, group: '期刊' },
+  { to: '/tools', label: '写作工具', icon: Wrench, group: '期刊' },
 
   // admin 组：用户 → 角色申请 → 期刊四件套（卷/期/信息/设置），审计日志垫底
   { to: '/admin', label: '站点总览', icon: Gavel, auth: true, adminOnly: true, group: '站点管理', subgroup: '总览' },
