@@ -65,15 +65,16 @@ describe("mergeDuplicateIngestResources", () => {
     expect(result.data[0].abstract).toBe("a much longer abstract");
   });
 
-  it("falls back to normalized title and keeps genuinely different papers", () => {
+  it("only merges same-title records from the same first author", () => {
     const result = mergeDuplicateIngestResources([
-      resource({ title: "Same   Title" }),
-      resource({ title: "same title", authors: ["Bob B"] }),
+      resource({ title: "Same   Title", authors: ["Alice A"] }),
+      resource({ title: "same title", authors: ["Alice A"] }),
+      resource({ title: "Same Title", authors: ["Bob B"] }),
       resource({ title: "Different", authors: ["Carol C"] }),
     ]);
 
     expect(result.merged).toBe(1);
-    expect(result.data).toHaveLength(2);
-    expect(result.data[1].title).toBe("Different");
+    expect(result.data).toHaveLength(3);
+    expect(result.data[1].authors).toEqual(["Bob B"]);
   });
 });

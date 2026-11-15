@@ -126,7 +126,13 @@ function normalizedTitle(value: string): string {
 
 function duplicateKey(resource: IngestResource): string {
   const doi = resource.doi?.trim().toLowerCase();
-  return doi ? `doi:${doi}` : `title:${normalizedTitle(resource.title)}`;
+  if (doi) return `doi:${doi}`;
+  // 没 DOI 时不能只按标题合并：不同作者的同名“Editorial”会被误吞。
+  const firstAuthor = (resource.authors[0] ?? "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+  return `title:${normalizedTitle(resource.title)}|author:${firstAuthor}`;
 }
 
 function mergeMissingFields(
@@ -162,7 +168,12 @@ function mergeMissingFields(
     "short_container_title",
   ];
   for (const key of fill) {
-    if (merged[key] == null || merged[key] === "") {
+    const currentValue = merged[key];
+    const isEmpty =
+      currentValue == null ||
+      currentValue === "" ||
+      (key === "discipline" && currentValue === "unknown");
+    if (isEmpty) {
       // 每个字段类型不同，但都来自同一 IngestResource，后端已校验过。
       Object.assign(merged, { [key]: extra[key] });
     }
