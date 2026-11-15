@@ -1534,3 +1534,50 @@ html {
 @media (max-width: 767px) {
   body { scrollbar-gutter: auto; }
 }
+
+/* ---------------------------------------------------------------------------
+ * P1 多端：流体字号与容器查询
+ *
+ * 以前所有尺寸都是「断点跳档」：390 一档、768 一档、1440 一档，中间宽度
+ * 只能继承相邻档位，于是小屏挤、大屏空。这里把标题交给 clamp()，让字号
+ * 随视口连续变化；列表密度交给容器查询，让卡片按「容器有多宽」排，
+ * 而不是按「屏幕有多宽」猜。
+ * ------------------------------------------------------------------------- */
+.type-page {
+  font-size: clamp(1.32rem, 1.16rem + 0.72vw, 1.85rem);
+  line-height: 1.28;
+}
+.type-hero {
+  font-size: clamp(2.35rem, 1.45rem + 4.4vw, 5.4rem);
+  line-height: 1.04;
+}
+
+.catalog-grid-wrap {
+  container-type: inline-size;
+}
+
+.catalog-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 1fr;
+}
+
+@container (min-width: 520px) {
+  .catalog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container (min-width: 820px) {
+  .catalog-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@container (min-width: 1080px) {
+  .catalog-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* 封面比例跟着容器走：手机上是一行缩略图（3:4），平板方图，桌面宽图。
+   原来固定 3:4，1440 宽度下四列每张封面 460px 高，一屏只看得见一行标题。 */
+.catalog-cover { aspect-ratio: 3 / 4; }
+@container (min-width: 520px) {
+  .catalog-cover { aspect-ratio: 1 / 1; }
+}
+@container (min-width: 1080px) {
+  .catalog-cover { aspect-ratio: 4 / 3; }
+}

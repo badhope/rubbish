@@ -36,7 +36,7 @@ export function CatalogGridCard({ resource, query }: CatalogGridCardProps) {
       className="card-lift group flex flex-row overflow-hidden rounded-xl border bg-card shadow-sm sm:flex-col"
     >
       {/* 封面区：封面图在上层，学科色块在底层兜底 */}
-      <div className="relative aspect-[3/4] w-24 shrink-0 overflow-hidden sm:w-full">
+      <div className="catalog-cover relative w-24 shrink-0 overflow-hidden sm:w-full">
         <div
           aria-hidden
           className={cn('absolute inset-0 bg-gradient-to-br', style.tint)}

@@ -476,13 +476,12 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
       ) : viewMode === 'grid' ? (
         // 手机端单列：390px 下两列会把中文标题压成半行，读者必须先猜标题；
         // 平板 2 列、桌面 4 列。九宫格留给桌面，手机优先可读性。
-        <div
-          className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-          data-testid="catalog-resource-list"
-        >
+        <div className="catalog-grid-wrap">
+          <div className="catalog-grid" data-testid="catalog-resource-list">
           {data.data.map((r) => (
             <CatalogGridCard key={r.id} resource={r} query={search.q} />
           ))}
+          </div>
         </div>
       ) : isMobile ? (
         // 移动端：卡片列表（独立设计，无批量勾选）

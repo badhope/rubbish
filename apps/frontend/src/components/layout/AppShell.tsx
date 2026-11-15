@@ -127,7 +127,15 @@ const NAV: NavItem[] = [
 
 export function AppShell() {
   // collapsed 仅用于桌面端（≥md）侧边栏宽窄切换
-  const [collapsed, setCollapsed] = useState(false)
+  // 侧栏默认宽度按设备档位给：≥1180 展开；平板/小笔记本（768–1180）
+  // 先收成图标栏，把正文宽度让出来。用户手动切换后记住选择。
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    const saved = window.localStorage.getItem('rubbish_rail_collapsed')
+    if (saved === '1') return true
+    if (saved === '0') return false
+    return window.innerWidth < 1180
+  })
   // mobileOpen 控制 <md 抽屉开合；路由切换后自动关闭
   const [mobileOpen, setMobileOpen] = useState(false)
   const [cmdOpen, setCmdOpen] = useState(false)
@@ -409,7 +417,16 @@ export function AppShell() {
         {/* 折叠按钮仅桌面端可见 */}
         <button
           type="button"
-          onClick={() => setCollapsed((v) => !v)}
+          onClick={() =>
+            setCollapsed((v) => {
+              try {
+                window.localStorage.setItem('rubbish_rail_collapsed', v ? '0' : '1')
+              } catch {
+                // 隐私模式下无法写入，忽略即可。
+              }
+              return !v
+            })
+          }
           className="hidden h-12 items-center justify-center border-t text-sidebar-foreground/60 hover:text-sidebar-foreground md:flex"
           aria-label={text(collapsed ? '展开侧边栏' : '收起侧边栏', lang)}
         >

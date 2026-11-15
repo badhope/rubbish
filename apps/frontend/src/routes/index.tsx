@@ -814,7 +814,7 @@ function HomePage() {
                 className="h-11 w-11 shrink-0 text-primary sm:h-24 sm:w-24"
               />
               <span
-                className="hero-title whitespace-nowrap text-5xl leading-none tracking-tight sm:text-9xl"
+                className="hero-title type-hero whitespace-nowrap tracking-tight"
                 style={{ fontFamily: DISPLAY_FONT, fontWeight: 600 }}
               >
                 Rubbish
