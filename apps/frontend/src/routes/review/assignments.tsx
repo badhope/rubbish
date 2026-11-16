@@ -237,7 +237,7 @@ function ReviewWorkbenchPage() {
     const body: ReviewSubmit = {
       recommendation: reviewForm.recommendation,
       scores: {
-        rubric_version: '5.0',
+        rubric_version: '5.1',
         track: reviewForm.track,
         dimensions: Object.fromEntries(
           dims.map((d) => [

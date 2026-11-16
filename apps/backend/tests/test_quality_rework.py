@@ -59,7 +59,7 @@ async def test_score_endpoint_computes_weighted_total(
     body = r.json()
     assert body["score"] == 100.0
     assert body["grade"] == "T1+"
-    assert body["rubric_version"] == "5.0"
+    assert body["rubric_version"] == "5.1"
 
 
 @pytest.mark.asyncio

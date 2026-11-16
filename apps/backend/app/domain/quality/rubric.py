@@ -1,16 +1,16 @@
-"""学术价值评分口径 v5.0（RQS v5.0）——五维双赛道 + 分区硬门槛。
+"""学术价值评分口径 v5.1（RQS v5.1）——五维学术 / 六维荒诞 + 分区硬门槛。
 
 为什么改
 --------
 v4.0 是七维百分制，但站内对外一直写“五维两段式”；更要命的是七维同一套
 权重套到荒诞稿上，会把“无厘头但自洽”的稿子按样本量、伦理审批逐条扣死。
-v5.0 收成两件事：
+v5.0 先收成两条赛道，v5.1 再补荒诞度；核心是两件事：
 
-1. **两条赛道、各五个维度。** 学术稿按同行评审的五个判断面审；荒诞稿按
-   “设定是否真荒诞、内部是否自洽、是否一本正经执行、材料是否可核、文风
-   是否立得住”审。两套维度名、权重、锚点都不同，不共用一把尺子。
-2. **每个维度都要“分 + 理由 + 证据”。** 只有分数没有证据的评分一律拒绝。
-   证据必须能落到正文位置（章节/段落/图表/引用编号），不是“感觉不错”。
+1. **两条赛道：学术五维、荒诞六维。** 学术稿按同行评审的五个判断面审；
+   荒诞稿在原有五维之外单列“荒诞度”，用来判断反讽、悖论、夸张推演等
+   荒诞信号是否真的进入正文，而不是只在标题玩梗。两套维度名、权重、
+   锚点都不同，不共用一把尺子。
+2. **每个维度必须给分；理由与证据选填。** 若填写理由/证据，应能落到正文位置（章节/段落/图表/引用编号），不是“感觉不错”；不填不影响计算。
 
 分区口径（用户已定，不再改）
 --------------------------
@@ -23,8 +23,9 @@ v5.0 收成两件事：
 - 任一维度 < 50 → 总分封顶 59；两项及以上 < 50 → 封顶 49（退稿）。
 - 任一维度 < 60 → 总分封顶 79（进不了 Q1/顶刊）。
 - 论证 < 50 → 封顶 59：论证断链不能靠数据好看进区。
-- 荒诞：自洽 < 50 → 封顶 59；执行 < 50 → 封顶 69；任一维度 < 60 → 封顶 79。
-  荒诞允许“无中生有”，不允许“前后打架、写不下去、梗硬凑”。
+- 荒诞：自洽 < 50 → 封顶 59；执行 < 50 → 封顶 69；荒诞度 < 50 → 封顶 69；
+  任一维度 < 60 → 封顶 79。荒诞允许“无中生有”，不允许“前后打架、
+  写不下去、梗硬凑”，也不允许只有标题玩梗。
 
 分数锚点
 --------
@@ -35,7 +36,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-RUBRIC_VERSION = "5.0"
+RUBRIC_VERSION = "5.1"
 
 # --- 赛道与维度 -----------------------------------------------------------
 
@@ -53,6 +54,7 @@ ACADEMIC_DIMENSIONS: tuple[tuple[str, str, str], ...] = (
 )
 
 ABSURD_DIMENSIONS: tuple[tuple[str, str, str], ...] = (
+    ("absurdity", "荒诞度", "反讽、悖论、夸张推演、冷面错位是否进入正文并持续起作用，而不是只在标题玩梗"),
     ("concept", "荒诞设定与原创", "设定是否真荒诞、新鲜、有记忆点，而不是普通的胡说"),
     ("coherence", "内部自洽", "在这个设定下规则是否自洽、前后不打架"),
     ("execution", "一本正经的执行", "是否用完整结构把荒诞当正事推进，而不是段子拼贴"),
@@ -80,11 +82,12 @@ WEIGHTS: dict[str, dict[str, int]] = {
         "integrity": 15,
     },
     "absurd": {
-        "concept": 25,
-        "coherence": 20,
+        "absurdity": 20,
+        "concept": 20,
+        "coherence": 15,
         "execution": 20,
-        "material": 20,
-        "voice": 15,
+        "material": 15,
+        "voice": 10,
     },
 }
 
@@ -364,6 +367,9 @@ def _caps_for(track: str, by_key: dict[str, DimensionScore]) -> tuple[float | No
         if values.get("execution", 100) < 50:
             caps.append(69.0)
             notes.append("一本正经的执行低于 50 分：段子拼贴不成篇，封顶 69")
+        if values.get("absurdity", 100) < 50:
+            caps.append(69.0)
+            notes.append("荒诞度低于 50 分：只有标题玩梗，正文没有荒诞信号，封顶 69")
 
     return (min(caps), notes) if caps else (None, [])
 
@@ -376,9 +382,9 @@ def evaluate(
     metrics: PaperMetrics | None = None,
     override_total: float | None = None,
 ) -> dict[str, object]:
-    """按维度评分计算 RQS v5.0。
+    """按维度评分计算 RQS v5.1。
 
-    ``dimension_scores`` 必须覆盖该赛道全部五个维度——缺一个就拒绝计算，
+    ``dimension_scores`` 必须覆盖该赛道全部维度（学术五维 / 荒诞六维）——缺一个就拒绝计算，
     而不是按缺失维度给 0 分：那会让“审稿人漏填”看起来像“这篇很差”。
     """
     track = track if track in WEIGHTS else "academic"
@@ -425,7 +431,7 @@ def evaluate(
 
     # 完整性闸门：任一维 < 50 说明这个部分“没有交付”，不是“质量差一点”。
     # 没有交付的稿子不进入分区，不能用一个加权总分把它抬进 Q3/Q4；
-    # 完整稿（五维都 >= 50）才评“上限”，50–59 是完整但最弱的一档。
+    # 完整稿（该赛道全部维度都 >= 50）才评“上限”，50–59 是完整但最弱的一档。
     veto = track == "academic" and by_key["integrity"].score == 0
     incomplete = [key for key, _label, _hint in dims if by_key[key].score < 50]
     if veto and "integrity" not in incomplete:
@@ -464,7 +470,7 @@ def evaluate(
         "complete": complete,
         "incomplete_dimensions": incomplete,
         "completeness_note": (
-            "五维完整，进入上限评审"
+            "全部维度完整，进入上限评审"
             if complete
             else "存在未交付维度（<50）：由编辑部按原思路补全，补全后再评级；不打回作者"
         ),
@@ -486,7 +492,7 @@ def rubric_payload() -> dict[str, object]:
     """公开口径：审稿人、作者、外部 AI 都用这一份。"""
     return {
         "version": RUBRIC_VERSION,
-        "model": "五维双赛道百分制；每维必须给分，理由与正文证据选填",
+        "model": "学术五维 / 荒诞六维双赛道百分制；每维必须给分，理由与正文证据选填",
         "tracks": {
             "academic": {
                 "label": TRACK_LABELS["academic"],

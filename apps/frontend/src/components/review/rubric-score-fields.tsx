@@ -66,17 +66,24 @@ export const ACADEMIC_REVIEW_DIMENSIONS: DimensionMeta[] = [
 
 export const ABSURD_REVIEW_DIMENSIONS: DimensionMeta[] = [
   {
+    key: 'absurdity',
+    label: '荒诞度',
+    hint: '反讽、悖论、夸张推演、冷面错位进入正文并持续起作用',
+    weight: 20,
+    watch: '正文至少 3 处可指认的荒诞信号，且服务于论点；只有标题/结尾玩梗，这一维不高。荒诞度低于 50，总分封顶 69。',
+  },
+  {
     key: 'concept',
     label: '荒诞设定与原创',
     hint: '设定真荒诞、新鲜、有记忆点，不是普通吐槽换皮',
-    weight: 25,
+    weight: 20,
     watch: '把核心设定用一句话讲给没看过的人听；他会不会想继续听？只是“离谱”但没有新规则，这一维不高。',
   },
   {
     key: 'coherence',
     label: '内部自洽',
     hint: '设定内规则自洽，前后不打架',
-    weight: 20,
+    weight: 15,
     watch: '允许无中生有，但不允许人物、时间、数字、规则互相打架。自洽低于 50，总分封顶 59。',
   },
   {
@@ -90,14 +97,14 @@ export const ABSURD_REVIEW_DIMENSIONS: DimensionMeta[] = [
     key: 'material',
     label: '材料与梗的可核查',
     hint: '梗、案例、数据有出处，或自造规则被明确交代',
-    weight: 20,
+    weight: 15,
     watch: '引用的台词、论文、事件能不能核到？自造数据有没有标注“自造”？张冠李戴直接扣到底。',
   },
   {
     key: 'voice',
     label: '文风与节奏',
     hint: '有节奏、有包袱、不啰嗦，荒诞感靠写法立住',
-    weight: 15,
+    weight: 10,
     watch: '读出声来，哪里会笑、哪里会拖？靠括号解释笑点、靠重复词凑字数，都写进证据。',
   },
 ]
@@ -124,7 +131,7 @@ const ANCHORS: Record<ReviewTrack, { min: number; text: string }[]> = {
   ],
   absurd: [
     { min: 95, text: '荒诞范本：设定、执行、文风合一，读完想转给别人。' },
-    { min: 90, text: '顶刊级荒诞：设定极新，规则严丝合缝，一本正经到忘记它在胡说。' },
+    { min: 90, text: '顶刊级荒诞：荒诞信号密集且克制，设定极新，规则严丝合缝，一本正经到忘记它在胡说。' },
     { min: 80, text: '一区：荒诞点清楚，结构完整，梗有出处或规则自洽。' },
     { min: 70, text: '二区：设定成立，执行基本完整，但局部靠硬凑梗。' },
     { min: 60, text: '三区：有荒诞点，但内部规则开始打架，或后半程写不下去。' },
@@ -256,7 +263,7 @@ export function RubricScoreFields({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Label>评分（百分制 0–100）· 五维逐项审批</Label>
+        <Label>评分（百分制 0–100）· 按赛道维度逐项审批</Label>
         <span className="text-[11px] tabular-nums text-muted-foreground">
           {completed}/{dims.length} 维完整
         </span>

@@ -44,6 +44,7 @@ class BatchDimensionInput(BaseModel):
         "method",
         "evidence",
         "integrity",
+        "absurdity",
         "concept",
         "coherence",
         "execution",
@@ -51,15 +52,16 @@ class BatchDimensionInput(BaseModel):
         "voice",
     ]
     score: int = Field(ge=0, le=100)
-    reason: str = Field(min_length=4, max_length=2000)
-    evidence: str = Field(min_length=8, max_length=2000)
+    # 理由 / 证据选填：先给分，再决定是否补依据。
+    reason: str = Field(default="", max_length=2000)
+    evidence: str = Field(default="", max_length=2000)
 
 
 class BatchItem(BaseModel):
     resource_id: int = Field(ge=1)
     track: Literal["academic", "absurd"] = "academic"
     article_type: Literal["research", "review", "essay", "note"] = "research"
-    dimensions: list[BatchDimensionInput] = Field(min_length=5, max_length=5)
+    dimensions: list[BatchDimensionInput] = Field(min_length=5, max_length=6)
     # 0–10 风格坐标：审核必填项。不进质量分、不参与排序（铁律）。
     absurdity_index: float = Field(ge=0, le=10)
     content_category: ContentCategory | None = None

@@ -1,4 +1,4 @@
-"""审稿评分表单：五维双赛道，每个维度落成审稿人逐条可勾的检查项。
+"""审稿评分表单：学术五维 / 荒诞六维，每个维度落成审稿人逐条可勾的检查项。
 
 设计意图
 --------
@@ -10,10 +10,10 @@
 - 每个维度至少 3 项，且必须全部作答才能提交——漏答会让“没检查”
   看起来像“检查了但没问题”。
 - 检查项的答案（是/部分/否/不适用）只折算成**建议分**，审稿人可以覆盖，
-  分数必填；理由 + 正文证据选填（见 ``rubric.DimensionScore``）。v5.0 起证据是
-  硬性字段：没有证据的分数不进入计算。
+  分数必填；理由 + 正文证据选填（见 ``rubric.DimensionScore``）。v5.1 起
+  空白理由/证据不再阻断计算，但填了就应落到正文位置。
 - 学术/荒诞两套检查项完全分开：荒诞稿不审“伦理审批”“样本量”，改审
-  “设定是否真荒诞、规则是否自洽、梗是否有出处”。
+  “荒诞度是否进入正文、设定是否真荒诞、规则是否自洽、梗是否有出处”。
 
 这套表单同时是给 AI 的输入规格：``prompt_payload`` 输出的 JSON 结构
 就是要求外部模型返回的结构。
@@ -71,6 +71,10 @@ ACADEMIC_CHECK_ITEMS: tuple[CheckItem, ...] = (
 )
 
 ABSURD_CHECK_ITEMS: tuple[CheckItem, ...] = (
+    # --- 荒诞度 ---
+    CheckItem("x_degree", "absurdity", "正文是否有至少 3 处可指认的荒诞信号（反讽/悖论/夸张/错位/冷面幽默）？", 2),
+    CheckItem("x_degree_function", "absurdity", "荒诞写法是否在推进论点或暴露制度荒谬，而不是纯装饰？", 2),
+    CheckItem("x_degree_control", "absurdity", "荒诞语气是否有收束与边界，读完后仍能回到论文/叙事框架？", 2),
     # --- 荒诞设定与原创 ---
     CheckItem("x_new", "concept", "设定是否真的荒诞且新，不是把普通吐槽换个说法？", 2),
     CheckItem("x_nonsense", "concept", "“无中生有”的部分是否有明确边界（读者知道哪里在胡说）？", 2),
@@ -151,7 +155,7 @@ def suggest_dimension_score(
 
 
 def score_answers(answers: dict[str, str], track: str = "academic") -> dict[str, dict[str, object]]:
-    """对全部五个维度给出建议分与检查项明细。"""
+    """对全部维度（学术五维 / 荒诞六维）给出建议分与检查项明细。"""
     track = track if track in CHECK_ITEMS_BY_TRACK else "academic"
     out: dict[str, dict[str, object]] = {}
     for key, label, hint in dimensions_for(track):
@@ -199,9 +203,9 @@ def form_payload(track: str = "academic") -> dict[str, object]:
         ],
         "score_anchors": [{"score": s, "meaning": m} for s, m in SCORE_ANCHORS[track]],
         "evidence_policy": {
-            "required": True,
-            "min_chars": 8,
-            "what_counts": "章节/段落/图号/表号/引用编号/公开链接；只写“感觉”“整体不错”不算证据",
+            "required": False,
+            "min_chars": 0,
+            "what_counts": "选填。若填写，建议落到章节/段落/图号/表号/引用编号/公开链接；只写“感觉”“整体不错”不算证据",
         },
         # 荒诞指数是审核必填事实（0–10 风格坐标），不进总分、不参与排序。
         "absurdity_index": {

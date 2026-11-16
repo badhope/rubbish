@@ -68,7 +68,7 @@ function QuickReviewPage() {
     const body: ReviewSubmit = {
       recommendation: form.recommendation,
       scores: {
-        rubric_version: '5.0',
+        rubric_version: '5.1',
         track: form.track,
         dimensions: Object.fromEntries(
           dims.map((dim) => [

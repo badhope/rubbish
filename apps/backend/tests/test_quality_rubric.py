@@ -57,7 +57,8 @@ def test_track_weights_sum_to_100() -> None:
 
 def test_absurd_track_has_different_dimensions() -> None:
     assert set(_ACADEMIC_KEYS).isdisjoint(set(_ABSURD_KEYS))
-    assert len(_ACADEMIC_KEYS) == len(_ABSURD_KEYS) == 5
+    assert len(_ACADEMIC_KEYS) == 5
+    assert len(_ABSURD_KEYS) == 6
 
 
 def test_academic_argument_has_highest_weight() -> None:
@@ -161,7 +162,7 @@ def test_one_dimension_below_50_is_incomplete_not_quartile() -> None:
     scores = _scores(95)
     scores[2] = DimensionScore("method", 45, "方法不可复现", "证据：§3 未报告样本量与参数")
     result = evaluate(scores)
-    assert result["score"] == 85.0  # 诊断分不封顶，封顶只用于完整稿评级
+    assert result["score"] == 85.0  # 诊断分不封顶（学术五维权重），封顶只用于完整稿评级
     assert result["complete"] is False
     assert result["incomplete_dimensions"] == ["method"]
     assert result["grade"] == "NA"
@@ -182,9 +183,10 @@ def test_two_dimensions_below_50_caps_at_49() -> None:
 
 def test_absurd_coherence_gate() -> None:
     scores = _scores(95, track="absurd")
-    scores[1] = DimensionScore("coherence", 45, "规则打架", "证据：第 2 节与第 5 节时间线冲突")
+    idx = _ABSURD_KEYS.index("coherence")
+    scores[idx] = DimensionScore("coherence", 45, "规则打架", "证据：第 2 节与第 5 节时间线冲突")
     result = evaluate(scores, track="absurd")
-    assert result["score"] == 85.0  # 诊断分不封顶
+    assert result["score"] == 87.5  # 诊断分不封顶（v5.1 六维权重）
 
 
 def test_same_scores_same_total() -> None:
@@ -205,7 +207,7 @@ def test_auto_precheck_flags_missing_abstract() -> None:
 
 def test_rubric_payload_shape() -> None:
     payload = rubric_payload()
-    assert payload["version"] == "5.0"
+    assert payload["version"] == "5.1"
     assert len(payload["dimensions"]) == 5
     assert set(payload["tracks"]) == {"academic", "absurd"}
     assert [g["code"] for g in payload["grades"]] == ["T1+", "T1", "Q1", "Q2", "Q3", "Q4", "R"]
@@ -228,7 +230,7 @@ def test_academic_and_absurd_forms_are_separate() -> None:
     academic = form_payload("academic")
     absurd = form_payload("absurd")
     assert len(academic["dimensions"]) == 5
-    assert len(absurd["dimensions"]) == 5
+    assert len(absurd["dimensions"]) == 6
     assert academic["track"] == "academic"
     assert absurd["track"] == "absurd"
     assert {i["key"] for d in academic["dimensions"] for i in d["items"]}.isdisjoint(
@@ -262,7 +264,7 @@ def test_missing_answer_counts_as_unchecked() -> None:
 
 def test_prompt_payload_has_output_schema_and_rules() -> None:
     payload = prompt_payload("research", "academic")
-    assert payload["rubric_version"] == "5.0"
+    assert payload["rubric_version"] == "5.1"
     assert payload["track"] == "academic"
     assert "output_schema" in payload
     assert "evidence" in payload["output_schema"]["dimensions"]["<dimension_key>"]

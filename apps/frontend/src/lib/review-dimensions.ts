@@ -1,4 +1,4 @@
-/** Rubbish 五维评分与历史报告维度的统一展示口径。 */
+/** Rubbish 五维学术 / 六维荒诞评分与历史报告维度的统一展示口径。 */
 
 export const REVIEW_DIMENSION_LABELS: Record<string, string> = {
   question: '选题与真问题',

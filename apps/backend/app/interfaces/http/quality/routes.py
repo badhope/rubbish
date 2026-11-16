@@ -39,7 +39,7 @@ router = APIRouter(prefix="/quality", tags=["quality"])
 logger = get_logger("rubbish.quality")
 
 _ACADEMIC_KEYS = ("question", "argument", "method", "evidence", "integrity")
-_ABSURD_KEYS = ("concept", "coherence", "execution", "material", "voice")
+_ABSURD_KEYS = ("absurdity", "concept", "coherence", "execution", "material", "voice")
 
 
 class DimensionInput(BaseModel):
@@ -51,6 +51,7 @@ class DimensionInput(BaseModel):
         "method",
         "evidence",
         "integrity",
+        "absurdity",
         "concept",
         "coherence",
         "execution",
@@ -65,7 +66,7 @@ class DimensionInput(BaseModel):
 class ScoreRequest(BaseModel):
     track: Literal["academic", "absurd"] = "academic"
     article_type: Literal["research", "review", "essay", "note"] = "research"
-    dimensions: list[DimensionInput] = Field(min_length=5, max_length=5)
+    dimensions: list[DimensionInput] = Field(min_length=5, max_length=6)
     # 0–10 风格坐标（荒诞指数）：审核流程的必填事实。不进质量分、
     # 不参与排序（铁律）；这里可选——仅实时预览时可省略，落库必须给。
     absurdity_index: float | None = Field(default=None, ge=0, le=10)
@@ -93,7 +94,7 @@ async def get_rubric() -> dict[str, object]:
 async def get_review_form(
     track: str = Query(default="academic", pattern=r"^(academic|absurd)$"),
 ) -> dict[str, object]:
-    """审稿评分表单（公开）：按赛道返回五维下的逐条事实检查项。"""
+    """审稿评分表单（公开）：按赛道返回对应维度下的逐条事实检查项。"""
     return form_payload(track)
 
 

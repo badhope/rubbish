@@ -271,7 +271,7 @@ async def test_quality_rubric_is_public_and_frozen(client: AsyncClient) -> None:
     r = await client.get("/api/quality/rubric")
     assert r.status_code == 200
     body = r.json()
-    assert body["version"] == "5.0"
+    assert body["version"] == "5.1"
     tracks = body["tracks"]
     assert set(tracks) == {"academic", "absurd"}
     assert tracks["academic"]["dimensions"][0]["key"] == "question"
@@ -298,7 +298,7 @@ async def test_quality_form_and_prompt_are_public(client: AsyncClient) -> None:
     assert len(form.json()["dimensions"]) == 5
     absurd = await client.get("/api/quality/form?track=absurd")
     assert absurd.status_code == 200
-    assert len(absurd.json()["dimensions"]) == 5
+    assert len(absurd.json()["dimensions"]) == 6
     prompt = await client.get("/api/quality/prompt?article_type=research&track=academic")
     assert prompt.status_code == 200
     assert "output_schema" in prompt.json()
