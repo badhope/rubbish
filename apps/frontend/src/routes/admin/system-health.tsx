@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { Activity, AlertTriangle, CheckCircle2, RefreshCw, XCircle } from 'lucide-react'
+import { Activity, AlertTriangle, CheckCircle2, KeyRound, Mail, RefreshCw, Send, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import { requireAdminGuard } from '@/lib/route-guards'
@@ -19,6 +19,24 @@ type Check = {
   label: string
   status: 'ok' | 'warn' | 'fail'
   detail: string
+}
+
+type SecurityStatus = {
+  signing_key_count: number
+  previous_key_count: number
+  signing_key_kid: string | null
+  rotation_window_open: boolean
+}
+
+type EmailStatus = {
+  configured: boolean
+  reachable: boolean
+  detail: string
+  backend: string
+  outbound_enabled: boolean
+  from_address: string
+  accounts: { from_address: string; host: string; port: number }[]
+  guard: Record<string, unknown>
 }
 
 type Health = {
@@ -42,6 +60,9 @@ function StatusIcon({ status }: { status: Check['status'] }) {
 
 export function SystemHealthPage() {
   const [data, setData] = useState<Health | null>(null)
+  const [security, setSecurity] = useState<SecurityStatus | null>(null)
+  const [email, setEmail] = useState<EmailStatus | null>(null)
+  const [opsBusy, setOpsBusy] = useState(false)
   const [loading, setLoading] = useState(true)
 
   async function load() {
@@ -56,8 +77,46 @@ export function SystemHealthPage() {
     }
   }
 
+  async function loadOps() {
+    const [sec, mail] = await Promise.allSettled([
+      api.get<SecurityStatus>('/admin/security/status'),
+      api.get<EmailStatus>('/admin/maintenance/email-status'),
+    ])
+    if (sec.status === 'fulfilled') setSecurity(sec.value.data)
+    if (mail.status === 'fulfilled') setEmail(mail.value.data)
+  }
+
+  async function reloadSecurity() {
+    if (!window.confirm('确认重新读取 Rubbish 安全配置？正在签发的令牌仍按旧密钥校验。')) return
+    setOpsBusy(true)
+    try {
+      await api.post('/admin/security/reload')
+      toast.success('已重新加载安全配置')
+      await loadOps()
+    } catch {
+      toast.error('安全配置重载失败')
+    } finally {
+      setOpsBusy(false)
+    }
+  }
+
+  async function triggerReminders() {
+    if (!window.confirm('立即执行一轮审稿催办？3 天内已催过的不会重复发信。')) return
+    setOpsBusy(true)
+    try {
+      const res = await api.post<Record<string, number>>('/admin/maintenance/review-reminders')
+      toast.success(`催办完成：检查 ${res.data.checked ?? 0} 条，发送 ${res.data.emailed ?? 0} 条`)
+      await loadOps()
+    } catch {
+      toast.error('催办任务执行失败')
+    } finally {
+      setOpsBusy(false)
+    }
+  }
+
   useEffect(() => {
     void load()
+    void loadOps()
   }, [])
 
   return (
@@ -183,6 +242,64 @@ export function SystemHealthPage() {
               </div>
             </CardContent>
           </Card>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <KeyRound className="h-4 w-4" />
+                  安全与密钥
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                {security ? (
+                  <>
+                    <p className="text-muted-foreground">
+                      当前签名密钥 {security.signing_key_count} 把，历史密钥{' '}
+                      {security.previous_key_count} 把；轮换窗口{' '}
+                      {security.rotation_window_open ? '开启' : '关闭'}。
+                    </p>
+                    <p className="break-all font-mono text-xs text-muted-foreground">
+                      kid={security.signing_key_kid ?? '—'}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-muted-foreground">状态未加载</p>
+                )}
+                <Button variant="outline" size="sm" onClick={reloadSecurity} disabled={opsBusy}>
+                  <RefreshCw className="mr-1.5 h-4 w-4" />
+                  重载安全配置
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Mail className="h-4 w-4" />
+                  邮件与催办
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                {email ? (
+                  <>
+                    <p className="text-muted-foreground">
+                      后端 {email.backend}；配置{' '}
+                      {email.configured ? '已开启' : '未开启'}；连通{' '}
+                      {email.reachable ? '正常' : '失败'}；发件 {email.from_address || '—'}
+                    </p>
+                    <p className="break-words text-xs text-muted-foreground">{email.detail}</p>
+                  </>
+                ) : (
+                  <p className="text-muted-foreground">状态未加载</p>
+                )}
+                <Button variant="outline" size="sm" onClick={triggerReminders} disabled={opsBusy}>
+                  <Send className="mr-1.5 h-4 w-4" />
+                  立即催审
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       )}
     </div>
