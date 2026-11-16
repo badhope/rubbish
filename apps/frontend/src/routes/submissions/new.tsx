@@ -22,6 +22,7 @@ import { toast } from 'sonner'
 import { getAuthState } from '@/lib/auth'
 import { HelpTip } from '@/components/common/help-tip'
 import { useCapabilities } from '@/hooks/use-capabilities'
+import { useMediaQuery } from '@/hooks/use-media-query'
 import {
   useCreateSubmission,
   useDeleteSubmissionDraft,
@@ -483,6 +484,8 @@ function SubmissionWizardPage() {
   const [step, setStep] = useState(0)
   // Studio 排版预览抽屉：任何时候都能看一眼“印出来是什么样”
   const [proofOpen, setProofOpen] = useState(false)
+  // ≥1280 常驻右栏；窄屏只在需要时开抽屉，避免后台白跑一遍分页
+  const showSidePreview = useMediaQuery('(min-width: 1280px)')
   // 用户已访问过的步骤：进入过 / 点过「上一步/下一步」的步骤才显示红框，
   // 避免刚打开页面就满屏红字。
   const [visited, setVisited] = useState<boolean[]>([true, false, false, false])
@@ -934,7 +937,7 @@ function SubmissionWizardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_400px]">
         {/* 左侧：步骤导航（桌面纵向；移动横向可滑动） */}
         <nav
           aria-label="投稿步骤"
@@ -1090,10 +1093,31 @@ function SubmissionWizardPage() {
             </div>
           </div>
         </div>
+
+        {/* 宽屏常驻右栏：边写边看纸面，不必反复开抽屉。 */}
+        {showSidePreview && !proofOpen ? (
+        <aside>
+          <div className="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-lg border bg-card p-3">
+            <PaperProof
+              title={form.title}
+              authors={parseListField(form.authors)}
+              affiliations={form.affiliations}
+              abstract={form.abstract}
+              keywords={parseListField(form.keywords)}
+              body={form.body}
+              doi={form.doi}
+              funding={form.funding}
+              clc={form.clc}
+              license={form.license}
+              track={form.type === 'paper' ? 'paper' : 'essay'}
+            />
+          </div>
+        </aside>
+        ) : null}
       </div>
 
       <Dialog open={proofOpen} onOpenChange={setProofOpen}>
-        <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto p-0">
+        <DialogContent className="max-h-[90vh] w-[min(96vw,56rem)] overflow-y-auto p-0 sm:max-w-4xl">
           <DialogHeader className="sr-only">
             <DialogTitle>论文排版预览</DialogTitle>
           </DialogHeader>
