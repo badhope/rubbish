@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import mimetypes
 from collections.abc import Sequence
+from datetime import timedelta
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
@@ -50,7 +51,7 @@ from app.domain.review.blinding import (
 from app.domain.review.models import ReviewAssignment, ReviewDraft, ReviewReport
 from app.domain.submission.models import Submission
 from app.interfaces.http.review.calibration import router as calibration_router
-from app.interfaces.http.review.coi import ensure_no_declared_conflict
+from app.interfaces.http.review.coi import ensure_no_declared_conflict, name_matches_author
 from app.interfaces.http.review.coi import router as coi_router
 from app.interfaces.http.review.schemas import (
     AssignmentListResponse,
@@ -814,18 +815,22 @@ async def assign_reviewers(
     tenant_id = require_tenant_id()
     sub = (
         await db.execute(
-            select(Submission).where(
-                Submission.id == submission_id, Submission.tenant_id == tenant_id
-            )
+            select(Submission)
+            .where(Submission.id == submission_id, Submission.tenant_id == tenant_id)
+            .with_for_update()
         )
     ).scalar_one_or_none()
     if sub is None:
         raise HTTPException(status_code=404, detail="Submission not found")
+    if sub.status not in ("pending", "under_review", "resubmitted"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot assign reviewer in status '{sub.status}'",
+        )
 
-    # 校验：reviewer 不能是 submitted_by 或 authors 里的人
+    # 校验：reviewer 不能是 submitted_by；署名作者同名（疑似共同作者）
+    # 由 name_matches_author 服务端拦截，与工作台冲突提示同口径。
     author_ids = {sub.submitted_by}
-    # authors 是 list[str]（姓名），无法直接映射到 user_id；这里只拦 submitted_by。
-    # （共同作者绑定 user_id 是 P1 认领后的事，此处先拦第一作者。）
     for rid in body.reviewer_ids:
         if rid in author_ids:
             raise HTTPException(
@@ -869,6 +874,16 @@ async def assign_reviewers(
         ):
             raise HTTPException(status_code=422, detail=f"User {rid} is not a reviewer")
         await ensure_no_declared_conflict(db, tenant_id=tenant_id, reviewer_id=rid, submission=sub)
+        if name_matches_author(reviewer, sub):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "code": "reviewer_name_conflict",
+                    "message": (
+                        f"审稿人 {reviewer.username} 与稿件作者同名：疑似共同作者/自审，请更换审稿人。"
+                    ),
+                },
+            )
         # 同一轮内已邀请过的不重复；旧轮 cancelled/declined 不拦新一轮
         dup = await db.execute(
             select(ReviewAssignment).where(
@@ -882,7 +897,7 @@ async def assign_reviewers(
         while next_slot in used_slots:
             next_slot += 1
         used_slots.add(next_slot)
-        due = utcnow() + __import__("datetime").timedelta(days=body.due_days)
+        due = utcnow() + timedelta(days=body.due_days)
         a = ReviewAssignment(
             tenant_id=tenant_id,
             submission_id=submission_id,
@@ -904,24 +919,31 @@ async def assign_reviewers(
         sub.triaged_by = current_user.id
     if sub.status == "pending" and created:
         sub.status = "under_review"
-    await db.flush()
-    for a in created:
-        reviewer = await db.get(User, a.reviewer_id)
-        if reviewer is not None:
-            await notifications.create(
-                db,
-                tenant_id=tenant_id,
-                user_id=a.reviewer_id,
-                type_="review.invited",
-                title=f"您被邀请审稿：{sub.title}",
-                body=(
-                    f"稿件 #{sub.id} 已分配给您，截止 {(a.due_date.date().isoformat() if a.due_date else '—')}，"
-                    "请前往审稿工作台回应。" + ("（外审专家邀请）" if a.is_external else "")
-                ),
-                related_type="review_assignment",
-                related_id=str(a.id),
-            )
-    await db.commit()
+    try:
+        await db.flush()
+        for a in created:
+            reviewer = await db.get(User, a.reviewer_id)
+            if reviewer is not None:
+                await notifications.create(
+                    db,
+                    tenant_id=tenant_id,
+                    user_id=a.reviewer_id,
+                    type_="review.invited",
+                    title=f"您被邀请审稿：{sub.title}",
+                    body=(
+                        f"稿件 #{sub.id} 已分配给您，截止 {(a.due_date.date().isoformat() if a.due_date else '—')}，"
+                        "请前往审稿工作台回应。" + ("（外审专家邀请）" if a.is_external else "")
+                    ),
+                    related_type="review_assignment",
+                    related_id=str(a.id),
+                )
+        await db.commit()
+    except IntegrityError as exc:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="审稿人本轮已被指派（并发或重复提交），请刷新后重试。",
+        ) from exc
     return {"assigned": len(created), "submission_id": submission_id}
 
 
@@ -1026,8 +1048,6 @@ async def assign_adjudicator(
     POST /review/assignments/{id}/submit 提交，recommendation 为 accept
     时，最终录用闸门才放行。
     """
-    from datetime import timedelta
-
     from app.api.deps import ROLE_REVIEWER, ROLE_SENIOR_REVIEWER
     from app.models import AuditLog
 

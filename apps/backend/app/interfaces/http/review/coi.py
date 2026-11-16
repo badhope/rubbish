@@ -187,6 +187,16 @@ async def latest_declaration(
     )
 
 
+def name_matches_author(reviewer: User, submission: Submission) -> bool:
+    """审稿人用户名与稿件署名作者同名（忽略大小写/首尾空白）。
+
+    与主编工作台冲突提示同一口径；指派端点服务端强制，直调 API 不能
+    绕过前端禁选。
+    """
+    author_names = {(n or "").strip().lower() for n in (submission.authors or []) if n}
+    return bool(reviewer.username) and reviewer.username.strip().lower() in author_names
+
+
 async def ensure_no_declared_conflict(
     db: AsyncSession, *, tenant_id: Any, reviewer_id: int, submission: Submission
 ) -> None:

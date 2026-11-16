@@ -635,3 +635,64 @@ async def test_editor_report_search_returns_review_content(
     item = next(i for i in body["items"] if i["submission_id"] == sub["id"])
     assert item["reviewer_username"] == "reviewer_search"
     assert "样本量" in (item["comments_to_editor"] or "")
+
+
+async def test_editor_workbench_decided_archive_paginated(
+    client: AsyncClient, admin_user: dict, test_user: dict, db_session: AsyncSession
+) -> None:
+    """已决定历史库分页下推：count 是全量、items≤50、has_more=True、最近优先。
+
+    回归 M5：旧实现把整表（含所有 assignment/report）加载进内存再切片，
+    历史库增长后工作台会越来越慢。这里直接 ORM 灌 55 篇 rejected，验证
+    SQL 侧 LIMIT + COUNT 与排序，且已决定稿不会泄漏进在途三栏。
+    """
+    from datetime import timedelta
+
+    from app.core.time import utcnow
+    from app.domain.submission.models import Submission
+
+    await client.get("/api/health")
+    tenant = (await db_session.execute(select(Tenant).where(Tenant.slug == "default"))).scalar_one()
+
+    base = utcnow()
+    seeded_ids: list[int] = []
+    for i in range(55):
+        s = Submission(
+            tenant_id=tenant.id,
+            submitted_by=int(test_user["user_id"]),
+            title=f"WB decided {i:03d}",
+            type="paper",
+            authors=["Archive Author"],
+            year=2026,
+            discipline="computer science",
+            tags=[],
+            abstract="decided archive probe",
+            preview="decided archive probe",
+            status="rejected",
+            submitted_at=base,
+            updated_at=base + timedelta(minutes=i),
+        )
+        db_session.add(s)
+        await db_session.flush()
+        seeded_ids.append(s.id)
+    await db_session.commit()
+
+    wb = await client.get("/api/editor/workbench", headers=auth_headers(admin_user))
+    assert wb.status_code == 200, wb.text
+    cols = wb.json()["columns"]
+    decided = cols["decided"]
+    assert decided["count"] >= 55
+    assert len(decided["items"]) <= 50
+    assert decided["page_size"] == 50
+    assert decided["has_more"] is True
+    # 最近更新（i=54）排最前
+    assert decided["items"][0]["title"] == "WB decided 054"
+    assert all(row["status"] == "rejected" for row in decided["items"])
+
+    # 已决定稿绝不能出现在在途三栏
+    active_ids = {
+        row["submission_id"]
+        for key in ("to_assign", "in_review", "to_decide")
+        for row in cols[key]["items"]
+    }
+    assert active_ids.isdisjoint(seeded_ids)

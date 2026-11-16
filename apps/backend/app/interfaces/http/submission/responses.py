@@ -19,17 +19,22 @@ from app.domain.submission.models import Submission
 from app.interfaces.http.submission.schemas import SubmissionListResponse, SubmissionResponse
 
 
-async def _get_or_404(db: AsyncSession, submission_id: int) -> Submission:
-    """Fetch a submission by id (scoped to current tenant) or raise 404."""
+async def _get_or_404(
+    db: AsyncSession, submission_id: int, *, lock: bool = False
+) -> Submission:
+    """Fetch a submission by id (scoped to current tenant) or raise 404.
+
+    ``lock=True`` adds ``FOR UPDATE`` so concurrent decisions/assignments
+    serialize on the row instead of racing read-modify-write (SQLite: no-op).
+    """
     tenant_id = require_tenant_id()
-    entry = (
-        await db.execute(
-            select(Submission).where(
-                Submission.id == submission_id,
-                Submission.tenant_id == tenant_id,
-            )
-        )
-    ).scalar_one_or_none()
+    stmt = select(Submission).where(
+        Submission.id == submission_id,
+        Submission.tenant_id == tenant_id,
+    )
+    if lock:
+        stmt = stmt.with_for_update()
+    entry = (await db.execute(stmt)).scalar_one_or_none()
     if entry is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

@@ -91,6 +91,10 @@ jobs:
       # `alembic check` 把历史直连 DDL 当成新差异阻断 CI。
       - name: Confirm migration head is applied
         run: uv run alembic current
+      # 策略"存在性"之外再验"生效性"：跨租户读/写/插入必须被 RLS 挡住。
+      # 这些用例标记 pg，SQLite 单测 lane 自动 skip。
+      - name: RLS enforcement regression (PG only)
+        run: uv run pytest -m pg -q
 
   frontend:
     runs-on: ubuntu-latest
