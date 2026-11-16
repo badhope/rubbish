@@ -6,6 +6,7 @@ import { extractError, cn } from '@/lib/utils'
 import type { UserProfileUpdate, UserResponse } from '@/lib/types'
 import { useUpdateProfile } from '@/hooks/api/use-auth'
 import { useUnlockAccent, useWallet } from '@/hooks/api/use-currency'
+import { useDisciplines } from '@/hooks/api/use-modules'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -39,6 +40,8 @@ type ProfileForm = {
   location: string
   research_interests: string
   reviewer_tags: string
+  /** 排序后逗号拼接的学科 slug，保持与其他字段一致的字符串比较。 */
+  reviewer_disciplines: string
   website: string
   google_scholar: string
   bio: string
@@ -59,6 +62,7 @@ function toForm(user?: UserResponse | null): ProfileForm {
     location: user?.location ?? '',
     research_interests: user?.research_interests ?? '',
     reviewer_tags: (user?.reviewer_tags ?? []).join(', '),
+    reviewer_disciplines: [...(user?.reviewer_disciplines ?? [])].sort().join(','),
     website: user?.website ?? '',
     google_scholar: user?.google_scholar ?? '',
     bio: user?.bio ?? '',
@@ -95,10 +99,26 @@ export function ProfileDetailsCard({ initial }: { initial?: UserResponse | null 
   const updateProfile = useUpdateProfile()
   const wallet = useWallet()
   const unlockAccent = useUnlockAccent()
+  const disciplines = useDisciplines()
   const saved = toForm(initial)
 
   const set = (key: keyof ProfileForm, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const selectedDisciplines = new Set(form.reviewer_disciplines.split(',').filter(Boolean))
+  const toggleDiscipline = (slug: string) => {
+    const next = new Set(selectedDisciplines)
+    if (next.has(slug)) {
+      next.delete(slug)
+    } else {
+      if (next.size >= 10) {
+        toast.info('最多选择 10 个学科；更细的方向请写进能力标签')
+        return
+      }
+      next.add(slug)
+    }
+    set('reviewer_disciplines', [...next].sort().join(','))
   }
 
   const dirty = (Object.keys(form) as Array<keyof ProfileForm>).some(
@@ -157,6 +177,10 @@ export function ProfileDetailsCard({ initial }: { initial?: UserResponse | null 
           .map((tag) => tag.trim())
           .filter(Boolean)
           .slice(0, 20)
+        continue
+      }
+      if (key === 'reviewer_disciplines') {
+        body.reviewer_disciplines = form.reviewer_disciplines.split(',').filter(Boolean)
         continue
       }
       // 空串提交 = 清除该字段；后端会把空串归一为 None。
@@ -370,6 +394,37 @@ export function ProfileDetailsCard({ initial }: { initial?: UserResponse | null 
           />
           <p className="text-xs text-muted-foreground">用顿号或逗号分隔均可，最多 500 字。</p>
         </div>
+
+        {(disciplines.data?.length ?? 0) > 0 && (
+          <div className="space-y-1.5">
+            <Label>审稿学科（多选，最多 10 个）</Label>
+            <div className="flex flex-wrap gap-2" data-testid="reviewer-discipline-picker">
+              {(disciplines.data ?? []).map((item) => {
+                const active = selectedDisciplines.has(item.slug)
+                return (
+                  <button
+                    key={item.slug}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => toggleDiscipline(item.slug)}
+                    className={cn(
+                      'flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs transition-colors',
+                      active
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'bg-background text-muted-foreground hover:bg-muted',
+                    )}
+                  >
+                    {item.name}
+                    {active && <Check className="h-3 w-3" />}
+                  </button>
+                )
+              })}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              来自平台学科词表，与投稿的学科分类同源；主编指派审稿人时按学科精确匹配并优先排序。
+            </p>
+          </div>
+        )}
 
         <div className="space-y-1.5">
           <Label htmlFor="profile-reviewer_tags">审稿能力标签（选填）</Label>

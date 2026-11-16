@@ -349,6 +349,8 @@ class ReviewerCandidate(BaseModel):
     match_reasons: list[str] = Field(default_factory=list)
     # P1-7：审稿人自填能力标签；候选理由里展示重合项。
     reviewer_tags: list[str] = Field(default_factory=list)
+    # 受控学科标签（Discipline.slug 数组；迁移 057），与稿件学科精确匹配。
+    reviewer_disciplines: list[str] = Field(default_factory=list)
     # P1-8：年度利益冲突声明。未声明不拦分派，但编辑能看见；声明命中
     # 作者姓名/通讯邮箱时 conflict=True，分派接口会 409。
     coi_declared: bool = False

@@ -103,6 +103,25 @@ async def update_me(
     # 未提供（缺键）时不触碰，与 orcid 的 None-保持不变约定一致。
     if "bio" in payload.model_fields_set:
         current_user.bio = payload.bio
+    # 受控学科标签：租户配置了词表才严格校验（与 catalog onto 宽松模式一致）。
+    if "reviewer_disciplines" in payload.model_fields_set and payload.reviewer_disciplines:
+        from app.domain.catalog.models import Discipline
+
+        tenant_id = require_tenant_id()
+        known = set(
+            (
+                await db.execute(select(Discipline.slug).where(Discipline.tenant_id == tenant_id))
+            )
+            .scalars()
+            .all()
+        )
+        if known:
+            unknown = [slug for slug in payload.reviewer_disciplines if slug not in known]
+            if unknown:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"未知学科标签：{', '.join(unknown)}",
+                )
     # 扩展资料：字段出现即写入，缺键保持不变。空串在 schema 层已归一为 None。
     for field in (
         "display_name",
@@ -112,6 +131,7 @@ async def update_me(
         "academic_title",
         "research_interests",
         "reviewer_tags",
+        "reviewer_disciplines",
         "website",
         "google_scholar",
         "location",

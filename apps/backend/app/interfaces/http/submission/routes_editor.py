@@ -260,6 +260,8 @@ def _candidate_score(
     history: list[Submission],
     active_count: int,
     reviewer_tags: list[str] | None = None,
+    reviewer_disciplines: list[str] | None = None,
+    discipline_names: dict[str, str] | None = None,
 ) -> tuple[int, list[str], list[str]]:
     """A transparent, explainable 0–100 match score.
 
@@ -275,6 +277,12 @@ def _candidate_score(
         if current.discipline and any(item.discipline == current.discipline for item in history):
             score += 40
             reasons.append(f"同学科：{current.discipline}")
+        declared_names = {
+            (discipline_names or {}).get(slug, slug) for slug in (reviewer_disciplines or [])
+        }
+        if current.discipline and current.discipline in declared_names:
+            score += 35
+            reasons.append(f"自选学科命中：{current.discipline}")
         if current.subdiscipline and any(
             item.subdiscipline == current.subdiscipline for item in history
         ):
@@ -336,6 +344,7 @@ async def list_reviewer_candidates(
                 User.affiliation,
                 User.department,
                 User.reviewer_tags,
+                User.reviewer_disciplines,
             )
             .join(UserRole, UserRole.user_id == User.id)
             .join(Role, Role.id == UserRole.role_id)
@@ -406,6 +415,19 @@ async def list_reviewer_candidates(
         db, tenant_id=tenant_id, reviewer_ids=reviewer_ids, year=coi_year
     )
 
+    from app.domain.catalog.models import Discipline
+
+    discipline_names: dict[str, str] = {
+        slug: name
+        for slug, name in (
+            await db.execute(
+                select(Discipline.slug, Discipline.name).where(
+                    Discipline.tenant_id == tenant_id
+                )
+            )
+        ).all()
+    }
+
     candidates: list[ReviewerCandidate] = []
     for row in rows:
         history = history_by_reviewer.get(row.id, [])
@@ -415,6 +437,8 @@ async def list_reviewer_candidates(
             history=history,
             active_count=active_count,
             reviewer_tags=list(getattr(row, "reviewer_tags", None) or []),
+            reviewer_disciplines=list(getattr(row, "reviewer_disciplines", None) or []),
+            discipline_names=discipline_names,
         )
         declaration = declarations.get(row.id)
         conflict_reasons = (
@@ -442,6 +466,7 @@ async def list_reviewer_candidates(
                 matched_keywords=matched,
                 match_reasons=reasons,
                 reviewer_tags=list(getattr(row, "reviewer_tags", None) or []),
+                reviewer_disciplines=list(getattr(row, "reviewer_disciplines", None) or []),
                 coi_declared=declaration is not None,
                 coi_year=coi_year,
                 conflict=bool(conflict_reasons),

@@ -55,6 +55,9 @@ from app.interfaces.http.review.coi import router as coi_router
 from app.interfaces.http.review.schemas import (
     AssignmentListResponse,
     AssignmentResponse,
+    ExpertiseDiscipline,
+    ExpertiseTag,
+    PublicExpertiseResponse,
     ReviewDraftIn,
     ReviewDraftResponse,
     ReviewReportResponse,
@@ -1181,4 +1184,78 @@ async def editor_decision(
             "code": "deprecated_use_submission_decision",
             "message": "最终裁决请使用 PATCH /api/submissions/{id}/decision（主编/执行编辑权限）。",
         },
+    )
+
+
+@router.get("/public-expertise", response_model=PublicExpertiseResponse)
+async def public_expertise(
+    db: AsyncSession = Depends(get_db),
+) -> PublicExpertiseResponse:
+    """审稿团队匿名专长画像（公开，无需登录）。
+
+    只输出聚合计数：学科覆盖人数 + 高频能力标签，绝不携带审稿人
+    id/姓名/邮箱——盲审策略下作者永远不可识别审稿人身份。
+    """
+    from collections import Counter
+
+    from app.domain.catalog.models import Discipline
+    from app.models import Role, UserRole
+
+    tenant_id = require_tenant_id()
+    rows = (
+        await db.execute(
+            select(User.id, User.reviewer_disciplines, User.reviewer_tags)
+            .join(UserRole, UserRole.user_id == User.id)
+            .join(Role, Role.id == UserRole.role_id)
+            .where(
+                User.tenant_id == tenant_id,
+                User.is_active.is_(True),
+                UserRole.tenant_id == tenant_id,
+                Role.tenant_id == tenant_id,
+                Role.name.in_([ROLE_REVIEWER, ROLE_SENIOR_REVIEWER]),
+            )
+        )
+    ).all()
+
+    discipline_counts: Counter[str] = Counter()
+    tag_counts: Counter[str] = Counter()
+    tag_display: dict[str, str] = {}
+    seen_ids: set[int] = set()
+    for row in rows:
+        if row.id in seen_ids:
+            continue
+        seen_ids.add(row.id)
+        for slug in row.reviewer_disciplines or []:
+            discipline_counts[str(slug)] += 1
+        for tag in row.reviewer_tags or []:
+            text = " ".join(str(tag).split()).strip()
+            if not text:
+                continue
+            key = text.casefold()
+            tag_counts[key] += 1
+            tag_display.setdefault(key, text)
+
+    disciplines = (
+        (
+            await db.execute(
+                select(Discipline)
+                .where(Discipline.tenant_id == tenant_id)
+                .order_by(Discipline.name.asc())
+            )
+        )
+        .scalars()
+        .all()
+    )
+    return PublicExpertiseResponse(
+        total_reviewers=len(seen_ids),
+        disciplines=[
+            ExpertiseDiscipline(
+                slug=d.slug, name=d.name, reviewer_count=discipline_counts.get(d.slug, 0)
+            )
+            for d in disciplines
+        ],
+        top_tags=[
+            ExpertiseTag(tag=tag_display[key], count=count)
+            for key, count in tag_counts.most_common(20)
+        ],
     )

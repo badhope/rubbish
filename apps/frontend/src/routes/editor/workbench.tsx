@@ -26,6 +26,7 @@ import {
   useEditorDecision,
   useEditorEmailDigestRecords,
   useEditorWorkbench,
+  useDisciplines,
   useRemindReviewers,
   useReviewerCandidates,
   useReviewerWorkload,
@@ -90,6 +91,10 @@ const COLUMN_META: { key: ColumnKey; title: string; accent: string }[] = [
 function EditorWorkbenchPage() {
   const { data, isLoading, isError, refetch } = useEditorWorkbench()
   const candidates = useReviewerCandidates(200)
+  const disciplines = useDisciplines()
+  const disciplineNames = new Map(
+    (disciplines.data ?? []).map((item) => [item.slug, item.name]),
+  )
   const workload = useReviewerWorkload()
   const batchMut = useBatchAssign()
   const cancelAssignMut = useCancelAssignment()
@@ -702,6 +707,15 @@ function EditorWorkbenchPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span>{c.username}</span>
+                        {(c.reviewer_disciplines ?? []).slice(0, 2).map((slug) => (
+                          <Badge
+                            key={slug}
+                            variant="outline"
+                            className="border-primary/40 text-[10px] text-primary"
+                          >
+                            {disciplineNames.get(slug) ?? slug}
+                          </Badge>
+                        ))}
                         {(c.reviewer_tags ?? []).slice(0, 3).map((tag) => (
                           <Badge key={tag} variant="secondary" className="text-[10px]">
                             {tag}
