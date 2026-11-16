@@ -52,7 +52,7 @@ export const Route = createFileRoute('/studio/$id')({
   component: StudioPage,
 })
 
-const EDITABLE_STATUSES = ['pending', 'major_revision', 'minor_revision']
+const EDITABLE_STATUSES = ['pending', 'major_revision', 'minor_revision', 'rework_requested']
 const LICENSE_OPTIONS = [
   'CC BY 4.0',
   'CC BY-NC 4.0',

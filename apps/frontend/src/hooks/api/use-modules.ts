@@ -2324,6 +2324,7 @@ export interface EditorColumnItem {
   submission_id: number
   title: string | null
   type: string | null
+  discipline?: string | null
   submitted_by: number
   status: string
   submitted_at: string

@@ -325,6 +325,7 @@ async def editor_workbench(
             "submission_id": s.id,
             "title": s.title,
             "type": s.type,
+            "discipline": s.discipline,
             "submitted_by": s.submitted_by,
             "status": s.status,
             "submitted_at": s.submitted_at,

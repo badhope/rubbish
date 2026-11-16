@@ -106,7 +106,7 @@ const STATUS_TABS: { value: SubmissionStatus | 'all'; label: string }[] = [
 ]
 
 // 作者可编辑内容的状态（与后端 update_submission 的状态门一致）
-const EDITABLE_STATUSES = ['pending', 'major_revision', 'minor_revision']
+const EDITABLE_STATUSES = ['pending', 'major_revision', 'minor_revision', 'rework_requested']
 
 function statusBadge(status: SubmissionStatus) {
   switch (status) {

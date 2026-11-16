@@ -493,8 +493,8 @@ class OnlineMarkdownBody(BaseModel):
     content: str = Field(min_length=1, max_length=MAX_ONLINE_BODY_BYTES)
 
 
-async def _editable_submission_or_error(
-    submission_id: int, current_user: User, db: AsyncSession
+async def _body_access_or_error(
+    submission_id: int, current_user: User, db: AsyncSession, *, require_editable: bool
 ) -> Submission:
     entry = await _get_or_404(db, submission_id)
     is_staff = current_user.is_admin or await user_has_editor_access(db, current_user)
@@ -503,8 +503,9 @@ async def _editable_submission_or_error(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only the submitter or editorial staff can access the body",
         )
-    # 编辑部改稿不受状态限制；作者本人仅在可编辑状态开放。
-    if not is_staff and entry.status not in _ONLINE_EDITABLE_STATUSES:
+    # 读取不限状态：审稿期作者仍要能看自己的稿子与修改建议。
+    # 写入门禁：编辑部改稿不受状态限制；作者本人仅在可编辑状态开放。
+    if require_editable and not is_staff and entry.status not in _ONLINE_EDITABLE_STATUSES:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot edit submission body in status '{entry.status}'",
@@ -518,8 +519,8 @@ async def get_submission_markdown(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, str]:
-    """读取在线正文（作者本人 / 编辑部）。"""
-    entry = await _editable_submission_or_error(submission_id, current_user, db)
+    """读取在线正文（作者本人 / 编辑部，不限稿件状态）。"""
+    entry = await _body_access_or_error(submission_id, current_user, db, require_editable=False)
     if not entry.markdown_path:
         return {"content": ""}
     from app.core.storage import get_storage
@@ -545,7 +546,7 @@ async def save_submission_markdown(
     """
     from uuid import uuid4
 
-    entry = await _editable_submission_or_error(submission_id, current_user, db)
+    entry = await _body_access_or_error(submission_id, current_user, db, require_editable=True)
     from app.core.storage import get_storage
 
     rel_path = f"{entry.tenant_id}/{entry.id}/{uuid4().hex}.md"
