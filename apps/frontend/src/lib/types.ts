@@ -374,7 +374,7 @@ export interface ClaimSubmitResponse {
 export interface AdminClaimEntry {
   id: number
   resource_id: number
-  title: string
+  resource_title: string
   user_id: number
   username: string
   author_position: number
@@ -385,9 +385,7 @@ export interface AdminClaimEntry {
   created_at: string
 }
 
-export interface AdminClaimListResponse {
-  data: AdminClaimEntry[]
-}
+export type AdminClaimListResponse = AdminClaimEntry[]
 
 export interface AdminClaimDecideRequest {
   approve: boolean

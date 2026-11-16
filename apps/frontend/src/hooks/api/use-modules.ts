@@ -1616,12 +1616,12 @@ export function useClaimResource() {
   })
 }
 
-// 编辑部：认领申请列表（?state=pending|approved|rejected）
+// 编辑部：认领申请列表（?claim_status=pending|approved|rejected）
 export function useAdminClaims(state: string) {
   return useQuery<AdminClaimListResponse>({
     queryKey: keys.admin.claims(state),
     queryFn: async () =>
-      (await api.get<AdminClaimListResponse>('/admin/claims', { params: { state } })).data,
+      (await api.get<AdminClaimListResponse>('/admin/claims', { params: { claim_status: state } })).data,
   })
 }
 
@@ -1629,15 +1629,21 @@ export function useAdminClaims(state: string) {
 export function usePendingClaimsCount(enabled: boolean) {
   return useQuery<{ count: number }>({
     queryKey: ['admin', 'claims', 'pending', 'count'],
-    queryFn: async () =>
-      (await api.get<{ count: number }>('/admin/claims', { params: { state: 'pending' } })).data,
+    queryFn: async () => {
+      const rows = (
+        await api.get<AdminClaimListResponse>('/admin/claims', {
+          params: { claim_status: 'pending' },
+        })
+      ).data
+      return { count: rows.length }
+    },
     enabled,
     refetchInterval: 60_000,
     staleTime: 30_000,
   })
 }
 
-// 编辑部：通过 / 驳回认领（v5 端点 POST /admin/claims/{id}/decide）
+// 编辑部：通过 / 驳回认领（后端 POST /admin/claims/{id}/decision）
 export function useDecideClaim() {
   const qc = useQueryClient()
   return useMutation<
@@ -1646,7 +1652,10 @@ export function useDecideClaim() {
     { claimId: number; body: AdminClaimDecideRequest }
   >({
     mutationFn: async ({ claimId, body }) =>
-      (await api.post(`/admin/claims/${claimId}/decide`, body)).data,
+      (await api.post(`/admin/claims/${claimId}/decision`, {
+        action: body.approve ? 'approve' : 'reject',
+        note: body.note,
+      })).data,
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['admin', 'claims'] })
     },

@@ -11,7 +11,8 @@ keywords / doi / funding / clc_code / license 这些列，缺的是“把自由�
 from __future__ import annotations
 
 import re
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 _AUTHOR_SUP = re.compile(r"^([^0-9*]+?)\s*([0-9,，\s]*)(\*?)$")
 

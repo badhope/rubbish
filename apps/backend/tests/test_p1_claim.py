@@ -126,6 +126,15 @@ async def test_approve_binds_owner_and_marks_author(
         headers={"Authorization": f"Bearer {admin_user['token']}"},
     )
     assert resp.status_code == 200, resp.text
+    # 审批台列表契约：后端返回裸数组，字段名必须是 resource_title（前端 AdminClaimEntry 同形）。
+    listed = await client.get(
+        "/api/admin/claims?claim_status=approved",
+        headers={"Authorization": f"Bearer {admin_user['token']}"},
+    )
+    assert listed.status_code == 200, listed.text
+    rows = listed.json()
+    assert isinstance(rows, list)
+    assert rows and rows[0]["resource_title"] == "待批"
     await db_session.refresh(resource)
     assert resource.owner_id == test_user["user_id"]
     # authors_detail 第 1 位 claimed

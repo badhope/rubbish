@@ -17,7 +17,6 @@ import io
 import re
 from typing import Any
 
-
 _SERIF_SRC = "/usr/share/fonts/opentype/noto/NotoSerifCJK-Regular.ttc"
 
 

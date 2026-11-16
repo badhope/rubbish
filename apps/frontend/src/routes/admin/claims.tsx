@@ -64,7 +64,7 @@ function ClaimsAdminPage() {
   const [assignPosition, setAssignPosition] = useState<number>(1)
 
   const { data, isLoading, isError, refetch } = useAdminClaims(statusFilter)
-  const rows = data?.data ?? []
+  const rows = data ?? []
 
   const onReject = async () => {
     if (!rejectTarget) return
@@ -198,7 +198,7 @@ function ClaimsAdminPage() {
                   params={{ resourceId: String(row.resource_id) }}
                   className="block text-sm leading-snug underline-offset-4 hover:underline"
                 >
-                  《{row.title}》
+                  《{row.resource_title}》
                 </Link>
                 <div className="grid gap-1 text-xs text-muted-foreground sm:grid-cols-3">
                   <p>位次：第 {row.author_position} 作者</p>

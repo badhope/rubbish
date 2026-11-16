@@ -105,7 +105,7 @@ function decoratePages(root: HTMLElement, license: string, track: 'paper' | 'ess
   const total = pages.length
   const leftText = `${track === 'essay' ? '副刊 · 非论文格式' : '论文轨 · 学术排版'}${
     license ? ` · ${license}` : ''
-  }　·　${chars} 字`
+  }\u3000·\u3000${chars} 字`
   const set = (page: HTMLElement, corner: string, text: string, align: string) => {
     const box = page.querySelector<HTMLElement>(
       `.pagedjs_margin-${corner} .pagedjs_margin-content`,
@@ -177,8 +177,6 @@ export function PaperProof({
   useEffect(() => {
     let cancelled = false
     let flow: { destroy?: () => void } | undefined
-    let timer: ReturnType<typeof setTimeout> | undefined
-
     const run = async () => {
       await document.fonts.ready
       if (cancelled || !sourceRef.current || !pagesRef.current) return
@@ -217,7 +215,7 @@ export function PaperProof({
       }
     }
 
-    timer = setTimeout(run, 260)
+    const timer = setTimeout(run, 260)
     return () => {
       cancelled = true
       if (timer) clearTimeout(timer)

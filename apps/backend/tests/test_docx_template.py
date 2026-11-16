@@ -97,7 +97,7 @@ def test_inline_semantics_all_rendered() -> None:
     assert "<u>" not in "".join(texts) and "<mark>" not in "".join(texts), "裸 HTML 标签泄漏到 Word"
 
 
-def test_chinese_publication_marks_use_kaiti() -> None:
+def test_chinese_publication_marks_use_body_font() -> None:
     runs = _runs(_render())
 
     def east_asia(run) -> str | None:
@@ -105,10 +105,10 @@ def test_chinese_publication_marks_use_kaiti() -> None:
         fonts = rpr.rFonts if rpr is not None else None
         return None if fonts is None else fonts.get(qn("w:eastAsia"))
 
-    kaiti = [r.text for r in runs if east_asia(r) == "LXGW WenKai"]
-    assert "《回收学报》" in kaiti
-    assert "「绿色排版」" in kaiti
-    assert "“中文引号”" in kaiti
+    body = [r.text for r in runs if east_asia(r) == BODY_FONT]
+    assert "《回收学报》" in body
+    assert "「绿色排版」" in body
+    assert "“中文引号”" in body
     book = next(r for r in runs if r.text == "《回收学报》")
     assert str(book.font.color.rgb) == "2E5E4A"
 
