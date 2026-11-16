@@ -2140,22 +2140,68 @@ def _export_cache_path(cache_key: str, ext: str) -> Path:
 def _pdf_page_png(pdf_path: Path, page: int) -> tuple[Path, int]:
     """把已生成的 PDF 某一页渲染成 PNG，供前端秒开预览。
 
+    优先用 Poppler 的 pdftoppm：线上 PDF 由 LibreOffice 生成，字体是
+    CID Type 0C；PyMuPDF 1.28 在部分 CID 字体上会把字形映射成错误码位，
+    文字层正常但像素全是乱码。Poppler 对这类 PDF 的渲染已验证正常。
+    PyMuPDF 仅作为未安装 poppler-utils 时的兼容兜底。
+
     pdf.js 直接打开 2.6 MB / 91 页的 PDF 时，移动端要等十几秒，
     还可能撞上 45 秒超时。服务端只回一页图片，首屏稳定在几百 KB
     以内，翻页再取下一页；预览和下载件仍是同一份 PDF。
     """
     import pymupdf
 
-    image_path = pdf_path.with_suffix(f".p{page}.png")
     with pymupdf.open(str(pdf_path)) as document:
         total = document.page_count
         target = max(1, min(page, total))
-        image_path = pdf_path.with_suffix(f".p{target}.png")
-        if not image_path.is_file():
-            pixmap = document.load_page(target - 1).get_pixmap(
-                matrix=pymupdf.Matrix(1.5, 1.5), alpha=False
+
+    # 新后缀刻意不和旧 PyMuPDF 缓存共用，避免线上继续命中坏图。
+    image_path = pdf_path.with_suffix(f".p{target}.poppler.png")
+    if image_path.is_file():
+        return image_path, total
+
+    import shutil
+    import subprocess
+    import tempfile
+
+    pdftoppm = shutil.which("pdftoppm")
+    if pdftoppm:
+        tmpdir = Path(tempfile.mkdtemp(prefix="rubbish-preview-"))
+        prefix = tmpdir / "page"
+        try:
+            subprocess.run(
+                [
+                    pdftoppm,
+                    "-f",
+                    str(target),
+                    "-l",
+                    str(target),
+                    "-r",
+                    "108",
+                    "-png",
+                    str(pdf_path),
+                    str(prefix),
+                ],
+                check=True,
+                capture_output=True,
+                timeout=45,
             )
-            pixmap.save(str(image_path))
+            produced = sorted(tmpdir.glob("page-*.png"))
+            if produced:
+                produced[0].replace(image_path)
+                return image_path, total
+        except (OSError, subprocess.SubprocessError):
+            # 渲染失败时继续走 PyMuPDF 兜底，不能把整页预览打成 500。
+            pass
+        finally:
+            shutil.rmtree(tmpdir, ignore_errors=True)
+
+    # 兜底：poppler 未安装或执行失败时仍返回一页图（可能受字体映射影响）。
+    with pymupdf.open(str(pdf_path)) as document:
+        pixmap = document.load_page(target - 1).get_pixmap(
+            matrix=pymupdf.Matrix(1.5, 1.5), alpha=False
+        )
+        pixmap.save(str(image_path))
     return image_path, total
 
 
