@@ -390,11 +390,13 @@ async def list_reviewer_candidates(
     active_counts = dict(
         (
             await db.execute(
-                select(ReviewAssignment.reviewer_id, func.count(ReviewAssignment.id)).where(
+                select(ReviewAssignment.reviewer_id, func.count(ReviewAssignment.id))
+                .where(
                     ReviewAssignment.tenant_id == tenant_id,
                     ReviewAssignment.reviewer_id.in_(reviewer_ids),
                     ReviewAssignment.status.in_(["pending", "accepted"]),
                 )
+                .group_by(ReviewAssignment.reviewer_id)
             )
         ).all()
     )
