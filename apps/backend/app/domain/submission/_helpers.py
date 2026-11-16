@@ -177,8 +177,31 @@ _VERSIONED_FIELDS = (
 
 
 def _version_payload(entry: Submission) -> dict[str, Any]:
-    """Extract the versioned bibliographic payload from a submission."""
-    return {field: getattr(entry, field) for field in _VERSIONED_FIELDS}
+    """Extract the versioned bibliographic payload from a submission.
+
+    除原始列值外，额外写入一份规范化题录 ``manuscript_meta``：作者上标/通讯
+    标记、单位序号、主副标题都在这里固定下来，后续导出或重排无需再从自由
+    文本里猜。它是派生数据，不回写数据库列，不改变既有版本的兼容性。
+    """
+    payload = {field: getattr(entry, field) for field in _VERSIONED_FIELDS}
+    try:
+        from app.domain.submission.manuscript_meta import build_manuscript_meta
+
+        payload["manuscript_meta"] = build_manuscript_meta(
+            title=entry.title,
+            authors=entry.authors,
+            affiliations=entry.author_affiliations,
+            abstract=entry.abstract or "",
+            keywords=entry.keywords,
+            doi=entry.doi,
+            funding=entry.funding,
+            clc=entry.clc_code,
+            license=entry.license,
+            track=entry.track,
+        )
+    except Exception:  # 快照绝不能因派生元信息失败而中断
+        pass
+    return payload
 
 
 async def _snapshot_submission(

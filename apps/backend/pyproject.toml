@@ -36,6 +36,8 @@ dependencies = [
     # 传递依赖下限：uv.lock 里 botocore/requests 会带 urllib3，
     # 2.7.x 有 3 条 PYSEC 通告（PYSEC-2026-4175/4176/4177），锁到 2.8+。
     "urllib3>=2.8.0",
+    # Studio 服务端 PDF：按实际字符裁剪 Noto Serif，避免 20MB 全量嵌入。
+    "fonttools>=4.56",
     "pymupdf>=1.25",
     "pymupdf4llm>=0.0.20",
     "mammoth>=1.9",

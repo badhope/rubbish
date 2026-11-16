@@ -39,6 +39,7 @@ import {
 import { MarkdownEditor } from '@/components/common/markdown-editor'
 import { PaperProof } from '@/components/submission/paper-proof'
 import { uploadMediaImage } from '@/lib/media'
+import { api } from '@/lib/api'
 import AuthPngPreview from '@/components/auth-png-preview'
 import {
   Dialog,
@@ -484,6 +485,7 @@ function SubmissionWizardPage() {
   const [step, setStep] = useState(0)
   // Studio 排版预览抽屉：任何时候都能看一眼“印出来是什么样”
   const [proofOpen, setProofOpen] = useState(false)
+  const [pdfBusy, setPdfBusy] = useState(false)
   // ≥1280 常驻右栏；窄屏只在需要时开抽屉，避免后台白跑一遍分页
   const showSidePreview = useMediaQuery('(min-width: 1280px)')
   // 用户已访问过的步骤：进入过 / 点过「上一步/下一步」的步骤才显示红框，
@@ -847,6 +849,43 @@ function SubmissionWizardPage() {
     return gates.find((g) => g.key === key)?.ok === false
   }
 
+  /** 当前表单 → 服务端同源排版 PDF（与预览同一题录顺序）。 */
+  const downloadStudioPdf = async () => {
+    if (pdfBusy) return
+    setPdfBusy(true)
+    try {
+      const res = await api.post(
+        '/submissions/studio-pdf',
+        {
+          title: form.title,
+          authors: parseListField(form.authors),
+          affiliations: form.affiliations,
+          abstract: form.abstract,
+          keywords: parseListField(form.keywords),
+          body: form.body,
+          doi: form.doi,
+          funding: form.funding,
+          clc: form.clc,
+          license: form.license,
+          track: form.type === 'paper' ? 'paper' : 'essay',
+        },
+        { responseType: 'blob' },
+      )
+      const blob = res.data as Blob
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${(form.title || 'paper').slice(0, 40)}-排版.pdf`
+      a.click()
+      URL.revokeObjectURL(url)
+      toast.success('排版 PDF 已生成')
+    } catch {
+      toast.error('排版 PDF 生成失败，请稍后再试')
+    } finally {
+      setPdfBusy(false)
+    }
+  }
+
   // -----------------------------------------------------------------------
   // 渲染
   // -----------------------------------------------------------------------
@@ -1110,6 +1149,8 @@ function SubmissionWizardPage() {
               clc={form.clc}
               license={form.license}
               track={form.type === 'paper' ? 'paper' : 'essay'}
+              onDownloadPdf={downloadStudioPdf}
+              pdfBusy={pdfBusy}
             />
           </div>
         </aside>
@@ -1133,6 +1174,8 @@ function SubmissionWizardPage() {
             clc={form.clc}
             license={form.license}
             track={form.type === 'paper' ? 'paper' : 'essay'}
+            onDownloadPdf={downloadStudioPdf}
+            pdfBusy={pdfBusy}
           />
         </DialogContent>
       </Dialog>

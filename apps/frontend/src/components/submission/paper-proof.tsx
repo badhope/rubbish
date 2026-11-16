@@ -24,6 +24,9 @@ export interface PaperProofProps {
   clc?: string
   license?: string
   track?: 'paper' | 'essay'
+  /** 有回调时工具条出现「下载 PDF」，由页面负责请求后端。 */
+  onDownloadPdf?: () => void
+  pdfBusy?: boolean
 }
 
 const PAGE_W = 794
@@ -37,6 +40,49 @@ function stripFrontMatter(body: string, title: string): string {
   md = md.replace(/^#{1,6}\s*(摘\s*要|Abstract)\s*\n[\s\S]*?(?=\n#{1,6}\s|$)/im, '')
   md = md.replace(/^#{1,6}\s*(关键词|关键字|Keywords?)\s*\n[\s\S]*?(?=\n#{1,6}\s|$)/im, '')
   return md.trim()
+}
+
+
+const AUTHOR_RE = /^([^0-9*]+?)\s*([0-9,，\s]*)(\*?)$/
+
+/** 「张三1,2*」→ 姓名 + 上标 + 通讯标记；无数字时原样输出。 */
+function renderAuthorLine(authors: string[]) {
+  if (authors.length === 0) return '作者未填写'
+  return authors.map((raw, i) => {
+    const name = (raw || '').trim()
+    const m = name.match(AUTHOR_RE)
+    const nodes =
+      m && (m[2].trim() || m[3]) ? (
+        <>
+          {m[1].trim()}
+          {m[2].trim() ? <sup>{m[2].replace(/[，\s]+/g, ',').replace(/^,|,$/g, '')}</sup> : null}
+          {m[3]}
+        </>
+      ) : (
+        name
+      )
+    return (
+      <span key={`${name}-${i}`}>
+        {i > 0 ? '　' : ''}
+        {nodes}
+      </span>
+    )
+  })
+}
+
+/** 单位按行/分号拆开，逐条加上标序号。 */
+function renderAffiliations(affiliations?: string) {
+  const lines = (affiliations || '')
+    .split(/[\n；;]+/)
+    .map((l) => l.trim())
+    .filter(Boolean)
+  if (lines.length === 0) return null
+  return lines.map((line, i) => (
+    <span key={i}>
+      {i > 0 ? <br /> : null}
+      <sup>{i + 1}</sup> {line.replace(/^\s*[0-9]+[.、)]\s*/, '')}
+    </span>
+  ))
 }
 
 function splitTitle(title: string): { main: string; sub: string } {
@@ -94,6 +140,8 @@ export function PaperProof({
   clc,
   license,
   track = 'paper',
+  onDownloadPdf,
+  pdfBusy = false,
 }: PaperProofProps) {
   const { main, sub } = splitTitle(title || '未填写标题')
   const cleanBody = stripFrontMatter(body, title)
@@ -195,13 +243,25 @@ export function PaperProof({
         <span>
           A4 纸面 · {pageCount > 0 ? `${pageCount} 页` : '排版中…'} · {chars} 字
         </span>
-        <button
-          type="button"
-          className="paper-proof-zoom"
-          onClick={() => setActualSize((v) => !v)}
-        >
-          {actualSize ? '适应宽度' : '原始大小'}
-        </button>
+        <div className="flex items-center gap-2">
+          {onDownloadPdf ? (
+            <button
+              type="button"
+              className="paper-proof-zoom"
+              onClick={onDownloadPdf}
+              disabled={pdfBusy}
+            >
+              {pdfBusy ? '生成中…' : '下载 PDF'}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="paper-proof-zoom"
+            onClick={() => setActualSize((v) => !v)}
+          >
+            {actualSize ? '适应宽度' : '原始大小'}
+          </button>
+        </div>
       </div>
 
       {/* 隐藏的排版源：pagedjs 从这里取内容，作者看到的纸页由它生成。 */}
@@ -210,9 +270,11 @@ export function PaperProof({
           <h1 className="paper-proof-title">{main}</h1>
           {sub ? <p className="paper-proof-subtitle">——{sub}</p> : null}
           <p className="paper-proof-authors">
-            {authors.length > 0 ? authors.join('　') : '作者未填写'}
+            {renderAuthorLine(authors)}
           </p>
-          {affiliations?.trim() ? <p className="paper-proof-affs">{affiliations}</p> : null}
+          {renderAffiliations(affiliations) ? (
+            <p className="paper-proof-affs">{renderAffiliations(affiliations)}</p>
+          ) : null}
           {metaLine ? <p className="paper-proof-affs">{metaLine}</p> : null}
 
           {abstract.trim() ? (
@@ -263,10 +325,10 @@ export function PaperProof({
             </div>
             <h1 className="paper-proof-title">{main}</h1>
             {sub ? <p className="paper-proof-subtitle">——{sub}</p> : null}
-            <p className="paper-proof-authors">
-              {authors.length > 0 ? authors.join('　') : '作者未填写'}
-            </p>
-            {affiliations?.trim() ? <p className="paper-proof-affs">{affiliations}</p> : null}
+            <p className="paper-proof-authors">{renderAuthorLine(authors)}</p>
+            {renderAffiliations(affiliations) ? (
+              <p className="paper-proof-affs">{renderAffiliations(affiliations)}</p>
+            ) : null}
             {metaLine ? <p className="paper-proof-affs">{metaLine}</p> : null}
             {abstract.trim() ? (
               <section className="paper-proof-block">

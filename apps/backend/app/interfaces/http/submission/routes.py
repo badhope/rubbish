@@ -79,6 +79,58 @@ _import_module("app.interfaces.http.submission.routes_editor")
 _import_module("app.interfaces.http.submission.routes_files")
 
 
+class StudioPdfRequest(BaseModel):
+    """Studio 排版 PDF 的题录载荷：与网页预览同一套字段。"""
+
+    title: str = ""
+    authors: list[str] = Field(default_factory=list)
+    affiliations: str | None = None
+    abstract: str = ""
+    keywords: list[str] = Field(default_factory=list)
+    body: str = ""
+    doi: str | None = None
+    funding: str | None = None
+    clc: str | None = None
+    license: str | None = None
+    track: str = "paper"
+
+
+@router.post("/studio-pdf")
+async def studio_pdf(
+    payload: StudioPdfRequest,
+    current_user: User = Depends(get_current_user),
+) -> Response:
+    """按 Studio 预览的题录顺序直接出 A4 PDF（不走 docx→LibreOffice）。"""
+    from starlette.concurrency import run_in_threadpool
+
+    from app.domain.submission.studio_pdf import render_studio_pdf
+
+    if len(payload.body) > 300_000:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="正文过长，无法生成排版 PDF",
+        )
+    meta = {
+        "title": payload.title,
+        "authors": payload.authors,
+        "affiliations": payload.affiliations or "",
+        "abstract": payload.abstract,
+        "keywords": payload.keywords,
+        "doi": payload.doi,
+        "funding": payload.funding,
+        "clc": payload.clc,
+        "license": payload.license,
+        "track": payload.track,
+    }
+    pdf = await run_in_threadpool(render_studio_pdf, meta, payload.body)
+    filename = quote(f"{(payload.title or 'paper')[:40]}-排版.pdf")
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"},
+    )
+
+
 @router.get("/draft", response_model=SubmissionDraftState)
 async def get_submission_draft(
     current_user: User = Depends(get_current_user),
