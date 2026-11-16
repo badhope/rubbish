@@ -117,6 +117,25 @@ class TwoFactorDisableRequest(BaseModel):
     backup_code: str | None = Field(default=None, min_length=4, max_length=20)
 
 
+class TwoFactorRegenerateRequest(TwoFactorDisableRequest):
+    """Body for POST /auth/2fa/backup-codes/regenerate.
+
+    与 disable 同样的重认证要求：密码 + （TOTP | 备份码）。重生成备份码
+    是敏感操作，仅凭 access token 不得放行——否则被盗会话可作废用户
+    手里唯一的备份码 sheet。
+    """
+
+
+class TwoFactorBackupCodesResponse(BaseModel):
+    """Returned by /auth/2fa/backup-codes/regenerate — 仅新备份码。
+
+    刻意不含 secret/otpauth_uri：重生成备份码不应再暴露 TOTP 密钥，
+    否则被盗会话可套取密钥永久绕过第二因子。明文备份码只返回这一次。
+    """
+
+    backup_codes: list[str] = Field(default_factory=list)
+
+
 # --- Two-factor auth (TOTP) ---
 class TwoFactorRequiredResponse(BaseModel):
     """Returned by /auth/login when the account has 2FA enabled.

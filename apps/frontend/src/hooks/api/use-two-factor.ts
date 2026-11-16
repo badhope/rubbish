@@ -62,8 +62,13 @@ export function useDisableTwoFactor() {
 }
 
 export function useRegenerateBackupCodes() {
-  return useMutation<TwoFactorSetupResponse, Error, void>({
-    mutationFn: async () =>
-      (await api.post<TwoFactorSetupResponse>('/auth/2fa/backup-codes/regenerate')).data,
+  return useMutation<
+    { backup_codes: string[] },
+    Error,
+    { password: string; code?: string; backup_code?: string }
+  >({
+    mutationFn: async (body) =>
+      (await api.post<{ backup_codes: string[] }>('/auth/2fa/backup-codes/regenerate', body))
+        .data,
   })
 }

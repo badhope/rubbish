@@ -424,6 +424,113 @@ async def test_two_factor_endpoints_require_auth(client: AsyncClient) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Backup-code regeneration (re-auth required, no secret leak)
+# ---------------------------------------------------------------------------
+
+
+async def test_regenerate_requires_body(client: AsyncClient, test_user: dict) -> None:
+    """无 body → 422：重生成现在强制携带重认证字段。"""
+    await _enable(client, test_user)
+    resp = await client.post(
+        "/api/auth/2fa/backup-codes/regenerate", headers=auth_headers(test_user)
+    )
+    assert resp.status_code == 422
+
+
+async def test_regenerate_wrong_password_401(client: AsyncClient, test_user: dict) -> None:
+    """被劫持的会话不能光凭 token 就刷新备份码。"""
+    await _enable(client, test_user)
+    resp = await client.post(
+        "/api/auth/2fa/backup-codes/regenerate",
+        json={"password": "wrong-password", "code": "123456"},
+        headers=auth_headers(test_user),
+    )
+    assert resp.status_code == 401
+
+
+async def test_regenerate_rejects_replayed_totp(client: AsyncClient, test_user: dict) -> None:
+    """verify-setup 消费过的同窗口码不能用于重生成（重放保护）。"""
+    secret, _ = await _enable(client, test_user)
+    resp = await client.post(
+        "/api/auth/2fa/backup-codes/regenerate",
+        json={"password": test_user["password"], "code": _code(secret)},
+        headers=auth_headers(test_user),
+    )
+    assert resp.status_code == 401
+
+
+async def test_regenerate_when_not_enabled_400(client: AsyncClient, test_user: dict) -> None:
+    resp = await client.post(
+        "/api/auth/2fa/backup-codes/regenerate",
+        json={"password": test_user["password"], "code": "123456"},
+        headers=auth_headers(test_user),
+    )
+    assert resp.status_code == 400
+
+
+async def test_regenerate_returns_only_backup_codes(
+    client: AsyncClient, test_user: dict, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """有效重认证 → 200，响应仅含 backup_codes，绝不回传 secret/otpauth_uri。
+
+    旧实现仅凭 access token 即可重生成并拿到 TOTP 密钥，被盗会话可据此
+    永久绕过第二因子。这里断言响应键集合恰为 {backup_codes}。
+    """
+    secret, old_codes = await _enable(client, test_user)
+    real_time = time.time()
+    monkeypatch.setattr(time, "time", lambda: real_time + 35)
+    resp = await client.post(
+        "/api/auth/2fa/backup-codes/regenerate",
+        json={
+            "password": test_user["password"],
+            "code": pyotp.TOTP(secret).at(real_time + 30),
+        },
+        headers=auth_headers(test_user),
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert set(body.keys()) == {"backup_codes"}
+    new_codes = body["backup_codes"]
+    assert len(new_codes) == 10
+    assert set(new_codes).isdisjoint(old_codes)
+    monkeypatch.undo()
+
+    status_resp = await client.get("/api/auth/2fa/status", headers=auth_headers(test_user))
+    assert status_resp.json()["backup_codes_remaining"] == 10
+
+
+async def test_regenerate_with_backup_code_invalidates_old(
+    client: AsyncClient, test_user: dict
+) -> None:
+    """用备份码重认证也能刷新；旧码全部失效，新码可登录一次。"""
+    _, old_codes = await _enable(client, test_user)
+    resp = await client.post(
+        "/api/auth/2fa/backup-codes/regenerate",
+        json={"password": test_user["password"], "backup_code": old_codes[0]},
+        headers=auth_headers(test_user),
+    )
+    assert resp.status_code == 200, resp.text
+    new_codes = resp.json()["backup_codes"]
+    assert len(new_codes) == 10
+
+    async def _login_with(code: str) -> int:
+        login = await client.post(
+            "/api/auth/login",
+            json={"username": test_user["username"], "password": test_user["password"]},
+        )
+        r = await client.post(
+            "/api/auth/login/2fa",
+            json={"pending_token": login.json()["pending_token"], "code": code},
+        )
+        return r.status_code
+
+    # 旧码（含用于重认证的那张）全部失效
+    assert await _login_with(old_codes[1]) == 401
+    # 新码可用
+    assert await _login_with(new_codes[0]) == 200
+
+
+# ---------------------------------------------------------------------------
 # Pending token unit-level guards
 # ---------------------------------------------------------------------------
 
