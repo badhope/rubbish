@@ -72,6 +72,7 @@ body { font-family: "PaperSerif", "Noto Serif CJK SC", china-s; font-size: 10.5p
 .authors { font-size: 10pt; text-align: center; margin: 0 0 3pt 0; }
 .affs { font-size: 8.5pt; text-align: center; color: #5d6b60; margin: 0 0 3pt 0; line-height: 1.6; }
 .num { font-family: "Times-Roman"; }
+.formula { font-family: "Times-Roman"; font-style: italic; }
 .meta { font-size: 8.5pt; text-align: center; color: #5d6b60; margin: 0 0 10pt 0; }
 .abstract { background-color: #f5f7f3; border-left: 2pt solid #2e5e4a; padding: 8pt 10pt; margin: 10pt 0 8pt 0; }
 .abstract .label { font-size: 8pt; font-weight: bold; letter-spacing: 3pt; color: #2e5e4a; margin: 0 0 4pt 0; }
@@ -94,6 +95,53 @@ _SUP_MAP = str.maketrans("0123456789,，", "⁰¹²³⁴⁵⁶⁷⁸⁹··")
 def _sup(text: str) -> str:
     """Story 不支持 vertical-align/sup，用 Unicode 上标数字替代。"""
     return (text or "").translate(_SUP_MAP)
+
+
+_GREEK = {
+    "alpha": "α", "beta": "β", "gamma": "γ", "delta": "δ", "epsilon": "ε",
+    "zeta": "ζ", "eta": "η", "theta": "θ", "lambda": "λ", "mu": "μ",
+    "nu": "ν", "xi": "ξ", "pi": "π", "rho": "ρ", "sigma": "σ", "tau": "τ",
+    "phi": "φ", "chi": "χ", "psi": "ψ", "omega": "ω",
+    "Gamma": "Γ", "Delta": "Δ", "Theta": "Θ", "Lambda": "Λ", "Pi": "Π",
+    "Sigma": "Σ", "Phi": "Φ", "Psi": "Ψ", "Omega": "Ω",
+}
+_SUP_DIGITS = str.maketrans("0123456789+-n", "⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻ⁿ")
+
+
+def _tex_to_text(tex: str) -> str:
+    """把常见 TeX 片段降级成可读文本（PDF 无 KaTeX，先保证不是源码）。"""
+    import re
+
+    text = tex.strip()
+    text = re.sub(r"\\left|\\right|\\,|\\;|\\!", "", text)
+    text = re.sub(r"\\(?:mathbb|mathbf|mathrm|mathcal|text|operatorname)\{(.+?)\}", r"\1", text)
+    for _ in range(3):
+        text = re.sub(r"\\frac\{(.+?)\}\{(.+?)\}", r"(\1)/(\2)", text)
+    text = re.sub(r"\\sqrt\{(.+?)\}", r"√(\1)", text)
+    for name, char in _GREEK.items():
+        text = re.sub(rf"\\{name}\b", char, text)
+    text = text.replace("\\sim", "∼").replace("\\cdot", "·").replace("\\times", "×")
+    text = text.replace("\\le", "≤").replace("\\ge", "≥").replace("\\neq", "≠")
+    text = text.replace("\\infty", "∞").replace("\\pm", "±").replace("\\to", "→")
+    text = re.sub(r"\^{([0-9n+\-]+)}", lambda m: m.group(1).translate(_SUP_DIGITS), text)
+    text = re.sub(r"\^([0-9n])", lambda m: m.group(1).translate(_SUP_DIGITS), text)
+    text = text.replace("\\", "")
+    return text.strip()
+
+
+def _math_html(fragment: str) -> str:
+    """$...$ / $$...$$ → 可读公式文本；Story 不支持 KaTeX。"""
+    import re
+
+    def block(match: re.Match[str]) -> str:
+        return f'<div class="formula">{html.escape(_tex_to_text(match.group(1)))}</div>'
+
+    def inline(match: re.Match[str]) -> str:
+        return f'<span class="formula">{html.escape(_tex_to_text(match.group(1)))}</span>'
+
+    fragment = re.sub(r"\$\$(.+?)\$\$", block, fragment, flags=re.S)
+    fragment = re.sub(r"\$(.+?)\$", inline, fragment, flags=re.S)
+    return fragment
 
 _AUTHOR_SUP = re.compile(r"^([^0-9*]+?)\s*([0-9,，\s]*)(\*?)$")
 
@@ -163,7 +211,7 @@ def build_studio_html(meta: dict[str, Any], body_md: str) -> str:
 
     abstract = meta.get("abstract") or ""
     abstract_html = (
-        f'<div class="abstract"><div class="label">摘 要</div>{md_to_html(abstract)}</div>'
+        f'<div class="abstract"><div class="label">摘 要</div>{_math_html(md_to_html(abstract))}</div>'
         if abstract.strip()
         else ""
     )
@@ -181,7 +229,7 @@ def build_studio_html(meta: dict[str, Any], body_md: str) -> str:
 {f'<div class="meta">{meta_line}</div>' if meta_line else ''}
 {abstract_html}
 {keywords_html}
-{md_to_html(body_md)}
+{_math_html(md_to_html(body_md))}
 </body></html>"""
 
 

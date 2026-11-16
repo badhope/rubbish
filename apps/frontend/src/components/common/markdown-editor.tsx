@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ChevronDown,
+  BookMarked,
   Focus,
   History,
   ImagePlus,
@@ -64,6 +65,8 @@ export interface MarkdownEditorProps {
   onUploadImage?: (file: File) => Promise<string>
   /** 传入后显示「版本」按钮；快照只存本机，按此 key 隔离。 */
   snapshotKey?: string
+  /** Studio 工作台：显示学术插入菜单（公式/脚注/图注/表题/参考文献/交叉引用）。 */
+  academicTools?: boolean
 }
 
 interface ToolAction {
@@ -192,6 +195,67 @@ const INSERT_TOOLS = [
   QUOTE_DOUBLE,
 ]
 
+const ACADEMIC_SNIPPETS = [
+  { label: '行内公式', text: '$E = mc^2$' },
+  {
+    label: '独立公式',
+    text: '\n$$\n\\begin{aligned}\n  a &= b \\\\\n  c &= d\n\\end{aligned}\n$$\n',
+  },
+  { label: '脚注', text: '[^1]\n\n[^1]: 在这里写脚注内容\n' },
+  { label: '图注', text: '\n![图 1](在这里填图片地址)\n\n**图 1**　图注文字\n' },
+  {
+    label: '三线表表题',
+    text: '\n**表 1**　表题文字\n\n| 列 1 | 列 2 |\n| --- | --- |\n|  |  |\n',
+  },
+  {
+    label: '参考文献',
+    text: '\n[1] 作者. 题名[J]. 刊名, 年, 卷(期): 页码.\n',
+  },
+  { label: '交叉引用', text: '见 §1' },
+]
+
+function AcademicMenu({
+  disabled,
+  onInsert,
+}: {
+  disabled?: boolean
+  onInsert: (text: string) => void
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={disabled}
+          className="h-7 gap-1 px-1.5 text-xs font-medium text-muted-foreground"
+          title="学术插入：公式 / 脚注 / 图注 / 表题 / 参考文献 / 交叉引用"
+          aria-label="学术插入"
+        >
+          <BookMarked className="h-3.5 w-3.5" />
+          学术
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-48">
+        <DropdownMenuLabel className="text-xs text-muted-foreground">
+          插入学术元素
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {ACADEMIC_SNIPPETS.map((item) => (
+          <DropdownMenuItem
+            key={item.label}
+            className="gap-2 text-xs"
+            onSelect={() => onInsert(item.text)}
+          >
+            {item.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
 export function MarkdownEditor({
   value,
   onChange,
@@ -201,6 +265,7 @@ export function MarkdownEditor({
   testId,
   onUploadImage,
   snapshotKey,
+  academicTools = false,
 }: MarkdownEditorProps) {
   const areaRef = useRef<HTMLTextAreaElement | null>(null)
   const imageRef = useRef<HTMLInputElement | null>(null)
@@ -632,6 +697,7 @@ export function MarkdownEditor({
           onInsert={() => applyTool(TABLE)}
           onEdit={applyTableEdit}
         />
+        {academicTools && <AcademicMenu disabled={disabled} onInsert={insertText} />}
         <ToolButton
           tool={{ label: '↶', title: '撤销（Ctrl+Z）' }}
           disabled={disabled || !canUndo}

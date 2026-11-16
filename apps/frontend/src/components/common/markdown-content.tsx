@@ -133,7 +133,7 @@ export function MarkdownContent({
   return (
     <div className={cn('markdown-body', className)}>
       <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkCjkStrong, remarkMath]}
+        remarkPlugins={[remarkGfm, remarkMath, remarkCjkStrong]}
         rehypePlugins={[
           rehypeRaw,
           [rehypeSanitize, markdownSanitizeSchema],
