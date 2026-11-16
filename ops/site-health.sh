@@ -15,7 +15,17 @@ for i in $(seq 1 5); do
   sleep 3
 done
 [ "$code" = 200 ] || bad "home=$code"
-curl -sS -m 15 -D - -o /dev/null "$BASE/" | grep -qi 'cache-control: no-cache' || bad "html cache-control missing"
+# 缓存头检查：用临时文件而不用 `-D - | grep -q`（grep 提前退出会让 curl 报
+# "Failed writing headers" 噪声），并重试 3 次，避免发版重启窗口的假告警。
+hdr=$(mktemp)
+ok=0
+for i in $(seq 1 3); do
+  curl -sS -m 15 -D "$hdr" -o /dev/null "$BASE/" 2>/dev/null || true
+  if grep -qi 'cache-control: no-cache' "$hdr" 2>/dev/null; then ok=1; break; fi
+  sleep 2
+done
+rm -f "$hdr"
+[ "$ok" = 1 ] || bad "html cache-control missing"
 code=000
 for i in $(seq 1 5); do
   code=$(curl -sS -m 15 -o /dev/null -w '%{http_code}' "$BASE/api/health" || echo 000)
