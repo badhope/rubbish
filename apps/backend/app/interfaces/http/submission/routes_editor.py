@@ -939,6 +939,12 @@ async def submission_timeline(
     if not is_editor and entry.submitted_by != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
 
+    # 双盲下作者不得经由时间线反推审稿人身份（邀请/接受/报告事件都点名）。
+    # 编辑视图与单盲作者视图保持原样。函数级导入规避模块环。
+    from app.domain.review.blinding import get_review_mode
+
+    hide_reviewers = not is_editor and await get_review_mode(db, entry.tenant_id) == "double_blind"
+
     events: list[dict] = []
 
     def add(at, kind: str, title: str, detail: str | None = None) -> None:
@@ -988,8 +994,17 @@ async def submission_timeline(
         .scalars()
         .all()
     )
+    # 稳定匿名标签：按 invited_at 顺序给不同审稿人编号，重复 reviewer_id
+    # 复用同一标签，避免作者靠事件顺序反推身份。
+    reviewer_labels: dict[int, str] = {}
     for a in assignments:
-        who = a.reviewer.username if a.reviewer else f"#{a.reviewer_id}"
+        if a.reviewer_id not in reviewer_labels:
+            reviewer_labels[a.reviewer_id] = f"审稿人{len(reviewer_labels) + 1}"
+    for a in assignments:
+        if hide_reviewers:
+            who = reviewer_labels[a.reviewer_id]
+        else:
+            who = a.reviewer.username if a.reviewer else f"#{a.reviewer_id}"
         add(
             a.invited_at,
             "assignment",

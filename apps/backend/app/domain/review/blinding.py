@@ -177,6 +177,13 @@ def reviewer_facing_payload(payload: dict[str, Any], *, double_blind: bool) -> d
         if field in scrubbed:
             scrubbed[field] = None
     if double_blind:
+        # 正文侧信道：abstract/preview 常把 byline 与通讯邮箱写进去，只抹
+        # authors 字段挡不住。用 scrub 前的原始作者名整词脱敏，保留学术内容。
+        original_authors = scrubbed.get("authors")
+        for field in ("abstract", "preview"):
+            text = scrubbed.get(field)
+            if isinstance(text, str):
+                scrubbed[field] = redact_manuscript_identity(text, original_authors)
         for field, value in _DOUBLE_BLIND_SCRUB.items():
             if field in scrubbed:
                 scrubbed[field] = value
@@ -198,6 +205,11 @@ def anonymize_submission_fields(payload: dict[str, Any]) -> dict[str, Any]:
     直接送到审稿人面前，构成穿过双盲的侧信道。
     """
     scrubbed = {k: v for k, v in payload.items() if k in REVIEWER_VISIBLE_FIELDS}
+    original_authors = scrubbed.get("authors")
+    for field in ("abstract", "preview"):
+        text = scrubbed.get(field)
+        if isinstance(text, str):
+            scrubbed[field] = redact_manuscript_identity(text, original_authors)
     for field, value in _DOUBLE_BLIND_SCRUB.items():
         if field in scrubbed:
             scrubbed[field] = value
