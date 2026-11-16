@@ -64,7 +64,7 @@ from app.core.security import (
     verify_password,
 )
 from app.core.time import utcnow
-from app.core.token_denylist import get_denylist
+from app.core.token_denylist import DenylistUnavailableError, get_denylist
 from app.core.tokens import (
     RESET_PASSWORD_TOKEN_TYPE,
     VERIFY_EMAIL_TOKEN_TYPE,
@@ -400,14 +400,22 @@ async def refresh(
         )
 
     # Per-token denylist check — a previously-consumed refresh token
-    # (e.g. rotated or logged out) must be rejected.
-    denylist = await get_denylist()
+    # (e.g. rotated or logged out) must be rejected. If the revocation
+    # backend is unreachable we fail closed (503) rather than letting a
+    # possibly-revoked token through.
     token_jti = decoded.get("jti")
-    if token_jti and await denylist.is_denied(str(token_jti)):
+    try:
+        denylist = await get_denylist()
+        if token_jti and await denylist.is_denied(str(token_jti)):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Refresh token has been revoked",
+            )
+    except DenylistUnavailableError as exc:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Refresh token has been revoked",
-        )
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Token revocation service unavailable",
+        ) from exc
 
     try:
         user_id = int(decoded["sub"])
@@ -449,7 +457,13 @@ async def refresh(
     # Per-token revocation: add the consumed token's JTI to the denylist
     # so it cannot be replayed. The new token pair gets a fresh JTI.
     if token_jti and "exp" in decoded:
-        await denylist.add(str(token_jti), float(decoded["exp"]))
+        try:
+            await denylist.add(str(token_jti), float(decoded["exp"]))
+        except DenylistUnavailableError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Token revocation service unavailable",
+            ) from exc
 
     # Commit releases the row lock. We do NOT bump refresh_token_version
     # here — the denylist handles per-token rotation so other devices'
@@ -495,8 +509,14 @@ async def logout(
     if raw_token:
         decoded = decode_refresh_token(raw_token)
         if decoded and "jti" in decoded and "exp" in decoded:
-            denylist = await get_denylist()
-            await denylist.add(str(decoded["jti"]), float(decoded["exp"]))
+            try:
+                denylist = await get_denylist()
+                await denylist.add(str(decoded["jti"]), float(decoded["exp"]))
+            except DenylistUnavailableError as exc:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Token revocation service unavailable",
+                ) from exc
 
     # Bump token_version to invalidate the current access token.
     # We do NOT bump refresh_token_version — the JTI denylist above

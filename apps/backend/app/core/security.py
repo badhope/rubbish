@@ -5,11 +5,12 @@ Tokens carry ``sub`` (user id) and ``token_version``. The user table stores
 previously-issued token without a denylist.
 
 Refresh tokens additionally carry ``rtv`` (refresh_token_version) — a
-counter independent from ``token_version``. Each ``/auth/refresh`` call
-bumps it on the User row, so the consumed refresh token (and any older
-ones) become invalid the next time they are presented. This is OAuth2-
-standard refresh token rotation; access tokens and the user's other
-devices are NOT affected.
+counter independent from ``token_version``. It is bumped only on bulk
+revocation (``/auth/revoke-all``, password change), invalidating every
+outstanding refresh token at once. A single ``/auth/refresh`` does NOT
+bump ``rtv``: the consumed token's ``jti`` is added to the denylist
+instead, so the user's other devices keep working. Bumping ``rtv`` per
+refresh would revoke every other session and break multi-device use.
 
 Signing key rotation (M3 hardening): JWT signing + verification lives
 in ``app.core.key_rotation``. ``encode_jwt`` always signs with the

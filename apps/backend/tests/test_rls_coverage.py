@@ -55,6 +55,19 @@ _NO_RLS_BY_DESIGN = {
     "tenant_hosts",
 }
 
+# Tables that DO have an RLS enable (so they are not coverage offenders) but
+# were created via raw ``CREATE TABLE`` SQL rather than ``op.create_table``,
+# so the create-table detector cannot see their tenant_id column. They are
+# legitimate phantom-check exemptions, NOT hidden RLS enables. Each entry
+# must cite the raw-SQL migration that creates it.
+_CREATED_OUTSIDE_OP = {
+    # point_events is created by ``CREATE TABLE IF NOT EXISTS point_events``
+    # in alembic/versions/034_coin_backfill.py (raw SQL, not op.create_table).
+    # 054_missing_table_rls enables RLS on it; the phantom check below would
+    # otherwise flag it as "RLS-enabled but never created with a tenant_id".
+    "point_events",
+}
+
 # op.create_table("table_name", ...) — both quote styles used in the
 # codebase (single-quote style after the migration consolidation).
 _CREATE_TABLE_RE = re.compile(r'op\.create_table\(\s*["\']([a-z_0-9]+)["\']')
@@ -227,8 +240,10 @@ def test_rls_coverage_is_nonempty() -> None:
     # Every RLS-enabled table must have been *created with* a tenant_id
     # somewhere, otherwise we detected a phantom.
     # (tenants is created without the marker in the create_table window we
-    # scan — it's whitelisted separately — so exclude it from this check.)
-    phantom = rls_tables - tenant_tables - _TENANT_ROOT_TABLES
+    # scan — it's whitelisted separately — so exclude it from this check.
+    # _CREATED_OUTSIDE_OP covers tables built via raw CREATE TABLE SQL, e.g.
+    # point_events in 034, whose tenant_id column the detector cannot see.)
+    phantom = rls_tables - tenant_tables - _TENANT_ROOT_TABLES - _CREATED_OUTSIDE_OP
     assert not phantom, (
         f"RLS-enabled tables not created with a tenant_id column: "
         f"{sorted(phantom)}. These may be legitimate (added later via "

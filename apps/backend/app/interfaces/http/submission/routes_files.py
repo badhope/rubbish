@@ -27,6 +27,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import (
     get_current_user,
     get_current_user_optional,
+    require_tenant_id,
     user_has_editor_access,
 )
 from app.core.db import get_db
@@ -799,37 +800,47 @@ def _download_ticket_secret() -> bytes:
     from app.core.config import get_settings
 
     key = get_settings().secret_key
-    return key.encode("utf-8") if isinstance(key, str) else key
+    raw = key.encode("utf-8") if isinstance(key, str) else key
+    # 域分离：从主密钥派生专用票据密钥，避免同一密钥被 JWT/其他 HMAC
+    # 协议直接重用（跨协议签名重用是一类经典的密钥管理缺陷）。
+    return hmac.new(raw, b"rubbish-download-ticket-v1", hashlib.sha256).digest()
 
 
-def _make_download_ticket(submission_id: int, user_id: int, file_format: str) -> str:
+def _make_download_ticket(
+    submission_id: int, user_id: int, file_format: str, tenant_id: str
+) -> str:
     """短时下载票据：移动端浏览器/下载器带不上 Authorization 头时用。
 
-    票据只绑定稿件、用户、格式和到期时间，不携带用户密码或长期 token；
-    泄露后最多 10 分钟内可下载同一份稿件，且不能调用其他接口。
+    票据绑定稿件、用户、格式、**租户**和到期时间，不携带用户密码或长期
+    token；泄露后最多 10 分钟内可下载同一租户的同一份稿件，且不能调用
+    其他接口。租户段确保 A 租户的票据拿到 B 租户部署上即使 HMAC 正确也无效。
     """
     expires = int(time.time()) + _DOWNLOAD_TICKET_TTL
-    payload = f"{submission_id}:{user_id}:{file_format}:{expires}"
+    payload = f"{submission_id}:{user_id}:{file_format}:{tenant_id}:{expires}"
     signature = hmac.new(
         _download_ticket_secret(), payload.encode("utf-8"), hashlib.sha256
     ).hexdigest()
     return base64.urlsafe_b64encode(f"{payload}:{signature}".encode()).decode("ascii")
 
 
-def _verify_download_ticket(ticket: str, submission_id: int, file_format: str) -> int | None:
+def _verify_download_ticket(
+    ticket: str, submission_id: int, file_format: str, tenant_id: str
+) -> int | None:
     try:
         decoded = base64.urlsafe_b64decode(ticket.encode("ascii")).decode("utf-8")
         payload, signature = decoded.rsplit(":", 1)
         parts = payload.split(":")
-        if len(parts) != 4:
+        if len(parts) != 5:
             return None
-        ticket_submission, ticket_user, ticket_format, expires_s = parts
+        ticket_submission, ticket_user, ticket_format, ticket_tenant, expires_s = parts
         expected = hmac.new(
             _download_ticket_secret(), payload.encode("utf-8"), hashlib.sha256
         ).hexdigest()
         if not hmac.compare_digest(signature, expected):
             return None
         if int(ticket_submission) != submission_id or ticket_format != file_format:
+            return None
+        if not hmac.compare_digest(ticket_tenant, tenant_id):
             return None
         if int(expires_s) < int(time.time()):
             return None
@@ -881,7 +892,7 @@ async def create_submission_download_ticket(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have access to this submission file",
         )
-    ticket = _make_download_ticket(entry.id, current_user.id, file_format)
+    ticket = _make_download_ticket(entry.id, current_user.id, file_format, str(entry.tenant_id))
     # 路径必须以 .pdf/.docx 结尾：微信内置浏览器按扩展名判断能否
     # 交给文件查看器/下载器；只靠 ?format=pdf 它经常当成网页不处理。
     return {
@@ -950,21 +961,44 @@ async def download_submission_file(
             detail="This submission has no uploaded file or online manuscript",
         )
 
+    actor: User | None
     if current_user is not None:
-        actor_id = current_user.id
-        if not await _can_access_submission_file(db, entry, actor_id, current_user):
+        actor = current_user
+        if not await _can_access_submission_file(db, entry, actor.id, actor):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You do not have access to this submission file",
             )
     elif ticket is not None:
-        # 票据换发时已经完整校验过权限；这里只验证 HMAC/绑定/到期，
-        # 不再要求浏览器带 Authorization 头。票据 10 分钟失效。
-        actor_id = _verify_download_ticket(ticket, entry.id, file_format) or 0
+        # 票据绑定租户：跨租户伪造即使 HMAC 正确也拒绝（5 段含 tenant_id）。
+        actor_id = (
+            _verify_download_ticket(ticket, entry.id, file_format, str(require_tenant_id())) or 0
+        )
         if not actor_id:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Download ticket is invalid or expired",
+            )
+        # 兑换时复核 actor 仍属本租户且活跃，并**重新鉴权**：换发后若被
+        # 撤派/撤权/禁用，票据不再放行——票据是短时直链，不是长期授权。
+        actor = (
+            await db.execute(
+                select(User).where(
+                    User.id == actor_id,
+                    User.tenant_id == entry.tenant_id,
+                    User.is_active.is_(True),
+                )
+            )
+        ).scalar_one_or_none()
+        if actor is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Download ticket is invalid or expired",
+            )
+        if not await _can_access_submission_file(db, entry, actor.id, actor):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have access to this submission file",
             )
     else:
         raise HTTPException(
@@ -972,10 +1006,10 @@ async def download_submission_file(
             detail="Authentication required",
         )
 
-    # 作者/编辑可直接取回 Markdown 源文件（审稿人仍走匿名通道）。
+    # 作者/编辑持票可取回 Markdown 源文件（审稿人仍走匿名通道）。
     if file_format == "md" and (entry.file_path or entry.markdown_path):
-        is_privileged_md = current_user is not None and (
-            entry.submitted_by == current_user.id or await user_has_editor_access(db, current_user)
+        is_privileged_md = actor is not None and (
+            entry.submitted_by == actor.id or await user_has_editor_access(db, actor)
         )
         if is_privileged_md:
             # 作者上传的 .md 原件优先（保留原始换行/字节）；没有原件时
@@ -1000,8 +1034,8 @@ async def download_submission_file(
     # ``review_mode=double_blind``，但 328/329 都没有匿名稿，于是审稿人连
     # 稿件都下载不了，整个评审流程卡死。现在改为**从 Markdown 现场生成**
     # 匿名 Word/PDF：不依赖外部 URL，也不会把原始 PDF 的元数据带出去。
-    is_privileged = current_user is not None and (
-        entry.submitted_by == current_user.id or await user_has_editor_access(db, current_user)
+    is_privileged = actor is not None and (
+        entry.submitted_by == actor.id or await user_has_editor_access(db, actor)
     )
     needs_anonymized = False
     if not is_privileged:
