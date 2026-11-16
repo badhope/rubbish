@@ -72,10 +72,10 @@ MAX_PAGE_SIZE = 100
 
 
 def _normalize_review_scores(scores: dict[str, Any]) -> dict[str, Any]:
-    """校验并计算审稿评分：五维、逐维分数/理由/证据缺一不可。
+    """校验并计算审稿评分：五维，分数必填，理由/证据/修改意见选填。
 
-    旧版报告里的自由结构（originality: 4）不再受理新提交：没有正文证据的
-    分数无法复核，也会让“随手给高分”绕过口径。读取旧报告不受影响。
+    先让审稿人能直接给分；理由和证据填写了就保留，不填也不阻断提交或
+    计分。旧版报告里的自由结构（originality: 4）仍不受理新提交。
     """
     track = str(scores.get("track") or "academic")
     if track not in ("academic", "absurd"):
@@ -84,7 +84,7 @@ def _normalize_review_scores(scores: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(raw, dict):
         raise HTTPException(
             status_code=422,
-            detail="评分必须按五维提交：scores.dimensions = {key: {score, reason, evidence}}",
+            detail="评分必须按五维提交：scores.dimensions = {key: {score, reason?, evidence?}}",
         )
     required = [k for k, _, _ in dimensions_for(track)]
     missing = [k for k in required if k not in raw]
@@ -104,42 +104,6 @@ def _normalize_review_scores(scores: dict[str, Any]) -> dict[str, Any]:
         reason = str(item.get("reason") or "").strip()
         evidence = str(item.get("evidence") or "").strip()
         suggestion = str(item.get("suggestion") or "").strip()
-        # 分越高，证据门槛越高：90+ 是“顶刊范本”，不能用一句“写得不错”
-        # 换一个高分。80+ 也要求能定位到正文位置，而不是泛泛而谈。
-        if score >= 90:
-            reason_min, evidence_min = 40, 60
-            level = "90+ 顶刊级"
-        elif score >= 80:
-            reason_min, evidence_min = 15, 20
-            level = "80+ 一区"
-        else:
-            reason_min, evidence_min = 4, 10
-            level = "常规"
-        if len(reason) < reason_min:
-            raise HTTPException(
-                status_code=422,
-                detail=f"{key}: {level}评分理由至少 {reason_min} 字，当前 {len(reason)} 字",
-            )
-        if len(evidence) < evidence_min:
-            raise HTTPException(
-                status_code=422,
-                detail=(
-                    f"{key}: {level}正文证据至少 {evidence_min} 字，当前 {len(evidence)} 字；"
-                    "需写清章节/段落/图号/表号/引用编号或可访问链接"
-                ),
-            )
-        locator_hit = any(
-            token in evidence
-            for token in ("第", "§", "图", "表", "页", "段", "节", "引用", "文献", "附录", "http")
-        )
-        if not locator_hit:
-            raise HTTPException(
-                status_code=422,
-                detail=(
-                    f"{key}: 证据必须能定位到正文（例如“§3 第2段 / 图2 / 表1 / 参考文献[4]”），"
-                    "不能只写主观印象"
-                ),
-            )
         parsed.append(
             DimensionScore(
                 key=key, score=score, reason=reason, evidence=evidence, suggestion=suggestion

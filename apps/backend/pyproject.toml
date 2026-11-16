@@ -42,6 +42,9 @@ dependencies = [
     "pymupdf4llm>=0.0.20",
     "mammoth>=1.9",
     "markdownify>=0.14",
+    # 直接 import：export_docs 使用 markdown-it-py 做正文 HTML 渲染；
+    # 之前只靠 markdownify 的传递依赖，显式锁定避免上游换实现后断链。
+    "markdown-it-py==4.2.0",
     "python-docx>=1.1",
     "docxcompose>=2.2.0",
 ]

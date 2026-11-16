@@ -159,17 +159,8 @@ export function mergeDimensionReviews(
 
 export function dimensionIssue(_dim: DimensionMeta, value: DimensionReview | undefined): string | null {
   if (!value || value.score === null) return '未给分'
-  const score = value.score
-  // 与服务端同一条门槛：90+ 顶刊级要 40 字理由 + 60 字可定位证据，
-  // 80+ 一区要 15/20 字，其余至少 4/10 字。前端先拦，避免提交后 422。
-  const [reasonMin, evidenceMin] = score >= 90 ? [40, 60] : score >= 80 ? [15, 20] : [4, 10]
-  const reason = value.reason.trim()
-  const evidence = value.evidence.trim()
-  if (reason.length < reasonMin) return `理由至少 ${reasonMin} 字（当前 ${reason.length}）`
-  if (evidence.length < evidenceMin) return `正文证据至少 ${evidenceMin} 字（当前 ${evidence.length}）`
-  if (!['第', '§', '图', '表', '页', '段', '节', '引用', '文献', '附录', 'http'].some((t) => evidence.includes(t))) {
-    return '证据要定位到正文（§/段/图/表/引用编号）'
-  }
+  if (value.score < 0 || value.score > 100) return '分数需在 0–100'
+  // 分数是唯一必填项；理由、正文证据、修改意见都由审稿人自行决定填不填。
   return null
 }
 
@@ -271,8 +262,8 @@ export function RubricScoreFields({
         </span>
       </div>
       <p className="text-[11px] leading-5 text-muted-foreground">
-        每个维度必须同时有 <strong>分数 + 理由 + 正文证据</strong>。证据写到章节/段落/图号/表号/引用编号，只写“整体不错”不算。
-        90 分以上按顶刊级取证：理由至少 40 字、证据至少 60 字；80 分以上也要能定位到正文。三项任一缺失，服务端会拒绝整份报告。
+        每个维度必须给 <strong>分数</strong>；评分理由、正文证据、修改意见均为<strong>选填</strong>。
+        建议填写理由和证据方便复核，但不填不会阻断提交，也不影响计分。
       </p>
 
       {dims.map((dim) => {
@@ -316,7 +307,7 @@ export function RubricScoreFields({
             <div className="mt-2 grid gap-2 lg:grid-cols-3">
               <div className="space-y-1">
                 <p className="flex items-center gap-1 text-[11px] font-medium">
-                  <FileSearch className="h-3.5 w-3.5" /> 为什么给这个分
+                  <FileSearch className="h-3.5 w-3.5" /> 评分理由（选填）
                 </p>
                 <Textarea
                   value={value.reason}
@@ -330,7 +321,7 @@ export function RubricScoreFields({
               </div>
               <div className="space-y-1">
                 <p className="flex items-center gap-1 text-[11px] font-medium">
-                  <FileSearch className="h-3.5 w-3.5" /> 正文证据（必填）
+                  <FileSearch className="h-3.5 w-3.5" /> 正文证据（选填）
                 </p>
                 <Textarea
                   value={value.evidence}
@@ -359,7 +350,7 @@ export function RubricScoreFields({
             </div>
             <div className="mt-1.5 flex items-center justify-between text-[10px]">
               <span className={cn('text-muted-foreground', issue && 'text-amber-700 dark:text-amber-300')}>
-                {issue ? `待补：${issue}` : '本维度已可提交'}
+                {issue ? `待补：${issue}` : '已给分 · 可选填理由/证据'}
               </span>
               <span className="text-muted-foreground tabular-nums">
                 理由 {value.reason.trim().length} 字 · 证据 {value.evidence.trim().length} 字 · 修改意见 {value.suggestion.trim().length} 字

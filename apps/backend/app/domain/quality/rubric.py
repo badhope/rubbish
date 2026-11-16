@@ -280,30 +280,22 @@ def auto_precheck(m: PaperMetrics) -> list[dict[str, str]]:
 
 @dataclass
 class DimensionScore:
-    """一个维度的评分：分值 + 必填理由 + 必填证据。
+    """一个维度的评分：分值必填，理由 / 证据 / 修改意见均选填。
 
-    只有“70 分”没有信息量；只有“写得不错”也无法复核。证据要能落到正文
-    位置（章节/段落/图号/表号/引用编号/链接），审核记录才可追溯。
+    评审可以先给分，再决定是否补充可复核的正文依据；选填内容一旦填写
+    就原样保留，不做最低字数或“必须定位正文”的门槛。
     """
 
     key: str
     score: float  # 0–100
-    reason: str
+    reason: str = ""
     evidence: str = ""
     # 逐维修改意见（审稿人写给作者的可执行修改建议，可选）
     suggestion: str = ""
 
     def __post_init__(self) -> None:
-        if self.evidence.strip() and not self.reason.strip():
-            raise ValueError(f"{self.key}: evidence requires a reason")
-        if self.reason.strip() and len(self.evidence.strip()) < 8:
-            raise ValueError(
-                f"{self.key}: evidence is required (每个分数必须附正文证据，至少 8 字)"
-            )
         if not 0 <= self.score <= 100:
             raise ValueError(f"{self.key}: score must be 0–100, got {self.score}")
-        if not self.reason.strip():
-            raise ValueError(f"{self.key}: reason is required (评分必须给理由)")
 
 
 @dataclass
@@ -401,12 +393,6 @@ def evaluate(
         raise ValueError(f"Missing dimension scores: {missing}")
     if unknown:
         raise ValueError(f"Unknown dimension for track {track}: {unknown}")
-    for key, _label, _hint in dims:
-        d = by_key[key]
-        if not d.reason.strip():
-            raise ValueError(f"{key}: reason is required")
-        if len(d.evidence.strip()) < 8:
-            raise ValueError(f"{key}: evidence is required (每个分数必须附正文证据)")
 
     breakdown: dict[str, dict[str, object]] = {}
     total = 0.0
@@ -500,7 +486,7 @@ def rubric_payload() -> dict[str, object]:
     """公开口径：审稿人、作者、外部 AI 都用这一份。"""
     return {
         "version": RUBRIC_VERSION,
-        "model": "五维双赛道百分制；每维必须附理由与正文证据",
+        "model": "五维双赛道百分制；每维必须给分，理由与正文证据选填",
         "tracks": {
             "academic": {
                 "label": TRACK_LABELS["academic"],

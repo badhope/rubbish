@@ -43,7 +43,7 @@ _ABSURD_KEYS = ("concept", "coherence", "execution", "material", "voice")
 
 
 class DimensionInput(BaseModel):
-    """一个维度的评分输入。理由与证据必填——没证据的分数不受理。"""
+    """一个维度的评分输入：分数必填，理由/证据选填。"""
 
     key: Literal[
         "question",
@@ -58,8 +58,8 @@ class DimensionInput(BaseModel):
         "voice",
     ]
     score: int = Field(ge=0, le=100)
-    reason: str = Field(min_length=4, max_length=2000)
-    evidence: str = Field(min_length=8, max_length=2000)
+    reason: str = Field(default="", max_length=2000)
+    evidence: str = Field(default="", max_length=2000)
 
 
 class ScoreRequest(BaseModel):

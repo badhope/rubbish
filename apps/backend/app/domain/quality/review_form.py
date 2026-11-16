@@ -10,7 +10,7 @@
 - 每个维度至少 3 项，且必须全部作答才能提交——漏答会让“没检查”
   看起来像“检查了但没问题”。
 - 检查项的答案（是/部分/否/不适用）只折算成**建议分**，审稿人可以覆盖，
-  但必须写理由 + 正文证据（见 ``rubric.DimensionScore``）。v5.0 起证据是
+  分数必填；理由 + 正文证据选填（见 ``rubric.DimensionScore``）。v5.0 起证据是
   硬性字段：没有证据的分数不进入计算。
 - 学术/荒诞两套检查项完全分开：荒诞稿不审“伦理审批”“样本量”，改审
   “设定是否真荒诞、规则是否自洽、梗是否有出处”。
@@ -125,7 +125,7 @@ def suggest_dimension_score(
 ) -> float:
     """把检查项答案折算成该维度的建议分（0–100 百分制）。
 
-    只作**建议**：审稿人可以覆盖，但覆盖必须写理由与证据。``na`` 从分母里
+    只作**建议**：审稿人可以覆盖；覆盖时理由与证据可选填。``na`` 从分母里
     剔除——一篇纯理论文章没有“样本量”，强制答 no 会把方法分错误地压低。
     """
     items = _items_for(track, dimension)
@@ -238,7 +238,7 @@ def prompt_payload(article_type: str = "research", track: str = "academic") -> d
     track = track if track in CHECK_ITEMS_BY_TRACK else "academic"
     return {
         "rubric_version": RUBRIC_VERSION,
-        "task": "按下列检查项逐条作答，再按固定权重计算总分。禁止跳过检查项；每个维度必须给出正文证据。",
+        "task": "按下列检查项逐条作答，再按固定权重计算总分。检查项不得跳过；每个维度给分即可，理由与正文证据选填。",
         "track": track,
         "track_label": TRACK_LABELS[track],
         "article_type": article_type,
@@ -252,8 +252,8 @@ def prompt_payload(article_type: str = "research", track: str = "academic") -> d
             "dimensions": {
                 "<dimension_key>": {
                     "score": "0-100 的整数",
-                    "reason": "必填：为什么给这个分",
-                    "evidence": "必填：引用正文具体位置（章节/段落/图号/表号/引用编号/链接）",
+                    "reason": "选填：为什么给这个分",
+                    "evidence": "选填：引用正文具体位置（章节/段落/图号/表号/引用编号/链接）",
                 }
             },
             "summary": "150 字以内的总体判断",
@@ -261,7 +261,7 @@ def prompt_payload(article_type: str = "research", track: str = "academic") -> d
         },
         "rules": [
             "逐条作答，不得跳过；确实不适用才填 na。",
-            "每个维度必须给出 reason 与 evidence；没有证据的维度分不进入总分。",
+            "每个维度必须给分；reason 与 evidence 选填，填写了会原样留存供复核。",
             "学术赛道：integrity 维度若发现编造数据或引用，直接给 0 分并总分归零。",
             "荒诞赛道：允许无中生有；但设定内规则必须自洽，梗与材料必须可核或明确标注自造。",
             "总分由权重计算得出，不得自行调高或调低；触发任一硬门槛时按门槛封顶。",

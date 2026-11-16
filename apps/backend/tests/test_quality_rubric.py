@@ -2,7 +2,7 @@
 
 锁死六条核心承诺：
 1. 两条赛道各五维、各套权重合计 100；
-2. 每个维度必须同时有分数、理由、正文证据；
+2. 每个维度必须有分数，理由、正文证据选填；
 3. 学术诚信一票否决；
 4. 分区边界：90 顶刊、80/70/60/50 一/二/三/四区、<50 退稿；
 5. 硬门槛：任一维 <60 封顶 79、<50 封顶 59、两维 <50 封顶 49；
@@ -96,14 +96,12 @@ def test_integrity_veto_forces_zero() -> None:
     assert result["editorial_completion_required"] is False
 
 
-def test_evidence_is_required() -> None:
-    with pytest.raises(ValueError, match="evidence is required"):
-        DimensionScore("question", 80, "问题成立", "太短")
-
-
-def test_reason_is_required() -> None:
-    with pytest.raises(ValueError, match="evidence requires a reason"):
-        DimensionScore("question", 80, "   ", "证据：第 3 节第 2 段")
+def test_reason_and_evidence_are_optional() -> None:
+    score = DimensionScore("question", 80, "", "")
+    assert score.reason == ""
+    assert score.evidence == ""
+    result = evaluate([DimensionScore(k, 80, "", "") for k in _ACADEMIC_KEYS])
+    assert result["score"] == 80.0
 
 
 def test_missing_dimension_raises() -> None:
@@ -282,3 +280,14 @@ def test_prompt_stability_same_answers_same_scores() -> None:
     absurd_answers = {item.key: "partial" for item in ABSURD_CHECK_ITEMS}
     c = score_answers(absurd_answers, "absurd")
     assert all(v["suggested_score"] == 50.0 for v in c.values())
+
+
+def test_review_scores_accept_only_required_scores() -> None:
+    from app.interfaces.http.review.routes import _normalize_review_scores
+
+    dimensions = {
+        k: {"score": 80} for k, _, _ in dimensions_for("academic")
+    }
+    result = _normalize_review_scores({"track": "academic", "dimensions": dimensions})
+    assert result["score"] == 80.0
+    assert all(item["reason"] == "" and item["evidence"] == "" for item in result["dimensions"].values())

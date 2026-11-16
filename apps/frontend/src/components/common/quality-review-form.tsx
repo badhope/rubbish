@@ -50,7 +50,7 @@ interface Props {
  *
  * 交互设计刻意是「先勾事实、再给判断」：审稿人先把每个维度下的检查项
  * 逐条答「是/部分/否/不适用」，系统折算建议分；审稿人可以覆盖建议分，
- * 但必须写理由。这样两个审稿人对同一篇稿子的分歧会落在"哪条事实判断
+ * 理由选填。这样两个审稿人对同一篇稿子的分歧会落在"哪条事实判断
  * 不同"，而不是"我感觉这稿子值 3 分还是 4 分"——后者无法仲裁。
  */
 export function QualityReviewForm({ articleType = 'research', onSubmit, readOnly }: Props) {
@@ -106,7 +106,7 @@ export function QualityReviewForm({ articleType = 'research', onSubmit, readOnly
           </CardTitle>
         </CardHeader>
         <CardContent className="text-xs text-muted-foreground">
-          先逐条回答事实性检查项，系统据此给出建议分；你可以覆盖建议分，但必须写理由。
+          先逐条回答事实性检查项，系统据此给出建议分；你可以覆盖建议分，理由选填。
           覆盖的理由会作为修改指引发给作者。
         </CardContent>
       </Card>
@@ -211,7 +211,7 @@ export function QualityReviewForm({ articleType = 'research', onSubmit, readOnly
                     </span>
                   </div>
                   <Textarea
-                    placeholder="为什么给这个分（必填，至少 4 字）"
+                    placeholder="为什么给这个分（选填）"
                     value={reasons[dim.key] ?? ''}
                     disabled={readOnly}
                     onChange={(e) => setReasons((p) => ({ ...p, [dim.key]: e.target.value }))}
@@ -220,7 +220,7 @@ export function QualityReviewForm({ articleType = 'research', onSubmit, readOnly
                     aria-label={`${dim.label} 评分理由`}
                   />
                   <Textarea
-                    placeholder="正文证据（必填，至少 8 字）：章节/段落/图号/表号/引用编号/链接"
+                    placeholder="正文证据（选填）：章节/段落/图号/表号/引用编号/链接"
                     value={evidences[dim.key] ?? ''}
                     disabled={readOnly}
                     onChange={(e) => setEvidences((p) => ({ ...p, [dim.key]: e.target.value }))}
@@ -228,10 +228,10 @@ export function QualityReviewForm({ articleType = 'research', onSubmit, readOnly
                     className="text-xs"
                     aria-label={`${dim.label} 正文证据`}
                   />
-                  {(reasons[dim.key]?.trim().length ?? 0) < 4 ||
-                  (evidences[dim.key]?.trim().length ?? 0) < 8 ? (
-                    <p className="text-[11px] text-amber-700 dark:text-amber-300">
-                      该维度需同时补齐理由（≥4 字）与正文证据（≥8 字）才能计分。
+                  {(reasons[dim.key]?.trim().length ?? 0) === 0 &&
+                  (evidences[dim.key]?.trim().length ?? 0) === 0 ? (
+                    <p className="text-[11px] text-muted-foreground">
+                      理由与正文证据选填；填写后可用于复核。
                     </p>
                   ) : null}
                 </div>
@@ -246,8 +246,8 @@ export function QualityReviewForm({ articleType = 'research', onSubmit, readOnly
           <p className="flex items-start gap-2 text-[11px] text-muted-foreground">
             <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
             学术赛道诚信维度为 0 分时总分归零（一票否决）。总分低于 50 分为退稿、
-            不入区；任一维度低于 60 分会封顶 79，低于 50 分会封顶 59。没有理由或
-            没有正文证据的维度不计分，也不允许用平均分抬档。
+            不入区；任一维度低于 60 分会封顶 79，低于 50 分会封顶 59。每维只需给分，
+            理由与正文证据选填。
           </p>
           {scoreMut.data && (
             <p className="text-sm">
@@ -266,12 +266,7 @@ export function QualityReviewForm({ articleType = 'research', onSubmit, readOnly
             disabled={
               readOnly ||
               scoreMut.isPending ||
-              answeredCount < totalItems ||
-              dimensions.some(
-                (d) =>
-                  (reasons[d.key]?.trim().length ?? 0) < 4 ||
-                  (evidences[d.key]?.trim().length ?? 0) < 8,
-              )
+              answeredCount < totalItems
             }
             onClick={submit}
           >
@@ -279,13 +274,7 @@ export function QualityReviewForm({ articleType = 'research', onSubmit, readOnly
               ? '计算中…'
               : answeredCount < totalItems
                 ? `请完成全部检查项（${answeredCount}/${totalItems}）`
-                : dimensions.some(
-                      (d) =>
-                        (reasons[d.key]?.trim().length ?? 0) < 4 ||
-                        (evidences[d.key]?.trim().length ?? 0) < 8,
-                    )
-                  ? '请补齐每维理由与证据'
-                  : '生成评分'}
+                : '生成评分'}
           </Button>
         </CardContent>
       </Card>
