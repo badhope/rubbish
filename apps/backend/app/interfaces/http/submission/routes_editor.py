@@ -9,7 +9,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from fastapi import Depends, HTTPException, Query, status
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -1225,6 +1225,20 @@ async def editor_decision(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Unknown decision: {decision}",
+        )
+
+    # 终局/修回决定后，当前轮未完成的审稿邀请不应继续挂在审稿人工作台上。
+    # 此前 accept/reject 只改稿件状态，pending/accepted 的 assignment 会一直
+    # 留在「待审稿」，审稿人看到的是一篇已经录用/退稿的稿件。
+    if decision in ("accept", "reject", "major_revision", "minor_revision"):
+        await db.execute(
+            update(ReviewAssignment)
+            .where(
+                ReviewAssignment.submission_id == entry.id,
+                ReviewAssignment.tenant_id == entry.tenant_id,
+                ReviewAssignment.status.in_(["pending", "accepted"]),
+            )
+            .values(status="cancelled", responded_at=now)
         )
 
     # 积分结算：作者侧（录用 60 / 拒稿 5）+ 编辑侧（每次裁决 8）。
