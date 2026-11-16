@@ -161,6 +161,7 @@ _SPA_ROUTE_PREFIXES = frozenset(
         "review",
         "settings",
         "submissions",
+        "studio",
         "support",
         "tools",
         "verify-email",
