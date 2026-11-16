@@ -397,3 +397,82 @@ def test_redact_manuscript_identity_strips_byline_and_email() -> None:
     assert "Mcx" not in redacted
     assert "mcx@example.org" not in redacted
     assert "Literature" in redacted
+
+
+def test_reviewer_facing_payload_redacts_abstract_preview() -> None:
+    """P1 #7：双盲下 abstract/preview 的姓名/邮箱脱敏，学术文本保留；单盲不变。"""
+    from app.domain.review.blinding import reviewer_facing_payload
+
+    payload = {
+        "title": "T",
+        "authors": ["Alice Identifiable"],
+        "abstract": "By Alice Identifiable (alice@x.edu). 学术内容保留。",
+        "preview": "Alice Identifiable 预览，邮箱 alice@x.edu。",
+        "admin_note": "secret",
+    }
+    out = reviewer_facing_payload(payload, double_blind=True)
+    assert "Alice Identifiable" not in out["abstract"]
+    assert "alice@x.edu" not in out["abstract"]
+    assert "学术内容保留" in out["abstract"]
+    assert "Alice Identifiable" not in out["preview"]
+    assert "alice@x.edu" not in out["preview"]
+    assert out["authors"] == [ANONYMIZED_AUTHOR]
+
+    single = reviewer_facing_payload(payload, double_blind=False)
+    assert single["abstract"] == payload["abstract"]
+    assert single["preview"] == payload["preview"]
+
+
+def test_anonymize_submission_fields_redacts_abstract_preview() -> None:
+    """P1 #7：anonymize_submission_fields 同样脱敏 abstract/preview。"""
+    from app.domain.review.blinding import anonymize_submission_fields
+
+    payload = {
+        "authors": ["Bob Traceable"],
+        "abstract": "Bob Traceable 撰写，联系 bob@y.org。方法学正文。",
+        "preview": "Bob Traceable 预览。",
+    }
+    out = anonymize_submission_fields(payload)
+    assert "Bob Traceable" not in out["abstract"]
+    assert "bob@y.org" not in out["abstract"]
+    assert "方法学正文" in out["abstract"]
+    assert "Bob Traceable" not in out["preview"]
+
+
+async def test_double_blind_reviewer_abstract_redacted(
+    client: AsyncClient, admin_user: dict, test_user: dict, db_session: AsyncSession
+) -> None:
+    """P1 #7：审稿人经 assignment 详情拿到的 abstract/preview 已脱敏。"""
+    payload = {
+        **_PAYLOAD,
+        "abstract": (
+            "本研究由 Alice Identifiable 完成，通讯 alice@identifiable-university.edu。"
+            "核心学术论点保留。"
+        ),
+        "preview": "Alice Identifiable 的预览，邮箱 alice@identifiable-university.edu。",
+    }
+    created = await client.post("/api/submissions", json=payload, headers=auth_headers(test_user))
+    created.raise_for_status()
+    sid = created.json()["id"]
+    reviewer = await _register(client, "abstractreviewer")
+    await _grant_reviewer(db_session, int(reviewer["user_id"]))
+    assigned = await client.post(
+        f"/api/submissions/{sid}/assignments",
+        json={"reviewer_id": reviewer["user_id"]},
+        headers=auth_headers(admin_user),
+    )
+    assigned.raise_for_status()
+    await _set_mode(client, admin_user, "double_blind")
+
+    resp = await client.get(
+        f"/api/review/assignments/{assigned.json()['id']}/submission",
+        headers=auth_headers(reviewer),
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert "Alice Identifiable" not in body["abstract"]
+    assert "alice@identifiable-university.edu" not in body["abstract"]
+    assert "核心学术论点保留" in body["abstract"]
+    assert "Alice Identifiable" not in body["preview"]
+
+    await _set_mode(client, admin_user, "single_blind")
