@@ -132,12 +132,12 @@ class User(Base, TenantScopedMixin):
     ``token_version`` is bumped on logout/password change to
     invalidate all outstanding access tokens.
 
-    ``refresh_token_version`` is a separate counter bumped on each
-    ``/auth/refresh`` call. It invalidates only the consumed refresh
-    token (and any other refresh tokens issued before this refresh) —
-    access tokens and the user's other devices are not affected.
-    This is OAuth2-standard refresh token rotation: a stolen refresh
-    token becomes useless the moment the legitimate holder refreshes.
+    ``refresh_token_version`` is a separate counter bumped only on bulk
+    revocation (``/auth/revoke-all``, password change), invalidating all
+    outstanding refresh tokens at once. A single ``/auth/refresh`` does
+    NOT bump it — the consumed token's ``jti`` goes into the denylist
+    instead, so the user's other devices keep working. Bumping it per
+    refresh would revoke every other session and break multi-device use.
     """
 
     __tablename__ = "users"
