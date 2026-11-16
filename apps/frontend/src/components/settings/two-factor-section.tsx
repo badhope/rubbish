@@ -21,6 +21,8 @@ type Phase =
   | { kind: 'setup-pending'; data: TwoFactorSetupResponse }
   | { kind: 'enabled' }
   | { kind: 'disable-pending' }
+  | { kind: 'regenerate-pending' }
+  | { kind: 'regenerate-done'; codes: string[] }
 
 
 export function TwoFactorSection() {
@@ -32,9 +34,15 @@ export function TwoFactorSection() {
 
   const [phase, setPhase] = useState<Phase>({ kind: 'off' })
   const [confirmCode, setConfirmCode] = useState('')
-  const [disableCode, setDisableCode] = useState('')
-  const [disableBackup, setDisableBackup] = useState('')
-  const [disablePassword, setDisablePassword] = useState('')
+  const [reauthCode, setReauthCode] = useState('')
+  const [reauthBackup, setReauthBackup] = useState('')
+  const [reauthPassword, setReauthPassword] = useState('')
+
+  const clearReauth = () => {
+    setReauthCode('')
+    setReauthBackup('')
+    setReauthPassword('')
+  }
 
   // Initial phase derived from the server status - if 2FA is already on,
   // jump straight to the enabled state. Avoids a one-frame flash of "off".
@@ -72,15 +80,13 @@ export function TwoFactorSection() {
   const runDisable = async () => {
     try {
       await disable.mutateAsync({
-        password: disablePassword,
-        code: disableCode || undefined,
-        backup_code: disableBackup || undefined,
+        password: reauthPassword,
+        code: reauthCode || undefined,
+        backup_code: reauthBackup || undefined,
       })
       toast.success('两步验证已关闭')
       setPhase({ kind: 'off' })
-      setDisableCode('')
-      setDisableBackup('')
-      setDisablePassword('')
+      clearReauth()
       void status.refetch()
     } catch (err) {
       toast.error(extractError(err, '关闭失败'))
@@ -89,8 +95,15 @@ export function TwoFactorSection() {
 
   const runRegenerate = async () => {
     try {
-      await regenerate.mutateAsync()
+      const data = await regenerate.mutateAsync({
+        password: reauthPassword,
+        code: reauthCode || undefined,
+        backup_code: reauthBackup || undefined,
+      })
       toast.success('备用码已刷新')
+      setPhase({ kind: 'regenerate-done', codes: data.backup_codes })
+      clearReauth()
+      void status.refetch()
     } catch (err) {
       toast.error(extractError(err, '刷新失败'))
     }
@@ -138,27 +151,61 @@ export function TwoFactorSection() {
           <EnabledPanel
             remaining={status.data?.backup_codes_remaining ?? 0}
             onDisable={() => setPhase({ kind: 'disable-pending' })}
-            onRegenerate={runRegenerate}
-            regenerating={regenerate.isPending}
+            onRegenerate={() => setPhase({ kind: 'regenerate-pending' })}
           />
         )}
 
         {phase.kind === 'disable-pending' && (
-          <DisableForm
-            password={disablePassword}
-            setPassword={setDisablePassword}
-            code={disableCode}
-            setCode={setDisableCode}
-            backup={disableBackup}
-            setBackup={setDisableBackup}
+          <ReauthForm
+            title="关闭两步验证"
+            description="出于安全考虑，关闭时除密码外还需要一个一次性验证码或备用码。关闭后所有当前会话将自动失效。"
+            submitLabel="确认关闭"
+            submitTestId="confirm-disable-2fa"
+            codeTestId="disable-code"
+            backupTestId="disable-backup"
+            destructive
+            password={reauthPassword}
+            setPassword={setReauthPassword}
+            code={reauthCode}
+            setCode={setReauthCode}
+            backup={reauthBackup}
+            setBackup={setReauthBackup}
             onSubmit={runDisable}
             onCancel={() => {
               setPhase({ kind: 'enabled' })
-              setDisableCode('')
-              setDisableBackup('')
-              setDisablePassword('')
+              clearReauth()
             }}
             pending={disable.isPending}
+          />
+        )}
+
+        {phase.kind === 'regenerate-pending' && (
+          <ReauthForm
+            title="刷新备用码"
+            description="出于安全考虑，刷新备用码前需要重新验证密码和一个一次性验证码或备用码。旧备用码将立即失效。"
+            submitLabel="确认刷新"
+            submitTestId="confirm-regenerate-2fa"
+            codeTestId="regenerate-code"
+            backupTestId="regenerate-backup"
+            password={reauthPassword}
+            setPassword={setReauthPassword}
+            code={reauthCode}
+            setCode={setReauthCode}
+            backup={reauthBackup}
+            setBackup={setReauthBackup}
+            onSubmit={runRegenerate}
+            onCancel={() => {
+              setPhase({ kind: 'enabled' })
+              clearReauth()
+            }}
+            pending={regenerate.isPending}
+          />
+        )}
+
+        {phase.kind === 'regenerate-done' && (
+          <BackupCodesPanel
+            codes={phase.codes}
+            onDone={() => setPhase({ kind: 'enabled' })}
           />
         )}
       </CardContent>
@@ -247,18 +294,17 @@ interface EnabledPanelProps {
   remaining: number
   onDisable: () => void
   onRegenerate: () => void
-  regenerating: boolean
 }
 
-function EnabledPanel({ remaining, onDisable, onRegenerate, regenerating }: EnabledPanelProps) {
+function EnabledPanel({ remaining, onDisable, onRegenerate }: EnabledPanelProps) {
   return (
     <div className="space-y-4">
       <div className="rounded-md border border-green-500/40 bg-green-500/5 p-3 text-sm">
         两步验证已启用。剩余 <b>{remaining}</b> 个备用码。
       </div>
       <div className="flex flex-wrap gap-2">
-        <Button variant="outline" onClick={onRegenerate} disabled={regenerating}>
-          {regenerating ? '刷新中…' : '刷新备用码'}
+        <Button data-testid="open-regenerate-2fa" variant="outline" onClick={onRegenerate}>
+          刷新备用码
         </Button>
         <Button data-testid="open-disable-2fa" variant="destructive" onClick={onDisable}>
           关闭两步验证
@@ -268,7 +314,14 @@ function EnabledPanel({ remaining, onDisable, onRegenerate, regenerating }: Enab
   )
 }
 
-interface DisableFormProps {
+interface ReauthFormProps {
+  title: string
+  description: string
+  submitLabel: string
+  submitTestId: string
+  codeTestId: string
+  backupTestId: string
+  destructive?: boolean
   password: string
   setPassword: (v: string) => void
   code: string
@@ -280,22 +333,23 @@ interface DisableFormProps {
   pending: boolean
 }
 
-function DisableForm(props: DisableFormProps) {
+function ReauthForm(props: ReauthFormProps) {
   const submitDisabled =
     props.pending ||
     !props.password ||
     (!props.code && !props.backup)
+  const frame = props.destructive
+    ? 'border-destructive/40 bg-destructive/5'
+    : 'border-border bg-muted/30'
   return (
-    <div className="space-y-3 rounded-md border border-destructive/40 bg-destructive/5 p-3">
-      <p className="text-sm font-medium">关闭两步验证</p>
-      <p className="text-xs text-muted-foreground">
-        出于安全考虑，关闭时除密码外还需要一个一次性验证码或备用码。
-        关闭后所有当前会话将自动失效。
-      </p>
+    <div className={`space-y-3 rounded-md border p-3 ${frame}`}>
+      <p className="text-sm font-medium">{props.title}</p>
+      <p className="text-xs text-muted-foreground">{props.description}</p>
       <div className="space-y-2">
-        <Label htmlFor="disable-password">当前密码</Label>
+        <Label htmlFor="reauth-password">当前密码</Label>
         <Input
-          id="disable-password"
+          id="reauth-password"
+          data-testid="reauth-password"
           type="password"
           autoComplete="current-password"
           value={props.password}
@@ -304,10 +358,10 @@ function DisableForm(props: DisableFormProps) {
       </div>
       <div className="grid gap-2 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="disable-code">验证码（6 位）</Label>
+          <Label htmlFor="reauth-code">验证码（6 位）</Label>
           <Input
-            id="disable-code"
-            data-testid="disable-code"
+            id="reauth-code"
+            data-testid={props.codeTestId}
             inputMode="numeric"
             pattern="\d{6}"
             maxLength={6}
@@ -316,10 +370,10 @@ function DisableForm(props: DisableFormProps) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="disable-backup">或备用码</Label>
+          <Label htmlFor="reauth-backup">或备用码</Label>
           <Input
-            id="disable-backup"
-            data-testid="disable-backup"
+            id="reauth-backup"
+            data-testid={props.backupTestId}
             value={props.backup}
             onChange={(e) => props.setBackup(e.target.value)}
           />
@@ -327,17 +381,38 @@ function DisableForm(props: DisableFormProps) {
       </div>
       <div className="flex gap-2">
         <Button
-          data-testid="confirm-disable-2fa"
-          variant="destructive"
+          data-testid={props.submitTestId}
+          variant={props.destructive ? 'destructive' : 'default'}
           onClick={props.onSubmit}
           disabled={submitDisabled}
         >
-          {props.pending ? '关闭中…' : '确认关闭'}
+          {props.pending ? '处理中…' : props.submitLabel}
         </Button>
         <Button variant="outline" onClick={props.onCancel} disabled={props.pending}>
           取消
         </Button>
       </div>
+    </div>
+  )
+}
+
+function BackupCodesPanel({ codes, onDone }: { codes: string[]; onDone: () => void }) {
+  return (
+    <div className="space-y-3">
+      <p className="text-sm font-medium">新的备用恢复码（每个一次性使用，请妥善保存）：</p>
+      <ul
+        data-testid="regenerated-codes"
+        className="grid grid-cols-2 gap-1 rounded-md border bg-muted/30 p-3 font-mono text-xs"
+      >
+        {codes.map((code) => (
+          <li key={code} className="select-all">
+            {code}
+          </li>
+        ))}
+      </ul>
+      <Button data-testid="regenerate-done" onClick={onDone}>
+        我已保存，返回
+      </Button>
     </div>
   )
 }

@@ -48,7 +48,9 @@ from app.models import User
 from app.schemas import (
     TokenResponse,
     TwoFactorAuthenticateRequest,
+    TwoFactorBackupCodesResponse,
     TwoFactorDisableRequest,
+    TwoFactorRegenerateRequest,
     TwoFactorSetupResponse,
     TwoFactorStatusResponse,
     TwoFactorVerifyRequest,
@@ -120,6 +122,54 @@ def _hashes_to_set(value: str | None) -> set[str]:
 
 def _hashes_to_json(values: set[str]) -> str:
     return json.dumps(sorted(values))
+
+
+def _require_password_and_factor(
+    user: User, password: str, code: str | None, backup_code: str | None
+) -> None:
+    """重认证闸门：密码 + （TOTP | 备份码）二者其一。
+
+    敏感操作（关闭 2FA、重生成备份码、注册 passkey）共用：仅凭 access
+    token 不足以证明持有第二因子，防止被盗会话静默降级账户或套取 TOTP
+    密钥。TOTP 带 last_counter 防重放；备份码校验成功即单次消费。
+    会修改 user 的 counter/备份码哈希，调用方负责 commit。
+    """
+    if not verify_password(password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid password",
+        )
+    if (code is None) == (backup_code is None):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Exactly one of 'code' or 'backup_code' is required",
+        )
+    ok = False
+    if code is not None:
+        try:
+            secret = decrypt_secret(user.totp_secret_encrypted or "")
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="2FA secret cannot be decrypted",
+            ) from exc
+        counter = verify_totp(secret, code, last_counter=user.totp_last_used_counter or -1)
+        ok = counter is not None
+        if counter is not None:
+            user.totp_last_used_counter = counter
+    else:
+        normalized = normalize_backup_code(backup_code or "")
+        hashes = _hashes_to_set(user.totp_backup_codes_hashed)
+        candidate = hash_backup_code(normalized)
+        if candidate in hashes:
+            hashes.discard(candidate)
+            user.totp_backup_codes_hashed = _hashes_to_json(hashes)
+            ok = True
+    if not ok:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid 2FA code",
+        )
 
 
 # --- endpoints -------------------------------------------------------------
@@ -349,54 +399,7 @@ async def disable_2fa(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="2FA is not enabled on this account",
         )
-    if not verify_password(payload.password, current_user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid password",
-        )
-    if (payload.code is None) == (payload.backup_code is None):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Exactly one of 'code' or 'backup_code' is required",
-        )
-    ok = False
-    if payload.code is not None:
-        try:
-            secret = decrypt_secret(current_user.totp_secret_encrypted or "")
-        except ValueError as exc:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="2FA secret cannot be decrypted",
-            ) from exc
-        # M2 加固：与 /auth/2fa/authenticate 相同的重放保护——同一（或更早）
-        # time-step 的码只允许使用一次。此前 disable 端点直接 verify_totp
-        # 不带 last_counter，一条被钓鱼/截获的验证码在 30 秒窗口内既能登录
-        # 也能关 2FA。通过校验后立即记录 counter。
-        counter = verify_totp(
-            secret,
-            payload.code,
-            last_counter=current_user.totp_last_used_counter or -1,
-        )
-        ok = counter is not None
-        if counter is not None:
-            current_user.totp_last_used_counter = counter
-    else:
-        # Explicit check (not `assert`): assertions are stripped under
-        # `python -O`, and this is an authentication path.
-        if payload.backup_code is None:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail="backup_code is required when a TOTP code is not provided",
-            )
-        normalized = normalize_backup_code(payload.backup_code)
-        hashes = _hashes_to_set(current_user.totp_backup_codes_hashed)
-        ok = hash_backup_code(normalized) in hashes
-
-    if not ok:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid 2FA code",
-        )
+    _require_password_and_factor(current_user, payload.password, payload.code, payload.backup_code)
 
     # Wipe all 2FA state. Bump token_version so any access tokens in
     # flight are invalidated - if someone had stolen a session they
@@ -410,35 +413,28 @@ async def disable_2fa(
     return {"enabled": False}
 
 
-@router.post("/backup-codes/regenerate", response_model=TwoFactorSetupResponse)
+@router.post("/backup-codes/regenerate", response_model=TwoFactorBackupCodesResponse)
 async def regenerate_backup_codes(
+    payload: TwoFactorRegenerateRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
-) -> TwoFactorSetupResponse:
+) -> TwoFactorBackupCodesResponse:
     """Mint a fresh set of 10 backup codes. Old codes are invalidated.
 
-    Does NOT touch the TOTP secret - the user's authenticator app keeps
-    working. The cleartext list is returned exactly once, same as setup.
+    重认证（密码 + TOTP|备份码）后才放行，且**不再回传 TOTP 密钥**：
+    旧实现仅凭 access token 即可重生成并拿到 secret/otpauth_uri，被盗
+    会话可据此套取密钥永久绕过第二因子。不触碰 TOTP secret，认证器照常
+    工作；明文备份码只返回这一次。
     """
     if current_user.totp_enabled_at is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="2FA is not enabled; call /auth/2fa/setup first",
         )
-    try:
-        secret = decrypt_secret(current_user.totp_secret_encrypted or "")
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="2FA secret cannot be decrypted",
-        ) from exc
+    _require_password_and_factor(current_user, payload.password, payload.code, payload.backup_code)
     backup_codes = generate_backup_codes()
     backup_hashes = {hash_backup_code(c) for c in backup_codes}
     current_user.totp_backup_codes_hashed = _hashes_to_json(backup_hashes)
     await db.commit()
     logger.info("two_factor_backup_codes_regenerated", user_id=current_user.id)
-    return TwoFactorSetupResponse(
-        secret=secret,
-        otpauth_uri=otpauth_uri(secret, current_user.username, _issuer()),
-        backup_codes=backup_codes,
-    )
+    return TwoFactorBackupCodesResponse(backup_codes=backup_codes)

@@ -24,7 +24,7 @@ from app.api.deps import get_current_user, require_tenant_id
 from app.core.config import settings
 from app.core.db import get_db
 from app.core.logging import get_logger
-from app.core.security import create_access_token, create_refresh_token
+from app.core.security import create_access_token, create_refresh_token, verify_password
 from app.core.tokens import random_jti
 from app.core.webauthn import (
     generate_authentication_options,
@@ -65,10 +65,20 @@ class WebAuthnCredentialBody(BaseModel):
 
 
 class WebAuthnRegisterCompleteRequest(BaseModel):
-    """Body for POST /auth/webauthn/register/complete."""
+    """Body for POST /auth/webauthn/register/complete.
+
+    Adding a passkey is a sensitive credential change, so the caller
+    must re-authenticate: ``password`` is always required, and when the
+    account has 2FA enabled a fresh ``code`` (TOTP) OR ``backup_code``
+    is required too. A hijacked session alone cannot enroll a new
+    passkey.
+    """
 
     credential: WebAuthnCredentialBody
     name: str = Field(default="Passkey", max_length=128)
+    password: str = Field(min_length=1)
+    code: str | None = Field(default=None, min_length=6, max_length=10)
+    backup_code: str | None = Field(default=None, min_length=4, max_length=20)
 
 
 class WebAuthnAuthenticateBeginRequest(BaseModel):
@@ -139,7 +149,20 @@ async def register_complete(
 
     The ``name`` field is an optional human-readable label (e.g.
     "YubiKey 5C" or "iPhone Touch ID").
+
+    Re-authentication is required: ``password`` always, plus a fresh
+    TOTP ``code`` or ``backup_code`` when the account has 2FA enabled.
+    A stolen session alone cannot add a passkey.
     """
+    from app.api.two_factor import _require_password_and_factor
+
+    if current_user.totp_enabled_at is not None:
+        _require_password_and_factor(
+            current_user, payload.password, payload.code, payload.backup_code
+        )
+    elif not verify_password(payload.password, current_user.hashed_password):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid password")
+
     credential_dict = payload.credential.model_dump()
     # Ensure ``rawId`` is populated — the browser sends ``id`` and
     # ``rawId``, but some libraries omit one.
