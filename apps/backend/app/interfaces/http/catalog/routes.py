@@ -2109,6 +2109,30 @@ def _docx_meta_for_resource(resource, md_text: str):
     )
 
 
+
+
+def _studio_meta_for_resource(resource, md_text: str, meta=None) -> dict[str, object]:
+    """Catalog 条目 → Studio 排版元信息（与投稿工作台共用一套 PDF 内核）。"""
+    meta = meta or _docx_meta_for_resource(resource, md_text)
+    return {
+        "title": meta.title,
+        "authors": list(meta.authors),
+        "affiliations": "\n".join(meta.affiliations),
+        "abstract": meta.abstract,
+        "keywords": list(meta.keywords),
+        "doi": meta.doi,
+        "clc": getattr(resource, "clc_code", None) or "",
+        "funding": getattr(resource, "funding", None) or "",
+        "year": meta.year,
+        "volume": meta.volume,
+        "issue": meta.issue,
+        "pages": meta.pages,
+        "site_id": meta.site_id,
+        "track": meta.track,
+        "license": getattr(resource, "license", None) or "",
+    }
+
+
 def _export_cache_path(cache_key: str, ext: str) -> Path:
     return _export_cache_root() / f"{cache_key}.{ext}"
 
@@ -2432,7 +2456,7 @@ async def export_resource_manuscript(
         ]
     )
     cache_key = hashlib.sha256(
-        f"v26\x00{format}\x00{byline}\x00{_meta_key}\x00".encode() + md_text.encode("utf-8")
+        f"v44\x00{format}\x00{byline}\x00{_meta_key}\x00".encode() + md_text.encode("utf-8")
     ).hexdigest()[:40]
     etag = f'W/"{cache_key}"'
 
@@ -2457,9 +2481,22 @@ async def export_resource_manuscript(
     else:
 
         def _convert():
-            # Word 与 PDF 共用同一份品牌 docx：先排版，再按格式决定直接下发
-            # 还是交给镜像内置的 LibreOffice 转 PDF。PDF 不再另走
-            # Markdown→HTML→pymupdf 的第二套版式。
+            # PDF 优先走 Studio 同一套 PyMuPDF 版式（Noto 子集、A4 页眉页脚、
+            # 题录顺序与网页预览一致）；失败时回退 docx→LibreOffice。
+            if format == "pdf":
+                try:
+                    from app.domain.submission.docx_template import _strip_front_matter
+                    from app.domain.submission.studio_pdf import render_studio_pdf
+
+                    docx_meta = _docx_meta_for_resource(resource, md_text)
+                    clean_md = _strip_front_matter(md_text, docx_meta)
+                    return render_studio_pdf(
+                        _studio_meta_for_resource(resource, md_text, docx_meta),
+                        clean_md,
+                    )
+                except Exception:
+                    logger.exception("catalog_studio_pdf_failed", resource_id=resource.id)
+
             from app.domain.submission.docx_template import build as build_docx
 
             meta = _docx_meta_for_resource(resource, md_text)

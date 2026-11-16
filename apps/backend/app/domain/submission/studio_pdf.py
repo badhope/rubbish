@@ -67,13 +67,16 @@ _MARGIN_X, _MARGIN_TOP, _MARGIN_BOTTOM = 40.5, 37.5, 34.5
 _CSS = """
 @font-face { font-family: "PaperSerif"; src: url("PaperSerif.otf"); }
 body { font-family: "PaperSerif", "Noto Serif CJK SC", china-s; font-size: 10.5pt; line-height: 1.85; color: #1b211d; }
-.title { font-size: 20pt; font-weight: bold; text-align: center; margin: 0 0 4pt 0; line-height: 1.35; }
+.title { font-size: 18pt; font-weight: bold; text-align: center; margin: 0 0 4pt 0; line-height: 1.35; }
+.title.long { font-size: 16pt; }
+.title.xlong { font-size: 14.5pt; }
 .subtitle { font-size: 11pt; text-align: center; color: #44514a; margin: 0 0 10pt 0; }
 .authors { font-size: 10pt; text-align: center; margin: 0 0 3pt 0; }
 .affs { font-size: 8.5pt; text-align: center; color: #5d6b60; margin: 0 0 3pt 0; line-height: 1.6; }
 .num { font-family: "Times-Roman"; }
 .formula { font-family: "Times-Roman"; font-style: italic; }
-.meta { font-size: 8.5pt; text-align: center; color: #5d6b60; margin: 0 0 10pt 0; }
+.meta { font-size: 8.5pt; text-align: center; color: #5d6b60; margin: 0 0 3pt 0; }
+.cite { font-size: 8pt; text-align: center; color: #6b7a70; margin: 0 0 10pt 0; }
 .abstract { background-color: #f5f7f3; border-left: 2pt solid #2e5e4a; padding: 8pt 10pt; margin: 10pt 0 8pt 0; }
 .abstract .label { font-size: 8pt; font-weight: bold; letter-spacing: 3pt; color: #2e5e4a; margin: 0 0 4pt 0; }
 .abstract p { font-size: 9.5pt; line-height: 1.8; margin: 0; }
@@ -83,7 +86,7 @@ h3 { font-size: 10.5pt; margin: 10pt 0 4pt 0; }
 p { margin: 4pt 0; text-align: justify; }
 table { border-collapse: collapse; margin: 8pt auto; }
 th, td { border: 0.6pt solid #444; padding: 3pt 6pt; font-size: 9pt; }
-img { display: block; margin: 8pt auto; }
+img { display: block; margin: 8pt auto; width: 320px; }
 blockquote { color: #444; margin: 6pt 12pt; }
 code { font-family: monospace; font-size: 9pt; }
 """
@@ -187,6 +190,80 @@ def _affiliations_html(affiliations: str) -> str:
     return "<br/>".join(out)
 
 
+
+
+def _strip_meta_sections(body_md: str) -> str:
+    """去掉正文开头重复的「摘要 / 关键词」块（元信息已在题录区印过一次）。"""
+    import re
+
+    text = body_md or ""
+    # 只在文档最前面处理，避免误删正文中段的同名小节。
+    text = re.sub(
+        r"^\s*#{1,6}\s*(?:摘\s*要|关键词)\s*\n+.*?\n(?=#{1,6}\s)",
+        "",
+        text,
+        count=1,
+        flags=re.S,
+    )
+    text = re.sub(
+        r"^\s*#{1,6}\s*(?:摘\s*要|关键词)\s*\n+.*?\n(?=#{1,6}\s)",
+        "",
+        text,
+        count=1,
+        flags=re.S,
+    )
+    return text.lstrip("\n")
+
+
+
+
+def _inline_image_sources(fragment: str) -> str:
+    """把正文里的同站图片取回并内联成 data URI；Story 不会自己请求 HTTP 图。"""
+    import base64
+    import re
+    from urllib.request import ProxyHandler, Request, build_opener
+
+    pattern = re.compile(r'src="([^"]+)"')
+
+    def sniff(raw: bytes) -> str:
+        if raw.startswith(b"\xff\xd8\xff"):
+            return "image/jpeg"
+        if raw.startswith(b"\x89PNG"):
+            return "image/png"
+        if raw.startswith(b"GIF8"):
+            return "image/gif"
+        return "image/png"
+
+    def repl(match: re.Match[str]) -> str:
+        src = match.group(1)
+        if not (
+            src.startswith("/api/catalog/")
+            or src.startswith("https://rubbish.argjiemi.cn/api/catalog/")
+        ):
+            return match.group(0)
+        url = (
+            "http://localhost:8080" + src
+            if src.startswith("/api/")
+            else src.replace("https://rubbish.argjiemi.cn", "http://localhost:8080", 1)
+        )
+        try:
+            req = Request(url, headers={"User-Agent": "rubbish-studio-pdf/1.0"})
+            opener = build_opener(ProxyHandler({}))
+            with opener.open(req, timeout=8) as resp:
+                raw = resp.read()
+            if not raw:
+                return match.group(0)
+            mime = sniff(raw)
+            # Story 会按图片原始像素宽度铺满版面，用 width 属性把它压到 360px；
+            # 保留原始字节，不物理降采样，避免论文插图被压成马赛克。
+            data = base64.b64encode(raw).decode("ascii")
+            return f'src="data:{mime};base64,{data}" width="360"'
+        except Exception:
+            return match.group(0)
+
+    return pattern.sub(repl, fragment)
+
+
 def build_studio_html(meta: dict[str, Any], body_md: str) -> str:
     from app.domain.submission.export_docs import md_to_html
 
@@ -209,6 +286,22 @@ def build_studio_html(meta: dict[str, Any], body_md: str) -> str:
         meta_parts.append(f"基金：{_esc(meta['funding'])}")
     meta_line = "　·　".join(meta_parts)
 
+    cite_parts = []
+    if meta.get("year") or meta.get("volume") or meta.get("issue"):
+        vi = []
+        if meta.get("year"):
+            vi.append(str(meta["year"]))
+        if meta.get("volume"):
+            vi.append(f"第 {meta['volume']} 卷")
+        if meta.get("issue"):
+            vi.append(f"第 {meta['issue']} 期")
+        cite_parts.append(" · ".join(vi))
+    if meta.get("pages"):
+        cite_parts.append(f"页码 {_esc(str(meta['pages']))}")
+    if meta.get("site_id"):
+        cite_parts.append(f"本站刊号: {_esc(str(meta['site_id']))}")
+    cite_line = "　·　".join(cite_parts)
+
     abstract = meta.get("abstract") or ""
     abstract_html = (
         f'<div class="abstract"><div class="label">摘 要</div>{_math_html(md_to_html(abstract))}</div>'
@@ -222,14 +315,15 @@ def build_studio_html(meta: dict[str, Any], body_md: str) -> str:
     )
 
     return f"""<html><body>
-<div class="title">{_esc(title)}</div>
+<div class="title{' xlong' if len(title) > 28 else (' long' if len(title) > 22 else '')}">{_esc(title)}</div>
 {f'<div class="subtitle">——{_esc(subtitle)}</div>' if subtitle else ''}
 <div class="authors">{_author_html(authors) or '作者未填写'}</div>
 {f'<div class="affs">{_affiliations_html(meta.get("affiliations",""))}</div>' if meta.get('affiliations') else ''}
 {f'<div class="meta">{meta_line}</div>' if meta_line else ''}
+{f'<div class="cite">{cite_line}</div>' if cite_line else ''}
 {abstract_html}
 {keywords_html}
-{_math_html(md_to_html(body_md))}
+{_inline_image_sources(_math_html(md_to_html(_strip_meta_sections(body_md))))}
 </body></html>"""
 
 
@@ -296,6 +390,16 @@ def render_studio_pdf(meta: dict[str, Any], body_md: str) -> bytes:
             fontname="china-ss",
             color=(0.42, 0.48, 0.44),
         )
+    doc.set_metadata(
+        {
+            "title": str(meta.get("title") or ""),
+            "author": "；".join(str(a) for a in (meta.get("authors") or [])),
+            "subject": "Rubbish Journal · " + str(meta.get("track") or "paper"),
+            "keywords": "；".join(str(k) for k in (meta.get("keywords") or [])),
+            "creator": "Rubbish Studio",
+            "producer": "Rubbish",
+        }
+    )
     packed = io.BytesIO()
     doc.save(packed, deflate=True, garbage=4, deflate_images=True, deflate_fonts=True)
     if font_dir:
