@@ -20,6 +20,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.gamification.models import CoinPolicy, CoinRule, PointEvent
@@ -173,7 +174,31 @@ async def award(
     if await _coin_event_exists(db, user, reason, ref_type, ref_id):
         return False
 
-    policy = await _load_policy(db, user)
+    # 串行化同一用户的并发发放：锁 User 行并在锁内重读余额快照，避免两个
+    # 并发 award 都通过日上限检查后各自加分（丢失更新）。统一锁序 user→policy。
+    await db.execute(
+        select(User)
+        .where(User.id == user.id, User.tenant_id == user.tenant_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    # 租户月发行总量竞态：锁该租户唯一 coin_policy 行（uq_coin_policy_tenant）
+    # 再做 monthly 检查。老租户无 policy 行时用临时默认值（无可锁行）。
+    policy_row = (
+        await db.execute(
+            select(CoinPolicy).where(CoinPolicy.tenant_id == user.tenant_id).with_for_update()
+        )
+    ).scalar_one_or_none()
+    policy = (
+        policy_row
+        if policy_row is not None
+        else CoinPolicy(
+            tenant_id=user.tenant_id,
+            coin_per_yuan=COIN_PER_YUAN_DEFAULT,
+            daily_earn_cap=DAILY_EARN_CAP_DEFAULT,
+            monthly_issue_cap=MONTHLY_ISSUE_CAP_DEFAULT,
+        )
+    )
     if (
         reason not in DAILY_CAP_EXEMPT_REASONS
         and await _daily_earned(db, user) + value > policy.daily_earn_cap
@@ -201,19 +226,26 @@ async def award(
         if rule_daily + value > rule.daily_cap:
             return False
 
-    db.add(
-        PointEvent(
-            tenant_id=user.tenant_id,
-            user_id=user.id,
-            identity=COIN_IDENTITY,
-            delta=value,
-            reason=reason,
-            ref_type=ref_type,
-            ref_id=ref_id,
-            note=note,
-        )
-    )
-    user.coin_balance = int(user.coin_balance or 0) + value
+    # 写入放在 SAVEPOINT 内：唯一约束冲突只回滚本次发放，不破坏调用方同一
+    # 事务里的其它待提交工作（例如签到的 XP 积分）。
+    try:
+        async with db.begin_nested():
+            db.add(
+                PointEvent(
+                    tenant_id=user.tenant_id,
+                    user_id=user.id,
+                    identity=COIN_IDENTITY,
+                    delta=value,
+                    reason=reason,
+                    ref_type=ref_type,
+                    ref_id=ref_id,
+                    note=note,
+                )
+            )
+            user.coin_balance = int(user.coin_balance or 0) + value
+            await db.flush()
+    except IntegrityError:
+        return False
     if commit:
         await db.commit()
         await db.refresh(user)
