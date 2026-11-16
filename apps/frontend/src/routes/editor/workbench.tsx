@@ -35,6 +35,7 @@ import {
   useSubmission,
   useSubmissionDownloadTicket,
   useSubmissionMarkdown,
+  useWaiveReview,
   type ConflictCandidate,
 } from '@/hooks/api/use-modules'
 import { REVIEW_DIMENSION_LABELS, reviewDimensionEntries } from '@/lib/review-dimensions'
@@ -95,6 +96,7 @@ function EditorWorkbenchPage() {
   const conflictsMut = useCheckConflicts()
   const remindMut = useRemindReviewers()
   const decisionMut = useEditorDecision()
+  const waiveMut = useWaiveReview()
 
   // 待指派勾选
   const [checked, setChecked] = useState<Set<number>>(new Set())
@@ -109,6 +111,9 @@ function EditorWorkbenchPage() {
   const [viewingId, setViewingId] = useState<number | null>(null)
   const [decision, setDecision] = useState<'accept' | 'minor_revision' | 'major_revision' | 'reject'>('major_revision')
   const [editorNote, setEditorNote] = useState('')
+  // 免评审录用：只在选择「录用」时出现；理由会随 waive-review 写审计。
+  const [waiveReview, setWaiveReview] = useState(false)
+  const [waiveReason, setWaiveReason] = useState('')
 
   // 邮件摘要状态条：展开查看投递记录
   const [digestOpen, setDigestOpen] = useState(false)
@@ -237,7 +242,17 @@ function EditorWorkbenchPage() {
 
   const onDecide = async () => {
     if (decidingId === null) return
+    if (decision === 'accept' && waiveReview && waiveReason.trim().length < 10) {
+      toast.error('免评审理由至少 10 个字，会写入审计与作者通知')
+      return
+    }
     try {
+      if (decision === 'accept' && waiveReview) {
+        await waiveMut.mutateAsync({
+          id: decidingId,
+          reason: waiveReason.trim(),
+        })
+      }
       await decisionMut.mutateAsync({
         id: decidingId,
         body: { decision, editor_note: editorNote || undefined },
@@ -245,6 +260,8 @@ function EditorWorkbenchPage() {
       toast.success('已记录编辑决定')
       setDecidingId(null)
       setEditorNote('')
+      setWaiveReview(false)
+      setWaiveReason('')
     } catch (err) {
       toast.error(extractError(err, '裁决失败'))
     }
@@ -254,6 +271,8 @@ function EditorWorkbenchPage() {
     setDecidingId(submissionId)
     setDecision('major_revision')
     setEditorNote('')
+    setWaiveReview(false)
+    setWaiveReason('')
   }
 
   return (
@@ -783,6 +802,35 @@ function EditorWorkbenchPage() {
                 </SelectContent>
               </Select>
             </div>
+            {decision === 'accept' && (
+              <div className="space-y-2 rounded-md border border-amber-300/60 bg-amber-50/60 p-3 dark:border-amber-800 dark:bg-amber-950/20">
+                <label className="flex cursor-pointer items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={waiveReview}
+                    onChange={(e) => setWaiveReview(e.target.checked)}
+                    className="mt-0.5 size-4 accent-primary"
+                  />
+                  <span>
+                    <span className="font-medium">该稿免同行评审（desk accept）</span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      仅用于约稿、编委特稿、重复发表复核等确实无需外审的稿件；会写审计并通知作者。
+                    </span>
+                  </span>
+                </label>
+                {waiveReview && (
+                  <div className="space-y-1">
+                    <Label htmlFor="waive-reason">免评审理由（至少 10 字）</Label>
+                    <Input
+                      id="waive-reason"
+                      value={waiveReason}
+                      onChange={(e) => setWaiveReason(e.target.value)}
+                      placeholder="例如：编委特稿，已由两位编委完成内部复核"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
             <div className="space-y-1">
               <Label htmlFor="editor-note">给作者的说明（可选）</Label>
               <Input
@@ -797,8 +845,15 @@ function EditorWorkbenchPage() {
             <Button variant="outline" onClick={() => setDecidingId(null)}>
               取消
             </Button>
-            <Button onClick={onDecide} disabled={decisionMut.isPending}>
-              {decisionMut.isPending ? '提交中…' : '提交决定'}
+            <Button
+              onClick={onDecide}
+              disabled={decisionMut.isPending || (decision === 'accept' && waiveReview && waiveMut.isPending)}
+            >
+              {decisionMut.isPending || (decision === 'accept' && waiveReview && waiveMut.isPending)
+                ? '提交中…'
+                : decision === 'accept' && waiveReview
+                  ? '记录免评审并录用'
+                  : '提交决定'}
             </Button>
           </DialogFooter>
         </DialogContent>

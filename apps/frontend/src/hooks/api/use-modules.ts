@@ -813,6 +813,20 @@ export function useCancelAssignment() {
   })
 }
 
+// 免评审录用：desk accept 的前置声明，理由必填（≥10 字）
+export function useWaiveReview() {
+  const qc = useQueryClient()
+  return useMutation<SubmissionResponse, Error, { id: number; reason: string }>({
+    mutationFn: async ({ id, reason }) =>
+      (await api.post<SubmissionResponse>(`/submissions/${id}/waive-review`, { reason })).data,
+    onSuccess: (data, { id }) => {
+      qc.setQueryData(keys.submission.detail(id), data)
+      void qc.invalidateQueries({ queryKey: ['workbench'] })
+      void qc.invalidateQueries({ queryKey: ['submissions'] })
+    },
+  })
+}
+
 // 编辑 4-元决定
 export function useEditorDecision() {
   const qc = useQueryClient()
