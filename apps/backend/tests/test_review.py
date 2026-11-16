@@ -999,3 +999,54 @@ async def test_author_response_to_reviewers(
     kinds = {e["kind"] for e in timeline.json()["events"]}
     assert "review_report" in kinds
     assert "author_response" in kinds
+
+
+async def test_timeline_double_blind_hides_reviewer_identity_from_author(
+    client: AsyncClient, admin_user: dict, test_user: dict
+) -> None:
+    """P1 #6：双盲下作者时间线只见稳定匿名标签，编辑/单盲作者仍见真名。"""
+    submission = await _create_submission(client, test_user)
+    sid = submission["id"]
+    reviewer = await register_reviewer(
+        client, admin_user, "timelinereviewer", "timelinereviewer@example.com"
+    )
+    assigned = await client.post(
+        f"/api/submissions/{sid}/assignments",
+        json={"reviewer_id": reviewer["user_id"]},
+        headers=auth_headers(admin_user),
+    )
+    assigned.raise_for_status()
+
+    async def _set_mode(mode: str) -> None:
+        resp = await client.patch(
+            "/api/admin/settings/review-mode",
+            json={"review_mode": mode},
+            headers=auth_headers(admin_user),
+        )
+        assert resp.status_code == 200, resp.text
+
+    def _titles(resp) -> str:
+        return " ".join(e["title"] for e in resp.json()["events"])
+
+    await _set_mode("double_blind")
+    # 作者视图：匿名标签，无审稿人 username。
+    author_tl = await client.get(
+        f"/api/submissions/{sid}/timeline", headers=auth_headers(test_user)
+    )
+    assert author_tl.status_code == 200
+    assert "timelinereviewer" not in _titles(author_tl)
+    assert "审稿人1" in _titles(author_tl)
+    # 编辑视图：真名仍在。
+    editor_tl = await client.get(
+        f"/api/submissions/{sid}/timeline", headers=auth_headers(admin_user)
+    )
+    assert editor_tl.status_code == 200
+    assert "timelinereviewer" in _titles(editor_tl)
+
+    # 单盲作者视图：恢复真名（向后兼容）。
+    await _set_mode("single_blind")
+    single_tl = await client.get(
+        f"/api/submissions/{sid}/timeline", headers=auth_headers(test_user)
+    )
+    assert single_tl.status_code == 200
+    assert "timelinereviewer" in _titles(single_tl)
