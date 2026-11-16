@@ -700,6 +700,8 @@ async def purchase_shop_item(
 ) -> dict[str, object]:
     try:
         result = await shop.purchase(db, current_user, item_id)
+    except shop.ShopConflictError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
     except shop.ShopError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     return {**result, "wallet": await currency.wallet_summary(db, current_user)}

@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.gamification.currency import COIN_IDENTITY
@@ -14,6 +15,10 @@ from app.models import User
 
 class ShopError(Exception):
     pass
+
+
+class ShopConflictError(ShopError):
+    """台账唯一约束冲突（重复订单/幂等重放）→ HTTP 409。"""
 
 
 async def list_items(
@@ -94,13 +99,23 @@ async def update_item(
 
 
 async def purchase(db: AsyncSession, user: User, item_id: int) -> dict[str, Any]:
+    # 统一锁序：先锁 User 行再锁货品行，串行化同一用户的并发购买，
+    # 并在锁内重读余额/主题色状态（populate_existing 刷新 ORM 快照）。
+    await db.execute(
+        select(User)
+        .where(User.id == user.id, User.tenant_id == user.tenant_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
     item = (
         await db.execute(
-            select(CoinShopItem).where(
+            select(CoinShopItem)
+            .where(
                 CoinShopItem.tenant_id == user.tenant_id,
                 CoinShopItem.id == item_id,
                 CoinShopItem.is_active.is_(True),
             )
+            .with_for_update()
         )
     ).scalar_one_or_none()
     if item is None:
@@ -109,27 +124,35 @@ async def purchase(db: AsyncSession, user: User, item_id: int) -> dict[str, Any]
         raise ShopError("货品已售罄")
     if item.effect == "accent_unlock" and user.accent_unlocked:
         raise ShopError("你已经解锁过自定义主题色")
-    if int(user.coin_balance or 0) < item.price_coin:
-        raise ShopError(f"R 币不足，还差 {item.price_coin - int(user.coin_balance or 0)} R")
+    balance = int(user.coin_balance or 0)
+    if balance < item.price_coin:
+        raise ShopError(f"R 币不足，还差 {item.price_coin - balance} R")
 
-    import uuid
-
-    ref_id = f"{item.id}:{uuid.uuid4().hex}"
-    db.add(
-        PointEvent(
-            tenant_id=user.tenant_id,
-            user_id=user.id,
-            identity=COIN_IDENTITY,
-            delta=-item.price_coin,
-            reason="shop.item",
-            ref_type="shop_item",
-            ref_id=ref_id,
-            note=item.name,
+    # 原子扣减：余额守卫 + 行锁 + CHECK 约束三重防线。rowcount!=1 → 余额不足。
+    debit = await db.execute(
+        update(User)
+        .where(
+            User.id == user.id,
+            User.tenant_id == user.tenant_id,
+            User.coin_balance >= item.price_coin,
         )
+        .values(coin_balance=User.coin_balance - item.price_coin)
+        .execution_options(synchronize_session=False)
     )
-    user.coin_balance = int(user.coin_balance or 0) - item.price_coin
+    if debit.rowcount != 1:
+        raise ShopError("R 币不足")
+
     if item.stock is not None:
-        item.stock = max(0, item.stock - 1)
+        restock = await db.execute(
+            update(CoinShopItem)
+            .where(CoinShopItem.id == item.id, CoinShopItem.stock > 0)
+            .values(stock=CoinShopItem.stock - 1)
+            .execution_options(synchronize_session=False)
+        )
+        if restock.rowcount != 1:
+            # 售罄：抛错回滚整个事务（含上面的扣款），不会负库存/扣钱不发货。
+            raise ShopError("货品已售罄")
+
     status = "paid"
     note = "待主编人工发货"
     if item.effect == "accent_unlock":
@@ -146,6 +169,27 @@ async def purchase(db: AsyncSession, user: User, item_id: int) -> dict[str, Any]
         note=note,
     )
     db.add(purchase)
+    await db.flush()  # 取得 purchase.id
+
+    # 确定性 ref_id：台账↔订单 1:1，可重放对账（替代 uuid4 随机 ref）。
+    db.add(
+        PointEvent(
+            tenant_id=user.tenant_id,
+            user_id=user.id,
+            identity=COIN_IDENTITY,
+            delta=-item.price_coin,
+            reason="shop.item",
+            ref_type="shop_item",
+            ref_id=f"purchase:{purchase.id}",
+            note=item.name,
+        )
+    )
+    try:
+        await db.flush()
+    except IntegrityError as exc:
+        await db.rollback()
+        raise ShopConflictError("订单台账冲突（重复购买）") from exc
+
     await db.commit()
     await db.refresh(user)
     await db.refresh(purchase)
