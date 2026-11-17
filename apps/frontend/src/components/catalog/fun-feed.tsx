@@ -217,33 +217,10 @@ export function FunCatalog({
           )}
 
           <div className="mt-5 space-y-7">
-            {featuredId != null && (
-              <section>
-                <SectionHead title="编辑推荐" note="本周先看这篇" />
-                <div className="mt-3">
-                  <FunCard resource={stories[0]} featured />
-                </div>
-              </section>
-            )}
-
-            {rest.length > 0 && (
-              <section>
-                <SectionHead
-                  title="最新副刊"
-                  note={data.meta.total ? `共 ${data.meta.total} 篇` : undefined}
-                />
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  {rest.map((r) => (
-                    <FunCard key={r.id} resource={r} featured={false} />
-                  ))}
-                </div>
-              </section>
-            )}
-
             {visibleGenres.length > 0 && (
               <section>
-                <SectionHead title="按文体逛" note="选一个门类，换一种笑法" />
-                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                <SectionHead title="按文体进入" note="先选门类，再读这一门里的最新几篇" />
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
                   {visibleGenres.map((g) => {
                     const active = search.genre === g.value
                     return (
@@ -283,6 +260,29 @@ export function FunCatalog({
                 </div>
               </section>
             )}
+            {featuredId != null && (
+              <section>
+                <SectionHead title="编辑推荐" note="本周先看这篇" />
+                <div className="mt-3">
+                  <FunCard resource={stories[0]} featured />
+                </div>
+              </section>
+            )}
+
+            {rest.length > 0 && (
+              <section>
+                <SectionHead
+                  title="最新副刊"
+                  note={data.meta.total ? `共 ${data.meta.total} 篇` : undefined}
+                />
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  {rest.map((r) => (
+                    <FunCard key={r.id} resource={r} featured={false} />
+                  ))}
+                </div>
+              </section>
+            )}
+
           </div>
 
           <div className="mt-7 flex items-center justify-between gap-3 border-t border-border pt-4">

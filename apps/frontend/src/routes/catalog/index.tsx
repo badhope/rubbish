@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute, Link, useNavigate, useSearch } from '@tanstack/react-router'
-import { AlertTriangle, ChevronDown, Download, FileDown, Plus, RefreshCw, SlidersHorizontal, Sparkles } from 'lucide-react'
+import { AlertTriangle, ArrowRight, BookOpen, ChevronDown, Download, FileDown, FlaskConical, FolderTree, Plus, RefreshCw, SlidersHorizontal, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/use-auth'
 import { useIsMobile } from '@/hooks/use-is-mobile'
@@ -13,9 +13,10 @@ import {
   type ExportPreflightResponse,
   type AnyExportFormat,
 } from '@/hooks/api/use-modules'
-import type { ResourceType } from '@/lib/types'
+import type { ResourceType, ResourceStats } from '@/lib/types'
 import { extractError, formatAuthors, cn } from '@/lib/utils'
 import { contentCategoryLabel, displayTypeLabel, isScholarlyContent } from '@/lib/resource-labels'
+import { DISCIPLINE_STYLE, DEFAULT_DISCIPLINE_STYLE } from '@/lib/discipline-style'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState } from '@/components/common/state'
 import { Pagination } from '@/components/common/pagination'
@@ -307,43 +308,17 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
         }
       />
 
-      {/* 论文内部两区：学术论文 / 荒诞论文。默认学术，并列切换；
-          副刊是另一条轨道，不在这组标签里。 */}
+      {/* 论文目录：一级是“学术 / 荒诞”，二级是学科。先看目录，再看文章，
+          不再把两种论文混成一条从上到下的列表。 */}
       {fixedTrack === 'paper' && !search.q ? (
-        <div
-          className="mb-5 grid grid-cols-2 gap-2 rounded-2xl border bg-card p-1.5"
-          role="tablist"
-          aria-label="论文分区"
-        >
-          {([
-            { id: 'serious', label: '学术论文', note: '正经研究', count: seriousCount },
-            { id: 'absurd', label: '荒诞论文', note: '一本正经胡说八道', count: absurdCount },
-          ] as const).map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              role="tab"
-              aria-selected={paperKind === tab.id}
-              onClick={() => updateSearch({ kind: tab.id, page: 1 })}
-              className={cn(
-                'rounded-xl px-3 py-2.5 text-left transition-colors',
-                paperKind === tab.id
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'hover:bg-muted/50',
-              )}
-            >
-              <span className="flex items-baseline justify-between gap-2">
-                <span className="font-serif text-sm font-semibold sm:text-base">{tab.label}</span>
-                <span className={cn('text-xs tabular-nums', paperKind === tab.id ? 'opacity-80' : 'text-muted-foreground')}>
-                  {tab.count} 篇
-                </span>
-              </span>
-              <span className={cn('mt-0.5 block text-[11px]', paperKind === tab.id ? 'opacity-80' : 'text-muted-foreground')}>
-                {tab.note}
-              </span>
-            </button>
-          ))}
-        </div>
+        <PaperDirectory
+          paperKind={paperKind}
+          seriousCount={seriousCount}
+          absurdCount={absurdCount}
+          stats={stats}
+          search={search}
+          updateSearch={updateSearch}
+        />
       ) : null}
 
       {/* 1626：论文栏目顶部随机推荐。每次刷新换一批，不改变下面正式目录的排序。 */}
@@ -414,11 +389,6 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
           onChange={(view) => updateSearch({ view })}
         />
       </div>
-
-      {/* 栏目（学科）快捷筛选：点击即切换，免去展开下拉的两步操作 */}
-      {!isMobile && (
-        <DisciplineChips search={search} updateSearch={updateSearch} track={statsTrack} resultTotal={data?.meta.total} />
-      )}
 
       {/* 桌面端：筛选常驻卡片（md 及以上） */}
       {!isMobile && (
@@ -1106,6 +1076,168 @@ function DesktopFilters({
 // 带篇数计数，点击即筛。超过 8 个时默认收起一排展开按钮 ——
 // 已选中的栏目即使排在收起区也会补显出来，不让筛选条件"隐身"。
 const CHIP_COLLAPSE_AT = 8
+
+function PaperDirectory({
+  paperKind,
+  seriousCount,
+  absurdCount,
+  stats,
+  search,
+  updateSearch,
+}: {
+  paperKind: 'serious' | 'absurd'
+  seriousCount: number
+  absurdCount: number
+  stats?: ResourceStats
+  search: CatalogSearch
+  updateSearch: (patch: Partial<CatalogSearch>) => void
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const disciplines = useMemo(
+    () => Object.entries(stats?.by_discipline ?? {}).sort((a, b) => b[1] - a[1]),
+    [stats],
+  )
+  const visible = expanded ? disciplines : disciplines.slice(0, 12)
+  const kinds = [
+    {
+      id: 'serious' as const,
+      label: '学术论文',
+      note: '真实问题 · 可核查材料 · 正经论证',
+      count: seriousCount,
+      icon: BookOpen,
+      tone: 'from-emerald-500/15 via-card to-card',
+      dot: 'bg-emerald-500',
+    },
+    {
+      id: 'absurd' as const,
+      label: '荒诞论文',
+      note: '论文格式不变 · 命题一本正经地荒诞',
+      count: absurdCount,
+      icon: FlaskConical,
+      tone: 'from-amber-500/15 via-card to-card',
+      dot: 'bg-amber-500',
+    },
+  ]
+
+  return (
+    <section className="mb-5 space-y-3" aria-label="论文目录">
+      <div className="grid gap-3 sm:grid-cols-2" role="tablist" aria-label="论文分区">
+        {kinds.map((kind) => {
+          const active = paperKind === kind.id
+          const Icon = kind.icon
+          return (
+            <button
+              key={kind.id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => updateSearch({ kind: kind.id, discipline: undefined, page: 1 })}
+              className={cn(
+                'group relative overflow-hidden rounded-2xl border p-4 text-left transition-all sm:p-5',
+                active
+                  ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                  : 'border-border bg-gradient-to-br hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-sm',
+                !active && kind.tone,
+              )}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', active ? 'bg-white/15' : 'bg-background/80')}>
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="flex flex-wrap items-baseline gap-x-2">
+                      <span className="font-serif text-lg font-semibold tracking-tight">{kind.label}</span>
+                      <span className={cn('text-xs tabular-nums', active ? 'text-white/80' : 'text-muted-foreground')}>
+                        {kind.count} 篇
+                      </span>
+                    </span>
+                    <span className={cn('mt-0.5 block text-xs leading-5', active ? 'text-white/80' : 'text-muted-foreground')}>
+                      {kind.note}
+                    </span>
+                  </span>
+                </div>
+                <span className={cn('mt-1 h-2.5 w-2.5 shrink-0 rounded-full', active ? 'bg-white/80' : kind.dot)} />
+              </div>
+            </button>
+          )
+        })}
+      </div>
+
+      <div className="rounded-2xl border bg-card p-4 sm:p-5">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <div>
+            <h2 className="font-serif text-lg font-semibold tracking-tight">按学科进入</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              当前分区：{paperKind === 'absurd' ? '荒诞论文' : '学术论文'}；学科目录跨两个分区共用。
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => updateSearch({ discipline: undefined, page: 1 })}
+            className={cn(
+              'inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs transition-colors',
+              !search.discipline
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground',
+            )}
+          >
+            <FolderTree className="h-3.5 w-3.5" />
+            全部学科
+          </button>
+        </div>
+
+        {disciplines.length === 0 ? (
+          <p className="mt-3 text-xs text-muted-foreground">暂无可浏览的学科目录。</p>
+        ) : (
+          <>
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+              {visible.map(([name]) => {
+                const style = DISCIPLINE_STYLE[name] ?? DEFAULT_DISCIPLINE_STYLE
+                const Icon = style.icon
+                const active = search.discipline === name
+                return (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() => updateSearch({ discipline: active ? undefined : name, page: 1 })}
+                    className={cn(
+                      'group flex min-h-20 items-center gap-3 rounded-xl border p-3 text-left transition-all',
+                      active
+                        ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                        : 'border-border bg-background/60 hover:-translate-y-0.5 hover:border-primary/35 hover:bg-accent/20',
+                    )}
+                  >
+                    <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br', active ? 'bg-white/15' : style.tint)}>
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium">{name}</span>
+                      <span className={cn('mt-0.5 block text-[11px]', active ? 'text-white/75' : 'text-muted-foreground')}>
+                        {active ? '已进入，点击返回全部' : '进入学科'}
+                      </span>
+                    </span>
+                    <ArrowRight className={cn('h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5', active ? 'text-white/80' : 'text-muted-foreground')} />
+                  </button>
+                )
+              })}
+            </div>
+            {disciplines.length > 12 ? (
+              <button
+                type="button"
+                onClick={() => setExpanded((v) => !v)}
+                className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+              >
+                {expanded ? '收起学科目录' : `查看全部 ${disciplines.length} 个学科`}
+                <ChevronDown className={cn('h-3.5 w-3.5 transition-transform', expanded && 'rotate-180')} />
+              </button>
+            ) : null}
+          </>
+        )}
+      </div>
+    </section>
+  )
+}
 
 function DisciplineChips({
   search,
