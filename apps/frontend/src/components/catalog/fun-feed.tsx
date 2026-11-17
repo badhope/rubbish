@@ -46,7 +46,9 @@ export function FunCatalog({
 }: FunCatalogProps) {
   const genreCounts = stats?.by_genre ?? {}
   const visibleGenres = ESSAY_GENRES.filter((g) => (genreCounts[g.value] ?? 0) > 0)
-  const totalAll = Object.values(genreCounts).reduce((a, b) => a + b, 0) || data?.meta.total || 0
+  // 「全部」用全站聚合总数，不能把各文体相加：没有文体的公告/说明会漏掉，
+  // 出现「全部 35、页脚 36」的自相矛盾。
+  const totalAll = stats?.total ?? data?.meta.total ?? Object.values(genreCounts).reduce((a, b) => a + b, 0)
 
   const go = (patch: Record<string, unknown>) => {
     updateSearch({ ...patch, page: 1 })
