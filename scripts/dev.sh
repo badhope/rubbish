@@ -18,6 +18,8 @@ RUN_DIR="$ROOT/.run"
 
 API_PORT="${RUBBISH_API_PORT:-8000}"
 WEB_PORT="${RUBBISH_WEB_PORT:-5173}"
+# 默认存储根 /data/uploads 在非 root 开发机不可写；未显式指定时落在仓库内。
+export RUBBISH_STORAGE_PATH="${RUBBISH_STORAGE_PATH:-$RUN_DIR/uploads}"
 
 START_BACKEND=1
 START_FRONTEND=1

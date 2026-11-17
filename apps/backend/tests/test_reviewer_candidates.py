@@ -46,6 +46,7 @@ async def test_candidates_include_reviewer_role_holders(
         "matched_keywords",
         "match_reasons",
         "reviewer_tags",
+        "reviewer_disciplines",
         "coi_declared",
         "coi_year",
         "conflict",

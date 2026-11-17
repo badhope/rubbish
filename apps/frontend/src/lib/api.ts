@@ -23,8 +23,18 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+  Object.assign(config.headers, csrfHeaders())
   return config
 })
+
+// Double-submit CSRF：后端中间件开启时，cookie 认证端点（refresh/logout/
+// revoke-all）要求 X-CSRF-Token 与 csrf cookie 一致。cookie 非 httpOnly，
+// 这里读出来回显；未下发 cookie 时返回空头，开发环境零影响。
+export function csrfHeaders(): Record<string, string> {
+  if (typeof document === 'undefined') return {}
+  const match = /(?:^|;\s*)csrf=([^;]+)/.exec(document.cookie)
+  return match ? { 'X-CSRF-Token': decodeURIComponent(match[1]) } : {}
+}
 
 let refreshing: Promise<void> | null = null
 
@@ -39,7 +49,7 @@ async function refreshOnce(): Promise<void> {
       const { data } = await axios.post(
         `${baseURL}/auth/refresh`,
         {},
-        { withCredentials: true, timeout: 5_000 }, // shorter timeout for refresh
+        { withCredentials: true, timeout: 5_000, headers: csrfHeaders() }, // shorter timeout for refresh
       )
       useAuthStore.getState().setAuth(data.access_token, {
         id: data.user_id,

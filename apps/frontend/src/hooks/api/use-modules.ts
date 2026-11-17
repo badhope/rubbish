@@ -12,6 +12,7 @@ import type {
   AssignmentResponse,
   AuditLogEntry,
   AuthorFollowListResponse,
+  DisciplineOption,
   DisciplineSubscriptionListResponse,
   FetchRequest,
   FollowStatusResponse,
@@ -29,6 +30,7 @@ import type {
   NotificationResponse,
   ParseRequest,
   ParseResponse,
+  PublicExpertiseResponse,
   QualityRubric,
   ReadingListCreate,
   ReadingListDetailResponse,
@@ -487,6 +489,8 @@ export interface ReviewerCandidate {
   match_reasons?: string[]
   /** P1-7：审稿人自填能力标签。 */
   reviewer_tags?: string[]
+  /** 受控学科标签（Discipline.slug 数组），与稿件学科精确匹配。 */
+  reviewer_disciplines?: string[]
   /** P1-8：是否已提交当前年度利益冲突声明。 */
   coi_declared?: boolean
   coi_year?: number
@@ -540,6 +544,25 @@ export function useReviewerCandidates(limit = 200, submissionId?: number) {
         })
       ).data.data,
     staleTime: 60_000,
+  })
+}
+
+/** 学科词表（公开）：审稿人自选学科标签 / 指派筛选用。 */
+export function useDisciplines() {
+  return useQuery<DisciplineOption[]>({
+    queryKey: ['catalog', 'disciplines'] as const,
+    queryFn: async () => (await api.get<DisciplineOption[]>('/catalog/disciplines')).data,
+    staleTime: 5 * 60_000,
+  })
+}
+
+/** 审稿团队匿名专长画像（公开，无身份信息）：投稿页展示。 */
+export function usePublicExpertise() {
+  return useQuery<PublicExpertiseResponse>({
+    queryKey: ['review', 'public-expertise'] as const,
+    queryFn: async () =>
+      (await api.get<PublicExpertiseResponse>('/review/public-expertise')).data,
+    staleTime: 5 * 60_000,
   })
 }
 
@@ -2301,6 +2324,7 @@ export interface EditorColumnItem {
   submission_id: number
   title: string | null
   type: string | null
+  discipline?: string | null
   submitted_by: number
   status: string
   submitted_at: string

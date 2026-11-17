@@ -184,10 +184,17 @@ Render free 实例**不支持** preDeployCommand 与 persistent disk
 ## 上线前 checklist
 
 - [ ] `alembic upgrade head` 已在目标库执行（RLS 就位，`test_rls_coverage` 保证所有租户表都有策略）
+- [ ] 应用以**非 superuser** 角色 `rubbish_app` 连库（superuser 绕过 FORCE RLS，租户隔离会失效）：
+      新集群设 `RUBBISH_APP_DB_PASSWORD` + `RUBBISH_DB_APP_USER=rubbish_app`，initdb 自动建角色；
+      已有数据卷的旧集群手工跑 `apps/backend/migrations-sql/20261117_rls_app_role.sql` 再切换连接串。
+      仍以 superuser 连库时生产启动日志会打 `rls_bypassed_by_superuser` 告警。
 - [ ] `RUBBISH_ENVIRONMENT=production`（触发强密钥/ALLOWED_HOSTS 校验）
 - [ ] SECRET_KEY / FERNET_KEY / ADMIN_PASSWORD 均为强随机值且**持久化**（重启不变）
 - [ ] `RUBBISH_ALLOWED_HOSTS` / `RUBBISH_CORS_ORIGINS` 收紧到真实域名
 - [ ] 首次登录后立即改 admin 密码 + 开启 TOTP（`/api/auth/2fa`）
+- [ ] 安全开关：`csrf_enabled` / `captcha_required_for_registration` 生产未显式配置时默认开；
+      全体管理员 rollout TOTP 后设 `RUBBISH_REQUIRE_2FA_FOR_ADMIN=true`。
+      任一开关在生产为关时启动日志会打 `hardening_disabled_in_production` 告警。
 - [ ] 健康检查：`GET /api/health` → `{"status":"ok"}`
 - [ ] 文件存储用 R2/S3（容器本地盘会随重启丢文件）
 

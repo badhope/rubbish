@@ -49,6 +49,8 @@ export interface UserResponse {
   academic_title?: string | null
   research_interests?: string | null
   reviewer_tags?: string[] | null
+  /** 受控学科标签（Discipline.slug 数组；迁移 057） */
+  reviewer_disciplines?: string[] | null
   website?: string | null
   google_scholar?: string | null
   location?: string | null
@@ -80,6 +82,7 @@ export type UserProfileUpdate = Partial<
     | 'academic_title'
     | 'research_interests'
     | 'reviewer_tags'
+    | 'reviewer_disciplines'
     | 'website'
     | 'google_scholar'
     | 'location'
@@ -996,6 +999,28 @@ export interface AuthorFollowListResponse {
 
 export interface DisciplineSubscriptionListResponse {
   data: string[]
+}
+
+// --- 学科词表（GET /catalog/disciplines，公开） ---
+export interface SubdisciplineOption {
+  id: number
+  slug: string
+  name: string
+}
+
+export interface DisciplineOption {
+  id: number
+  slug: string
+  name: string
+  description?: string | null
+  subdisciplines: SubdisciplineOption[]
+}
+
+// --- 审稿团队匿名专长画像（GET /review/public-expertise，公开） ---
+export interface PublicExpertiseResponse {
+  total_reviewers: number
+  disciplines: Array<{ slug: string; name: string; reviewer_count: number }>
+  top_tags: Array<{ tag: string; count: number }>
 }
 
 // --- Ingest ---

@@ -21,8 +21,12 @@ services:
       POSTGRES_DB: rubbish
       POSTGRES_USER: rubbish
       POSTGRES_PASSWORD: ${RUBBISH_DB_PASSWORD:?RUBBISH_DB_PASSWORD is required — set it in repo-root .env}
+      # superuser 绕过 RLS：initdb 阶段用该密码创建非 superuser 应用角色
+      # rubbish_app。未设置则跳过创建（应用回退 superuser，启动日志告警）。
+      RUBBISH_APP_DB_PASSWORD: ${RUBBISH_APP_DB_PASSWORD:-}
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./pg-init:/docker-entrypoint-initdb.d:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U rubbish"]
@@ -51,10 +55,20 @@ services:
     env_file:
       - ../.env
     environment:
-      RUBBISH_DATABASE_URL: postgresql+asyncpg://rubbish:${RUBBISH_DB_PASSWORD:?RUBBISH_DB_PASSWORD is required — set it in repo-root .env}@postgres:5432/rubbish
+      # 设置 RUBBISH_DB_APP_USER=rubbish_app + RUBBISH_APP_DB_PASSWORD 后
+      # 应用改用非 superuser 角色连库，RLS 租户隔离才真正生效（superuser
+      # 绕过 FORCE RLS）。未设置时回退 superuser，启动日志会告警。
+      RUBBISH_DATABASE_URL: postgresql+asyncpg://${RUBBISH_DB_APP_USER:-rubbish}:${RUBBISH_APP_DB_PASSWORD:-${RUBBISH_DB_PASSWORD}}@postgres:5432/rubbish
       RUBBISH_MEILISEARCH_URL: http://meilisearch:7700
       RUBBISH_MEILISEARCH_API_KEY: ${RUBBISH_MEILISEARCH_API_KEY:?RUBBISH_MEILISEARCH_API_KEY is required — set it in repo-root .env}
       RUBBISH_ENVIRONMENT: production
+    # 迁移固定用 superuser（DDL 权限 + 表归其所有，initdb 的
+    # ALTER DEFAULT PRIVILEGES 才能把新表授权给 rubbish_app）；
+    # uvicorn 用 environment 里的 RUBBISH_DATABASE_URL（可为 rubbish_app）。
+    command: >
+      sh -c "RUBBISH_DATABASE_URL='postgresql+asyncpg://rubbish:${RUBBISH_DB_PASSWORD}@postgres:5432/rubbish'
+      alembic upgrade head
+      && uvicorn app.main:app --host 0.0.0.0 --port 8000"
     depends_on:
       postgres:
         condition: service_healthy

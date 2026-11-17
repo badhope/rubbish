@@ -41,7 +41,7 @@ from app.domain.notifications import services as notifications
 from app.domain.notifications.models import EmailDigestRecord
 from app.domain.review.models import ReviewAssignment, ReviewReport
 from app.domain.submission.models import Submission
-from app.interfaces.http.review.coi import ensure_no_declared_conflict
+from app.interfaces.http.review.coi import ensure_no_declared_conflict, name_matches_author
 from app.models import AuditLog, User
 
 router = APIRouter(tags=["workbench"])
@@ -287,31 +287,7 @@ async def editor_workbench(
     now = utcnow()
     tenant_id = require_tenant_id()
 
-    submissions = (
-        (
-            await db.execute(
-                select(Submission)
-                .where(Submission.tenant_id == tenant_id)
-                .options(
-                    selectinload(Submission.review_assignments).selectinload(
-                        ReviewAssignment.reviewer
-                    ),
-                    selectinload(Submission.review_assignments).selectinload(
-                        ReviewAssignment.report
-                    ),
-                )
-            )
-        )
-        .scalars()
-        .all()
-    )
-
-    to_assign: list[dict[str, Any]] = []
-    in_review: list[dict[str, Any]] = []
-    to_decide: list[dict[str, Any]] = []
-    decided: list[dict[str, Any]] = []
-
-    for s in submissions:
+    def _base_row(s: Submission) -> dict[str, Any]:
         # 只认当前轮：重投后旧轮 assignment 保留追溯，但绝不能继续出现在
         # 评审中或「未交」状态里，否则拒审/旧轮会把主编误导成还在审。
         current_round = _current_round(s.review_assignments)
@@ -319,12 +295,11 @@ async def editor_workbench(
         active = [a for a in round_rows if a.status in ACTIVE_ASSIGNMENT_STATUSES]
         done = [a for a in round_rows if a.status == "completed"]
         declined = [a for a in round_rows if a.status == "declined"]
-        distinct_done = {a.reviewer_id for a in done}
-
-        base = {
+        return {
             "submission_id": s.id,
             "title": s.title,
             "type": s.type,
+            "discipline": s.discipline,
             "submitted_by": s.submitted_by,
             "status": s.status,
             "submitted_at": s.submitted_at,
@@ -334,9 +309,44 @@ async def editor_workbench(
             "declined_count": len(declined),
         }
 
-        if s.status in DECIDED_STATUSES:
-            decided.append(base)
-            continue
+    # 在途稿件（非已决定）才需要展开 assignment 做归位；状态下推到 SQL，
+    # 避免把不断增长的「已决定」历史库整表加载进内存。
+    submissions = (
+        (
+            await db.execute(
+                select(Submission)
+                .where(
+                    Submission.tenant_id == tenant_id,
+                    Submission.status.not_in(DECIDED_STATUSES),
+                )
+                .options(
+                    selectinload(Submission.review_assignments).selectinload(
+                        ReviewAssignment.reviewer
+                    ),
+                    selectinload(Submission.review_assignments).selectinload(
+                        ReviewAssignment.report
+                    ),
+                )
+                .order_by(desc(Submission.submitted_at), desc(Submission.id))
+            )
+        )
+        .scalars()
+        .all()
+    )
+
+    to_assign: list[dict[str, Any]] = []
+    in_review: list[dict[str, Any]] = []
+    to_decide: list[dict[str, Any]] = []
+
+    for s in submissions:
+        current_round = _current_round(s.review_assignments)
+        round_rows = [a for a in s.review_assignments if (a.round or 1) == current_round]
+        active = [a for a in round_rows if a.status in ACTIVE_ASSIGNMENT_STATUSES]
+        done = [a for a in round_rows if a.status == "completed"]
+        declined = [a for a in round_rows if a.status == "declined"]
+        distinct_done = {a.reviewer_id for a in done}
+
+        base = _base_row(s)
 
         if s.status == "pending" and not active and not done:
             to_assign.append(base)
@@ -379,6 +389,43 @@ async def editor_workbench(
             bucket["assignments"] = [_assignment_row_editor(a, now) for a in round_rows]
             in_review.append(bucket)
 
+    # 已决定历史库：只取最近 50 篇 + 全量计数，分页下推到 SQL。
+    decided_total = int(
+        (
+            await db.execute(
+                select(func.count(Submission.id)).where(
+                    Submission.tenant_id == tenant_id,
+                    Submission.status.in_(DECIDED_STATUSES),
+                )
+            )
+        ).scalar()
+        or 0
+    )
+    decided_page = (
+        (
+            await db.execute(
+                select(Submission)
+                .where(
+                    Submission.tenant_id == tenant_id,
+                    Submission.status.in_(DECIDED_STATUSES),
+                )
+                .options(
+                    selectinload(Submission.review_assignments).selectinload(
+                        ReviewAssignment.reviewer
+                    ),
+                    selectinload(Submission.review_assignments).selectinload(
+                        ReviewAssignment.report
+                    ),
+                )
+                .order_by(desc(Submission.updated_at), desc(Submission.id))
+                .limit(50)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    decided = [_base_row(s) for s in decided_page]
+
     email_digest = await _email_digest_summary(db, tenant_id, now)
 
     # 每栏先给 50 篇，避免主编工作台一次渲染几百张卡片；count 仍是全量。
@@ -395,7 +442,12 @@ async def editor_workbench(
             "to_assign": _page(to_assign),
             "in_review": _page(in_review),
             "to_decide": _page(to_decide),
-            "decided": _page(decided),
+            "decided": {
+                "count": decided_total,
+                "items": decided,
+                "page_size": 50,
+                "has_more": decided_total > 50,
+            },
         },
         "email_digest": email_digest,
     }
@@ -837,7 +889,6 @@ async def check_conflicts(
     if sub is None:
         raise HTTPException(status_code=404, detail="Submission not found")
 
-    author_names = {(n or "").strip().lower() for n in (sub.authors or []) if n}
     out: list[dict[str, Any]] = []
     for rid in body.reviewer_ids:
         reviewer = (
@@ -848,7 +899,7 @@ async def check_conflicts(
             continue
 
         is_submitter = rid == sub.submitted_by
-        name_match = bool(reviewer.username) and reviewer.username.strip().lower() in author_names
+        name_match = name_matches_author(reviewer, sub)
         own_count = (
             await db.execute(
                 select(func.count(Submission.id)).where(

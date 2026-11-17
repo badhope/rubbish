@@ -43,6 +43,7 @@ from app.interfaces.http.review.coi import (
     declarations_for_reviewers,
     ensure_no_declared_conflict,
     institution_matches,
+    name_matches_author,
 )
 from app.interfaces.http.review.schemas import (
     AssignmentCreate,
@@ -260,6 +261,8 @@ def _candidate_score(
     history: list[Submission],
     active_count: int,
     reviewer_tags: list[str] | None = None,
+    reviewer_disciplines: list[str] | None = None,
+    discipline_names: dict[str, str] | None = None,
 ) -> tuple[int, list[str], list[str]]:
     """A transparent, explainable 0–100 match score.
 
@@ -275,6 +278,12 @@ def _candidate_score(
         if current.discipline and any(item.discipline == current.discipline for item in history):
             score += 40
             reasons.append(f"同学科：{current.discipline}")
+        declared_names = {
+            (discipline_names or {}).get(slug, slug) for slug in (reviewer_disciplines or [])
+        }
+        if current.discipline and current.discipline in declared_names:
+            score += 35
+            reasons.append(f"自选学科命中：{current.discipline}")
         if current.subdiscipline and any(
             item.subdiscipline == current.subdiscipline for item in history
         ):
@@ -336,6 +345,7 @@ async def list_reviewer_candidates(
                 User.affiliation,
                 User.department,
                 User.reviewer_tags,
+                User.reviewer_disciplines,
             )
             .join(UserRole, UserRole.user_id == User.id)
             .join(Role, Role.id == UserRole.role_id)
@@ -406,6 +416,19 @@ async def list_reviewer_candidates(
         db, tenant_id=tenant_id, reviewer_ids=reviewer_ids, year=coi_year
     )
 
+    from app.domain.catalog.models import Discipline
+
+    discipline_names: dict[str, str] = {
+        slug: name
+        for slug, name in (
+            await db.execute(
+                select(Discipline.slug, Discipline.name).where(
+                    Discipline.tenant_id == tenant_id
+                )
+            )
+        ).all()
+    }
+
     candidates: list[ReviewerCandidate] = []
     for row in rows:
         history = history_by_reviewer.get(row.id, [])
@@ -415,6 +438,8 @@ async def list_reviewer_candidates(
             history=history,
             active_count=active_count,
             reviewer_tags=list(getattr(row, "reviewer_tags", None) or []),
+            reviewer_disciplines=list(getattr(row, "reviewer_disciplines", None) or []),
+            discipline_names=discipline_names,
         )
         declaration = declarations.get(row.id)
         conflict_reasons = (
@@ -442,6 +467,7 @@ async def list_reviewer_candidates(
                 matched_keywords=matched,
                 match_reasons=reasons,
                 reviewer_tags=list(getattr(row, "reviewer_tags", None) or []),
+                reviewer_disciplines=list(getattr(row, "reviewer_disciplines", None) or []),
                 coi_declared=declaration is not None,
                 coi_year=coi_year,
                 conflict=bool(conflict_reasons),
@@ -566,7 +592,7 @@ async def review_submission(
     ≥2 名录用审稿人或已 waive-review。新代码请用 ``PATCH /{id}/decision``。
     Terminal: once reviewed, a submission cannot be re-reviewed.
     """
-    entry = await _get_or_404(db, submission_id)
+    entry = await _get_or_404(db, submission_id, lock=True)
     if entry.submitted_by == current_user.id:
         raise HTTPException(status_code=403, detail="Cannot review own submission")
     if entry.status != "pending":
@@ -653,7 +679,7 @@ async def assign_reviewer(
 
     分配后 submission 自动从 pending → under_review（仅 pending 时）。
     """
-    entry = await _get_or_404(db, submission_id)
+    entry = await _get_or_404(db, submission_id, lock=True)
     if entry.status not in ("pending", "under_review", "resubmitted"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -696,6 +722,16 @@ async def assign_reviewer(
         reviewer_id=reviewer.id,
         submission=entry,
     )
+    if name_matches_author(reviewer, entry):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "reviewer_name_conflict",
+                "message": (
+                    f"审稿人 {reviewer.username} 与稿件作者同名：疑似共同作者/自审，请更换审稿人。"
+                ),
+            },
+        )
     if (entry.triage_status or "pending") in ("pending", "rework"):
         entry.triage_status = "passed"
         entry.triaged_at = utcnow()
@@ -1155,7 +1191,7 @@ async def editor_decision(
     权限：仅 L8 执行编辑 / L9 主编（require_chief_editor）。L7 栏目编辑
     按分工只有初审、送审与推荐权，无最终裁决权。
     """
-    entry = await _get_or_404(db, submission_id)
+    entry = await _get_or_404(db, submission_id, lock=True)
     # 仅 pending / under_review / resubmitted 可决断
     if entry.status not in ("pending", "under_review", "resubmitted"):
         raise HTTPException(

@@ -26,6 +26,7 @@ import {
   useEditorDecision,
   useEditorEmailDigestRecords,
   useEditorWorkbench,
+  useDisciplines,
   useRemindReviewers,
   useReviewerCandidates,
   useReviewerWorkload,
@@ -90,6 +91,10 @@ const COLUMN_META: { key: ColumnKey; title: string; accent: string }[] = [
 function EditorWorkbenchPage() {
   const { data, isLoading, isError, refetch } = useEditorWorkbench()
   const candidates = useReviewerCandidates(200)
+  const disciplines = useDisciplines()
+  const disciplineNames = new Map(
+    (disciplines.data ?? []).map((item) => [item.slug, item.name]),
+  )
   const workload = useReviewerWorkload()
   const batchMut = useBatchAssign()
   const cancelAssignMut = useCancelAssignment()
@@ -104,6 +109,7 @@ function EditorWorkbenchPage() {
   const [selectedReviewers, setSelectedReviewers] = useState<number[]>([])
   const [dueDays, setDueDays] = useState(14)
   const [conflicts, setConflicts] = useState<Record<number, ConflictCandidate>>({})
+  const [onlySameDiscipline, setOnlySameDiscipline] = useState(false)
 
   // 待裁决：当前正在裁决的稿件 id
   const [decidingId, setDecidingId] = useState<number | null>(null)
@@ -129,6 +135,22 @@ function EditorWorkbenchPage() {
 
   const columns = data?.columns
   const digest = data?.email_digest
+
+  // 单稿指派时提供与初筛台一致的「只看自选学科」筛选；多稿学科不一，不提供。
+  const checkedDiscipline =
+    checked.size === 1
+      ? (Object.values(columns ?? {})
+          .flatMap((col) => col.items)
+          .find((item) => checked.has(item.submission_id))?.discipline ?? null)
+      : null
+  const checkedDisciplineSlug = checkedDiscipline
+    ? (disciplines.data ?? []).find((d) => d.name === checkedDiscipline)?.slug
+    : undefined
+  const allCandidates = candidates.data ?? []
+  const dialogCandidates =
+    onlySameDiscipline && checkedDisciplineSlug
+      ? allCandidates.filter((c) => (c.reviewer_disciplines ?? []).includes(checkedDisciplineSlug))
+      : allCandidates
 
   // 只有在琥珀/红两态下才按需拉 records；绿色态不需要
   const digestRecords = useEditorEmailDigestRecords({
@@ -163,6 +185,7 @@ function EditorWorkbenchPage() {
     setChecked(new Set(selectedIds))
     setAssignOpen(true)
     setSelectedReviewers([])
+    setOnlySameDiscipline(false)
     setConflicts({})
     // 对第一篇勾选稿件跑一次冲突检查（多稿件时共用候选名单；冲突提示以该稿件为准）
     const firstSubId = selectedIds[0]
@@ -680,8 +703,26 @@ function EditorWorkbenchPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
+            {checkedDisciplineSlug && (
+              <label className="flex items-center gap-2 text-xs">
+                <input
+                  type="checkbox"
+                  checked={onlySameDiscipline}
+                  onChange={(e) => setOnlySameDiscipline(e.target.checked)}
+                  className="h-3.5 w-3.5"
+                />
+                只看自选「{checkedDiscipline}」学科的审稿人
+              </label>
+            )}
             <div className="max-h-72 space-y-1 overflow-y-auto rounded border p-2">
-              {(candidates.data ?? []).map((c) => {
+              {dialogCandidates.length === 0 && (
+                <p className="px-2 py-1.5 text-sm text-muted-foreground">
+                  {onlySameDiscipline && allCandidates.length > 0
+                    ? '没有自选该学科的审稿人；取消筛选可查看全部候选。'
+                    : '暂无候选审稿人：请先在「用户管理」里授予审稿人角色。'}
+                </p>
+              )}
+              {dialogCandidates.map((c) => {
                 const conflict = conflicts[c.id]
                 const warned = conflict?.warning
                 const disabled = conflict?.is_submitter || conflict?.name_matches_author
@@ -702,6 +743,15 @@ function EditorWorkbenchPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span>{c.username}</span>
+                        {(c.reviewer_disciplines ?? []).slice(0, 2).map((slug) => (
+                          <Badge
+                            key={slug}
+                            variant="outline"
+                            className="border-primary/40 text-[10px] text-primary"
+                          >
+                            {disciplineNames.get(slug) ?? slug}
+                          </Badge>
+                        ))}
                         {(c.reviewer_tags ?? []).slice(0, 3).map((tag) => (
                           <Badge key={tag} variant="secondary" className="text-[10px]">
                             {tag}

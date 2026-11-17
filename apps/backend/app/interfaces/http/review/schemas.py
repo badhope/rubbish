@@ -116,3 +116,24 @@ class ReviewDraftIn(BaseModel):
 class ReviewDraftResponse(BaseModel):
     payload: dict[str, Any] | None = None
     updated_at: datetime | None = None
+
+
+class ExpertiseDiscipline(BaseModel):
+    """匿名学科覆盖：仅 slug/名称/人数，不含任何身份信息。"""
+
+    slug: str
+    name: str
+    reviewer_count: int = 0
+
+
+class ExpertiseTag(BaseModel):
+    tag: str
+    count: int
+
+
+class PublicExpertiseResponse(BaseModel):
+    """GET /review/public-expertise — 投稿人可见的审稿团队匿名画像。"""
+
+    total_reviewers: int = 0
+    disciplines: list[ExpertiseDiscipline] = Field(default_factory=list)
+    top_tags: list[ExpertiseTag] = Field(default_factory=list)

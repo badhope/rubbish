@@ -226,3 +226,59 @@ describe('api 401 刷新拦截器', () => {
     expect(refreshCalls).toBe(0)
   })
 })
+
+describe('CSRF double-submit 回显', () => {
+  it('有 csrf cookie 时业务请求带 X-CSRF-Token', async () => {
+    document.cookie = 'csrf=nonce-123; path=/'
+    let seen: InternalAxiosRequestConfig | undefined
+    business = async (config) => {
+      seen = config
+      return makeResponse(config, {})
+    }
+
+    await api.post('/auth/logout')
+
+    expect(seen?.headers['X-CSRF-Token']).toBe('nonce-123')
+    document.cookie = 'csrf=; path=/; max-age=0'
+  })
+
+  it('无 csrf cookie 时不带 X-CSRF-Token', async () => {
+    document.cookie = 'csrf=; path=/; max-age=0'
+    let seen: InternalAxiosRequestConfig | undefined
+    business = async (config) => {
+      seen = config
+      return makeResponse(config, {})
+    }
+
+    await api.post('/auth/logout')
+
+    expect(seen?.headers['X-CSRF-Token']).toBeUndefined()
+  })
+
+  it('refresh 走全局 axios 也回显 X-CSRF-Token', async () => {
+    document.cookie = 'csrf=nonce-456; path=/'
+    useAuthStore.setState({
+      token: 'old-token',
+      user: { id: 1, username: 'alice', is_admin: false },
+    })
+    let refreshConfig: InternalAxiosRequestConfig | undefined
+    refreshImpl = async (config) => {
+      refreshConfig = config
+      return later(() =>
+        makeResponse(config, {
+          access_token: 'new-token',
+          user_id: 7,
+          username: 'alice',
+          is_admin: false,
+        }),
+      )
+    }
+    business = async (config) =>
+      later(() => Promise.reject<AxiosResponse>(makeError(401, config)))
+
+    await expect(api.get('/library')).rejects.toMatchObject({ response: { status: 401 } })
+
+    expect(refreshConfig?.headers?.['X-CSRF-Token']).toBe('nonce-456')
+    document.cookie = 'csrf=; path=/; max-age=0'
+  })
+})

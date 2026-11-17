@@ -116,8 +116,8 @@ class Settings(BaseSettings):
 
     # --- CSRF ---
     # Double-submit-cookie protection for state-changing requests on
-    # cookie-authenticated endpoints. Off by default for backward
-    # compatibility; flip on once the SPA echoes ``X-CSRF-Token``.
+    # cookie-authenticated endpoints. Dev/test default off; production
+    # auto-enables when unset (SPA echoes ``X-CSRF-Token``).
     csrf_enabled: bool = False
 
     # --- WebAuthn / Passkeys ---
@@ -139,8 +139,8 @@ class Settings(BaseSettings):
 
     # --- CAPTCHA policy ---
     # When True, /api/auth/register demands a captcha_token field and
-    # runs it through the verifier at ``captcha_verifier``. Default
-    # off so dev / CI / unit tests do not need an external provider.
+    # runs it through the verifier at ``captcha_verifier``. Dev/CI default
+    # off (no external provider needed); production auto-enables when unset.
     captcha_required_for_registration: bool = False
     # Dotted path to a verifier. Empty -> a dev passthrough that
     # accepts everything (with a single warning log).
@@ -229,8 +229,10 @@ class Settings(BaseSettings):
     oidc_token_url: str = ""
     oidc_userinfo_url: str = ""
     oidc_scopes: str = "openid email profile"
-    # After OIDC callback, where to redirect the browser. We append
-    # ``?access_token=...&refresh_token=...`` (refresh also set as cookie).
+    # After OIDC callback, where to redirect the browser. We append the
+    # access token in the URL ``#fragment`` (not the query string, so it
+    # stays out of history/referrer/server logs); the refresh token goes
+    # ONLY in the httpOnly cookie. See api/oidc.py callback.
     oidc_redirect_url: str = ""  # e.g. https://app.example.com/auth/oidc/callback
     # PKCE (RFC 7636) is REQUIRED on every deployment by default. The
     # one-shot code_verifier is stored in an httpOnly cookie and
@@ -437,6 +439,12 @@ class Settings(BaseSettings):
                 raise ValueError("RUBBISH_ALLOWED_HOSTS must be explicitly set in production")
             if "*" in self.cors_origins_list:
                 raise ValueError("CORS wildcard '*' is not allowed in production")
+            # 安全开关生产默认开（未显式配置时）：SPA 已回显 X-CSRF-Token、
+            # 注册页已支持自建 captcha，默认关只会让生产裸奔。显式 env 仍优先。
+            if "csrf_enabled" not in self.model_fields_set:
+                self.csrf_enabled = True
+            if "captcha_required_for_registration" not in self.model_fields_set:
+                self.captcha_required_for_registration = True
 
         return self
 

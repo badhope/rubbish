@@ -6,6 +6,7 @@ submission, etc.) live in module packages.
 
 from __future__ import annotations
 
+import re
 from datetime import datetime
 from typing import Any, Literal
 from urllib.parse import urlparse
@@ -232,6 +233,8 @@ class UserResponse(BaseModel):
     research_interests: str | None = None
     # P1-7 审稿能力标签（空列表 = 未填写）
     reviewer_tags: list[str] = Field(default_factory=list)
+    # 受控学科标签（迁移 057；空列表 = 未填写）
+    reviewer_disciplines: list[str] = Field(default_factory=list)
     website: str | None = None
     google_scholar: str | None = None
     location: str | None = None
@@ -281,6 +284,7 @@ class UserResponse(BaseModel):
                 "academic_title": data.academic_title,
                 "research_interests": data.research_interests,
                 "reviewer_tags": list(getattr(data, "reviewer_tags", None) or []),
+                "reviewer_disciplines": list(getattr(data, "reviewer_disciplines", None) or []),
                 "website": data.website,
                 "google_scholar": data.google_scholar,
                 "location": data.location,
@@ -389,6 +393,9 @@ class UserUpdate(BaseModel):
     academic_title: str | None = Field(default=None, max_length=100)
     research_interests: str | None = Field(default=None, max_length=500)
     reviewer_tags: list[str] | None = Field(default=None, max_length=20)
+    # 受控学科标签（迁移 057）：Discipline.slug 数组；存在性在端点按
+    # onto 宽松模式校验（租户未配置词表时放行）。
+    reviewer_disciplines: list[str] | None = Field(default=None, max_length=10)
     website: str | None = Field(default=None, max_length=300)
     google_scholar: str | None = Field(default=None, max_length=300)
     location: str | None = Field(default=None, max_length=100)
@@ -463,6 +470,25 @@ class UserUpdate(BaseModel):
             seen.add(key)
             out.append(text[:40])
         return out[:20]
+
+    @field_validator("reviewer_disciplines")
+    @classmethod
+    def _clean_reviewer_disciplines(cls, values: list[str] | None) -> list[str] | None:
+        if values is None:
+            return None
+        out: list[str] = []
+        seen: set[str] = set()
+        for raw in values:
+            slug = str(raw).strip().lower()
+            if not slug:
+                continue
+            if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,99}", slug):
+                raise ValueError("学科标签必须是学科词表的 slug（小写字母/数字/连字符）")
+            if slug in seen:
+                continue
+            seen.add(slug)
+            out.append(slug)
+        return out[:10]
 
     @field_validator("bio")
     @classmethod

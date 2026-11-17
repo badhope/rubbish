@@ -14,7 +14,11 @@ import { cn } from '@/lib/utils'
  * 不生效。现在统一补齐四件事：
  * 1. remark-math + KaTeX 渲染行内/块级公式；
  * 2. rehype-raw 保留编辑器插入的 <u>/<mark>/<figure> 等排版标签；
- * 3. 白名单清洗（含 id/class/colspan/rowspan），既保留排版又挡 XSS；
+ * 3. 白名单清洗：id 全标签放行但被 defaultSchema 的 clobberPrefix
+ *    （user-content-）前缀化，防 DOM clobbering；className 不做全标签放行，
+ *    沿用 defaultSchema 的按标签取值白名单（code 的 language-*、脚注、
+ *    任务列表等），挡住任意 Tailwind 工具类注入造成的 UI 红披/点击劫持。
+ *    KaTeX 在清洗之后运行、排版类由 React 组件施加，均不受影响；
  * 4. data:image 图片白名单，避免上传图或公式图被默认 URL 清洗清空。
  */
 export const markdownSanitizeSchema = {
@@ -41,7 +45,9 @@ export const markdownSanitizeSchema = {
   },
   attributes: {
     ...defaultSchema.attributes,
-    '*': [...(defaultSchema.attributes?.['*'] ?? []), 'className', 'id'],
+    // id 已在 defaultSchema['*'] 中且受 clobberPrefix 保护；这里不额外
+    // 放行 className，保留 defaultSchema 的按标签取值限制。
+    '*': [...(defaultSchema.attributes?.['*'] ?? [])],
     a: [...(defaultSchema.attributes?.a ?? []), 'target', 'rel'],
     img: [
       ...(defaultSchema.attributes?.img ?? []),
@@ -50,7 +56,8 @@ export const markdownSanitizeSchema = {
       'width',
       'height',
     ],
-    code: [...(defaultSchema.attributes?.code ?? []), 'className'],
+    // code 沿用 defaultSchema 的 [['className', /^language-./]]，不放行任意类。
+    code: [...(defaultSchema.attributes?.code ?? [])],
     table: [...(defaultSchema.attributes?.table ?? []), 'align'],
     td: [...(defaultSchema.attributes?.td ?? []), 'colSpan', 'rowSpan', 'align'],
     th: [...(defaultSchema.attributes?.th ?? []), 'colSpan', 'rowSpan', 'align'],

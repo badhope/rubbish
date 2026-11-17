@@ -38,6 +38,7 @@ import {
 } from '@/hooks/api/use-modules'
 import { MarkdownEditor } from '@/components/common/markdown-editor'
 import { PaperProof } from '@/components/submission/paper-proof'
+import { ExpertiseCoverage } from '@/components/submission/expertise-coverage'
 import { uploadMediaImage } from '@/lib/media'
 import { api } from '@/lib/api'
 import AuthPngPreview from '@/components/auth-png-preview'
@@ -1330,6 +1331,8 @@ function StepBibliography({
           </datalist>
         </div>
       </div>
+
+      <ExpertiseCoverage currentDiscipline={form.discipline} />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2">

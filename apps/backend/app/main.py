@@ -81,6 +81,31 @@ async def _verify_db_with_retry() -> None:
     logger.info("database_connection_verified")
 
 
+async def _warn_if_db_role_bypasses_rls() -> None:
+    """superuser 绕过 RLS（FORCE ROW LEVEL SECURITY 也无效）。
+
+    生产以 superuser 连库时租户隔离形同虚设，打 error 级告警提示改用
+    rubbish_app 角色（infra/pg-init/01-app-role.sh 或
+    migrations-sql/20261117_rls_app_role.sql）。
+    """
+    from sqlalchemy import text
+
+    from app.core.db import engine
+
+    if engine.dialect.name != "postgresql":
+        return
+    async with engine.connect() as conn:
+        is_super = await conn.scalar(
+            text("SELECT rolsuper FROM pg_roles WHERE rolname = current_user")
+        )
+    if is_super:
+        logger.error(
+            "rls_bypassed_by_superuser",
+            hint="应用以 superuser 连库，RLS 租户隔离不生效；请改用非 superuser "
+            "角色 rubbish_app（见 DEPLOY.md 与 migrations-sql/20261117_rls_app_role.sql）",
+        )
+
+
 # Load enabled modules eagerly so their routers are available when the
 # app is constructed. Module __init__ only registers manifests (no I/O),
 # so this is safe to run at import time.
@@ -95,8 +120,18 @@ logger.info(
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Application lifespan: verify DB → bootstrap → yield → dispose."""
+    if settings.is_production:
+        for flag in (
+            "csrf_enabled",
+            "captcha_required_for_registration",
+            "require_2fa_for_admin",
+        ):
+            if not getattr(settings, flag):
+                logger.warning("hardening_disabled_in_production", flag=flag)
     if not settings.is_test:
         await _verify_db_with_retry()
+        if settings.is_production:
+            await _warn_if_db_role_bypasses_rls()
         await run_bootstrap()
 
     if not settings.is_test:

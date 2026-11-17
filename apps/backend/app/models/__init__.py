@@ -212,6 +212,11 @@ class User(Base, TenantScopedMixin):
     reviewer_tags: Mapped[list[str]] = mapped_column(
         JSONBVariant, nullable=False, default=list, server_default="[]"
     )
+    # 审稿学科标签（迁移 057）：受控词表 Discipline.slug 数组，与稿件
+    # discipline 同源可精确匹配；自由补充仍走 reviewer_tags。
+    reviewer_disciplines: Mapped[list[str]] = mapped_column(
+        JSONBVariant, nullable=False, default=list, server_default="[]"
+    )
     website: Mapped[str | None] = mapped_column(String(300), nullable=True)
     google_scholar: Mapped[str | None] = mapped_column(String(300), nullable=True)
     location: Mapped[str | None] = mapped_column(String(100), nullable=True)

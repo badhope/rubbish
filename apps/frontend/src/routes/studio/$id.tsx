@@ -6,6 +6,7 @@ import {
   Download,
   Eye,
   FileText,
+  MessageSquareText,
   Save,
   Settings2,
 } from 'lucide-react'
@@ -16,6 +17,7 @@ import {
   useSaveSubmissionMarkdown,
   useSubmission,
   useSubmissionMarkdown,
+  useSubmissionReports,
   useUpdateSubmission,
 } from '@/hooks/api/use-modules'
 import { cn, extractError } from '@/lib/utils'
@@ -41,6 +43,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { MarkdownEditor } from '@/components/common/markdown-editor'
 import { ErrorState, LoadingSkeleton } from '@/components/common/state'
 import { PaperProof } from '@/components/submission/paper-proof'
+import { RevisionSuggestions } from '@/components/submission/revision-suggestions'
 
 export const Route = createFileRoute('/studio/$id')({
   beforeLoad: () => {
@@ -49,7 +52,7 @@ export const Route = createFileRoute('/studio/$id')({
   component: StudioPage,
 })
 
-const EDITABLE_STATUSES = ['pending', 'major_revision', 'minor_revision']
+const EDITABLE_STATUSES = ['pending', 'major_revision', 'minor_revision', 'rework_requested']
 const LICENSE_OPTIONS = [
   'CC BY 4.0',
   'CC BY-NC 4.0',
@@ -125,6 +128,9 @@ function StudioPage() {
   const [pdfBusy, setPdfBusy] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [metaOpen, setMetaOpen] = useState(false)
+  const [previewTab, setPreviewTab] = useState<'proof' | 'suggestions'>('proof')
+  const reports = useSubmissionReports(submissionId)
+  const reportCount = reports.data?.length ?? 0
   const metaLoaded = useRef(false)
   const bodyLoaded = useRef(false)
 
@@ -256,6 +262,35 @@ function StudioPage() {
       onDownloadPdf={handleDownloadPdf}
       pdfBusy={pdfBusy}
     />
+  )
+
+  const previewPanel = (
+    <Tabs
+      value={previewTab}
+      onValueChange={(value) => setPreviewTab(value as 'proof' | 'suggestions')}
+    >
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="proof">
+          <Eye className="mr-1 h-3.5 w-3.5" />
+          纸面预览
+        </TabsTrigger>
+        <TabsTrigger value="suggestions" data-testid="studio-suggestions-tab">
+          <MessageSquareText className="mr-1 h-3.5 w-3.5" />
+          修改建议
+          {reportCount > 0 && (
+            <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-[10px]">
+              {reportCount}
+            </Badge>
+          )}
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent value="proof" className="mt-2">
+        {proof}
+      </TabsContent>
+      <TabsContent value="suggestions" className="mt-2">
+        <RevisionSuggestions submissionId={submissionId} />
+      </TabsContent>
+    </Tabs>
   )
 
   const statusText = useMemo(() => {
@@ -548,7 +583,7 @@ function StudioPage() {
         {!previewOpen && (
           <aside className="hidden min-w-0 xl:block">
             <div className="sticky top-3 max-h-[calc(100vh-5rem)] overflow-auto pr-1">
-              {proof}
+              {previewPanel}
             </div>
           </aside>
         )}
@@ -559,7 +594,7 @@ function StudioPage() {
           <DialogHeader>
             <DialogTitle>排版预览</DialogTitle>
           </DialogHeader>
-          {proof}
+          {previewPanel}
         </DialogContent>
       </Dialog>
     </div>

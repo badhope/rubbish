@@ -21,6 +21,7 @@ import {
   useAssignAdjudicator,
   useAssignReviewersBulk,
   useCancelAssignment,
+  useDisciplines,
   useEditorDecision,
   useSetAnonymizedFile,
   useSubmissionAssignments,
@@ -929,8 +930,22 @@ function AssignReviewerDialog({
   // 专供编辑的候选端点：只返回持 reviewer 角色且启用的账号，非 admin 的
   // editor 也能用（此前走 /admin/users 会 403，下拉永远是空的）。
   const { data: candidateData, isLoading } = useReviewerCandidates(REVIEWER_CANDIDATE_LIMIT, submission.id)
-  const candidates = candidateData ?? []
-  const truncated = candidates.length >= REVIEWER_CANDIDATE_LIMIT
+  const disciplines = useDisciplines()
+  const disciplineNames = new Map(
+    (disciplines.data ?? []).map((item) => [item.slug, item.name]),
+  )
+  const submissionDisciplineSlug = (disciplines.data ?? []).find(
+    (item) => item.name === submission.discipline,
+  )?.slug
+  const [onlySameDiscipline, setOnlySameDiscipline] = useState(false)
+  const allCandidates = candidateData ?? []
+  const candidates =
+    onlySameDiscipline && submissionDisciplineSlug
+      ? allCandidates.filter((u) =>
+          (u.reviewer_disciplines ?? []).includes(submissionDisciplineSlug),
+        )
+      : allCandidates
+  const truncated = allCandidates.length >= REVIEWER_CANDIDATE_LIMIT
   const assignMut = useAssignReviewersBulk()
   const [selected, setSelected] = useState<number[]>([])
   const [dueDays, setDueDays] = useState('14')
@@ -1005,12 +1020,25 @@ function AssignReviewerDialog({
           <p className="text-xs text-muted-foreground">
             可一次多选（最多 3 名，占 slot 1/2/3）；重复邀请同一审稿人会自动跳过。
           </p>
+          {submissionDisciplineSlug && (
+            <label className="flex items-center gap-2 text-xs">
+              <input
+                type="checkbox"
+                checked={onlySameDiscipline}
+                onChange={(e) => setOnlySameDiscipline(e.target.checked)}
+                className="h-3.5 w-3.5"
+              />
+              只看自选「{submission.discipline}」学科的审稿人
+            </label>
+          )}
           <div className="max-h-[40vh] space-y-1 overflow-y-auto">
             {isLoading ? (
               <Loading />
             ) : candidates.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                没有可指派的审稿人：请先在「用户管理」里给用户授予审稿人（reviewer）角色。
+                {onlySameDiscipline && allCandidates.length > 0
+                  ? '没有自选该学科的审稿人；取消筛选可查看全部候选。'
+                  : '没有可指派的审稿人：请先在「用户管理」里给用户授予审稿人（reviewer）角色。'}
               </p>
             ) : (
               candidates.map((u) => {
@@ -1034,6 +1062,15 @@ function AssignReviewerDialog({
                         匹配 {u.score}
                       </Badge>
                     ) : null}
+                    {(u.reviewer_disciplines ?? []).slice(0, 2).map((slug) => (
+                      <Badge
+                        key={slug}
+                        variant="outline"
+                        className="border-primary/40 text-[10px] text-primary"
+                      >
+                        {disciplineNames.get(slug) ?? slug}
+                      </Badge>
+                    ))}
                     {(u.reviewer_tags ?? []).slice(0, 3).map((tag) => (
                       <Badge key={tag} variant="secondary" className="text-[10px]">
                         {tag}
