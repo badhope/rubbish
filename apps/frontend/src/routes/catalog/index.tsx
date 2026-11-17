@@ -319,6 +319,7 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
           stats={stats}
           search={search}
           updateSearch={updateSearch}
+          isMobile={isMobile}
         />
       ) : null}
 
@@ -795,7 +796,7 @@ function ViewSwitcher({
               : 'text-muted-foreground hover:text-foreground',
           )}
         >
-          {v === 'list' ? '列表' : '九宫格'}
+          {v === 'list' ? '列表' : '网格'}
         </button>
       ))}
     </div>
@@ -1122,6 +1123,7 @@ function PaperDirectory({
   stats,
   search,
   updateSearch,
+  isMobile,
 }: {
   paperKind: 'serious' | 'absurd'
   seriousCount: number
@@ -1129,13 +1131,15 @@ function PaperDirectory({
   stats?: ResourceStats
   search: CatalogSearch
   updateSearch: (patch: Partial<CatalogSearch>) => void
+  isMobile: boolean
 }) {
   const [expanded, setExpanded] = useState(false)
   const disciplines = useMemo(
     () => Object.entries(stats?.by_discipline ?? {}).sort((a, b) => b[1] - a[1]),
     [stats],
   )
-  const visible = expanded ? disciplines : disciplines.slice(0, 12)
+  const collapseAt = isMobile ? 6 : 12
+  const visible = expanded ? disciplines : disciplines.slice(0, collapseAt)
   const kinds = [
     {
       id: 'serious' as const,
@@ -1159,7 +1163,7 @@ function PaperDirectory({
 
   return (
     <section className="mb-5 space-y-3" aria-label="论文目录">
-      <div className="grid gap-3 sm:grid-cols-2" role="tablist" aria-label="论文分区">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3" role="tablist" aria-label="论文分区">
         {kinds.map((kind) => {
           const active = paperKind === kind.id
           const Icon = kind.icon
@@ -1171,7 +1175,7 @@ function PaperDirectory({
               aria-selected={active}
               onClick={() => updateSearch({ kind: kind.id, discipline: undefined, page: 1 })}
               className={cn(
-                'group relative overflow-hidden rounded-2xl border p-4 text-left transition-all sm:p-5',
+                'group relative overflow-hidden rounded-2xl border p-3 text-left transition-all sm:p-5',
                 active
                   ? 'border-primary bg-primary text-primary-foreground shadow-sm'
                   : 'border-border bg-gradient-to-br hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-sm',
@@ -1184,13 +1188,13 @@ function PaperDirectory({
                     <Icon className="h-5 w-5" />
                   </span>
                   <span className="min-w-0">
-                    <span className="flex flex-wrap items-baseline gap-x-2">
-                      <span className="font-serif text-lg font-semibold tracking-tight">{kind.label}</span>
-                      <span className={cn('text-xs tabular-nums', active ? 'text-white/80' : 'text-muted-foreground')}>
+                    <span className="flex min-w-0 flex-col sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-2">
+                      <span className="whitespace-nowrap font-serif text-base font-semibold tracking-tight sm:text-lg">{kind.label}</span>
+                      <span className={cn('mt-0.5 text-xs tabular-nums sm:mt-0', active ? 'text-white/80' : 'text-muted-foreground')}>
                         {kind.count} 篇
                       </span>
                     </span>
-                    <span className={cn('mt-0.5 block text-xs leading-5', active ? 'text-white/80' : 'text-muted-foreground')}>
+                    <span className={cn('mt-0.5 hidden text-xs leading-5 sm:block', active ? 'text-white/80' : 'text-muted-foreground')}>
                       {kind.note}
                     </span>
                   </span>
@@ -1229,7 +1233,7 @@ function PaperDirectory({
           <p className="mt-3 text-xs text-muted-foreground">暂无可浏览的学科目录。</p>
         ) : (
           <>
-            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="mt-3 grid grid-cols-3 gap-2 lg:grid-cols-4">
               {visible.map(([name]) => {
                 const style = DISCIPLINE_STYLE[name] ?? DEFAULT_DISCIPLINE_STYLE
                 const Icon = style.icon
@@ -1240,13 +1244,13 @@ function PaperDirectory({
                     type="button"
                     onClick={() => updateSearch({ discipline: active ? undefined : name, page: 1 })}
                     className={cn(
-                      'group flex min-h-20 items-center gap-2 rounded-xl border p-2.5 text-left transition-all sm:gap-3 sm:p-3',
+                      'group flex min-h-20 items-center gap-2 rounded-xl border p-2 text-left transition-all sm:gap-3 sm:p-3',
                       active
                         ? 'border-primary bg-primary text-primary-foreground shadow-sm'
                         : 'border-border bg-background/60 hover:-translate-y-0.5 hover:border-primary/35 hover:bg-accent/20',
                     )}
                   >
-                    <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br sm:h-9 sm:w-9', active ? 'bg-white/15' : style.tint)}>
+                    <span className={cn('hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br sm:flex sm:h-9 sm:w-9', active ? 'bg-white/15' : style.tint)}>
                       <Icon className="h-4 w-4" />
                     </span>
                     <span className="min-w-0 flex-1">
@@ -1260,7 +1264,7 @@ function PaperDirectory({
                 )
               })}
             </div>
-            {disciplines.length > 12 ? (
+            {disciplines.length > collapseAt ? (
               <button
                 type="button"
                 onClick={() => setExpanded((v) => !v)}

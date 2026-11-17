@@ -1559,23 +1559,22 @@ html {
 .catalog-grid {
   display: grid;
   gap: 0.75rem;
-  grid-template-columns: 1fr;
+  /* 手机也必须保持两列：一列长列表会让每张卡看起来一样，读者无法比较。
+     卡片改成纵向封面卡后，两列在 390px 下仍然能读清标题。 */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-@container (min-width: 520px) {
-  .catalog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-@container (min-width: 820px) {
+@container (min-width: 700px) {
   .catalog-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @container (min-width: 1080px) {
   .catalog-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
-/* 封面比例跟着容器走：手机上是一行缩略图（3:4），平板方图，桌面宽图。
-   原来固定 3:4，1440 宽度下四列每张封面 460px 高，一屏只看得见一行标题。 */
-.catalog-cover { aspect-ratio: 3 / 4; }
-@container (min-width: 520px) {
+/* 封面比例跟着容器走：手机两列用 4:5 封面，平板方图，桌面宽图。
+   原来手机是横向 3:4 缩略图，视觉上退化成信息流；现在改为纵向封面卡。 */
+.catalog-cover { aspect-ratio: 4 / 5; }
+@container (min-width: 700px) {
   .catalog-cover { aspect-ratio: 1 / 1; }
 }
 @container (min-width: 1080px) {

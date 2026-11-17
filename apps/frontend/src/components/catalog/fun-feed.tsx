@@ -222,7 +222,7 @@ export function FunCatalog({
             {visibleGenres.length > 0 && (
               <section>
                 <SectionHead title="按文体进入" note="先选门类，再读这一门里的最新几篇" />
-                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+                <div className="mt-3 grid grid-cols-3 gap-2 lg:grid-cols-4">
                   {visibleGenres.map((g) => {
                     const active = search.genre === g.value
                     return (
@@ -231,18 +231,20 @@ export function FunCatalog({
                         type="button"
                         onClick={() => go({ genre: active ? undefined : g.value })}
                         className={cn(
-                          'group flex items-center gap-2.5 rounded-xl border px-3 py-3 text-left transition-all',
+                          'group flex min-h-[74px] items-center gap-2 rounded-xl border px-2.5 py-2.5 text-left transition-all sm:gap-2.5 sm:px-3 sm:py-3',
                           active
                             ? 'border-primary bg-primary text-primary-foreground shadow-sm'
                             : 'border-border bg-card hover:-translate-y-0.5 hover:border-primary/30 hover:bg-accent/25',
                         )}
                       >
-                        <span className="text-xl leading-none">{g.emoji}</span>
+                        <span className="text-base leading-none sm:text-xl">{g.emoji}</span>
                         <span className="min-w-0 flex-1">
-                          <span className="block text-sm font-medium">{g.label}</span>
+                          <span className="block whitespace-nowrap text-[12px] font-medium leading-4 sm:text-sm">
+                            {g.label}
+                          </span>
                           <span
                             className={cn(
-                              'mt-0.5 block truncate text-[11px]',
+                              'mt-0.5 block truncate text-[10px] sm:text-[11px]',
                               active ? 'text-white/75' : 'text-muted-foreground',
                             )}
                           >
@@ -252,7 +254,7 @@ export function FunCatalog({
                         </span>
                         <ArrowRight
                           className={cn(
-                            'h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5',
+                            'hidden h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5 sm:block',
                             active ? 'text-white/80' : 'text-muted-foreground',
                           )}
                         />
@@ -277,7 +279,7 @@ export function FunCatalog({
                   title="最新副刊"
                   note={data.meta.total ? `共 ${data.meta.total} 篇` : undefined}
                 />
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:gap-3">
                   {rest.map((r) => (
                     <FunCard key={r.id} resource={r} featured={false} />
                   ))}
@@ -363,7 +365,7 @@ function FunCard({ resource, featured }: { resource: ResourceResponse; featured:
           resource.cover_image ? 'md:grid-cols-[1.15fr_0.85fr]' : 'md:grid-cols-1',
         )}
       >
-        <div className="order-1 flex flex-col justify-center gap-3 p-5 sm:p-7 md:order-1">
+        <div className="order-2 flex flex-col justify-center gap-3 p-4 sm:p-7 md:order-1">
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="rounded-full bg-primary px-2.5 py-1 font-medium text-primary-foreground">
               {genre.label}
@@ -389,7 +391,7 @@ function FunCard({ resource, featured }: { resource: ResourceResponse; featured:
           </div>
         </div>
         <div
-          className="relative order-2 hidden overflow-hidden md:order-2 md:block md:min-h-[260px]"
+          className="relative order-1 block overflow-hidden md:order-2 md:block md:min-h-[260px]"
         >
           <ArticleCover
             resource={resource}
@@ -411,9 +413,9 @@ function FunCard({ resource, featured }: { resource: ResourceResponse; featured:
     <Link
       to="/catalog/$resourceId"
       params={{ resourceId: String(resource.id) }}
-      className="group grid grid-cols-[92px_1fr] gap-4 rounded-2xl border border-transparent bg-card/70 p-3 transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:bg-card sm:grid-cols-[120px_1fr] sm:p-4"
+      className="group flex flex-col gap-2 rounded-2xl border border-transparent bg-card/70 p-2.5 transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:bg-card sm:grid sm:grid-cols-[120px_1fr] sm:gap-4 sm:p-4"
     >
-      <div className="relative aspect-square overflow-hidden rounded-xl">
+      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg sm:aspect-square sm:w-auto sm:rounded-xl">
         <ArticleCover resource={resource} showDiscipline={false} className="h-full" />
         {!resource.cover_image ? (
           <span className="pointer-events-none absolute inset-0 grid place-items-center text-2xl">
@@ -422,19 +424,19 @@ function FunCard({ resource, featured }: { resource: ResourceResponse; featured:
         ) : null}
       </div>
       <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground sm:gap-2 sm:text-[11px]">
           <span className="font-medium text-primary">{genre.label}</span>
           <span>·</span>
           <span>{resource.year}</span>
           {resource.reads != null ? <span>· 阅读 {resource.reads}</span> : null}
         </div>
-        <h3 className="mt-1 line-clamp-2 font-serif text-base font-semibold leading-snug tracking-tight sm:text-lg">
+        <h3 className="mt-1 line-clamp-2 font-serif text-[13px] font-semibold leading-snug tracking-tight sm:text-lg">
           {resource.title}
         </h3>
-        <p className="mt-1.5 line-clamp-2 text-xs leading-6 text-muted-foreground sm:text-sm">
+        <p className="mt-1 line-clamp-2 text-[10px] leading-4 text-muted-foreground sm:mt-1.5 sm:text-sm sm:leading-6">
           {preview}
         </p>
-        <p className="mt-2 truncate text-[11px] text-muted-foreground">
+        <p className="mt-2 truncate text-[10px] text-muted-foreground sm:text-[11px]">
           {formatAuthors(resource.authors) || '佚名'}
         </p>
       </div>

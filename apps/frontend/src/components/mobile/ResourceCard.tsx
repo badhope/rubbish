@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { FileDown } from 'lucide-react'
 import { ArticleCover } from '@/components/common/article-cover'
 import { isScholarlyContent } from '@/lib/resource-labels'
+import { essayGenreLabel } from '@/lib/essay-genres'
 import { formatAuthors, cn } from '@/lib/utils'
 import type { ResourceResponse } from '@/lib/types'
 
@@ -17,14 +18,13 @@ import type { ResourceResponse } from '@/lib/types'
 export function ResourceCard({ resource }: { resource: ResourceResponse }) {
   const authors = formatAuthors(resource.authors)
   const scholarly = isScholarlyContent(resource.content_category, resource.content_track)
-  // 论文卡：CLC + 学科一行；娱乐卡：娱乐向/吐槽向，不渲染空 CLC 占位。
+  const essay = resource.content_track === 'essay'
+  // 论文卡：CLC + 学科一行；副刊卡：具体文体，不渲染空 CLC 占位。
   const subLabel = scholarly
     ? resource.clc_code
       ? `CLC ${resource.clc_code}`
       : resource.discipline
-    : resource.content_category === 'rant'
-      ? '吐槽向'
-      : '副刊'
+    : essayGenreLabel(resource.content_genre)
 
   return (
     <Link
@@ -51,12 +51,14 @@ export function ResourceCard({ resource }: { resource: ResourceResponse }) {
             <span
               className={cn(
                 'inline-flex items-center rounded border px-1.5 py-0 font-semibold leading-none',
-                scholarly
-                  ? 'border-slate-700/40 bg-slate-900/85 text-white'
-                  : 'border-amber-600/40 bg-amber-500/90 text-white',
+                essay
+                  ? 'border-rose-700/40 bg-rose-600/90 text-white'
+                  : scholarly
+                    ? 'border-slate-700/40 bg-slate-900/85 text-white'
+                    : 'border-amber-600/40 bg-amber-500/90 text-white',
               )}
             >
-              {scholarly ? (resource.track === 'absurd' ? '荒诞论文' : '学术论文') : '副刊'}
+              {essay ? '副刊' : resource.track === 'absurd' ? '荒诞论文' : '学术论文'}
             </span>
             <span className="text-muted-foreground">{subLabel}</span>
             {resource.has_file ? <FileDown className="h-3 w-3" /> : null}
