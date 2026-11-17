@@ -335,7 +335,7 @@ function StudioPage() {
           </Link>
         </Button>
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-base font-semibold lg:text-lg">Studio 工作台</h1>
+          <h1 className="truncate text-base font-semibold lg:text-lg">创作工作台</h1>
           <p className="truncate text-xs text-muted-foreground">
             {meta.title || '未填写标题'}
           </p>

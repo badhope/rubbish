@@ -52,7 +52,7 @@ function ResetPasswordPage() {
       <Card className="w-full">
         <CardHeader>
           <CardTitle className="text-2xl">重置密码</CardTitle>
-          <CardDescription>输入邮件中的 token 和新密码。</CardDescription>
+          <CardDescription>输入邮件中的令牌和新密码。</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
