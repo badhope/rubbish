@@ -637,7 +637,7 @@ function CatalogHub() {
   const seriousTotal = stats?.by_paper_kind?.serious ?? 0
   const absurdTotal = stats?.by_paper_kind?.absurd ?? 0
   const genreCounts = stats?.by_genre ?? {}
-  const essayTotal = Object.values(genreCounts).reduce((a, b) => a + b, 0)
+  const essayTotal = stats?.by_track?.essay ?? Object.values(genreCounts).reduce((a, b) => a + b, 0)
   const disciplines = Object.entries(stats?.by_discipline ?? {})
     .filter(([name]) => name && name !== '未分类')
     .sort((a, b) => b[1] - a[1])

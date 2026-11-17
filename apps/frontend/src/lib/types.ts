@@ -440,6 +440,9 @@ export interface ResourceListResponse {
 export interface ResourceStats {
   total: number
   by_type: Record<string, number>
+  // 内容赛道（paper / essay）分布：副刊总数不能用 by_genre 相加，
+  // 没有文体的公告/说明会漏掉。
+  by_track?: Record<string, number>
   by_discipline: Record<string, number>
   by_genre?: Record<string, number>
   by_paper_kind?: Record<string, number>
