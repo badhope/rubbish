@@ -23,7 +23,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
-from sqlalchemy import and_, case, desc, func, or_, select, update
+from sqlalchemy import String, and_, case, cast, desc, func, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -260,8 +260,10 @@ async def list_resources(
     q: str | None = None,
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
-    sort: str | None = Query(default=None, pattern=r"^(year|title|created_at|issue|published_at)$"),
+    sort: str | None = Query(default=None, pattern=r"^(year|title|created_at|issue|published_at|random)$"),
     order: str | None = Query(default=None, pattern=r"^(asc|desc)$"),
+    # 随机浏览/随机推荐的稳定种子：同一种子分页不重不漏，换种子即换一批。
+    seed: int = Query(default=0, ge=0, le=2147483647),
     db: AsyncSession = Depends(get_db),
     viewer: User | None = Depends(get_current_user_optional),
 ) -> ResourceListResponse:
@@ -440,6 +442,21 @@ async def list_resources(
             page=page,
             page_size=page_size,
             order_by=(Resource.volume.asc(), Resource.issue.asc(), Resource.pages.asc()),
+        )
+        return ResourceListResponse(data=await _with_engagement(db, rows), meta=meta)
+    if sort == "random":
+        # 可复现的随机顺序：同一 seed 下分页稳定，换 seed 即整批换序。
+        # PostgreSQL 用 md5(id||seed) 做确定性散列；SQLite 测试环境用线性同余。
+        if db.get_bind().dialect.name == "postgresql":
+            random_expr = func.md5(func.concat(cast(Resource.id, String), str(seed)))
+        else:
+            random_expr = func.abs(Resource.id * 1103515245 + seed)
+        rows, meta = await paginate(
+            db,
+            stmt,
+            page=page,
+            page_size=page_size,
+            order_by=(random_expr, Resource.id.asc()),
         )
         return ResourceListResponse(data=await _with_engagement(db, rows), meta=meta)
 

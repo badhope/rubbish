@@ -481,8 +481,10 @@ export interface ResourceListParams {
   q?: string
   page?: number
   page_size?: number
-  sort?: 'created_at' | 'year' | 'title' | 'issue'
+  sort?: 'created_at' | 'year' | 'title' | 'issue' | 'random'
   order?: 'asc' | 'desc'
+  /** 随机排序的稳定种子；同一 seed 下分页不重不漏。 */
+  seed?: number
 }
 
 // --- Submission ---

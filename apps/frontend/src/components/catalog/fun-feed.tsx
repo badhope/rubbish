@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { ArrowRight, ChevronDown, Search, Sparkles } from 'lucide-react'
+import { ArrowRight, ChevronDown, RefreshCw, Search, Sparkles } from 'lucide-react'
 import type { ResourceResponse, ResourceStats } from '@/lib/types'
 import { ESSAY_GENRES, essayGenreMeta } from '@/lib/essay-genres'
 import { ArticleCover } from '@/components/common/article-cover'
@@ -22,6 +22,7 @@ interface FunCatalogProps {
   search: { q?: string; genre?: string; page?: number }
   updateSearch: (patch: Record<string, unknown>) => void
   routePath: '/papers' | '/fun' | '/catalog'
+  onShuffle?: () => void
 }
 
 function plainPreview(text?: string | null): string {
@@ -43,6 +44,7 @@ export function FunCatalog({
   search,
   updateSearch,
   routePath,
+  onShuffle,
 }: FunCatalogProps) {
   const genreCounts = stats?.by_genre ?? {}
   const visibleGenres = ESSAY_GENRES.filter((g) => (genreCounts[g.value] ?? 0) > 0)
@@ -55,7 +57,7 @@ export function FunCatalog({
   }
 
   // 编辑部栏目说明不跟普通副刊稿抢头图：抽成顶部一条紧凑说明栏，
-  // 首篇推荐也只从真正的副刊稿里选，避免“编辑推荐”永远落在公告上。
+  // 首篇推荐也只从真正的副刊稿里选，避免推荐永远落在公告上；顺序由随机目录决定。
   const editorialNotes = data?.data.filter(isEditorialNote) ?? []
   const stories = data?.data.filter((r) => !isEditorialNote(r)) ?? []
   const featuredId = stories[0]?.id
@@ -138,10 +140,23 @@ export function FunCatalog({
             格式与版式
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
-          <span>
-            {search.genre ? `${essayGenreMeta(search.genre).label} · ` : ''}
-            {data?.meta.total ?? 0} 篇
-          </span>
+          <div className="flex items-center gap-3">
+            {onShuffle && (
+              <button
+                type="button"
+                onClick={onShuffle}
+                className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+                title="随机换一批"
+              >
+                <RefreshCw className="h-3 w-3" />
+                换一批
+              </button>
+            )}
+            <span>
+              {search.genre ? `${essayGenreMeta(search.genre).label} · ` : ''}
+              {data?.meta.total ?? 0} 篇
+            </span>
+          </div>
         </div>
       </div>
 
@@ -203,7 +218,7 @@ export function FunCatalog({
           <div className="mt-3 space-y-4 sm:mt-5 sm:space-y-7">
             {visibleGenres.length > 0 && (
               <section>
-                <SectionHead title="按文体进入" note="先选门类，再读这一门里的最新几篇" />
+                <SectionHead title="按文体进入" note="先选门类，再随机翻这一门" />
                 <div className="mt-2 flex flex-wrap gap-1.5 sm:hidden">
                   <GenrePill active={!search.genre} onClick={() => go({ genre: undefined })}>
                     全部 · {totalAll}
@@ -266,7 +281,7 @@ export function FunCatalog({
             )}
             {featuredId != null && (
               <section>
-                <SectionHead title="编辑推荐" note="本周先看这篇" />
+                <SectionHead title="本期推荐" note="每次刷新换一篇" />
                 <div className="mt-3">
                   <FunCard resource={stories[0]} featured />
                 </div>
@@ -276,8 +291,8 @@ export function FunCatalog({
             {rest.length > 0 && (
               <section>
                 <SectionHead
-                  title="最新副刊"
-                  note={data.meta.total ? `共 ${data.meta.total} 篇` : undefined}
+                  title="随机翻阅"
+                  note={data.meta.total ? `共 ${data.meta.total} 篇 · 每次换一批` : undefined}
                 />
                 <div className="mt-3 grid grid-cols-2 gap-2 sm:gap-3">
                   {rest.map((r) => (
@@ -386,7 +401,7 @@ function FunCard({ resource, featured }: { resource: ResourceResponse; featured:
             {resource.reads != null ? <span>· 阅读 {resource.reads}</span> : null}
             <span className="inline-flex items-center gap-1 text-primary">
               <Sparkles className="h-3.5 w-3.5" />
-              编辑推荐
+              本期推荐
             </span>
           </div>
         </div>

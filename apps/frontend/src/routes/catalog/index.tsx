@@ -106,18 +106,6 @@ const EXPORT_FORMATS: { format: AnyExportFormat; label: string }[] = [
   { format: 'zip', label: '逐篇 ZIP' },
 ]
 
-/** 固定种子的 Fisher–Yates：刷新页面换 seed，同一次浏览内「换一批」也稳定。 */
-function seededShuffle<T>(items: T[], seed: number): T[] {
-  const list = items.slice()
-  let state = (seed % 2147483647) || 1
-  for (let i = list.length - 1; i > 0; i -= 1) {
-    state = (state * 48271) % 2147483647
-    const j = state % (i + 1)
-    ;[list[i], list[j]] = [list[j], list[i]]
-  }
-  return list
-}
-
 export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay' } = {}) {
   const navigate = useNavigate()
   const search = useSearch({ strict: false }) as CatalogSearch
@@ -136,6 +124,11 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
     : fixedTrack === 'essay'
       ? '/fun'
       : '/catalog'
+
+  // 目录首页采用「可复现随机」：每次进入/点“换一批”换 seed，分页仍稳定；
+  // 搜索时回到相关度/新近排序，避免随机打乱检索结果。
+  const [feedSeed, setFeedSeed] = useState(() => Math.floor(Math.random() * 2147483646) + 1)
+  const randomFeed = Boolean(fixedTrack) && !search.q && !search.author && !search.doi && !search.clc
 
   const params = {
     q: search.q || undefined,
@@ -156,28 +149,23 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
     clc: search.clc || undefined,
     page: search.page || 1,
     page_size: 10,
+    sort: randomFeed ? ('random' as const) : undefined,
+    seed: randomFeed ? feedSeed : undefined,
   }
 
   const { data, isLoading, isFetching, isError, refetch } = useResources(params)
   const { data: stats } = useCatalogStats(statsTrack)
 
-  // `/papers` 顶部随机推荐：单独拉论文池，用于抽取推荐卡片；
-  // 两个 tab 的计数不要从这里数——池子只有 50 条，会把 240 篇截成 50。
+  // `/papers` 顶部随机推荐：直接从整个分区随机取 4 条，
+  // 不再只从最新 50 条里挑，老稿也有同样的曝光机会。
+  const [pickSeed, setPickSeed] = useState(() => Math.floor(Math.random() * 2147483646) + 1)
   const { data: paperPool } = useResources(
-    { track: 'paper', page: 1, page_size: 50 },
+    { track: 'paper', paper_kind: paperKind, sort: 'random', seed: pickSeed, page: 1, page_size: 4 },
     fixedTrack === 'paper',
   )
-  const [pickSeed, setPickSeed] = useState(() => Math.floor(Math.random() * 2147483646) + 1)
   const seriousCount = stats?.by_paper_kind?.serious ?? 0
   const absurdCount = stats?.by_paper_kind?.absurd ?? 0
-  const paperPicks = useMemo(
-    () =>
-      seededShuffle(
-        (paperPool?.data ?? []).filter((r) => (r.track ?? 'serious') === paperKind),
-        pickSeed,
-      ).slice(0, 4),
-    [paperPool?.data, pickSeed, paperKind],
-  )
+  const paperPicks = paperPool?.data ?? []
 
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   // 默认视图 = 九宫格（v1.15）：封面浏览是目录页第一动作；?view=list 时才切列表。
@@ -193,6 +181,11 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
       search: { ...search, ...patch },
       replace: true,
     } as never)
+  }
+
+  const shuffleFeed = () => {
+    setFeedSeed(Math.floor(Math.random() * 2147483646) + 1)
+    updateSearch({ page: 1 })
   }
 
   const allIds = data?.data.map((r) => r.id) ?? []
@@ -259,6 +252,7 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
         search={search}
         updateSearch={updateSearch}
         routePath={routePath}
+        onShuffle={shuffleFeed}
       />
     )
   }
@@ -386,10 +380,16 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
               ? '副刊轨：非论文格式 · 格式与合规检查 · 不计分 · 独立成刊'
               : '论文与副刊分属两条轨道，从左侧导航或底部 Tab 进入对应目录。'}
         </p>
-        <ViewSwitcher
-          value={viewMode}
-          onChange={(view) => updateSearch({ view })}
-        />
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={shuffleFeed} title="随机换一批">
+            <RefreshCw className="h-4 w-4" />
+            换一批
+          </Button>
+          <ViewSwitcher
+            value={viewMode}
+            onChange={(view) => updateSearch({ view })}
+          />
+        </div>
       </div>
 
       {/* 桌面端：筛选常驻卡片（md 及以上） */}
@@ -398,7 +398,7 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
       )}
 
       {/* 移动端：筛选收进可折叠面板，默认收起，避免挤占浏览空间 */}
-      {isMobile && <MobileFilters search={search} updateSearch={updateSearch} track={statsTrack} resultTotal={data?.meta.total} />}
+      {isMobile && <MobileFilters search={search} updateSearch={updateSearch} track={statsTrack} resultTotal={data?.meta.total} onShuffle={shuffleFeed} />}
 
       {/* 批量选择/导出是桌面管理操作，移动端隐藏以保持浏览专注 */}
       {!isMobile && selectedIds.length > 0 && (
@@ -990,11 +990,13 @@ function MobileFilters({
   updateSearch,
   track,
   resultTotal,
+  onShuffle,
 }: {
   search: CatalogSearch
   updateSearch: (patch: Partial<CatalogSearch>) => void
   track?: 'paper' | 'essay'
   resultTotal?: number
+  onShuffle?: () => void
 }) {
   const [open, setOpen] = useState(false)
   const activeCount = [
@@ -1019,6 +1021,19 @@ function MobileFilters({
             onCommit={(q) => updateSearch({ q: q || undefined, page: 1 })}
           />
         </div>
+        {onShuffle && (
+          <Button
+            type="button"
+            variant="outline"
+            className="h-10 shrink-0 gap-1 px-2.5 text-xs"
+            onClick={onShuffle}
+            aria-label="随机换一批"
+            title="随机换一批"
+          >
+            <RefreshCw className="h-4 w-4" />
+            换一批
+          </Button>
+        )}
         <Button
           type="button"
           variant="outline"
