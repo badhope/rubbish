@@ -17,6 +17,7 @@ import type { ResourceType, ResourceStats } from '@/lib/types'
 import { extractError, formatAuthors, cn } from '@/lib/utils'
 import { contentCategoryLabel, displayTypeLabel, isScholarlyContent } from '@/lib/resource-labels'
 import { DISCIPLINE_STYLE, DEFAULT_DISCIPLINE_STYLE } from '@/lib/discipline-style'
+import { ESSAY_GENRES } from '@/lib/essay-genres'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState } from '@/components/common/state'
 import { Pagination } from '@/components/common/pagination'
@@ -632,19 +633,20 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
 // 总目录落地页：三区入口。读者先选「论文 / 副刊」，论文内部再选
 // 「学术论文 / 荒诞论文」；不把 274 篇混在一列里。
 function CatalogHub() {
-  const papers = useResources({ track: 'paper', page: 1, page_size: 30, sort: 'created_at', order: 'desc' })
-  const essays = useResources({ track: 'essay', page: 1, page_size: 5, sort: 'created_at', order: 'desc' })
   const { data: stats } = useCatalogStats()
-  const paperRows = papers.data?.data ?? []
-  const seriousRows = paperRows.filter((r) => (r.track ?? 'serious') === 'serious')
-  const absurdRows = paperRows.filter((r) => r.track === 'absurd')
-  // 计数必须取全站聚合值：按首屏 30 条统计会在近期以荒诞稿为主时
-  // 显示成“0 篇学术论文”，与首页、论文页的口径冲突。
-  const seriousTotal = stats?.by_paper_kind?.serious ?? seriousRows.length
-  const absurdTotal = stats?.by_paper_kind?.absurd ?? absurdRows.length
-  const essayRows = essays.data?.data ?? []
+  const seriousTotal = stats?.by_paper_kind?.serious ?? 0
+  const absurdTotal = stats?.by_paper_kind?.absurd ?? 0
+  const genreCounts = stats?.by_genre ?? {}
+  const essayTotal = Object.values(genreCounts).reduce((a, b) => a + b, 0)
+  const disciplines = Object.entries(stats?.by_discipline ?? {})
+    .filter(([name]) => name && name !== '未分类')
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+  const genres = ESSAY_GENRES.filter((g) => (genreCounts[g.value] ?? 0) > 0)
 
   const zoneLink = 'group flex items-start gap-3 rounded-xl border bg-card p-3 transition-colors hover:border-primary/40 hover:bg-muted/20'
+  const miniLink = 'group flex min-h-16 items-center gap-2.5 rounded-lg border border-border/70 bg-background/60 px-3 py-2 text-left transition-colors hover:border-primary/35 hover:bg-accent/20'
+
   return (
     <div className="mx-auto max-w-6xl">
       <PageHeader
@@ -665,7 +667,8 @@ function CatalogHub() {
               进入论文区
             </Link>
           </div>
-          <div className="mt-4 grid gap-2">
+
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
             <Link to="/papers" search={{ kind: 'serious' }} className={zoneLink}>
               <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
               <span className="min-w-0">
@@ -687,17 +690,33 @@ function CatalogHub() {
               </span>
             </Link>
           </div>
+
           <div className="mt-4 border-t pt-3">
-            <p className="mb-2 text-xs font-medium text-muted-foreground">最新论文</p>
-            <div className="space-y-2">
-              {paperRows.slice(0, 3).map((r) => (
-                <Link key={r.id} to="/catalog/$resourceId" params={{ resourceId: String(r.id) }} className="block text-sm hover:text-primary">
-                  <span className="mr-1.5 rounded bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
-                    {r.track === 'absurd' ? '荒诞' : '学术'}
-                  </span>
-                  <span className="line-clamp-1">{r.title}</span>
-                </Link>
-              ))}
+            <div className="mb-2 flex items-baseline justify-between gap-2">
+              <p className="text-xs font-medium text-muted-foreground">按学科进入</p>
+              <Link to="/papers" className="text-[11px] text-primary hover:underline">全部学科</Link>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5">
+              {disciplines.map(([name, count]) => {
+                const style = DISCIPLINE_STYLE[name] ?? DEFAULT_DISCIPLINE_STYLE
+                const Icon = style.icon
+                return (
+                  <Link
+                    key={name}
+                    to="/papers"
+                    search={{ discipline: name }}
+                    className={miniLink}
+                  >
+                    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${style.tint}`}>
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-xs font-medium">{name}</span>
+                      <span className="block text-[10px] text-muted-foreground">{count} 篇 · 全刊</span>
+                    </span>
+                  </Link>
+                )
+              })}
             </div>
           </div>
         </section>
@@ -707,21 +726,42 @@ function CatalogHub() {
             <div>
               <p className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">Supplement</p>
               <h2 className="mt-1 font-serif text-xl font-semibold">副刊</h2>
-              <p className="mt-1 text-xs text-muted-foreground">小说、随笔、评论、指南、吐槽；不用论文体、不计分</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {essayTotal} 篇 · 小说、随笔、评论、指南、吐槽；不用论文体、不计分
+              </p>
             </div>
             <Link to="/fun" className="shrink-0 rounded-full border px-3 py-1 text-xs hover:bg-background">
               进入副刊
             </Link>
           </div>
+
           <div className="mt-4 border-t pt-3">
-            <p className="mb-2 text-xs font-medium text-muted-foreground">最新副刊</p>
-            <div className="space-y-2">
-              {essayRows.map((r) => (
-                <Link key={r.id} to="/catalog/$resourceId" params={{ resourceId: String(r.id) }} className="block text-sm hover:text-primary">
-                  <span className="line-clamp-1">{r.title}</span>
+            <div className="mb-2 flex items-baseline justify-between gap-2">
+              <p className="text-xs font-medium text-muted-foreground">按文体进入</p>
+              <Link to="/fun" className="text-[11px] text-primary hover:underline">全部文体</Link>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5">
+              {genres.map((g) => (
+                <Link
+                  key={g.value}
+                  to="/fun"
+                  search={{ genre: g.value }}
+                  className={miniLink}
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-base">
+                    {g.emoji}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-xs font-medium">{g.label}</span>
+                    <span className="block text-[10px] text-muted-foreground">{genreCounts[g.value]} 篇</span>
+                  </span>
                 </Link>
               ))}
             </div>
+          </div>
+
+          <div className="mt-4 rounded-xl border border-dashed bg-muted/25 px-3 py-2 text-[11px] text-muted-foreground">
+            副刊不参与学术计分，也不进站内热度；编辑推荐与最新稿件在副刊页内按文体展开。
           </div>
         </section>
       </div>
@@ -729,8 +769,6 @@ function CatalogHub() {
   )
 }
 
-// 视图切换：九宫格（封面浏览，默认）/ 列表（紧凑行）。状态写进 URL ?view=，
-// 刷新与分享链接都不丢；九宫格在前、列表在后，与默认视图顺序一致。
 function ViewSwitcher({
   value,
   onChange,
