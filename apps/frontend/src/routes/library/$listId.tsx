@@ -292,7 +292,7 @@ function AddResourceDialogBody({
     e.preventDefault()
     const resourceId = Number(manualId)
     if (!resourceId || Number.isNaN(resourceId)) {
-      toast.error('请输入有效的 resource_id')
+      toast.error('请输入有效的 资源 ID')
       return
     }
     await onAdd(resourceId)
@@ -355,11 +355,11 @@ function AddResourceDialogBody({
       )}
 
       <div className="border-t pt-4">
-        <p className="mb-2 text-xs text-muted-foreground">或直接输入 resource_id</p>
+        <p className="mb-2 text-xs text-muted-foreground">或直接输入 资源 ID</p>
         <form onSubmit={onAddManual} className="flex gap-2">
           <Input
             type="number"
-            placeholder="resource_id"
+            placeholder="资源 ID"
             value={manualId}
             onChange={(e) => setManualId(e.target.value)}
           />

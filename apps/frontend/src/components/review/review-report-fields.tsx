@@ -59,25 +59,25 @@ export const RECOMMENDATION_OPTIONS: {
 }[] = [
   {
     value: 'accept',
-    label: '接收（Accept）',
+    label: '接收',
     short: '可直接发表',
     when: '论证与证据完整，剩余问题只是编辑性修改；你愿意为这篇的结论背书。',
   },
   {
     value: 'minor_revision',
-    label: '小修（Minor Revision）',
+    label: '小修',
     short: '小改后发表',
     when: '结论成立，但有个别数据、引用或表述需要澄清；修改可在一次轮回内完成。',
   },
   {
     value: 'major_revision',
-    label: '大修（Major Revision）',
+    label: '大修',
     short: '实质补强后再审',
     when: '问题可以补，但需要新增证据、重做分析或重构论证；改完必须回看。',
   },
   {
     value: 'reject',
-    label: '拒稿（Reject）',
+    label: '拒稿',
     short: '不适合本刊或无法补救',
     when: '核心问题不成立、存在伦理/诚信硬伤，或与本刊范围不符且修改也无法解决。',
   },

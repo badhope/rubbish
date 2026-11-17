@@ -57,7 +57,7 @@ function ResetPasswordPage() {
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="token">重置 Token</Label>
+              <Label htmlFor="token">重置令牌</Label>
               <Input
                 id="token"
                 value={token}

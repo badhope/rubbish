@@ -158,7 +158,7 @@ function VerifyEmailPage() {
         <CardContent className="space-y-4">
           <form onSubmit={onVerify} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="token">验证 Token</Label>
+              <Label htmlFor="token">验证令牌</Label>
               <Input
                 id="token"
                 value={token}

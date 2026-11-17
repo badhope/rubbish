@@ -845,10 +845,10 @@ function EditorWorkbenchPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="accept">录用（Accept）</SelectItem>
-                  <SelectItem value="minor_revision">小修（Minor Revision）</SelectItem>
-                  <SelectItem value="major_revision">大修（Major Revision）</SelectItem>
-                  <SelectItem value="reject">拒稿（Reject）</SelectItem>
+                  <SelectItem value="accept">录用</SelectItem>
+                  <SelectItem value="minor_revision">小修</SelectItem>
+                  <SelectItem value="major_revision">大修</SelectItem>
+                  <SelectItem value="reject">拒稿</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -862,7 +862,7 @@ function EditorWorkbenchPage() {
                     className="mt-0.5 size-4 accent-primary"
                   />
                   <span>
-                    <span className="font-medium">该稿免同行评审（desk accept）</span>
+                    <span className="font-medium">该稿免同行评审（编辑直接录用）</span>
                     <span className="mt-0.5 block text-xs text-muted-foreground">
                       仅用于约稿、编委特稿、重复发表复核等确实无需外审的稿件；会写审计并通知作者。
                     </span>

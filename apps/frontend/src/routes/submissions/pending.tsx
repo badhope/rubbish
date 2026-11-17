@@ -95,10 +95,10 @@ export const Route = createFileRoute('/submissions/pending')({
 })
 
 const DECISION_OPTIONS: { value: EditorDecision; label: string; hint?: string }[] = [
-  { value: 'accept', label: '接收（Accept）', hint: '自动入目录' },
-  { value: 'minor_revision', label: '小修（Minor Revision）' },
-  { value: 'major_revision', label: '大修（Major Revision）' },
-  { value: 'reject', label: '拒稿（Reject）' },
+  { value: 'accept', label: '接收', hint: '自动入目录' },
+  { value: 'minor_revision', label: '小修' },
+  { value: 'major_revision', label: '大修' },
+  { value: 'reject', label: '拒稿' },
 ]
 
 // 维度中文口径统一在 @/lib/review-dimensions，旧四维作为历史数据兜底。
@@ -1038,7 +1038,7 @@ function AssignReviewerDialog({
               <p className="text-sm text-muted-foreground">
                 {onlySameDiscipline && allCandidates.length > 0
                   ? '没有自选该学科的审稿人；取消筛选可查看全部候选。'
-                  : '没有可指派的审稿人：请先在「用户管理」里给用户授予审稿人（reviewer）角色。'}
+                  : '没有可指派的审稿人：请先在「用户管理」里给用户授予审稿人角色。'}
               </p>
             ) : (
               candidates.map((u) => {
