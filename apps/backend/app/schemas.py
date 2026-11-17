@@ -431,8 +431,10 @@ class UserUpdate(BaseModel):
         cleaned = value.strip()
         if not cleaned:
             return None
-        if cleaned.startswith("/api/forum/images/") or cleaned.startswith(
-            "/api/users/profile-images/"
+        if (
+            cleaned.startswith("/api/forum/images/")
+            or cleaned.startswith("/api/users/profile-images/")
+            or cleaned.startswith("/api/media/images/")
         ):
             return cleaned
         parsed = urlparse(cleaned)
