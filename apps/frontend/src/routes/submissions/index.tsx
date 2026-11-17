@@ -822,7 +822,7 @@ function SubmissionsPage() {
                     }}
                   >
                     <LayoutPanelTop className="h-4 w-4" />
-                    Studio 工作台
+                    创作工作台
                   </Button>
                   <Button
                     variant="outline"
