@@ -325,7 +325,7 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
 
       {/* 1626：论文栏目顶部随机推荐。每次刷新换一批，不改变下面正式目录的排序。 */}
       {fixedTrack === 'paper' && !search.q && paperPicks.length > 0 ? (
-        <section className="mb-5 rounded-2xl border border-amber-200/70 bg-gradient-to-br from-amber-50/80 via-card to-card p-3 sm:p-4 dark:border-amber-500/20 dark:from-amber-950/20">
+        <section className="mb-5 hidden rounded-2xl border border-amber-200/70 bg-gradient-to-br from-amber-50/80 via-card to-card p-3 sm:block sm:p-4 dark:border-amber-500/20 dark:from-amber-950/20">
           <div className="flex items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-1.5">
               <Sparkles className="h-4 w-4 shrink-0 text-primary" />
@@ -376,7 +376,7 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
 
       {/* 顶部只留视图切换。论文 / 副刊的主入口在侧栏与移动端「更多」菜单，
           页面内不再放第二套轨道分段，避免同一屏出现两个切换器。 */}
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+      <div className="mb-0 hidden flex-wrap items-center justify-between gap-2 sm:mb-4 sm:flex">
         <p className="text-xs text-muted-foreground">
           {fixedTrack === 'paper'
             ? paperKind === 'absurd'
@@ -1010,30 +1010,31 @@ function MobileFilters({
   ].filter(Boolean).length
 
   return (
-    <div className="mb-4 space-y-2">
-      {/* 搜索是目录页的第一动作，不再藏进「筛选」里：手机用户不用先展开面板 */}
-      <DebouncedSearchInput
-        initial={search.q ?? ''}
-        onCommit={(q) => updateSearch({ q: q || undefined, page: 1 })}
-      />
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full justify-between"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-      >
-        <span className="flex items-center gap-2">
+    <div className="mb-3">
+      <div className="flex items-start gap-2">
+        {/* 搜索是目录页的第一动作；筛选收成同一行的一个按钮，不再占一整行。 */}
+        <div className="min-w-0 flex-1">
+          <DebouncedSearchInput
+            initial={search.q ?? ''}
+            onCommit={(q) => updateSearch({ q: q || undefined, page: 1 })}
+          />
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          className="relative h-10 w-12 shrink-0 px-0"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-label={open ? '收起筛选' : '展开筛选'}
+        >
           <SlidersHorizontal className="h-4 w-4" />
-          筛选
           {activeCount > 0 && (
-            <span className="rounded-full bg-primary px-1.5 text-xs text-primary-foreground">
+            <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] text-primary-foreground">
               {activeCount}
             </span>
           )}
-        </span>
-        <span className="text-xs text-muted-foreground">{open ? '收起' : '展开'}</span>
-      </Button>
+        </Button>
+      </div>
 
       {open && (
         <div className="mt-3 rounded-lg border bg-muted/30 p-3">
@@ -1162,7 +1163,7 @@ function PaperDirectory({
   ]
 
   return (
-    <section className="mb-5 space-y-3" aria-label="论文目录">
+    <section className="mb-3 space-y-2 sm:mb-5 sm:space-y-3" aria-label="论文目录">
       <div className="grid grid-cols-2 gap-2 sm:gap-3" role="tablist" aria-label="论文分区">
         {kinds.map((kind) => {
           const active = paperKind === kind.id
@@ -1175,7 +1176,7 @@ function PaperDirectory({
               aria-selected={active}
               onClick={() => updateSearch({ kind: kind.id, discipline: undefined, page: 1 })}
               className={cn(
-                'group relative overflow-hidden rounded-2xl border p-3 text-left transition-all sm:p-5',
+                'group relative overflow-hidden rounded-2xl border p-2.5 text-left transition-all sm:p-5',
                 active
                   ? 'border-primary bg-primary text-primary-foreground shadow-sm'
                   : 'border-border bg-gradient-to-br hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-sm',
@@ -1184,7 +1185,7 @@ function PaperDirectory({
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3">
-                  <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', active ? 'bg-white/15' : 'bg-background/80')}>
+                  <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-10 sm:w-10', active ? 'bg-white/15' : 'bg-background/80')}>
                     <Icon className="h-5 w-5" />
                   </span>
                   <span className="min-w-0">
@@ -1206,11 +1207,11 @@ function PaperDirectory({
         })}
       </div>
 
-      <div className="rounded-2xl border bg-card p-4 sm:p-5">
+      <div className="rounded-2xl border-0 bg-transparent p-0 sm:border sm:bg-card sm:p-5">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div>
             <h2 className="font-serif text-lg font-semibold tracking-tight">按学科进入</h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
+            <p className="mt-0.5 hidden text-xs text-muted-foreground sm:block">
               当前分区：{paperKind === 'absurd' ? '荒诞论文' : '学术论文'}；学科目录跨两个分区共用。
             </p>
           </div>
@@ -1233,7 +1234,7 @@ function PaperDirectory({
           <p className="mt-3 text-xs text-muted-foreground">暂无可浏览的学科目录。</p>
         ) : (
           <>
-            <div className="mt-3 grid grid-cols-3 gap-2 lg:grid-cols-4">
+            <div className="mt-2 grid grid-cols-3 gap-2 sm:mt-3 lg:grid-cols-4">
               {visible.map(([name]) => {
                 const style = DISCIPLINE_STYLE[name] ?? DEFAULT_DISCIPLINE_STYLE
                 const Icon = style.icon
@@ -1244,7 +1245,7 @@ function PaperDirectory({
                     type="button"
                     onClick={() => updateSearch({ discipline: active ? undefined : name, page: 1 })}
                     className={cn(
-                      'group flex min-h-20 items-center gap-2 rounded-xl border p-2 text-left transition-all sm:gap-3 sm:p-3',
+                      'group flex min-h-[56px] items-center gap-2 rounded-xl border p-2 text-left transition-all sm:min-h-20 sm:gap-3 sm:p-3',
                       active
                         ? 'border-primary bg-primary text-primary-foreground shadow-sm'
                         : 'border-border bg-background/60 hover:-translate-y-0.5 hover:border-primary/35 hover:bg-accent/20',

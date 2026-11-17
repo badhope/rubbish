@@ -64,14 +64,14 @@ export function FunCatalog({
   return (
     <div className="mx-auto max-w-5xl px-4 py-3 sm:px-6 sm:py-6">
       {/* 刊头只负责“这是副刊”。筛选、搜索、公告全部下移，首屏不再堆四层控件。 */}
-      <header className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card via-card to-accent/25 px-4 py-5 shadow-sm sm:px-8 sm:py-7">
+      <header className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card via-card to-accent/25 px-4 py-3.5 shadow-sm sm:px-8 sm:py-7">
         <div
           aria-hidden
           className="pointer-events-none absolute -right-12 -top-14 h-44 w-44 rotate-12 rounded-full bg-amber-300/20 blur-2xl dark:bg-amber-500/10"
         />
         <div className="relative">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-primary/70 sm:text-[11px] sm:tracking-[0.24em]">
+            <p className="hidden text-[10px] font-semibold uppercase tracking-[0.12em] text-primary/70 sm:block sm:text-[11px] sm:tracking-[0.24em]">
               Rubbish · Off the Record
             </p>
             <div className="inline-flex shrink-0 items-center rounded-full border border-border bg-card p-0.5 text-[11px]">
@@ -89,7 +89,7 @@ export function FunCatalog({
               不正经研究所，认真你就输了
             </span>
           </div>
-          <p className="mt-1.5 max-w-2xl text-sm leading-6 text-muted-foreground sm:mt-2 sm:leading-7">
+          <p className="mt-1.5 hidden max-w-2xl text-sm leading-6 text-muted-foreground sm:mt-2 sm:block sm:leading-7">
             小说、随笔、评论、指南，以及大量假装是论文的整活。这里不计分、不进站内热度、
             不走评审——只负责让你在改稿的间隙笑一下。
           </p>
@@ -97,26 +97,8 @@ export function FunCatalog({
       </header>
 
       {/* 文体 + 搜索合并成一条工具栏。移动端一行下拉、一行搜索，不再在刊头里叠控件。 */}
-      <div className="mt-3 rounded-2xl border border-border bg-card p-3 sm:p-4">
+      <div className="mt-3 rounded-2xl border border-border bg-card p-2.5 sm:p-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <div className="sm:hidden">
-            <select
-              aria-label="选择副刊文体"
-              value={search.genre ?? ''}
-              onChange={(e) => go({ genre: e.target.value || undefined })}
-              className="h-10 w-full rounded-full border border-border bg-card px-4 text-sm text-foreground outline-none transition-colors focus:border-primary/40"
-            >
-              <option value="">
-                全部文体 · {totalAll}
-              </option>
-              {visibleGenres.map((g) => (
-                <option key={g.value} value={g.value}>
-                  {g.label} · {genreCounts[g.value]}
-                </option>
-              ))}
-            </select>
-          </div>
-
           <div className="hidden min-w-0 flex-1 flex-wrap gap-1.5 sm:flex">
             <GenrePill active={!search.genre} onClick={() => go({ genre: undefined })}>
               全部 · {totalAll}
@@ -188,7 +170,7 @@ export function FunCatalog({
         <>
           {/* 公告默认折叠：它们重要，但不该和正文抢同一屏。 */}
           {editorialNotes.length > 0 && (
-            <details className="group mt-3 rounded-xl border border-dashed border-border bg-muted/30 px-3 py-2 open:bg-muted/45">
+            <details className="group mt-3 hidden rounded-xl border border-dashed border-border bg-muted/30 px-3 py-2 open:bg-muted/45 sm:block">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[11px] font-medium text-foreground/80">
                 <span>
                   公告与说明
@@ -218,11 +200,29 @@ export function FunCatalog({
             </details>
           )}
 
-          <div className="mt-5 space-y-7">
+          <div className="mt-3 space-y-4 sm:mt-5 sm:space-y-7">
             {visibleGenres.length > 0 && (
               <section>
                 <SectionHead title="按文体进入" note="先选门类，再读这一门里的最新几篇" />
-                <div className="mt-3 grid grid-cols-3 gap-2 lg:grid-cols-4">
+                <div className="mt-2 flex flex-wrap gap-1.5 sm:hidden">
+                  <GenrePill active={!search.genre} onClick={() => go({ genre: undefined })}>
+                    全部 · {totalAll}
+                  </GenrePill>
+                  {visibleGenres.map((g) => {
+                    const active = search.genre === g.value
+                    return (
+                      <GenrePill
+                        key={g.value}
+                        active={active}
+                        onClick={() => go({ genre: active ? undefined : g.value })}
+                        title={g.hint}
+                      >
+                        {g.emoji} {g.label} · {genreCounts[g.value]}
+                      </GenrePill>
+                    )
+                  })}
+                </div>
+                <div className="mt-3 hidden grid-cols-3 gap-2 sm:grid lg:grid-cols-4">
                   {visibleGenres.map((g) => {
                     const active = search.genre === g.value
                     return (
@@ -335,7 +335,7 @@ function GenrePill({
       onClick={onClick}
       title={title}
       className={cn(
-        'shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
+        'shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors sm:px-3 sm:py-1.5 sm:text-xs',
         active
           ? 'border-primary bg-primary text-primary-foreground shadow-sm'
           : 'border-border bg-card text-foreground/80 hover:border-primary/30 hover:text-foreground',
@@ -361,13 +361,13 @@ function FunCard({ resource, featured }: { resource: ResourceResponse; featured:
         to="/catalog/$resourceId"
         params={{ resourceId: String(resource.id) }}
         className={cn(
-          'card-lift group grid overflow-hidden rounded-2xl border border-border bg-card',
+          'card-lift group grid grid-cols-[40%_1fr] overflow-hidden rounded-2xl border border-border bg-card',
           resource.cover_image ? 'md:grid-cols-[1.15fr_0.85fr]' : 'md:grid-cols-1',
         )}
       >
-        <div className="order-2 flex flex-col justify-center gap-3 p-4 sm:p-7 md:order-1">
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="rounded-full bg-primary px-2.5 py-1 font-medium text-primary-foreground">
+        <div className="order-2 flex flex-col justify-center gap-2 p-3 sm:gap-3 sm:p-7 md:order-1">
+          <div className="flex flex-wrap items-center gap-2 text-[11px] sm:text-xs">
+            <span className="rounded-full bg-primary px-2 py-0.5 font-medium text-primary-foreground sm:px-2.5 sm:py-1">
               {genre.label}
             </span>
             {resource.is_special_issue ? (
@@ -377,11 +377,11 @@ function FunCard({ resource, featured }: { resource: ResourceResponse; featured:
             ) : null}
             <span className="text-muted-foreground">{resource.year}</span>
           </div>
-          <h2 className="font-serif text-xl font-semibold leading-snug tracking-tight sm:text-2xl">
+          <h2 className="font-serif text-lg font-semibold leading-snug tracking-tight sm:text-2xl">
             {resource.title}
           </h2>
-          <p className="line-clamp-3 text-sm leading-7 text-muted-foreground">{preview}</p>
-          <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          <p className="line-clamp-2 text-xs leading-5 text-muted-foreground sm:line-clamp-3 sm:text-sm sm:leading-7">{preview}</p>
+          <div className="mt-auto flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground sm:gap-x-3 sm:text-xs">
             <span>{formatAuthors(resource.authors) || '佚名'}</span>
             {resource.reads != null ? <span>· 阅读 {resource.reads}</span> : null}
             <span className="inline-flex items-center gap-1 text-primary">
@@ -391,12 +391,12 @@ function FunCard({ resource, featured }: { resource: ResourceResponse; featured:
           </div>
         </div>
         <div
-          className="relative order-1 block overflow-hidden md:order-2 md:block md:min-h-[260px]"
+          className="relative order-1 min-h-[210px] overflow-hidden md:order-2 md:block md:min-h-[260px]"
         >
           <ArticleCover
             resource={resource}
             showDiscipline={false}
-            aspect="aspect-[16/10] md:h-full md:aspect-auto"
+            aspect="aspect-auto h-full"
             className="h-full"
           />
           {!resource.cover_image ? (

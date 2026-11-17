@@ -95,8 +95,8 @@ export function CatalogGridCard({ resource, query }: CatalogGridCardProps) {
       </div>
 
       {/* 信息区：标题 + 一行轨道/学术元信息 + 摘要一句 + 作者 */}
-      <div className="flex flex-1 flex-col gap-1.5 p-2.5 sm:p-3">
-        <p className="line-clamp-2 text-[13px] font-medium leading-snug sm:text-sm">
+      <div className="catalog-card-body flex flex-1 flex-col gap-1.5 p-2.5 sm:p-3">
+        <p className="catalog-card-title line-clamp-2 text-[13px] font-medium leading-snug sm:text-sm">
           <Highlight text={resource.title} query={query} />
         </p>
 

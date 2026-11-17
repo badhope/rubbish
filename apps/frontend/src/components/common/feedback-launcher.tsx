@@ -72,13 +72,10 @@ export function FeedbackLauncher() {
           aria-label="给编辑部提问题"
           data-testid="feedback-launcher"
           title="给编辑部提问题"
-          className="fixed right-0 top-[56%] z-40 inline-flex h-20 w-10 -translate-y-1/2 flex-col items-center justify-center gap-1 rounded-l-lg border border-r-0 bg-card/95 text-xs font-medium text-foreground shadow-lg backdrop-blur transition-colors hover:border-primary/50 hover:text-primary md:right-0 md:top-1/2 md:h-auto md:w-auto md:flex-row md:rounded-l-xl md:px-2.5 md:py-3 md:text-sm"
+          className="fixed bottom-20 right-3 z-40 inline-flex h-11 w-11 items-center justify-center rounded-full border bg-card/95 text-foreground shadow-lg backdrop-blur transition-colors hover:border-primary/50 hover:text-primary md:bottom-auto md:right-0 md:top-1/2 md:h-auto md:w-auto md:-translate-y-1/2 md:flex-row md:rounded-l-xl md:border-r-0 md:px-2.5 md:py-3 md:text-sm"
         >
           <MessageSquareText className="h-4 w-4" />
           <span className="hidden md:inline">提问题</span>
-          <span className="text-[11px] leading-[1.25] tracking-[0.08em] [writing-mode:vertical-rl] md:hidden">
-            提问题
-          </span>
         </button>
       </DialogTrigger>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">
