@@ -64,13 +64,6 @@ export const Route = createFileRoute('/')({
 const DISPLAY_FONT =
   "'Playfair Display Variable', Georgia, 'Noto Serif SC Site', 'Songti SC', 'DejaVu Serif', serif"
 
-const TYPEWRITER_PHRASES = [
-  '投稿 · 评审 · 开放出版',
-  '让每一篇值得留下的稿子被看见',
-  'Open Access · No Paywall · No Embargo',
-  '编辑评审 · 版本留痕 · 全文免费',
-]
-
 const DEPARTMENTS = [
   { name: '信息科学', note: '数据治理、信息安全、信息系统' },
   { name: '计算机科学', note: '软件工程、人机交互、机器学习' },
@@ -133,11 +126,6 @@ const slideInLeft: Variants = {
   show: { opacity: 1, x: 0, transition: { duration: 0.7, ease: EASE_OUT } },
 }
 
-const slideInRight: Variants = {
-  hidden: { opacity: 0.3, x: 28 },
-  show: { opacity: 1, x: 0, transition: { duration: 0.7, ease: EASE_OUT } },
-}
-
 const cardsWrap: Variants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } },
@@ -160,39 +148,6 @@ function fmtDate(iso: string): string {
   if (Number.isNaN(d.getTime())) return ''
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
-}
-
-/** 打字机：轮播短语，尊重系统减弱动效（直接显示第一条，无动画）。 */
-function useTypewriter(phrases: string[]): string {
-  // 首帧直接给完整句子：原实现从空字符串开始逐字打，慢网/首屏截图会
-  // 只看到“让每一篇经…”，读者以为标题被截断。
-  const [text, setText] = useState(() => phrases[0])
-  const [idx, setIdx] = useState(0)
-  const [deleting, setDeleting] = useState(false)
-
-  useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const full = phrases[idx % phrases.length]
-    // 所有状态迁移都走 setTimeout（含 0ms），避免在 effect 内同步 setState。
-    if (!deleting && text === full) {
-      const t = setTimeout(() => setDeleting(true), 1700)
-      return () => clearTimeout(t)
-    }
-    if (deleting && text === '') {
-      const t = setTimeout(() => {
-        setDeleting(false)
-        setIdx((v) => (v + 1) % phrases.length)
-      }, 0)
-      return () => clearTimeout(t)
-    }
-    const t = setTimeout(
-      () => setText(deleting ? full.slice(0, text.length - 1) : full.slice(0, text.length + 1)),
-      deleting ? 38 : 95,
-    )
-    return () => clearTimeout(t)
-  }, [text, deleting, idx, phrases])
-
-  return text
 }
 
 /** 数字滚动：进入视口后从 0 缓动到目标；减弱动效时首帧直接到位。 */
@@ -681,7 +636,6 @@ function HomePage() {
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
-  const typed = useTypewriter(TYPEWRITER_PHRASES)
   const { data, isLoading, isError, refetch } = useResources({
     track: 'paper',
     page: 1,
@@ -793,7 +747,7 @@ function HomePage() {
           />
           <HeroBackdrop />
 
-          <div className="relative mx-auto max-w-6xl px-4 pb-12 pt-8 text-center sm:px-6 sm:pt-20">
+          <div className="relative mx-auto flex min-h-[calc(100svh-2.25rem)] max-w-6xl flex-col justify-start px-4 pb-20 pt-[18vh] text-center sm:px-6 sm:pt-[16vh]">
             <motion.p
               variants={rise}
               custom={0}
@@ -830,30 +784,6 @@ function HomePage() {
               给不够完美、但值得留下的研究，一个正式、可引用的落点。
             </motion.p>
 
-            {/* 打字机口号：固定两行高度 + 移动端降字号。
-                之前只有 min-h-7，长句在 390px 上换行→高度跳变，
-                每打一个字整页就抖一下（用户实测的「页面抖动」来源之一）。 */}
-            <motion.p
-              variants={slideInRight}
-              className="mx-auto mt-5 flex h-14 max-w-[22rem] items-center justify-center px-2 text-sm leading-snug text-muted-foreground sm:h-8 sm:max-w-none sm:text-lg"
-            >
-              <span className="mr-1 line-clamp-2" style={{ fontFamily: DISPLAY_FONT }}>
-                {typed}
-              </span>
-              <span
-                aria-hidden
-                className="inline-block h-4 w-[2px] shrink-0 animate-pulse bg-primary sm:h-6"
-              />
-            </motion.p>
-
-            <motion.p
-              variants={rise}
-              custom={3}
-              className="mt-3 text-xs text-muted-foreground/80"
-            >
-              底刊编号 · DOI 选填
-            </motion.p>
-
             <motion.div
               variants={rise}
               custom={4}
@@ -879,13 +809,21 @@ function HomePage() {
               </Button>
             </motion.div>
 
+            <motion.p
+              variants={rise}
+              custom={3}
+              className="mt-16 text-[11px] uppercase tracking-[0.3em] text-muted-foreground/70 sm:mt-20"
+            >
+              向下阅读 · Scroll
+            </motion.p>
+
             {/* 数据卡：进入视口数字滚动 */}
             <motion.div
               ref={statsRevealRef}
               variants={cardsWrap}
               initial="hidden"
               animate={statsReveal ? 'show' : 'hidden'}
-              className="mx-auto mt-6 grid max-w-4xl grid-cols-2 gap-2.5 sm:mt-12 sm:gap-4 lg:grid-cols-4"
+              className="mx-auto mt-[40vh] grid max-w-4xl grid-cols-2 gap-2.5 sm:mt-[48vh] sm:gap-4 lg:grid-cols-4"
             >
               {[
                 // 四张卡只回答「这里有什么、怎么定位、是否收费、编号怎么给」。

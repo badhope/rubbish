@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute, Link, useNavigate, useSearch } from '@tanstack/react-router'
-import { AlertTriangle, ArrowRight, BookOpen, ChevronDown, Download, FileDown, FlaskConical, FolderTree, Plus, RefreshCw, SlidersHorizontal, Sparkles } from 'lucide-react'
+import { AlertTriangle, BookOpen, ChevronDown, Download, FileDown, FlaskConical, Plus, RefreshCw, SlidersHorizontal } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/use-auth'
 import { useIsMobile } from '@/hooks/use-is-mobile'
@@ -13,7 +13,7 @@ import {
   type ExportPreflightResponse,
   type AnyExportFormat,
 } from '@/hooks/api/use-modules'
-import type { ResourceType, ResourceStats } from '@/lib/types'
+import type { ResourceType } from '@/lib/types'
 import { extractError, formatAuthors, cn } from '@/lib/utils'
 import { contentCategoryLabel, displayTypeLabel, isScholarlyContent } from '@/lib/resource-labels'
 import { DISCIPLINE_STYLE, DEFAULT_DISCIPLINE_STYLE } from '@/lib/discipline-style'
@@ -156,16 +156,8 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
   const { data, isLoading, isFetching, isError, refetch } = useResources(params)
   const { data: stats } = useCatalogStats(statsTrack)
 
-  // `/papers` 顶部随机推荐：直接从整个分区随机取 4 条，
-  // 不再只从最新 50 条里挑，老稿也有同样的曝光机会。
-  const [pickSeed, setPickSeed] = useState(() => Math.floor(Math.random() * 2147483646) + 1)
-  const { data: paperPool } = useResources(
-    { track: 'paper', paper_kind: paperKind, sort: 'random', seed: pickSeed, page: 1, page_size: 4 },
-    fixedTrack === 'paper',
-  )
   const seriousCount = stats?.by_paper_kind?.serious ?? 0
   const absurdCount = stats?.by_paper_kind?.absurd ?? 0
-  const paperPicks = paperPool?.data ?? []
 
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   // 默认视图 = 九宫格（v1.15）：封面浏览是目录页第一动作；?view=list 时才切列表。
@@ -268,6 +260,7 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
 
   return (
     <div>
+      <section className="flex min-h-[calc(100svh-5rem)] flex-col justify-center">
       <PageHeader
         title={
           search.q
@@ -310,63 +303,14 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
           paperKind={paperKind}
           seriousCount={seriousCount}
           absurdCount={absurdCount}
-          stats={stats}
-          search={search}
           updateSearch={updateSearch}
-          isMobile={isMobile}
         />
       ) : null}
 
-      {/* 1626：论文栏目顶部随机推荐。每次刷新换一批，不改变下面正式目录的排序。 */}
-      {fixedTrack === 'paper' && !search.q && paperPicks.length > 0 ? (
-        <section className="mb-5 hidden rounded-2xl border border-amber-200/70 bg-gradient-to-br from-amber-50/80 via-card to-card p-3 sm:block sm:p-4 dark:border-amber-500/20 dark:from-amber-950/20">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex min-w-0 items-center gap-1.5">
-              <Sparkles className="h-4 w-4 shrink-0 text-primary" />
-              <h2 className="font-serif text-base font-semibold tracking-tight sm:text-lg">
-                随机推荐
-              </h2>
-              <span className="hidden text-[11px] text-muted-foreground sm:inline">
-                每次刷新换一批，让每篇都有机会
-              </span>
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-8 shrink-0 text-xs text-muted-foreground"
-              onClick={() => setPickSeed(Math.floor(Math.random() * 2147483646) + 1)}
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-              换一批
-            </Button>
-          </div>
-          <div className="mt-3 grid grid-cols-2 gap-2 lg:grid-cols-4">
-            {paperPicks.map((r) => (
-              <Link
-                key={r.id}
-                to="/catalog/$resourceId"
-                params={{ resourceId: String(r.id) }}
-                className="group flex min-h-24 flex-col rounded-xl border border-border/70 bg-background/80 p-3 transition-colors hover:border-primary/40 hover:bg-card"
-              >
-                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                  <span className="rounded-full bg-primary/10 px-1.5 py-0.5 font-medium text-primary dark:bg-primary/15">
-                    {r.track === 'absurd' ? '荒诞论文' : '学术论文'}
-                  </span>
-                  <span>{r.year}</span>
-                </div>
-                <h3 className="mt-1.5 line-clamp-2 font-serif text-sm font-semibold leading-snug tracking-tight group-hover:text-primary">
-                  {r.title}
-                </h3>
-                <p className="mt-auto truncate pt-2 text-[11px] text-muted-foreground">
-                  {formatAuthors(r.authors) || '佚名'}
-                  {r.reads != null ? ` · 阅读 ${r.reads}` : ''}
-                </p>
-              </Link>
-            ))}
-          </div>
-        </section>
-      ) : null}
+      <p className="mt-10 text-center text-[11px] uppercase tracking-[0.3em] text-muted-foreground/70">
+        向下浏览目录 · Scroll
+      </p>
+      </section>
 
       {/* 顶部只留视图切换。论文 / 副刊的主入口在侧栏与移动端「更多」菜单，
           页面内不再放第二套轨道分段，避免同一屏出现两个切换器。 */}
@@ -1136,26 +1080,13 @@ function PaperDirectory({
   paperKind,
   seriousCount,
   absurdCount,
-  stats,
-  search,
   updateSearch,
-  isMobile,
 }: {
   paperKind: 'serious' | 'absurd'
   seriousCount: number
   absurdCount: number
-  stats?: ResourceStats
-  search: CatalogSearch
   updateSearch: (patch: Partial<CatalogSearch>) => void
-  isMobile: boolean
 }) {
-  const [expanded, setExpanded] = useState(false)
-  const disciplines = useMemo(
-    () => Object.entries(stats?.by_discipline ?? {}).sort((a, b) => b[1] - a[1]),
-    [stats],
-  )
-  const collapseAt = isMobile ? 6 : 12
-  const visible = expanded ? disciplines : disciplines.slice(0, collapseAt)
   const kinds = [
     {
       id: 'serious' as const,
@@ -1222,77 +1153,6 @@ function PaperDirectory({
         })}
       </div>
 
-      <div className="rounded-2xl border-0 bg-transparent p-0 sm:border sm:bg-card sm:p-5">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <div>
-            <h2 className="font-serif text-lg font-semibold tracking-tight">按学科进入</h2>
-            <p className="mt-0.5 hidden text-xs text-muted-foreground sm:block">
-              当前分区：{paperKind === 'absurd' ? '荒诞论文' : '学术论文'}；学科目录跨两个分区共用。
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => updateSearch({ discipline: undefined, page: 1 })}
-            className={cn(
-              'inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs transition-colors',
-              !search.discipline
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground',
-            )}
-          >
-            <FolderTree className="h-3.5 w-3.5" />
-            全部学科
-          </button>
-        </div>
-
-        {disciplines.length === 0 ? (
-          <p className="mt-3 text-xs text-muted-foreground">暂无可浏览的学科目录。</p>
-        ) : (
-          <>
-            <div className="mt-2 grid grid-cols-3 gap-2 sm:mt-3 lg:grid-cols-4">
-              {visible.map(([name]) => {
-                const style = DISCIPLINE_STYLE[name] ?? DEFAULT_DISCIPLINE_STYLE
-                const Icon = style.icon
-                const active = search.discipline === name
-                return (
-                  <button
-                    key={name}
-                    type="button"
-                    onClick={() => updateSearch({ discipline: active ? undefined : name, page: 1 })}
-                    className={cn(
-                      'group flex min-h-[56px] items-center gap-2 rounded-xl border p-2 text-left transition-all sm:min-h-20 sm:gap-3 sm:p-3',
-                      active
-                        ? 'border-primary bg-primary text-primary-foreground shadow-sm'
-                        : 'border-border bg-background/60 hover:-translate-y-0.5 hover:border-primary/35 hover:bg-accent/20',
-                    )}
-                  >
-                    <span className={cn('hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br sm:flex sm:h-9 sm:w-9', active ? 'bg-white/15' : style.tint)}>
-                      <Icon className="h-4 w-4" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="line-clamp-2 text-[13px] font-medium leading-4 sm:text-sm sm:leading-5">{name}</span>
-                      <span className={cn('mt-0.5 hidden text-[11px] sm:block', active ? 'text-white/75' : 'text-muted-foreground')}>
-                        {active ? '已进入，点击返回全部' : '进入学科'}
-                      </span>
-                    </span>
-                    <ArrowRight className={cn('hidden h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5 sm:block', active ? 'text-white/80' : 'text-muted-foreground')} />
-                  </button>
-                )
-              })}
-            </div>
-            {disciplines.length > collapseAt ? (
-              <button
-                type="button"
-                onClick={() => setExpanded((v) => !v)}
-                className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-              >
-                {expanded ? '收起学科目录' : `查看全部 ${disciplines.length} 个学科`}
-                <ChevronDown className={cn('h-3.5 w-3.5 transition-transform', expanded && 'rotate-180')} />
-              </button>
-            ) : null}
-          </>
-        )}
-      </div>
     </section>
   )
 }
