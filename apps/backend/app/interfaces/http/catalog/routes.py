@@ -2519,7 +2519,7 @@ async def export_resource_manuscript(
         ]
     )
     cache_key = hashlib.sha256(
-        f"v45\x00{format}\x00{byline}\x00{_meta_key}\x00".encode() + md_text.encode("utf-8")
+        f"v47\x00{format}\x00{byline}\x00{_meta_key}\x00".encode() + md_text.encode("utf-8")
     ).hexdigest()[:40]
     etag = f'W/"{cache_key}"'
 

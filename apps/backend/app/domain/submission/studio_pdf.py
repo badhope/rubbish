@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import html
 import io
+import os
 import re
 from typing import Any
 
@@ -240,9 +241,9 @@ def _inline_image_sources(fragment: str) -> str:
         ):
             return match.group(0)
         url = (
-            "http://localhost:8080" + src
+            f"http://localhost:{os.environ.get('PORT', '8000')}" + src
             if src.startswith("/api/")
-            else src.replace("https://rubbish.argjiemi.cn", "http://localhost:8080", 1)
+            else src.replace("https://rubbish.argjiemi.cn", f"http://localhost:{os.environ.get('PORT', '8000')}", 1)
         )
         try:
             req = Request(url, headers={"User-Agent": "rubbish-studio-pdf/1.0"})
@@ -255,7 +256,7 @@ def _inline_image_sources(fragment: str) -> str:
             # Story 会按图片原始像素宽度铺满版面，用 width 属性把它压到 360px；
             # 保留原始字节，不物理降采样，避免论文插图被压成马赛克。
             data = base64.b64encode(raw).decode("ascii")
-            return f'src="data:{mime};base64,{data}" width="360"'
+            return f'src="data:{mime};base64,{data}" width="460"'
         except Exception:
             return match.group(0)
 

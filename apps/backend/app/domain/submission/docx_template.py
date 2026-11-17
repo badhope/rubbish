@@ -27,6 +27,7 @@
 
 from __future__ import annotations
 
+import os
 import base64
 import io
 import re
@@ -354,9 +355,9 @@ def _add_picture(doc: Any, src: str, base_dir: Path | None) -> bool:
             from urllib.request import ProxyHandler, Request, build_opener
 
             url = (
-                "http://localhost:8080" + src
+                f"http://localhost:{os.environ.get('PORT', '8000')}" + src
                 if src.startswith("/api/")
-                else src.replace("https://rubbish.argjiemi.cn", "http://localhost:8080", 1)
+                else src.replace("https://rubbish.argjiemi.cn", f"http://localhost:{os.environ.get('PORT', '8000')}", 1)
                 if src.startswith("https://rubbish.argjiemi.cn")
                 else src
             )
