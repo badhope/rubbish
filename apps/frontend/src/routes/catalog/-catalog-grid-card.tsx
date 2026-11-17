@@ -41,7 +41,10 @@ export function CatalogGridCard({ resource, query }: CatalogGridCardProps) {
     <Link
       to="/catalog/$resourceId"
       params={{ resourceId: String(resource.id) }}
-      className="card-lift group flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm"
+      className={cn(
+        'card-lift group flex flex-col overflow-hidden rounded-xl border bg-card shadow-sm',
+        !resource.cover_image && 'catalog-card-no-cover',
+      )}
     >
       {/* 封面区：封面图在上层，学科色块在底层兜底 */}
       <div className="catalog-cover relative w-full shrink-0 overflow-hidden">

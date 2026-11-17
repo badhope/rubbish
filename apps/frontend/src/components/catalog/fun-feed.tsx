@@ -376,8 +376,10 @@ function FunCard({ resource, featured }: { resource: ResourceResponse; featured:
         to="/catalog/$resourceId"
         params={{ resourceId: String(resource.id) }}
         className={cn(
-          'card-lift group grid grid-cols-[40%_1fr] overflow-hidden rounded-2xl border border-border bg-card',
-          resource.cover_image ? 'md:grid-cols-[1.15fr_0.85fr]' : 'md:grid-cols-1',
+          'card-lift group grid overflow-hidden rounded-2xl border border-border bg-card',
+          resource.cover_image
+            ? 'grid-cols-[40%_1fr] md:grid-cols-[1.15fr_0.85fr]'
+            : 'grid-cols-1',
         )}
       >
         <div className="order-2 flex flex-col justify-center gap-2 p-3 sm:gap-3 sm:p-7 md:order-1">
@@ -428,7 +430,10 @@ function FunCard({ resource, featured }: { resource: ResourceResponse; featured:
     <Link
       to="/catalog/$resourceId"
       params={{ resourceId: String(resource.id) }}
-      className="group flex flex-col gap-2 rounded-2xl border border-transparent bg-card/70 p-2.5 transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:bg-card sm:grid sm:grid-cols-[120px_1fr] sm:gap-4 sm:p-4"
+      className={cn(
+        'group flex flex-col gap-2 rounded-2xl border border-transparent bg-card/70 p-2.5 transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:bg-card sm:grid sm:grid-cols-[120px_1fr] sm:gap-4 sm:p-4',
+        !resource.cover_image && 'fun-card-no-cover',
+      )}
     >
       <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg sm:aspect-square sm:w-auto sm:rounded-xl">
         <ArticleCover resource={resource} showDiscipline={false} className="h-full" />

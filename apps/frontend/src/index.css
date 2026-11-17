@@ -1602,6 +1602,35 @@ html {
   .catalog-grid > :first-child .catalog-card-body {
     padding: 0.875rem;
   }
+  /* 没有封面的头条不硬留 40% 空图位：直接让标题/摘要占满整行；
+     其余无封面小卡把封面压成一条学科色带，避免一眼看去像破图。 */
+  .catalog-grid > .catalog-card-no-cover:first-child {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .catalog-grid > .catalog-card-no-cover:first-child .catalog-cover {
+    display: none;
+  }
+  .catalog-grid > .catalog-card-no-cover:first-child .catalog-card-body {
+    padding: 1rem;
+  }
+}
+
+/* 无封面卡片在任何设备上都不该占满 4/5 封面位。 */
+.catalog-card-no-cover .catalog-cover {
+  height: 84px;
+  min-height: 84px;
+  aspect-ratio: auto;
+}
+
+@media (max-width: 699px) {
+  /* 副刊普通无封面卡：把 4/5 空图位收成一条 72px 色带。 */
+  .fun-card-no-cover > div:first-child {
+    height: 72px;
+    aspect-ratio: auto;
+  }
+  .fun-card-no-cover > div:first-child > div {
+    height: 100%;
+  }
 }
 
 /* 论文排版预览（Studio）：白纸黑字，不受暗色主题影响——纸张就是纸张。 */
