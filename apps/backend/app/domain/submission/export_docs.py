@@ -78,7 +78,11 @@ def md_to_html(md: str) -> str:
     from markdown_it import MarkdownIt
 
     parser = MarkdownIt("commonmark", {"typographer": False}).enable("table")
-    return str(parser.render(md))
+    html = str(parser.render(md))
+    # CommonMark 不会把「**标签：**正文」这种紧贴中日韩字符的粗体解析成
+    # <strong>，会把字面量 ** 留在正文里。PDF/Word 里不能出现排版标记，
+    # 这里统一清掉；已经解析出的 <strong> 不受影响。
+    return html.replace("**", "")
 
 
 # --- HTML → PDF（pymupdf Story） ---------------------------------------------

@@ -64,8 +64,7 @@ _PAGE_W, _PAGE_H = 595, 842  # A4 pt
 _MARGIN_X, _MARGIN_TOP, _MARGIN_BOTTOM = 40.5, 37.5, 34.5
 
 _CSS = """
-@font-face { font-family: "PaperSerif"; src: url("PaperSerif.otf"); }
-body { font-family: "PaperSerif", "Noto Serif CJK SC", china-s; font-size: 10.5pt; line-height: 1.85; color: #1b211d; }
+body { font-family: "Noto Serif CJK SC", china-s; font-size: 10.5pt; line-height: 1.85; color: #1b211d; }
 .title { font-size: 18pt; font-weight: bold; text-align: center; margin: 0 0 4pt 0; line-height: 1.35; }
 .title.long { font-size: 16pt; }
 .title.xlong { font-size: 14.5pt; }
@@ -330,12 +329,15 @@ def render_studio_pdf(meta: dict[str, Any], body_md: str) -> bytes:
     import pymupdf
 
     html_text = build_studio_html(meta, body_md)
-    font_dir = _subset_font(html_text)
+    # 直接使用系统 Noto Serif CJK SC，不再走 fontTools 的 CID 子集。
+    # 实测 PyMuPDF 2.0 对子集 OTF 的 CMap 映射会错位，导致正文出现
+    # “PADA-Vृ”这类乱码；全量嵌入换来正确字形，2 MB 左右的体积可接受。
+    font_dir = None
     story = pymupdf.Story(
         html=html_text,
         user_css=_CSS,
         em=11,
-        archive=pymupdf.Archive(font_dir or "/usr/share/fonts/opentype/noto/"),
+        archive=pymupdf.Archive("/usr/share/fonts/opentype/noto/"),
     )
     buf = io.BytesIO()
     writer = pymupdf.DocumentWriter(buf)
