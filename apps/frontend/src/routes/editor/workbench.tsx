@@ -548,6 +548,14 @@ function EditorWorkbenchPage() {
                                   {item.type ?? '未分类'} · 提交于{' '}
                                   {new Date(item.submitted_at).toLocaleDateString()}
                                 </p>
+                                {(col.key === 'to_assign' || col.key === 'in_review') && (item.interest_count ?? 0) > 0 && (
+                                  <div className="mt-1 rounded bg-emerald-50/70 px-2 py-1 text-[11px] text-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-300">
+                                    有 {item.interest_count} 人申请审稿
+                                    {item.interesters?.length
+                                      ? `：${item.interesters.join('、')}`
+                                      : ''}
+                                  </div>
+                                )}
                                 <Button
                                   variant="ghost"
                                   size="sm"

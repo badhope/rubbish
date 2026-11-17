@@ -115,13 +115,13 @@ export function FunArticle({
             {data.has_markdown ? (
               <>
                 <Button asChild variant="ghost" size="sm" className="h-8 shrink-0 gap-1 px-2 text-muted-foreground">
-                  <a href={`/api/catalog/${data.id}/export?format=pdf&v=23`} download aria-label="下载副刊 PDF">
+                  <a href={`/api/catalog/${data.id}/export?format=pdf&v=27`} download aria-label="下载副刊 PDF">
                     <FileDown className="h-4 w-4" />
                     PDF
                   </a>
                 </Button>
                 <Button asChild variant="ghost" size="sm" className="h-8 shrink-0 gap-1 px-2 text-muted-foreground">
-                  <a href={`/api/catalog/${data.id}/export?format=docx&v=23`} download aria-label="下载副刊 Word">
+                  <a href={`/api/catalog/${data.id}/export?format=docx&v=27`} download aria-label="下载副刊 Word">
                     <FileDown className="h-4 w-4" />
                     Word
                   </a>

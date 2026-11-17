@@ -2335,6 +2335,8 @@ export interface EditorColumnItem {
   editor_note?: string | null
   author_response?: string | null
   author_response_at?: string | null
+  interest_count?: number
+  interesters?: string[]
   assignments?: EditorAssignmentRow[]
   active_count?: number
   completed_count?: number

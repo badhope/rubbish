@@ -354,7 +354,7 @@ function CatalogDetailPage() {
                     <span className="truncate">PDF 版式预览</span>
                   </Button>
                   <Button asChild variant="outline" size="sm" className="min-w-0">
-                    <a href={`/api/catalog/${id}/export?format=pdf&v=23`} download>
+                    <a href={`/api/catalog/${id}/export?format=pdf&v=27`} download>
                       <FileDown className="h-4 w-4 shrink-0" />
                       <span className="truncate">下载 PDF</span>
                     </a>
@@ -636,7 +636,7 @@ function CatalogDetailPage() {
               </CardHeader>
               <CardContent className="space-y-2">
                 <Button asChild variant="outline" size="sm" className="w-full">
-                  <a href={`/api/catalog/${id}/export?format=docx&v=23`} download>
+                  <a href={`/api/catalog/${id}/export?format=docx&v=27`} download>
                     <FileDown className="h-4 w-4" />
                     Word 文档（.docx）
                   </a>
@@ -644,7 +644,7 @@ function CatalogDetailPage() {
                 {isPaperTrack && (
                   <>
                     <Button asChild variant="outline" size="sm" className="w-full">
-                      <a href={`/api/catalog/${id}/export?format=pdf&v=23`} download>
+                      <a href={`/api/catalog/${id}/export?format=pdf&v=27`} download>
                         <FileDown className="h-4 w-4" />
                         规范化 PDF
                       </a>
@@ -1427,7 +1427,7 @@ function MobileDetailActions({
       <div className="fixed inset-x-0 bottom-0 z-40 flex h-14 items-center gap-2 border-t bg-background/95 px-3 backdrop-blur">
         {hasFile && (
           <Button asChild variant="ghost" size="sm" className="flex-1 gap-1">
-            <a href={`/api/catalog/${resourceId}/export?format=docx&v=23`} download aria-label="下载 Word">
+            <a href={`/api/catalog/${resourceId}/export?format=docx&v=27`} download aria-label="下载 Word">
               <FileDown className="h-4 w-4" />
               下载
             </a>

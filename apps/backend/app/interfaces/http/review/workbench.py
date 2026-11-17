@@ -287,6 +287,26 @@ async def editor_workbench(
     now = utcnow()
     tenant_id = require_tenant_id()
 
+    # 审稿广场的申请意愿：只读审计日志，按稿件聚合后带给主编工作台。
+    interest_rows = (
+        await db.execute(
+            select(AuditLog).where(
+                AuditLog.tenant_id == tenant_id,
+                AuditLog.action == "review.interest",
+                AuditLog.target_type == "submission",
+            )
+        )
+    ).scalars().all()
+    interest_by_sub: dict[int, list[str]] = {}
+    for row in interest_rows:
+        try:
+            submission_id = int(row.target_id or "")
+        except (TypeError, ValueError):
+            continue
+        payload = row.payload if isinstance(row.payload, dict) else {}
+        username = payload.get("reviewer_username") or f"#{row.actor_user_id}"
+        interest_by_sub.setdefault(submission_id, []).append(username)
+
     def _base_row(s: Submission) -> dict[str, Any]:
         # 只认当前轮：重投后旧轮 assignment 保留追溯，但绝不能继续出现在
         # 评审中或「未交」状态里，否则拒审/旧轮会把主编误导成还在审。
@@ -307,6 +327,8 @@ async def editor_workbench(
             "editor_note": s.editor_note,
             "author_response": s.author_response,
             "author_response_at": s.author_response_at,
+            "interest_count": len(interest_by_sub.get(s.id, [])),
+            "interesters": interest_by_sub.get(s.id, [])[:5],
             "active_count": len(active),
             "completed_count": len(done),
             "declined_count": len(declined),
