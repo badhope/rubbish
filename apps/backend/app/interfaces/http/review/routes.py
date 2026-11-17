@@ -32,10 +32,12 @@ from app.api.deps import (
     ROLE_REVIEWER,
     ROLE_SENIOR_REVIEWER,
     get_current_user,
+    get_current_user_optional,
     require_editor,
     require_reviewer,
     require_tenant_id,
     user_has_role,
+    user_role_names,
 )
 from app.core.db import get_db, paginate
 from app.core.storage import get_storage
@@ -285,6 +287,124 @@ async def delete_review_draft(
         await db.delete(row)
         await db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/board")
+async def review_board(
+    viewer: User | None = Depends(get_current_user_optional),
+    tenant_id = Depends(require_tenant_id),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """公开的「审稿围观」列表。
+
+    只返回标题、摘要、学科和审稿人数；绝不返回作者身份、邮箱、正文或
+    稿件文件。读者/作者可以看到当前有哪些稿件在审，审稿人可以在这里
+    直接表达审稿意愿，由编辑部在指派台处理。
+    """
+    rows = (
+        await db.execute(
+            select(Submission)
+            .where(
+                Submission.tenant_id == tenant_id,
+                Submission.status == "under_review",
+            )
+            .options(selectinload(Submission.review_assignments))
+            .order_by(desc(Submission.submitted_at), desc(Submission.id))
+            .limit(50)
+        )
+    ).scalars().all()
+
+    can_apply = False
+    if viewer is not None:
+        roles = set(await user_role_names(db, viewer))
+        can_apply = bool(roles & {"reviewer", "senior_reviewer", "editor", "editor_in_chief"})
+
+    items = []
+    for sub in rows:
+        assignments = list(sub.review_assignments or [])
+        mine = [a for a in assignments if a.reviewer_id == viewer.id] if viewer else []
+        items.append(
+            {
+                "submission_id": sub.id,
+                "title": sub.title,
+                "abstract": (sub.abstract or "")[:600],
+                "type": sub.type,
+                "track": sub.track,
+                "discipline": sub.discipline,
+                "subdiscipline": sub.subdiscipline,
+                "submitted_at": sub.submitted_at.isoformat() if sub.submitted_at else None,
+                "reviewer_count": len([a for a in assignments if a.status in ("accepted", "completed")]),
+                "already_assigned": bool(mine),
+            }
+        )
+    return {"data": items, "can_apply": can_apply, "total": len(items)}
+
+
+@router.post("/board/{submission_id}/interest")
+async def express_review_interest(
+    submission_id: int,
+    current_user: User = Depends(require_reviewer),
+    tenant_id = Depends(require_tenant_id),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """审稿人表达审稿意愿；不直接改变指派状态，由主编在指派台决定。"""
+    sub = (
+        await db.execute(
+            select(Submission).where(
+                Submission.id == submission_id,
+                Submission.tenant_id == tenant_id,
+                Submission.status == "under_review",
+            )
+        )
+    ).scalar_one_or_none()
+    if sub is None:
+        raise HTTPException(status_code=404, detail="稿件不在审稿中")
+    existing = (
+        await db.execute(
+            select(ReviewAssignment).where(
+                ReviewAssignment.submission_id == submission_id,
+                ReviewAssignment.reviewer_id == current_user.id,
+                ReviewAssignment.tenant_id == tenant_id,
+            )
+        )
+    ).scalar_one_or_none()
+    if existing is not None:
+        raise HTTPException(status_code=409, detail="你已在这篇稿件的审稿名单中")
+    from app.models import AuditLog
+
+    db.add(
+        AuditLog(
+            tenant_id=tenant_id,
+            actor_user_id=current_user.id,
+            action="review.interest",
+            target_type="submission",
+            target_id=str(submission_id),
+            payload={"reviewer_username": current_user.username},
+        )
+    )
+    # 让主编在站内通知里直接看到审稿意愿，而不是只留在审计日志。
+    editor_ids = (
+        await db.execute(
+            select(User.id).where(
+                User.tenant_id == tenant_id,
+                User.role == "editor_in_chief",
+                User.is_active.is_(True),
+            )
+        )
+    ).scalars().all()
+    for editor_id in editor_ids:
+        await notifications.create(
+            db,
+            tenant_id=tenant_id,
+            user_id=editor_id,
+            type_="review.interest",
+            title=f"审稿申请：{sub.title}",
+            body=f"{current_user.username} 申请参与稿件 #{submission_id} 的审稿，请到主编工作台指派台处理。",
+            related_type="submission",
+            related_id=str(submission_id),
+        )
+    await db.commit()
+    return {"submission_id": submission_id, "status": "recorded"}
 
 
 @router.get("/assignments/me", response_model=AssignmentListResponse)

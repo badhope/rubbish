@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ClipboardCheck,
   Coffee,
+  Eye,
   Gavel,
   Heart,
   Home,
@@ -102,6 +103,7 @@ const NAV: NavItem[] = [
   // 期刊门面：指标并入「关于本刊」的页签，规则并入「投稿指南」。
   // 这里只保留四条真正不同的去处，避免同一内容出现两个入口。
   { to: '/sections', label: '栏目', icon: Layers, group: '期刊' },
+  { to: '/review/board', label: '审稿广场', icon: Eye, group: '期刊' },
   { to: '/archive', label: '卷期归档', icon: CalendarDays, group: '期刊' },
   { to: '/about', label: '关于与指标', icon: Building2, group: '期刊' },
   { to: '/guide', label: '投稿指南', icon: PenLine, group: '期刊' },

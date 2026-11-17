@@ -79,6 +79,7 @@ import { Route as LibraryListIdRouteImport } from './routes/library/$listId'
 import { Route as PapersResourceIdRouteImport } from './routes/papers/$resourceId'
 import { Route as ReaderResourceIdRouteImport } from './routes/reader/$resourceId'
 import { Route as ReviewAssignmentsRouteImport } from './routes/review/assignments'
+import { Route as ReviewBoardRouteImport } from './routes/review/board'
 import { Route as ReviewWorkbenchRouteImport } from './routes/review/workbench'
 import { Route as SectionsSlugRouteImport } from './routes/sections_.$slug'
 import { Route as StudioIdRouteImport } from './routes/studio/$id'
@@ -443,6 +444,11 @@ const ReviewAssignmentsRoute = ReviewAssignmentsRouteImport.update({
   path: '/review/assignments',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReviewBoardRoute = ReviewBoardRouteImport.update({
+  id: '/review/board',
+  path: '/review/board',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReviewWorkbenchRoute = ReviewWorkbenchRouteImport.update({
   id: '/review/workbench',
   path: '/review/workbench',
@@ -574,6 +580,7 @@ export interface FileRoutesByFullPath {
   '/papers/$resourceId': typeof PapersResourceIdRoute
   '/reader/$resourceId': typeof ReaderResourceIdRoute
   '/review/assignments': typeof ReviewAssignmentsRoute
+  '/review/board': typeof ReviewBoardRoute
   '/review/workbench': typeof ReviewWorkbenchRoute
   '/sections/$slug': typeof SectionsSlugRoute
   '/studio/$id': typeof StudioIdRoute
@@ -659,6 +666,7 @@ export interface FileRoutesByTo {
   '/papers/$resourceId': typeof PapersResourceIdRoute
   '/reader/$resourceId': typeof ReaderResourceIdRoute
   '/review/assignments': typeof ReviewAssignmentsRoute
+  '/review/board': typeof ReviewBoardRoute
   '/review/workbench': typeof ReviewWorkbenchRoute
   '/sections/$slug': typeof SectionsSlugRoute
   '/studio/$id': typeof StudioIdRoute
@@ -745,6 +753,7 @@ export interface FileRoutesById {
   '/papers/$resourceId': typeof PapersResourceIdRoute
   '/reader/$resourceId': typeof ReaderResourceIdRoute
   '/review/assignments': typeof ReviewAssignmentsRoute
+  '/review/board': typeof ReviewBoardRoute
   '/review/workbench': typeof ReviewWorkbenchRoute
   '/sections_/$slug': typeof SectionsSlugRoute
   '/studio/$id': typeof StudioIdRoute
@@ -832,6 +841,7 @@ export interface FileRouteTypes {
     | '/papers/$resourceId'
     | '/reader/$resourceId'
     | '/review/assignments'
+    | '/review/board'
     | '/review/workbench'
     | '/sections/$slug'
     | '/studio/$id'
@@ -917,6 +927,7 @@ export interface FileRouteTypes {
     | '/papers/$resourceId'
     | '/reader/$resourceId'
     | '/review/assignments'
+    | '/review/board'
     | '/review/workbench'
     | '/sections/$slug'
     | '/studio/$id'
@@ -1002,6 +1013,7 @@ export interface FileRouteTypes {
     | '/papers/$resourceId'
     | '/reader/$resourceId'
     | '/review/assignments'
+    | '/review/board'
     | '/review/workbench'
     | '/sections_/$slug'
     | '/studio/$id'
@@ -1087,6 +1099,7 @@ export interface RootRouteChildren {
   LibraryListIdRoute: typeof LibraryListIdRoute
   ReaderResourceIdRoute: typeof ReaderResourceIdRoute
   ReviewAssignmentsRoute: typeof ReviewAssignmentsRoute
+  ReviewBoardRoute: typeof ReviewBoardRoute
   ReviewWorkbenchRoute: typeof ReviewWorkbenchRoute
   SectionsSlugRoute: typeof SectionsSlugRoute
   StudioIdRoute: typeof StudioIdRoute
@@ -1600,6 +1613,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReviewAssignmentsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/review/board': {
+      id: '/review/board'
+      path: '/review/board'
+      fullPath: '/review/board'
+      preLoaderRoute: typeof ReviewBoardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/review/workbench': {
       id: '/review/workbench'
       path: '/review/workbench'
@@ -1769,6 +1789,7 @@ const rootRouteChildren: RootRouteChildren = {
   LibraryListIdRoute: LibraryListIdRoute,
   ReaderResourceIdRoute: ReaderResourceIdRoute,
   ReviewAssignmentsRoute: ReviewAssignmentsRoute,
+  ReviewBoardRoute: ReviewBoardRoute,
   ReviewWorkbenchRoute: ReviewWorkbenchRoute,
   SectionsSlugRoute: SectionsSlugRoute,
   StudioIdRoute: StudioIdRoute,

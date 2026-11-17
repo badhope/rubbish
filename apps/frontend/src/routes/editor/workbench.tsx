@@ -79,11 +79,12 @@ export const Route = createFileRoute('/editor/workbench')({
   component: EditorWorkbenchPage,
 })
 
-type ColumnKey = 'to_assign' | 'in_review' | 'to_decide' | 'decided'
+type ColumnKey = 'to_assign' | 'in_review' | 'rework' | 'to_decide' | 'decided'
 
 const COLUMN_META: { key: ColumnKey; title: string; accent: string }[] = [
   { key: 'to_assign', title: '待指派', accent: 'bg-slate-100 text-slate-700 dark:bg-slate-800' },
   { key: 'in_review', title: '评审中', accent: 'bg-blue-100 text-blue-700 dark:bg-blue-950/40' },
+  { key: 'rework', title: '返修中', accent: 'bg-violet-100 text-violet-700 dark:bg-violet-950/40' },
   { key: 'to_decide', title: '待裁决', accent: 'bg-amber-100 text-amber-800 dark:bg-amber-950/40' },
   { key: 'decided', title: '已决定', accent: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40' },
 ]
@@ -302,7 +303,7 @@ function EditorWorkbenchPage() {
     <div>
       <PageHeader
         title="主编工作台"
-        description="四栏流水线：待指派 → 评审中 → 待裁决 → 已决定。"
+        description="五栏流水线：待指派 → 评审中 → 返修中 → 待裁决 → 已决定。"
         actions={
           <>
             <Link to="/editor/triage">
@@ -350,9 +351,9 @@ function EditorWorkbenchPage() {
         </div>
       )}
 
-      {columns && (columns.to_assign.has_more || columns.in_review.has_more || columns.to_decide.has_more || columns.decided.has_more) && (
+      {columns && (columns.to_assign.has_more || columns.in_review.has_more || columns.rework.has_more || columns.to_decide.has_more || columns.decided.has_more) && (
         <p className="mb-3 text-xs text-muted-foreground">
-          每栏最多展示 50 篇；当前共 待指派 {columns.to_assign.count} / 评审中 {columns.in_review.count} / 待裁决 {columns.to_decide.count} / 已决定 {columns.decided.count} 篇。
+          每栏最多展示 50 篇；当前共 待指派 {columns.to_assign.count} / 评审中 {columns.in_review.count} / 返修中 {columns.rework.count} / 待裁决 {columns.to_decide.count} / 已决定 {columns.decided.count} 篇。
         </p>
       )}
 
@@ -503,7 +504,7 @@ function EditorWorkbenchPage() {
       ) : (
         <>
           {/* 桌面四列 / 移动横向滚动 */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
             {COLUMN_META.map((col) => {
               const bucket = columns[col.key]
               return (
@@ -603,6 +604,35 @@ function EditorWorkbenchPage() {
                               </div>
                             )}
 
+                            {col.key === 'rework' && (
+                              <div className="space-y-2 border-t pt-2 text-xs">
+                                <div className="flex items-center gap-1.5">
+                                  <Badge variant="outline">
+                                    {item.status === 'major_revision'
+                                      ? '大修'
+                                      : item.status === 'minor_revision'
+                                        ? '小修'
+                                        : '已返修待审'}
+                                  </Badge>
+                                  {item.editor_note ? (
+                                    <span className="line-clamp-2 text-muted-foreground">
+                                      编辑备注：{item.editor_note}
+                                    </span>
+                                  ) : (
+                                    <span className="text-muted-foreground">编辑未填备注</span>
+                                  )}
+                                </div>
+                                {item.author_response ? (
+                                  <div className="rounded bg-muted/40 p-2 text-muted-foreground">
+                                    <span className="font-medium text-foreground">作者返修说明：</span>
+                                    <span className="line-clamp-3 whitespace-pre-wrap">{item.author_response}</span>
+                                  </div>
+                                ) : (
+                                  <p className="text-muted-foreground">作者尚未提交返修说明。</p>
+                                )}
+                              </div>
+                            )}
+
                             {col.key === 'in_review' && item.assignments && item.assignments.some(
                               (a) => a.status === 'pending' || a.status === 'accepted',
                             ) && (
@@ -635,6 +665,16 @@ function EditorWorkbenchPage() {
                                   更换审稿人
                                 </Button>
                               </div>
+                            )}
+
+                            {col.key === 'in_review' && (item.completed_count ?? 0) >= 1 && (
+                              <Button
+                                size="sm"
+                                className="w-full"
+                                onClick={() => openDecide(item.submission_id)}
+                              >
+                                <Gavel className="h-3 w-3" /> 提前裁决（已有 {item.completed_count} 份意见）
+                              </Button>
                             )}
 
                             {col.key === 'to_assign' && item.needs_reassign && (

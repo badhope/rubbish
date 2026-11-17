@@ -46,7 +46,7 @@ from app.models import AuditLog, User
 
 router = APIRouter(tags=["workbench"])
 
-DECIDED_STATUSES = ("accepted", "approved", "rejected", "major_revision", "minor_revision")
+DECIDED_STATUSES = ("accepted", "approved", "rejected")
 ACTIVE_ASSIGNMENT_STATUSES = ("pending", "accepted")
 
 
@@ -304,6 +304,9 @@ async def editor_workbench(
             "status": s.status,
             "submitted_at": s.submitted_at,
             "current_round": current_round,
+            "editor_note": s.editor_note,
+            "author_response": s.author_response,
+            "author_response_at": s.author_response_at,
             "active_count": len(active),
             "completed_count": len(done),
             "declined_count": len(declined),
@@ -336,6 +339,7 @@ async def editor_workbench(
 
     to_assign: list[dict[str, Any]] = []
     in_review: list[dict[str, Any]] = []
+    rework: list[dict[str, Any]] = []
     to_decide: list[dict[str, Any]] = []
 
     for s in submissions:
@@ -383,11 +387,12 @@ async def editor_workbench(
                 in_review.append(bucket)
             continue
 
-        # major/minor revision / resubmitted 等中间态归到评审中（仍需推进）
+        # 返修中单独成栏：主编需要看到作者是否已返修、上一轮编辑说明和
+        # 返修说明，而不是把返修稿混在“评审中”。
         if s.status in ("major_revision", "minor_revision", "resubmitted"):
             bucket = dict(base)
             bucket["assignments"] = [_assignment_row_editor(a, now) for a in round_rows]
-            in_review.append(bucket)
+            rework.append(bucket)
 
     # 已决定历史库：只取最近 50 篇 + 全量计数，分页下推到 SQL。
     decided_total = int(
@@ -441,6 +446,7 @@ async def editor_workbench(
         "columns": {
             "to_assign": _page(to_assign),
             "in_review": _page(in_review),
+            "rework": _page(rework),
             "to_decide": _page(to_decide),
             "decided": {
                 "count": decided_total,

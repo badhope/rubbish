@@ -1232,6 +1232,9 @@ export function useReviewSubmissionDetail(assignmentId: number) {
     queryFn: async () =>
       (await api.get<SubmissionResponse>(
         `/review/assignments/${assignmentId}/submission`,
+        // 审稿稿件的 Markdown 正文可能超过 3MB，默认 10s 超时会误报
+        // “加载稿件失败”；该端点单独放宽到 30s。
+        { timeout: 30_000 },
       )).data,
     enabled: assignmentId > 0,
   })
@@ -2329,6 +2332,9 @@ export interface EditorColumnItem {
   status: string
   submitted_at: string
   current_round?: number
+  editor_note?: string | null
+  author_response?: string | null
+  author_response_at?: string | null
   assignments?: EditorAssignmentRow[]
   active_count?: number
   completed_count?: number
@@ -2375,6 +2381,7 @@ export interface EditorWorkbenchResponse {
   columns: {
     to_assign: { count: number; items: EditorColumnItem[]; page_size?: number; has_more?: boolean }
     in_review: { count: number; items: EditorColumnItem[]; page_size?: number; has_more?: boolean }
+    rework: { count: number; items: EditorColumnItem[]; page_size?: number; has_more?: boolean }
     to_decide: { count: number; items: EditorColumnItem[]; page_size?: number; has_more?: boolean }
     decided: { count: number; items: EditorColumnItem[]; page_size?: number; has_more?: boolean }
   }
@@ -2490,6 +2497,45 @@ export function useRemindReviewers() {
   })
 }
 
+
+export interface ReviewBoardItem {
+  submission_id: number
+  title: string
+  type: string | null
+  abstract: string
+  track: string | null
+  discipline: string | null
+  subdiscipline: string | null
+  submitted_at: string | null
+  reviewer_count: number
+  already_assigned: boolean
+}
+
+export interface ReviewBoardResponse {
+  data: ReviewBoardItem[]
+  can_apply: boolean
+  total: number
+}
+
+export function useReviewBoard() {
+  return useQuery<ReviewBoardResponse>({
+    queryKey: ['review', 'board'],
+    queryFn: async () => (await api.get<ReviewBoardResponse>('/review/board')).data,
+    staleTime: 30_000,
+  })
+}
+
+export function useExpressReviewInterest() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (submissionId: number) =>
+      (await api.post(`/review/board/${submissionId}/interest`)).data,
+    onSuccess: () => {
+      toast.success('已记录审稿意愿，主编会在指派时看到')
+      void qc.invalidateQueries({ queryKey: ['review', 'board'] })
+    },
+  })
+}
 
 export interface SectionPart { slug: string; label: string; count: number; track_counts?: { paper: number; essay: number } }
 export interface ArticleSection { slug: string; label: string; description: string; count: number; track_counts?: { paper: number; essay: number }; parts: SectionPart[] }

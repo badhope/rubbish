@@ -15,7 +15,7 @@ interface PdfImagePreviewProps {
  */
 export default function PdfImagePreview({
   resourceId,
-  version = '21',
+  version = '22',
 }: PdfImagePreviewProps) {
   const viewKey = `${resourceId}:${version}`
   const [totalState, setTotalState] = useState({ key: viewKey, total: 0 })
