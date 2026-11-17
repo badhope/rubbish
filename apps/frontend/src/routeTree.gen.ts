@@ -76,6 +76,7 @@ import { Route as ForumTopicIdRouteImport } from './routes/forum/$topicId'
 import { Route as IngestIndexRouteImport } from './routes/ingest/index'
 import { Route as LibraryIndexRouteImport } from './routes/library/index'
 import { Route as LibraryListIdRouteImport } from './routes/library/$listId'
+import { Route as PapersResourceIdRouteImport } from './routes/papers/$resourceId'
 import { Route as ReaderResourceIdRouteImport } from './routes/reader/$resourceId'
 import { Route as ReviewAssignmentsRouteImport } from './routes/review/assignments'
 import { Route as ReviewWorkbenchRouteImport } from './routes/review/workbench'
@@ -427,6 +428,11 @@ const LibraryListIdRoute = LibraryListIdRouteImport.update({
   path: '/library/$listId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PapersResourceIdRoute = PapersResourceIdRouteImport.update({
+  id: '/$resourceId',
+  path: '/$resourceId',
+  getParentRoute: () => PapersRoute,
+} as any)
 const ReaderResourceIdRoute = ReaderResourceIdRouteImport.update({
   id: '/reader/$resourceId',
   path: '/reader/$resourceId',
@@ -524,7 +530,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
   '/notifications': typeof NotificationsRoute
-  '/papers': typeof PapersRoute
+  '/papers': typeof PapersRouteWithChildren
   '/policies': typeof PoliciesRoute
   '/profile': typeof ProfileRoute
   '/recommendations': typeof RecommendationsRoute
@@ -565,6 +571,7 @@ export interface FileRoutesByFullPath {
   '/editor/workbench': typeof EditorWorkbenchRoute
   '/forum/$topicId': typeof ForumTopicIdRoute
   '/library/$listId': typeof LibraryListIdRoute
+  '/papers/$resourceId': typeof PapersResourceIdRoute
   '/reader/$resourceId': typeof ReaderResourceIdRoute
   '/review/assignments': typeof ReviewAssignmentsRoute
   '/review/workbench': typeof ReviewWorkbenchRoute
@@ -608,7 +615,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
   '/notifications': typeof NotificationsRoute
-  '/papers': typeof PapersRoute
+  '/papers': typeof PapersRouteWithChildren
   '/policies': typeof PoliciesRoute
   '/profile': typeof ProfileRoute
   '/recommendations': typeof RecommendationsRoute
@@ -649,6 +656,7 @@ export interface FileRoutesByTo {
   '/editor/workbench': typeof EditorWorkbenchRoute
   '/forum/$topicId': typeof ForumTopicIdRoute
   '/library/$listId': typeof LibraryListIdRoute
+  '/papers/$resourceId': typeof PapersResourceIdRoute
   '/reader/$resourceId': typeof ReaderResourceIdRoute
   '/review/assignments': typeof ReviewAssignmentsRoute
   '/review/workbench': typeof ReviewWorkbenchRoute
@@ -693,7 +701,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
   '/notifications': typeof NotificationsRoute
-  '/papers': typeof PapersRoute
+  '/papers': typeof PapersRouteWithChildren
   '/policies': typeof PoliciesRoute
   '/profile': typeof ProfileRoute
   '/recommendations': typeof RecommendationsRoute
@@ -734,6 +742,7 @@ export interface FileRoutesById {
   '/editor/workbench': typeof EditorWorkbenchRoute
   '/forum/$topicId': typeof ForumTopicIdRoute
   '/library/$listId': typeof LibraryListIdRoute
+  '/papers/$resourceId': typeof PapersResourceIdRoute
   '/reader/$resourceId': typeof ReaderResourceIdRoute
   '/review/assignments': typeof ReviewAssignmentsRoute
   '/review/workbench': typeof ReviewWorkbenchRoute
@@ -820,6 +829,7 @@ export interface FileRouteTypes {
     | '/editor/workbench'
     | '/forum/$topicId'
     | '/library/$listId'
+    | '/papers/$resourceId'
     | '/reader/$resourceId'
     | '/review/assignments'
     | '/review/workbench'
@@ -904,6 +914,7 @@ export interface FileRouteTypes {
     | '/editor/workbench'
     | '/forum/$topicId'
     | '/library/$listId'
+    | '/papers/$resourceId'
     | '/reader/$resourceId'
     | '/review/assignments'
     | '/review/workbench'
@@ -988,6 +999,7 @@ export interface FileRouteTypes {
     | '/editor/workbench'
     | '/forum/$topicId'
     | '/library/$listId'
+    | '/papers/$resourceId'
     | '/reader/$resourceId'
     | '/review/assignments'
     | '/review/workbench'
@@ -1032,7 +1044,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MeRoute: typeof MeRoute
   NotificationsRoute: typeof NotificationsRoute
-  PapersRoute: typeof PapersRoute
+  PapersRoute: typeof PapersRouteWithChildren
   PoliciesRoute: typeof PoliciesRoute
   ProfileRoute: typeof ProfileRoute
   RecommendationsRoute: typeof RecommendationsRoute
@@ -1567,6 +1579,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LibraryListIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/papers/$resourceId': {
+      id: '/papers/$resourceId'
+      path: '/$resourceId'
+      fullPath: '/papers/$resourceId'
+      preLoaderRoute: typeof PapersResourceIdRouteImport
+      parentRoute: typeof PapersRoute
+    }
     '/reader/$resourceId': {
       id: '/reader/$resourceId'
       path: '/reader/$resourceId'
@@ -1675,6 +1694,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface PapersRouteChildren {
+  PapersResourceIdRoute: typeof PapersResourceIdRoute
+}
+
+const PapersRouteChildren: PapersRouteChildren = {
+  PapersResourceIdRoute: PapersResourceIdRoute,
+}
+
+const PapersRouteWithChildren =
+  PapersRoute._addFileChildren(PapersRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   R403Route: R403Route,
@@ -1696,7 +1726,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MeRoute: MeRoute,
   NotificationsRoute: NotificationsRoute,
-  PapersRoute: PapersRoute,
+  PapersRoute: PapersRouteWithChildren,
   PoliciesRoute: PoliciesRoute,
   ProfileRoute: ProfileRoute,
   RecommendationsRoute: RecommendationsRoute,

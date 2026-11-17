@@ -139,8 +139,11 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
     q: search.q || undefined,
     type: search.type,
     category: search.category || undefined,
-    track: effectiveTrack,
-    paper_kind: effectiveTrack === 'paper' ? paperKind : undefined,
+    // 搜索结果页的文案是“全站论文与副刊”，所以有关键词时必须解除当前分区
+    // 的 track/paper_kind 收窄；否则 109 这类已改判荒诞、或被分到副刊的稿
+    // 在 /papers?q= 下会假性 0 命中（API 直查是有结果的）。
+    track: search.q ? undefined : effectiveTrack,
+    paper_kind: search.q ? undefined : effectiveTrack === 'paper' ? paperKind : undefined,
     genre: effectiveTrack === 'essay' ? search.genre : undefined,
     discipline: search.discipline || undefined,
     year: search.year,

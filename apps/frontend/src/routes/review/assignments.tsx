@@ -54,6 +54,25 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { waitingChip } from '@/components/common/waiting-chip'
 
+/**
+ * 审稿详情页的摘要来自结构化元数据，正文又常常自带「摘要 / Keywords」开头。
+ * 两处并排展示会像重复投稿；这里只在正文开头是题录前言时剥掉，正文本身的
+ * 摘要（例如没有结构化摘要的旧稿）保持不动。
+ */
+function stripManuscriptFrontMatter(body: string): string {
+  const text = body.trim()
+  const firstSection = text.search(
+    /^#{1,6}\s+(?:(?:1|一)\s*[.、]?\s*)?(引言|绪论|Introduction|背景|研究背景|Related\s+Work)/im,
+  )
+  if (firstSection > 0) {
+    const prefix = text.slice(0, firstSection)
+    if (/摘\s*要|Abstract|关键词|Keywords/i.test(prefix)) {
+      return text.slice(firstSection)
+    }
+  }
+  return text
+}
+
 function SimilarityNotice({
   score,
   matches,
@@ -288,11 +307,15 @@ function ReviewWorkbenchPage() {
     }
   }
 
+  const missingReviewDims = TRACK_DIMENSIONS[reviewForm.track].filter(
+    (d) => dimensionIssue(d, reviewForm.dimensions[d.key]) !== null,
+  )
+
   return (
     <div>
       <PageHeader
         title="审稿工作台"
-        description="填写审稿报告：先过四问，再按七个维度逐项打分；意见支持 Markdown 与预览，提交前可看作者/编辑两个视角。稿件默认下载 Word，也可切换 PDF。"
+        description="填写审稿报告：先过四问，再按赛道维度逐项打分（学术五维 / 荒诞六维）；意见支持 Markdown 与预览，提交前可看作者/编辑两个视角。稿件默认下载 Word，也可切换 PDF。"
       />
 
       <div className="mb-4">
@@ -518,10 +541,15 @@ function ReviewWorkbenchPage() {
                     type="submit"
                     disabled={
                       submitMut.isPending ||
+                      missingReviewDims.length > 0 ||
                       (reviewForm.special_issue && reviewForm.special_issue_reason.trim().length < 10)
                     }
                   >
-                    {submitMut.isPending ? '提交中…' : '提交审稿报告'}
+                    {submitMut.isPending
+                      ? '提交中…'
+                      : missingReviewDims.length > 0
+                        ? `还差 ${missingReviewDims.length} 维`
+                        : '提交审稿报告'}
                   </Button>
                 </DialogFooter>
               </form>
@@ -708,7 +736,7 @@ function ReviewManuscriptPane({ assignmentId }: { assignmentId: number }) {
             正文（双盲稿已自动隐藏作者姓名与邮箱）
           </div>
           <div className="max-h-[55vh] overflow-y-auto rounded-md border bg-muted/20 p-3">
-            <MarkdownContent text={data.manuscript_body} className="text-sm leading-relaxed" />
+            <MarkdownContent text={stripManuscriptFrontMatter(data.manuscript_body)} className="text-sm leading-relaxed" />
           </div>
         </div>
       ) : data.preview ? (
@@ -806,7 +834,7 @@ function SubmissionDetailDialog({
             正文（双盲稿已自动隐藏作者姓名与邮箱）
           </div>
                 <div className="max-h-[55vh] overflow-y-auto rounded-md border bg-muted/20 p-3">
-                  <MarkdownContent text={data.manuscript_body} className="text-sm leading-relaxed" />
+                  <MarkdownContent text={stripManuscriptFrontMatter(data.manuscript_body)} className="text-sm leading-relaxed" />
                 </div>
               </div>
             ) : data.preview ? (

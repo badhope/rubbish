@@ -430,7 +430,13 @@ function computeGates(f: WizardForm): GateResult[] {
       key: 'references',
       label: '参考文献',
       step: 1,
-      ok: hasRefsHeading || hasFile,
+      // 荒诞论文和副刊不强制参考文献：用户明确允许“不造假就留空”，
+      // 学术论文仍要求有引用或上传完整稿件，避免正刊降格。
+      ok:
+        hasRefsHeading ||
+        hasFile ||
+        f.paperKind === 'absurd' ||
+        f.type === 'tutorial',
     },
     {
       key: 'authors',
@@ -1656,6 +1662,8 @@ function StepUpload({
               <Badge className="bg-emerald-500/15 text-emerald-700">
                 已检测到参考文献
               </Badge>
+            ) : form.paperKind === 'absurd' || form.type === 'tutorial' ? (
+              <Badge variant="outline">参考文献可选 · 不强制补造</Badge>
             ) : (
               <Badge
                 variant="outline"

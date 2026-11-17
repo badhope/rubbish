@@ -72,7 +72,7 @@ MAX_PAGE_SIZE = 100
 
 
 def _normalize_review_scores(scores: dict[str, Any]) -> dict[str, Any]:
-    """校验并计算审稿评分：五维，分数必填，理由/证据/修改意见选填。
+    """校验并计算审稿评分：按赛道维度（学术五维 / 荒诞六维），分数必填，理由/证据/修改意见选填。
 
     先让审稿人能直接给分；理由和证据填写了就保留，不填也不阻断提交或
     计分。旧版报告里的自由结构（originality: 4）仍不受理新提交。
@@ -84,7 +84,7 @@ def _normalize_review_scores(scores: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(raw, dict):
         raise HTTPException(
             status_code=422,
-            detail="评分必须按五维提交：scores.dimensions = {key: {score, reason?, evidence?}}",
+            detail="评分必须按赛道维度提交：scores.dimensions = {key: {score, reason?, evidence?}}",
         )
     required = [k for k, _, _ in dimensions_for(track)]
     missing = [k for k in required if k not in raw]

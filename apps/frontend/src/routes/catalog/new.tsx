@@ -104,6 +104,19 @@ function NewResourcePage() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    const missing: string[] = []
+    if (!form.title.trim()) missing.push('标题')
+    if (!form.authors.trim()) missing.push('作者')
+    if (!form.discipline.trim()) missing.push('学科')
+    if (missing.length > 0) {
+      toast.error(`请先填写：${missing.join('、')}`)
+      return
+    }
+    const year = Number(form.year)
+    if (!Number.isFinite(year)) {
+      toast.error('年份需要是有效数字')
+      return
+    }
     const body: ResourceCreate = {
       type: form.type,
       title: form.title,
@@ -150,7 +163,7 @@ function NewResourcePage() {
       <PageHeader title="新建资源" description="创建一条新的学术资源记录。" />
       <Card>
         <CardContent>
-          <form onSubmit={onSubmit} className="space-y-6">
+          <form onSubmit={onSubmit} className="space-y-6" noValidate>
             {/* 必填区 */}
             <div className="space-y-4">
               <h3 className="text-sm font-medium text-muted-foreground">必填信息</h3>
