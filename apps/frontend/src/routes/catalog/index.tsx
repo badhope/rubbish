@@ -310,7 +310,7 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
 
       {/* 论文目录：一级是“学术 / 荒诞”，二级是学科。先看目录，再看文章，
           不再把两种论文混成一条从上到下的列表。 */}
-      {fixedTrack === 'paper' && !search.q ? (
+      {effectiveTrack === 'paper' && !search.q ? (
         <PaperDirectory
           paperKind={paperKind}
           seriousCount={seriousCount}
