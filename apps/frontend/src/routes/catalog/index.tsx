@@ -1240,22 +1240,22 @@ function PaperDirectory({
                     type="button"
                     onClick={() => updateSearch({ discipline: active ? undefined : name, page: 1 })}
                     className={cn(
-                      'group flex min-h-20 items-center gap-3 rounded-xl border p-3 text-left transition-all',
+                      'group flex min-h-20 items-center gap-2 rounded-xl border p-2.5 text-left transition-all sm:gap-3 sm:p-3',
                       active
                         ? 'border-primary bg-primary text-primary-foreground shadow-sm'
                         : 'border-border bg-background/60 hover:-translate-y-0.5 hover:border-primary/35 hover:bg-accent/20',
                     )}
                   >
-                    <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br', active ? 'bg-white/15' : style.tint)}>
+                    <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br sm:h-9 sm:w-9', active ? 'bg-white/15' : style.tint)}>
                       <Icon className="h-4 w-4" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium">{name}</span>
-                      <span className={cn('mt-0.5 block text-[11px]', active ? 'text-white/75' : 'text-muted-foreground')}>
+                      <span className="line-clamp-2 text-[13px] font-medium leading-4 sm:text-sm sm:leading-5">{name}</span>
+                      <span className={cn('mt-0.5 hidden text-[11px] sm:block', active ? 'text-white/75' : 'text-muted-foreground')}>
                         {active ? '已进入，点击返回全部' : '进入学科'}
                       </span>
                     </span>
-                    <ArrowRight className={cn('h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5', active ? 'text-white/80' : 'text-muted-foreground')} />
+                    <ArrowRight className={cn('hidden h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5 sm:block', active ? 'text-white/80' : 'text-muted-foreground')} />
                   </button>
                 )
               })}
