@@ -747,7 +747,7 @@ function HomePage() {
           />
           <HeroBackdrop />
 
-          <div className="relative mx-auto flex min-h-[calc(100svh-2.25rem)] max-w-6xl flex-col justify-start px-4 pb-20 pt-[18vh] text-center sm:px-6 sm:pt-[16vh]">
+          <div className="relative mx-auto flex min-h-[calc(100svh-2.25rem)] max-w-6xl flex-col justify-center px-4 pb-16 pt-10 text-center sm:px-6 sm:pb-24">
             <motion.p
               variants={rise}
               custom={0}
@@ -765,7 +765,7 @@ function HomePage() {
               {/* 刊头回收标志：源自创刊 PDF 原图，随主题色（品牌绿） */}
               <BrandMark
                 decorative
-                className="h-11 w-11 shrink-0 text-primary sm:h-24 sm:w-24"
+                className="h-11 w-11 shrink-0 text-primary sm:h-28 sm:w-28"
               />
               <span
                 className="hero-title type-hero whitespace-nowrap tracking-tight"
@@ -778,7 +778,7 @@ function HomePage() {
             <motion.p
               variants={rise}
               custom={1}
-              className="mx-auto mt-4 max-w-3xl px-2 text-[15px] leading-7 text-muted-foreground sm:text-lg sm:leading-8"
+              className="mx-auto mt-5 max-w-4xl px-2 text-[15px] leading-7 text-muted-foreground sm:text-xl sm:leading-9"
             >
               不是顶刊，是<span className="font-medium text-foreground">学术底刊</span>：
               给不够完美、但值得留下的研究，一个正式、可引用的落点。
@@ -817,81 +817,6 @@ function HomePage() {
               向下阅读 · Scroll
             </motion.p>
 
-            {/* 数据卡：进入视口数字滚动 */}
-            <motion.div
-              ref={statsRevealRef}
-              variants={cardsWrap}
-              initial="hidden"
-              animate={statsReveal ? 'show' : 'hidden'}
-              className="mx-auto mt-[40vh] grid max-w-4xl grid-cols-2 gap-2.5 sm:mt-[48vh] sm:gap-4 lg:grid-cols-4"
-            >
-              {[
-                // 四张卡只回答「这里有什么、怎么定位、是否收费、编号怎么给」。
-                // 不再把「平均处理天数」当门面：评审样本不足时，这个数字只会误导。
-                {
-                  label: '已刊稿件',
-                  node: (
-                    <span className="inline-flex flex-col items-start">
-                      <CountUpNumber target={totalPublished} />
-                      <span className="mt-1 text-[10px] font-normal tracking-normal text-muted-foreground sm:text-xs">
-                        学术 {seriousTotal} · 荒诞 {absurdTotal} · 副刊 {funTotal}
-                      </span>
-                    </span>
-                  ),
-                },
-                { label: '覆盖学科', node: <CountUpNumber target={disciplines} /> },
-                {
-                  label: '开放获取',
-                  node:
-                    metrics?.open_access_rate != null ? (
-                      <span className="tabular-nums">{metrics.open_access_rate.toFixed(0)}%</span>
-                    ) : (
-                      <span className="text-base text-muted-foreground">全部</span>
-                    ),
-                },
-                {
-                  label: '赛道',
-                  node: (
-                    <span className="inline-flex flex-col items-start">
-                      <span className="text-2xl sm:text-3xl">学术底刊</span>
-                      <span className="mt-1 text-[10px] font-normal tracking-normal text-muted-foreground sm:text-xs">
-                        自建赛道 · DOI 选填
-                      </span>
-                    </span>
-                  ),
-                },
-              ].map((s) => (
-                <motion.div
-                  key={s.label}
-                  variants={card}
-                  animate={statsReveal ? 'show' : 'hidden'}
-                  whileHover={{ y: -4 }}
-                  className="glass-card rounded-lg p-4 text-left transition-colors hover:border-primary/40 sm:p-6"
-                >
-                  <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                    {s.label}
-                  </p>
-                  <p
-                    className="mt-1 text-[2rem] text-primary sm:mt-2 sm:text-[2.8rem]"
-                    style={{ fontFamily: DISPLAY_FONT, fontWeight: 600 }}
-                  >
-                    {s.node}
-                  </p>
-                </motion.div>
-              ))}
-            </motion.div>
-
-            {funStats ? (
-              <div className="mx-auto mt-3 flex max-w-4xl flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-muted-foreground sm:mt-4 sm:text-sm">
-                <Link to="/papers" className="font-medium text-primary hover:underline">
-                  论文 {paperTotal} 篇 →
-                </Link>
-                <span aria-hidden className="h-1 w-1 rounded-full bg-border" />
-                <Link to="/fun" className="font-medium text-primary hover:underline">
-                  副刊 {funTotal} 篇 →
-                </Link>
-              </div>
-            ) : null}
           </div>
         </motion.section>
 
@@ -954,6 +879,95 @@ function HomePage() {
             </form>
           </div>
         </div>
+
+        <section className="border-b bg-muted/20 py-12 sm:py-16">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6">
+            <div className="mb-9 text-center">
+              <p className="flex items-center justify-center gap-2 text-[11px] font-medium uppercase tracking-[0.28em] text-primary">
+                <span aria-hidden className="h-1.5 w-1.5 rotate-45 bg-primary" />
+                At a Glance
+              </p>
+              <h2 className="mt-2 text-2xl sm:text-3xl" style={{ fontFamily: DISPLAY_FONT }}>
+                本刊概览
+              </h2>
+            </div>
+                        {/* 数据卡：进入视口数字滚动 */}
+            <motion.div
+              ref={statsRevealRef}
+              variants={cardsWrap}
+              initial="hidden"
+              animate={statsReveal ? 'show' : 'hidden'}
+              className="mx-auto grid max-w-4xl grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4"
+            >
+              {[
+                // 四张卡只回答「这里有什么、怎么定位、是否收费、编号怎么给」。
+                // 不再把「平均处理天数」当门面：评审样本不足时，这个数字只会误导。
+                {
+                  label: '已刊稿件',
+                  node: (
+                    <span className="inline-flex flex-col items-start">
+                      <CountUpNumber target={totalPublished} />
+                      <span className="mt-1 text-[10px] font-normal tracking-normal text-muted-foreground sm:text-xs">
+                        学术 {seriousTotal} · 荒诞 {absurdTotal} · 副刊 {funTotal}
+                      </span>
+                    </span>
+                  ),
+                },
+                { label: '覆盖学科', node: <CountUpNumber target={disciplines} /> },
+                {
+                  label: '开放获取',
+                  node:
+                    metrics?.open_access_rate != null ? (
+                      <span className="tabular-nums">{metrics.open_access_rate.toFixed(0)}%</span>
+                    ) : (
+                      <span className="text-base text-muted-foreground">全部</span>
+                    ),
+                },
+                {
+                  label: '赛道',
+                  node: (
+                    <span className="inline-flex flex-col items-start">
+                      <span className="text-2xl sm:text-3xl">学术底刊</span>
+                      <span className="mt-1 text-[10px] font-normal tracking-normal text-muted-foreground sm:text-xs">
+                        自建赛道 · DOI 选填
+                      </span>
+                    </span>
+                  ),
+                },
+              ].map((s) => (
+                <motion.div
+                  key={s.label}
+                  variants={card}
+                  animate={statsReveal ? 'show' : 'hidden'}
+                  whileHover={{ y: -4 }}
+                  className="glass-card rounded-lg p-4 text-left transition-colors hover:border-primary/40 sm:p-6"
+                >
+                  <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                    {s.label}
+                  </p>
+                  <p
+                    className="mt-1 text-[2rem] text-primary sm:mt-2 sm:text-[2.8rem]"
+                    style={{ fontFamily: DISPLAY_FONT, fontWeight: 600 }}
+                  >
+                    {s.node}
+                  </p>
+                </motion.div>
+              ))}
+            </motion.div>
+
+            {funStats ? (
+              <div className="mx-auto mt-5 flex max-w-4xl flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+                <Link to="/papers" className="font-medium text-primary hover:underline">
+                  论文 {paperTotal} 篇 →
+                </Link>
+                <span aria-hidden className="h-1 w-1 rounded-full bg-border" />
+                <Link to="/fun" className="font-medium text-primary hover:underline">
+                  副刊 {funTotal} 篇 →
+                </Link>
+              </div>
+            ) : null}
+          </div>
+        </section>
 
         {/* ── 分类入口：跳转式导航（点哪个学科进哪个模块） ──
             用户口径：入门先是分类界面，而不是把全部文章铺在脸上。

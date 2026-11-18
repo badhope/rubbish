@@ -261,14 +261,17 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
   return (
     <div>
       <section className="flex min-h-[calc(100svh-5rem)] flex-col justify-center">
+      {!search.q && fixedTrack === 'paper' && (
+        <p className="mb-2 text-center text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
+          Paper Index
+        </p>
+      )}
       <PageHeader
         title={
           search.q
             ? '搜索结果'
             : fixedTrack === 'paper'
-              ? paperKind === 'absurd'
-                ? '荒诞论文'
-                : '学术论文'
+              ? '论文'
               : fixedTrack === 'essay'
                 ? '副刊'
                 : '论文与副刊'
@@ -280,9 +283,7 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
             : fixedTrack === 'essay'
               ? '小说、随笔、评论、诗歌与吐槽；独立成刊，不用论文体、不参与学术计分。'
               : fixedTrack === 'paper'
-                ? paperKind === 'absurd'
-                  ? '严格论文格式，用可核查材料一本正经地论证荒诞命题；与学术论文同用百分制评审。'
-                  : '真实问题、可核查材料、正经论证；副刊与荒诞论文都在各自独立分区。'
+                ? '学术论文与荒诞论文各自独立分区：一种认真研究，一种用论文格式认真论证荒诞。'
                 : '论文与副刊分属两本刊；论文内部再分学术论文与荒诞论文。'
         }
         actions={
@@ -1123,32 +1124,31 @@ function PaperDirectory({
               aria-selected={active}
               onClick={() => updateSearch({ kind: kind.id, discipline: undefined, page: 1 })}
               className={cn(
-                'group relative flex min-h-[104px] flex-col justify-center overflow-hidden rounded-2xl border p-3 text-left transition-all sm:min-h-[132px] sm:p-6',
+                'group relative flex min-h-[150px] flex-col items-start justify-between overflow-hidden rounded-2xl border p-4 text-left transition-all sm:min-h-[196px] sm:p-6',
                 active
                   ? 'border-primary bg-primary text-primary-foreground shadow-sm'
                   : 'border-border bg-gradient-to-br hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-sm',
                 !active && kind.tone,
               )}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-3">
-                  <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12', active ? 'bg-white/15' : 'bg-background/80')}>
-                    <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="flex min-w-0 flex-col sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-2">
-                      <span className="whitespace-nowrap font-serif text-base font-semibold tracking-tight sm:text-lg">{kind.label}</span>
-                      <span className={cn('mt-0.5 text-[13px] tabular-nums sm:mt-0 sm:text-sm', active ? 'text-white/80' : 'text-muted-foreground')}>
-                        {kind.count} 篇
-                      </span>
-                    </span>
-                    <span className={cn('mt-1 hidden text-[13px] leading-5 sm:block', active ? 'text-white/80' : 'text-muted-foreground')}>
-                      {kind.note}
-                    </span>
-                  </span>
-                </div>
+              <div className="flex w-full items-start justify-between gap-3">
+                <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12', active ? 'bg-white/15' : 'bg-background/80')}>
+                  <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
+                </span>
                 <span className={cn('mt-1 h-2.5 w-2.5 shrink-0 rounded-full', active ? 'bg-white/80' : kind.dot)} />
               </div>
+              <span className={cn('mt-4 font-serif text-[19px] font-semibold tracking-tight sm:text-[24px]', active ? 'text-white' : 'text-foreground')}>
+                {kind.label}
+              </span>
+              <span className="mt-1 flex items-baseline gap-1">
+                <span className={cn('font-serif text-[2rem] leading-none sm:text-[2.6rem]', active ? 'text-white' : 'text-primary')}>
+                  {kind.count}
+                </span>
+                <span className={cn('text-[13px]', active ? 'text-white/70' : 'text-muted-foreground')}>篇</span>
+              </span>
+              <span className={cn('mt-3 hidden text-[13px] leading-5 sm:block', active ? 'text-white/80' : 'text-muted-foreground')}>
+                {kind.note}
+              </span>
             </button>
           )
         })}

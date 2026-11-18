@@ -12,13 +12,19 @@ interface Props {
 // 窄屏 flex-col：标题在上，actions 在下左对齐；sm+ 横排右对齐
 export function PageHeader({ title, description, actions, size = 'default' }: Props) {
   return (
-    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-      <div className="min-w-0">
-        <span className="page-title-rule" aria-hidden="true" />
+    <div
+      className={
+        size === 'cover'
+          ? 'mb-8 flex flex-col items-center gap-3 text-center'
+          : 'mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4'
+      }
+    >
+      <div className={size === 'cover' ? 'mx-auto min-w-0' : 'min-w-0'}>
+        {size !== 'cover' && <span className="page-title-rule" aria-hidden="true" />}
         <h1
           className={
             size === 'cover'
-              ? 'section-title text-[2rem] font-semibold leading-tight tracking-tight sm:text-[2.65rem]'
+              ? 'section-title text-[2rem] font-semibold leading-tight tracking-tight sm:text-[3rem]'
               : 'section-title type-page font-semibold'
           }
         >
@@ -28,7 +34,7 @@ export function PageHeader({ title, description, actions, size = 'default' }: Pr
           <p
             className={
               size === 'cover'
-                ? 'mt-2 max-w-2xl text-[15px] leading-7 text-muted-foreground sm:text-base sm:leading-8'
+                ? 'mx-auto mt-2 max-w-3xl text-[15px] leading-7 text-muted-foreground sm:text-base sm:leading-8'
                 : 'mt-1 text-sm text-muted-foreground'
             }
           >

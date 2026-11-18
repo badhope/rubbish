@@ -1548,7 +1548,7 @@ html {
   line-height: 1.28;
 }
 .type-hero {
-  font-size: clamp(2.35rem, 1.45rem + 4.4vw, 5.4rem);
+  font-size: clamp(2.6rem, 2rem + 5vw, 7rem);
   line-height: 1.04;
 }
 
