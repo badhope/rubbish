@@ -22,7 +22,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from fastapi.responses import Response
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import String, and_, case, cast, desc, func, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -3576,12 +3576,35 @@ async def admin_overview(
 
 
 class FeedbackIn(BaseModel):
-    """全站问题反馈（2.0 主编要求：每个页面都可提 bug，交主编处理）。"""
+    """全站问题反馈（2.0 主编要求：每个页面都可提 bug，交主编处理）。
 
-    kind: str = Field(default="bug", max_length=20)  # bug / suggestion / appeal_help
+    反馈不是只有“bug / 建议”两种：内容纠错、版式、性能、无障碍、
+    投稿咨询都需要单独归类，才能被对应的人接手。
+    """
+
+    kind: str = Field(
+        default="bug",
+        pattern=r"^(bug|suggestion|content|submission|design|performance|accessibility|other)$",
+    )
     title: str = Field(min_length=2, max_length=120)
     body: str = Field(min_length=5, max_length=2000)
     page_url: str = Field(default="", max_length=300)
+    images: list[str] = Field(default_factory=list, max_length=5)
+
+    @field_validator("images")
+    @classmethod
+    def _validate_images(cls, values: list[str]) -> list[str]:
+        import re
+
+        allowed = re.compile(r"^(/api/media/images/[0-9a-f]{32}\.(?:png|jpg|jpeg|gif|webp))$")
+        cleaned: list[str] = []
+        for value in values:
+            value = value.strip()
+            if not allowed.match(value):
+                raise ValueError("反馈图片地址不合法")
+            if value not in cleaned:
+                cleaned.append(value)
+        return cleaned
 
 
 def _feedback_row(entry: AuditLog) -> dict[str, object]:
@@ -3597,6 +3620,7 @@ def _feedback_row(entry: AuditLog) -> dict[str, object]:
         "status": payload.get("status") or "open",
         "resolution_note": payload.get("resolution_note"),
         "resolved_at": payload.get("resolved_at"),
+        "images": payload.get("images") or [],
         "created_at": entry.created_at.isoformat() if entry.created_at else None,
     }
 
@@ -3604,6 +3628,10 @@ def _feedback_row(entry: AuditLog) -> dict[str, object]:
 @router.get("/feedback/board")
 async def feedback_board(
     status: str | None = Query(default=None, pattern=r"^(open|resolved)$"),
+    kind: str | None = Query(
+        default=None,
+        pattern=r"^(bug|suggestion|content|submission|design|performance|accessibility|other)$",
+    ),
     limit: int = Query(default=50, ge=1, le=200),
     tenant_id: int = Depends(require_tenant_id),
     db: AsyncSession = Depends(get_db),
@@ -3623,12 +3651,19 @@ async def feedback_board(
     all_items = [_feedback_row(r) for r in rows]
     items = all_items
     if status is not None:
-        items = [i for i in all_items if i["status"] == status]
-    # 计数始终是全局口径：切到「已解决」也能看到还有多少待处理。
+        items = [i for i in items if i["status"] == status]
+    if kind is not None:
+        items = [i for i in items if i["kind"] == kind]
+    # 计数始终是全局口径：切到「已解决」或某个类型，也能看到真实总量。
+    kind_counts: dict[str, int] = {}
+    for item in all_items:
+        key = str(item["kind"])
+        kind_counts[key] = kind_counts.get(key, 0) + 1
     return {
         "data": items,
         "open_count": sum(1 for i in all_items if i["status"] == "open"),
         "resolved_count": sum(1 for i in all_items if i["status"] == "resolved"),
+        "kind_counts": kind_counts,
     }
 
 
@@ -3700,6 +3735,7 @@ async def submit_feedback(
             "body": body.body,
             "status": "open",
             "page_url": body.page_url,
+            "images": body.images,
         },
         created_at=utcnow(),
     )

@@ -64,8 +64,9 @@ export function FunCatalog({
   const rest = stories.slice(1)
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-3 sm:px-6 sm:py-6">
-      {/* 刊头只负责“这是副刊”。筛选、搜索、公告全部下移，首屏不再堆四层控件。 */}
+    <div className="w-full">
+      {/* 第一屏只回答“这是副刊、怎么搜、有哪些文体”，不往下露推荐和列表。 */}
+      <section className="mx-auto flex min-h-[100svh] max-w-5xl flex-col justify-center px-4 py-12 pb-24 sm:px-6 sm:py-16">
       <header className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card via-card to-accent/25 px-4 py-3.5 shadow-sm sm:px-8 sm:py-7">
         <div
           aria-hidden
@@ -131,6 +132,22 @@ export function FunCatalog({
             />
           </div>
         </div>
+        {/* 手机端文体入口放在第一屏，不再单独占一层；桌面端仍用顶部胶囊。 */}
+        <div className="mt-2 flex flex-wrap gap-1.5 sm:hidden">
+          <GenrePill active={!search.genre} onClick={() => go({ genre: undefined })}>
+            全部 · {totalAll}
+          </GenrePill>
+          {visibleGenres.map((g) => (
+            <GenrePill
+              key={g.value}
+              active={search.genre === g.value}
+              onClick={() => go({ genre: search.genre === g.value ? undefined : g.value })}
+              title={g.hint}
+            >
+              {g.emoji} {g.label} · {genreCounts[g.value]}
+            </GenrePill>
+          ))}
+        </div>
 
         <div className="mt-2 flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
           <Link
@@ -159,6 +176,7 @@ export function FunCatalog({
           </div>
         </div>
       </div>
+      </section>
 
       {isLoading ? (
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -215,96 +233,37 @@ export function FunCatalog({
             </details>
           )}
 
-          <div className="mt-3 space-y-4 sm:mt-5 sm:space-y-7">
-            {visibleGenres.length > 0 && (
-              <section>
-                <SectionHead title="按文体进入" note="先选门类，再随机翻这一门" />
-                <div className="mt-2 flex flex-wrap gap-1.5 sm:hidden">
-                  <GenrePill active={!search.genre} onClick={() => go({ genre: undefined })}>
-                    全部 · {totalAll}
-                  </GenrePill>
-                  {visibleGenres.map((g) => {
-                    const active = search.genre === g.value
-                    return (
-                      <GenrePill
-                        key={g.value}
-                        active={active}
-                        onClick={() => go({ genre: active ? undefined : g.value })}
-                        title={g.hint}
-                      >
-                        {g.emoji} {g.label} · {genreCounts[g.value]}
-                      </GenrePill>
-                    )
-                  })}
-                </div>
-                <div className="mt-3 hidden grid-cols-3 gap-2 sm:grid lg:grid-cols-4">
-                  {visibleGenres.map((g) => {
-                    const active = search.genre === g.value
-                    return (
-                      <button
-                        key={g.value}
-                        type="button"
-                        onClick={() => go({ genre: active ? undefined : g.value })}
-                        className={cn(
-                          'group flex min-h-[74px] items-center gap-2 rounded-xl border px-2.5 py-2.5 text-left transition-all sm:gap-2.5 sm:px-3 sm:py-3',
-                          active
-                            ? 'border-primary bg-primary text-primary-foreground shadow-sm'
-                            : 'border-border bg-card hover:-translate-y-0.5 hover:border-primary/30 hover:bg-accent/25',
-                        )}
-                      >
-                        <span className="text-base leading-none sm:text-xl">{g.emoji}</span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block whitespace-nowrap text-[12px] font-medium leading-4 sm:text-sm">
-                            {g.label}
-                          </span>
-                          <span
-                            className={cn(
-                              'mt-0.5 block truncate text-[10px] sm:text-[11px]',
-                              active ? 'text-white/75' : 'text-muted-foreground',
-                            )}
-                          >
-                            {genreCounts[g.value]} 篇
-                            <span className="hidden sm:inline"> · {g.hint}</span>
-                          </span>
-                        </span>
-                        <ArrowRight
-                          className={cn(
-                            'hidden h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5 sm:block',
-                            active ? 'text-white/80' : 'text-muted-foreground',
-                          )}
-                        />
-                      </button>
-                    )
-                  })}
-                </div>
-              </section>
-            )}
+          <div className="w-full">
             {featuredId != null && (
-              <section>
-                <SectionHead title="本期推荐" note="每次刷新换一篇" />
-                <div className="mt-3">
-                  <FunCard resource={stories[0]} featured />
+              <section className="flex min-h-[100svh] flex-col justify-center border-b px-4 py-16 pb-24 sm:px-6">
+                <div className="mx-auto w-full max-w-5xl">
+                  <SectionHead title="本期推荐" note="每次刷新换一篇" />
+                  <div className="mt-4">
+                    <FunCard resource={stories[0]} featured />
+                  </div>
                 </div>
               </section>
             )}
 
             {rest.length > 0 && (
-              <section>
-                <SectionHead
-                  title="随机翻阅"
-                  note={data.meta.total ? `共 ${data.meta.total} 篇 · 每次换一批` : undefined}
-                />
-                <div className="mt-3 grid grid-cols-2 gap-2 sm:gap-3">
-                  {rest.map((r) => (
-                    <FunCard key={r.id} resource={r} featured={false} />
-                  ))}
+              <section className="flex min-h-[100svh] flex-col justify-center px-4 py-16 pb-24 sm:px-6">
+                <div className="mx-auto w-full max-w-5xl">
+                  <SectionHead
+                    title="随机翻阅"
+                    note={data.meta.total ? `共 ${data.meta.total} 篇 · 每次换一批` : undefined}
+                  />
+                  <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-3">
+                    {rest.map((r) => (
+                      <FunCard key={r.id} resource={r} featured={false} />
+                    ))}
+                  </div>
                 </div>
               </section>
             )}
 
           </div>
 
-          <div className="mt-7 flex items-center justify-between gap-3 border-t border-border pt-4">
+          <div className="mx-auto mt-0 flex w-full max-w-5xl items-center justify-between gap-3 border-t border-border px-4 py-4 sm:px-6">
             <Link
               to={routePath === '/fun' ? '/papers' : routePath}
               className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"

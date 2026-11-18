@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { MessageSquareText } from 'lucide-react'
+import { ImagePlus, Loader2, MessageSquareText, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
+import { useAuth } from '@/hooks/use-auth'
+import { uploadMediaImage } from '@/lib/media'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -19,7 +21,11 @@ const KINDS = [
   { value: 'bug', label: '页面或功能出错' },
   { value: 'suggestion', label: '功能建议' },
   { value: 'content', label: '内容问题（错字、图片、版权）' },
+  { value: 'design', label: '版式与视觉问题' },
+  { value: 'performance', label: '性能与加载问题' },
+  { value: 'accessibility', label: '无障碍与移动端问题' },
   { value: 'submission', label: '投稿与审稿咨询' },
+  { value: 'other', label: '其他问题' },
 ] as const
 
 /**
@@ -33,10 +39,46 @@ export function FeedbackComposer({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const { isAuthenticated } = useAuth()
   const [kind, setKind] = useState<(typeof KINDS)[number]['value']>('bug')
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
+  const [images, setImages] = useState<string[]>([])
+  const [uploading, setUploading] = useState(false)
   const [sending, setSending] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  async function addImages(files: FileList | null) {
+    if (!files?.length) return
+    if (!isAuthenticated) {
+      toast.error('登录后才能上传截图；文字反馈可以直接提交')
+      return
+    }
+    if (images.length + files.length > 5) {
+      toast.error('最多附 5 张图')
+      return
+    }
+    setUploading(true)
+    try {
+      for (const file of Array.from(files)) {
+        if (!file.type.startsWith('image/')) {
+          toast.error(`${file.name} 不是图片`)
+          continue
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error(`${file.name} 超过 5MB`)
+          continue
+        }
+        const url = await uploadMediaImage(file, 'feedback')
+        setImages((prev) => (prev.includes(url) ? prev : [...prev, url]))
+      }
+    } catch {
+      toast.error('截图上传失败，请重试')
+    } finally {
+      setUploading(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
 
   async function submit() {
     if (title.trim().length < 2) {
@@ -57,11 +99,13 @@ export function FeedbackComposer({
           typeof window === 'undefined'
             ? ''
             : window.location.pathname + window.location.search,
+        images,
       })
       toast.success('已提交，主编会收到')
       onOpenChange(false)
       setTitle('')
       setBody('')
+      setImages([])
     } catch {
       toast.error('提交失败，请稍后再试')
     } finally {
@@ -114,6 +158,46 @@ export function FeedbackComposer({
               onChange={(e) => setBody(e.target.value)}
               placeholder="说明你看到的现象、页面地址和操作步骤；内容问题请附文章标题。"
             />
+          </div>
+          <div className="space-y-2">
+            <Label>截图（可选，最多 5 张）</Label>
+            <div className="flex flex-wrap gap-2">
+              {images.map((url) => (
+                <div key={url} className="group relative h-20 w-20 overflow-hidden rounded-md border bg-muted">
+                  <img src={url} alt="反馈截图" loading="lazy" className="h-full w-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setImages((prev) => prev.filter((item) => item !== url))}
+                    className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-background/90 text-foreground shadow"
+                    aria-label="移除截图"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+              {images.length < 5 ? (
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploading}
+                  className="grid h-20 w-20 place-items-center rounded-md border border-dashed text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
+                >
+                  {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
+                  <span className="mt-1">{uploading ? '上传中' : '加截图'}</span>
+                </button>
+              ) : null}
+            </div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/png,image/jpeg,image/gif,image/webp"
+              multiple
+              className="hidden"
+              onChange={(event) => void addImages(event.target.files)}
+            />
+            <p className="text-xs text-muted-foreground">
+              {isAuthenticated ? '支持 PNG / JPEG / GIF / WebP，单张不超过 5MB。' : '登录后可附截图；未登录也可以直接提交文字。'}
+            </p>
           </div>
           <p className="text-xs text-muted-foreground">
             当前页面会自动附上：{typeof window !== 'undefined' ? window.location.pathname : '—'}

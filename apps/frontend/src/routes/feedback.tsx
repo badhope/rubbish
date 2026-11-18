@@ -31,6 +31,7 @@ interface FeedbackItem {
   status: 'open' | 'resolved'
   resolution_note: string | null
   resolved_at: string | null
+  images: string[]
   created_at: string | null
 }
 
@@ -38,8 +39,14 @@ const KIND_LABELS: Record<string, string> = {
   bug: '页面/功能出错',
   suggestion: '功能建议',
   content: '内容问题',
+  design: '版式与视觉',
+  performance: '性能与加载',
+  accessibility: '无障碍/移动端',
   submission: '投稿咨询',
+  other: '其他问题',
 }
+
+const KIND_ORDER = ['bug', 'suggestion', 'content', 'design', 'performance', 'accessibility', 'submission', 'other']
 
 type StatusTab = 'all' | 'open' | 'resolved'
 
@@ -51,17 +58,26 @@ function formatDate(value: string): string {
 
 function FeedbackBoardPage() {
   const [status, setStatus] = useState<StatusTab>('all')
+  const [kindFilter, setKindFilter] = useState<string>('all')
   const [target, setTarget] = useState<FeedbackItem | null>(null)
   const [composeOpen, setComposeOpen] = useState(false)
   const [note, setNote] = useState('')
   const { isAdmin } = useAuth()
   const qc = useQueryClient()
 
-  const query = useQuery<{ data: FeedbackItem[]; open_count: number; resolved_count: number }>({
-    queryKey: ['feedback-board', status],
+  const query = useQuery<{
+    data: FeedbackItem[]
+    open_count: number
+    resolved_count: number
+    kind_counts?: Record<string, number>
+  }>({
+    queryKey: ['feedback-board', status, kindFilter],
     queryFn: async () =>
       (await api.get('/catalog/feedback/board', {
-        params: status === 'all' ? {} : { status },
+        params: {
+          ...(status === 'all' ? {} : { status }),
+          ...(kindFilter === 'all' ? {} : { kind: kindFilter }),
+        },
       })).data,
   })
 
@@ -80,6 +96,7 @@ function FeedbackBoardPage() {
   const items = query.data?.data ?? []
   const openCount = query.data?.open_count ?? 0
   const resolvedCount = query.data?.resolved_count ?? 0
+  const kindCounts = query.data?.kind_counts ?? {}
 
   return (
     <div>
@@ -115,18 +132,35 @@ function FeedbackBoardPage() {
         </Card>
       </div>
 
-      <Tabs
-        value={status}
-        onValueChange={(v) => setStatus(v as StatusTab)}
-      >
-        <div className="overflow-x-auto pb-1">
-          <TabsList className="w-max">
-            <TabsTrigger value="all">全部</TabsTrigger>
-            <TabsTrigger value="open">待处理</TabsTrigger>
-            <TabsTrigger value="resolved">已解决</TabsTrigger>
-          </TabsList>
-        </div>
-      </Tabs>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <Tabs
+          value={status}
+          onValueChange={(v) => setStatus(v as StatusTab)}
+        >
+          <div className="overflow-x-auto pb-1">
+            <TabsList className="w-max">
+              <TabsTrigger value="all">全部</TabsTrigger>
+              <TabsTrigger value="open">待处理</TabsTrigger>
+              <TabsTrigger value="resolved">已解决</TabsTrigger>
+            </TabsList>
+          </div>
+        </Tabs>
+        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+          按类型
+          <select
+            value={kindFilter}
+            onChange={(event) => setKindFilter(event.target.value)}
+            className="h-9 rounded-md border bg-background px-2 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <option value="all">全部类型</option>
+            {KIND_ORDER.map((value) => (
+              <option key={value} value={value}>
+                {KIND_LABELS[value]}（{kindCounts[value] ?? 0}）
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
 
       <div className="mt-4">
         {query.isLoading ? (
@@ -162,6 +196,21 @@ function FeedbackBoardPage() {
                   <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">
                     {item.body}
                   </p>
+                  {item.images?.length ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {item.images.map((url) => (
+                        <a
+                          key={url}
+                          href={url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="block h-20 w-20 overflow-hidden rounded-md border bg-muted transition-opacity hover:opacity-80"
+                        >
+                          <img src={url} alt="反馈附图" loading="lazy" className="h-full w-full object-cover" />
+                        </a>
+                      ))}
+                    </div>
+                  ) : null}
                   {item.status === 'resolved' && item.resolution_note ? (
                     <div className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
                       <span className="font-medium">编辑部说明：</span>
