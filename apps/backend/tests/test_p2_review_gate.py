@@ -43,10 +43,10 @@ async def _pending_submission(db: AsyncSession, tenant: Tenant, submitted_by: in
 @pytest.mark.asyncio
 async def test_version_is_current(client: AsyncClient) -> None:
     """版本号与 app 包一致，/api/health 返回。"""
-    assert __version__ == "1.15.0"
+    assert __version__ == "1.15.1"
     resp = await client.get("/api/health")
     assert resp.status_code == 200
-    assert resp.json()["version"] == "1.15.0"
+    assert resp.json()["version"] == "1.15.1"
 
 
 @pytest.mark.asyncio
