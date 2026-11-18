@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { CheckCircle2, MessageSquareText, Pin, RefreshCw } from 'lucide-react'
+import { FeedbackComposer } from '@/components/common/feedback-launcher'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
@@ -51,6 +52,7 @@ function formatDate(value: string): string {
 function FeedbackBoardPage() {
   const [status, setStatus] = useState<StatusTab>('all')
   const [target, setTarget] = useState<FeedbackItem | null>(null)
+  const [composeOpen, setComposeOpen] = useState(false)
   const [note, setNote] = useState('')
   const { isAdmin } = useAuth()
   const qc = useQueryClient()
@@ -85,10 +87,16 @@ function FeedbackBoardPage() {
         title="反馈墙"
         description="大家提过的问题都集中在这里；编辑部处理后会标成「已解决」。"
         actions={
-          <Button variant="outline" size="sm" onClick={() => void query.refetch()} disabled={query.isFetching}>
-            <RefreshCw className={query.isFetching ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} />
-            刷新
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button size="sm" onClick={() => setComposeOpen(true)}>
+              <MessageSquareText className="h-4 w-4" />
+              提个问题
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => void query.refetch()} disabled={query.isFetching}>
+              <RefreshCw className={query.isFetching ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} />
+              刷新
+            </Button>
+          </div>
         }
       />
 
@@ -224,6 +232,8 @@ function FeedbackBoardPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <FeedbackComposer open={composeOpen} onOpenChange={setComposeOpen} />
 
       <p className="mt-6 flex items-center gap-1.5 text-xs text-muted-foreground">
         <MessageSquareText className="h-3.5 w-3.5" />
