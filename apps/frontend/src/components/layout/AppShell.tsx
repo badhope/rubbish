@@ -1,8 +1,6 @@
 import { Fragment, useEffect, useState, type FormEvent } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router'
 import {
-  ShieldAlert,
-  Activity,
   BookOpen,
   Building2,
   CalendarDays,
@@ -15,20 +13,13 @@ import {
   Layers,
   Menu,
   PenLine,
-  Rocket,
   Search,
-  Settings,
   ShieldCheck,
   User,
-  Users,
   ShoppingBag,
   Award,
   FileSignature,
-  Megaphone,
   MessagesSquare,
-  MessageSquare,
-  Wallet,
-  Mail,
   X,
   Wrench,
 } from 'lucide-react'
@@ -36,7 +27,6 @@ import { toast } from 'sonner'
 import { OnboardingTour } from '@/components/common/onboarding-tour'
 import { useAuth } from '@/hooks/use-auth'
 import { useLogout } from '@/hooks/api/use-auth'
-import { useUnreadCount } from '@/hooks/api/use-modules'
 import { cn } from '@/lib/utils'
 import { BrandMark } from '@/components/common/brand-mark'
 import { AmbientBackdrop } from '@/components/common/ambient-backdrop'
@@ -97,25 +87,9 @@ const NAV: NavItem[] = [
   { to: '/guide', label: '投稿指南', icon: PenLine, group: '期刊' },
   { to: '/tools', label: '写作工具', icon: Wrench, group: '期刊' },
 
-  // admin 组：用户 → 角色申请 → 期刊四件套（卷/期/信息/设置），审计日志垫底
-  { to: '/admin', label: '站点总览', icon: Gavel, auth: true, adminOnly: true, group: '站点管理', subgroup: '总览' },
-  { to: '/admin/users', label: '用户管理', icon: Users, auth: true, adminOnly: true, group: '站点管理', subgroup: '用户与权限' },
-  { to: '/admin/shop', label: 'R 币商城', icon: ShoppingBag, auth: true, roles: ['chief_editor', 'deputy_editor', 'editor_in_chief', 'shop_manager'], group: '站点管理', subgroup: '内容与社区' },
-  { to: '/admin/claims', label: '认领审批', icon: FileSignature, auth: true, adminOnly: true, group: '站点管理', subgroup: '用户与权限' },
-  { to: '/admin/role-applications', label: '角色申请', icon: ClipboardCheck, auth: true, adminOnly: true, group: '站点管理', subgroup: '用户与权限' },
-  { to: '/admin/announcements', label: '公告管理', icon: Megaphone, auth: true, adminOnly: true, group: '站点管理', subgroup: '内容与社区' },
-  { to: '/admin/forum-boards', label: '社区版块', icon: MessagesSquare, auth: true, adminOnly: true, group: '站点管理', subgroup: '内容与社区' },
-  { to: '/admin/reports', label: '举报处置', icon: ShieldAlert, auth: true, adminOnly: true, group: '站点管理', subgroup: '内容与社区' },
-  { to: '/admin/comments', label: '评论管理', icon: MessageSquare, auth: true, adminOnly: true, group: '站点管理', subgroup: '内容与社区' },
-  { to: '/admin/desk-subscribers', label: '邮件订阅', icon: Mail, auth: true, adminOnly: true, group: '站点管理', subgroup: '内容与社区' },
-  { to: '/admin/finance', label: '财务台账', icon: Wallet, auth: true, adminOnly: true, group: '站点管理', subgroup: '系统与安全' },
-  { to: '/admin/volumes', label: '卷管理', icon: Layers, auth: true, adminOnly: true, group: '站点管理', subgroup: '期刊与发布' },
-  { to: '/admin/issues', label: '期管理', icon: CalendarDays, auth: true, adminOnly: true, group: '站点管理', subgroup: '期刊与发布' },
-  { to: '/admin/releases', label: '发布门禁', icon: Rocket, auth: true, adminOnly: true, group: '站点管理', subgroup: '期刊与发布' },
-  { to: '/admin/journal', label: '期刊信息', icon: Building2, auth: true, adminOnly: true, group: '站点管理', subgroup: '期刊与发布' },
-  { to: '/admin/settings', label: '期刊设置', icon: Settings, auth: true, adminOnly: true, group: '站点管理', subgroup: '期刊与发布' },
-  { to: '/admin/audit-logs', label: '审计日志', icon: ShieldCheck, auth: true, adminOnly: true, group: '站点管理', subgroup: '系统与安全' },
-  { to: '/admin/system-health', label: '系统健康', icon: Activity, auth: true, adminOnly: true, group: '站点管理', subgroup: '系统与安全' },
+  // admin 组：只保留一个后台入口；具体管理页收进 /admin 的分组卡片。
+  { to: '/admin', label: '管理后台', icon: Gavel, auth: true, adminOnly: true, group: '站点管理' },
+  { to: '/admin/shop', label: 'R 币商城', icon: ShoppingBag, auth: true, roles: ['chief_editor', 'deputy_editor', 'editor_in_chief', 'shop_manager'], group: '站点管理' },
 ]
 
 const PUBLIC_NAV = NAV.slice(0, 5)
@@ -127,7 +101,6 @@ const WORK_ROUTE_PREFIXES = [
   '/editor',
   '/review/assignments',
   '/review/quick',
-  '/review/workbench',
   '/submissions/pending',
 ]
 
@@ -185,7 +158,6 @@ export function AppShell() {
   const navigate = useNavigate()
   const location = useLocation()
   const logoutMut = useLogout()
-  const { data: unread } = useUnreadCount({ enabled: isAuthenticated })
   const lang = useLang()
 
   const visibleNav = filterNav(NAV, {
@@ -348,7 +320,6 @@ export function AppShell() {
   const renderNavLink = (item: NavItem) => {
     const Icon = item.icon
     const active = item.to === activePath
-    const showBadge = item.to === '/notifications' && (unread?.unread ?? 0) > 0
     return (
       <Link
         key={item.to}
@@ -363,11 +334,6 @@ export function AppShell() {
       >
         <Icon className="h-4 w-4 shrink-0" />
         {!collapsed && <span className="flex-1">{navLabel(item.to, item.label, lang)}</span>}
-        {showBadge && !collapsed && (
-          <span className="rounded-full bg-destructive px-2 py-0.5 text-xs text-destructive-foreground">
-            {unread!.unread}
-          </span>
-        )}
       </Link>
     )
   }

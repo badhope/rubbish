@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { getAuthState } from '@/lib/auth'
 import { useAuth } from '@/hooks/use-auth'
@@ -26,12 +26,15 @@ import { isMeTab, type MeTabKey } from '@/components/me/types'
 export const Route = createFileRoute('/me')({
   validateSearch: (
     search: Record<string, unknown>,
-  ): { tab?: MeTabKey; section?: string } => {
+  ): { tab?: MeTabKey; section?: string; notifications?: boolean } => {
     const tab = isMeTab(search.tab) ? search.tab : undefined
     const section = typeof search.section === 'string' ? search.section : undefined
+    const notifications =
+      search.notifications === true || search.notifications === '1' || search.notifications === 'true'
     return {
       ...(tab ? { tab } : {}),
       ...(section ? { section } : {}),
+      ...(notifications ? { notifications: true } : {}),
     }
   },
   beforeLoad: () => {
@@ -57,7 +60,11 @@ function MePage() {
   const pendingReviews = useMyReviewAssignments('pending', 1, 1, { enabled: reviewAccess })
   const readingLists = useReadingLists(1, 1)
   const unread = useUnreadCount()
-  const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [notificationsOpen, setNotificationsOpen] = useState(Boolean(search.notifications))
+
+  useEffect(() => {
+    if (search.notifications) setNotificationsOpen(true)
+  }, [search.notifications])
 
   if (profile.isLoading) return <Loading />
   if (profile.isError || !profile.data) {
@@ -110,7 +117,7 @@ function MePage() {
         {activeTab === 'reviews' && reviewable ? <MeReviews reviewable={reviewable} /> : null}
         {activeTab === 'library' ? <MeLibrary /> : null}
         {activeTab === 'coins' ? <MeCoins profile={data} /> : null}
-        {activeTab === 'settings' ? <MeSettings username={data.username} /> : null}
+        {activeTab === 'settings' ? <MeSettings username={data.username} initialSection={search.section} /> : null}
       </div>
 
       {notificationsOpen ? (

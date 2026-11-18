@@ -21,7 +21,6 @@ import { Route as DeskRouteImport } from './routes/desk'
 import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FunRouteImport } from './routes/fun'
-import { Route as GradeRouteImport } from './routes/grade'
 import { Route as GuideRouteImport } from './routes/guide'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as JournalMetricsRouteImport } from './routes/journal-metrics'
@@ -31,7 +30,6 @@ import { Route as MeRouteImport } from './routes/me'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as PapersRouteImport } from './routes/papers'
 import { Route as PoliciesRouteImport } from './routes/policies'
-import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RecommendationsRouteImport } from './routes/recommendations'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -80,7 +78,6 @@ import { Route as PapersResourceIdRouteImport } from './routes/papers/$resourceI
 import { Route as ReaderResourceIdRouteImport } from './routes/reader/$resourceId'
 import { Route as ReviewAssignmentsRouteImport } from './routes/review/assignments'
 import { Route as ReviewBoardRouteImport } from './routes/review/board'
-import { Route as ReviewWorkbenchRouteImport } from './routes/review/workbench'
 import { Route as SectionsSlugRouteImport } from './routes/sections_.$slug'
 import { Route as StudioIdRouteImport } from './routes/studio/$id'
 import { Route as SubmissionsIndexRouteImport } from './routes/submissions/index'
@@ -154,11 +151,6 @@ const FunRoute = FunRouteImport.update({
   path: '/fun',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GradeRoute = GradeRouteImport.update({
-  id: '/grade',
-  path: '/grade',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const GuideRoute = GuideRouteImport.update({
   id: '/guide',
   path: '/guide',
@@ -202,11 +194,6 @@ const PapersRoute = PapersRouteImport.update({
 const PoliciesRoute = PoliciesRouteImport.update({
   id: '/policies',
   path: '/policies',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProfileRoute = ProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecommendationsRoute = RecommendationsRouteImport.update({
@@ -449,11 +436,6 @@ const ReviewBoardRoute = ReviewBoardRouteImport.update({
   path: '/review/board',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ReviewWorkbenchRoute = ReviewWorkbenchRouteImport.update({
-  id: '/review/workbench',
-  path: '/review/workbench',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SectionsSlugRoute = SectionsSlugRouteImport.update({
   id: '/sections_/$slug',
   path: '/sections/$slug',
@@ -528,7 +510,6 @@ export interface FileRoutesByFullPath {
   '/feedback': typeof FeedbackRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/fun': typeof FunRoute
-  '/grade': typeof GradeRoute
   '/guide': typeof GuideRoute
   '/help': typeof HelpRoute
   '/journal-metrics': typeof JournalMetricsRoute
@@ -538,7 +519,6 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof NotificationsRoute
   '/papers': typeof PapersRouteWithChildren
   '/policies': typeof PoliciesRoute
-  '/profile': typeof ProfileRoute
   '/recommendations': typeof RecommendationsRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -581,7 +561,6 @@ export interface FileRoutesByFullPath {
   '/reader/$resourceId': typeof ReaderResourceIdRoute
   '/review/assignments': typeof ReviewAssignmentsRoute
   '/review/board': typeof ReviewBoardRoute
-  '/review/workbench': typeof ReviewWorkbenchRoute
   '/sections/$slug': typeof SectionsSlugRoute
   '/studio/$id': typeof StudioIdRoute
   '/submissions/new': typeof SubmissionsNewRoute
@@ -614,7 +593,6 @@ export interface FileRoutesByTo {
   '/feedback': typeof FeedbackRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/fun': typeof FunRoute
-  '/grade': typeof GradeRoute
   '/guide': typeof GuideRoute
   '/help': typeof HelpRoute
   '/journal-metrics': typeof JournalMetricsRoute
@@ -624,7 +602,6 @@ export interface FileRoutesByTo {
   '/notifications': typeof NotificationsRoute
   '/papers': typeof PapersRouteWithChildren
   '/policies': typeof PoliciesRoute
-  '/profile': typeof ProfileRoute
   '/recommendations': typeof RecommendationsRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -667,7 +644,6 @@ export interface FileRoutesByTo {
   '/reader/$resourceId': typeof ReaderResourceIdRoute
   '/review/assignments': typeof ReviewAssignmentsRoute
   '/review/board': typeof ReviewBoardRoute
-  '/review/workbench': typeof ReviewWorkbenchRoute
   '/sections/$slug': typeof SectionsSlugRoute
   '/studio/$id': typeof StudioIdRoute
   '/submissions/new': typeof SubmissionsNewRoute
@@ -701,7 +677,6 @@ export interface FileRoutesById {
   '/feedback': typeof FeedbackRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/fun': typeof FunRoute
-  '/grade': typeof GradeRoute
   '/guide': typeof GuideRoute
   '/help': typeof HelpRoute
   '/journal-metrics': typeof JournalMetricsRoute
@@ -711,7 +686,6 @@ export interface FileRoutesById {
   '/notifications': typeof NotificationsRoute
   '/papers': typeof PapersRouteWithChildren
   '/policies': typeof PoliciesRoute
-  '/profile': typeof ProfileRoute
   '/recommendations': typeof RecommendationsRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -754,7 +728,6 @@ export interface FileRoutesById {
   '/reader/$resourceId': typeof ReaderResourceIdRoute
   '/review/assignments': typeof ReviewAssignmentsRoute
   '/review/board': typeof ReviewBoardRoute
-  '/review/workbench': typeof ReviewWorkbenchRoute
   '/sections_/$slug': typeof SectionsSlugRoute
   '/studio/$id': typeof StudioIdRoute
   '/submissions/new': typeof SubmissionsNewRoute
@@ -789,7 +762,6 @@ export interface FileRouteTypes {
     | '/feedback'
     | '/forgot-password'
     | '/fun'
-    | '/grade'
     | '/guide'
     | '/help'
     | '/journal-metrics'
@@ -799,7 +771,6 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/papers'
     | '/policies'
-    | '/profile'
     | '/recommendations'
     | '/register'
     | '/reset-password'
@@ -842,7 +813,6 @@ export interface FileRouteTypes {
     | '/reader/$resourceId'
     | '/review/assignments'
     | '/review/board'
-    | '/review/workbench'
     | '/sections/$slug'
     | '/studio/$id'
     | '/submissions/new'
@@ -875,7 +845,6 @@ export interface FileRouteTypes {
     | '/feedback'
     | '/forgot-password'
     | '/fun'
-    | '/grade'
     | '/guide'
     | '/help'
     | '/journal-metrics'
@@ -885,7 +854,6 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/papers'
     | '/policies'
-    | '/profile'
     | '/recommendations'
     | '/register'
     | '/reset-password'
@@ -928,7 +896,6 @@ export interface FileRouteTypes {
     | '/reader/$resourceId'
     | '/review/assignments'
     | '/review/board'
-    | '/review/workbench'
     | '/sections/$slug'
     | '/studio/$id'
     | '/submissions/new'
@@ -961,7 +928,6 @@ export interface FileRouteTypes {
     | '/feedback'
     | '/forgot-password'
     | '/fun'
-    | '/grade'
     | '/guide'
     | '/help'
     | '/journal-metrics'
@@ -971,7 +937,6 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/papers'
     | '/policies'
-    | '/profile'
     | '/recommendations'
     | '/register'
     | '/reset-password'
@@ -1014,7 +979,6 @@ export interface FileRouteTypes {
     | '/reader/$resourceId'
     | '/review/assignments'
     | '/review/board'
-    | '/review/workbench'
     | '/sections_/$slug'
     | '/studio/$id'
     | '/submissions/new'
@@ -1048,7 +1012,6 @@ export interface RootRouteChildren {
   FeedbackRoute: typeof FeedbackRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   FunRoute: typeof FunRoute
-  GradeRoute: typeof GradeRoute
   GuideRoute: typeof GuideRoute
   HelpRoute: typeof HelpRoute
   JournalMetricsRoute: typeof JournalMetricsRoute
@@ -1058,7 +1021,6 @@ export interface RootRouteChildren {
   NotificationsRoute: typeof NotificationsRoute
   PapersRoute: typeof PapersRouteWithChildren
   PoliciesRoute: typeof PoliciesRoute
-  ProfileRoute: typeof ProfileRoute
   RecommendationsRoute: typeof RecommendationsRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -1100,7 +1062,6 @@ export interface RootRouteChildren {
   ReaderResourceIdRoute: typeof ReaderResourceIdRoute
   ReviewAssignmentsRoute: typeof ReviewAssignmentsRoute
   ReviewBoardRoute: typeof ReviewBoardRoute
-  ReviewWorkbenchRoute: typeof ReviewWorkbenchRoute
   SectionsSlugRoute: typeof SectionsSlugRoute
   StudioIdRoute: typeof StudioIdRoute
   SubmissionsNewRoute: typeof SubmissionsNewRoute
@@ -1207,13 +1168,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FunRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/grade': {
-      id: '/grade'
-      path: '/grade'
-      fullPath: '/grade'
-      preLoaderRoute: typeof GradeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/guide': {
       id: '/guide'
       path: '/guide'
@@ -1275,13 +1229,6 @@ declare module '@tanstack/react-router' {
       path: '/policies'
       fullPath: '/policies'
       preLoaderRoute: typeof PoliciesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/profile': {
-      id: '/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recommendations': {
@@ -1620,13 +1567,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReviewBoardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/review/workbench': {
-      id: '/review/workbench'
-      path: '/review/workbench'
-      fullPath: '/review/workbench'
-      preLoaderRoute: typeof ReviewWorkbenchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/sections_/$slug': {
       id: '/sections_/$slug'
       path: '/sections/$slug'
@@ -1738,7 +1678,6 @@ const rootRouteChildren: RootRouteChildren = {
   FeedbackRoute: FeedbackRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   FunRoute: FunRoute,
-  GradeRoute: GradeRoute,
   GuideRoute: GuideRoute,
   HelpRoute: HelpRoute,
   JournalMetricsRoute: JournalMetricsRoute,
@@ -1748,7 +1687,6 @@ const rootRouteChildren: RootRouteChildren = {
   NotificationsRoute: NotificationsRoute,
   PapersRoute: PapersRouteWithChildren,
   PoliciesRoute: PoliciesRoute,
-  ProfileRoute: ProfileRoute,
   RecommendationsRoute: RecommendationsRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
@@ -1790,7 +1728,6 @@ const rootRouteChildren: RootRouteChildren = {
   ReaderResourceIdRoute: ReaderResourceIdRoute,
   ReviewAssignmentsRoute: ReviewAssignmentsRoute,
   ReviewBoardRoute: ReviewBoardRoute,
-  ReviewWorkbenchRoute: ReviewWorkbenchRoute,
   SectionsSlugRoute: SectionsSlugRoute,
   StudioIdRoute: StudioIdRoute,
   SubmissionsNewRoute: SubmissionsNewRoute,

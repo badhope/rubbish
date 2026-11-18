@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { ExternalLink, Settings2 } from 'lucide-react'
 import { useMe } from '@/hooks/api/use-auth'
@@ -19,9 +19,14 @@ const SUB_TABS = [
 
 type SettingsSubTab = (typeof SUB_TABS)[number]['key']
 
-export function MeSettings({ username }: { username: string }) {
-  const [tab, setTab] = useState<SettingsSubTab>('profile')
+export function MeSettings({ username, initialSection }: { username: string; initialSection?: string }) {
+  const resolvedInitial = SUB_TABS.find((item) => item.key === initialSection)?.key ?? 'profile'
+  const [tab, setTab] = useState<SettingsSubTab>(resolvedInitial)
   const { data: me } = useMe()
+
+  useEffect(() => {
+    setTab(resolvedInitial)
+  }, [resolvedInitial])
 
   return (
     <section>

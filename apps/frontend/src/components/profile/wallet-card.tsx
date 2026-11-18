@@ -83,7 +83,7 @@ export function WalletCard() {
             <>
               <Sparkles className="h-4 w-4 text-primary" />
               <span>自定义主题色已解锁</span>
-              <Link to="/settings" search={{ tab: 'profile' }} className="ml-auto text-xs text-primary hover:underline">
+              <Link to="/me" search={{ tab: 'settings', section: 'profile' }} className="ml-auto text-xs text-primary hover:underline">
                 去换色
               </Link>
             </>
