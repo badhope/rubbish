@@ -9,9 +9,19 @@ import { getAuthState } from '@/lib/auth'
  * - 未登录 → /login（正常认证流）
  * - 已登录但无权 → /403（明确的越权页，提供返回路径）
  */
+
+/** 未登录时带上当前地址，登录后回到原页面；后台页也同样适用。 */
+function redirectToLogin(): never {
+  const path =
+    typeof window !== 'undefined'
+      ? `${window.location.pathname}${window.location.search}`
+      : '/dashboard'
+  throw redirect({ to: '/login', search: { redirect: path } })
+}
+
 export function requireAdminGuard(): void {
   const state = getAuthState()
-  if (!state.isAuthenticated) throw redirect({ to: '/login' })
+  if (!state.isAuthenticated) redirectToLogin()
   if (!state.isAdmin) throw redirect({ to: '/403' })
 }
 
@@ -19,7 +29,7 @@ export function requireAdminGuard(): void {
 /** 主编/副主编可访问的站点管理页（比 admin 宽一档，覆盖非 is_admin 的主编）。 */
 export function requireChiefGuard(): void {
   const state = getAuthState()
-  if (!state.isAuthenticated) throw redirect({ to: '/login' })
+  if (!state.isAuthenticated) redirectToLogin()
   const roles = state.user?.roles ?? []
   if (!state.isAdmin && !roles.some((r) => ['chief_editor', 'deputy_editor', 'editor_in_chief'].includes(r))) {
     throw redirect({ to: '/403' })
@@ -29,7 +39,7 @@ export function requireChiefGuard(): void {
 /** 商城后台：主编/副主编，或单独授予 shop_manager 的账号。 */
 export function requireShopManagerGuard(): void {
   const state = getAuthState()
-  if (!state.isAuthenticated) throw redirect({ to: '/login' })
+  if (!state.isAuthenticated) redirectToLogin()
   const roles = state.user?.roles ?? []
   if (
     !state.isAdmin &&
