@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute, Link, useNavigate, useSearch } from '@tanstack/react-router'
-import { AlertTriangle, BookOpen, ChevronDown, Download, FileDown, FlaskConical, Plus, RefreshCw, SlidersHorizontal } from 'lucide-react'
+import { AlertTriangle, ChevronDown, Download, FileDown, Plus, RefreshCw, SlidersHorizontal } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/use-auth'
 import { useIsMobile } from '@/hooks/use-is-mobile'
@@ -1100,27 +1100,23 @@ function PaperDirectory({
       label: '学术论文',
       note: '真实问题 · 可核查材料 · 正经论证',
       count: seriousCount,
-      icon: BookOpen,
-      tone: 'from-emerald-500/15 via-card to-card',
-      dot: 'bg-emerald-500',
+      activeClass: 'border-primary text-primary',
     },
     {
       id: 'absurd' as const,
       label: '荒诞论文',
       note: '论文格式不变 · 命题一本正经地荒诞',
       count: absurdCount,
-      icon: FlaskConical,
-      tone: 'from-amber-500/15 via-card to-card',
-      dot: 'bg-amber-500',
+      activeClass: 'border-absurd text-absurd',
     },
   ]
+  const activeKind = kinds.find((kind) => kind.id === paperKind) ?? kinds[0]
 
   return (
-    <section className="mb-3 space-y-2 sm:mb-5 sm:space-y-3" aria-label="论文目录">
-      <div className="grid grid-cols-2 gap-2 sm:gap-3" role="tablist" aria-label="论文分区">
+    <section className="mb-8 border-y" aria-label="论文目录">
+      <div className="flex flex-wrap items-baseline gap-x-10 gap-y-2 py-5" role="tablist" aria-label="论文分区">
         {kinds.map((kind) => {
           const active = paperKind === kind.id
-          const Icon = kind.icon
           return (
             <button
               key={kind.id}
@@ -1129,36 +1125,21 @@ function PaperDirectory({
               aria-selected={active}
               onClick={() => updateSearch({ kind: kind.id, discipline: undefined, page: 1 })}
               className={cn(
-                'group relative flex min-h-[150px] flex-col items-start justify-between overflow-hidden rounded-2xl border p-4 text-left transition-all sm:min-h-[196px] sm:p-6',
+                'inline-flex items-baseline gap-2 border-b-2 pb-1 text-left transition-colors',
                 active
-                  ? 'border-primary bg-primary text-primary-foreground shadow-sm'
-                  : 'border-border bg-gradient-to-br hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-sm',
-                !active && kind.tone,
+                  ? kind.activeClass
+                  : 'border-transparent text-muted-foreground hover:text-foreground',
               )}
             >
-              <div className="flex w-full items-start justify-between gap-3">
-                <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12', active ? 'bg-white/15' : 'bg-background/80')}>
-                  <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
-                </span>
-                <span className={cn('mt-1 h-2.5 w-2.5 shrink-0 rounded-full', active ? 'bg-white/80' : kind.dot)} />
-              </div>
-              <span className={cn('mt-4 font-serif text-[19px] font-semibold tracking-tight sm:text-[24px]', active ? 'text-white' : 'text-foreground')}>
+              <span className="font-serif text-2xl font-semibold tracking-tight sm:text-[1.75rem]">
                 {kind.label}
               </span>
-              <span className="mt-1 flex items-baseline gap-1">
-                <span className={cn('font-serif text-[2rem] leading-none sm:text-[2.6rem]', active ? 'text-white' : 'text-primary')}>
-                  {kind.count}
-                </span>
-                <span className={cn('text-[13px]', active ? 'text-white/70' : 'text-muted-foreground')}>篇</span>
-              </span>
-              <span className={cn('mt-3 hidden text-[13px] leading-5 sm:block', active ? 'text-white/80' : 'text-muted-foreground')}>
-                {kind.note}
-              </span>
+              <span className="font-mono text-sm tabular-nums">{kind.count} 篇</span>
             </button>
           )
         })}
       </div>
-
+      <p className="pb-4 text-sm leading-6 text-muted-foreground">{activeKind.note}</p>
     </section>
   )
 }
