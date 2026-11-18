@@ -286,53 +286,55 @@ function DiscoverTabs({
 }) {
   const submitCta = isAuthenticated ? '/submissions' : '/register'
   return (
-    <Tabs defaultValue="guide" className="gap-8">
-      <TabsList className="h-auto w-full flex-wrap justify-start gap-1 rounded-lg bg-muted/60 p-1">
-        <TabsTrigger value="guide" className="px-4 py-2 text-sm">
+    <Tabs defaultValue="guide" className="gap-4 sm:gap-8">
+      <TabsList className="grid h-auto w-full grid-cols-4 justify-start gap-0.5 rounded-lg bg-muted/60 p-1 sm:flex sm:flex-wrap sm:gap-1">
+        <TabsTrigger value="guide" className="px-1 py-2 text-xs sm:px-4 sm:text-sm">
           投稿指南
         </TabsTrigger>
-        <TabsTrigger value="scope" className="px-4 py-2 text-sm">
+        <TabsTrigger value="scope" className="px-1 py-2 text-xs sm:px-4 sm:text-sm">
           征稿范围
         </TabsTrigger>
-        <TabsTrigger value="access" className="px-4 py-2 text-sm">
+        <TabsTrigger value="access" className="px-1 py-2 text-xs sm:px-4 sm:text-sm">
           开放获取
         </TabsTrigger>
-        <TabsTrigger value="about" className="px-4 py-2 text-sm">
+        <TabsTrigger value="about" className="px-1 py-2 text-xs sm:px-4 sm:text-sm">
           关于与社区
         </TabsTrigger>
       </TabsList>
 
       {/* ── 投稿指南：五步流程 + 完整规范入口 ── */}
-      <TabsContent value="guide" className="mt-8">
+      <TabsContent value="guide" className="mt-5 sm:mt-8">
         <motion.div
           variants={cardsWrap}
           initial="hidden"
           animate={revealed ? 'show' : 'hidden'}
-          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5"
+          className="divide-y rounded-xl border bg-card sm:grid sm:grid-cols-2 sm:gap-4 sm:divide-y-0 sm:border-0 sm:bg-transparent lg:grid-cols-5"
         >
           {REVIEW_STEPS.map((step, i) => (
             <motion.div
               key={step.title}
               variants={card}
               whileHover={{ y: -4 }}
-              className="relative rounded-lg border bg-card p-5 shadow-sm transition-colors hover:border-primary/40"
+              className="flex items-start gap-3 p-3 transition-colors hover:bg-muted/30 sm:relative sm:block sm:rounded-lg sm:border sm:bg-card sm:p-5 sm:shadow-sm sm:hover:border-primary/40 sm:hover:bg-card"
             >
               <span
                 aria-hidden
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm text-primary-foreground"
+                className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground sm:mt-0 sm:h-9 sm:w-9 sm:text-sm"
                 style={{ fontFamily: DISPLAY_FONT, fontWeight: 600 }}
               >
                 {i + 1}
               </span>
-              <h3 className="mt-4 text-base" style={{ fontFamily: DISPLAY_FONT }}>
-                {step.title}
-              </h3>
-              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{step.detail}</p>
+              <div className="min-w-0">
+                <h3 className="text-sm sm:mt-4 sm:text-base" style={{ fontFamily: DISPLAY_FONT }}>
+                  {step.title}
+                </h3>
+                <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground sm:mt-2 sm:line-clamp-none sm:text-xs">{step.detail}</p>
+              </div>
             </motion.div>
           ))}
         </motion.div>
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
-          <p className="flex items-start gap-2 text-xs text-muted-foreground">
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 sm:mt-8 sm:gap-4">
+          <p className="hidden items-start gap-2 text-xs text-muted-foreground sm:flex">
             <ShieldCheck aria-hidden className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
             审稿人身份与稿件内容按角色隔离；每次裁决与版本变更都写入审计日志。
           </p>
@@ -597,7 +599,7 @@ function ForumPulse() {
   }
 
   return (
-    <section className="mx-auto max-w-6xl py-12">
+    <section className="mx-auto flex min-h-[100svh] w-full max-w-6xl flex-col justify-center px-4 pb-24 pt-12 sm:px-6 sm:py-12">
       <SectionHeading
         label="Community"
         title="正在讨论"
@@ -820,9 +822,6 @@ function HomePage() {
           </div>
         </motion.section>
 
-        <ContactStrip />
-        <CurrentIssueBar />
-
         {/* ── 吸顶导航 + 检索：单根发丝线，无双线 ── */}
         <div className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur">
           <div className="mx-auto flex max-w-6xl flex-col items-stretch gap-2 py-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-6 sm:gap-y-2">
@@ -880,7 +879,7 @@ function HomePage() {
           </div>
         </div>
 
-        <section className="border-b bg-muted/20 py-12 sm:py-16">
+        <section className="flex min-h-[100svh] flex-col justify-center border-b bg-muted/20 py-12 pb-24 sm:py-16">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="mb-9 text-center">
               <p className="flex items-center justify-center gap-2 text-[11px] font-medium uppercase tracking-[0.28em] text-primary">
@@ -977,7 +976,7 @@ function HomePage() {
           initial="hidden"
           animate={revealLatest ? 'show' : 'hidden'}
           variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05 } } }}
-          className="mx-auto max-w-6xl sm:py-16"
+          className="mx-auto flex min-h-[100svh] w-full max-w-6xl flex-col justify-center px-4 pb-24 pt-12 sm:px-6 sm:py-16"
         >
           <SectionHeading
             title="按学科浏览"
@@ -998,7 +997,7 @@ function HomePage() {
               ))}
             </div>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
               {disciplineEntries.map(([name, count]) => {
                 const style = DISCIPLINE_STYLE[name] ?? DEFAULT_DISCIPLINE_STYLE
                 const Icon = style.icon
@@ -1013,18 +1012,18 @@ function HomePage() {
                       to="/catalog"
                       search={{ discipline: name }}
                       className={cn(
-                        'group flex items-center gap-4 rounded-xl border bg-gradient-to-br p-4 shadow-sm transition-all hover:shadow-md hover:border-primary/40',
+                        'group flex items-center gap-3 rounded-xl border bg-gradient-to-br p-3 shadow-sm transition-all hover:shadow-md hover:border-primary/40 sm:gap-4 sm:p-4',
                         style.tint,
                       )}
                     >
-                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-background/70 ring-1 ring-border">
-                        <Icon className="h-5 w-5 text-foreground/75" />
+                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-background/70 ring-1 ring-border sm:h-11 sm:w-11">
+                        <Icon className="h-4 w-4 text-foreground/75 sm:h-5 sm:w-5" />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate font-medium">{name}</span>
-                        <span className="block text-xs text-muted-foreground">{count} 篇</span>
+                        <span className="block text-sm font-medium leading-snug sm:text-base">{name}</span>
+                        <span className="block text-[11px] text-muted-foreground sm:text-xs">{count} 篇</span>
                       </span>
-                      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
+                      <ArrowRight className="hidden h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary sm:block" />
                     </Link>
                   </motion.div>
                 )
@@ -1034,7 +1033,8 @@ function HomePage() {
         </motion.section>
 
         {/* ── 最新发表：紧凑列表（分类已承担导航，这里只做"随便看看"） ── */}
-        <section className="mx-auto max-w-6xl pb-16">
+        <section className="mx-auto flex min-h-[100svh] w-full max-w-6xl flex-col justify-center px-4 pb-24 pt-10 sm:px-6 sm:pb-12">
+          <CurrentIssueBar />
           <SectionHeading
             title="最新发表"
             label="Latest Articles"
@@ -1092,9 +1092,9 @@ function HomePage() {
           initial="hidden"
           animate={revealDiscover ? 'show' : 'hidden'}
           variants={{ hidden: {}, show: { transition: { staggerChildren: 0.06 } } }}
-          className="bg-muted/40 py-16"
+          className="flex min-h-[100svh] flex-col justify-center bg-muted/40 pb-24 pt-10 sm:py-16"
         >
-          <div className="mx-auto max-w-6xl">
+          <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
             <SectionHeading title="了解本刊" label="Explore the Journal" />
             <motion.div
               variants={card}
@@ -1113,9 +1113,9 @@ function HomePage() {
           animate={revealFaq ? 'show' : 'hidden'}
           id="faq"
           variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05 } } }}
-          className="scroll-mt-16 py-16"
+          className="flex min-h-[100svh] flex-col justify-center scroll-mt-16 pb-24 pt-12 sm:py-16"
         >
-          <div className="mx-auto max-w-4xl">
+          <div className="mx-auto w-full max-w-4xl px-4 sm:px-6">
             <SectionHeading title="常见问题" label="FAQ" />
             <div className="grid gap-3">
               {FAQ.map((item) => (
@@ -1140,6 +1140,8 @@ function HomePage() {
             </div>
           </div>
         </motion.section>
+
+        <ContactStrip />
 
         <AnimatePresence>
           {showTop && (
