@@ -6,7 +6,6 @@ import {
   Gavel,
   Heart,
   Home,
-  Coffee,
   Eye,
   Layers,
   Scale,
@@ -14,12 +13,10 @@ import {
   Lightbulb,
   PenLine,
   Rocket,
-  ScrollText,
   Activity,
   Flag,
   Settings,
   ShieldCheck,
-  Upload,
   Users,
   CalendarDays,
   Megaphone,
@@ -57,13 +54,13 @@ export interface MobileMoreItem {
 // 折叠菜单分组顺序
 export const MOBILE_MORE_GROUP_ORDER = ['我的', '工作台', '期刊', '消息', '内容与社区', '用户与权限', '期刊与发布', '系统与安全', '设置'] as const
 
-// 底部固定 5 Tab：首页 / 论文 / 副刊 / 讨论 / 我的。
-// 「我的」指向 /me（身份等级同事已落地；/profile 会重定向到 /me）。
+// 底部固定 5 Tab：首页 / 论文 / 投稿 / 社区 / 我的。
+// 论文入口进入总目录，学术与荒诞在目录页内分区；副刊不再单列一级。
 export const MOBILE_TABS: MobileTab[] = [
   { to: '/', label: '首页', icon: Home },
-  { to: '/papers', label: '论文', icon: BookOpen },
-  { to: '/fun', label: '副刊', icon: Coffee },
-  { to: '/forum', label: '讨论', icon: MessagesSquare },
+  { to: '/catalog', label: '论文', icon: BookOpen },
+  { to: '/submissions', label: '投稿', icon: PenLine },
+  { to: '/forum', label: '社区', icon: MessagesSquare },
   { to: '/me', label: '我的', icon: User },
 ]
 
@@ -71,7 +68,6 @@ export const MOBILE_TABS: MobileTab[] = [
 // 避免删抽屉后指标/卷期/政策/关于/后台等入口失联。
 export const MOBILE_MORE: MobileMoreItem[] = [
   { to: '/dashboard', label: '概览', icon: Home, auth: true, group: '我的' },
-  { to: '/submissions', label: '我的提交', icon: ScrollText, auth: true, group: '我的' },
   { to: '/appeals', label: '作者申诉', icon: Scale, auth: true, group: '我的' },
   { to: '/follows', label: '关注与订阅', icon: Heart, auth: true, group: '我的' },
   { to: '/recommendations', label: '推荐', icon: Lightbulb, auth: true, group: '我的' },
@@ -86,7 +82,6 @@ export const MOBILE_MORE: MobileMoreItem[] = [
     roles: ['editor', 'section_editor', 'board_editor', 'deputy_editor', 'chief_editor', 'editor_in_chief'],
     group: '工作台',
   },
-  { to: '/ingest', label: '导入', icon: Upload, auth: true, roles: ['author', 'editor', 'section_editor', 'board_editor', 'deputy_editor', 'chief_editor', 'editor_in_chief'], group: '工作台' },
   { to: '/sections', label: '栏目', icon: Layers, group: '期刊' },
   { to: '/review/board', label: '审稿广场', icon: Eye, group: '期刊' },
   { to: '/archive', label: '卷期归档', icon: CalendarDays, group: '期刊' },
@@ -115,6 +110,3 @@ export const MOBILE_MORE: MobileMoreItem[] = [
   { to: '/admin/audit-logs', label: '审计日志', icon: ShieldCheck, auth: true, adminOnly: true, group: '系统与安全' },
   { to: '/admin/system-health', label: '系统健康', icon: Activity, auth: true, adminOnly: true, group: '系统与安全' },
 ]
-
-// 中心悬浮按钮（FAB）跳转目标：导入页（投稿/导入属于创建类操作）。
-export const MOBILE_FAB_TO = '/ingest'

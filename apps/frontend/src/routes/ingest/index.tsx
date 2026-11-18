@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import {
   AlertCircle,
+  ArrowLeft,
   ArrowRight,
   CheckCircle2,
   Send,
@@ -405,8 +406,16 @@ function IngestPage() {
   return (
     <div>
       <PageHeader
-        title="导入"
-        description="读取 BibTeX / RIS / CSV / JSON 文件，或按 DOI、PubMed、arXiv、OpenAlex、Semantic Scholar 查询；解析结果可勾选多条批量提交投稿，进入编辑评审队列。"
+        title="从文献导入"
+        description="这是投稿的一种创建方式：读取 BibTeX / RIS / CSV / JSON，或按 DOI、PubMed、arXiv、OpenAlex、Semantic Scholar 查询，解析后可勾选多条进入投稿向导。"
+        actions={
+          <Button variant="outline" asChild>
+            <Link to="/submissions">
+              <ArrowLeft className="h-4 w-4" />
+              返回我的提交
+            </Link>
+          </Button>
+        }
       />
 
       <Tabs

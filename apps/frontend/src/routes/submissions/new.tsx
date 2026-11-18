@@ -1245,7 +1245,7 @@ function StepBibliography({
             className={[
               'rounded-lg border px-4 py-3 text-left text-sm transition-colors',
               form.type === 'paper' && form.paperKind === 'absurd'
-                ? 'border-primary bg-primary/5 font-medium'
+                ? 'border-absurd bg-absurd-soft font-medium'
                 : 'border-border bg-card hover:bg-muted/40',
             ].join(' ')}
           >

@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { CatalogListPage } from './catalog/index'
 
-// 论文轨独立入口：URL 与娱乐区分开，导航高亮、分享链接、返回路径都不再
-// 依赖 /catalog?track=paper 这种“同一页换参数”的临时状态。
+// 论文入口不再固定成单一学术轨：先进入总目录，读者在目录页内选择
+// 学术 / 荒诞 / 副刊。副刊从独立一级入口退成目录内的一个分区。
 export const Route = createFileRoute('/papers')({
-  component: () => <CatalogListPage fixedTrack="paper" />,
+  component: () => <CatalogListPage />,
 })

@@ -10,7 +10,6 @@ import {
   ChevronDown,
   ChevronLeft,
   ClipboardCheck,
-  Coffee,
   Eye,
   Gavel,
   Heart,
@@ -21,9 +20,7 @@ import {
   Menu,
   PenLine,
   Rocket,
-  Upload,
   Scale,
-  ScrollText,
   Search,
   Settings,
   ShieldCheck,
@@ -70,14 +67,13 @@ const NAV: NavItem[] = [
   // 一级入口固定五项：首页 / 论文 / 副刊 / 讨论 / 我的。
   // 栏目、卷期、指标等期刊门面退到「期刊」二级组，不再和社区抢一级入口。
   { to: '/', label: '首页', icon: Home, group: '一级入口' },
-  { to: '/papers', label: '论文', icon: BookOpen, group: '一级入口' },
-  { to: '/fun', label: '副刊', icon: Coffee, group: '一级入口' },
-  { to: '/forum', label: '讨论', icon: MessagesSquare, group: '一级入口' },
+  { to: '/catalog', label: '论文', icon: BookOpen, group: '一级入口' },
+  { to: '/submissions', label: '投稿', icon: PenLine, group: '一级入口' },
+  { to: '/forum', label: '社区', icon: MessagesSquare, group: '一级入口' },
   { to: '/me', label: '我的', icon: User, group: '一级入口' },
 
   // 我的工作：只放需要登录的个人链路。
   { to: '/dashboard', label: '我的概览', icon: Home, auth: true, group: '我的工作', subgroup: '个人' },
-  { to: '/submissions', label: '我的提交', icon: ScrollText, auth: true, group: '我的工作', subgroup: '个人' },
   { to: '/appeals', label: '作者申诉', icon: Scale, auth: true, group: '我的工作', subgroup: '个人' },
   { to: '/library', label: '阅读列表', icon: Library, auth: true, group: '我的工作', subgroup: '个人' },
   { to: '/follows', label: '关注与订阅', icon: Heart, auth: true, group: '我的工作', subgroup: '个人' },
@@ -100,7 +96,6 @@ const NAV: NavItem[] = [
     group: '我的工作',
     subgroup: '编辑与投稿',
   },
-  { to: '/ingest', label: '导入', icon: Upload, auth: true, roles: ['author', 'editor', 'section_editor', 'board_editor', 'deputy_editor', 'chief_editor', 'editor_in_chief'], group: '我的工作', subgroup: '编辑与投稿' },
   { to: '/notifications', label: '通知', icon: Bell, auth: true, group: '我的工作', subgroup: '个人' },
 
   // 期刊门面：指标并入「关于本刊」的页签，规则并入「投稿指南」。

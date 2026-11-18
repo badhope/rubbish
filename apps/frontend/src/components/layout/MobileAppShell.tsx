@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router'
-import { LogOut, Plus, LayoutGrid } from 'lucide-react'
+import { LogOut, LayoutGrid } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/use-auth'
 import { useLogout } from '@/hooks/api/use-auth'
@@ -27,7 +27,6 @@ import {
   MOBILE_TABS,
   MOBILE_MORE,
   MOBILE_MORE_GROUP_ORDER,
-  MOBILE_FAB_TO,
   type MobileTab,
 } from './mobile-nav'
 
@@ -125,18 +124,7 @@ export function MobileAppShell() {
     }
   }, [immersive])
 
-  // FAB 只在「浏览类」页面出现
-  const FAB_ROUTES: string[] = [] // 右下角悬浮“＋”会压住正文与卡片；导入统一走移动端功能菜单
-  const canIngest =
-    isAdmin ||
-    ['author', 'editor', 'section_editor', 'board_editor', 'deputy_editor', 'chief_editor', 'editor_in_chief'].some((r) => (user?.roles ?? []).includes(r))
-  const showFab =
-    showChrome &&
-    isAuthenticated &&
-    canIngest &&
-    !hasOwnBottomBar &&
-    !isHome &&
-    FAB_ROUTES.some((p) => location.pathname === p || location.pathname.startsWith(p + '/'))
+  // 导入是投稿流程的一部分，不再做右下角悬浮“＋”。创建动作从页面内主按钮进入。
 
   // 认证页：完全裸奔，不套任何壳
   if (isAuthPage) {
@@ -321,18 +309,6 @@ export function MobileAppShell() {
           </ModuleErrorBoundary>
         </div>
       </main>
-
-      {/* FAB：右下角，悬浮在 Tab 栏上方 */}
-      {showFab && (
-        <Button
-          aria-label="导入"
-          onClick={() => go(MOBILE_FAB_TO)}
-          className="fixed bottom-[calc(8.5rem+env(safe-area-inset-bottom))] right-4 z-40 h-14 w-14 rounded-full shadow-lg sm:bottom-[calc(5rem+env(safe-area-inset-bottom))]"
-          size="icon"
-        >
-          <Plus className="h-6 w-6" />
-        </Button>
-      )}
 
       {bottomTab}
     </div>

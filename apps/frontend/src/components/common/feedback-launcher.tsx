@@ -237,9 +237,10 @@ export function FeedbackLauncher() {
         aria-label="给编辑部提问题"
         data-testid="feedback-launcher"
         title="给编辑部提问题"
-        className="fixed bottom-20 right-3 z-40 hidden h-11 w-11 items-center justify-center rounded-full border bg-card/95 text-foreground shadow-lg backdrop-blur transition-colors hover:border-primary/50 hover:text-primary md:bottom-28 md:left-4 md:right-auto md:top-auto md:inline-flex"
+        className="fixed bottom-20 left-3 z-40 hidden h-11 items-center gap-1.5 rounded-full border bg-card/95 px-3 text-foreground shadow-lg backdrop-blur transition-colors hover:border-primary/50 hover:text-primary md:bottom-28 md:left-4 md:right-auto md:top-auto md:inline-flex"
       >
         <MessageSquareText className="h-4 w-4" />
+        <span className="text-xs font-medium">反馈</span>
       </button>
       <FeedbackComposer open={open} onOpenChange={setOpen} />
     </>

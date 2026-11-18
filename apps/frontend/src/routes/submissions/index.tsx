@@ -271,7 +271,7 @@ function SubmissionsPage() {
     <div>
       <PageHeader
         title="我的提交"
-        description="查看你提交的资源及审核状态。"
+        description="查看你提交的资源及审核状态；也可以从 BibTeX、RIS、CSV、JSON 或文献 ID 导入已有题录。"
         actions={
           <>
             {canOpenWorkbench && (
@@ -282,6 +282,12 @@ function SubmissionsPage() {
                 </Link>
               </Button>
             )}
+            <Button variant="outline" asChild>
+              <Link to="/ingest">
+                <Upload className="h-4 w-4" />
+                从文献导入
+              </Link>
+            </Button>
             <Button
               onClick={() => {
                 void navigate({ to: '/submissions/new' })

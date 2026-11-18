@@ -712,10 +712,10 @@ function HomePage() {
               />
               {isAuthenticated ? (
                 <Link
-                  to="/dashboard"
+                  to="/me"
                   className="inline-flex items-center gap-1 transition-colors hover:text-foreground"
                 >
-                  进入工作台 <ArrowRight className="h-3 w-3" />
+                  进入我的 <ArrowRight className="h-3 w-3" />
                 </Link>
               ) : (
                 <>
@@ -831,38 +831,29 @@ function HomePage() {
                 首页
               </span>
               <Link
-                to="/papers"
+                to="/catalog"
                 className="link-underline text-muted-foreground transition-colors hover:text-foreground"
               >
                 论文
               </Link>
               <Link
-                to="/fun"
+                to="/submissions"
                 className="link-underline text-muted-foreground transition-colors hover:text-foreground"
               >
-                副刊
+                投稿
               </Link>
               <Link
                 to="/forum"
                 className="link-underline text-muted-foreground transition-colors hover:text-foreground"
               >
-                讨论
+                社区
               </Link>
-              {isAuthenticated ? (
-                <Link
-                  to="/me"
-                  className="link-underline text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  我的
-                </Link>
-              ) : (
-                <Link
-                  to="/login"
-                  className="link-underline text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  登录
-                </Link>
-              )}
+              <Link
+                to="/me"
+                className="link-underline text-muted-foreground transition-colors hover:text-foreground"
+              >
+                我的
+              </Link>
             </nav>
             <form onSubmit={onSearch} className="flex w-full items-center sm:w-64 sm:max-w-xs">
               <div className="relative w-full">
