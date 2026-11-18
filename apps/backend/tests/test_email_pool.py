@@ -2,7 +2,7 @@
 
 覆盖：
 - ``parse_smtp_accounts`` 对合法 / 畸形 JSON 的容忍度（畸形只记日志，不抛）。
-- ``SmtpPoolEmailSender`` 的轮询、单账号失败自动切换、连续失败熔断。
+- ``SmtpPoolEmailSender`` 的主账号优先、单账号失败自动切换、连续失败熔断。
 - 收件护栏：冷却窗口、滚动窗口上限、大小写归一。
 """
 
@@ -142,7 +142,7 @@ def _reset_senders():
 
 
 @pytest.mark.asyncio
-async def test_pool_round_robins_between_accounts(monkeypatch) -> None:
+async def test_pool_keeps_primary_until_failure(monkeypatch) -> None:
     monkeypatch.setattr(smtplib, "SMTP_SSL", _FakeSMTP)
     pool = SmtpPoolEmailSender([_account("a"), _account("b")], retries=0)
 
@@ -150,7 +150,7 @@ async def test_pool_round_robins_between_accounts(monkeypatch) -> None:
         await pool.send(to="reader@test", subject="s", body="b")
 
     hosts = [inst.host for inst in _FakeSMTP.instances]
-    assert hosts == ["smtp.a.test", "smtp.b.test", "smtp.a.test", "smtp.b.test"]
+    assert hosts == ["smtp.a.test", "smtp.a.test", "smtp.a.test", "smtp.a.test"]
 
 
 @pytest.mark.asyncio

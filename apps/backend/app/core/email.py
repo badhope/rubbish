@@ -274,17 +274,16 @@ def configured_accounts() -> list[SmtpAccount]:
 
 class SmtpPoolEmailSender:
     _bypass_outbound_guard: bool = False
-    """Round-robin SMTP sender with per-account circuit breaking.
+    """Priority SMTP sender with per-account circuit breaking.
 
-    Why a pool: a single free mailbox (QQ/126) throttles aggressively and
-    sometimes rejects connections outright. Rotating between two identities
-    spreads the load and keeps verification / reset mail flowing when one
-    provider has a bad minute. Failures are counted per account; after
-    ``breaker_threshold`` consecutive failures the account is parked for
-    ``breaker_cooldown`` seconds and the next account takes over.
-
-    The rotation is deliberately *sticky-fair*: every send advances the
-    cursor, so two accounts get roughly half the traffic each.
+    The first account in ``RUBBISH_EMAIL_SMTP_ACCOUNTS`` is the official
+    primary identity and handles every send while it is healthy. The remaining
+    accounts are fallbacks for provider throttling or a bad primary minute.
+    Failures are counted per account; after ``breaker_threshold`` consecutive
+    failures the account is parked for ``breaker_cooldown`` seconds, then the
+    next configured account takes over. Do not round-robin the public official
+    address with the old personal mailboxes: that would make the sender identity
+    inconsistent and defeat the point of having an official address.
     """
 
     def __init__(
@@ -303,7 +302,6 @@ class SmtpPoolEmailSender:
         self._retries = retries
         self._breaker_threshold = breaker_threshold
         self._breaker_cooldown = breaker_cooldown
-        self._cursor = 0
         self._failures: dict[str, int] = {a.key: 0 for a in accounts}
         self._cooldown_until: dict[str, float] = {a.key: 0.0 for a in accounts}
 
@@ -318,11 +316,9 @@ class SmtpPoolEmailSender:
         return live or list(self._accounts)
 
     def _order(self, now: float) -> list[SmtpAccount]:
-        live = self._available(now)
-        n = len(live)
-        start = self._cursor % n
-        self._cursor = (self._cursor + 1) % max(1, len(self._accounts))
-        return live[start:] + live[:start]
+        # Keep configuration order: official address first, old mailboxes only
+        # when the official account is cooling down after throttling/failure.
+        return self._available(now)
 
     def _record_success(self, account: SmtpAccount) -> None:
         self._failures[account.key] = 0

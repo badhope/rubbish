@@ -102,7 +102,7 @@ const FAQ = [
   },
   {
     q: '忘记密码怎么办？',
-    a: '当前站点尚未开通邮件服务，自助重置不可用。请使用注册邮箱联系编辑部 Rubbish_EB@qun.mail.163.com，由管理员协助重置。',
+    a: '当前站点尚未开通邮件服务，自助重置不可用。请使用注册邮箱联系编辑部 info@rubbishasci.cn，由管理员协助重置。',
   },
 ]
 
@@ -513,8 +513,8 @@ function DiscoverTabs({
             </h3>
             <p className="mt-3 flex items-center gap-2 text-sm">
               <Mail aria-hidden className="h-4 w-4 text-muted-foreground" />
-              <a href="mailto:Rubbish_EB@qun.mail.163.com" className="text-primary hover:underline">
-                Rubbish_EB@qun.mail.163.com
+              <a href="mailto:info@rubbishasci.cn" className="text-primary hover:underline">
+                info@rubbishasci.cn
               </a>
             </p>
             <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
@@ -1286,10 +1286,10 @@ function HomePage() {
                 </li>
                 <li>
                   <a
-                    href="mailto:Rubbish_EB@qun.mail.163.com"
+                    href="mailto:info@rubbishasci.cn"
                     className="block break-all !text-white/80 transition-colors hover:!text-white hover:underline"
                   >
-                    联系编辑部 · Rubbish_EB@qun.mail.163.com
+                    联系编辑部 · info@rubbishasci.cn
                   </a>
                 </li>
               </ul>

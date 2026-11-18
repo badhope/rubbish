@@ -316,7 +316,7 @@ class Settings(BaseSettings):
     meilisearch_index_prefix: str = "rubbish"
 
     # --- Admin bootstrap ---
-    admin_email: str = "Rubbish_EB@qun.mail.163.com"
+    admin_email: str = "info@rubbishasci.cn"
     admin_username: str = "admin"
     admin_password: str = Field(default="")
 
