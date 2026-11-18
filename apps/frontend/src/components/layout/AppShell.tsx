@@ -441,7 +441,7 @@ export function AppShell() {
           {text('跳到主要内容', lang)}
         </a>
         <header className="app-header-rule sticky top-0 z-40 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
+          <div className="mx-auto flex h-16 w-full max-w-[1600px] items-center justify-between gap-4 px-5 sm:px-7 lg:px-10 xl:px-12">
             <Link to="/" className="flex min-w-0 items-center gap-2.5">
               <BrandMark className="h-7 w-7 shrink-0 text-primary" />
               <span className="flex min-w-0 flex-col leading-none">
@@ -491,7 +491,7 @@ export function AppShell() {
         </header>
 
         <main id="main-content" tabIndex={-1} className="outline-none">
-          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+          <div className="mx-auto w-full max-w-[1600px] px-5 py-6 sm:px-7 sm:py-8 lg:px-10 xl:px-12">
             <ModuleErrorBoundary name="页面" resetKeys={[location.pathname]}>
               <PageTransition>
                 <Outlet />
@@ -684,7 +684,7 @@ export function AppShell() {
 
         <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto outline-none">
           {/* 响应式 padding：移动端紧凑，桌面端宽松 */}
-          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+          <div className="mx-auto w-full max-w-[1600px] px-5 py-6 sm:px-7 sm:py-8 lg:px-10 xl:px-12">
             {/* 页面级错误边界：单个路由崩溃时侧边栏/头部仍可用，
                 resetKeys 绑定 pathname —— 换页自动复位，无需手动点重试 */}
             <ModuleErrorBoundary name="页面" resetKeys={[location.pathname]}>

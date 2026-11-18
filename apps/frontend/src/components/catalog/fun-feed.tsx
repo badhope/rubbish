@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Pagination } from '@/components/common/pagination'
 import { EmptyState, ErrorState } from '@/components/common/state'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ScrollCue } from '@/components/common/scroll-cue'
 
 // 娱乐区（v1.16）：不是“论文目录换个底色”，而是一套自己的阅读入口。
 // 论文区回答“这篇文章可不可信”；娱乐区回答“这篇东西好不好玩”。
@@ -66,7 +67,7 @@ export function FunCatalog({
   return (
     <div className="w-full">
       {/* 第一屏只回答“这是副刊、怎么搜、有哪些文体”，不往下露推荐和列表。 */}
-      <section className="mx-auto flex min-h-[100svh] max-w-5xl flex-col justify-start px-4 pb-24 pt-10 sm:px-6 sm:pt-16">
+      <section className="mx-auto flex min-h-[100svh] w-full max-w-[1320px] flex-col justify-start px-0 pb-24 pt-10 sm:pt-16">
       <header className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card via-card to-accent/25 px-4 py-3.5 shadow-sm sm:px-8 sm:py-7">
         <div
           aria-hidden
@@ -176,6 +177,7 @@ export function FunCatalog({
           </div>
         </div>
       </div>
+      <ScrollCue label="向下浏览副刊" className="mt-16 pb-6 sm:mt-24 sm:pb-10" />
       </section>
 
       {isLoading ? (
@@ -235,8 +237,8 @@ export function FunCatalog({
 
           <div className="w-full">
             {featuredId != null && (
-              <section className="flex min-h-[100svh] flex-col justify-start border-b px-4 pb-24 pt-12 sm:px-6 sm:pt-16">
-                <div className="mx-auto w-full max-w-5xl">
+              <section className="flex min-h-[100svh] flex-col justify-start border-b px-0 pb-24 pt-12 sm:pt-16">
+                <div className="mx-auto w-full max-w-[1320px]">
                   <SectionHead title="本期推荐" note="每次刷新换一篇" />
                   <div className="mt-4">
                     <FunCard resource={stories[0]} featured />
@@ -246,8 +248,8 @@ export function FunCatalog({
             )}
 
             {rest.length > 0 && (
-              <section className="flex min-h-[100svh] flex-col justify-start px-4 pb-24 pt-12 sm:px-6 sm:pt-16">
-                <div className="mx-auto w-full max-w-5xl">
+              <section className="flex min-h-[100svh] flex-col justify-start px-0 pb-24 pt-12 sm:pt-16">
+                <div className="mx-auto w-full max-w-[1320px]">
                   <SectionHead
                     title="随机翻阅"
                     note={data.meta.total ? `共 ${data.meta.total} 篇 · 每次换一批` : undefined}
@@ -263,7 +265,7 @@ export function FunCatalog({
 
           </div>
 
-          <div className="mx-auto mt-0 flex w-full max-w-5xl items-center justify-between gap-3 border-t border-border px-4 py-4 sm:px-6">
+          <div className="mx-auto mt-0 flex w-full max-w-[1320px] items-center justify-between gap-3 border-t border-border px-0 py-4">
             <Link
               to={routePath === '/fun' ? '/papers' : routePath}
               className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"

@@ -18,6 +18,7 @@ import { extractError, formatAuthors, cn } from '@/lib/utils'
 import { contentCategoryLabel, displayTypeLabel, isScholarlyContent } from '@/lib/resource-labels'
 import { ESSAY_GENRES } from '@/lib/essay-genres'
 import { PageHeader } from '@/components/common/page-header'
+import { ScrollCue } from '@/components/common/scroll-cue'
 import { EmptyState, ErrorState } from '@/components/common/state'
 import { Pagination } from '@/components/common/pagination'
 import { Badge } from '@/components/ui/badge'
@@ -260,9 +261,18 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
     return <CatalogHub />
   }
 
+  const isCover =
+    effectiveTrack === 'paper' &&
+    !search.q &&
+    !search.discipline &&
+    !search.year &&
+    !search.type &&
+    !search.category
+
   return (
     <div>
-      <section className="flex min-h-[calc(100svh-5rem)] flex-col justify-center">
+      <section className={cn('flex flex-col', isCover && 'min-h-[calc(100svh-5rem)]')}>
+      <div className={cn(isCover && 'flex flex-1 flex-col justify-center')}>
       {!search.q && effectiveTrack === 'paper' && (
         <p className="mb-2 text-center text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
           Paper Index
@@ -307,9 +317,8 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
         />
       ) : null}
 
-      <p className="mt-12 text-center text-xs uppercase tracking-[0.3em] text-muted-foreground/80">
-        向下浏览目录 · Scroll
-      </p>
+      </div>
+      {isCover ? <ScrollCue label="向下浏览目录" className="pb-36 sm:pb-10" /> : null}
       </section>
 
       {/* 顶部只留视图切换。论文 / 副刊的主入口在侧栏与移动端「更多」菜单，
@@ -592,7 +601,7 @@ function CatalogHub() {
     'group grid grid-cols-[2rem_minmax(0,1fr)_auto] items-baseline gap-x-4 gap-y-1 py-5 transition-colors hover:text-primary'
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto w-full max-w-[1320px]">
       <PageHeader
         title="目录"
         description="一个入口，两本刊：论文内部再分学术与荒诞；副刊独立成刊，不混入论文分区。"

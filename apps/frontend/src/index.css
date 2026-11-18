@@ -1829,3 +1829,15 @@ html {
 .paper-proof .pagedjs_area {
   overflow: hidden !important;
 }
+
+/* 封面到目录的过渡针：只在视觉上提示继续下滑，不参与布局占位。 */
+@keyframes scroll-cue-bob {
+  0%, 100% { transform: translateY(-1px); opacity: 0.55; }
+  50% { transform: translateY(4px); opacity: 1; }
+}
+.scroll-cue-arrow {
+  animation: scroll-cue-bob 2.8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scroll-cue-arrow { animation: none; }
+}

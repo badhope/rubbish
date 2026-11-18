@@ -49,7 +49,7 @@ export function CatalogIndexRow({
           {resource.clc_code ? ` · CLC ${resource.clc_code}` : ''}
         </span>
         {preview && (
-          <span className="mt-2 line-clamp-2 block text-[12px] leading-5 text-muted-foreground/80">
+          <span className="mt-2 line-clamp-2 text-[12px] leading-5 text-muted-foreground/80">
             {preview}
           </span>
         )}

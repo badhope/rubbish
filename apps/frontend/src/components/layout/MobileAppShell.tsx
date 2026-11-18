@@ -187,7 +187,7 @@ export function MobileAppShell() {
         <AmbientBackdrop />
         <main className="relative z-10 min-w-0 flex-1 overflow-x-hidden pb-[calc(8rem+env(safe-area-inset-bottom))]">
           <CookieBanner />
-          <div className="mx-auto w-full max-w-screen-sm overflow-x-clip px-4">
+          <div className="mx-auto w-full max-w-screen-sm overflow-x-clip px-5 sm:px-6">
             <ModuleErrorBoundary name="页面" resetKeys={[location.pathname]}>
               <PageTransition>
                 <Outlet />
@@ -205,7 +205,7 @@ export function MobileAppShell() {
     <div className="flex min-h-screen flex-col bg-background">
       <AmbientBackdrop />
       {/* 紧凑头部：logo + 主题切换 + 显式「功能」入口 */}
-      <header className="app-header-rule sticky top-0 z-20 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur relative supports-[backdrop-filter]:bg-background/60">
+      <header className="app-header-rule sticky top-0 z-20 flex h-14 items-center justify-between border-b bg-background/95 px-5 backdrop-blur relative sm:px-6 supports-[backdrop-filter]:bg-background/60">
         <Link to="/" className="flex items-center gap-2 font-semibold tracking-tight">
           <BrandMark className="h-5 w-5 shrink-0" />
           <span>Rubbish</span>
@@ -300,7 +300,7 @@ export function MobileAppShell() {
                 : 'pb-4',
         )}
       >
-        <div className="mx-auto w-full max-w-screen-sm overflow-x-clip px-4 py-4">
+        <div className="mx-auto w-full max-w-screen-sm overflow-x-clip px-5 sm:px-6 py-4">
           <CookieBanner />
           <ModuleErrorBoundary name="页面" resetKeys={[location.pathname]}>
             <PageTransition>

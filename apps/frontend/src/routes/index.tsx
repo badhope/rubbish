@@ -41,6 +41,7 @@ import {
 } from '@/components/common/announcement-dialog'
 import { BrandMark } from '@/components/common/brand-mark'
 import { HeroBackdrop } from '@/components/common/hero-backdrop'
+import { ScrollCue } from '@/components/common/scroll-cue'
 
 import { issueTitle } from '@/lib/issue-meta'
 import { DISCIPLINE_STYLE, DEFAULT_DISCIPLINE_STYLE } from '@/lib/discipline-style'
@@ -201,7 +202,7 @@ function CurrentIssueBar() {
       <motion.div
         variants={rise}
         custom={5}
-        className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-2 py-3"
+        className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-x-6 gap-y-2 py-3"
       >
         <p className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm">
           <CalendarDays aria-hidden className="h-4 w-4 shrink-0 text-primary" />
@@ -236,7 +237,7 @@ function ContactStrip() {
   }
   return (
     <div className="border-b bg-primary/5">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 py-3 sm:flex-wrap sm:gap-3">
+      <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-2 py-3 sm:flex-wrap sm:gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
           <MessageCircle aria-hidden className="h-4 w-4 shrink-0 text-primary" />
           <div className="min-w-0">
@@ -599,7 +600,7 @@ function ForumPulse() {
   }
 
   return (
-    <section className="mx-auto flex min-h-[100svh] w-full max-w-6xl flex-col justify-center px-4 pb-24 pt-12 sm:px-6 sm:py-12">
+    <section className="mx-auto flex min-h-[100svh] w-full max-w-[1500px] flex-col justify-center px-4 pb-24 pt-12 sm:px-6 sm:py-12">
       <SectionHeading
         label="Community"
         title="正在讨论"
@@ -702,7 +703,7 @@ function HomePage() {
 
         {/* ── 顶部细条：身份 + 公告 + 账号入口（<header> 即 banner 地标） ── */}
         <header className="bg-muted/40">
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-1.5 text-xs text-muted-foreground sm:px-6">
+          <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-1.5 text-xs text-muted-foreground sm:px-6">
             <span className="tracking-wide">An Academic Bottom Journal · 学术底刊</span>
             <div className="flex items-center gap-3">
               <AnnouncementChip
@@ -749,7 +750,7 @@ function HomePage() {
           />
           <HeroBackdrop />
 
-          <div className="relative mx-auto flex min-h-[calc(100svh-2.25rem)] max-w-6xl flex-col justify-center px-4 pb-16 pt-10 text-center sm:px-6 sm:pb-24">
+          <div className="relative mx-auto flex min-h-[calc(100svh-2.25rem)] max-w-7xl flex-col justify-center px-5 pb-16 pt-10 text-center sm:px-8 sm:pb-24">
             <motion.p
               variants={rise}
               custom={0}
@@ -811,20 +812,20 @@ function HomePage() {
               </Button>
             </motion.div>
 
-            <motion.p
+            <motion.div
               variants={rise}
               custom={3}
-              className="mt-14 text-xs uppercase tracking-[0.3em] text-muted-foreground/80 sm:mt-16"
+              className="mt-12 flex justify-center sm:mt-14"
             >
-              向下阅读 · Scroll
-            </motion.p>
+              <ScrollCue label="向下阅读" />
+            </motion.div>
 
           </div>
         </motion.section>
 
         {/* ── 吸顶导航 + 检索：单根发丝线，无双线 ── */}
         <div className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur">
-          <div className="mx-auto flex max-w-6xl flex-col items-stretch gap-2 py-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-6 sm:gap-y-2">
+          <div className="mx-auto flex max-w-[1500px] flex-col items-stretch gap-2 py-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-6 sm:gap-y-2">
             {/* 手机端底部已有主导航，这里不再重复一行一级入口；桌面端保留。 */}
             <nav className="hidden w-full items-center gap-x-5 overflow-x-auto whitespace-nowrap text-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex sm:w-auto sm:flex-wrap sm:overflow-visible">
               <span aria-current="page" className="font-medium">
@@ -871,7 +872,7 @@ function HomePage() {
         </div>
 
         <section className="flex min-h-[100svh] flex-col justify-center border-b bg-muted/20 py-12 pb-24 sm:py-16">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="mx-auto max-w-[1500px] px-4 sm:px-6">
             <div className="mb-9 text-center">
               <p className="flex items-center justify-center gap-2 text-[11px] font-medium uppercase tracking-[0.28em] text-primary">
                 <span aria-hidden className="h-1.5 w-1.5 rotate-45 bg-primary" />
@@ -967,7 +968,7 @@ function HomePage() {
           initial="hidden"
           animate={revealLatest ? 'show' : 'hidden'}
           variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05 } } }}
-          className="mx-auto flex min-h-[100svh] w-full max-w-6xl flex-col justify-center px-4 pb-24 pt-12 sm:px-6 sm:py-16"
+          className="mx-auto flex min-h-[100svh] w-full max-w-[1500px] flex-col justify-center px-4 pb-24 pt-12 sm:px-6 sm:py-16"
         >
           <SectionHeading
             title="按学科浏览"
@@ -1024,7 +1025,7 @@ function HomePage() {
         </motion.section>
 
         {/* ── 最新发表：紧凑列表（分类已承担导航，这里只做"随便看看"） ── */}
-        <section className="mx-auto flex min-h-[100svh] w-full max-w-6xl flex-col justify-center px-4 pb-24 pt-10 sm:px-6 sm:pb-12">
+        <section className="mx-auto flex min-h-[100svh] w-full max-w-[1500px] flex-col justify-center px-4 pb-24 pt-10 sm:px-6 sm:pb-12">
           <CurrentIssueBar />
           <SectionHeading
             title="最新发表"
@@ -1085,7 +1086,7 @@ function HomePage() {
           variants={{ hidden: {}, show: { transition: { staggerChildren: 0.06 } } }}
           className="flex min-h-[100svh] flex-col justify-center bg-muted/40 pb-24 pt-10 sm:py-16"
         >
-          <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
+          <div className="mx-auto w-full max-w-[1500px] px-4 sm:px-6">
             <SectionHeading title="了解本刊" label="Explore the Journal" />
             <motion.div
               variants={card}
@@ -1153,7 +1154,7 @@ function HomePage() {
 
         {/* ── 页脚：深色收底，替代浅灰双线 ── */}
         <footer className="bg-primary text-primary-foreground">
-          <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-4">
+          <div className="mx-auto grid max-w-[1500px] gap-8 px-4 py-12 sm:px-6 md:grid-cols-4">
             <div className="md:col-span-2">
               <p className="text-3xl" style={{ fontFamily: DISPLAY_FONT, fontWeight: 600 }}>
                 Rubbish
@@ -1289,7 +1290,7 @@ function HomePage() {
             </div>
           </div>
           <div className="border-t border-primary-foreground/15">
-            <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-3 text-xs text-primary-foreground/60 sm:px-6">
+            <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-2 px-4 py-3 text-xs text-primary-foreground/60 sm:px-6">
               <span>
                 © {new Date().getFullYear()} Rubbish · An Academic Bottom Journal
               </span>
