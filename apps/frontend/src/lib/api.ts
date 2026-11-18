@@ -102,6 +102,12 @@ api.interceptors.response.use(
       return api(original)
     } catch (refreshError) {
       useAuthStore.getState().logout()
+      // 会话过期后，页面本身通常还停在原地；仅清 store 会留下一个所有请求
+      // 都 401 的死页面。把用户送回登录，并带上当前地址，登录后原地恢复。
+      if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+        const next = `${window.location.pathname}${window.location.search}`
+        window.location.assign(`/login?redirect=${encodeURIComponent(next)}`)
+      }
       return Promise.reject(refreshError)
     }
   },

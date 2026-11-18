@@ -20,7 +20,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export const Route = createFileRoute('/follows/')({
   beforeLoad: () => {
-    if (!getAuthState().isAuthenticated) throw redirect({ to: '/login' })
+    if (!getAuthState().isAuthenticated) throw redirect({ to: '/login', search: { redirect: '/follows' } })
   },
   component: FollowsPage,
 })

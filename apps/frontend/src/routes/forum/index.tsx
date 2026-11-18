@@ -208,7 +208,7 @@ function ForumListPage() {
 
   const openComposer = () => {
     if (!isAuthenticated) {
-      void navigate({ to: '/login' })
+      void navigate({ to: '/login', search: { redirect: '/forum' } })
       return
     }
     setForm((prev) => ({ ...prev, board_id: prev.board_id ?? defaultBoardId }))

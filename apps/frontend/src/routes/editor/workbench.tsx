@@ -70,7 +70,7 @@ import {
 export const Route = createFileRoute('/editor/workbench')({
   beforeLoad: () => {
     const state = getAuthState()
-    if (!state.isAuthenticated) throw redirect({ to: '/login' })
+    if (!state.isAuthenticated) throw redirect({ to: '/login', search: { redirect: '/editor/workbench' } })
     const roles = state.user?.roles ?? []
     if (!state.isAdmin && !roles.some((r) => ['editor', 'section_editor', 'editor_in_chief'].includes(r))) {
       throw redirect({ to: '/403' })

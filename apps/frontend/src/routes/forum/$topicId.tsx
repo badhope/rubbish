@@ -133,7 +133,7 @@ function ReactionBar({
             disabled={mut.isPending}
             onClick={() => {
               if (!isAuthenticated) {
-                void navigate({ to: '/login' })
+                void navigate({ to: '/login', search: { redirect: window.location.pathname } })
                 return
               }
               mut.mutate(kind)

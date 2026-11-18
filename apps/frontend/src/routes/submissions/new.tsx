@@ -70,7 +70,7 @@ import { Textarea } from '@/components/ui/textarea'
 
 export const Route = createFileRoute('/submissions/new')({
   beforeLoad: () => {
-    if (!getAuthState().isAuthenticated) throw redirect({ to: '/login' })
+    if (!getAuthState().isAuthenticated) throw redirect({ to: '/login', search: { redirect: '/submissions/new' } })
   },
   component: SubmissionWizardPage,
 })

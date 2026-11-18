@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/me')({
   beforeLoad: () => {
-    if (!getAuthState().isAuthenticated) throw redirect({ to: '/login' })
+    if (!getAuthState().isAuthenticated) throw redirect({ to: '/login', search: { redirect: '/me' } })
   },
   component: MePage,
 })

@@ -34,6 +34,9 @@ import {
   FileSignature,
   Megaphone,
   MessagesSquare,
+  MessageSquare,
+  Wallet,
+  Mail,
   X,
   Wrench,
 } from 'lucide-react'
@@ -84,7 +87,7 @@ const NAV: NavItem[] = [
     label: '审稿工作台',
     icon: ClipboardCheck,
     auth: true,
-    roles: ['reviewer', 'editor_in_chief'],
+    roles: ['reviewer', 'senior_reviewer', 'editor_in_chief'],
     group: '我的工作',
     subgroup: '编辑与投稿',
   },
@@ -118,6 +121,9 @@ const NAV: NavItem[] = [
   { to: '/admin/announcements', label: '公告管理', icon: Megaphone, auth: true, adminOnly: true, group: '站点管理', subgroup: '内容与社区' },
   { to: '/admin/forum-boards', label: '社区版块', icon: MessagesSquare, auth: true, adminOnly: true, group: '站点管理', subgroup: '内容与社区' },
   { to: '/admin/reports', label: '举报处置', icon: ShieldAlert, auth: true, adminOnly: true, group: '站点管理', subgroup: '内容与社区' },
+  { to: '/admin/comments', label: '评论管理', icon: MessageSquare, auth: true, adminOnly: true, group: '站点管理', subgroup: '内容与社区' },
+  { to: '/admin/desk-subscribers', label: '邮件订阅', icon: Mail, auth: true, adminOnly: true, group: '站点管理', subgroup: '内容与社区' },
+  { to: '/admin/finance', label: '财务台账', icon: Wallet, auth: true, adminOnly: true, group: '站点管理', subgroup: '系统与安全' },
   { to: '/admin/volumes', label: '卷管理', icon: Layers, auth: true, adminOnly: true, group: '站点管理', subgroup: '期刊与发布' },
   { to: '/admin/issues', label: '期管理', icon: CalendarDays, auth: true, adminOnly: true, group: '站点管理', subgroup: '期刊与发布' },
   { to: '/admin/releases', label: '发布门禁', icon: Rocket, auth: true, adminOnly: true, group: '站点管理', subgroup: '期刊与发布' },
@@ -490,7 +496,7 @@ export function AppShell() {
                       {text('账号设置', lang)}
                     </Link>
                   </DropdownMenuItem>
-                  {(user.roles?.includes('reviewer') || user.roles?.includes('editor_in_chief') || isAdmin) && (
+                  {(user.roles?.includes('reviewer') || user.roles?.includes('senior_reviewer') || user.roles?.includes('editor_in_chief') || isAdmin) && (
                     <DropdownMenuItem asChild>
                       <Link to="/review/assignments">
                         <ClipboardCheck className="h-4 w-4" />

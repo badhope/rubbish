@@ -58,7 +58,7 @@ import {
 
 export const Route = createFileRoute("/ingest/")({
   beforeLoad: () => {
-    if (!getAuthState().isAuthenticated) throw redirect({ to: "/login" });
+    if (!getAuthState().isAuthenticated) throw redirect({ to: '/login', search: { redirect: '/ingest' } });
   },
   component: IngestPage,
 });

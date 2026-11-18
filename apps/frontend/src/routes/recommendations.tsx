@@ -20,7 +20,7 @@ import {
 
 export const Route = createFileRoute('/recommendations')({
   beforeLoad: () => {
-    if (!getAuthState().isAuthenticated) throw redirect({ to: '/login' })
+    if (!getAuthState().isAuthenticated) throw redirect({ to: '/login', search: { redirect: '/recommendations' } })
   },
   component: RecommendationsPage,
 })

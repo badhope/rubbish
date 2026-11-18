@@ -37,7 +37,7 @@ import { Textarea } from '@/components/ui/textarea'
 
 export const Route = createFileRoute('/library/')({
   beforeLoad: () => {
-    if (!getAuthState().isAuthenticated) throw redirect({ to: '/login' })
+    if (!getAuthState().isAuthenticated) throw redirect({ to: '/login', search: { redirect: '/library' } })
   },
   component: LibraryPage,
 })

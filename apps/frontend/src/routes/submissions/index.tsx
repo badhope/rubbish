@@ -85,7 +85,7 @@ declare module '@tanstack/history' {
 
 export const Route = createFileRoute('/submissions/')({
   beforeLoad: () => {
-    if (!getAuthState().isAuthenticated) throw redirect({ to: '/login' })
+    if (!getAuthState().isAuthenticated) throw redirect({ to: '/login', search: { redirect: '/submissions' } })
   },
   component: SubmissionsPage,
 })

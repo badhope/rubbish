@@ -43,7 +43,8 @@ function MobileTabButton({
   onClick: () => void
 }) {
   const Icon = tab.icon
-  const showBadge = tab.to === '/notifications' && (badge ?? 0) > 0
+  // 底部 5 个 Tab 里没有 /notifications；未读提醒应落在「我的」上。
+  const showBadge = tab.to === '/me' && (badge ?? 0) > 0
   return (
     <button
       type="button"

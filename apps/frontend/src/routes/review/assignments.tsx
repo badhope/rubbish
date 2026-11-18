@@ -108,7 +108,7 @@ function SimilarityNotice({
 export const Route = createFileRoute('/review/assignments')({
   beforeLoad: () => {
     // 审稿工作台需要登录；具体 reviewer 角色由后端强制（403 由 UI 兜底）
-    if (!getAuthState().isAuthenticated) throw redirect({ to: '/login' })
+    if (!getAuthState().isAuthenticated) throw redirect({ to: '/login', search: { redirect: '/review/assignments' } })
   },
   component: ReviewWorkbenchPage,
 })
