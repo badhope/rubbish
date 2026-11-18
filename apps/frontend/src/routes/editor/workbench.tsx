@@ -38,6 +38,7 @@ import {
   useSubmissionMarkdown,
   useWaiveReview,
   type ConflictCandidate,
+  type EditorColumnItem,
 } from '@/hooks/api/use-modules'
 import { REVIEW_DIMENSION_LABELS, reviewDimensionEntries } from '@/lib/review-dimensions'
 import { extractError } from '@/lib/utils'
@@ -134,7 +135,23 @@ function EditorWorkbenchPage() {
     names: string
   } | null>(null)
 
+  // 后端会省略空栏（例如当前没有返修稿时不返回 rework），而页面把五栏
+  // 当成固定结构渲染。这里补齐空栏，避免 columns.rework.has_more 直接抛错。
+  const emptyColumn: {
+    count: number
+    items: EditorColumnItem[]
+    page_size?: number
+    has_more?: boolean
+  } = { count: 0, items: [], has_more: false }
   const columns = data?.columns
+    ? {
+        to_assign: data.columns.to_assign,
+        in_review: data.columns.in_review,
+        rework: data.columns.rework ?? emptyColumn,
+        to_decide: data.columns.to_decide,
+        decided: data.columns.decided,
+      }
+    : undefined
   const digest = data?.email_digest
 
   // 单稿指派时提供与初筛台一致的「只看自选学科」筛选；多稿学科不一，不提供。
