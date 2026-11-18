@@ -112,22 +112,24 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
   const isMobile = useIsMobile()
 
   // 轨道切换 → 后端 ?track=paper|essay（按 content_track 过滤，与旧 content_category 解耦）。
-  // fixedTrack 由 /papers、/fun 两条独立路由传入，避免用户从娱乐区又切回混合列表。
+  // fixedTrack 由 /papers、/fun 两条独立路由传入；只有 kind 没有 track 时，
+  // 也按论文轨处理，保证目录页点“学术/荒诞”能进入论文列表而不是回到 Hub。
   const effectiveTrack: 'paper' | 'essay' | undefined =
-    fixedTrack ?? search.track
+    fixedTrack ?? search.track ?? (search.kind ? 'paper' : undefined)
   // /papers 默认进入「学术论文」；荒诞论文是同页的并列分区，不是另一条轨道。
   const paperKind: 'serious' | 'absurd' = search.kind ?? 'serious'
   const statsTrack = effectiveTrack === 'essay' ? 'essay' : effectiveTrack === 'paper' ? 'paper' : undefined
-  const routePath: '/papers' | '/fun' | '/catalog' = fixedTrack === 'paper'
-    ? '/papers'
-    : fixedTrack === 'essay'
-      ? '/fun'
-      : '/catalog'
+  const routePath: '/papers' | '/fun' | '/catalog' =
+    fixedTrack === 'paper' || (!fixedTrack && search.kind)
+      ? '/papers'
+      : fixedTrack === 'essay'
+        ? '/fun'
+        : '/catalog'
 
   // 目录首页采用「可复现随机」：每次进入/点“换一批”换 seed，分页仍稳定；
   // 搜索时回到相关度/新近排序，避免随机打乱检索结果。
   const [feedSeed, setFeedSeed] = useState(() => Math.floor(Math.random() * 2147483646) + 1)
-  const randomFeed = Boolean(fixedTrack) && !search.q && !search.author && !search.doi && !search.clc
+  const randomFeed = Boolean(fixedTrack || search.kind) && !search.q && !search.author && !search.doi && !search.clc
 
   const params = {
     q: search.q || undefined,
@@ -251,16 +253,16 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
   // 总目录不再把所有内容混成一列：先让读者选「论文 / 副刊」，
   // 论文里再选「学术 / 荒诞」。带检索词时仍走下面的跨区结果列表。
   const hasCatalogFilter = Boolean(
-    search.q || search.type || search.category || search.discipline || search.year,
+    search.q || search.type || search.category || search.discipline || search.year || search.kind,
   )
-  if (!fixedTrack && !hasCatalogFilter) {
+  if (!effectiveTrack && !hasCatalogFilter) {
     return <CatalogHub />
   }
 
   return (
     <div>
       <section className="flex min-h-[calc(100svh-5rem)] flex-col justify-center">
-      {!search.q && fixedTrack === 'paper' && (
+      {!search.q && effectiveTrack === 'paper' && (
         <p className="mb-2 text-center text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
           Paper Index
         </p>
@@ -269,24 +271,20 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
         title={
           search.q
             ? '搜索结果'
-            : fixedTrack === 'paper'
+            : effectiveTrack === 'paper'
               ? '论文'
-              : fixedTrack === 'essay'
-                ? '副刊'
-                : '论文与副刊'
+              : '论文与副刊'
         }
-        size={!search.q && fixedTrack === 'paper' ? 'cover' : 'default'}
+        size={!search.q && effectiveTrack === 'paper' ? 'cover' : 'default'}
         description={
           search.q
             ? `在全站论文与副刊中检索“${search.q}”，命中 ${data?.meta.total ?? '…'} 条。`
-            : fixedTrack === 'essay'
-              ? '小说、随笔、评论、诗歌与吐槽；独立成刊，不用论文体、不参与学术计分。'
-              : fixedTrack === 'paper'
-                ? '学术论文与荒诞论文各自独立分区：一种认真研究，一种用论文格式认真论证荒诞。'
-                : '论文与副刊分属两本刊；论文内部再分学术论文与荒诞论文。'
+            : effectiveTrack === 'paper'
+              ? '学术论文与荒诞论文各自独立分区：一种认真研究，一种用论文格式认真论证荒诞。'
+              : '论文与副刊分属两本刊；论文内部再分学术论文与荒诞论文。'
         }
         actions={
-          isAdmin && !(!search.q && fixedTrack === 'paper') ? (
+          isAdmin && !(!search.q && effectiveTrack === 'paper') ? (
             <Button asChild>
               <Link to="/catalog/new">
                 <Plus className="h-4 w-4" />
@@ -317,13 +315,11 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
           页面内不再放第二套轨道分段，避免同一屏出现两个切换器。 */}
       <div className="mb-0 hidden flex-wrap items-center justify-between gap-2 sm:mb-4 sm:flex">
         <p className="text-[13px] text-muted-foreground">
-          {fixedTrack === 'paper'
+          {effectiveTrack === 'paper'
             ? paperKind === 'absurd'
               ? '荒诞论文：论文格式与评审标准不变，命题一本正经地荒诞'
               : '学术论文：编辑评审 · 百分制计分 · 站内热度仅内部参考'
-            : fixedTrack === 'essay'
-              ? '副刊轨：非论文格式 · 格式与合规检查 · 不计分 · 独立成刊'
-              : '论文与副刊分属两条轨道，从左侧导航或底部 Tab 进入对应目录。'}
+            : '论文与副刊分属两条轨道，从顶部导航或底部 Tab 进入对应目录。'}
         </p>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" className="h-10 px-4" onClick={shuffleFeed} title="随机换一批">
@@ -388,7 +384,7 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
           description={
             search.q
               ? '换个更短的关键词，或点上方“清除搜索”回到全刊目录。'
-              : fixedTrack === 'paper'
+              : effectiveTrack === 'paper'
                 ? '换个筛选条件，或切到另一个论文分区看看。'
                 : '还没有匹配的副刊，换个筛选条件。'
           }

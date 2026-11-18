@@ -1211,6 +1211,12 @@ html {
 }
 .dark .ambient-shape { opacity: 0.16; }
 
+/* 手机公开页：背景几何退到纸纹级别，避免大圆/三角压住标题与目录行 */
+@media (max-width: 640px) {
+  .ambient-shape { opacity: 0.045; }
+  .ambient-dot { opacity: 0.45; }
+}
+
 /* 状态面板：空态/错误态不再是裸图标，玻璃卡与柔和几何光斑保持同一视觉语言 */
 .state-panel {
   position: relative;
