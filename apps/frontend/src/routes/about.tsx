@@ -1,10 +1,10 @@
 import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
 import { ArrowLeft, Building2, Globe, Mail, Newspaper, ScrollText } from 'lucide-react'
 import { PageHeader } from '@/components/common/page-header'
-import { Card, CardContent } from '@/components/ui/card'
 import { CoverArt } from '@/components/common/cover-art'
 import { RevealSection } from '@/components/common/reveal-section'
 import { JournalMetricsPage } from './journal-metrics'
+import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/about')({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -15,23 +15,25 @@ export const Route = createFileRoute('/about')({
 
 function AboutTabs({ active }: { active: 'about' | 'metrics' }) {
   return (
-    <div className="mb-6 flex flex-wrap gap-2">
-      <Link
-        to="/about"
-        search={{ tab: 'about' }}
-        data-active={active === 'about'}
-        className="seg-link px-3.5 py-2 text-sm font-medium"
-      >
-        关于本刊
-      </Link>
-      <Link
-        to="/about"
-        search={{ tab: 'metrics' }}
-        data-active={active === 'metrics'}
-        className="seg-link px-3.5 py-2 text-sm font-medium"
-      >
-        本刊数据
-      </Link>
+    <div className="mb-6 flex border-b">
+      {[
+        { value: 'about', label: '关于本刊' },
+        { value: 'metrics', label: '本刊数据' },
+      ].map((t) => (
+        <Link
+          key={t.value}
+          to="/about"
+          search={{ tab: t.value }}
+          className={cn(
+            'border-b-2 px-0 py-2.5 pr-8 text-sm font-medium transition-colors',
+            active === t.value
+              ? 'border-primary text-foreground'
+              : 'border-transparent text-muted-foreground hover:text-foreground',
+          )}
+        >
+          {t.label}
+        </Link>
+      ))}
     </div>
   )
 }
@@ -90,14 +92,14 @@ function AboutPage() {
   const { tab } = useSearch({ from: '/about' })
   if (tab === 'metrics') {
     return (
-      <div className="mx-auto w-full max-w-4xl">
+      <div className="about-page mx-auto w-full max-w-[1100px]">
         <AboutTabs active="metrics" />
         <JournalMetricsPage embedded />
       </div>
     )
   }
   return (
-    <div className="mx-auto w-full max-w-4xl">
+    <div className="about-page mx-auto w-full max-w-[1100px]">
       <Link
         to="/"
         className="mb-4 inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-primary"
@@ -139,18 +141,16 @@ function AboutPage() {
           <h2 className="text-xl font-medium">编辑部岗位与职责</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             {BOARD.map((m) => (
-              <Card key={m.name}>
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-medium">{m.name}</p>
-                    <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs text-primary">
-                      {m.role}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">{m.affiliation}</p>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{m.note}</p>
-                </CardContent>
-              </Card>
+              <div key={m.name} className="border-t pt-4">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-medium">{m.name}</p>
+                  <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs text-primary">
+                    {m.role}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">{m.affiliation}</p>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{m.note}</p>
+              </div>
             ))}
           </div>
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
@@ -185,7 +185,7 @@ function AboutPage() {
               { icon: ScrollText, label: '收录范围', value: '严肃格式与自由主题统一评审 · 学术/副刊/吐槽分类呈现' },
               { icon: Building2, label: '出版方', value: 'Rubbish 编辑部' },
             ].map(({ icon: Icon, label, value }) => (
-              <div key={label} className="flex items-start gap-3 rounded-lg border bg-card p-4">
+              <div key={label} className="flex items-start gap-3 border-t pt-3">
                 <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                 <div>
                   <dt className="text-xs text-muted-foreground">{label}</dt>
@@ -196,7 +196,7 @@ function AboutPage() {
           </dl>
         </RevealSection>
 
-        <RevealSection className="rounded-xl border bg-gradient-to-br from-primary/5 to-accent/10 p-8">
+        <RevealSection className="border-t pt-6">
           <h2 className="flex items-center gap-2 text-lg font-medium">
             <Mail className="h-5 w-5 text-primary" />
             联系编辑部

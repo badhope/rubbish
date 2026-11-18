@@ -158,8 +158,8 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
   const { data, isLoading, isFetching, isError, refetch } = useResources(params)
   const { data: stats } = useCatalogStats(statsTrack)
 
-  const seriousCount = stats?.by_paper_kind?.serious ?? 0
-  const absurdCount = stats?.by_paper_kind?.absurd ?? 0
+  const seriousCount = stats?.by_paper_kind?.serious
+  const absurdCount = stats?.by_paper_kind?.absurd
 
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   // 默认索引行，不默认九宫格：卡片只作为用户主动切换的展示方式。
@@ -588,10 +588,13 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
 // 学科与文体都退成索引文字，读者先看清层级，再进入。
 function CatalogHub() {
   const { data: stats } = useCatalogStats()
-  const seriousTotal = stats?.by_paper_kind?.serious ?? 0
-  const absurdTotal = stats?.by_paper_kind?.absurd ?? 0
+  const seriousTotal = stats?.by_paper_kind?.serious
+  const absurdTotal = stats?.by_paper_kind?.absurd
+  const paperTotal = seriousTotal == null || absurdTotal == null ? undefined : seriousTotal + absurdTotal
   const genreCounts = stats?.by_genre ?? {}
-  const essayTotal = stats?.by_track?.essay ?? Object.values(genreCounts).reduce((a, b) => a + b, 0)
+  const essayTotal = stats
+    ? stats.by_track?.essay ?? Object.values(genreCounts).reduce((a, b) => a + b, 0)
+    : undefined
   const disciplines = Object.entries(stats?.by_discipline ?? {})
     .filter(([name]) => name && name !== '未分类')
     .sort((a, b) => b[1] - a[1])
@@ -615,7 +618,7 @@ function CatalogHub() {
             <h2 className="mt-2 font-serif text-3xl font-semibold tracking-tight">论文</h2>
           </div>
           <p className="font-mono text-sm tabular-nums text-muted-foreground">
-            {seriousTotal + absurdTotal} 篇
+            {paperTotal ?? '…'} 篇
           </p>
         </div>
 
@@ -629,7 +632,7 @@ function CatalogHub() {
               </span>
             </span>
             <span className="font-mono text-sm tabular-nums text-muted-foreground">
-              {seriousTotal} 篇 →
+              {seriousTotal ?? '…'} 篇 →
             </span>
           </Link>
 
@@ -642,7 +645,7 @@ function CatalogHub() {
               </span>
             </span>
             <span className="font-mono text-sm tabular-nums text-muted-foreground">
-              {absurdTotal} 篇 →
+              {absurdTotal ?? '…'} 篇 →
             </span>
           </Link>
         </div>
@@ -684,7 +687,7 @@ function CatalogHub() {
         </div>
 
         <p className="mt-4 max-w-2xl text-sm leading-7 text-muted-foreground">
-          {essayTotal} 篇 · 小说、随笔、评论、指南、吐槽；不用论文体、不计分，独立成刊。
+          {essayTotal ?? '…'} 篇 · 小说、随笔、评论、指南、吐槽；不用论文体、不计分，独立成刊。
         </p>
 
         {genres.length > 0 && (
@@ -1101,8 +1104,8 @@ function PaperDirectory({
   updateSearch,
 }: {
   paperKind: 'serious' | 'absurd'
-  seriousCount: number
-  absurdCount: number
+  seriousCount?: number
+  absurdCount?: number
   updateSearch: (patch: Partial<CatalogSearch>) => void
 }) {
   const kinds = [
@@ -1145,7 +1148,7 @@ function PaperDirectory({
               <span className="font-serif text-2xl font-semibold tracking-tight sm:text-[1.75rem]">
                 {kind.label}
               </span>
-              <span className="font-mono text-sm tabular-nums">{kind.count} 篇</span>
+              <span className="font-mono text-sm tabular-nums">{kind.count ?? '…'} 篇</span>
             </button>
           )
         })}
@@ -1219,7 +1222,7 @@ function DisciplineChips({
         onClick={() => updateSearch({ discipline: undefined, page: 1 })}
       >
         {track === 'paper' ? '论文轨' : track === 'essay' ? '副刊' : '全部'}
-        <span className="tabular-nums opacity-60">{stats?.total ?? 0}</span>
+        <span className="tabular-nums opacity-60">{stats?.total ?? '…'}</span>
       </button>
       {visible.map(([name, count]) => (
         <button

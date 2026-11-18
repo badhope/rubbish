@@ -60,7 +60,7 @@ export function CatalogIndexRow({
       <span
         aria-hidden
         className={cn(
-          'self-center text-sm text-muted-foreground transition-colors group-hover:text-primary',
+          'hidden self-center text-sm text-muted-foreground transition-colors group-hover:text-primary sm:block',
           scholarly ? '' : 'text-absurd/70',
         )}
       >

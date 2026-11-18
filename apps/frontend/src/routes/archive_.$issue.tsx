@@ -254,7 +254,7 @@ export function IssuePageContent({
     <div className={cn('min-h-screen', palette.paper, palette.ink)}>
       <div className="mx-auto max-w-6xl">
         {/* 报头 */}
-        <div className="mb-8 flex flex-wrap items-end justify-between gap-3 border-b-2 border-current/20 pb-4">
+        <div className="mb-8 flex flex-col items-start gap-4 border-b-2 border-current/20 pb-4 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
           <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-end sm:gap-4">
             <Link
               to="/archive"
@@ -266,12 +266,12 @@ export function IssuePageContent({
               <p className="font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
                 Rubbish
               </p>
-              <p className="mt-1 text-[11px] uppercase tracking-[0.28em] opacity-60">
+              <p className="mt-1 text-[9px] uppercase tracking-[0.18em] opacity-60 sm:text-[11px] sm:tracking-[0.28em]">
                 A Journal of Serious Format & Free Subjects
               </p>
             </div>
           </div>
-          <div className="text-right text-xs leading-relaxed opacity-70">
+          <div className="text-left text-xs leading-relaxed opacity-70 sm:text-right">
             <p>
               第 {issueVolume ?? '—'} 卷 · 第 {issue} 期
             </p>

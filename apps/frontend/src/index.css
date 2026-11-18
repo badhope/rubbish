@@ -1900,3 +1900,19 @@ html {
   padding-left: 0;
   padding-right: 0;
 }
+
+/* 关于页与刊史同样用章节线，不用卡片栅格。 */
+.about-page [data-slot="card"] {
+  gap: 0.75rem;
+  padding: 1rem 0 0.75rem;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.about-page [data-slot="card"] > [data-slot="card-header"],
+.about-page [data-slot="card"] > [data-slot="card-content"] {
+  padding-left: 0;
+  padding-right: 0;
+}

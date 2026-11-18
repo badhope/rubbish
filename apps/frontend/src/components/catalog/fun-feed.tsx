@@ -51,7 +51,7 @@ export function FunCatalog({
   const visibleGenres = ESSAY_GENRES.filter((g) => (genreCounts[g.value] ?? 0) > 0)
   // 「全部」用全站聚合总数，不能把各文体相加：没有文体的公告/说明会漏掉，
   // 出现「全部 35、页脚 36」的自相矛盾。
-  const totalAll = stats?.total ?? data?.meta.total ?? Object.values(genreCounts).reduce((a, b) => a + b, 0)
+  const totalAll = stats?.total ?? data?.meta.total ?? null
 
   const go = (patch: Record<string, unknown>) => {
     updateSearch({ ...patch, page: 1 })
@@ -68,12 +68,8 @@ export function FunCatalog({
     <div className="w-full">
       {/* 第一屏只回答“这是副刊、怎么搜、有哪些文体”，不往下露推荐和列表。 */}
       <section className="mx-auto flex min-h-[100svh] w-full max-w-[1320px] flex-col justify-start px-0 pb-24 pt-10 sm:pt-16">
-      <header className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card via-card to-accent/25 px-4 py-3.5 shadow-sm sm:px-8 sm:py-7">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-12 -top-14 h-44 w-44 rotate-12 rounded-full bg-amber-300/20 blur-2xl dark:bg-amber-500/10"
-        />
-        <div className="relative">
+      <header className="relative border-t pt-6 sm:pt-8">
+        <div>
           <div className="flex items-center justify-between gap-2">
             <p className="hidden text-[10px] font-semibold uppercase tracking-[0.12em] text-primary/70 sm:block sm:text-[11px] sm:tracking-[0.24em]">
               Rubbish · Off the Record
@@ -100,12 +96,12 @@ export function FunCatalog({
         </div>
       </header>
 
-      {/* 文体 + 搜索合并成一条工具栏。移动端一行下拉、一行搜索，不再在刊头里叠控件。 */}
-      <div className="mt-3 rounded-2xl border border-border bg-card p-2.5 sm:p-4">
+      {/* 文体 + 搜索合并成一条工具栏；用上下细线分隔，不做第二张卡。 */}
+      <div className="mt-5 border-y py-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="hidden min-w-0 flex-1 flex-wrap gap-1.5 sm:flex">
             <GenrePill active={!search.genre} onClick={() => go({ genre: undefined })}>
-              全部 · {totalAll}
+              全部 · {totalAll ?? '…'}
             </GenrePill>
             {visibleGenres.map((g) => (
               <GenrePill
@@ -136,7 +132,7 @@ export function FunCatalog({
         {/* 手机端文体入口放在第一屏，不再单独占一层；桌面端仍用顶部胶囊。 */}
         <div className="mt-2 flex flex-wrap gap-1.5 sm:hidden">
           <GenrePill active={!search.genre} onClick={() => go({ genre: undefined })}>
-            全部 · {totalAll}
+            全部 · {totalAll ?? '…'}
           </GenrePill>
           {visibleGenres.map((g) => (
             <GenrePill
@@ -172,7 +168,7 @@ export function FunCatalog({
             )}
             <span>
               {search.genre ? `${essayGenreMeta(search.genre).label} · ` : ''}
-              {data?.meta.total ?? 0} 篇
+              {data?.meta.total ?? '…'} 篇
             </span>
           </div>
         </div>
@@ -181,9 +177,16 @@ export function FunCatalog({
       </section>
 
       {isLoading ? (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-44 rounded-2xl" />
+        <div className="mt-4 border-t">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex gap-4 border-b py-4">
+              <Skeleton className="h-20 w-20 shrink-0 rounded-md sm:h-24 sm:w-24" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <Skeleton className="h-4 w-2/3 rounded-sm" />
+                <Skeleton className="h-3 w-1/3 rounded-sm" />
+                <Skeleton className="h-3 w-full rounded-sm" />
+              </div>
+            </div>
           ))}
         </div>
       ) : isError ? (
@@ -254,7 +257,7 @@ export function FunCatalog({
                     title="随机翻阅"
                     note={data.meta.total ? `共 ${data.meta.total} 篇 · 每次换一批` : undefined}
                   />
-                  <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-3">
+                  <div className="mt-4 grid grid-cols-1 gap-x-10 sm:grid-cols-2">
                     {rest.map((r) => (
                       <FunCard key={r.id} resource={r} featured={false} />
                     ))}
@@ -337,7 +340,7 @@ function FunCard({ resource, featured }: { resource: ResourceResponse; featured:
         to="/catalog/$resourceId"
         params={{ resourceId: String(resource.id) }}
         className={cn(
-          'card-lift group grid overflow-hidden rounded-2xl border border-border bg-card',
+          'group grid border-b pb-6',
           resource.cover_image
             ? 'grid-cols-[40%_1fr] md:grid-cols-[1.15fr_0.85fr]'
             : 'grid-cols-1',
@@ -392,7 +395,7 @@ function FunCard({ resource, featured }: { resource: ResourceResponse; featured:
       to="/catalog/$resourceId"
       params={{ resourceId: String(resource.id) }}
       className={cn(
-        'group flex flex-col gap-2 rounded-2xl border border-transparent bg-card/70 p-2.5 transition-all hover:-translate-y-0.5 hover:border-primary/25 hover:bg-card sm:grid sm:grid-cols-[120px_1fr] sm:gap-4 sm:p-4',
+        'group grid grid-cols-[96px_1fr] gap-4 border-b py-4 transition-colors hover:text-primary sm:grid-cols-[120px_1fr]',
         !resource.cover_image && 'fun-card-no-cover',
       )}
     >
@@ -414,7 +417,7 @@ function FunCard({ resource, featured }: { resource: ResourceResponse; featured:
         <h3 className="mt-1 line-clamp-2 font-serif text-[13px] font-semibold leading-snug tracking-tight sm:text-lg">
           {resource.title}
         </h3>
-        <p className="mt-1 line-clamp-2 text-[10px] leading-4 text-muted-foreground sm:mt-1.5 sm:text-sm sm:leading-6">
+        <p className="mt-1 line-clamp-1 text-[10px] leading-4 text-muted-foreground sm:mt-1.5 sm:line-clamp-2 sm:text-sm sm:leading-6">
           {preview}
         </p>
         <p className="mt-2 truncate text-[10px] text-muted-foreground sm:text-[11px]">
