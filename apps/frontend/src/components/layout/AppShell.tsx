@@ -50,6 +50,7 @@ import { ModuleErrorBoundary } from '@/components/common/error-boundary'
 import { PageTransition } from '@/components/common/page-transition'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -128,6 +129,48 @@ const NAV: NavItem[] = [
   { to: '/admin/system-health', label: '系统健康', icon: Activity, auth: true, adminOnly: true, group: '站点管理', subgroup: '系统与安全' },
 ]
 
+const PUBLIC_NAV = NAV.slice(0, 5)
+
+// 公开页与工作台的分界：后台、审稿指派、主编工作台、待审列表保留业务左栏；
+// 其余页面用顶部 5 导航，公开页不再出现全局左栏。
+const WORK_ROUTE_PREFIXES = [
+  '/admin',
+  '/editor',
+  '/review/assignments',
+  '/review/quick',
+  '/review/workbench',
+  '/submissions/pending',
+]
+
+function isWorkRoute(pathname: string): boolean {
+  return WORK_ROUTE_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  )
+}
+
+function resolvePublicNavPath(pathname: string): string | undefined {
+  if (pathname === '/') return '/'
+  if (
+    ['/catalog', '/papers', '/fun', '/archive', '/sections', '/issues'].some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    )
+  ) {
+    return '/catalog'
+  }
+  if (pathname === '/submissions' || pathname.startsWith('/submissions/') || pathname.startsWith('/ingest')) {
+    return '/submissions'
+  }
+  if (pathname === '/forum' || pathname.startsWith('/forum/')) return '/forum'
+  if (
+    ['/me', '/dashboard', '/settings', '/security', '/notifications', '/library', '/follows', '/recommendations', '/shop', '/levels', '/wallet', '/checkin', '/appeals', '/claim'].some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    )
+  ) {
+    return '/me'
+  }
+  return undefined
+}
+
 export function AppShell() {
   // collapsed 仅用于桌面端（≥md）侧边栏宽窄切换
   // 侧栏默认宽度按设备档位给：≥1180 展开；平板/小笔记本（768–1180）
@@ -143,6 +186,7 @@ export function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [cmdOpen, setCmdOpen] = useState(false)
   const [cmdQ, setCmdQ] = useState('')
+  const [publicQ, setPublicQ] = useState('')
   // 侧边栏只默认展开一级入口；工作台/期刊/后台按需展开，点开就收起另一组，
   // 避免一进后台就被 15 个管理项铺满。
   const [openGroup, setOpenGroup] = useState<string>('一级入口')
@@ -218,6 +262,12 @@ export function AppShell() {
     void navigate({ to: '/catalog', search: q ? { q } : {} })
   }
 
+  const submitPublicSearch = (e: FormEvent) => {
+    e.preventDefault()
+    const q = publicQ.trim()
+    void navigate({ to: '/catalog', search: q ? { q } : {} })
+  }
+
   const onLogout = async () => {
     try {
       await logoutMut.mutateAsync()
@@ -229,6 +279,96 @@ export function AppShell() {
       void navigate({ to: '/login' })
     }
   }
+
+  const userMenu = isAuthenticated && user ? (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm" className="gap-2" aria-label={text('账号菜单', lang)}>
+          <Avatar className="h-7 w-7">
+            <AvatarImage src={user.avatar_url ?? undefined} alt="" />
+            <AvatarFallback>{displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <span className="hidden text-sm sm:inline">{displayName}</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>{displayName}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link to="/me">
+            <Award className="h-4 w-4" />
+            {text('个人中心', lang)}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/submissions">
+            <FileSignature className="h-4 w-4" />
+            我的提交
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/notifications">
+            <Bell className="h-4 w-4" />
+            {text('通知', lang)}
+            {(unread?.unread ?? 0) > 0 && (
+              <span className="ml-auto rounded-full bg-destructive px-1.5 py-0.5 text-[10px] text-destructive-foreground">
+                {unread!.unread}
+              </span>
+            )}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/settings">
+            <Settings className="h-4 w-4" />
+            {text('账号设置', lang)}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/shop">
+            <ShoppingBag className="h-4 w-4" />
+            R 币商城
+          </Link>
+        </DropdownMenuItem>
+        {(user.roles?.includes('reviewer') || user.roles?.includes('senior_reviewer') || user.roles?.includes('editor_in_chief') || isAdmin) && (
+          <DropdownMenuItem asChild>
+            <Link to="/review/assignments">
+              <ClipboardCheck className="h-4 w-4" />
+              {text('审稿工作台', lang)}
+            </Link>
+          </DropdownMenuItem>
+        )}
+        {(user.roles?.some((r) => ['editor', 'section_editor', 'board_editor', 'deputy_editor', 'chief_editor', 'editor_in_chief'].includes(r)) || isAdmin) && (
+          <DropdownMenuItem asChild>
+            <Link to="/editor/workbench">
+              <Gavel className="h-4 w-4" />
+              {text('主编工作台', lang)}
+            </Link>
+          </DropdownMenuItem>
+        )}
+        {isAdmin && (
+          <DropdownMenuItem asChild>
+            <Link to="/admin">
+              <ShieldCheck className="h-4 w-4" />
+              管理后台
+            </Link>
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={onLogout} className="text-destructive">
+          {text('退出登录', lang)}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ) : (
+    <div className="flex items-center gap-2">
+      <Button asChild variant="ghost" size="sm">
+        <Link to="/login">{text('登录', lang)}</Link>
+      </Button>
+      <Button asChild size="sm">
+        <Link to="/register">{text('注册', lang)}</Link>
+      </Button>
+    </div>
+  )
 
   // 按 group 切段，交给下面的手风琴渲染；不再把 30 多个入口平铺成一条长列表。
   const navGroups = visibleNav.reduce<Array<{ name: string; items: NavItem[] }>>((acc, item) => {
@@ -281,6 +421,85 @@ export function AppShell() {
             <Outlet />
           </PageTransition>
         </ModuleErrorBoundary>
+        <CookieBanner />
+        <PageViewTracker />
+      </div>
+    )
+  }
+
+  // 公开页壳：桌面顶部 5 导航，不再套工作台全局左栏。
+  // 工作台 / 后台 / 审稿指派仍走下面的业务左栏。
+  if (!isWorkRoute(location.pathname)) {
+    const publicActive = resolvePublicNavPath(location.pathname)
+    return (
+      <div className="min-h-screen bg-background">
+        <AmbientBackdrop />
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:shadow"
+        >
+          {text('跳到主要内容', lang)}
+        </a>
+        <header className="app-header-rule sticky top-0 z-40 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
+            <Link to="/" className="flex min-w-0 items-center gap-2.5">
+              <BrandMark className="h-7 w-7 shrink-0 text-primary" />
+              <span className="flex min-w-0 flex-col leading-none">
+                <span className="font-serif text-lg font-semibold tracking-tight">Rubbish</span>
+                <span className="mt-1 hidden truncate text-[10px] uppercase tracking-[0.28em] text-muted-foreground sm:block">
+                  An Academic Bottom Journal
+                </span>
+              </span>
+            </Link>
+
+            <nav className="hidden items-center gap-5 text-sm md:flex" aria-label="主导航">
+              {PUBLIC_NAV.map((item) => {
+                const active = publicActive === item.to
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    data-active={active ? 'true' : 'false'}
+                    className={cn(
+                      'link-underline transition-colors hover:text-foreground',
+                      active ? 'font-medium text-foreground' : 'text-muted-foreground',
+                    )}
+                  >
+                    {navLabel(item.to, item.label, lang)}
+                  </Link>
+                )
+              })}
+            </nav>
+
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <form onSubmit={submitPublicSearch} className="hidden lg:block">
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    value={publicQ}
+                    onChange={(e) => setPublicQ(e.target.value)}
+                    placeholder="检索…"
+                    aria-label="检索"
+                    className="h-9 w-44 rounded-full border bg-transparent pl-8 text-sm"
+                  />
+                </div>
+              </form>
+              <AppearanceMenu />
+              {userMenu}
+            </div>
+          </div>
+        </header>
+
+        <main id="main-content" tabIndex={-1} className="outline-none">
+          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+            <ModuleErrorBoundary name="页面" resetKeys={[location.pathname]}>
+              <PageTransition>
+                <Outlet />
+              </PageTransition>
+            </ModuleErrorBoundary>
+          </div>
+        </main>
+        <OnboardingTour />
         <CookieBanner />
         <PageViewTracker />
       </div>
@@ -459,70 +678,7 @@ export function AppShell() {
               <kbd className="rounded border bg-muted px-1 font-mono text-[10px] text-muted-foreground">⌘K</kbd>
             </Button>
             <AppearanceMenu />
-            {isAuthenticated && user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="gap-2" aria-label={text('账号菜单', lang)}>
-                    <Avatar className="h-7 w-7">
-                      <AvatarImage src={user.avatar_url ?? undefined} alt="" />
-                      <AvatarFallback>{displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <span className="hidden text-sm sm:inline">{displayName}</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>{displayName}</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to="/shop">
-                      <ShoppingBag className="h-4 w-4" />
-                      R 币商城
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/me">
-                      <Award className="h-4 w-4" />
-                      {text('个人中心', lang)}
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/settings">
-                      <User className="h-4 w-4" />
-                      {text('账号设置', lang)}
-                    </Link>
-                  </DropdownMenuItem>
-                  {(user.roles?.includes('reviewer') || user.roles?.includes('senior_reviewer') || user.roles?.includes('editor_in_chief') || isAdmin) && (
-                    <DropdownMenuItem asChild>
-                      <Link to="/review/assignments">
-                        <ClipboardCheck className="h-4 w-4" />
-                        {text('审稿工作台', lang)}
-                      </Link>
-                    </DropdownMenuItem>
-                  )}
-                  {(user.roles?.some((r) => ['editor', 'section_editor', 'board_editor', 'deputy_editor', 'chief_editor', 'editor_in_chief'].includes(r)) || isAdmin) && (
-                    <DropdownMenuItem asChild>
-                      <Link to="/editor/workbench">
-                        <Gavel className="h-4 w-4" />
-                        {text('主编工作台', lang)}
-                      </Link>
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={onLogout} className="text-destructive">
-                    {text('退出登录', lang)}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Button asChild variant="ghost" size="sm">
-                  <Link to="/login">{text('登录', lang)}</Link>
-                </Button>
-                <Button asChild size="sm">
-                  <Link to="/register">{text('注册', lang)}</Link>
-                </Button>
-              </div>
-            )}
+            {userMenu}
           </div>
         </header>
 
