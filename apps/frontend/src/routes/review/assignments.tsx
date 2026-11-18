@@ -351,9 +351,9 @@ function ReviewWorkbenchPage() {
           })
         }
       >
-        <TabsList>
+        <TabsList className="!grid !h-auto grid-cols-4 justify-start gap-1 overflow-visible p-1 sm:!inline-flex sm:!h-9 sm:flex-nowrap">
           {STATUS_TABS.map((t) => (
-            <TabsTrigger key={t.value} value={t.value}>
+            <TabsTrigger key={t.value} value={t.value} className="h-8 px-2.5 text-xs">
               {t.label}
             </TabsTrigger>
           ))}

@@ -465,24 +465,24 @@ function EditorWorkbenchPage() {
               审稿人负载
               <span className="text-xs font-normal text-muted-foreground">按接受中任务排序</span>
             </div>
-            <div className="max-h-56 overflow-auto">
-              <table className="w-full min-w-[520px] text-xs">
+            <div className="max-h-56 overflow-y-auto">
+              <table className="w-full table-fixed text-[11px]">
                 <thead className="text-muted-foreground">
                   <tr className="border-b text-left">
-                    <th className="py-1 pr-3 font-normal">审稿人</th>
-                    <th className="py-1 pr-3 font-normal">接受中</th>
-                    <th className="py-1 pr-3 font-normal">已完成</th>
-                    <th className="py-1 pr-3 font-normal">已逾期</th>
-                    <th className="py-1 font-normal">累计邀请</th>
+                    <th className="py-1 pr-2 font-normal">审稿人</th>
+                    <th className="py-1 pr-2 font-normal">接受中</th>
+                    <th className="py-1 pr-2 font-normal">已完成</th>
+                    <th className="py-1 pr-2 font-normal">逾期</th>
+                    <th className="py-1 font-normal">邀请</th>
                   </tr>
                 </thead>
                 <tbody>
                   {workload.data.map((r) => (
                     <tr key={r.reviewer_id} className="border-b border-border/50 last:border-0">
-                      <td className="py-1.5 pr-3">{r.username}</td>
-                      <td className="py-1.5 pr-3 font-medium">{r.active_count}</td>
-                      <td className="py-1.5 pr-3">{r.completed_count}</td>
-                      <td className={`py-1.5 pr-3 ${r.overdue_count > 0 ? 'font-semibold text-red-600' : ''}`}>
+                      <td className="py-1.5 pr-2"><div className="truncate" title={r.username}>{r.username}</div></td>
+                      <td className="py-1.5 pr-2 font-medium">{r.active_count}</td>
+                      <td className="py-1.5 pr-2">{r.completed_count}</td>
+                      <td className={`py-1.5 pr-2 ${r.overdue_count > 0 ? 'font-semibold text-red-600' : ''}`}>
                         {r.overdue_count}
                       </td>
                       <td className="py-1.5">{r.total_count}</td>

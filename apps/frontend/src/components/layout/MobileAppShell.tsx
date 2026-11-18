@@ -125,7 +125,7 @@ export function MobileAppShell() {
   }, [immersive])
 
   // FAB 只在「浏览类」页面出现
-  const FAB_ROUTES = ['/dashboard', '/catalog', '/library', '/follows', '/recommendations', '/notifications', '/forum']
+  const FAB_ROUTES: string[] = [] // 右下角悬浮“＋”会压住正文与卡片；导入统一走移动端功能菜单
   const canIngest =
     isAdmin ||
     ['author', 'editor', 'section_editor', 'board_editor', 'deputy_editor', 'chief_editor', 'editor_in_chief'].some((r) => (user?.roles ?? []).includes(r))

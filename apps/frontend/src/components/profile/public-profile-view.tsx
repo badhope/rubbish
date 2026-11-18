@@ -74,16 +74,16 @@ export function PublicProfileView({
           {actions ? <div className="absolute right-3 top-3 sm:right-5 sm:top-5">{actions}</div> : null}
         </div>
         <CardContent className="relative px-4 pb-5 sm:px-6">
-          <div className="-mt-10 flex items-end gap-4 sm:-mt-12">
+          <div className="flex items-start gap-4">
             {user.avatar_url ? (
               <img
                 src={user.avatar_url}
                 alt={`${name} 的头像`}
-                className="h-20 w-20 shrink-0 rounded-full border-4 border-card object-cover shadow-sm sm:h-24 sm:w-24"
+                className="-mt-10 h-20 w-20 shrink-0 rounded-full border-4 border-card object-cover shadow-sm sm:-mt-12 sm:h-24 sm:w-24"
               />
             ) : (
               <span
-                className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-4 border-card text-2xl font-semibold text-white shadow-sm sm:h-24 sm:w-24"
+                className="-mt-10 flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-4 border-card text-2xl font-semibold text-white shadow-sm sm:-mt-12 sm:h-24 sm:w-24"
                 style={{ backgroundColor: accent }}
               >
                 {name.slice(0, 1)}

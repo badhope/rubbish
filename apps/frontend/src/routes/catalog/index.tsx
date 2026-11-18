@@ -287,7 +287,7 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
                 : '论文与副刊分属两本刊；论文内部再分学术论文与荒诞论文。'
         }
         actions={
-          isAdmin ? (
+          isAdmin && !(!search.q && fixedTrack === 'paper') ? (
             <Button asChild>
               <Link to="/catalog/new">
                 <Plus className="h-4 w-4" />
@@ -959,6 +959,17 @@ function MobileFilters({
 
   return (
     <div className="mb-3">
+      {track && (
+        <div className="mb-2 flex items-baseline justify-between gap-3">
+          <p className="text-[13px] font-medium text-foreground">
+            {track === 'paper' ? '论文目录' : '副刊目录'}
+            <span className="ml-1.5 font-normal text-muted-foreground">
+              · {resultTotal ?? '…'} 篇
+            </span>
+          </p>
+          <p className="text-[11px] text-muted-foreground">按最近更新随机编排</p>
+        </div>
+      )}
       <div className="flex items-start gap-2">
         {/* 搜索是目录页的第一动作；筛选收成同一行的一个按钮，不再占一整行。 */}
         <div className="min-w-0 flex-1">

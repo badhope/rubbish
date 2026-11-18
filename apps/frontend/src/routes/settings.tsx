@@ -92,7 +92,7 @@ function ProfileCard() {
             登录一次）。没验证不影响阅读与投稿，但会影响找回密码与作者页展示，
             所以这里常驻一个明确的状态与一键重发。 */}
         <div className="flex items-center justify-between gap-4">
-          <span className="text-muted-foreground">邮箱</span>
+          <span className="shrink-0 whitespace-nowrap text-muted-foreground">邮箱</span>
           <span className="flex min-w-0 items-center gap-2">
             <span className="truncate font-medium">{user?.email ?? '—'}</span>
             <Badge variant={user?.is_email_verified ? 'default' : 'outline'}>
@@ -126,7 +126,7 @@ function ProfileCard() {
           </div>
         )}
         <div className="flex justify-between gap-4">
-          <span className="text-muted-foreground">角色</span>
+          <span className="shrink-0 whitespace-nowrap text-muted-foreground">角色</span>
           <span className="text-right font-medium">{roleSummary(user?.is_admin, user?.roles)}</span>
         </div>
         <p className="pt-2 text-xs text-muted-foreground">
@@ -158,7 +158,7 @@ function SettingsPage() {
   }
 
   return (
-    <div className="w-full max-w-3xl space-y-6">
+    <div className="w-full max-w-4xl space-y-6">
       <PageHeader
         title="账号设置"
         description="账号资料、个人简介与安全项；所有字段都可以留空，留空不会覆盖已有内容。"
