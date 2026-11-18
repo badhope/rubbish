@@ -33,8 +33,8 @@ import {
 } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Input } from '@/components/ui/input'
-import { ResourceCard } from '@/components/mobile/ResourceCard'
 import { CatalogGridCard } from './-catalog-grid-card'
+import { CatalogIndexRow } from './-catalog-index-row'
 import { FunCatalog } from '@/components/catalog/fun-feed'
 import {
   Select,
@@ -162,7 +162,8 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
 
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   // 默认视图 = 九宫格（v1.15）：封面浏览是目录页第一动作；?view=list 时才切列表。
-  const viewMode: 'list' | 'grid' = search.view === 'list' ? 'list' : 'grid'
+  // 默认索引行，不默认九宫格：卡片只作为用户主动切换的展示方式。
+  const viewMode: 'list' | 'grid' = search.view === 'grid' ? 'grid' : 'list'
 
   // 筛选条件写到 URL，replace 避免每次筛选都污染历史。
   // 顺带清空勾选：翻页/改筛选后旧 id 已经不在页面上，留着会让「导出」
@@ -400,10 +401,10 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
           </div>
         </div>
       ) : isMobile ? (
-        // 移动端：卡片列表（独立设计，无批量勾选）
-        <div className="space-y-3" data-testid="catalog-resource-list">
-          {data.data.map((r) => (
-            <ResourceCard key={r.id} resource={r} />
+        // 移动端：索引行，不用封面卡片；一条一行，标题优先。
+        <div className="divide-y border-y" data-testid="catalog-resource-list">
+          {data.data.map((r, index) => (
+            <CatalogIndexRow key={r.id} resource={r} query={search.q} index={index + 1} />
           ))}
         </div>
       ) : (
