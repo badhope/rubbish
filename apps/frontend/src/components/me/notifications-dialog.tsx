@@ -1,6 +1,7 @@
-import { Bell, CheckCheck } from 'lucide-react'
+import { useState } from 'react'
+import { Bell, CheckCheck, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useMarkAllRead, useMarkRead, useNotifications } from '@/hooks/api/use-modules'
+import { useDeleteNotification, useMarkAllRead, useMarkRead, useNotifications } from '@/hooks/api/use-modules'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -10,6 +11,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Loading } from '@/components/common/state'
+import { Pagination } from '@/components/common/pagination'
 import { cn } from '@/lib/utils'
 import { shortDateTime } from './format'
 
@@ -20,9 +22,11 @@ export function NotificationsDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
-  const notifications = useNotifications(1, 20)
+  const [page, setPage] = useState(1)
+  const notifications = useNotifications(page, 50)
   const markAll = useMarkAllRead()
   const markOne = useMarkRead()
+  const remove = useDeleteNotification()
 
   const onMarkAll = async () => {
     try {
@@ -41,6 +45,15 @@ export function NotificationsDialog({
     }
   }
 
+  const onDelete = async (id: number) => {
+    try {
+      await remove.mutateAsync(id)
+      toast.success('通知已删除')
+    } catch {
+      toast.error('删除失败，请稍后再试')
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[86vh] max-w-2xl gap-0 overflow-hidden p-0">
@@ -52,7 +65,7 @@ export function NotificationsDialog({
                 通知
               </DialogTitle>
               <DialogDescription className="mt-1 text-xs">
-                最近 20 条；标为已读后不会再提醒。
+                最近 50 条；标为已读后不会再提醒。
               </DialogDescription>
             </div>
             <Button
@@ -76,14 +89,14 @@ export function NotificationsDialog({
           ) : null}
           <ul className="divide-y">
             {notifications.data?.data.map((item) => (
-              <li key={item.id}>
+              <li key={item.id} className="group flex items-start gap-2">
                 <button
                   type="button"
                   onClick={() => {
                     if (!item.is_read) void onMarkOne(item.id)
                   }}
                   className={cn(
-                    'flex w-full items-start gap-3 py-4 text-left transition-colors hover:bg-primary/[0.03]',
+                    'flex min-w-0 flex-1 items-start gap-3 py-4 text-left transition-colors hover:bg-primary/[0.03]',
                     !item.is_read && 'bg-primary/[0.025]',
                   )}
                 >
@@ -108,9 +121,28 @@ export function NotificationsDialog({
                     </span>
                   </span>
                 </button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mt-3 h-8 w-8 shrink-0 p-0 text-muted-foreground hover:text-destructive"
+                  aria-label={`删除通知：${item.title}`}
+                  onClick={() => void onDelete(item.id)}
+                  disabled={remove.isPending}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </li>
             ))}
           </ul>
+          {notifications.data && notifications.data.meta.total_pages > 1 ? (
+            <div className="border-t py-3">
+              <Pagination
+                page={notifications.data.meta.page}
+                totalPages={notifications.data.meta.total_pages}
+                onPageChange={setPage}
+              />
+            </div>
+          ) : null}
         </div>
       </DialogContent>
     </Dialog>

@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { ExternalLink, Settings2 } from 'lucide-react'
-import { useMe } from '@/hooks/api/use-auth'
+import { useMe, useResendVerification } from '@/hooks/api/use-auth'
 import { ProfileDetailsCard } from '@/components/settings/profile-details-card'
 import { NotificationPrefsCard } from '@/components/settings/notification-prefs-card'
 import { AiAccessCard } from '@/components/settings/ai-access-card'
 import { TwoFactorSection } from '@/components/settings/two-factor-section'
 import { ChangePasswordCard } from '@/components/settings/change-password-card'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
 const SUB_TABS = [
@@ -23,6 +24,7 @@ export function MeSettings({ username, initialSection }: { username: string; ini
   const resolvedInitial = SUB_TABS.find((item) => item.key === initialSection)?.key ?? 'profile'
   const [tab, setTab] = useState<SettingsSubTab>(resolvedInitial)
   const { data: me } = useMe()
+  const resend = useResendVerification()
 
   useEffect(() => {
     setTab(resolvedInitial)
@@ -67,13 +69,33 @@ export function MeSettings({ username, initialSection }: { username: string; ini
       <div className="mt-5 space-y-5">
         {tab === 'profile' ? (
           <>
-            <div className="flex items-start gap-3 border-y py-4 text-sm">
-              <Settings2 className="mt-0.5 h-4 w-4 text-muted-foreground" />
-              <div className="text-xs leading-relaxed text-muted-foreground">
-                当前账号 <span className="font-medium text-foreground">@{username}</span>
-                {me?.email ? ` · ${me.email}` : ''}
-                {me?.is_email_verified ? ' · 邮箱已验证' : ' · 邮箱未验证'}
+            <div className="flex flex-wrap items-start justify-between gap-3 border-y py-4 text-sm">
+              <div className="flex items-start gap-3">
+                <Settings2 className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                <div className="text-xs leading-relaxed text-muted-foreground">
+                  当前账号 <span className="font-medium text-foreground">@{username}</span>
+                  {me?.email ? ` · ${me.email}` : ''}
+                  {me?.is_email_verified ? ' · 邮箱已验证' : ' · 邮箱未验证'}
+                </div>
               </div>
+              {!me?.is_email_verified && me?.email ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={resend.isPending}
+                  onClick={() =>
+                    resend.mutate(
+                      { email: me.email as string },
+                      {
+                        onSuccess: () => toast.success('验证邮件已重新发送，请查收（含垃圾箱）'),
+                        onError: () => toast.error('发送失败，请稍后再试'),
+                      },
+                    )
+                  }
+                >
+                  {resend.isPending ? '发送中…' : '重发验证邮件'}
+                </Button>
+              ) : null}
             </div>
             <ProfileDetailsCard key={me?.id ?? 'profile-empty'} initial={me ?? undefined} />
           </>
