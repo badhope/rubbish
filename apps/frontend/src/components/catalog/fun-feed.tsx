@@ -66,7 +66,7 @@ export function FunCatalog({
   return (
     <div className="w-full">
       {/* 第一屏只回答“这是副刊、怎么搜、有哪些文体”，不往下露推荐和列表。 */}
-      <section className="mx-auto flex min-h-[100svh] max-w-5xl flex-col justify-center px-4 py-12 pb-24 sm:px-6 sm:py-16">
+      <section className="mx-auto flex min-h-[100svh] max-w-5xl flex-col justify-start px-4 pb-24 pt-10 sm:px-6 sm:pt-16">
       <header className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card via-card to-accent/25 px-4 py-3.5 shadow-sm sm:px-8 sm:py-7">
         <div
           aria-hidden
@@ -235,7 +235,7 @@ export function FunCatalog({
 
           <div className="w-full">
             {featuredId != null && (
-              <section className="flex min-h-[100svh] flex-col justify-center border-b px-4 py-16 pb-24 sm:px-6">
+              <section className="flex min-h-[100svh] flex-col justify-start border-b px-4 pb-24 pt-12 sm:px-6 sm:pt-16">
                 <div className="mx-auto w-full max-w-5xl">
                   <SectionHead title="本期推荐" note="每次刷新换一篇" />
                   <div className="mt-4">
@@ -246,7 +246,7 @@ export function FunCatalog({
             )}
 
             {rest.length > 0 && (
-              <section className="flex min-h-[100svh] flex-col justify-center px-4 py-16 pb-24 sm:px-6">
+              <section className="flex min-h-[100svh] flex-col justify-start px-4 pb-24 pt-12 sm:px-6 sm:pt-16">
                 <div className="mx-auto w-full max-w-5xl">
                   <SectionHead
                     title="随机翻阅"
