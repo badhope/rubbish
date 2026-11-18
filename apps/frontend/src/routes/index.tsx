@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowRight, ChevronRight, LogIn, PenLine } from 'lucide-react'
+import { ArrowRight, Bell, ChevronRight, LogIn, PenLine } from 'lucide-react'
 import '@fontsource-variable/playfair-display'
 import { api } from '@/lib/api'
 import { useAuth } from '@/hooks/use-auth'
@@ -107,6 +107,19 @@ function HomePage() {
                 onOpen={() => notice.setOpen(true)}
               />
             </span>
+            {notice.announcement && (
+              <button
+                type="button"
+                onClick={() => notice.setOpen(true)}
+                className="relative inline-flex h-8 w-8 items-center justify-center rounded-full border bg-background text-muted-foreground transition-colors hover:text-foreground sm:hidden"
+                aria-label={notice.seen ? '查看编辑部公告' : '查看未读的编辑部公告'}
+              >
+                <Bell className="h-3.5 w-3.5" />
+                {!notice.seen && (
+                  <span aria-hidden className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-destructive" />
+                )}
+              </button>
+            )}
             <AppearanceMenu />
             {isAuthenticated ? (
               <Link to="/me" className="inline-flex items-center gap-1 whitespace-nowrap transition-colors hover:text-foreground">
