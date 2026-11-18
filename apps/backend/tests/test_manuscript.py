@@ -630,3 +630,43 @@ async def test_img_endpoint_hidden_for_unpublished(
     # 匿名访问：manuscript 与 img 同边界
     assert (await client.get(f"/api/catalog/{rid}/manuscript")).status_code == 404
     assert (await client.get(f"/api/catalog/{rid}/img/1")).status_code == 404
+
+
+async def test_img_endpoint_reads_old_cache_dir_after_markdown_rewrite(
+    client: AsyncClient, db_session, admin_user: dict
+) -> None:
+    """正文换新文件名后，旧 `<stem>.img/` 里的图仍应可读。
+
+    真实事故：每保存一次 Markdown，storage key 换 uuid，图片缓存目录
+    仍留在旧 stem 下；如果只按当前 stem 查，整篇图片会全部 404。
+    """
+    import base64
+    from pathlib import Path
+
+    from sqlalchemy import select as sa_select
+
+    from app.core.config import get_settings
+    from app.core.storage import get_storage
+    from app.domain.submission.models import Submission
+
+    md_text = "# 图\n\n![a](data:image/png;base64," + _TINY_PNG_B64 + ")\n"
+    rid = await _seed_published_md(client, db_session, admin_user, md_text=md_text)
+
+    sub = (
+        await db_session.execute(sa_select(Submission).where(Submission.resource_id == rid))
+    ).scalar_one()
+    storage_root = Path(get_settings().storage_path)
+    old_md = storage_root / sub.markdown_path
+    cache_dir = old_md.parent / f"{old_md.stem}.img"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    (cache_dir / "1.png").write_bytes(base64.b64decode(_TINY_PNG_B64))
+
+    new_rel = f"{sub.tenant_id}/{rid}/rewritten.md"
+    await get_storage().save(new_rel, "# 图\n\n正文已重写，但图仍引用旧缓存。\n".encode())
+    sub.markdown_path = new_rel
+    await db_session.commit()
+
+    img = await client.get(f"/api/catalog/{rid}/img/1")
+    assert img.status_code == 200
+    assert img.headers["content-type"] == "image/png"
+    assert img.content == base64.b64decode(_TINY_PNG_B64)

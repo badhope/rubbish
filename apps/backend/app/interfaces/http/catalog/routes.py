@@ -260,7 +260,9 @@ async def list_resources(
     q: str | None = None,
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
-    sort: str | None = Query(default=None, pattern=r"^(year|title|created_at|issue|published_at|random)$"),
+    sort: str | None = Query(
+        default=None, pattern=r"^(year|title|created_at|issue|published_at|random)$"
+    ),
     order: str | None = Query(default=None, pattern=r"^(asc|desc)$"),
     # 随机浏览/随机推荐的稳定种子：同一种子分页不重不漏，换种子即换一批。
     seed: int = Query(default=0, ge=0, le=2147483647),
@@ -1740,33 +1742,43 @@ async def get_resource_manuscript_image(
             if not sub.markdown_path:
                 continue
             cache_root = storage_root / sub.markdown_path
-            cache_dir = cache_root.parent / f"{cache_root.stem}.img"
-            if not cache_dir.is_dir():
-                continue
-            candidates = sorted(cache_dir.glob(f"{n}.*"))
-            if not candidates:
-                continue
-            cache_file = candidates[0]
-            try:
-                data = cache_file.read_bytes()
-                media_type = mimetypes.guess_type(cache_file.name)[0] or "application/octet-stream"
-                etag = f'W/"{hashlib.sha256(data).hexdigest()[:32]}"'
-                if if_none_match and etag in if_none_match:
-                    return Response(
-                        status_code=status.HTTP_304_NOT_MODIFIED, headers={"ETag": etag}
+            # 正文每次保存都会换一个新的 markdown 文件名，早期生成的
+            # `<旧 stem>.img/` 仍在同一稿件目录里；只认当前 stem 会让
+            # 所有经过改稿的文章图片 404。这里按目录逐个回退，仍只读
+            # 当前 submission 的目录，不跨稿件取图。
+            cache_dirs = [cache_root.parent / f"{cache_root.stem}.img"]
+            cache_dirs.extend(
+                p for p in sorted(cache_root.parent.glob("*.img")) if p != cache_dirs[0]
+            )
+            for cache_dir in cache_dirs:
+                if not cache_dir.is_dir():
+                    continue
+                candidates = sorted(cache_dir.glob(f"{n}.*"))
+                if not candidates:
+                    continue
+                cache_file = candidates[0]
+                try:
+                    data = cache_file.read_bytes()
+                    media_type = (
+                        mimetypes.guess_type(cache_file.name)[0] or "application/octet-stream"
                     )
-                return Response(
-                    content=data,
-                    media_type=media_type,
-                    headers={
-                        "X-Content-Type-Options": "nosniff",
-                        "ETag": etag,
-                        "Cache-Control": "public, max-age=31536000, immutable",
-                    },
-                )
-            except OSError:
-                # 缓存文件读失败时继续试下一版，不让单个坏文件拖垮整篇。
-                continue
+                    etag = f'W/"{hashlib.sha256(data).hexdigest()[:32]}"'
+                    if if_none_match and etag in if_none_match:
+                        return Response(
+                            status_code=status.HTTP_304_NOT_MODIFIED, headers={"ETag": etag}
+                        )
+                    return Response(
+                        content=data,
+                        media_type=media_type,
+                        headers={
+                            "X-Content-Type-Options": "nosniff",
+                            "ETag": etag,
+                            "Cache-Control": "public, max-age=31536000, immutable",
+                        },
+                    )
+                except OSError:
+                    # 缓存文件读失败时继续试下一版，不让单个坏文件拖垮整篇。
+                    continue
 
     if n < 1:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image not found")
@@ -2124,8 +2136,6 @@ def _docx_meta_for_resource(resource, md_text: str):
         year=str(getattr(resource, "year", None) or ""),
         track=(getattr(resource, "content_track", None) or ""),
     )
-
-
 
 
 def _studio_meta_for_resource(resource, md_text: str, meta=None) -> dict[str, object]:
