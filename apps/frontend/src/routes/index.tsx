@@ -339,7 +339,7 @@ function DiscoverTabs({
           <div className="flex flex-wrap gap-3">
             <Button asChild>
               <Link to={submitCta}>
-                <PenLine className="h-4 w-4" />
+                <PenLine className="h-4 w-4 sm:h-5 sm:w-5" />
                 {isAuthenticated ? '进入我的投稿' : '免费注册投稿'}
               </Link>
             </Button>
@@ -490,7 +490,7 @@ function DiscoverTabs({
             </div>
             {!isAuthenticated && (
               <div className="mt-6">
-                <Button asChild size="lg" className="button-shine">
+                <Button asChild size="lg" className="button-shine h-12 px-6 text-sm sm:h-14 sm:px-7 sm:text-base">
                   <Link to="/register">免费注册，参与社区</Link>
                 </Button>
                 <p className="mt-2 text-xs text-muted-foreground">
@@ -778,7 +778,7 @@ function HomePage() {
             <motion.p
               variants={rise}
               custom={1}
-              className="mx-auto mt-4 max-w-2xl px-2 text-sm leading-relaxed text-muted-foreground sm:text-base"
+              className="mx-auto mt-4 max-w-3xl px-2 text-[15px] leading-7 text-muted-foreground sm:text-lg sm:leading-8"
             >
               不是顶刊，是<span className="font-medium text-foreground">学术底刊</span>：
               给不够完美、但值得留下的研究，一个正式、可引用的落点。
@@ -787,24 +787,24 @@ function HomePage() {
             <motion.div
               variants={rise}
               custom={4}
-              className="mt-7 flex flex-wrap items-center justify-center gap-3"
+              className="mt-8 flex flex-wrap items-center justify-center gap-3"
             >
               {isAuthenticated ? (
-                <Button asChild size="lg" className="button-shine">
+                <Button asChild size="lg" className="button-shine h-12 px-6 text-sm sm:h-14 sm:px-7 sm:text-base">
                   <Link to="/submissions">
-                    <PenLine className="h-4 w-4" /> 提交稿件
+                    <PenLine className="h-4 w-4 sm:h-5 sm:w-5" /> 提交稿件
                   </Link>
                 </Button>
               ) : (
-                <Button asChild size="lg" className="button-shine">
+                <Button asChild size="lg" className="button-shine h-12 px-6 text-sm sm:h-14 sm:px-7 sm:text-base">
                   <Link to="/register">
-                    <PenLine className="h-4 w-4" /> 免费注册投稿
+                    <PenLine className="h-4 w-4 sm:h-5 sm:w-5" /> 免费注册投稿
                   </Link>
                 </Button>
               )}
-              <Button asChild size="lg" variant="outline">
+              <Button asChild size="lg" variant="outline" className="h-12 px-6 text-sm sm:h-14 sm:px-7 sm:text-base">
                 <Link to="/catalog">
-                  浏览全部目录 <ArrowRight className="h-4 w-4" />
+                  浏览全部目录 <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
                 </Link>
               </Button>
             </motion.div>
@@ -812,7 +812,7 @@ function HomePage() {
             <motion.p
               variants={rise}
               custom={3}
-              className="mt-16 text-[11px] uppercase tracking-[0.3em] text-muted-foreground/70 sm:mt-20"
+              className="mt-14 text-xs uppercase tracking-[0.3em] text-muted-foreground/80 sm:mt-16"
             >
               向下阅读 · Scroll
             </motion.p>
@@ -866,13 +866,13 @@ function HomePage() {
                   variants={card}
                   animate={statsReveal ? 'show' : 'hidden'}
                   whileHover={{ y: -4 }}
-                  className="glass-card rounded-lg p-3.5 text-left transition-colors hover:border-primary/40 sm:p-5"
+                  className="glass-card rounded-lg p-4 text-left transition-colors hover:border-primary/40 sm:p-6"
                 >
                   <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
                     {s.label}
                   </p>
                   <p
-                    className="mt-1 text-2xl text-primary sm:mt-2 sm:text-4xl"
+                    className="mt-1 text-[2rem] text-primary sm:mt-2 sm:text-[2.8rem]"
                     style={{ fontFamily: DISPLAY_FONT, fontWeight: 600 }}
                   >
                     {s.node}

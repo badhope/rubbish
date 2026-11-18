@@ -273,6 +273,7 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
                 ? '副刊'
                 : '论文与副刊'
         }
+        size={!search.q && fixedTrack === 'paper' ? 'cover' : 'default'}
         description={
           search.q
             ? `在全站论文与副刊中检索“${search.q}”，命中 ${data?.meta.total ?? '…'} 条。`
@@ -307,7 +308,7 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
         />
       ) : null}
 
-      <p className="mt-10 text-center text-[11px] uppercase tracking-[0.3em] text-muted-foreground/70">
+      <p className="mt-12 text-center text-xs uppercase tracking-[0.3em] text-muted-foreground/80">
         向下浏览目录 · Scroll
       </p>
       </section>
@@ -315,7 +316,7 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
       {/* 顶部只留视图切换。论文 / 副刊的主入口在侧栏与移动端「更多」菜单，
           页面内不再放第二套轨道分段，避免同一屏出现两个切换器。 */}
       <div className="mb-0 hidden flex-wrap items-center justify-between gap-2 sm:mb-4 sm:flex">
-        <p className="text-xs text-muted-foreground">
+        <p className="text-[13px] text-muted-foreground">
           {fixedTrack === 'paper'
             ? paperKind === 'absurd'
               ? '荒诞论文：论文格式与评审标准不变，命题一本正经地荒诞'
@@ -325,7 +326,7 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
               : '论文与副刊分属两条轨道，从左侧导航或底部 Tab 进入对应目录。'}
         </p>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={shuffleFeed} title="随机换一批">
+          <Button variant="outline" size="sm" className="h-10 px-4" onClick={shuffleFeed} title="随机换一批">
             <RefreshCw className="h-4 w-4" />
             换一批
           </Button>
@@ -723,7 +724,7 @@ function ViewSwitcher({
 }) {
   return (
     <div
-      className="inline-flex rounded-md border p-0.5 text-xs"
+      className="inline-flex rounded-lg border p-0.5 text-sm"
       role="group"
       aria-label="切换视图"
     >
@@ -734,7 +735,7 @@ function ViewSwitcher({
           aria-pressed={value === v}
           onClick={() => onChange(v)}
           className={cn(
-            'rounded px-3 py-1 transition-colors',
+            'rounded-md px-3.5 py-1.5 transition-colors',
             value === v
               ? 'bg-primary font-medium text-primary-foreground'
               : 'text-muted-foreground hover:text-foreground',
@@ -1122,7 +1123,7 @@ function PaperDirectory({
               aria-selected={active}
               onClick={() => updateSearch({ kind: kind.id, discipline: undefined, page: 1 })}
               className={cn(
-                'group relative overflow-hidden rounded-2xl border p-2.5 text-left transition-all sm:p-5',
+                'group relative flex min-h-[104px] flex-col justify-center overflow-hidden rounded-2xl border p-3 text-left transition-all sm:min-h-[132px] sm:p-6',
                 active
                   ? 'border-primary bg-primary text-primary-foreground shadow-sm'
                   : 'border-border bg-gradient-to-br hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-sm',
@@ -1131,17 +1132,17 @@ function PaperDirectory({
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3">
-                  <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-10 sm:w-10', active ? 'bg-white/15' : 'bg-background/80')}>
-                    <Icon className="h-5 w-5" />
+                  <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12', active ? 'bg-white/15' : 'bg-background/80')}>
+                    <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
                   </span>
                   <span className="min-w-0">
                     <span className="flex min-w-0 flex-col sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-2">
                       <span className="whitespace-nowrap font-serif text-base font-semibold tracking-tight sm:text-lg">{kind.label}</span>
-                      <span className={cn('mt-0.5 text-xs tabular-nums sm:mt-0', active ? 'text-white/80' : 'text-muted-foreground')}>
+                      <span className={cn('mt-0.5 text-[13px] tabular-nums sm:mt-0 sm:text-sm', active ? 'text-white/80' : 'text-muted-foreground')}>
                         {kind.count} 篇
                       </span>
                     </span>
-                    <span className={cn('mt-0.5 hidden text-xs leading-5 sm:block', active ? 'text-white/80' : 'text-muted-foreground')}>
+                    <span className={cn('mt-1 hidden text-[13px] leading-5 sm:block', active ? 'text-white/80' : 'text-muted-foreground')}>
                       {kind.note}
                     </span>
                   </span>

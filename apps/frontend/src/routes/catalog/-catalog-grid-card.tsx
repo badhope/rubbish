@@ -98,32 +98,32 @@ export function CatalogGridCard({ resource, query }: CatalogGridCardProps) {
       </div>
 
       {/* 信息区：标题 + 一行轨道/学术元信息 + 摘要一句 + 作者 */}
-      <div className="catalog-card-body flex flex-1 flex-col gap-1.5 p-2.5 sm:p-3">
-        <p className="catalog-card-title line-clamp-2 text-[13px] font-medium leading-snug sm:text-sm">
+      <div className="catalog-card-body flex flex-1 flex-col gap-1.5 p-3 sm:p-3.5">
+        <p className="catalog-card-title line-clamp-2 text-[14px] font-medium leading-snug sm:text-[15px]">
           <Highlight text={resource.title} query={query} />
         </p>
 
         {scholarly ? (
           // 论文卡：CLC + 学术信息一行；没有 CLC 时只给学科/年，不渲染空占位
-          <p className="line-clamp-1 text-[10px] text-muted-foreground sm:text-[11px]">
+          <p className="line-clamp-1 text-[11px] text-muted-foreground sm:text-[12px]">
             {resource.clc_code ? `CLC ${resource.clc_code}` : resource.discipline}
             {resource.year ? ` · ${resource.year}` : ''}
           </p>
         ) : (
           // 副刊卡：文体必须在卡面出现，不能只写一个“副刊”
-          <p className="line-clamp-1 text-[10px] text-muted-foreground sm:text-[11px]">
+          <p className="line-clamp-1 text-[11px] text-muted-foreground sm:text-[12px]">
             {essayGenreLabel(resource.content_genre)}
             {resource.year ? ` · ${resource.year}` : ''}
           </p>
         )}
 
         {preview ? (
-          <p className="line-clamp-2 text-[10px] leading-4 text-muted-foreground/80 sm:text-[11px] sm:leading-[1.35]">
+          <p className="line-clamp-2 text-[11px] leading-4 text-muted-foreground/80 sm:text-[12px] sm:leading-5">
             {preview}
           </p>
         ) : null}
 
-        <p className="mt-auto line-clamp-1 pt-0.5 text-[10px] text-muted-foreground sm:text-[11px]">
+        <p className="mt-auto line-clamp-1 pt-1 text-[11px] text-muted-foreground sm:text-[12px]">
           {authors || '佚名'}
         </p>
       </div>
