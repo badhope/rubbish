@@ -22,24 +22,26 @@ The email backend is selected by `RUBBISH_EMAIL_BACKEND`. Two options:
 - `smtp` — opens an SMTP connection per message. Works with any provider
   that exposes an SMTP relay (which is all of them).
 
-### Multiple sender identities (recommended for free mailboxes)
+### Primary sender + fallback identities
 
-Free providers (QQ / 126 / 163) throttle per mailbox and occasionally reject
-connections outright. Give the app several identities and it will rotate
-between them, so one bad mailbox cannot stop verification / reset mail:
+Use the official journal mailbox as the first identity. Old free-provider
+mailboxes (QQ / 126 / 163) go after it and are used only when the official
+mailbox is throttled, parked by the circuit breaker, or temporarily failing:
 
 ```bash
 RUBBISH_EMAIL_BACKEND=smtp
-RUBBISH_EMAIL_SMTP_ACCOUNTS=[{"host":"smtp.126.com","port":465,"username":"a@126.com","password":"<auth-code>","from_address":"a@126.com","from_name":"Rubbish","use_tls":true,"starttls":false},{"host":"smtp.qq.com","port":465,"username":"b@foxmail.com","password":"<auth-code>","from_address":"b@foxmail.com","from_name":"Rubbish","use_tls":true,"starttls":false}]
+RUBBISH_EMAIL_SMTP_ACCOUNTS=[{"host":"smtp.exmail.qq.com","port":465,"username":"info@rubbishasci.cn","password":"<auth-code>","from_address":"info@rubbishasci.cn","from_name":"Rubbish","use_tls":true,"starttls":false},{"host":"smtp.126.com","port":465,"username":"old@126.com","password":"<auth-code>","from_address":"old@126.com","from_name":"Rubbish","use_tls":true,"starttls":false}]
 ```
 
-Behaviour: each send advances a cursor (roughly 50/50), and an identity that
-fails `RUBBISH_EMAIL_SMTP_BREAKER_THRESHOLD` times in a row (default 2) is
-parked for `RUBBISH_EMAIL_SMTP_BREAKER_COOLDOWN` seconds (default 180) while
-the others take over. `RUBBISH_EMAIL_SMTP_ACCOUNTS` takes precedence over the
-single `RUBBISH_EMAIL_SMTP_*` fields; leave it empty to keep the single-account
-path. `GET /api/admin/maintenance/email-status` probes every identity and
-reports address + host only (never the password).
+Behaviour: the first identity handles every send while healthy. It is
+**not** round-robined with the fallbacks: the public From address stays
+consistent. If it fails `RUBBISH_EMAIL_SMTP_BREAKER_THRESHOLD` times in a row
+(default 2), it is parked for `RUBBISH_EMAIL_SMTP_BREAKER_COOLDOWN` seconds
+(default 180) and the next identity takes over; after the cooldown the
+official identity is tried first again. `RUBBISH_EMAIL_SMTP_ACCOUNTS` takes
+precedence over the single `RUBBISH_EMAIL_SMTP_*` fields; leave it empty to
+keep the single-account path. `GET /api/admin/maintenance/email-status`
+probes every identity and reports address + host only (never the password).
 
 ### Recipient throttling
 
