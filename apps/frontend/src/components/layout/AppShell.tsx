@@ -3,7 +3,6 @@ import { Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router'
 import {
   ShieldAlert,
   Activity,
-  Bell,
   BookOpen,
   Building2,
   CalendarDays,
@@ -12,21 +11,17 @@ import {
   ClipboardCheck,
   Eye,
   Gavel,
-  Heart,
   Home,
   Layers,
-  Library,
-  Lightbulb,
   Menu,
   PenLine,
   Rocket,
-  Scale,
   Search,
   Settings,
   ShieldCheck,
-  ShoppingBag,
   User,
   Users,
+  ShoppingBag,
   Award,
   FileSignature,
   Megaphone,
@@ -74,11 +69,6 @@ const NAV: NavItem[] = [
   { to: '/me', label: '我的', icon: User, group: '一级入口' },
 
   // 我的工作：只放需要登录的个人链路。
-  { to: '/dashboard', label: '我的概览', icon: Home, auth: true, group: '我的工作', subgroup: '个人' },
-  { to: '/appeals', label: '作者申诉', icon: Scale, auth: true, group: '我的工作', subgroup: '个人' },
-  { to: '/library', label: '阅读列表', icon: Library, auth: true, group: '我的工作', subgroup: '个人' },
-  { to: '/follows', label: '关注与订阅', icon: Heart, auth: true, group: '我的工作', subgroup: '个人' },
-  { to: '/recommendations', label: '推荐', icon: Lightbulb, auth: true, group: '我的工作', subgroup: '个人' },
   {
     to: '/review/assignments',
     label: '审稿工作台',
@@ -97,7 +87,6 @@ const NAV: NavItem[] = [
     group: '我的工作',
     subgroup: '编辑与投稿',
   },
-  { to: '/notifications', label: '通知', icon: Bell, auth: true, group: '我的工作', subgroup: '个人' },
 
   // 期刊门面：指标并入「关于本刊」的页签，规则并入「投稿指南」。
   // 这里只保留四条真正不同的去处，避免同一内容出现两个入口。
@@ -304,29 +293,6 @@ export function AppShell() {
           <Link to="/submissions">
             <FileSignature className="h-4 w-4" />
             我的提交
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="/notifications">
-            <Bell className="h-4 w-4" />
-            {text('通知', lang)}
-            {(unread?.unread ?? 0) > 0 && (
-              <span className="ml-auto rounded-full bg-destructive px-1.5 py-0.5 text-[10px] text-destructive-foreground">
-                {unread!.unread}
-              </span>
-            )}
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="/settings">
-            <Settings className="h-4 w-4" />
-            {text('账号设置', lang)}
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="/shop">
-            <ShoppingBag className="h-4 w-4" />
-            R 币商城
           </Link>
         </DropdownMenuItem>
         {(user.roles?.includes('reviewer') || user.roles?.includes('senior_reviewer') || user.roles?.includes('editor_in_chief') || isAdmin) && (

@@ -19,7 +19,7 @@ export function cn(...inputs: ClassValue[]) {
  */
 export function safeInternalPath(
   redirect: string | null | undefined,
-  fallback = '/dashboard',
+  fallback = '/me',
 ): string {
   if (!redirect) return fallback
   if (!redirect.startsWith('/')) return fallback

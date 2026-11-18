@@ -15,23 +15,23 @@ describe('safeInternalPath', () => {
   })
 
   it('空值回退到默认页', () => {
-    expect(safeInternalPath(null)).toBe('/dashboard')
-    expect(safeInternalPath(undefined)).toBe('/dashboard')
-    expect(safeInternalPath('')).toBe('/dashboard')
+    expect(safeInternalPath(null)).toBe('/me')
+    expect(safeInternalPath(undefined)).toBe('/me')
+    expect(safeInternalPath('')).toBe('/me')
   })
 
   it('拦截绝对 URL（含 http/https 与协议相对）', () => {
-    expect(safeInternalPath('https://evil.example/phish')).toBe('/dashboard')
-    expect(safeInternalPath('http://evil.example')).toBe('/dashboard')
+    expect(safeInternalPath('https://evil.example/phish')).toBe('/me')
+    expect(safeInternalPath('http://evil.example')).toBe('/me')
     // `//evil.example` 会被浏览器当成协议相对 URL，是最容易漏的一种
-    expect(safeInternalPath('//evil.example')).toBe('/dashboard')
+    expect(safeInternalPath('//evil.example')).toBe('/me')
     // 部分浏览器把 `/\evil.example` 也当外链
-    expect(safeInternalPath('/\\evil.example')).toBe('/dashboard')
+    expect(safeInternalPath('/\\evil.example')).toBe('/me')
   })
 
   it('拦截 javascript: 等伪协议', () => {
-    expect(safeInternalPath('javascript:alert(1)')).toBe('/dashboard')
-    expect(safeInternalPath('data:text/html,<script>')).toBe('/dashboard')
+    expect(safeInternalPath('javascript:alert(1)')).toBe('/me')
+    expect(safeInternalPath('data:text/html,<script>')).toBe('/me')
   })
 
   it('尊重自定义 fallback', () => {

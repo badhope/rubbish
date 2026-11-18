@@ -41,7 +41,7 @@ export const Route = createFileRoute('/auth/oidc/callback')({
       throw redirect({ to: '/login' })
     }
 
-    throw redirect({ to: '/dashboard' })
+    throw redirect({ to: '/me' })
   },
   component: () => null,
 })

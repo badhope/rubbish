@@ -1,0 +1,87 @@
+import { useState } from 'react'
+import { Link } from '@tanstack/react-router'
+import { ExternalLink, Settings2 } from 'lucide-react'
+import { useMe } from '@/hooks/api/use-auth'
+import { ProfileDetailsCard } from '@/components/settings/profile-details-card'
+import { NotificationPrefsCard } from '@/components/settings/notification-prefs-card'
+import { AiAccessCard } from '@/components/settings/ai-access-card'
+import { TwoFactorSection } from '@/components/settings/two-factor-section'
+import { ChangePasswordCard } from '@/components/settings/change-password-card'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+
+const SUB_TABS = [
+  { key: 'profile', label: '资料' },
+  { key: 'security', label: '安全' },
+  { key: 'notifications', label: '通知' },
+  { key: 'ai', label: 'AI 投稿' },
+] as const
+
+type SettingsSubTab = (typeof SUB_TABS)[number]['key']
+
+export function MeSettings({ username }: { username: string }) {
+  const [tab, setTab] = useState<SettingsSubTab>('profile')
+  const { data: me } = useMe()
+
+  return (
+    <section>
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b pb-4">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">SETTINGS</p>
+          <h2 className="mt-1 font-serif text-xl tracking-tight">账号设置</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            资料、安全、通知与 AI 投稿都在这里；留空不会覆盖已有内容。
+          </p>
+        </div>
+        <Button variant="ghost" size="sm" asChild>
+          <Link to="/u/$username" params={{ username }}>
+            <ExternalLink className="h-3.5 w-3.5" />
+            公开主页
+          </Link>
+        </Button>
+      </div>
+
+      <nav aria-label="设置分类" className="scrollbar-none mt-3 flex gap-1 overflow-x-auto border-b">
+        {SUB_TABS.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            onClick={() => setTab(item.key)}
+            data-active={tab === item.key ? 'true' : 'false'}
+            className={cn(
+              'relative min-h-[42px] shrink-0 px-3 text-sm transition-colors',
+              tab === item.key ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            {item.label}
+            {tab === item.key ? <span aria-hidden className="absolute inset-x-2 bottom-0 h-0.5 bg-primary" /> : null}
+          </button>
+        ))}
+      </nav>
+
+      <div className="mt-5 space-y-5">
+        {tab === 'profile' ? (
+          <>
+            <div className="flex items-start gap-3 border-y py-4 text-sm">
+              <Settings2 className="mt-0.5 h-4 w-4 text-muted-foreground" />
+              <div className="text-xs leading-relaxed text-muted-foreground">
+                当前账号 <span className="font-medium text-foreground">@{username}</span>
+                {me?.email ? ` · ${me.email}` : ''}
+                {me?.is_email_verified ? ' · 邮箱已验证' : ' · 邮箱未验证'}
+              </div>
+            </div>
+            <ProfileDetailsCard key={me?.id ?? 'profile-empty'} initial={me ?? undefined} />
+          </>
+        ) : null}
+        {tab === 'security' ? (
+          <div className="grid gap-5 lg:grid-cols-2">
+            <TwoFactorSection />
+            <ChangePasswordCard />
+          </div>
+        ) : null}
+        {tab === 'notifications' ? <NotificationPrefsCard /> : null}
+        {tab === 'ai' ? <AiAccessCard /> : null}
+      </div>
+    </section>
+  )
+}

@@ -1,21 +1,16 @@
 import {
-  Bell,
   BookOpen,
   ClipboardCheck,
   FileSignature,
   Gavel,
-  Heart,
   Home,
   Eye,
   Layers,
-  Scale,
   Building2,
-  Lightbulb,
   PenLine,
   Rocket,
   Activity,
   Flag,
-  Settings,
   ShieldCheck,
   Users,
   CalendarDays,
@@ -25,11 +20,11 @@ import {
   MessageSquare,
   Wallet,
   Mail,
-  ShoppingBag,
-  Library,
   Wrench,
   type LucideIcon,
   User,
+  ShoppingBag,
+  Settings,
 } from 'lucide-react'
 
 export interface MobileTab {
@@ -67,12 +62,6 @@ export const MOBILE_TABS: MobileTab[] = [
 // 折叠菜单（header 右上角"⋯"弹出）：收进抽屉时代的次级入口，
 // 避免删抽屉后指标/卷期/政策/关于/后台等入口失联。
 export const MOBILE_MORE: MobileMoreItem[] = [
-  { to: '/dashboard', label: '概览', icon: Home, auth: true, group: '我的' },
-  { to: '/appeals', label: '作者申诉', icon: Scale, auth: true, group: '我的' },
-  { to: '/follows', label: '关注与订阅', icon: Heart, auth: true, group: '我的' },
-  { to: '/recommendations', label: '推荐', icon: Lightbulb, auth: true, group: '我的' },
-  { to: '/library', label: '阅读列表', icon: Library, auth: true, group: '我的' },
-  { to: '/shop', label: 'R 币商城', icon: ShoppingBag, auth: true, group: '我的' },
   { to: '/review/assignments', label: '审稿工作台', icon: ClipboardCheck, auth: true, roles: ['reviewer', 'senior_reviewer', 'editor_in_chief'], group: '工作台' },
   {
     to: '/editor/workbench',
@@ -88,8 +77,6 @@ export const MOBILE_MORE: MobileMoreItem[] = [
   { to: '/about', label: '关于与指标', icon: Building2, group: '期刊' },
   { to: '/guide', label: '投稿与操作指南', icon: PenLine, group: '期刊' },
   { to: '/tools', label: '写作工具', icon: Wrench, group: '期刊' },
-  { to: '/notifications', label: '通知', icon: Bell, auth: true, group: '消息' },
-  { to: '/settings', label: '账号设置', icon: Settings, auth: true, group: '设置' },
   { to: '/feedback', label: '反馈与建议', icon: MessageSquareText, group: '设置' },
   { to: '/admin', label: '站点总览', icon: Gavel, auth: true, adminOnly: true, group: '用户与权限' },
   { to: '/admin/users', label: '用户管理', icon: Users, auth: true, adminOnly: true, group: '用户与权限' },

@@ -2,7 +2,7 @@ import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { AuthorsPage } from './authors'
 import { HelpPage } from './help'
-import { LevelsPage } from './levels'
+import { LevelsPage } from '@/components/guide/levels-page'
 import { PoliciesPage } from './policies'
 
 export const Route = createFileRoute('/guide')({

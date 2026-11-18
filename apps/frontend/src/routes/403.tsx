@@ -22,7 +22,7 @@ function ForbiddenPage() {
           </p>
           <div className="flex gap-2">
             <Button asChild variant="outline">
-              <Link to="/dashboard">
+              <Link to="/me">
                 <ArrowLeft className="h-4 w-4" /> 返回概览
               </Link>
             </Button>

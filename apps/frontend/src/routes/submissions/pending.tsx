@@ -88,7 +88,7 @@ export const Route = createFileRoute('/submissions/pending')({
     if (!isAuthenticated) throw redirect({ to: '/login' })
     const roles = user?.roles ?? []
     if (!isAdmin && !roles.some((r) => ['editor', 'section_editor', 'editor_in_chief'].includes(r))) {
-      throw redirect({ to: '/dashboard' })
+      throw redirect({ to: '/me' })
     }
   },
   component: PendingSubmissionsPage,

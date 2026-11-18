@@ -94,7 +94,7 @@ export function RegisterPage() {
         void navigate({ to: '/verify-email', search: { email } })
       } else {
         toast.success('注册成功，已自动登录')
-        void navigate({ to: '/dashboard' })
+        void navigate({ to: '/me' })
       }
     } catch (err) {
       const msg =

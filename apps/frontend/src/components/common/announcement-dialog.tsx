@@ -121,7 +121,8 @@ export function AnnouncementDialog({
         <DialogFooter className="flex-row flex-wrap items-center justify-between gap-3 border-t bg-background/60 p-4 sm:justify-between">
           <div className="flex flex-wrap gap-4">
             <Link
-              to="/levels"
+              to="/me"
+              search={{ tab: 'coins', section: 'levels' }}
               className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
             >
               查看等级与投稿规范 <ArrowRight className="h-3.5 w-3.5" />

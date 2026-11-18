@@ -1,0 +1,16 @@
+export const ME_TABS = [
+  { key: 'overview', label: '概览' },
+  { key: 'submissions', label: '投稿' },
+  { key: 'reviews', label: '审稿' },
+  { key: 'library', label: '收藏' },
+  { key: 'coins', label: 'R 币' },
+  { key: 'settings', label: '设置' },
+] as const
+
+export type MeTabKey = (typeof ME_TABS)[number]['key']
+
+export const ME_TAB_KEYS = ME_TABS.map((tab) => tab.key)
+
+export function isMeTab(value: unknown): value is MeTabKey {
+  return typeof value === 'string' && ME_TAB_KEYS.includes(value as MeTabKey)
+}

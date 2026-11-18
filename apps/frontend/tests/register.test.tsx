@@ -86,7 +86,7 @@ describe('registration response', () => {
   await user.type(screen.getByLabelText('确认密码'), 'password123')
   await user.type(screen.getByLabelText(/验证码/), '2')
   await user.click(screen.getByRole('button', { name: '注册' }))
-  await waitFor(() => expect(navigate).toHaveBeenCalledWith({ to: '/dashboard' }))
+  await waitFor(() => expect(navigate).toHaveBeenCalledWith({ to: '/me' }))
   expect(useAuthStore.getState().token).toBe('token')
  })
 })

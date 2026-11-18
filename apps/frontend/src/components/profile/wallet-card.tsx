@@ -137,7 +137,7 @@ export function WalletCard() {
             R（签到/发帖），审稿、录用、认领等一次性劳务另计；全站本月已发{' '}
             {data.monthly_issued}/{data.monthly_issue_cap} R。
           </span>
-          <Link to="/shop" className="inline-flex items-center gap-1 text-primary hover:underline">
+          <Link to="/me" search={{ tab: 'coins' }} className="inline-flex items-center gap-1 text-primary hover:underline">
             <ShoppingBag className="h-3.5 w-3.5" /> 去商城
           </Link>
         </div>

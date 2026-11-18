@@ -80,7 +80,7 @@ function ReviewBoardPage() {
                             const message = extractError(err, '申请审稿失败')
                             if (message.includes('Reviewer role required')) {
                               toast.info('请先在等级页申请审稿人资格')
-                              window.location.href = '/levels'
+                              window.location.href = '/me?tab=coins&section=levels'
                               return
                             }
                             toast.error(message)
@@ -92,7 +92,7 @@ function ReviewBoardPage() {
                     </Button>
                   ) : (
                     <Button asChild size="sm" variant="outline">
-                      <Link to="/levels">先申请审稿人资格</Link>
+                      <Link to="/me" search={{ tab: 'coins', section: 'levels' }}>先申请审稿人资格</Link>
                     </Button>
                   )}
                 </div>
