@@ -97,7 +97,7 @@ export function MobileAppShell() {
   // 资源详情页自带底部固定操作栏（z-40），会盖住 Tab 栏
   const hasOwnBottomBar = /^\/catalog\/\d+/.test(location.pathname)
   // 沉浸阅读：Tab 栏随滚动方向隐藏
-  const immersive = /^\/reader\//.test(location.pathname)
+  const immersive = /^\/catalog\/\d+/.test(location.pathname)
   const [barHidden, setBarHidden] = useState(false)
 
   useEffect(() => {

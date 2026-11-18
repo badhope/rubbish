@@ -10,7 +10,7 @@ for i in $(seq 1 30); do
   sleep 2
 done
 
-for p in / /papers /fun /sitemap.xml /rss.xml /api/health /api/catalog/stats; do
+for p in / /catalog /archive /about?tab=metrics /sitemap.xml /rss.xml /api/health /api/catalog/stats; do
   code=$(curl -sS -m 20 -o /dev/null -w '%{http_code} %{time_starttransfer}' "$BASE$p" || true)
   note "warm $p $code"
   [ "${code%% *}" = 200 ] || exit 1

@@ -20,7 +20,7 @@ export function MeReviews({ reviewable }: { reviewable: boolean }) {
               当前账号还没有审稿权限。审稿人由编辑部审批授予；作者等级与质量分满足条件后，可以在等级页提交申请。
             </p>
             <Button variant="outline" size="sm" className="mt-4" asChild>
-              <Link to="/rules" search={{ tab: 'levels' }}>
+              <Link to="/guide" search={{ tab: 'levels' }}>
                 查看审稿资格
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>

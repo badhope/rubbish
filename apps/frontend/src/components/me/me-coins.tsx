@@ -108,7 +108,7 @@ export function MeCoins({ profile }: { profile: MeProfile }) {
               </Button>
             )}
             <Button variant="outline" size="sm" asChild>
-              <Link to="/rules" search={{ tab: 'levels' }}>
+              <Link to="/guide" search={{ tab: 'levels' }}>
                 等级与规则
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
@@ -241,7 +241,7 @@ export function MeCoins({ profile }: { profile: MeProfile }) {
           hint="等级只在同一身份内累计；不跨身份比较，也不兑换权限。"
           action={
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/rules" search={{ tab: 'levels' }}>
+              <Link to="/guide" search={{ tab: 'levels' }}>
                 完整等级表
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>

@@ -159,7 +159,7 @@ function ReadingProgressBlock({ resourceId }: { resourceId: number }) {
     try {
       await remove.mutateAsync(resourceId)
       toast.success('已从阅读历史移除')
-      void navigate({ to: '/library' })
+      void navigate({ to: '/me', search: { tab: 'library' } })
     } catch (err) {
       toast.error(extractError(err, '移除失败'))
     }

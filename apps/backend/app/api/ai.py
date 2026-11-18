@@ -152,7 +152,7 @@ async def capabilities() -> dict[str, Any]:
         "auth": {
             "type": "personal_api_token",
             "header": "X-API-Key: rbk_...",
-            "create_at": "/settings?tab=ai",
+            "create_at": "/me?tab=settings&section=ai",
             "note": "不接受账号密码；Token 可撤销、默认 90 天过期。",
         },
         "scopes": _SCOPES.split(),
@@ -330,7 +330,7 @@ async def ai_create_submission(
                 "code": "rules_ack_required",
                 "version": CURRENT_RULES_VERSION,
                 "message": "请先在站点确认当版《Rubbish 投稿与编辑规范》，再让 AI 投稿。",
-                "ack_url": "/settings?tab=profile",
+                "ack_url": "/me?tab=settings&section=profile",
             },
         )
 

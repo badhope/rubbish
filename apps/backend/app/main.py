@@ -16,7 +16,7 @@ from pathlib import Path
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.ext.asyncio import AsyncSession
 from tenacity import (
@@ -400,18 +400,6 @@ from app.interfaces.http.comments.admin_routes import router as comments_admin_r
 
 app.include_router(comments_admin_router, prefix="/api")
 logger.info("module_router_mounted", module="comments_admin", prefix="/api/admin/comments")
-
-
-# --- /reader/{int} 服务端 301 ------------------------------------------------
-# 旧外链 /reader/301 需永久重定向到新详情锚点 /catalog/301#article。
-# 必须注册在 SPA catch-all 之前；路径只匹配整数 id，避免吞掉 /reader/xxx
-# 这类静态资源或其它前端深链。
-@app.get("/reader/{resource_id}", include_in_schema=False)
-async def legacy_reader_redirect(resource_id: int) -> RedirectResponse:
-    return RedirectResponse(
-        url=f"/catalog/{resource_id}#article",
-        status_code=301,
-    )
 
 
 # HEAD / 给监控与社交抓取一个无 body 的 200；必须在 SPA catch-all 之前注册。

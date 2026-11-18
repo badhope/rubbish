@@ -96,7 +96,7 @@ export function MeQuickActions({
           />
         </Link>
       ) : (
-        <Link to="/rules" search={{ tab: 'levels' }} className={actionClass}>
+        <Link to="/guide" search={{ tab: 'levels' }} className={actionClass}>
           <ActionBody
             label="申请审稿"
             shortLabel="审稿"

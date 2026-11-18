@@ -1,4 +1,4 @@
-import { createFileRoute, Link, redirect } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { ArrowLeft, BookOpen, Download, Lock, Quote, TrendingUp } from 'lucide-react'
 import { useJournalMetrics } from '@/hooks/api/use-modules'
 import { PageHeader } from '@/components/common/page-header'
@@ -7,13 +7,6 @@ import { ErrorState, LoadingSkeleton } from '@/components/common/state'
 import { Card, CardContent } from '@/components/ui/card'
 import { typeLabel } from '@/lib/resource-labels'
 import { DisciplineBar, EngagementRadar } from '@/components/charts/metrics-charts'
-
-export const Route = createFileRoute('/journal-metrics')({
-  beforeLoad: () => {
-    throw redirect({ to: '/about', search: { tab: 'metrics' } })
-  },
-  component: () => null,
-})
 
 // 百分比 / 中位数类指标的最小样本量：样本不足时一律显示
 // 「暂无数据（样本不足）」，而不是让 0 天 / 0.0% 这种误导性的数字出场。

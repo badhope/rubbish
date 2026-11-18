@@ -113,7 +113,7 @@ function isWorkRoute(pathname: string): boolean {
 function resolvePublicNavPath(pathname: string): string | undefined {
   if (pathname === '/') return '/'
   if (
-    ['/catalog', '/papers', '/fun', '/archive', '/sections', '/issues'].some(
+    ['/catalog', '/archive', '/sections'].some(
       (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
     )
   ) {

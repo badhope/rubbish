@@ -3,7 +3,7 @@ import { ArrowLeft, Building2, Globe, Mail, Newspaper, ScrollText } from 'lucide
 import { PageHeader } from '@/components/common/page-header'
 import { CoverArt } from '@/components/common/cover-art'
 import { RevealSection } from '@/components/common/reveal-section'
-import { JournalMetricsPage } from './journal-metrics'
+import { JournalMetricsPage } from '@/components/about/journal-metrics'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/about')({

@@ -106,39 +106,31 @@ const EXPORT_FORMATS: { format: AnyExportFormat; label: string }[] = [
   { format: 'zip', label: '逐篇 ZIP' },
 ]
 
-export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay' } = {}) {
+export function CatalogListPage() {
   const navigate = useNavigate()
   const search = useSearch({ strict: false }) as CatalogSearch
   const { isAdmin, isAuthenticated } = useAuth()
   const isMobile = useIsMobile()
 
   // 轨道切换 → 后端 ?track=paper|essay（按 content_track 过滤，与旧 content_category 解耦）。
-  // fixedTrack 由 /papers、/fun 两条独立路由传入；只有 kind 没有 track 时，
-  // 也按论文轨处理，保证目录页点“学术/荒诞”能进入论文列表而不是回到 Hub。
+  // 目录是唯一入口；只有 kind 没有 track 时，按论文轨处理。
   const effectiveTrack: 'paper' | 'essay' | undefined =
-    fixedTrack ?? search.track ?? (search.kind ? 'paper' : undefined)
-  // /papers 默认进入「学术论文」；荒诞论文是同页的并列分区，不是另一条轨道。
+    search.track ?? (search.kind ? 'paper' : undefined)
+  // 目录内默认进入「学术论文」；荒诞论文是同页的并列分区，不是另一条轨道。
   const paperKind: 'serious' | 'absurd' = search.kind ?? 'serious'
   const statsTrack = effectiveTrack === 'essay' ? 'essay' : effectiveTrack === 'paper' ? 'paper' : undefined
-  const routePath: '/papers' | '/fun' | '/catalog' =
-    fixedTrack === 'paper' || (!fixedTrack && search.kind)
-      ? '/papers'
-      : fixedTrack === 'essay'
-        ? '/fun'
-        : '/catalog'
 
   // 目录首页采用「可复现随机」：每次进入/点“换一批”换 seed，分页仍稳定；
   // 搜索时回到相关度/新近排序，避免随机打乱检索结果。
   const [feedSeed, setFeedSeed] = useState(() => Math.floor(Math.random() * 2147483646) + 1)
-  const randomFeed = Boolean(fixedTrack || search.kind) && !search.q && !search.author && !search.doi && !search.clc
+  const randomFeed = Boolean(search.track || search.kind) && !search.q && !search.author && !search.doi && !search.clc
 
   const params = {
     q: search.q || undefined,
     type: search.type,
     category: search.category || undefined,
     // 搜索结果页的文案是“全站论文与副刊”，所以有关键词时必须解除当前分区
-    // 的 track/paper_kind 收窄；否则 109 这类已改判荒诞、或被分到副刊的稿
-    // 在 /papers?q= 下会假性 0 命中（API 直查是有结果的）。
+    // 的 track/paper_kind 收窄；否则已改判荒诞、或被分到副刊的稿在目录检索下会假性 0 命中。
     track: search.q ? undefined : effectiveTrack,
     paper_kind: search.q ? undefined : effectiveTrack === 'paper' ? paperKind : undefined,
     genre: effectiveTrack === 'essay' ? search.genre : undefined,
@@ -172,7 +164,7 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
   const updateSearch = (patch: Partial<CatalogSearch>) => {
     setSelectedIds([])
     void navigate({
-      to: routePath,
+      to: '/catalog',
       search: { ...search, ...patch },
       replace: true,
     } as never)
@@ -246,7 +238,6 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
         stats={stats}
         search={search}
         updateSearch={updateSearch}
-        routePath={routePath}
         onShuffle={shuffleFeed}
       />
     )
@@ -623,7 +614,7 @@ function CatalogHub() {
         </div>
 
         <div className="mt-6 divide-y border-y">
-          <Link to="/papers" search={{ kind: 'serious' }} className={rowClass}>
+          <Link to="/catalog" search={{ kind: 'serious' }} className={rowClass}>
             <span className="font-mono text-xs text-muted-foreground">01</span>
             <span className="min-w-0">
               <span className="block font-serif text-xl font-semibold">学术论文</span>
@@ -636,7 +627,7 @@ function CatalogHub() {
             </span>
           </Link>
 
-          <Link to="/papers" search={{ kind: 'absurd' }} className={rowClass}>
+          <Link to="/catalog" search={{ kind: 'absurd' }} className={rowClass}>
             <span className="font-mono text-xs text-absurd">02</span>
             <span className="min-w-0">
               <span className="block font-serif text-xl font-semibold">荒诞论文</span>
@@ -654,7 +645,7 @@ function CatalogHub() {
           <div className="mt-6">
             <div className="flex items-baseline justify-between gap-4">
               <p className="text-xs font-medium text-muted-foreground">按学科进入</p>
-              <Link to="/papers" className="text-[11px] text-primary hover:underline">
+              <Link to="/catalog" search={{ track: 'paper' }} className="text-[11px] text-primary hover:underline">
                 全部学科
               </Link>
             </div>
@@ -662,8 +653,7 @@ function CatalogHub() {
               {disciplines.map(([name, count]) => (
                 <Link
                   key={name}
-                  to="/papers"
-                  search={{ discipline: name }}
+                  to="/catalog" search={{ track: 'paper', discipline: name }}
                   className="inline-flex items-baseline gap-1.5 text-sm transition-colors hover:text-primary"
                 >
                   <span>{name}</span>
@@ -681,7 +671,7 @@ function CatalogHub() {
             <p className="text-[10px] uppercase tracking-[0.32em] text-muted-foreground">II · Supplement</p>
             <h2 className="mt-2 font-serif text-3xl font-semibold tracking-tight">副刊</h2>
           </div>
-          <Link to="/fun" className="text-sm text-primary hover:underline">
+          <Link to="/catalog" search={{ track: 'essay' }} className="text-sm text-primary hover:underline">
             进入副刊 →
           </Link>
         </div>
@@ -694,7 +684,7 @@ function CatalogHub() {
           <div className="mt-5">
             <div className="flex items-baseline justify-between gap-4">
               <p className="text-xs font-medium text-muted-foreground">按文体进入</p>
-              <Link to="/fun" className="text-[11px] text-primary hover:underline">
+              <Link to="/catalog" search={{ track: 'essay' }} className="text-[11px] text-primary hover:underline">
                 全部文体
               </Link>
             </div>
@@ -702,8 +692,8 @@ function CatalogHub() {
               {genres.map((g) => (
                 <Link
                   key={g.value}
-                  to="/fun"
-                  search={{ genre: g.value }}
+                  to="/catalog"
+                  search={{ track: 'essay', genre: g.value }}
                   className="inline-flex items-baseline gap-1.5 text-sm transition-colors hover:text-primary"
                 >
                   <span>{g.label}</span>

@@ -189,7 +189,7 @@ function HomePage() {
           label="Featured · 本期主稿"
           title="先读这一篇"
           action={
-            <Link to="/papers" className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary">
+            <Link to="/catalog" search={{ track: 'paper' }} className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary">
               本期目录 <ChevronRight className="h-4 w-4" />
             </Link>
           }
@@ -272,7 +272,7 @@ function HomePage() {
             }
           />
           <div className="divide-y divide-border/70 border-t border-border/70">
-            <Link to="/papers" search={{ kind: 'serious' }} className="group flex items-center gap-4 py-5 sm:gap-6">
+            <Link to="/catalog" search={{ kind: 'serious' }} className="group flex items-center gap-4 py-5 sm:gap-6">
               <span className="w-10 shrink-0 font-mono text-sm text-muted-foreground">01</span>
               <span className="min-w-0 flex-1">
                 <span className="flex flex-wrap items-baseline gap-x-3">
@@ -287,7 +287,7 @@ function HomePage() {
               </span>
               <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
             </Link>
-            <Link to="/papers" search={{ kind: 'absurd' }} className="group flex items-center gap-4 py-5 sm:gap-6">
+            <Link to="/catalog" search={{ kind: 'absurd' }} className="group flex items-center gap-4 py-5 sm:gap-6">
               <span className="w-10 shrink-0 font-mono text-sm text-muted-foreground">02</span>
               <span className="min-w-0 flex-1">
                 <span className="flex flex-wrap items-baseline gap-x-3">
@@ -302,7 +302,7 @@ function HomePage() {
               </span>
               <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
             </Link>
-            <Link to="/fun" className="group flex items-center gap-4 py-5 sm:gap-6">
+            <Link to="/catalog" search={{ track: 'essay' }} className="group flex items-center gap-4 py-5 sm:gap-6">
               <span className="w-10 shrink-0 font-mono text-sm text-muted-foreground">03</span>
               <span className="min-w-0 flex-1">
                 <span className="flex flex-wrap items-baseline gap-x-3">

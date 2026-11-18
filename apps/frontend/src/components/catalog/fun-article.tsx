@@ -72,7 +72,7 @@ export function FunArticle({
       <div className="mx-auto max-w-3xl px-4 pt-4 sm:px-6 sm:pt-6">
         <div className="flex items-center justify-between gap-2">
           <Link
-            to="/fun"
+            to="/catalog" search={{ track: 'essay' }}
             className="inline-flex min-h-[36px] shrink-0 items-center whitespace-nowrap text-sm text-muted-foreground hover:text-amber-700"
           >
             <ChevronLeft className="mr-1 h-4 w-4" />

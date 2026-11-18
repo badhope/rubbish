@@ -162,7 +162,7 @@ export function MeOverview({
             审稿人需要先满足作者等级与质量分要求，再由编辑部审批授予。你可以在等级页查看资格并提交申请。
           </p>
           <Button variant="outline" size="sm" className="mt-3" asChild>
-            <Link to="/rules" search={{ tab: 'levels' }}>
+            <Link to="/guide" search={{ tab: 'levels' }}>
               查看审稿资格
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>

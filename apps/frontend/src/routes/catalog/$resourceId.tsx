@@ -165,7 +165,10 @@ function CatalogDetailPage() {
     try {
       await deleteMut.mutateAsync(id)
       toast.success('已删除')
-      void navigate({ to: data?.content_track === 'essay' ? '/fun' : '/papers' } as never)
+      void navigate({
+        to: '/catalog',
+        search: data?.content_track === 'essay' ? { track: 'essay' } : { track: 'paper' },
+      })
     } catch {
       toast.error('删除失败')
     }
@@ -255,7 +258,8 @@ function CatalogDetailPage() {
         />
       </div>
       <Link
-        to="/papers"
+        to="/catalog"
+        search={{ track: 'paper' }}
         className="mb-3 inline-flex min-h-[36px] items-center text-sm text-muted-foreground hover:text-primary"
       >
         <ChevronLeft className="mr-1 h-4 w-4" />

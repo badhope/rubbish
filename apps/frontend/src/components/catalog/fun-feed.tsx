@@ -22,7 +22,6 @@ interface FunCatalogProps {
   stats?: ResourceStats
   search: { q?: string; genre?: string; page?: number }
   updateSearch: (patch: Record<string, unknown>) => void
-  routePath: '/papers' | '/fun' | '/catalog'
   onShuffle?: () => void
 }
 
@@ -44,7 +43,6 @@ export function FunCatalog({
   stats,
   search,
   updateSearch,
-  routePath,
   onShuffle,
 }: FunCatalogProps) {
   const genreCounts = stats?.by_genre ?? {}
@@ -75,7 +73,7 @@ export function FunCatalog({
               Rubbish · Off the Record
             </p>
             <div className="inline-flex shrink-0 items-center rounded-full border border-border bg-card p-0.5 text-[11px]">
-              <Link to="/papers" className="rounded-full px-2.5 py-0.5 text-muted-foreground hover:text-foreground">
+              <Link to="/catalog" search={{ track: 'paper' }} className="rounded-full px-2.5 py-0.5 text-muted-foreground hover:text-foreground">
                 论文
               </Link>
               <span className="rounded-full bg-primary px-2.5 py-0.5 font-medium text-primary-foreground">副刊</span>
@@ -270,7 +268,7 @@ export function FunCatalog({
 
           <div className="mx-auto mt-0 flex w-full max-w-[1320px] items-center justify-between gap-3 border-t border-border px-0 py-4">
             <Link
-              to={routePath === '/fun' ? '/papers' : routePath}
+              to="/catalog" search={{ track: 'paper' }}
               className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
             >
               想看论文？去论文区

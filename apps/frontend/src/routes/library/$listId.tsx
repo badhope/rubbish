@@ -104,7 +104,7 @@ function LibraryListDetailPage() {
   return (
     <div>
       <Link
-        to="/library"
+        to="/me" search={{ tab: 'library' }}
         className="mb-4 inline-flex items-center text-sm text-muted-foreground hover:text-primary"
       >
         <ChevronLeft className="mr-1 h-4 w-4" />

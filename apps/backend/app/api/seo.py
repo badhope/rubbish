@@ -112,7 +112,7 @@ CRAWLER_RULES = [
     "Disallow: /dashboard",
     "Disallow: /submissions",
     "Disallow: /review",
-    "Disallow: /settings",
+    "Disallow: /me",
     "Disallow: /notifications",
     "Disallow: /library",
 ]
@@ -161,7 +161,7 @@ async def ai_txt(request: Request) -> Response:
 ## 可以做什么
 - 读取公开文章、目录、论坛与 OAI-PMH：允许，遵守 /robots.txt。
 - 引用时保留标题、作者、出处与原文链接。
-- 通过 MCP 或 REST 投稿：需要用户本人在 {root}/settings?tab=ai 创建的个人 Token。
+- 通过 MCP 或 REST 投稿：需要用户本人在 {root}/me?tab=settings&section=ai 创建的个人 Token。
 
 ## 不可以做什么
 - 不要尝试登录、抓取 /admin、/settings、/review、/submissions 或他人数据。
@@ -193,16 +193,16 @@ async def sitemap(request: Request, db: AsyncSession = Depends(get_db)) -> Respo
     root = _root(request)
     urls: list[tuple[str, str, str, str | None]] = [
         (f"{root}/", "weekly", "1.0", None),
-        (f"{root}/papers", "daily", "0.9", None),
         (f"{root}/catalog", "daily", "0.9", None),
-        (f"{root}/fun", "daily", "0.8", None),
+        (f"{root}/catalog", "daily", "0.9", None),
+        (f"{root}/catalog?track=essay", "daily", "0.8", None),
         (f"{root}/forum", "daily", "0.7", None),
         (f"{root}/archive", "weekly", "0.7", None),
         (f"{root}/sections", "weekly", "0.6", None),
         (f"{root}/about", "monthly", "0.6", None),
         (f"{root}/guide", "monthly", "0.6", None),
         (f"{root}/rules", "monthly", "0.5", None),
-        (f"{root}/journal-metrics", "monthly", "0.6", None),
+        (f"{root}/about?tab=metrics", "monthly", "0.6", None),
         (f"{root}/help", "monthly", "0.5", None),
         (f"{root}/support", "monthly", "0.4", None),
         (f"{root}/policies", "monthly", "0.4", None),
@@ -258,15 +258,15 @@ async def llms_txt(request: Request, db: AsyncSession = Depends(get_db)) -> Resp
         "",
         "## 核心入口",
         f"- [首页]({root}/)",
-        f"- [论文]({root}/papers)",
-        f"- [副刊]({root}/fun)",
+        f"- [论文]({root}/catalog)",
+        f"- [副刊]({root}/catalog?track=essay)",
         f"- [全部目录]({root}/catalog)",
         f"- [栏目]({root}/sections)",
         f"- [往期目录]({root}/archive)",
         f"- [讨论区]({root}/forum)",
         f"- [作者指南]({root}/guide)",
         f"- [期刊政策]({root}/policies)",
-        f"- [期刊指标]({root}/journal-metrics)",
+        f"- [期刊指标]({root}/about?tab=metrics)",
         f"- [RSS]({root}/rss.xml)",
         f"- [OAI-PMH]({root}/oai)",
         f"- [Sitemap]({root}/sitemap.xml)",
@@ -297,7 +297,7 @@ async def llms_txt(request: Request, db: AsyncSession = Depends(get_db)) -> Resp
             "",
             "## AI 投稿",
             f"- 能力说明：GET {root}/api/ai/capabilities",
-            f"- 用户创建 Token：{root}/settings?tab=ai",
+            f"- 用户创建 Token：{root}/me?tab=settings&section=ai",
             f"- 投稿端点：POST {root}/api/ai/submissions（X-API-Key: rbk_...）",
             "- 不接受账号密码；Token 可撤销，每 Token 每小时最多 10 篇。",
             f"- Agent 边界：{root}/ai.txt",
