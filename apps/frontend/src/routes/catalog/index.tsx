@@ -16,7 +16,6 @@ import {
 import type { ResourceType } from '@/lib/types'
 import { extractError, formatAuthors, cn } from '@/lib/utils'
 import { contentCategoryLabel, displayTypeLabel, isScholarlyContent } from '@/lib/resource-labels'
-import { DISCIPLINE_STYLE, DEFAULT_DISCIPLINE_STYLE } from '@/lib/discipline-style'
 import { ESSAY_GENRES } from '@/lib/essay-genres'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState } from '@/components/common/state'
@@ -577,8 +576,9 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
   )
 }
 
-// 总目录落地页：三区入口。读者先选「论文 / 副刊」，论文内部再选
-// 「学术论文 / 荒诞论文」；不把 274 篇混在一列里。
+// 总目录落地页：不把论文/副刊做成两张“门户卡”。
+// 用一个编辑目录：先论文（学术 / 荒诞两行），再副刊（文体一行），
+// 学科与文体都退成索引文字，读者先看清层级，再进入。
 function CatalogHub() {
   const { data: stats } = useCatalogStats()
   const seriousTotal = stats?.by_paper_kind?.serious ?? 0
@@ -591,127 +591,125 @@ function CatalogHub() {
     .slice(0, 8)
   const genres = ESSAY_GENRES.filter((g) => (genreCounts[g.value] ?? 0) > 0)
 
-  const zoneLink = 'group flex items-start gap-3 rounded-xl border bg-card p-3 transition-colors hover:border-primary/40 hover:bg-muted/20'
-  const miniLink = 'group flex min-h-16 items-center gap-2.5 rounded-lg border border-border/70 bg-background/60 px-3 py-2 text-left transition-colors hover:border-primary/35 hover:bg-accent/20'
+  const rowClass =
+    'group grid grid-cols-[2rem_minmax(0,1fr)_auto] items-baseline gap-x-4 gap-y-1 py-5 transition-colors hover:text-primary'
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="mx-auto max-w-3xl">
       <PageHeader
         title="目录"
-        description="论文与副刊是两本刊。论文内部再分学术论文与荒诞论文：前者正经研究，后者严格论文格式但一本正经地论证荒诞命题。"
+        description="一个入口，两本刊：论文内部再分学术与荒诞；副刊独立成刊，不混入论文分区。"
       />
-      <div className="grid gap-4 lg:grid-cols-2">
-        <section className="rounded-2xl border bg-gradient-to-br from-card to-muted/20 p-4 sm:p-5">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">Paper</p>
-              <h2 className="mt-1 font-serif text-xl font-semibold">论文</h2>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {seriousTotal} 篇学术论文 · {absurdTotal} 篇荒诞论文
-              </p>
-            </div>
-            <Link to="/papers" className="shrink-0 rounded-full border px-3 py-1 text-xs hover:bg-background">
-              进入论文区
-            </Link>
-          </div>
 
-          <div className="mt-4 grid gap-2 sm:grid-cols-2">
-            <Link to="/papers" search={{ kind: 'serious' }} className={zoneLink}>
-              <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
-              <span className="min-w-0">
-                <span className="flex items-baseline justify-between gap-2">
-                  <span className="font-medium">学术论文</span>
-                  <span className="text-xs tabular-nums text-muted-foreground">{seriousTotal} 篇</span>
-                </span>
-                <span className="mt-0.5 block text-xs text-muted-foreground">真实问题、可核查材料、正经论证</span>
-              </span>
-            </Link>
-            <Link to="/papers" search={{ kind: 'absurd' }} className={zoneLink}>
-              <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-amber-500" />
-              <span className="min-w-0">
-                <span className="flex items-baseline justify-between gap-2">
-                  <span className="font-medium">荒诞论文</span>
-                  <span className="text-xs tabular-nums text-muted-foreground">{absurdTotal} 篇</span>
-                </span>
-                <span className="mt-0.5 block text-xs text-muted-foreground">论文格式、一本正经胡说八道、有论证有依据</span>
-              </span>
-            </Link>
+      <section className="mt-10 border-t pt-7">
+        <div className="flex items-baseline justify-between gap-4">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.32em] text-muted-foreground">I · Paper</p>
+            <h2 className="mt-2 font-serif text-3xl font-semibold tracking-tight">论文</h2>
           </div>
+          <p className="font-mono text-sm tabular-nums text-muted-foreground">
+            {seriousTotal + absurdTotal} 篇
+          </p>
+        </div>
 
-          <div className="mt-4 border-t pt-3">
-            <div className="mb-2 flex items-baseline justify-between gap-2">
+        <div className="mt-6 divide-y border-y">
+          <Link to="/papers" search={{ kind: 'serious' }} className={rowClass}>
+            <span className="font-mono text-xs text-muted-foreground">01</span>
+            <span className="min-w-0">
+              <span className="block font-serif text-xl font-semibold">学术论文</span>
+              <span className="mt-1 block text-sm leading-6 text-muted-foreground">
+                真实问题、可核查材料、正经论证；按学术五维评审。
+              </span>
+            </span>
+            <span className="font-mono text-sm tabular-nums text-muted-foreground">
+              {seriousTotal} 篇 →
+            </span>
+          </Link>
+
+          <Link to="/papers" search={{ kind: 'absurd' }} className={rowClass}>
+            <span className="font-mono text-xs text-absurd">02</span>
+            <span className="min-w-0">
+              <span className="block font-serif text-xl font-semibold">荒诞论文</span>
+              <span className="mt-1 block text-sm leading-6 text-muted-foreground">
+                论文格式、一本正经地论证荒诞命题；荒诞度单独计分。
+              </span>
+            </span>
+            <span className="font-mono text-sm tabular-nums text-muted-foreground">
+              {absurdTotal} 篇 →
+            </span>
+          </Link>
+        </div>
+
+        {disciplines.length > 0 && (
+          <div className="mt-6">
+            <div className="flex items-baseline justify-between gap-4">
               <p className="text-xs font-medium text-muted-foreground">按学科进入</p>
-              <Link to="/papers" className="text-[11px] text-primary hover:underline">全部学科</Link>
+              <Link to="/papers" className="text-[11px] text-primary hover:underline">
+                全部学科
+              </Link>
             </div>
-            <div className="grid grid-cols-2 gap-1.5">
-              {disciplines.map(([name, count]) => {
-                const style = DISCIPLINE_STYLE[name] ?? DEFAULT_DISCIPLINE_STYLE
-                const Icon = style.icon
-                return (
-                  <Link
-                    key={name}
-                    to="/papers"
-                    search={{ discipline: name }}
-                    className={miniLink}
-                  >
-                    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${style.tint}`}>
-                      <Icon className="h-4 w-4" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-xs font-medium">{name}</span>
-                      <span className="block text-[10px] text-muted-foreground">{count} 篇 · 全刊</span>
-                    </span>
-                  </Link>
-                )
-              })}
+            <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2">
+              {disciplines.map(([name, count]) => (
+                <Link
+                  key={name}
+                  to="/papers"
+                  search={{ discipline: name }}
+                  className="inline-flex items-baseline gap-1.5 text-sm transition-colors hover:text-primary"
+                >
+                  <span>{name}</span>
+                  <span className="font-mono text-[11px] text-muted-foreground">{count}</span>
+                </Link>
+              ))}
             </div>
           </div>
-        </section>
+        )}
+      </section>
 
-        <section className="rounded-2xl border bg-gradient-to-br from-card to-muted/20 p-4 sm:p-5">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">Supplement</p>
-              <h2 className="mt-1 font-serif text-xl font-semibold">副刊</h2>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {essayTotal} 篇 · 小说、随笔、评论、指南、吐槽；不用论文体、不计分
-              </p>
-            </div>
-            <Link to="/fun" className="shrink-0 rounded-full border px-3 py-1 text-xs hover:bg-background">
-              进入副刊
-            </Link>
+      <section className="mt-12 border-t pt-7">
+        <div className="flex items-baseline justify-between gap-4">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.32em] text-muted-foreground">II · Supplement</p>
+            <h2 className="mt-2 font-serif text-3xl font-semibold tracking-tight">副刊</h2>
           </div>
+          <Link to="/fun" className="text-sm text-primary hover:underline">
+            进入副刊 →
+          </Link>
+        </div>
 
-          <div className="mt-4 border-t pt-3">
-            <div className="mb-2 flex items-baseline justify-between gap-2">
+        <p className="mt-4 max-w-2xl text-sm leading-7 text-muted-foreground">
+          {essayTotal} 篇 · 小说、随笔、评论、指南、吐槽；不用论文体、不计分，独立成刊。
+        </p>
+
+        {genres.length > 0 && (
+          <div className="mt-5">
+            <div className="flex items-baseline justify-between gap-4">
               <p className="text-xs font-medium text-muted-foreground">按文体进入</p>
-              <Link to="/fun" className="text-[11px] text-primary hover:underline">全部文体</Link>
+              <Link to="/fun" className="text-[11px] text-primary hover:underline">
+                全部文体
+              </Link>
             </div>
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2">
               {genres.map((g) => (
                 <Link
                   key={g.value}
                   to="/fun"
                   search={{ genre: g.value }}
-                  className={miniLink}
+                  className="inline-flex items-baseline gap-1.5 text-sm transition-colors hover:text-primary"
                 >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-base">
-                    {g.emoji}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-xs font-medium">{g.label}</span>
-                    <span className="block text-[10px] text-muted-foreground">{genreCounts[g.value]} 篇</span>
+                  <span>{g.label}</span>
+                  <span className="font-mono text-[11px] text-muted-foreground">
+                    {genreCounts[g.value] ?? 0}
                   </span>
                 </Link>
               ))}
             </div>
           </div>
+        )}
 
-          <div className="mt-4 rounded-xl border border-dashed bg-muted/25 px-3 py-2 text-[11px] text-muted-foreground">
-            副刊不参与学术计分，也不进站内热度；编辑推荐与最新稿件在副刊页内按文体展开。
-          </div>
-        </section>
-      </div>
+        <p className="mt-8 border-t pt-4 text-[11px] leading-6 text-muted-foreground">
+          副刊不参与学术计分，也不进站内热度；编辑推荐与最新稿件在副刊页内按文体展开。
+        </p>
+      </section>
     </div>
   )
 }
