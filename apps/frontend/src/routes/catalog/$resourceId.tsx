@@ -262,7 +262,7 @@ function CatalogDetailPage() {
         返回目录
       </Link>
 
-      <div className="flex items-start gap-8">
+      <div className="mx-auto flex w-full max-w-[1280px] items-start gap-10">
         {/* 主体 */}
         <div className="min-w-0 flex-1" id="article">
           {/* 类型 chip + 标题 + 作者 */}
@@ -593,7 +593,7 @@ function CatalogDetailPage() {
         </div>
 
         {/* 右侧 sticky 侧栏：≥1280px（xl）才渲染 */}
-        <aside className="sticky top-24 hidden w-72 shrink-0 self-start space-y-4 xl:block">
+        <aside className="article-aside sticky top-24 hidden w-72 shrink-0 self-start space-y-4 xl:block">
           {toc.length > 2 && (
             <Card>
               <CardHeader>
@@ -1341,7 +1341,7 @@ function EditDialog({
 // 摘要卡：可折叠，默认展开；科普轨标题写"导语"，论文轨写"摘要"。
 function AbstractCard({ text, collapsible, label = '摘要' }: { text: string; collapsible: boolean; label?: string }) {
   const body = normalizeAbstract(text)
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(!collapsible)
   const [overflowing, setOverflowing] = useState(false)
   const ref = useRef<HTMLParagraphElement>(null)
 
@@ -1352,33 +1352,29 @@ function AbstractCard({ text, collapsible, label = '摘要' }: { text: string; c
   }, [text])
 
   return (
-    <Card className="mb-4 gap-2 py-4">
-      <CardHeader className="px-5 pb-1 pt-0">
-        <CardTitle className="text-sm font-semibold tracking-wide text-muted-foreground">
-          {label}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="px-5 pt-0">
-        <p
-          ref={ref}
-          className={
-            'text-sm leading-7 whitespace-pre-wrap' +
-            (collapsible && !open ? ' line-clamp-5' : '')
-          }
+    <section className="mb-6 border-l-2 border-primary/30 pl-4 sm:pl-5">
+      <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">
+        {label}
+      </p>
+      <p
+        ref={ref}
+        className={
+          'text-sm leading-7 whitespace-pre-wrap' +
+          (collapsible && !open ? ' line-clamp-5' : '')
+        }
+      >
+        {body}
+      </p>
+      {collapsible && (overflowing || !open) && (
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="mt-2 inline-flex min-h-[36px] items-center text-xs font-medium text-primary hover:underline"
         >
-          {body}
-        </p>
-        {collapsible && (overflowing || !open) && (
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            className="mt-2 inline-flex min-h-[36px] items-center text-xs font-medium text-primary hover:underline"
-          >
-            {open ? '收起' : '展开全文'}
-          </button>
-        )}
-      </CardContent>
-    </Card>
+          {open ? '收起' : '展开全文'}
+        </button>
+      )}
+    </section>
   )
 }
 
@@ -1393,12 +1389,12 @@ function FoldCard({
   children: ReactNode
 }) {
   return (
-    <details open={defaultOpen} className="group rounded-xl border bg-card text-card-foreground shadow-sm">
-      <summary className="flex min-h-[48px] cursor-pointer select-none items-center justify-between gap-2 px-6 py-4 text-base font-semibold [&::-webkit-details-marker]:hidden">
+    <details open={defaultOpen} className="fold-card group border-t">
+      <summary className="flex min-h-[48px] cursor-pointer select-none items-center justify-between gap-2 py-3 text-sm font-semibold tracking-tight [&::-webkit-details-marker]:hidden">
         {title}
         <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
       </summary>
-      <div className="pb-6">{children}</div>
+      <div className="pb-4">{children}</div>
     </details>
   )
 }

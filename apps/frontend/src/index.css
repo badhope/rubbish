@@ -1841,3 +1841,29 @@ html {
 @media (prefers-reduced-motion: reduce) {
   .scroll-cue-arrow { animation: none; }
 }
+
+/* 文章详情：右栏是索引/工具，不是卡片堆；折叠信息是章节，不是卡片。 */
+.article-aside > [data-slot="card"] {
+  gap: 0.75rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.article-aside > [data-slot="card"] > [data-slot="card-header"],
+.article-aside > [data-slot="card"] > [data-slot="card-content"] {
+  padding-left: 0;
+  padding-right: 0;
+}
+.fold-card {
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.fold-card [data-slot="card-content"] {
+  padding-left: 0;
+  padding-right: 0;
+}
