@@ -82,7 +82,7 @@ interface CatalogSearch {
   doi?: string
   clc?: string
   page?: number
-  view?: 'list' | 'grid'
+  view?: 'list' | 'grid' | 'index'
 }
 
 // 论文与副刊是两本刊，入口固定在侧栏与移动端底部 Tab；
@@ -162,9 +162,9 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
   const absurdCount = stats?.by_paper_kind?.absurd ?? 0
 
   const [selectedIds, setSelectedIds] = useState<number[]>([])
-  // 默认视图 = 九宫格（v1.15）：封面浏览是目录页第一动作；?view=list 时才切列表。
   // 默认索引行，不默认九宫格：卡片只作为用户主动切换的展示方式。
-  const viewMode: 'list' | 'grid' = search.view === 'grid' ? 'grid' : 'list'
+  const viewMode: 'list' | 'grid' | 'index' =
+    search.view === 'grid' ? 'grid' : search.view === 'list' ? 'list' : 'index'
 
   // 筛选条件写到 URL，replace 避免每次筛选都污染历史。
   // 顺带清空勾选：翻页/改筛选后旧 id 已经不在页面上，留着会让「导出」
@@ -399,22 +399,23 @@ export function CatalogListPage({ fixedTrack }: { fixedTrack?: 'paper' | 'essay'
                 : '还没有匹配的副刊，换个筛选条件。'
           }
         />
+      ) : viewMode === 'index' ? (
+        // 默认索引：手机一栏，桌面两栏；没有封面、没有卡片，标题和摘要先读。
+        <div className="grid border-t sm:grid-cols-2 sm:gap-x-12" data-testid="catalog-resource-list">
+          {data.data.map((r, index) => (
+            <div key={r.id} className="border-b">
+              <CatalogIndexRow resource={r} query={search.q} index={index + 1} />
+            </div>
+          ))}
+        </div>
       ) : viewMode === 'grid' ? (
-        // 手机端单列：390px 下两列会把中文标题压成半行，读者必须先猜标题；
-        // 平板 2 列、桌面 4 列。九宫格留给桌面，手机优先可读性。
+        // 封面网格是可选浏览方式，不作为默认。
         <div className="catalog-grid-wrap">
           <div className="catalog-grid" data-testid="catalog-resource-list">
           {data.data.map((r) => (
             <CatalogGridCard key={r.id} resource={r} query={search.q} />
           ))}
           </div>
-        </div>
-      ) : isMobile ? (
-        // 移动端：索引行，不用封面卡片；一条一行，标题优先。
-        <div className="divide-y border-y" data-testid="catalog-resource-list">
-          {data.data.map((r, index) => (
-            <CatalogIndexRow key={r.id} resource={r} query={search.q} index={index + 1} />
-          ))}
         </div>
       ) : (
         // 桌面端：表格
@@ -724,8 +725,8 @@ function ViewSwitcher({
   value,
   onChange,
 }: {
-  value: 'list' | 'grid'
-  onChange: (view: 'list' | 'grid') => void
+  value: 'list' | 'grid' | 'index'
+  onChange: (view: 'list' | 'grid' | 'index') => void
 }) {
   return (
     <div
@@ -733,7 +734,7 @@ function ViewSwitcher({
       role="group"
       aria-label="切换视图"
     >
-      {(['grid', 'list'] as const).map((v) => (
+      {(['index', 'grid', 'list'] as const).map((v) => (
         <button
           key={v}
           type="button"
@@ -746,7 +747,7 @@ function ViewSwitcher({
               : 'text-muted-foreground hover:text-foreground',
           )}
         >
-          {v === 'list' ? '列表' : '网格'}
+          {v === 'index' ? '索引' : v === 'list' ? '列表' : '网格'}
         </button>
       ))}
     </div>

@@ -431,7 +431,7 @@ function CatalogDetailPage() {
           )}
 
           {/* 文末折叠区 */}
-          <div className="mt-8 space-y-4">
+          <div className="article-tail mt-8 space-y-4">
             {data.tags.length > 0 && (
               <Card>
                 <CardHeader>

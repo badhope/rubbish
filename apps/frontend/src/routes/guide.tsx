@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
+import { cn } from '@/lib/utils'
 import { AuthorsPage } from './authors'
 import { HelpPage } from './help'
 import { LevelsPage } from './levels'
@@ -24,18 +25,23 @@ const TABS = [
 function GuidePage() {
   const { tab } = useSearch({ from: '/guide' })
   return (
-    <div>
-      <div className="mx-auto mb-5 grid w-full max-w-5xl grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+    <div className="guide-page">
+      <div className="mx-auto mb-8 flex w-full max-w-[1100px] overflow-x-auto border-t">
         {TABS.map((t) => (
           <Link
             key={t.value}
             to="/guide"
             search={{ tab: t.value }}
             data-active={tab === t.value}
-            className="seg-link px-3.5 py-2 text-left"
+            className={cn(
+              'min-w-0 flex-1 whitespace-nowrap border-b-2 px-0 py-3.5 pr-2 text-left transition-colors',
+              tab === t.value
+                ? 'border-primary text-foreground'
+                : 'border-transparent text-muted-foreground hover:text-foreground',
+            )}
           >
             <span className="block text-sm font-medium">{t.label}</span>
-            <span className="seg-link-desc mt-0.5 block text-[11px]">
+            <span className="mt-0.5 hidden text-[11px] leading-5 text-muted-foreground sm:block">
               {t.desc}
             </span>
           </Link>

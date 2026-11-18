@@ -1867,3 +1867,36 @@ html {
   padding-left: 0;
   padding-right: 0;
 }
+
+/* 指南页不铺卡片墙：同一页里的 Card 一律降级为带顶线的章节块。 */
+.guide-page [data-slot="card"] {
+  gap: 0.75rem;
+  padding: 1rem 0 0.75rem;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.guide-page [data-slot="card"] > [data-slot="card-header"],
+.guide-page [data-slot="card"] > [data-slot="card-content"] {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* 文末的标签、相关文章、评论是阅读的尾声，不是又一组卡片。 */
+.article-tail > [data-slot="card"] {
+  gap: 0.75rem;
+  padding-top: 1rem;
+  padding-bottom: 0.75rem;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.article-tail > [data-slot="card"] > [data-slot="card-header"],
+.article-tail > [data-slot="card"] > [data-slot="card-content"] {
+  padding-left: 0;
+  padding-right: 0;
+}

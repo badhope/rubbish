@@ -21,7 +21,6 @@ import {
 } from '@/hooks/api/use-comments'
 import { useAuth } from '@/hooks/use-auth'
 import { formatDateTime } from '@/lib/utils'
-import { EmptyState } from '@/components/common/state'
 
 // 超过 160 字的评论默认折叠，展开/收起切换。
 function LongText({ text }: { text: string }) {
@@ -175,13 +174,19 @@ export function Comments({ resourceId }: { resourceId: number }) {
             </button>
           </p>
         ) : total === 0 ? (
-          <EmptyState title="还没有评论" description="第一条评论的位置留给你。" />
+          <div className="flex items-start gap-3 border-t py-5 text-sm text-muted-foreground">
+            <MessageSquare className="mt-0.5 h-4 w-4 shrink-0 text-primary/60" />
+            <div>
+              <p className="font-medium text-foreground">还没有评论</p>
+              <p className="mt-1 text-xs">第一条评论的位置留给你。</p>
+            </div>
+          </div>
         ) : (
           <ul className="space-y-3">
             {data!.data.map((c) => {
               const mine = user?.id === c.user_id
               return (
-                <li key={c.id} className="rounded-lg border p-3">
+                <li key={c.id} className="border-b pb-3 last:border-0">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       {c.author_avatar_url ? (

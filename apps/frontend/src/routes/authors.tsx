@@ -74,7 +74,7 @@ export function AuthorsPage() {
   const rulesAccepted = profile.data?.rules_accepted ?? false
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="mx-auto max-w-[1100px]">
       <Link
         to="/"
         className="mb-4 inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-primary"
@@ -132,7 +132,7 @@ export function AuthorsPage() {
         <RevealSection>
           <h2 className="text-xl font-medium">发表要求</h2>
           <div className="mt-4 grid gap-6 lg:grid-cols-2">
-            <div className="rounded-lg border bg-card p-5">
+            <div className="border-t bg-transparent pt-5">
               <h3 className="flex items-center gap-2 text-sm font-medium text-primary">
                 <CheckCircle2 className="h-4 w-4" />
                 我们要求
@@ -149,7 +149,7 @@ export function AuthorsPage() {
                 <li>· 全体作者同意署名与排序，投稿后不可增删作者（只可勘误）</li>
               </ul>
             </div>
-            <div className="rounded-lg border bg-card p-5">
+            <div className="border-t bg-transparent pt-5">
               <h3 className="flex items-center gap-2 text-sm font-medium text-destructive">
                 <XCircle className="h-4 w-4" />
                 我们不要求
@@ -172,7 +172,7 @@ export function AuthorsPage() {
             {NOT_ACCEPTED.map((item) => (
               <li
                 key={item}
-                className="flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2 text-sm text-muted-foreground"
+                className="flex items-start gap-2 border-b border-destructive/15 pb-2 text-sm text-muted-foreground"
               >
                 <XCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive/70" />
                 {item}
