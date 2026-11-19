@@ -4,15 +4,12 @@ import { getAuthState } from '@/lib/auth'
 import { useAuth } from '@/hooks/use-auth'
 import {
   useMeProfile,
-  useMyReviewAssignments,
-  useMySubmissions,
-  useReadingLists,
   useUnreadCount,
 } from '@/hooks/api/use-modules'
 import { useMe } from '@/hooks/api/use-auth'
 import { ErrorState, Loading } from '@/components/common/state'
 import { MeIdentityHeader } from '@/components/me/me-identity-header'
-import { MeQuickActions } from '@/components/me/me-quick-actions'
+import { MeActionBar } from '@/components/me/me-action-bar'
 import { MeTabNav } from '@/components/me/me-tab-nav'
 import { MeOverview } from '@/components/me/me-overview'
 import { MeSubmissions } from '@/components/me/me-submissions'
@@ -49,7 +46,6 @@ function MePage() {
   const { user } = useAuth()
   const profile = useMeProfile()
   const account = useMe()
-  const submissions = useMySubmissions(undefined, 1, 1)
   const reviewAccess = Boolean(
     profile.data &&
       (profile.data.identities.includes('reviewer') ||
@@ -57,8 +53,6 @@ function MePage() {
         profile.data.permission_role === 'editor_in_chief' ||
         (user?.roles ?? []).some((role) => ['reviewer', 'senior_reviewer'].includes(role))),
   )
-  const pendingReviews = useMyReviewAssignments('pending', 1, 1, { enabled: reviewAccess })
-  const readingLists = useReadingLists(1, 1)
   const unread = useUnreadCount()
   const [notificationsOpen, setNotificationsOpen] = useState(Boolean(search.notifications))
 
@@ -95,11 +89,7 @@ function MePage() {
     <div className="mx-auto w-full max-w-[1120px]">
       <MeIdentityHeader profile={data} account={account.data} />
 
-      <MeQuickActions
-        submissionCount={submissions.data?.meta.total}
-        reviewCount={reviewable ? pendingReviews.data?.meta.total : undefined}
-        reviewable={reviewable}
-        libraryCount={readingLists.data?.meta.total}
+      <MeActionBar
         unreadCount={unread.data?.unread}
         onOpenNotifications={() => setNotificationsOpen(true)}
       />
