@@ -1,7 +1,7 @@
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useRef, useState } from 'react'
 import { createFileRoute, Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Clock3, Flame, Flag, Lock, Megaphone, MessageSquare, Pin, Plus } from 'lucide-react'
+import { Clock3, Flame, Flag, Lock, Megaphone, MessageSquare, Pin, Plus, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import { uploadForumImage } from '@/lib/forum'
@@ -16,8 +16,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
-  DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
 import {
@@ -26,8 +24,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -163,6 +159,8 @@ function ForumListPage() {
   const paperTitle = search.paperTitle ?? ''
 
   const [open, setOpen] = useState(false)
+  const [boardPickerOpen, setBoardPickerOpen] = useState(false)
+  const titleRef = useRef<HTMLInputElement>(null)
   const [form, setForm] = useState({
     title: paperId ? `讨论：${(paperTitle || `论文 #${paperId}`).slice(0, 170)}` : '',
     body: paperId ? `论文链接：/catalog/${paperId}\n\n` : '',
@@ -231,7 +229,8 @@ function ForumListPage() {
       void navigate({ to: '/login', search: { redirect: '/forum' } })
       return
     }
-    setForm((prev) => ({ ...prev, board_id: prev.board_id ?? defaultBoardId }))
+    setForm((prev) => ({ ...prev, board_id: prev.board_id ?? currentBoardId }))
+    setBoardPickerOpen(false)
     setOpen(true)
   }
 
@@ -239,6 +238,12 @@ function ForumListPage() {
     void navigate({ to: '/forum', search: { ...search, ...patch }, replace: true })
   }
 
+  const selectedBoard = allBoards.find((b) => b.id === form.board_id)
+  const currentBoardId = activeBoard
+    ? activeBoard.children.length > 0
+      ? collectBoards(activeBoard.children).find((b) => b.children.length === 0)?.id ?? activeBoard.id
+      : activeBoard.id
+    : defaultBoardId
   const topics: ForumTopic[] = listQ.data?.data ?? []
   const meta = listQ.data?.meta
 
@@ -465,72 +470,102 @@ function ForumListPage() {
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-xl">
-          <DialogHeader>
-            <DialogTitle>发新帖</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="t-board">版块</Label>
-              <Select
-                value={form.board_id ? String(form.board_id) : ''}
-                onValueChange={(v) => setForm((p) => ({ ...p, board_id: Number(v) }))}
-              >
-                <SelectTrigger id="t-board">
-                  <SelectValue placeholder="选择最具体的子板块" />
-                </SelectTrigger>
-                <SelectContent>
-                  {leafBoards.map((b) => (
-                    <SelectItem key={b.id} value={String(b.id)}>
-                      {b.path}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-[11px] text-muted-foreground">
-                发到叶子板块，父板块会自动汇总；已选：{allBoards.find((b) => b.id === form.board_id)?.name ?? '未选择'}
-              </p>
+        <DialogContent
+          showCloseButton={false}
+          className="top-0 left-0 flex h-[100dvh] max-h-none w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 p-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:h-[min(92vh,880px)] sm:max-h-[min(92vh,880px)] sm:max-w-4xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-lg sm:border"
+          onOpenAutoFocus={(event) => {
+            event.preventDefault()
+            titleRef.current?.focus()
+          }}
+        >
+          <div className="flex items-center justify-between border-b px-4 py-3 sm:px-6">
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">NEW TOPIC</p>
+              <DialogTitle className="mt-1 font-serif text-xl tracking-tight">发新帖</DialogTitle>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="t-title">标题</Label>
-              <Input
-                id="t-title"
+            <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="关闭发帖">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6">
+            <div className="mx-auto max-w-3xl space-y-4">
+              <input
+                ref={titleRef}
                 value={form.title}
                 onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
                 maxLength={200}
-                placeholder="一句话说清你要讨论什么"
+                placeholder="标题：一句话说清你要讨论什么"
+                aria-label="帖子标题"
+                className="w-full border-0 bg-transparent p-0 font-serif text-2xl leading-tight tracking-tight outline-none placeholder:text-muted-foreground/70"
               />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="t-body">内容</Label>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {boardPickerOpen ? (
+                  <Select
+                    value={form.board_id ? String(form.board_id) : ''}
+                    onValueChange={(v) => {
+                      setForm((p) => ({ ...p, board_id: Number(v) }))
+                      setBoardPickerOpen(false)
+                    }}
+                  >
+                    <SelectTrigger className="h-8 w-[280px] text-xs" aria-label="选择版块">
+                      <SelectValue placeholder="选择最具体的子板块" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {leafBoards.map((b) => (
+                        <SelectItem key={b.id} value={String(b.id)}>
+                          {b.path}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setBoardPickerOpen(true)}
+                    className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-colors hover:border-primary/40"
+                  >
+                    <span className="text-muted-foreground">发到：</span>
+                    <span className="font-medium">{selectedBoard?.name ?? '选择版块'}</span>
+                    <span className="text-primary">修改</span>
+                  </button>
+                )}
+                <span className="text-[11px] text-muted-foreground">父板块会自动汇总子板块帖子；发帖登录即可，不需要积分。</span>
+              </div>
+
               <Suspense fallback={<div className="rounded-md border border-dashed px-3 py-6 text-sm text-muted-foreground">编辑器加载中…</div>}>
                 <MarkdownEditor
                   value={form.body}
                   onChange={(body) => setForm((p) => ({ ...p, body }))}
                   onUploadImage={uploadForumImage}
-                  minHeight={180}
+                  minHeight={360}
                   compact
-                  autoFocus
                   onSubmitShortcut={publishTopic}
-                  placeholder="支持 Markdown。说清背景、你的判断、以及希望得到什么回应。"
+                  placeholder="说清背景、你的判断、以及希望得到什么回应。支持 Markdown、表情和图片。"
                 />
               </Suspense>
-              <p className="text-[11px] text-muted-foreground">
-                Ctrl / ⌘ + Enter 直接发布
-              </p>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              取消
-            </Button>
-            <Button
-              onClick={publishTopic}
-              disabled={createMut.isPending || !form.board_id || form.title.trim().length < 2 || form.body.trim().length < 2}
-            >
-              {createMut.isPending ? '发布中…' : '发布'}
-            </Button>
-          </DialogFooter>
+
+          <div className="border-t px-4 py-3 sm:px-6">
+            <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
+              <span className="text-[11px] text-muted-foreground">
+                Ctrl / ⌘ + Enter 发布 · 正文 {form.body.length} 字
+              </span>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" onClick={() => setOpen(false)}>
+                  取消
+                </Button>
+                <Button
+                  onClick={publishTopic}
+                  disabled={createMut.isPending || !form.board_id || form.title.trim().length < 2 || form.body.trim().length < 2}
+                >
+                  {createMut.isPending ? '发布中…' : '发布'}
+                </Button>
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
