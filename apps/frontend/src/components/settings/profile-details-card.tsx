@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Camera, Check, ImagePlus, LockKeyhole, Loader2, Sparkles } from 'lucide-react'
+import { Camera, Check, ChevronDown, ImagePlus, LockKeyhole, Loader2, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { uploadForumImage } from '@/lib/forum'
 import { extractError, cn } from '@/lib/utils'
@@ -94,6 +94,7 @@ const FIELDS: Array<{
 export function ProfileDetailsCard({ initial }: { initial?: UserResponse | null }) {
   const [form, setForm] = useState<ProfileForm>(() => toForm(initial))
   const [uploading, setUploading] = useState<'avatar' | 'banner' | null>(null)
+  const [showMoreFields, setShowMoreFields] = useState(false)
   const avatarInput = useRef<HTMLInputElement>(null)
   const bannerInput = useRef<HTMLInputElement>(null)
   const updateProfile = useUpdateProfile()
@@ -275,7 +276,7 @@ export function ProfileDetailsCard({ initial }: { initial?: UserResponse | null 
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          {FIELDS.map((field) => (
+          {FIELDS.slice(0, 4).map((field) => (
             <div key={field.key} className="space-y-1.5">
               <Label htmlFor={`profile-${field.key}`}>{field.label}</Label>
               <Input
@@ -290,6 +291,34 @@ export function ProfileDetailsCard({ initial }: { initial?: UserResponse | null 
             </div>
           ))}
         </div>
+
+        <button
+          type="button"
+          onClick={() => setShowMoreFields((value) => !value)}
+          className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-primary"
+        >
+          {showMoreFields ? '收起更多资料' : '更多资料（职称、所在地、主页、学者主页）'}
+          <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showMoreFields ? 'rotate-180' : ''}`} />
+        </button>
+
+        {showMoreFields ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {FIELDS.slice(4).map((field) => (
+              <div key={field.key} className="space-y-1.5">
+                <Label htmlFor={`profile-${field.key}`}>{field.label}</Label>
+                <Input
+                  id={`profile-${field.key}`}
+                  type={field.type === 'url' ? 'url' : 'text'}
+                  inputMode={field.type === 'url' ? 'url' : undefined}
+                  value={form[field.key]}
+                  maxLength={field.maxLength}
+                  placeholder={field.placeholder}
+                  onChange={(e) => set(field.key, e.target.value)}
+                />
+              </div>
+            ))}
+          </div>
+        ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
