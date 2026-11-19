@@ -1,11 +1,9 @@
 import { useState } from 'react'
-import { createFileRoute, Link, redirect, useNavigate, useSearch } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { Bookmark } from 'lucide-react'
-import { getAuthState } from '@/lib/auth'
 import { recommendationReason } from '@/lib/resource-labels'
 import { useMyRecommendations } from '@/hooks/api/use-modules'
 import { AddToListDialog } from '@/components/common/add-to-list-dialog'
-import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -18,63 +16,39 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-export const Route = createFileRoute('/recommendations')({
-  beforeLoad: () => {
-    if (!getAuthState().isAuthenticated) throw redirect({ to: '/login', search: { redirect: '/recommendations' } })
-  },
-  component: RecommendationsPage,
-})
-
-interface RecSearch {
-  limit?: number
-}
-
 const LIMIT_OPTIONS = [5, 10, 20, 50]
 const DEFAULT_LIMIT = 10
 
-function RecommendationsPage() {
-  const navigate = useNavigate()
-  const search = useSearch({ strict: false }) as RecSearch
-  const limit = search.limit ?? DEFAULT_LIMIT
+export function MeRecommendations() {
+  const [limit, setLimit] = useState(DEFAULT_LIMIT)
   const [listResourceId, setListResourceId] = useState<number | null>(null)
 
   const { data, isLoading, isError, refetch } = useMyRecommendations(limit)
 
-  // limit 同步到 URL，刷新或分享时仍能复现
-  const updateSearch = (patch: Partial<RecSearch>) => {
-    void navigate({
-      to: '/recommendations',
-      search: { ...search, ...patch },
-      replace: true,
-    })
-  }
-
   return (
     <div>
-      <PageHeader
-        title="为你推荐"
-        description="基于你的阅读历史与偏好的个性化推荐。"
-        actions={
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">条数</span>
-            <Select
-              value={String(limit)}
-              onValueChange={(v) => updateSearch({ limit: Number(v) })}
-            >
-              <SelectTrigger size="sm" className="w-24">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {LIMIT_OPTIONS.map((n) => (
-                  <SelectItem key={n} value={String(n)}>
-                    {n} 条
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        }
-      />
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b pb-4">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">FOR YOU</p>
+          <h2 className="mt-1 font-serif text-xl tracking-tight">为你推荐</h2>
+          <p className="mt-1 text-xs text-muted-foreground">基于阅读历史与关注学科；没有历史时先给最新收录。</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">条数</span>
+          <Select value={String(limit)} onValueChange={(v) => setLimit(Number(v))}>
+            <SelectTrigger size="sm" className="w-24">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {LIMIT_OPTIONS.map((n) => (
+                <SelectItem key={n} value={String(n)}>
+                  {n} 条
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       {isLoading ? (
         <Loading />

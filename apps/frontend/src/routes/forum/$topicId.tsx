@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
@@ -161,6 +161,7 @@ function ReplyCard({
   canReply,
   onReply,
   onReport,
+  inlineReply,
 }: {
   reply: ForumReply
   isRoot: boolean
@@ -169,6 +170,7 @@ function ReplyCard({
   canReply: boolean
   onReply: (reply: ForumReply) => void
   onReport: (target: { reply_id: number; reason: string }) => void
+  inlineReply?: ReactNode
 }) {
   const { isAuthenticated, user } = useAuth()
   const isTopicAuthor = reply.author?.id !== undefined && reply.author.id === topicAuthorId
@@ -254,6 +256,7 @@ function ReplyCard({
             </Button>
           )}
         </div>
+        {inlineReply}
       </CardContent>
     </Card>
   )
@@ -267,7 +270,6 @@ function ForumTopicPage() {
   const { isAuthenticated, user, isAdmin } = useAuth()
   const [reply, setReply] = useState('')
   const [replyTo, setReplyTo] = useState<ForumReply | null>(null)
-  const composerRef = useRef<HTMLDivElement | null>(null)
 
   const topicQ = useQuery<ForumTopic>({
     queryKey: ['forum', 'topic', id],
@@ -336,8 +338,43 @@ function ForumTopicPage() {
     repliesQ.data?.find((r) => r.id === replyItem.parent_id)?.author?.username
 
   const startReply = (target: ForumReply) => {
+    if (replyTo?.id !== target.id) setReply('')
     setReplyTo(target)
-    requestAnimationFrame(() => composerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }))
+  }
+
+  const cancelReply = () => {
+    setReply('')
+    setReplyTo(null)
+  }
+
+  const renderInlineReply = (target: ForumReply) => {
+    if (replyTo?.id !== target.id) return null
+    return (
+      <div className="mt-2 rounded-lg border bg-muted/25 p-2.5">
+        <div className="mb-2 text-[11px] text-muted-foreground">
+          回复 @{target.author?.display_name || target.author?.username || '已注销用户'}
+        </div>
+        <MarkdownEditor
+          value={reply}
+          onChange={setReply}
+          onUploadImage={uploadForumImage}
+          minHeight={120}
+          compact
+          autoFocus
+          onSubmitShortcut={sendReply}
+          placeholder="写在这条回复下面；Ctrl / ⌘ + Enter 发送"
+        />
+        <div className="mt-2 flex items-center justify-end gap-2">
+          <Button variant="ghost" size="sm" onClick={cancelReply}>
+            取消
+          </Button>
+          <Button size="sm" onClick={sendReply} disabled={replyMut.isPending || reply.trim().length < 1}>
+            <Send className="h-4 w-4" />
+            {replyMut.isPending ? '发送中…' : '回复'}
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   const share = async () => {
@@ -478,6 +515,7 @@ function ForumTopicPage() {
                   canReply={isAuthenticated && !topic.is_locked}
                   onReply={startReply}
                   onReport={(target) => reportMut.mutate(target)}
+                  inlineReply={renderInlineReply(root)}
                 />
                 {children.length > 0 && (
                   <div className="space-y-2">
@@ -491,6 +529,7 @@ function ForumTopicPage() {
                         canReply={isAuthenticated && !topic.is_locked}
                         onReply={startReply}
                         onReport={(target) => reportMut.mutate(target)}
+                        inlineReply={renderInlineReply(child)}
                       />
                     ))}
                   </div>
@@ -505,25 +544,11 @@ function ForumTopicPage() {
         <p className="rounded-md border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
           该帖已锁定，不再接受新回复。
         </p>
-      ) : (
-        <Card ref={composerRef}>
+      ) : replyTo ? null : (
+        <Card>
           <CardContent className="space-y-2 py-4">
             {isAuthenticated ? (
               <>
-                {replyTo && (
-                  <div className="flex items-center justify-between gap-2 rounded-md bg-muted/50 px-2.5 py-1.5 text-xs">
-                    <span className="min-w-0 truncate text-muted-foreground">
-                      正在回复 <span className="font-medium text-foreground">@{replyTo.author?.username ?? '已注销用户'}</span>
-                    </span>
-                    <button
-                      type="button"
-                      className="shrink-0 text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-                      onClick={() => setReplyTo(null)}
-                    >
-                      取消
-                    </button>
-                  </div>
-                )}
                 <MarkdownEditor
                   value={reply}
                   onChange={setReply}
@@ -532,11 +557,7 @@ function ForumTopicPage() {
                   compact
                   autoFocus
                   onSubmitShortcut={sendReply}
-                  placeholder={
-                    replyTo
-                      ? `回复 @${replyTo.author?.username ?? '对方'}：说清你同意哪一点、补充什么证据。`
-                      : '写下你的回应…（支持 Markdown、表情和站内表情包）'
-                  }
+                  placeholder="写下你的回应…（支持 Markdown、表情和站内表情包）"
                 />
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] text-muted-foreground">
@@ -547,7 +568,7 @@ function ForumTopicPage() {
                     disabled={replyMut.isPending || reply.trim().length < 1}
                   >
                     <Send className="h-4 w-4" />
-                    {replyMut.isPending ? '发送中…' : replyTo ? '回复' : '发表回复'}
+                    {replyMut.isPending ? '发送中…' : '发表回复'}
                   </Button>
                 </div>
               </>

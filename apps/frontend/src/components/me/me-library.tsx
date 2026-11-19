@@ -33,6 +33,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { MeFollows } from './me-follows'
+import { MeRecommendations } from './me-recommendations'
 import { shortDate } from './format'
 
 interface ListFormState {
@@ -40,7 +41,7 @@ interface ListFormState {
   description: string
 }
 
-function LibrarySectionNav({ active }: { active: 'library' | 'following' }) {
+function LibrarySectionNav({ active }: { active: 'library' | 'following' | 'recommendations' }) {
   return (
     <div className="flex flex-wrap gap-2 border-b pb-3">
       <Button variant={active === 'library' ? 'default' : 'outline'} size="sm" asChild>
@@ -53,12 +54,18 @@ function LibrarySectionNav({ active }: { active: 'library' | 'following' }) {
           关注与订阅
         </Link>
       </Button>
+      <Button variant={active === 'recommendations' ? 'default' : 'outline'} size="sm" asChild>
+        <Link to="/me" search={{ tab: 'library', section: 'recommendations' }}>
+          为你推荐
+        </Link>
+      </Button>
     </div>
   )
 }
 
 export function MeLibrary({ section }: { section?: string }) {
   const isFollowing = section === 'following'
+  const isRecommendations = section === 'recommendations'
   const [page, setPage] = useState(1)
   const lists = useReadingLists(page, 12)
   const authors = useMyFollowedAuthors(1, 12)
@@ -77,6 +84,15 @@ export function MeLibrary({ section }: { section?: string }) {
       <div className="space-y-5">
         <LibrarySectionNav active="following" />
         <MeFollows />
+      </div>
+    )
+  }
+
+  if (isRecommendations) {
+    return (
+      <div className="space-y-5">
+        <LibrarySectionNav active="recommendations" />
+        <MeRecommendations />
       </div>
     )
   }

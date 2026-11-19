@@ -16,12 +16,14 @@
 - `/feedback` 独立页删除；反馈墙并入 `/forum?view=feedback`，保留提交、状态筛选、类型筛选与后台回复。
 - `/appeals` 独立页删除；作者申诉收进 `/me?tab=submissions&section=appeals`，与投稿记录共用同一入口。
 - `/follows` 独立页删除；关注作者与订阅学科收进 `/me?tab=library&section=following`。
+- `/recommendations` 独立页删除；个性化推荐收进 `/me?tab=library&section=recommendations`。
+- 论坛回复改为在目标楼层下方内联展开，不再跳到底部输入框。
 - sitemap 改用 `/catalog?section=` 与 `/catalog?volume=&issue=`，不再收录旧归档/栏目页。
 
 ### Removed
 - 删除 `/tools` 路由、导航入口与后端 SPA 白名单。
-- 删除 `/authors`、`/help`、`/policies`、`/archive`、`/sections`、`/ingest`、`/feedback`、`/appeals`、`/follows` 路由文件；指南页面组件迁到 `components/guide/`。
-- 后端 SPA 白名单移除 `policies`、`help`、`rules`、`shop`、`archive`、`sections`、`ingest`、`feedback`、`appeals`、`follows`。
+- 删除 `/authors`、`/help`、`/policies`、`/archive`、`/sections`、`/ingest`、`/feedback`、`/appeals`、`/follows`、`/recommendations` 路由文件；指南页面组件迁到 `components/guide/`。
+- 后端 SPA 白名单移除 `policies`、`help`、`rules`、`shop`、`archive`、`sections`、`ingest`、`feedback`、`appeals`、`follows`、`recommendations`。
 
 ## [1.16.0] — 2026-11-19
 

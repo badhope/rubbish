@@ -187,7 +187,6 @@ _SPA_ROUTE_PREFIXES = frozenset(
         "papers",
         "profile",
         "reader",
-        "recommendations",
         "register",
         "reset-password",
         "review",
