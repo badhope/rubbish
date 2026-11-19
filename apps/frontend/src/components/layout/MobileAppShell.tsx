@@ -263,7 +263,7 @@ export function MobileAppShell() {
                       const Icon = item.icon
                       return (
                         <DropdownMenuItem key={item.to} asChild>
-                          <Link to={item.to} className="flex items-center gap-2">
+                          <Link to={item.to} search={item.search} className="flex items-center gap-2">
                             <Icon className="h-4 w-4 text-muted-foreground" />
                             <span>{item.label}</span>
                           </Link>

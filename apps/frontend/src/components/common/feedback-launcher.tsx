@@ -206,7 +206,8 @@ export function FeedbackComposer({
             {sending ? '提交中…' : '提交给主编'}
           </Button>
           <Link
-            to="/feedback"
+            to="/forum"
+            search={{ view: 'feedback' }}
             className="block text-center text-sm text-primary hover:underline"
             onClick={() => onOpenChange(false)}
           >

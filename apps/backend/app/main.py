@@ -201,7 +201,6 @@ _SPA_ROUTE_PREFIXES = frozenset(
         "fun",
         "appeals",
         "grade",
-        "feedback",
         "guide",
         "u",
     }

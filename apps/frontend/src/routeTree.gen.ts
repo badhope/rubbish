@@ -15,7 +15,6 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AppealsRouteImport } from './routes/appeals'
 import { Route as DeskRouteImport } from './routes/desk'
-import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as GuideRouteImport } from './routes/guide'
 import { Route as LoginRouteImport } from './routes/login'
@@ -80,11 +79,6 @@ const AppealsRoute = AppealsRouteImport.update({
 const DeskRoute = DeskRouteImport.update({
   id: '/desk',
   path: '/desk',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FeedbackRoute = FeedbackRouteImport.update({
-  id: '/feedback',
-  path: '/feedback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -270,7 +264,6 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/appeals': typeof AppealsRoute
   '/desk': typeof DeskRoute
-  '/feedback': typeof FeedbackRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/guide': typeof GuideRoute
   '/login': typeof LoginRoute
@@ -313,7 +306,6 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/appeals': typeof AppealsRoute
   '/desk': typeof DeskRoute
-  '/feedback': typeof FeedbackRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/guide': typeof GuideRoute
   '/login': typeof LoginRoute
@@ -358,7 +350,6 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/appeals': typeof AppealsRoute
   '/desk': typeof DeskRoute
-  '/feedback': typeof FeedbackRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/guide': typeof GuideRoute
   '/login': typeof LoginRoute
@@ -404,7 +395,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/appeals'
     | '/desk'
-    | '/feedback'
     | '/forgot-password'
     | '/guide'
     | '/login'
@@ -447,7 +437,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/appeals'
     | '/desk'
-    | '/feedback'
     | '/forgot-password'
     | '/guide'
     | '/login'
@@ -491,7 +480,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/appeals'
     | '/desk'
-    | '/feedback'
     | '/forgot-password'
     | '/guide'
     | '/login'
@@ -536,7 +524,6 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   AppealsRoute: typeof AppealsRoute
   DeskRoute: typeof DeskRoute
-  FeedbackRoute: typeof FeedbackRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   GuideRoute: typeof GuideRoute
   LoginRoute: typeof LoginRoute
@@ -609,13 +596,6 @@ declare module '@tanstack/react-router' {
       path: '/desk'
       fullPath: '/desk'
       preLoaderRoute: typeof DeskRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/feedback': {
-      id: '/feedback'
-      path: '/feedback'
-      fullPath: '/feedback'
-      preLoaderRoute: typeof FeedbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -895,7 +875,6 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   AppealsRoute: AppealsRoute,
   DeskRoute: DeskRoute,
-  FeedbackRoute: FeedbackRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   GuideRoute: GuideRoute,
   LoginRoute: LoginRoute,

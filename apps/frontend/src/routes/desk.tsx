@@ -158,7 +158,7 @@ function DeskPage() {
             关于本刊
           </Link>
           里；发现流程问题，可以通过
-          <Link to="/feedback" className="mx-1 text-primary hover:underline">
+          <Link to="/forum" search={{ view: 'feedback' }} className="mx-1 text-primary hover:underline">
             反馈墙
           </Link>
           留下可追踪的记录。

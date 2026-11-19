@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.16.1] — 2026-11-19
+## [1.17.0] — 2026-11-19
 
 ### Changed
 - 投稿向导“预览并提交”步骤接入编校检查：显示阻断/提醒数量，可展开逐条查看问题、行号与代码；不再保留独立工具页。
@@ -13,12 +13,13 @@
 - `/catalog/new` 删除；管理员资源录入收进 `/admin/journal?section=resources`。
 - `/studio/$id` 删除；稿件修改统一走 `/submissions/new?edit=<id>`，审稿意见继续在投稿详情中展示。
 - Markdown 编辑器新增 `compact` 模式：论坛发帖/回复隐藏查找、大纲、专注、版本、表格、分栏，保留输入、基础排版、表情、图片；正文自动聚焦，Ctrl/⌘+Enter 可直接发布。
+- `/feedback` 独立页删除；反馈墙并入 `/forum?view=feedback`，保留提交、状态筛选、类型筛选与后台回复。
 - sitemap 改用 `/catalog?section=` 与 `/catalog?volume=&issue=`，不再收录旧归档/栏目页。
 
 ### Removed
 - 删除 `/tools` 路由、导航入口与后端 SPA 白名单。
-- 删除 `/authors`、`/help`、`/policies`、`/archive`、`/sections`、`/ingest` 路由文件；指南页面组件迁到 `components/guide/`。
-- 后端 SPA 白名单移除 `policies`、`help`、`rules`、`shop`、`archive`、`sections`、`ingest`。
+- 删除 `/authors`、`/help`、`/policies`、`/archive`、`/sections`、`/ingest`、`/feedback` 路由文件；指南页面组件迁到 `components/guide/`。
+- 后端 SPA 白名单移除 `policies`、`help`、`rules`、`shop`、`archive`、`sections`、`ingest`、`feedback`。
 
 ## [1.16.0] — 2026-11-19
 

@@ -20,6 +20,7 @@ export interface MobileTab {
 
 export interface MobileMoreItem {
   to: string
+  search?: Record<string, string>
   label: string
   icon: LucideIcon
   /** 仅登录用户可见 */
@@ -59,6 +60,6 @@ export const MOBILE_MORE: MobileMoreItem[] = [
   { to: '/review/board', label: '审稿广场', icon: Eye, group: '期刊' },
   { to: '/about', label: '关于与指标', icon: Building2, group: '期刊' },
   { to: '/guide', label: '投稿与操作指南', icon: PenLine, group: '期刊' },
-  { to: '/feedback', label: '反馈与建议', icon: MessageSquareText, group: '设置' },
+  { to: '/forum', search: { view: 'feedback' }, label: '反馈与建议', icon: MessageSquareText, group: '设置' },
   { to: '/admin', label: '管理后台', icon: Gavel, auth: true, adminOnly: true, group: '管理' },
 ]

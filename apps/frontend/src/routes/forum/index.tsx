@@ -8,6 +8,7 @@ import { uploadForumImage } from '@/lib/forum'
 import { extractError } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
 import { PageHeader } from '@/components/common/page-header'
+import { FeedbackBoardPage } from '@/components/forum/feedback-board'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
 import { MarkdownEditor } from '@/components/common/markdown-editor'
 import { MarkdownExcerpt } from '@/components/common/markdown-content'
@@ -145,7 +146,9 @@ function ForumListPage() {
     paperId?: number | string
     paperTitle?: string
     sort?: string
+    view?: string
   }
+  const view = search.view === 'feedback' ? 'feedback' : 'list'
   const category = search.category ?? 'all'
   const page = search.page ?? 1
   const sort = search.sort === 'hot' ? 'hot' : 'latest'
@@ -234,18 +237,28 @@ function ForumListPage() {
   const topics: ForumTopic[] = listQ.data?.data ?? []
   const meta = listQ.data?.meta
 
+  if (view === 'feedback') {
+    return <FeedbackBoardPage />
+  }
+
   return (
     <div className="mx-auto w-full max-w-4xl space-y-4">
       <PageHeader
         title="讨论"
         description="学术交流与站务反馈两大父板块，向下细分到论文精读、复现与数据、写作与投稿、统计与方法等子板块。发帖登录即可，不需要积分。"
         actions={
-          <Button
-            onClick={openComposer}
-          >
-            <Plus className="h-4 w-4" />
-            发帖
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" asChild>
+              <Link to="/forum" search={{ view: 'feedback' }}>
+                <MessageSquare className="h-4 w-4" />
+                反馈墙
+              </Link>
+            </Button>
+            <Button onClick={openComposer}>
+              <Plus className="h-4 w-4" />
+              发帖
+            </Button>
+          </div>
         }
       />
 

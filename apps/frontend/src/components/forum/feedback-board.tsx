@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { CheckCircle2, MessageSquareText, Pin, RefreshCw } from 'lucide-react'
 import { FeedbackComposer } from '@/components/common/feedback-launcher'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -15,12 +15,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-
-export const Route = createFileRoute('/feedback')({
-  // 反馈墙是独立入口：提交反馈的人要能回来看到编辑部的公开回复与处理结果。
-  // 之前的 redirect 把整个反馈墙藏掉了，反馈入口点进去只会跳到论坛。
-  component: FeedbackBoardPage,
-})
 
 interface FeedbackItem {
   id: number
@@ -56,7 +50,7 @@ function formatDate(value: string): string {
   return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`
 }
 
-function FeedbackBoardPage() {
+export function FeedbackBoardPage() {
   const [status, setStatus] = useState<StatusTab>('all')
   const [kindFilter, setKindFilter] = useState<string>('all')
   const [target, setTarget] = useState<FeedbackItem | null>(null)
@@ -105,6 +99,9 @@ function FeedbackBoardPage() {
         description="大家提过的问题都集中在这里；编辑部处理后会标成「已解决」。"
         actions={
           <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/forum">返回讨论</Link>
+            </Button>
             <Button size="sm" onClick={() => setComposeOpen(true)}>
               <MessageSquareText className="h-4 w-4" />
               提个问题
