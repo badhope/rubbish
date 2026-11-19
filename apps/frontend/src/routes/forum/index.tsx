@@ -253,6 +253,13 @@ function ForumListPage() {
   const allBoards = collectBoards(boardTree)
   const leafBoards = allBoards.filter((b) => b.children.length === 0)
   const defaultBoardId = leafBoards.find((b) => b.slug === 'planning')?.id ?? leafBoards[0]?.id ?? null
+
+  // 版块树是异步加载的：从 ?compose=1 直接打开发帖框时表单可能先于版块数据初始化。
+  // 加载完成后再补上默认版块，避免标题和正文都填好后“发布”仍不可用。
+  useEffect(() => {
+    if (!open || form.board_id !== null || defaultBoardId === null) return
+    setForm((prev) => (prev.board_id === null ? { ...prev, board_id: defaultBoardId } : prev))
+  }, [defaultBoardId, form.board_id, open])
   const normalizedCategory = LEGACY_SLUG[category] ?? category
   const activeBoard = normalizedCategory === 'all' ? null : allBoards.find((b) => b.slug === normalizedCategory)
 
