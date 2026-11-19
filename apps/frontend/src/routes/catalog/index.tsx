@@ -37,7 +37,6 @@ import {
 } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Input } from '@/components/ui/input'
-import { CatalogGridCard } from './-catalog-grid-card'
 import { CatalogIndexRow } from './-catalog-index-row'
 import { FunCatalog } from '@/components/catalog/fun-feed'
 import {
@@ -93,7 +92,7 @@ interface CatalogSearch {
   /** 目录排序；issue=按卷期顺序。 */
   sort?: 'issue'
   page?: number
-  view?: 'list' | 'grid' | 'index'
+  view?: 'list' | 'index'
 }
 
 // 论文与副刊是两本刊，入口固定在侧栏与移动端底部 Tab；
@@ -169,8 +168,7 @@ export function CatalogListPage() {
 
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   // 默认索引行，不默认九宫格：卡片只作为用户主动切换的展示方式。
-  const viewMode: 'list' | 'grid' | 'index' =
-    search.view === 'grid' ? 'grid' : search.view === 'list' ? 'list' : 'index'
+  const viewMode: 'list' | 'index' = search.view === 'list' ? 'list' : 'index'
 
   // 筛选条件写到 URL，replace 避免每次筛选都污染历史。
   // 顺带清空勾选：翻页/改筛选后旧 id 已经不在页面上，留着会让「导出」
@@ -402,15 +400,6 @@ export function CatalogListPage() {
               <CatalogIndexRow resource={r} query={search.q} index={index + 1} />
             </div>
           ))}
-        </div>
-      ) : viewMode === 'grid' ? (
-        // 封面网格是可选浏览方式，不作为默认。
-        <div className="catalog-grid-wrap">
-          <div className="catalog-grid" data-testid="catalog-resource-list">
-          {data.data.map((r) => (
-            <CatalogGridCard key={r.id} resource={r} query={search.q} />
-          ))}
-          </div>
         </div>
       ) : (
         // 桌面端：表格
@@ -722,8 +711,8 @@ function ViewSwitcher({
   value,
   onChange,
 }: {
-  value: 'list' | 'grid' | 'index'
-  onChange: (view: 'list' | 'grid' | 'index') => void
+  value: 'list' | 'index'
+  onChange: (view: 'list' | 'index') => void
 }) {
   return (
     <div
@@ -731,7 +720,7 @@ function ViewSwitcher({
       role="group"
       aria-label="切换视图"
     >
-      {(['index', 'grid', 'list'] as const).map((v) => (
+      {(['index', 'list'] as const).map((v) => (
         <button
           key={v}
           type="button"
@@ -744,7 +733,7 @@ function ViewSwitcher({
               : 'text-muted-foreground hover:text-foreground',
           )}
         >
-          {v === 'index' ? '索引' : v === 'list' ? '列表' : '网格'}
+          {v === 'index' ? '索引' : '列表'}
         </button>
       ))}
     </div>
