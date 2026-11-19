@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Activity, AlertTriangle, CheckCircle2, KeyRound, Mail, RefreshCw, Send, XCircle } from 'lucide-react'
+import { Activity, AlertTriangle, CheckCircle2, KeyRound, Mail, RefreshCw, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import { PageHeader } from '@/components/common/page-header'
@@ -89,20 +89,6 @@ export default function SystemHealthPage() {
       await loadOps()
     } catch {
       toast.error('安全配置重载失败')
-    } finally {
-      setOpsBusy(false)
-    }
-  }
-
-  async function triggerReminders() {
-    if (!window.confirm('立即执行一轮审稿催办？3 天内已催过的不会重复发信。')) return
-    setOpsBusy(true)
-    try {
-      const res = await api.post<Record<string, number>>('/admin/maintenance/review-reminders')
-      toast.success(`催办完成：检查 ${res.data.checked ?? 0} 条，发送 ${res.data.emailed ?? 0} 条`)
-      await loadOps()
-    } catch {
-      toast.error('催办任务执行失败')
     } finally {
       setOpsBusy(false)
     }
@@ -211,10 +197,6 @@ export default function SystemHealthPage() {
                 <p className="font-medium tabular-nums">{data.counts.resources ?? '—'}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">投稿</p>
-                <p className="font-medium tabular-nums">{data.counts.submissions ?? '—'}</p>
-              </div>
-              <div>
                 <p className="text-xs text-muted-foreground">24h 新用户</p>
                 <p className="font-medium tabular-nums">{data.counts.new_users_24h ?? '—'}</p>
               </div>
@@ -271,7 +253,7 @@ export default function SystemHealthPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Mail className="h-4 w-4" />
-                  邮件与催办
+                  邮件通道
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
@@ -287,10 +269,6 @@ export default function SystemHealthPage() {
                 ) : (
                   <p className="text-muted-foreground">状态未加载</p>
                 )}
-                <Button variant="outline" size="sm" onClick={triggerReminders} disabled={opsBusy}>
-                  <Send className="mr-1.5 h-4 w-4" />
-                  立即催审
-                </Button>
               </CardContent>
             </Card>
           </div>

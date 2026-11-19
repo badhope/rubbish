@@ -165,7 +165,7 @@ export default function AdminPointsPage() {
               </div>
             </div>
             <p className="text-xs leading-relaxed text-muted-foreground">
-              每日上限只约束签到、发帖等日常收入；审稿、录用、认领、裁决等一次性奖励另计，但仍计入全站月发放上限。
+              每日上限只约束签到、发帖等日常收入；优质内容、社区贡献等一次性奖励另计，但仍计入全站月发放上限。
             </p>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-xs text-muted-foreground">
