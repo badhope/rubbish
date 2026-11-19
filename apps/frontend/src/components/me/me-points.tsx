@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
-import { ArrowRight, CheckCheck, Coins, Gift, ShoppingBag, Sparkles } from 'lucide-react'
+import { ArrowRight, CheckCheck, ChevronDown, Coins, Gift, ShoppingBag, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   useMyPurchases,
@@ -46,6 +46,8 @@ export function MePoints({ profile }: { profile: MeProfile }) {
   const buy = usePurchaseItem()
   const [buyingId, setBuyingId] = useState<number | null>(null)
   const [showAllShop, setShowAllShop] = useState(false)
+  const [showLevels, setShowLevels] = useState(false)
+  const [showLedger, setShowLedger] = useState(false)
 
   const ownedIdentities = profile.identities.filter((identity) => identity in profile.levels)
 
@@ -208,15 +210,21 @@ export function MePoints({ profile }: { profile: MeProfile }) {
           title="身份等级"
           hint="等级只在同一身份内累计；不跨身份比较，也不兑换权限。"
           action={
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/guide" search={{ tab: 'levels' }}>
-                完整等级表
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/guide" search={{ tab: 'levels' }}>
+                  完整等级表
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setShowLevels((value) => !value)}>
+                {showLevels ? '收起' : `展开 ${ownedIdentities.length} 条`}
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showLevels ? 'rotate-180' : ''}`} />
+              </Button>
+            </div>
           }
         />
-        {ownedIdentities.length === 0 ? (
+        {!showLevels ? null : ownedIdentities.length === 0 ? (
           <p className="border-y py-5 text-sm text-muted-foreground">
             {profile.permission_role === 'editor_in_chief'
               ? '主编为最高权限档，不参与等级轨。'
@@ -261,8 +269,18 @@ export function MePoints({ profile }: { profile: MeProfile }) {
       </section>
 
       <section>
-        <SectionTitle kicker="LEDGER" title="积分流水" hint="只展示最近记录；完整流水以服务端为准。" />
-        {(wallet.data?.recent.length ?? 0) === 0 ? (
+        <SectionTitle
+          kicker="LEDGER"
+          title="积分流水"
+          hint="只展示最近记录；完整流水以服务端为准。"
+          action={
+            <Button variant="ghost" size="sm" onClick={() => setShowLedger((value) => !value)}>
+              {showLedger ? '收起' : `展开 ${wallet.data?.recent.length ?? 0} 条`}
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showLedger ? 'rotate-180' : ''}`} />
+            </Button>
+          }
+        />
+        {!showLedger ? null : (wallet.data?.recent.length ?? 0) === 0 ? (
           <p className="border-y py-5 text-sm text-muted-foreground">还没有积分记录。</p>
         ) : (
           <ul className="divide-y border-y">
