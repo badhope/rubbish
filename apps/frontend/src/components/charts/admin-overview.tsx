@@ -1,9 +1,9 @@
-import type { AdminAnalytics, JournalMetrics } from '@/lib/types'
+import type { AdminAnalytics } from '@/lib/types'
 import { EChart } from './echart'
 
-// 主编看板的四张图：流量趋势、热门页面、来源、内容构成。
-// 数字全部来自 /admin/analytics/summary 与 /catalog/journal-metrics，
-// 不在前端二次估算，也不把“页面访问”冒充成“独立访客”。
+// 后台看板的三张图：流量趋势、热门页面、来源。
+// 数字全部来自 /admin/analytics/summary，不在前端二次估算，
+// 也不把“页面访问”冒充成“独立访客”。
 
 function EmptyChart({ text }: { text: string }) {
   return (
@@ -128,39 +128,4 @@ export function ReferrerBar({ data }: { data: AdminAnalytics['referrers'] }) {
   )
 }
 
-export function TrackDonut({ data }: { data: JournalMetrics | undefined }) {
-  const serious = data?.serious_total ?? 0
-  const absurd = data?.absurd_total ?? 0
-  const essay = Math.max((data?.published_total ?? 0) - serious - absurd, 0)
-  if (serious + absurd + essay === 0) return <EmptyChart text="暂无内容构成数据。" />
-  return (
-    <EChart
-      height={230}
-      ariaLabel="学术论文、荒诞论文与副刊构成"
-      option={{
-        tooltip: { trigger: 'item', formatter: '{b}：{c} 篇（{d}%）' },
-        legend: {
-          bottom: 0,
-          itemWidth: 8,
-          itemHeight: 8,
-          textStyle: { color: '#5c6b64', fontSize: 10 },
-        },
-        series: [
-          {
-            type: 'pie',
-            radius: ['46%', '70%'],
-            center: ['50%', '44%'],
-            avoidLabelOverlap: true,
-            itemStyle: { borderColor: '#fff', borderWidth: 2 },
-            label: { show: false },
-            data: [
-              { value: serious, name: '学术论文', itemStyle: { color: '#2f5d46' } },
-              { value: absurd, name: '荒诞论文', itemStyle: { color: '#8fb9a3' } },
-              { value: essay, name: '副刊', itemStyle: { color: '#c7a24b' } },
-            ],
-          },
-        ],
-      }}
-    />
-  )
-}
+

@@ -23,7 +23,6 @@ import type {
   IssuePlanResponse,
   JournalIssue,
   JournalVolume,
-  JournalMetrics,
   JournalSettings,
   LadderResponse,
   LevelSnapshot,
@@ -193,15 +192,6 @@ export function useResource(id: number) {
     staleTime: 30_000,
     // 阅读/下载/收藏计数由服务端实时累计：文章页停留时每 60 秒轻量刷新，
     // 不要求用户手动刷新页面才能看到最新数字。
-    refetchInterval: 60_000,
-  })
-}
-
-export function useJournalMetrics() {
-  return useQuery<JournalMetrics>({
-    queryKey: ['catalog', 'journal-metrics'],
-    queryFn: async () => (await api.get<JournalMetrics>('/catalog/journal-metrics')).data,
-    staleTime: 60_000,
     refetchInterval: 60_000,
   })
 }

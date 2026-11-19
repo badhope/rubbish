@@ -401,28 +401,6 @@ export interface AssignOwnerRequest {
   author_position?: number
 }
 
-export interface JournalMetrics {
-  published_total: number
-  serious_total?: number
-  absurd_total?: number
-  by_type: Record<string, number>
-  by_discipline: Record<string, number>
-  discipline_count: number
-  downloads_total: number
-  reads_total: number
-  saves_total: number
-  decided_submissions: number
-  accepted_submissions: number
-  acceptance_rate: number | null
-  avg_review_days: number | null
-  median_review_days: number | null
-  open_access_rate: number | null
-  /** 站内热度：全刊 R 指数均值，本刊自设计的旗舰指标（口径不公开） */
-  r_factor: number | null
-  /** 无引文数据，自引率恒为 0 */
-  self_citation_rate: number
-}
-
 export interface AdminAnalytics {
   days: number
   total: number
