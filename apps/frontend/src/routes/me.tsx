@@ -113,7 +113,7 @@ function MePage() {
             onOpenNotifications={() => setNotificationsOpen(true)}
           />
         ) : null}
-        {activeTab === 'submissions' ? <MeSubmissions /> : null}
+        {activeTab === 'submissions' ? <MeSubmissions section={search.section} /> : null}
         {activeTab === 'reviews' && reviewable ? <MeReviews reviewable={reviewable} /> : null}
         {activeTab === 'library' ? <MeLibrary /> : null}
         {activeTab === 'points' ? <MePoints profile={data} /> : null}

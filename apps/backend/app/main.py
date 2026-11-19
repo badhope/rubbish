@@ -199,7 +199,6 @@ _SPA_ROUTE_PREFIXES = frozenset(
         "support",
         "verify-email",
         "fun",
-        "appeals",
         "grade",
         "guide",
         "u",

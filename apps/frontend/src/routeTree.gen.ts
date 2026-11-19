@@ -13,7 +13,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as R403RouteImport } from './routes/403'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteImport } from './routes/admin'
-import { Route as AppealsRouteImport } from './routes/appeals'
 import { Route as DeskRouteImport } from './routes/desk'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as GuideRouteImport } from './routes/guide'
@@ -69,11 +68,6 @@ const AboutRoute = AboutRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppealsRoute = AppealsRouteImport.update({
-  id: '/appeals',
-  path: '/appeals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DeskRoute = DeskRouteImport.update({
@@ -262,7 +256,6 @@ export interface FileRoutesByFullPath {
   '/403': typeof R403Route
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
-  '/appeals': typeof AppealsRoute
   '/desk': typeof DeskRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/guide': typeof GuideRoute
@@ -304,7 +297,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/403': typeof R403Route
   '/about': typeof AboutRoute
-  '/appeals': typeof AppealsRoute
   '/desk': typeof DeskRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/guide': typeof GuideRoute
@@ -348,7 +340,6 @@ export interface FileRoutesById {
   '/403': typeof R403Route
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
-  '/appeals': typeof AppealsRoute
   '/desk': typeof DeskRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/guide': typeof GuideRoute
@@ -393,7 +384,6 @@ export interface FileRouteTypes {
     | '/403'
     | '/about'
     | '/admin'
-    | '/appeals'
     | '/desk'
     | '/forgot-password'
     | '/guide'
@@ -435,7 +425,6 @@ export interface FileRouteTypes {
     | '/'
     | '/403'
     | '/about'
-    | '/appeals'
     | '/desk'
     | '/forgot-password'
     | '/guide'
@@ -478,7 +467,6 @@ export interface FileRouteTypes {
     | '/403'
     | '/about'
     | '/admin'
-    | '/appeals'
     | '/desk'
     | '/forgot-password'
     | '/guide'
@@ -522,7 +510,6 @@ export interface RootRouteChildren {
   R403Route: typeof R403Route
   AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRouteWithChildren
-  AppealsRoute: typeof AppealsRoute
   DeskRoute: typeof DeskRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   GuideRoute: typeof GuideRoute
@@ -582,13 +569,6 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/appeals': {
-      id: '/appeals'
-      path: '/appeals'
-      fullPath: '/appeals'
-      preLoaderRoute: typeof AppealsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/desk': {
@@ -873,7 +853,6 @@ const rootRouteChildren: RootRouteChildren = {
   R403Route: R403Route,
   AboutRoute: AboutRoute,
   AdminRoute: AdminRouteWithChildren,
-  AppealsRoute: AppealsRoute,
   DeskRoute: DeskRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   GuideRoute: GuideRoute,

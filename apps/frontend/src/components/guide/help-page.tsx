@@ -61,7 +61,7 @@ export function HelpPage() {
       </div>
       <div className="mt-6 flex flex-wrap gap-3 text-sm">
         <Link className="underline underline-offset-4" to="/submissions">我的提交</Link>
-        <Link className="underline underline-offset-4" to="/appeals">作者申诉</Link>
+        <Link className="underline underline-offset-4" to="/me" search={{ tab: 'submissions', section: 'appeals' }}>作者申诉</Link>
         <Link className="underline underline-offset-4" to="/review/assignments">审稿工作台</Link>
         <Link className="underline underline-offset-4" to="/editor/workbench">主编工作台</Link>
         <Link className="underline underline-offset-4" to="/catalog">栏目</Link>

@@ -1,4 +1,3 @@
-import { createFileRoute } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/use-auth'
@@ -10,7 +9,6 @@ import {
   useSubmitAppeal,
   type AppealRow,
 } from '@/hooks/api/use-modules'
-import { PageHeader } from '@/components/common/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -19,10 +17,6 @@ import { EmptyState, Loading } from '@/components/common/state'
 import { MarkdownField } from '@/components/common/markdown-field'
 import { extractError } from '@/lib/utils'
 import { HelpTip } from '@/components/common/help-tip'
-
-export const Route = createFileRoute('/appeals')({
-  component: AppealsPage,
-})
 
 const KIND_LABEL: Record<string, string> = {
   withdraw: '撤回作品',
@@ -35,7 +29,7 @@ const STATUS_LABEL: Record<string, string> = {
   rejected: '未通过',
 }
 
-function AppealsPage() {
+export function MeAppeals() {
   const { user, isAdmin } = useAuth()
   const isEditor = isAdmin || (user?.roles ?? []).some((r) => ['editor', 'section_editor', 'board_editor', 'deputy_editor', 'chief_editor', 'editor_in_chief'].includes(r))
   const mine = useMyAppeals()
@@ -86,10 +80,13 @@ function AppealsPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader
-        title="作者申诉"
-        description="对评审结论、分数或分区有异议，可在这里提交完整理由。撤回申请经编辑部批准后作品会下架；分数/分区重审由编辑记录处置结论。"
-      />
+      <div className="border-b pb-4">
+        <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">APPEALS</p>
+        <h2 className="mt-1 font-serif text-xl tracking-tight">作者申诉</h2>
+        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+          对评审结论、分数或分区有异议，可在这里提交完整理由。撤回申请经编辑部批准后作品会下架；分数/分区重审由编辑记录处置结论。
+        </p>
+      </div>
       <p className="flex items-center gap-1 text-xs text-muted-foreground">
         <HelpTip text="理由需 100–3000 字；撤回不可逆，受理后作品下架；分数/分区重审由编辑给出处置说明。" />
         申诉类型与后果
