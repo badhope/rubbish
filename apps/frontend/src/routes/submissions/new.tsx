@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
+  ListChecks,
   Loader2,
   Save,
   Upload,
@@ -57,6 +58,7 @@ import type {
 import { DISCIPLINES } from '@/lib/disciplines'
 import { ARTICLE_SECTION_OPTIONS } from '@/lib/article-sections'
 import { extractError, parseListField } from '@/lib/utils'
+import { checkManuscript, type ManuscriptIssue } from '@/lib/manuscript-checks'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -1943,6 +1945,57 @@ function StepAuthors({
   )
 }
 
+function ManuscriptCheck({ body }: { body: string }) {
+  const issues = useMemo(() => checkManuscript(body), [body])
+  if (!body.trim()) return null
+  const blockers = issues.filter((issue) => issue.level === 'blocker').length
+  const warnings = issues.filter((issue) => issue.level === 'warning').length
+  return (
+    <div className="rounded-lg border p-4 text-sm">
+      <div className="flex items-center gap-2 font-medium">
+        <ListChecks className="h-4 w-4 text-primary" />
+        提交前编校检查
+      </div>
+      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+        {blockers > 0
+          ? `发现 ${blockers} 个阻断项、${warnings} 个提醒项，建议修正后再提交。`
+          : warnings > 0
+            ? `发现 ${warnings} 个提醒项，请确认是否需要调整。`
+            : '未发现编号、参考文献序号或重复段落等明显问题。'}
+      </p>
+      {issues.length > 0 ? (
+        <details className="mt-2">
+          <summary className="cursor-pointer text-xs text-primary">
+            查看 {issues.length} 条检查结果
+          </summary>
+          <ul className="mt-2 space-y-2">
+            {issues.map((issue: ManuscriptIssue, index) => (
+              <li key={`${issue.code}-${issue.line ?? 0}-${index}`} className="flex items-start gap-2 text-xs">
+                <span
+                  className={
+                    issue.level === 'blocker'
+                      ? 'shrink-0 rounded bg-destructive/10 px-1.5 py-0.5 text-destructive'
+                      : 'shrink-0 rounded bg-muted px-1.5 py-0.5 text-muted-foreground'
+                  }
+                >
+                  {issue.level === 'blocker' ? '阻断' : issue.level === 'warning' ? '提醒' : '提示'}
+                </span>
+                <span className="min-w-0">
+                  {issue.message}
+                  <span className="ml-1 text-muted-foreground">
+                    {issue.line ? `第 ${issue.line} 行 · ` : ''}
+                    {issue.code}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
+    </div>
+  )
+}
+
 function StepReview({
   form,
   missing,
@@ -1968,6 +2021,8 @@ function StepReview({
           请通读一遍。确认无误后点击下方「确认提交」，提交后状态为「待审核」。
         </p>
       </div>
+
+      <ManuscriptCheck body={form.body} />
 
       {missing.length > 0 && (
         <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
