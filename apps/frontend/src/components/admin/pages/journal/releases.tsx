@@ -547,7 +547,7 @@ export default function AdminReleasesPage() {
       )}
 
       <Button asChild variant="ghost" size="sm">
-        <Link to="/admin/journal" search={{ section: "issues" }}>
+        <Link to="/admin/journal" search={{ section: "volumes" }}>
           <ArrowLeft className="mr-1 h-4 w-4" />
           返回期管理
         </Link>

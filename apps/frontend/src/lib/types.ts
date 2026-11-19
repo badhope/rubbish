@@ -1126,6 +1126,7 @@ export interface VolumeInfo {
   volume: string
   articleCount: number
   issueCount: number
+  issues: IssueInfo[]
 }
 
 export interface IssueInfo {

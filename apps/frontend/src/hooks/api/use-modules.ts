@@ -1846,6 +1846,14 @@ export function useVolumeList() {
               volume: v.volume,
               articleCount: v.article_count,
               issueCount: v.issue_count,
+              issues: (v.issues ?? [])
+                .map((i): IssueInfo => ({
+                  issue: i.issue,
+                  articleCount: i.article_count,
+                  firstYear: i.first_year ?? 0,
+                  lastYear: i.last_year ?? 0,
+                }))
+                .sort((a, b) => sortDesc(a.issue, b.issue)),
             }))
             .sort((a, b) => sortDesc(a.volume, b.volume)),
         }
