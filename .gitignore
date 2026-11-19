@@ -183,3 +183,10 @@ apps/frontend/.tanstack/
 # Caddy access logs (runtime)
 /logs/caddy/*.log
 /logs/caddy/*.log.gz
+
+# 生产备份：只允许提交加密归档与脱敏导出，明文数据库/上传卷/密钥不得入库
+backups/**/*.sql
+backups/**/*.sql.gz
+backups/**/*.tar.gz
+backups/**/*.key
+backups/**/decrypted/

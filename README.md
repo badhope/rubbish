@@ -113,6 +113,11 @@ cd apps/frontend && npm ci && npm run lint && npm run typecheck && npm test
 cd apps/frontend && E2E_SPAWN_SERVER=1 npx playwright test
 ```
 
+## Data backup
+
+- A complete encrypted snapshot of the production database and uploads, plus a readable public-content export, lives in [`backups/rubbish-20261120`](backups/rubbish-20261120/README.md).
+- The snapshot contains 274 resources, 104 users, 310 legacy submissions, 10 forum topics, and 2,948 uploaded files. The encryption key is not committed.
+
 ## Docs
 
 - [Architecture deep dive](docs/ARCHITECTURE.md) · [Deployment guide](DEPLOY.md)

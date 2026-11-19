@@ -113,6 +113,11 @@ cd apps/frontend && npm ci && npm run lint && npm run typecheck && npm test
 cd apps/frontend && E2E_SPAWN_SERVER=1 npx playwright test
 ```
 
+## 数据备份
+
+- 生产库与上传卷已做完整加密归档，公开文章导出在 [`backups/rubbish-20261120`](backups/rubbish-20261120/README.md)。
+- 归档含 274 条资源、104 个用户、310 条旧提交、10 个社区主题和 2948 个上传文件；加密密钥不随仓库提交。
+
 ## 文档
 
 - [架构详解](docs/ARCHITECTURE.md) · [部署手册](DEPLOY.md)
