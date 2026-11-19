@@ -60,12 +60,10 @@ PAGE_META: dict[str, tuple[str, str]] = {
     "forum": ("讨论区", "围绕投稿、写作、审稿与学术生存的公开讨论；发帖前请先看版规。"),
     "about": ("关于 Rubbish", "Rubbish 的定位、编辑流程、开放获取政策与联系方式。"),
     "guide": ("作者指南", "投稿格式、图表规范、评审流程与常见退稿原因。"),
-    "sections": ("栏目", "按栏目浏览 Rubbish 的内容：论文、副刊、评论与更正。"),
     "journal-metrics": (
         "期刊指标",
         "Rubbish 公开指标：论文轨规模、学科构成、阅读与下载；样本不足的指标不硬凑数字。",
     ),
-    "archive": ("往期目录", "按卷期浏览 Rubbish 已上线内容。"),
     "support": ("成本公开", "Rubbish 的季度成本账本与编辑部来信；不开放赞助或收款。"),
 }
 
@@ -194,8 +192,7 @@ async def sitemap(request: Request, db: AsyncSession = Depends(get_db)) -> Respo
         (f"{root}/catalog", "daily", "0.9", None),
         (f"{root}/catalog?track=essay", "daily", "0.8", None),
         (f"{root}/forum", "daily", "0.7", None),
-        (f"{root}/archive", "weekly", "0.7", None),
-        (f"{root}/sections", "weekly", "0.6", None),
+        (f"{root}/catalog?sort=issue", "weekly", "0.7", None),
         (f"{root}/about", "monthly", "0.6", None),
         (f"{root}/guide", "monthly", "0.6", None),
         (f"{root}/about?tab=metrics", "monthly", "0.6", None),
@@ -203,10 +200,14 @@ async def sitemap(request: Request, db: AsyncSession = Depends(get_db)) -> Respo
         (f"{root}/privacy", "yearly", "0.3", None),
     ]
     for slug in sorted(SECTION_PAGE_SLUGS):
-        urls.append((f"{root}/sections/{slug}", "weekly", "0.6", None))
+        urls.append((f"{root}/catalog?section={slug}", "weekly", "0.6", None))
     rows = await _published_resources(db)
-    for issue in sorted({int(str(r.issue)) for r in rows if str(r.issue).isdigit()}):
-        urls.append((f"{root}/archive/{issue:02d}", "monthly", "0.5", None))
+    for volume, issue in sorted(
+        {(str(r.volume), str(r.issue)) for r in rows if r.volume and r.issue}
+    ):
+        urls.append(
+            (f"{root}/catalog?volume={volume}&issue={issue}", "monthly", "0.5", None)
+        )
     for r in rows:
         lastmod = r.publish_at or r.updated_at or r.created_at
         urls.append(
@@ -255,8 +256,8 @@ async def llms_txt(request: Request, db: AsyncSession = Depends(get_db)) -> Resp
         f"- [论文]({root}/catalog)",
         f"- [副刊]({root}/catalog?track=essay)",
         f"- [全部目录]({root}/catalog)",
-        f"- [栏目]({root}/sections)",
-        f"- [往期目录]({root}/archive)",
+        f"- [栏目]({root}/catalog)",
+        f"- [往期目录]({root}/catalog?sort=issue)",
         f"- [讨论区]({root}/forum)",
         f"- [作者指南]({root}/guide)",
         f"- [期刊政策]({root}/guide?tab=policies)",
@@ -267,7 +268,7 @@ async def llms_txt(request: Request, db: AsyncSession = Depends(get_db)) -> Resp
         "",
         "## 栏目",
         *[
-            f"- [{SECTION_PAGE_LABELS[slug]}]({root}/sections/{slug})"
+            f"- [{SECTION_PAGE_LABELS[slug]}]({root}/catalog?section={slug})"
             for slug in sorted(SECTION_PAGE_SLUGS)
         ],
         "",
@@ -456,17 +457,6 @@ async def build_index_html(
     extra = ""
     status = "200"
     og_type = "website"
-    if path.startswith("sections/"):
-        slug = path.split("/", 1)[1]
-        label = SECTION_PAGE_LABELS.get(slug)
-        if label:
-            title = f"{label} — 栏目 — {SITE_NAME}"
-            description = f"Rubbish 的 {label} 栏目：按栏目浏览已刊论文、评论与副刊内容。"
-    if path.startswith("archive/"):
-        issue = path.split("/", 1)[1]
-        if issue.isdigit():
-            title = f"第 {int(issue)} 期 — {SITE_NAME}"
-            description = f"Rubbish 第 {int(issue)} 期目录：本期论文、评论与副刊内容。"
     if path.startswith("catalog/") and path.split("/", 1)[1].isdigit():
         tenant = (
             await db.execute(select(Tenant).where(Tenant.slug == settings.bootstrap_tenant_slug))

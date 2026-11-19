@@ -7,11 +7,13 @@
 - 全局导航只保留一个“管理后台”，积分管理收进后台内部；桌面端与移动端同步。
 - `/authors`、`/help`、`/policies` 独立路由删除，作者指南、操作指南、政策规范统一进 `/guide?tab=authors|help|policies`。
 - 站点地图与 `llms.txt` 移除旧的政策/帮助地址，统一指向 `/guide`。
+- `/archive`、`/sections` 独立路由删除；栏目、卷、期与按期排序并入 `/catalog` 筛选。
+- sitemap 改用 `/catalog?section=` 与 `/catalog?volume=&issue=`，不再收录旧归档/栏目页。
 
 ### Removed
 - 删除 `/tools` 路由、导航入口与后端 SPA 白名单。
-- 删除 `/authors`、`/help`、`/policies` 路由文件；页面组件迁到 `components/guide/`。
-- 后端 SPA 白名单移除 `policies`、`help`、`rules`、`shop`。
+- 删除 `/authors`、`/help`、`/policies`、`/archive`、`/sections` 路由文件；指南页面组件迁到 `components/guide/`。
+- 后端 SPA 白名单移除 `policies`、`help`、`rules`、`shop`、`archive`、`sections`。
 
 ## [1.16.0] — 2026-11-19
 

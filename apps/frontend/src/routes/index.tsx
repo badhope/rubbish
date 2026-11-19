@@ -322,8 +322,8 @@ function HomePage() {
               已上线 <Count value={paperTotal} ready={Boolean(stats.data)} /> 篇论文 ·{' '}
               <Count value={funTotal} ready={Boolean(funStats.data)} /> 篇副刊
             </span>
-            <Link to="/archive" className="inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-primary">
-              卷期归档 <ChevronRight className="h-4 w-4" />
+            <Link to="/catalog" search={{ sort: 'issue' }} className="inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-primary">
+              按期浏览 <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
@@ -395,7 +395,7 @@ function HomePage() {
             <p className="mb-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">阅读</p>
             <ul className="space-y-1.5 text-sm">
               <li><Link to="/catalog" className="hover:text-primary">全部目录</Link></li>
-              <li><Link to="/archive" className="hover:text-primary">卷期归档</Link></li>
+              <li><Link to="/catalog" search={{ sort: 'issue' }} className="hover:text-primary">按期浏览</Link></li>
               <li><Link to="/guide" search={{ tab: 'authors' }} className="hover:text-primary">投稿指南</Link></li>
               <li><Link to="/guide" search={{ tab: 'policies' }} className="hover:text-primary">期刊政策</Link></li>
             </ul>

@@ -64,7 +64,7 @@ export function HelpPage() {
         <Link className="underline underline-offset-4" to="/appeals">作者申诉</Link>
         <Link className="underline underline-offset-4" to="/review/assignments">审稿工作台</Link>
         <Link className="underline underline-offset-4" to="/editor/workbench">主编工作台</Link>
-        <Link className="underline underline-offset-4" to="/sections">栏目</Link>
+        <Link className="underline underline-offset-4" to="/catalog">栏目</Link>
       </div>
     </div>
   )

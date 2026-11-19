@@ -110,7 +110,8 @@ function DeskPage() {
             </p>
           </div>
           <Link
-            to="/archive"
+            to="/catalog"
+            search={{ sort: 'issue' }}
             className="text-sm text-primary hover:underline"
           >
             全部卷期
@@ -120,8 +121,8 @@ function DeskPage() {
           {NOTES.map((note) => (
             <RevealSection key={note.issue}>
               <Link
-                to="/archive/$issue"
-                params={{ issue: note.issue }}
+                to="/catalog"
+                search={{ issue: note.issue, sort: 'issue' }}
                 className="block rounded-lg border bg-card p-4 transition-colors hover:border-primary/40 hover:bg-muted/20"
               >
                 <div className="flex items-start justify-between gap-3">

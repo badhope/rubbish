@@ -128,7 +128,8 @@ export function AnnouncementDialog({
               查看等级与投稿规范 <ArrowRight className="h-3.5 w-3.5" />
             </Link>
             <Link
-              to="/archive"
+              to="/catalog"
+              search={{ sort: 'issue' }}
               className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
             >
               本期目录 <ArrowRight className="h-3.5 w-3.5" />

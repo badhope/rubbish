@@ -14,7 +14,6 @@ import { Route as R403RouteImport } from './routes/403'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AppealsRouteImport } from './routes/appeals'
-import { Route as ArchiveRouteImport } from './routes/archive'
 import { Route as DeskRouteImport } from './routes/desk'
 import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -24,7 +23,6 @@ import { Route as MeRouteImport } from './routes/me'
 import { Route as RecommendationsRouteImport } from './routes/recommendations'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as SectionsRouteImport } from './routes/sections'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
@@ -33,7 +31,6 @@ import { Route as AdminEconomyRouteImport } from './routes/admin/economy'
 import { Route as AdminJournalRouteImport } from './routes/admin/journal'
 import { Route as AdminPeopleRouteImport } from './routes/admin/people'
 import { Route as AdminSystemRouteImport } from './routes/admin/system'
-import { Route as ArchiveIssueRouteImport } from './routes/archive_.$issue'
 import { Route as CatalogIndexRouteImport } from './routes/catalog/index'
 import { Route as CatalogResourceIdRouteImport } from './routes/catalog/$resourceId'
 import { Route as CatalogNewRouteImport } from './routes/catalog/new'
@@ -49,7 +46,6 @@ import { Route as IngestIndexRouteImport } from './routes/ingest/index'
 import { Route as LibraryListIdRouteImport } from './routes/library/$listId'
 import { Route as ReviewAssignmentsRouteImport } from './routes/review/assignments'
 import { Route as ReviewBoardRouteImport } from './routes/review/board'
-import { Route as SectionsSlugRouteImport } from './routes/sections_.$slug'
 import { Route as StudioIdRouteImport } from './routes/studio/$id'
 import { Route as SubmissionsIndexRouteImport } from './routes/submissions/index'
 import { Route as SubmissionsNewRouteImport } from './routes/submissions/new'
@@ -82,11 +78,6 @@ const AdminRoute = AdminRouteImport.update({
 const AppealsRoute = AppealsRouteImport.update({
   id: '/appeals',
   path: '/appeals',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ArchiveRoute = ArchiveRouteImport.update({
-  id: '/archive',
-  path: '/archive',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DeskRoute = DeskRouteImport.update({
@@ -134,11 +125,6 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SectionsRoute = SectionsRouteImport.update({
-  id: '/sections',
-  path: '/sections',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SupportRoute = SupportRouteImport.update({
   id: '/support',
   path: '/support',
@@ -178,11 +164,6 @@ const AdminSystemRoute = AdminSystemRouteImport.update({
   id: '/system',
   path: '/system',
   getParentRoute: () => AdminRoute,
-} as any)
-const ArchiveIssueRoute = ArchiveIssueRouteImport.update({
-  id: '/archive_/$issue',
-  path: '/archive/$issue',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const CatalogIndexRoute = CatalogIndexRouteImport.update({
   id: '/catalog/',
@@ -259,11 +240,6 @@ const ReviewBoardRoute = ReviewBoardRouteImport.update({
   path: '/review/board',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SectionsSlugRoute = SectionsSlugRouteImport.update({
-  id: '/sections_/$slug',
-  path: '/sections/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const StudioIdRoute = StudioIdRouteImport.update({
   id: '/studio/$id',
   path: '/studio/$id',
@@ -311,7 +287,6 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
   '/appeals': typeof AppealsRoute
-  '/archive': typeof ArchiveRoute
   '/desk': typeof DeskRoute
   '/feedback': typeof FeedbackRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -321,7 +296,6 @@ export interface FileRoutesByFullPath {
   '/recommendations': typeof RecommendationsRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/sections': typeof SectionsRoute
   '/support': typeof SupportRoute
   '/verify-email': typeof VerifyEmailRoute
   '/admin/content': typeof AdminContentRoute
@@ -329,7 +303,6 @@ export interface FileRoutesByFullPath {
   '/admin/journal': typeof AdminJournalRoute
   '/admin/people': typeof AdminPeopleRoute
   '/admin/system': typeof AdminSystemRoute
-  '/archive/$issue': typeof ArchiveIssueRoute
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
   '/catalog/new': typeof CatalogNewRoute
   '/claim/$resourceId': typeof ClaimResourceIdRoute
@@ -341,7 +314,6 @@ export interface FileRoutesByFullPath {
   '/library/$listId': typeof LibraryListIdRoute
   '/review/assignments': typeof ReviewAssignmentsRoute
   '/review/board': typeof ReviewBoardRoute
-  '/sections/$slug': typeof SectionsSlugRoute
   '/studio/$id': typeof StudioIdRoute
   '/submissions/new': typeof SubmissionsNewRoute
   '/submissions/pending': typeof SubmissionsPendingRoute
@@ -361,7 +333,6 @@ export interface FileRoutesByTo {
   '/403': typeof R403Route
   '/about': typeof AboutRoute
   '/appeals': typeof AppealsRoute
-  '/archive': typeof ArchiveRoute
   '/desk': typeof DeskRoute
   '/feedback': typeof FeedbackRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -371,7 +342,6 @@ export interface FileRoutesByTo {
   '/recommendations': typeof RecommendationsRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/sections': typeof SectionsRoute
   '/support': typeof SupportRoute
   '/verify-email': typeof VerifyEmailRoute
   '/admin/content': typeof AdminContentRoute
@@ -379,7 +349,6 @@ export interface FileRoutesByTo {
   '/admin/journal': typeof AdminJournalRoute
   '/admin/people': typeof AdminPeopleRoute
   '/admin/system': typeof AdminSystemRoute
-  '/archive/$issue': typeof ArchiveIssueRoute
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
   '/catalog/new': typeof CatalogNewRoute
   '/claim/$resourceId': typeof ClaimResourceIdRoute
@@ -391,7 +360,6 @@ export interface FileRoutesByTo {
   '/library/$listId': typeof LibraryListIdRoute
   '/review/assignments': typeof ReviewAssignmentsRoute
   '/review/board': typeof ReviewBoardRoute
-  '/sections/$slug': typeof SectionsSlugRoute
   '/studio/$id': typeof StudioIdRoute
   '/submissions/new': typeof SubmissionsNewRoute
   '/submissions/pending': typeof SubmissionsPendingRoute
@@ -413,7 +381,6 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
   '/appeals': typeof AppealsRoute
-  '/archive': typeof ArchiveRoute
   '/desk': typeof DeskRoute
   '/feedback': typeof FeedbackRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -423,7 +390,6 @@ export interface FileRoutesById {
   '/recommendations': typeof RecommendationsRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/sections': typeof SectionsRoute
   '/support': typeof SupportRoute
   '/verify-email': typeof VerifyEmailRoute
   '/admin/content': typeof AdminContentRoute
@@ -431,7 +397,6 @@ export interface FileRoutesById {
   '/admin/journal': typeof AdminJournalRoute
   '/admin/people': typeof AdminPeopleRoute
   '/admin/system': typeof AdminSystemRoute
-  '/archive_/$issue': typeof ArchiveIssueRoute
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
   '/catalog/new': typeof CatalogNewRoute
   '/claim/$resourceId': typeof ClaimResourceIdRoute
@@ -443,7 +408,6 @@ export interface FileRoutesById {
   '/library/$listId': typeof LibraryListIdRoute
   '/review/assignments': typeof ReviewAssignmentsRoute
   '/review/board': typeof ReviewBoardRoute
-  '/sections_/$slug': typeof SectionsSlugRoute
   '/studio/$id': typeof StudioIdRoute
   '/submissions/new': typeof SubmissionsNewRoute
   '/submissions/pending': typeof SubmissionsPendingRoute
@@ -466,7 +430,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/admin'
     | '/appeals'
-    | '/archive'
     | '/desk'
     | '/feedback'
     | '/forgot-password'
@@ -476,7 +439,6 @@ export interface FileRouteTypes {
     | '/recommendations'
     | '/register'
     | '/reset-password'
-    | '/sections'
     | '/support'
     | '/verify-email'
     | '/admin/content'
@@ -484,7 +446,6 @@ export interface FileRouteTypes {
     | '/admin/journal'
     | '/admin/people'
     | '/admin/system'
-    | '/archive/$issue'
     | '/catalog/$resourceId'
     | '/catalog/new'
     | '/claim/$resourceId'
@@ -496,7 +457,6 @@ export interface FileRouteTypes {
     | '/library/$listId'
     | '/review/assignments'
     | '/review/board'
-    | '/sections/$slug'
     | '/studio/$id'
     | '/submissions/new'
     | '/submissions/pending'
@@ -516,7 +476,6 @@ export interface FileRouteTypes {
     | '/403'
     | '/about'
     | '/appeals'
-    | '/archive'
     | '/desk'
     | '/feedback'
     | '/forgot-password'
@@ -526,7 +485,6 @@ export interface FileRouteTypes {
     | '/recommendations'
     | '/register'
     | '/reset-password'
-    | '/sections'
     | '/support'
     | '/verify-email'
     | '/admin/content'
@@ -534,7 +492,6 @@ export interface FileRouteTypes {
     | '/admin/journal'
     | '/admin/people'
     | '/admin/system'
-    | '/archive/$issue'
     | '/catalog/$resourceId'
     | '/catalog/new'
     | '/claim/$resourceId'
@@ -546,7 +503,6 @@ export interface FileRouteTypes {
     | '/library/$listId'
     | '/review/assignments'
     | '/review/board'
-    | '/sections/$slug'
     | '/studio/$id'
     | '/submissions/new'
     | '/submissions/pending'
@@ -567,7 +523,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/admin'
     | '/appeals'
-    | '/archive'
     | '/desk'
     | '/feedback'
     | '/forgot-password'
@@ -577,7 +532,6 @@ export interface FileRouteTypes {
     | '/recommendations'
     | '/register'
     | '/reset-password'
-    | '/sections'
     | '/support'
     | '/verify-email'
     | '/admin/content'
@@ -585,7 +539,6 @@ export interface FileRouteTypes {
     | '/admin/journal'
     | '/admin/people'
     | '/admin/system'
-    | '/archive_/$issue'
     | '/catalog/$resourceId'
     | '/catalog/new'
     | '/claim/$resourceId'
@@ -597,7 +550,6 @@ export interface FileRouteTypes {
     | '/library/$listId'
     | '/review/assignments'
     | '/review/board'
-    | '/sections_/$slug'
     | '/studio/$id'
     | '/submissions/new'
     | '/submissions/pending'
@@ -619,7 +571,6 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRouteWithChildren
   AppealsRoute: typeof AppealsRoute
-  ArchiveRoute: typeof ArchiveRoute
   DeskRoute: typeof DeskRoute
   FeedbackRoute: typeof FeedbackRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
@@ -629,10 +580,8 @@ export interface RootRouteChildren {
   RecommendationsRoute: typeof RecommendationsRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
-  SectionsRoute: typeof SectionsRoute
   SupportRoute: typeof SupportRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
-  ArchiveIssueRoute: typeof ArchiveIssueRoute
   CatalogResourceIdRoute: typeof CatalogResourceIdRoute
   CatalogNewRoute: typeof CatalogNewRoute
   ClaimResourceIdRoute: typeof ClaimResourceIdRoute
@@ -644,7 +593,6 @@ export interface RootRouteChildren {
   LibraryListIdRoute: typeof LibraryListIdRoute
   ReviewAssignmentsRoute: typeof ReviewAssignmentsRoute
   ReviewBoardRoute: typeof ReviewBoardRoute
-  SectionsSlugRoute: typeof SectionsSlugRoute
   StudioIdRoute: typeof StudioIdRoute
   SubmissionsNewRoute: typeof SubmissionsNewRoute
   SubmissionsPendingRoute: typeof SubmissionsPendingRoute
@@ -693,13 +641,6 @@ declare module '@tanstack/react-router' {
       path: '/appeals'
       fullPath: '/appeals'
       preLoaderRoute: typeof AppealsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/archive': {
-      id: '/archive'
-      path: '/archive'
-      fullPath: '/archive'
-      preLoaderRoute: typeof ArchiveRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/desk': {
@@ -765,13 +706,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/sections': {
-      id: '/sections'
-      path: '/sections'
-      fullPath: '/sections'
-      preLoaderRoute: typeof SectionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/support': {
       id: '/support'
       path: '/support'
@@ -827,13 +761,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/system'
       preLoaderRoute: typeof AdminSystemRouteImport
       parentRoute: typeof AdminRoute
-    }
-    '/archive_/$issue': {
-      id: '/archive_/$issue'
-      path: '/archive/$issue'
-      fullPath: '/archive/$issue'
-      preLoaderRoute: typeof ArchiveIssueRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/catalog/': {
       id: '/catalog/'
@@ -940,13 +867,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReviewBoardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/sections_/$slug': {
-      id: '/sections_/$slug'
-      path: '/sections/$slug'
-      fullPath: '/sections/$slug'
-      preLoaderRoute: typeof SectionsSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/studio/$id': {
       id: '/studio/$id'
       path: '/studio/$id'
@@ -1034,7 +954,6 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AdminRoute: AdminRouteWithChildren,
   AppealsRoute: AppealsRoute,
-  ArchiveRoute: ArchiveRoute,
   DeskRoute: DeskRoute,
   FeedbackRoute: FeedbackRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
@@ -1044,10 +963,8 @@ const rootRouteChildren: RootRouteChildren = {
   RecommendationsRoute: RecommendationsRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
-  SectionsRoute: SectionsRoute,
   SupportRoute: SupportRoute,
   VerifyEmailRoute: VerifyEmailRoute,
-  ArchiveIssueRoute: ArchiveIssueRoute,
   CatalogResourceIdRoute: CatalogResourceIdRoute,
   CatalogNewRoute: CatalogNewRoute,
   ClaimResourceIdRoute: ClaimResourceIdRoute,
@@ -1059,7 +976,6 @@ const rootRouteChildren: RootRouteChildren = {
   LibraryListIdRoute: LibraryListIdRoute,
   ReviewAssignmentsRoute: ReviewAssignmentsRoute,
   ReviewBoardRoute: ReviewBoardRoute,
-  SectionsSlugRoute: SectionsSlugRoute,
   StudioIdRoute: StudioIdRoute,
   SubmissionsNewRoute: SubmissionsNewRoute,
   SubmissionsPendingRoute: SubmissionsPendingRoute,

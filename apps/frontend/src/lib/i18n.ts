@@ -30,8 +30,6 @@ const NAV_EN: Record<string, string> = {
   '/recommendations': 'For you',
   '/review/assignments': 'Review desk',
   '/ingest': 'Import',
-  '/sections': 'Sections',
-  '/archive': 'Archive',
   '/about': 'About & metrics',
   '/guide': 'Submission guide',
   '/admin': 'Admin overview',

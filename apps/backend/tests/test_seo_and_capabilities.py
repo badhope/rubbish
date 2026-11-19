@@ -150,14 +150,14 @@ async def test_llms_txt_lists_public_entries(client: AsyncClient, admin_user: di
     assert f"/catalog/{rid}" in r.text
 
 
-async def test_sitemap_lists_sections_and_issue_archives(
+async def test_sitemap_lists_catalog_sections_and_issues(
     client: AsyncClient, admin_user: dict
 ) -> None:
-    await _create(client, admin_user, issue="03")
+    await _create(client, admin_user, volume="1", issue="03")
     root = ET.fromstring((await client.get("/sitemap.xml")).text)
     locs = [e.text or "" for e in root.iter() if e.tag.endswith("loc")]
-    assert any("/sections/research" in loc for loc in locs)
-    assert any("/archive/03" in loc for loc in locs)
+    assert any("/catalog?section=research" in loc for loc in locs)
+    assert any("/catalog?volume=1&issue=03" in loc for loc in locs)
 
 
 async def test_article_schema_has_license_and_breadcrumb(

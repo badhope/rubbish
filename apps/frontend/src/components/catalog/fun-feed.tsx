@@ -227,7 +227,7 @@ export function FunCatalog({
                   </Link>
                 ))}
                 <Link
-                  to="/sections"
+                  to="/catalog"
                   className="inline-flex items-center gap-0.5 text-[11px] text-primary hover:underline"
                 >
                   全部栏目

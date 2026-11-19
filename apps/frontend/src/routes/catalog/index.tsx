@@ -10,6 +10,8 @@ import {
   exportResources,
   useCatalogStats,
   useResources,
+  useIssueList,
+  useVolumeList,
   type ExportPreflightResponse,
   type AnyExportFormat,
 } from '@/hooks/api/use-modules'
@@ -17,6 +19,7 @@ import type { ResourceType } from '@/lib/types'
 import { extractError, formatAuthors, cn } from '@/lib/utils'
 import { contentCategoryLabel, displayTypeLabel, isScholarlyContent } from '@/lib/resource-labels'
 import { ESSAY_GENRES } from '@/lib/essay-genres'
+import { ARTICLE_SECTION_OPTIONS } from '@/lib/article-sections'
 import { PageHeader } from '@/components/common/page-header'
 import { ScrollCue } from '@/components/common/scroll-cue'
 import { EmptyState, ErrorState } from '@/components/common/state'
@@ -81,6 +84,14 @@ interface CatalogSearch {
   author?: string
   doi?: string
   clc?: string
+  /** 期刊栏目 slug（article_section）。 */
+  section?: string
+  /** 卷号；与 issue 一起用于按期筛选。 */
+  volume?: string
+  /** 期号；必须与 volume 一起使用。 */
+  issue?: string
+  /** 目录排序；issue=按卷期顺序。 */
+  sort?: 'issue'
   page?: number
   view?: 'list' | 'grid' | 'index'
 }
@@ -141,9 +152,12 @@ export function CatalogListPage() {
     author: search.author || undefined,
     doi: search.doi || undefined,
     clc: search.clc || undefined,
+    section: search.section || undefined,
+    volume: search.volume || undefined,
+    issue: search.volume ? search.issue || undefined : undefined,
     page: search.page || 1,
     page_size: 10,
-    sort: randomFeed ? ('random' as const) : undefined,
+    sort: search.sort === 'issue' ? ('issue' as const) : randomFeed ? ('random' as const) : undefined,
     seed: randomFeed ? feedSeed : undefined,
   }
 
@@ -792,6 +806,8 @@ function CatalogFilterFields({
   hideSearch?: boolean
 }) {
   const { data: stats } = useCatalogStats()
+  const { data: volumes } = useVolumeList()
+  const { data: issues } = useIssueList(search.volume ?? '')
   const facetDisciplines = Object.keys(stats?.by_discipline ?? {})
   return (
     <div className={className}>
@@ -828,6 +844,87 @@ function CatalogFilterFields({
             ))}
           </SelectContent>
         </Select>
+      </div>
+      <div className="space-y-1.5">
+        <label className="text-xs text-muted-foreground">栏目</label>
+        <Select
+          value={search.section ?? 'all'}
+          onValueChange={(v) =>
+            updateSearch({ section: v === 'all' ? undefined : v, page: 1 })
+          }
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">全部栏目</SelectItem>
+            {ARTICLE_SECTION_OPTIONS.map((section) => (
+              <SelectItem key={section.value} value={section.value}>
+                {section.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1.5">
+        <label className="text-xs text-muted-foreground">卷期</label>
+        <div className="flex items-center gap-2">
+          <Select
+            value={search.volume ?? 'all'}
+            onValueChange={(v) =>
+              updateSearch({
+                volume: v === 'all' ? undefined : v,
+                issue: undefined,
+                page: 1,
+              })
+            }
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="全部卷" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">全部卷</SelectItem>
+              {(volumes?.items ?? []).map((volume) => (
+                <SelectItem key={volume.volume} value={volume.volume}>
+                  第 {volume.volume} 卷
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={search.issue ?? 'all'}
+            disabled={!search.volume}
+            onValueChange={(v) =>
+              updateSearch({ issue: v === 'all' ? undefined : v, page: 1 })
+            }
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="全部期" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">全部期</SelectItem>
+              {(issues?.items ?? []).map((issue) => (
+                <SelectItem key={issue.issue} value={issue.issue}>
+                  第 {issue.issue} 期
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        <label className="text-xs text-muted-foreground">排序</label>
+        <Button
+          type="button"
+          variant={search.sort === 'issue' ? 'default' : 'outline'}
+          size="sm"
+          className="w-full"
+          onClick={() =>
+            updateSearch({ sort: search.sort === 'issue' ? undefined : 'issue', page: 1 })
+          }
+        >
+          按期顺序
+        </Button>
       </div>
       <div className="space-y-1.5">
         <label className="text-xs text-muted-foreground">学科</label>
@@ -953,6 +1050,9 @@ function MobileFilters({
     search.author,
     search.doi,
     search.clc,
+    search.section,
+    search.volume,
+    search.issue,
   ].filter(Boolean).length
 
   return (
@@ -1040,6 +1140,9 @@ function DesktopFilters({
     search.author,
     search.doi,
     search.clc,
+    search.section,
+    search.volume,
+    search.issue,
   ].filter(Boolean).length
   const [open, setOpen] = useState(() => activeCount > 0)
 
