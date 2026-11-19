@@ -76,7 +76,9 @@ class ForumTopic(Base, TenantScopedMixin):
     # 版块：论文沙龙 / 方法与写作 / 学术生存 / 组队招募 / 站务公告。
     # notice 是「站务公告」下的官方公告子类，只有编辑与管理员能发。
     # 保留旧字段作为兼容别名；新帖同时写入 board.slug。
-    category: Mapped[str] = mapped_column(String(20), nullable=False, default="paper")
+    category: Mapped[str] = mapped_column(String(20), nullable=False, default="discussion")
+    # 作者声明的虚构属性：帖子可能是小说、寓言、角色扮演或假设情境。
+    is_fictional: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     # 关联论文（可选）：从论文详情页发起的讨论带上资源 id，
     # 论文页据此显示"讨论 N"；普通帖子保持 NULL。
     paper_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)

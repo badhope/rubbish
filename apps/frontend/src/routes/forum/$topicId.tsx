@@ -48,6 +48,7 @@ interface ForumTopic {
   board_id: number | null
   board_slug: string | null
   board_name: string | null
+  is_fictional: boolean
   board_path: string | null
   is_pinned: boolean
   is_locked: boolean
@@ -71,15 +72,22 @@ interface ForumReply {
 }
 
 const CATEGORY_LABEL: Record<string, string> = {
-  paper: '研究记录',
-  method: '方法与复盘',
-  life: '科研生存',
-  collab: '组队招募',
-  meta: '站务公告',
+  planning: '研究计划',
+  'lab-notes': '实验记录',
+  'field-notes': '田野观察',
+  failures: '失败档案',
   discussion: '研究讨论',
-  suggestion: '建议',
-  question: '求助',
-  notice: '公告',
+  survival: '科研生存',
+  collab: '组队招募',
+  announcements: '社区公告',
+  feedback: '意见反馈',
+  // 旧帖子兜底
+  paper: '研究讨论',
+  method: '研究讨论',
+  meta: '社区公告',
+  notice: '社区公告',
+  question: '研究讨论',
+  suggestion: '意见反馈',
 }
 
 const REACTIONS: {
@@ -412,6 +420,11 @@ function ForumTopicPage() {
               </Badge>
             )}
             <Badge variant="outline">{topic.board_name ?? CATEGORY_LABEL[topic.category] ?? topic.category}</Badge>
+            {topic.is_fictional ? (
+              <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-800">
+                虚构
+              </Badge>
+            ) : null}
             {topic.board_path ? (
               <span className="text-[11px] text-muted-foreground">{topic.board_path}</span>
             ) : null}

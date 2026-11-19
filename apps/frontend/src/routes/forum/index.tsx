@@ -52,6 +52,7 @@ interface ForumTopic {
   board_id: number | null
   board_slug: string | null
   board_name: string | null
+  is_fictional: boolean
   board_path: string | null
   is_pinned: boolean
   is_locked: boolean
@@ -172,6 +173,7 @@ interface ForumDraft {
   body: string
   board_id: number | null
   paper_id: number | null
+  is_fictional: boolean
 }
 
 function readForumDraft(): ForumDraft | null {
@@ -185,6 +187,7 @@ function readForumDraft(): ForumDraft | null {
       body: value.body,
       board_id: typeof value.board_id === 'number' ? value.board_id : null,
       paper_id: typeof value.paper_id === 'number' ? value.paper_id : null,
+      is_fictional: value.is_fictional === true,
     }
   } catch {
     return null
@@ -233,6 +236,7 @@ function ForumListPage() {
     body: paperId ? `研究记录链接：/catalog/${paperId}\n\n` : '',
     board_id: null as number | null,
     paper_id: paperId,
+    is_fictional: false,
   })
 
   useEffect(() => {
@@ -248,7 +252,7 @@ function ForumListPage() {
   const boardTree: BoardNode[] = boardsQ.data?.tree ?? []
   const allBoards = collectBoards(boardTree)
   const leafBoards = allBoards.filter((b) => b.children.length === 0)
-  const defaultBoardId = leafBoards.find((b) => b.slug === 'paper-reading')?.id ?? leafBoards[0]?.id ?? null
+  const defaultBoardId = leafBoards.find((b) => b.slug === 'planning')?.id ?? leafBoards[0]?.id ?? null
   const normalizedCategory = LEGACY_SLUG[category] ?? category
   const activeBoard = normalizedCategory === 'all' ? null : allBoards.find((b) => b.slug === normalizedCategory)
 
@@ -272,7 +276,7 @@ function ForumListPage() {
       toast.success('已发布')
       void qc.invalidateQueries({ queryKey: ['forum'] })
       setOpen(false)
-      setForm({ title: '', body: '', board_id: defaultBoardId, paper_id: null })
+      setForm({ title: '', body: '', board_id: defaultBoardId, paper_id: null, is_fictional: false })
       try {
         window.localStorage.removeItem(FORUM_DRAFT_KEY)
       } catch {
@@ -328,6 +332,7 @@ function ForumListPage() {
         : usableDraft?.body ?? '',
       board_id: storedBoardId ?? currentBoardId,
       paper_id: paperId,
+      is_fictional: usableDraft?.is_fictional ?? false,
     })
     setBoardPickerOpen(false)
     setOpen(true)
@@ -511,6 +516,11 @@ function ForumListPage() {
                         {t.board_name ?? CATEGORY_LABEL[t.category] ?? t.category}
                       </Badge>
                     )}
+                    {t.is_fictional ? (
+                      <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-800">
+                        虚构
+                      </Badge>
+                    ) : null}
                     {t.is_locked && (
                       <Badge variant="secondary" className="gap-1">
                         <Lock className="h-3 w-3" />
@@ -643,6 +653,15 @@ function ForumListPage() {
                   </button>
                 )}
                 <span className="text-[11px] text-muted-foreground">父板块会自动汇总子板块帖子；发帖登录即可，不需要积分。</span>
+                <label className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={form.is_fictional}
+                    onChange={(e) => setForm((p) => ({ ...p, is_fictional: e.target.checked }))}
+                    className="h-3.5 w-3.5 accent-primary"
+                  />
+                  这是虚构内容
+                </label>
               </div>
 
               <Suspense fallback={<div className="rounded-md border border-dashed px-3 py-6 text-sm text-muted-foreground">编辑器加载中…</div>}>

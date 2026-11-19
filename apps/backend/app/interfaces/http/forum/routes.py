@@ -164,6 +164,7 @@ class TopicCreate(BaseModel):
     title: str = Field(min_length=2, max_length=200)
     body: str = Field(min_length=2, max_length=20000)
     category: ForumCategory = "discussion"
+    is_fictional: bool = False
     # 树形版块：新客户端传 board_id；旧客户端只传 category 仍然兼容。
     board_id: int | None = Field(default=None, ge=1)
     board_slug: str | None = Field(default=None, max_length=40)
@@ -193,6 +194,7 @@ class TopicOut(BaseModel):
     body: str
     category: str
     board_id: int | None = None
+    is_fictional: bool = False
     board_slug: str | None = None
     board_name: str | None = None
     board_path: str | None = None
@@ -332,6 +334,7 @@ def _topic_out(
         title=t.title,
         body=t.body,
         category=t.category,
+        is_fictional=t.is_fictional,
         board_id=t.board_id,
         board_slug=board.slug if board else None,
         board_name=board.name if board else None,
@@ -701,6 +704,7 @@ async def create_topic(
         title=payload.title.strip(),
         body=payload.body.strip(),
         category=category,
+        is_fictional=payload.is_fictional,
         board_id=board.id if board is not None else None,
         paper_id=payload.paper_id,
     )
