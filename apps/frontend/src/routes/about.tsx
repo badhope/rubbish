@@ -201,7 +201,7 @@ function AboutPage() {
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             投稿事宜请先读
-            <Link to="/authors" className="mx-1 text-primary hover:underline">
+            <Link to="/guide" search={{ tab: 'authors' }} className="mx-1 text-primary hover:underline">
               作者指南
             </Link>
             ；投诉与举报请在邮件主题注明「伦理」。一般咨询在 5 个工作日内回复。

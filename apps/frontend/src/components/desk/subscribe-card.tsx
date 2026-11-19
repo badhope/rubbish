@@ -81,7 +81,8 @@ export function DeskSubscribeCard() {
               <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
                 提交即表示同意按
                 <Link
-                  to="/policies"
+                  to="/guide"
+                  search={{ tab: 'policies' }}
                   className="mx-1 text-primary hover:underline"
                 >
                   隐私政策

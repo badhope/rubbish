@@ -397,7 +397,7 @@ function HomePage() {
               <li><Link to="/catalog" className="hover:text-primary">全部目录</Link></li>
               <li><Link to="/archive" className="hover:text-primary">卷期归档</Link></li>
               <li><Link to="/guide" search={{ tab: 'authors' }} className="hover:text-primary">投稿指南</Link></li>
-              <li><Link to="/policies" className="hover:text-primary">期刊政策</Link></li>
+              <li><Link to="/guide" search={{ tab: 'policies' }} className="hover:text-primary">期刊政策</Link></li>
             </ul>
           </div>
           <div>
@@ -410,7 +410,7 @@ function HomePage() {
               </li>
               <li className="text-muted-foreground">QQ 群：1084870548</li>
               <li><Link to="/about" search={{ tab: 'about' }} className="hover:text-primary">关于本刊</Link></li>
-              <li><Link to="/help" className="hover:text-primary">使用帮助</Link></li>
+              <li><Link to="/guide" search={{ tab: 'help' }} className="hover:text-primary">使用帮助</Link></li>
             </ul>
           </div>
         </div>

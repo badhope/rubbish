@@ -844,7 +844,7 @@ function SubmissionWizardPage() {
           description: '正在为你打开确认页…',
           duration: 6000,
         })
-        void navigate({ to: '/authors' })
+        void navigate({ to: '/guide', search: { tab: 'authors' } })
         return
       }
       toast.error(
@@ -976,7 +976,7 @@ function SubmissionWizardPage() {
           编辑规范
         </a>
         <span className="mx-2">·</span>
-        <a className="font-medium text-primary hover:underline" href="/authors">
+        <a className="font-medium text-primary hover:underline" href="/guide?tab=authors">
           投稿指南
         </a>
         <div className="mt-1">

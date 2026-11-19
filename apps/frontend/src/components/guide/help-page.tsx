@@ -1,15 +1,8 @@
-import { createFileRoute, Link, redirect } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { PageHeader } from '@/components/common/page-header'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
-export const Route = createFileRoute('/help')({
-  // 操作指南并入 /guide 的第二个页签，旧链接与书签统一跳转。
-  beforeLoad: () => {
-    throw redirect({ to: '/guide', search: { tab: 'help' } })
-  },
-  component: HelpPage,
-})
 
 const GROUPS = [
   {

@@ -169,7 +169,7 @@ export function JournalMetricsPage({ embedded = false }: { embedded?: boolean } 
               <Lock className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
               <p className="text-xs leading-relaxed text-muted-foreground">
                 关于口径：各项数据的口径与构成已在
-                <Link to="/policies" className="mx-1 text-primary hover:underline">
+                <Link to="/guide" search={{ tab: 'policies' }} className="mx-1 text-primary hover:underline">
                   本刊政策 · 数据口径
                 </Link>
                 一节公示。本刊没有接入 Web of Science、Scopus 或 Crossref 引文数据，因此

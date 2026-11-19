@@ -1,4 +1,4 @@
-import { createFileRoute, Link, redirect } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import {
   ArrowLeft,
   ArrowRight,
@@ -19,13 +19,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { useAuth } from '@/hooks/use-auth'
 import { useAcceptAuthorRules, useGamificationProfile } from '@/hooks/api/use-modules'
 
-export const Route = createFileRoute('/authors')({
-  // 投稿指南与操作指南合并为 /guide 的两个页签，旧入口只做跳转。
-  beforeLoad: () => {
-    throw redirect({ to: '/guide', search: { tab: 'authors' } })
-  },
-  component: AuthorsPage,
-})
 
 const ACCEPT_CRITERIA: Array<{ title: string; body: string }> = [
   {
@@ -181,7 +174,7 @@ export function AuthorsPage() {
           </ul>
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
             玩梗研究同样适用伦理底线：可以离谱，不可以伤人。详见
-            <Link to="/policies" className="mx-1 text-primary hover:underline">
+            <Link to="/guide" search={{ tab: 'policies' }} className="mx-1 text-primary hover:underline">
               期刊政策与社区规范
             </Link>
             。

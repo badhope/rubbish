@@ -146,7 +146,8 @@ export function FunCatalog({
 
         <div className="mt-2 flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
           <Link
-            to="/policies"
+            to="/guide"
+            search={{ tab: 'policies' }}
             className="inline-flex shrink-0 items-center gap-1 font-medium text-primary hover:underline"
           >
             格式与版式

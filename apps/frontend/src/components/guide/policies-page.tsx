@@ -1,4 +1,4 @@
-import { createFileRoute, Link, redirect } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import {
   ArrowLeft,
   BarChart3,
@@ -15,13 +15,6 @@ import { PageHeader } from '@/components/common/page-header'
 import { RevealSection } from '@/components/common/reveal-section'
 import { Card, CardContent } from '@/components/ui/card'
 
-export const Route = createFileRoute('/policies')({
-  // 政策规范与等级规则合并为 /rules 的两个页签，旧入口只做跳转。
-  beforeLoad: () => {
-    throw redirect({ to: '/guide', search: { tab: 'policies' } })
-  },
-  component: PoliciesPage,
-})
 
 // 期刊政策与社区规范：开放获取、学术诚信、虚构内容免责、社区行为、
 // 撤稿、隐私。一条一条写实，不留"最终解释权归本刊所有"这种废话。

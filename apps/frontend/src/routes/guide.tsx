@@ -1,9 +1,9 @@
 import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
-import { AuthorsPage } from './authors'
-import { HelpPage } from './help'
+import { AuthorsPage } from '@/components/guide/authors-page'
+import { HelpPage } from '@/components/guide/help-page'
 import { LevelsPage } from '@/components/guide/levels-page'
-import { PoliciesPage } from './policies'
+import { PoliciesPage } from '@/components/guide/policies-page'
 
 export const Route = createFileRoute('/guide')({
   validateSearch: (search: Record<string, unknown>) => ({

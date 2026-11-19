@@ -188,7 +188,6 @@ _SPA_ROUTE_PREFIXES = frozenset(
         "login",
         "notifications",
         "papers",
-        "policies",
         "profile",
         "reader",
         "recommendations",
@@ -204,13 +203,10 @@ _SPA_ROUTE_PREFIXES = frozenset(
         "fun",
         "sections",
         "appeals",
-        "help",
         "grade",
         "feedback",
         "guide",
         "u",
-        "rules",
-        "shop",
     }
 )
 

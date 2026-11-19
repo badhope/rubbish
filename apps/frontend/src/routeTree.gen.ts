@@ -15,15 +15,12 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AppealsRouteImport } from './routes/appeals'
 import { Route as ArchiveRouteImport } from './routes/archive'
-import { Route as AuthorsRouteImport } from './routes/authors'
 import { Route as DeskRouteImport } from './routes/desk'
 import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as GuideRouteImport } from './routes/guide'
-import { Route as HelpRouteImport } from './routes/help'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MeRouteImport } from './routes/me'
-import { Route as PoliciesRouteImport } from './routes/policies'
 import { Route as RecommendationsRouteImport } from './routes/recommendations'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -92,11 +89,6 @@ const ArchiveRoute = ArchiveRouteImport.update({
   path: '/archive',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthorsRoute = AuthorsRouteImport.update({
-  id: '/authors',
-  path: '/authors',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DeskRoute = DeskRouteImport.update({
   id: '/desk',
   path: '/desk',
@@ -117,11 +109,6 @@ const GuideRoute = GuideRouteImport.update({
   path: '/guide',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HelpRoute = HelpRouteImport.update({
-  id: '/help',
-  path: '/help',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -130,11 +117,6 @@ const LoginRoute = LoginRouteImport.update({
 const MeRoute = MeRouteImport.update({
   id: '/me',
   path: '/me',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PoliciesRoute = PoliciesRouteImport.update({
-  id: '/policies',
-  path: '/policies',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecommendationsRoute = RecommendationsRouteImport.update({
@@ -330,15 +312,12 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/appeals': typeof AppealsRoute
   '/archive': typeof ArchiveRoute
-  '/authors': typeof AuthorsRoute
   '/desk': typeof DeskRoute
   '/feedback': typeof FeedbackRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/guide': typeof GuideRoute
-  '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
-  '/policies': typeof PoliciesRoute
   '/recommendations': typeof RecommendationsRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -383,15 +362,12 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/appeals': typeof AppealsRoute
   '/archive': typeof ArchiveRoute
-  '/authors': typeof AuthorsRoute
   '/desk': typeof DeskRoute
   '/feedback': typeof FeedbackRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/guide': typeof GuideRoute
-  '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
-  '/policies': typeof PoliciesRoute
   '/recommendations': typeof RecommendationsRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -438,15 +414,12 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/appeals': typeof AppealsRoute
   '/archive': typeof ArchiveRoute
-  '/authors': typeof AuthorsRoute
   '/desk': typeof DeskRoute
   '/feedback': typeof FeedbackRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/guide': typeof GuideRoute
-  '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
-  '/policies': typeof PoliciesRoute
   '/recommendations': typeof RecommendationsRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -494,15 +467,12 @@ export interface FileRouteTypes {
     | '/admin'
     | '/appeals'
     | '/archive'
-    | '/authors'
     | '/desk'
     | '/feedback'
     | '/forgot-password'
     | '/guide'
-    | '/help'
     | '/login'
     | '/me'
-    | '/policies'
     | '/recommendations'
     | '/register'
     | '/reset-password'
@@ -547,15 +517,12 @@ export interface FileRouteTypes {
     | '/about'
     | '/appeals'
     | '/archive'
-    | '/authors'
     | '/desk'
     | '/feedback'
     | '/forgot-password'
     | '/guide'
-    | '/help'
     | '/login'
     | '/me'
-    | '/policies'
     | '/recommendations'
     | '/register'
     | '/reset-password'
@@ -601,15 +568,12 @@ export interface FileRouteTypes {
     | '/admin'
     | '/appeals'
     | '/archive'
-    | '/authors'
     | '/desk'
     | '/feedback'
     | '/forgot-password'
     | '/guide'
-    | '/help'
     | '/login'
     | '/me'
-    | '/policies'
     | '/recommendations'
     | '/register'
     | '/reset-password'
@@ -656,15 +620,12 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   AppealsRoute: typeof AppealsRoute
   ArchiveRoute: typeof ArchiveRoute
-  AuthorsRoute: typeof AuthorsRoute
   DeskRoute: typeof DeskRoute
   FeedbackRoute: typeof FeedbackRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   GuideRoute: typeof GuideRoute
-  HelpRoute: typeof HelpRoute
   LoginRoute: typeof LoginRoute
   MeRoute: typeof MeRoute
-  PoliciesRoute: typeof PoliciesRoute
   RecommendationsRoute: typeof RecommendationsRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -741,13 +702,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ArchiveRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/authors': {
-      id: '/authors'
-      path: '/authors'
-      fullPath: '/authors'
-      preLoaderRoute: typeof AuthorsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/desk': {
       id: '/desk'
       path: '/desk'
@@ -776,13 +730,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GuideRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/help': {
-      id: '/help'
-      path: '/help'
-      fullPath: '/help'
-      preLoaderRoute: typeof HelpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -795,13 +742,6 @@ declare module '@tanstack/react-router' {
       path: '/me'
       fullPath: '/me'
       preLoaderRoute: typeof MeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/policies': {
-      id: '/policies'
-      path: '/policies'
-      fullPath: '/policies'
-      preLoaderRoute: typeof PoliciesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recommendations': {
@@ -1095,15 +1035,12 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   AppealsRoute: AppealsRoute,
   ArchiveRoute: ArchiveRoute,
-  AuthorsRoute: AuthorsRoute,
   DeskRoute: DeskRoute,
   FeedbackRoute: FeedbackRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   GuideRoute: GuideRoute,
-  HelpRoute: HelpRoute,
   LoginRoute: LoginRoute,
   MeRoute: MeRoute,
-  PoliciesRoute: PoliciesRoute,
   RecommendationsRoute: RecommendationsRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,

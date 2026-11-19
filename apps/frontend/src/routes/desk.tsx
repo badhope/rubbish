@@ -22,7 +22,7 @@ const PILLARS = [
     title: '评审按证据说话',
     body:
       '按赛道维度逐项给分即可，理由与正文证据选填。审稿人身份不公开，编辑的终审理由留在站内审计链里。',
-    to: '/authors',
+    to: '/guide',
     label: '投稿与评审规范',
     icon: Gavel,
   },
@@ -149,7 +149,7 @@ function DeskPage() {
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           主编对每篇稿件的最终去留有决定权，但不能替作者补实验、不能绕过审稿证据，也不能把任何外部款项带进判断。
           可核对的口径写在
-          <Link to="/policies" className="mx-1 text-primary hover:underline">
+          <Link to="/guide" search={{ tab: 'policies' }} className="mx-1 text-primary hover:underline">
             期刊政策
           </Link>
           与
