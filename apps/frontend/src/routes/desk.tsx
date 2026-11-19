@@ -19,7 +19,7 @@ const PILLARS = [
     icon: Feather,
   },
   {
-    title: '评审不是投票',
+    title: '评审按证据说话',
     body:
       '按赛道维度逐项给分即可，理由与正文证据选填。审稿人身份不公开，编辑的终审理由留在站内审计链里。',
     to: '/authors',
@@ -70,7 +70,7 @@ function DeskPage() {
 
       <PageHeader
         title="主编桌"
-        description="陆止于海，Rubbish 主编。这里不是期刊首页的主编专栏，而是公开的工作笔记：为什么做、怎么判断、钱花在哪。"
+        description="陆止于海，Rubbish 主编。这是公开的主编工作笔记：为什么做、怎么判断、钱花在哪。"
       />
 
       <div className="grid gap-4 sm:grid-cols-3">

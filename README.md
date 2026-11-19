@@ -6,7 +6,7 @@
 
 **An open-access journal for the world's academic rubbish — Submit · Review · Publish · Read, the entire publishing loop in one codebase**
 
-> 15 backend modules · 870 unit tests · 68 E2E cases · strictly typed end to end
+> 16 backend modules · 870 unit tests · Playwright E2E · strictly typed end to end
 
 **🌐 [English](README.md) · [简体中文](README.zh-CN.md)**
 
@@ -20,7 +20,7 @@
 [![Unit tests](https://img.shields.io/badge/unit_tests-870-10B981?style=flat-square&logo=pytest&logoColor=white)](#testing)
 [![E2E](https://img.shields.io/badge/E2E_specs-68-22C55E?style=flat-square&logo=playwright&logoColor=white)](#testing)
 
-**Mirrors**: [GitHub](https://github.com/x33834/rubbish) · [GitHub](https://github.com/Morningstar202604/rubbish) · [GitCode](https://gitcode.com/badhope/rubbish) · [Gitee](https://gitee.com/badhope/rubbish)
+**Mirrors**: [GitHub x33834](https://github.com/x33834/rubbish) · [GitHub Morningstar](https://github.com/Morningstar202604/rubbish) · [GitHub badhope](https://github.com/badhope/rubbish) · [GitCode](https://gitcode.com/badhope/rubbish) · [Gitee](https://gitee.com/badhope/rubbish)
 
 **[Features](#features) · [Screenshots](#screenshots) · [Architecture](#architecture) · [Quick Start](#quick-start) · [Tech Stack](#tech-stack) · [Testing](#testing) · [Docs](#docs)**
 
@@ -33,7 +33,7 @@
 | | What it is | Where showcase content lives |
 | --- | --- | --- |
 | **Open-source example** (this repo) | Reference implementation of the Rubbish journal platform — clone it, self-host it, adapt it. | `site/` marketing pages, `docs/assets/`, README screenshots |
-| **Production service** ([rubbish.argjiemi.cn](https://rubbish.argjiemi.cn)) | A **live journal**, not a demo. The running app carries no screenshot galleries or promo material — every page exists to submit, review, publish and read. | nowhere — de-showcased by design |
+| **Production service** ([rubbish.argjiemi.cn](https://rubbish.argjiemi.cn)) | A **live journal in production**, serving submission, review, publication and reading. The running app carries no screenshot galleries or promo material. | nowhere — de-showcased by design |
 
 ## Features
 
@@ -44,7 +44,7 @@
 | **Reviewer** | Review reports, blind review (single / double), decision recommendation |
 | **Reader** | Public catalog search, **passwordless email-code sign-in**, **in-reader typography controls (font size / line height / serif)**, **instant manuscript structure check on upload**, **in-browser reading (pdf.js) — no login wall**, cross-device reading progress (local-storage fallback for guests), follow authors, subscribe |
 | **Community** | Reader comments on published papers (public read, login to post, owner/admin delete with audit), **independent discussion board (post / reply / categories / pin / lock, login to post)**, guest mode with local storage |
-| **Journal** | **First-class dual tracks (serious / absurd: required at submission, catalog filter, detail badge, per-track stats)**, editorial metrics (R factor, absurdity index) with hidden methodology, author guide / policies / about pages, submission templates |
+| **Journal** | **Two paper tracks (academic / absurd) plus a separate supplement**, required at submission, filterable in the catalog and labelled on detail pages; editorial metrics (R factor, absurdity index) with hidden methodology, author guide / policies / about pages, submission templates |
 | **Admin** | Users (search / suspend / **promote to platform admin** / grant & revoke roles) / volumes / issues / journals management, **announcement management**, audit logs, batch import (BibTeX / RIS / CSV / DOI / arXiv), **one-click issue publish & reschedule** |
 
 **Secure by default**: passwordless email-code sign-in (hashed one-time codes, rate limited), WebAuthn passkeys + TOTP 2FA, server-side JWT revocation with key rotation, sign-up captcha, per-action audit logs, multi-tenant isolation (PostgreSQL RLS).
@@ -53,17 +53,17 @@
 
 ## Screenshots
 
-| Public portal | Resource catalog | Online reading |
+| Public home | Paper catalog | Article page |
 | --- | --- | --- |
-| ![home](docs/assets/screenshots/rubbish-home.png) | ![catalog](docs/assets/screenshots/rubbish-catalog.png) | ![reader](docs/assets/screenshots/rubbish-reader.png) |
+| ![Public home](docs/assets/screenshots/rubbish-home.png) | ![Paper catalog](docs/assets/screenshots/rubbish-catalog.png) | ![Article page](docs/assets/screenshots/rubbish-reader.png) |
 
-| Workbench overview | My submissions | Editor workbench |
+| Forum | Volume archive | Journal data |
 | --- | --- | --- |
-| ![dashboard](docs/assets/screenshots/rubbish-dashboard.png) | ![submissions](docs/assets/screenshots/07-my-submissions.png) | ![editor](docs/assets/screenshots/rubbish-editor.png) |
+| ![Forum](docs/assets/screenshots/rubbish-forum.png) | ![Volume archive](docs/assets/screenshots/rubbish-archive.png) | ![Journal data](docs/assets/screenshots/rubbish-about.png) |
 
-| Mobile catalog | Mobile detail | Reviewer workbench |
+| Mobile catalog | Mobile article | Interface overview |
 | --- | --- | --- |
-| ![mobile catalog](docs/assets/screenshots/mobile-catalog.png) | ![mobile detail](docs/assets/screenshots/mobile-detail.png) | ![reviewer](docs/assets/screenshots/06-reviewer-workbench.png) |
+| ![Mobile catalog](docs/assets/screenshots/mobile-catalog.png) | ![Mobile article](docs/assets/screenshots/mobile-detail.png) | ![Interface overview](docs/assets/screenshots-overview.png) |
 
 ## Architecture
 

@@ -110,7 +110,7 @@ function AboutPage() {
 
       <PageHeader
         title="关于本刊"
-        description="Rubbish 是一份严肃格式与自由主题兼容的学术底刊——用严格的格式，收纳一切认真的思考。"
+        description="Rubbish 是一份学术底刊：格式从严，题材放宽，认真写下的东西都有一席之地。"
       />
       <AboutTabs active="about" />
 
@@ -122,14 +122,12 @@ function AboutPage() {
               「学问的尊严在于格式，不在题材。」
             </p>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              Rubbish 创刊于 2026 年，是一份免费投稿、免费阅读、免费评审的
-              纯开放获取学术底刊。我们收录标准学术研究，也正式收录传统刊物不敢收的脑洞选题——
-              只要论证自洽、格式规范，玩梗也是一种严肃。
+              Rubbish 创刊于 2026 年，免费投稿、免费阅读、免费评审。我们收标准学术研究，
+              也收传统刊物不愿碰的脑洞选题；前提是论证自洽、格式规范。玩梗也可以认真。
             </p>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              所谓「底刊」，不是低人一等，而是不参加顶刊竞赛：不拿影响因子当门槛，
-              不把「评审」当装饰。每篇稿件有编辑处置记录、有站内编号、有可引用版本；
-              DOI 与 ISSN 由作者和编辑部按需选择，不强制。
+              我们把「底刊」当作一种取舍：不参加顶刊竞赛，不拿影响因子当门槛，也不把评审当装饰。
+              每篇稿件有编辑处置记录、站内编号和可引用版本；DOI 与 ISSN 由作者和编辑部按需选择。
             </p>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
               不收版面费，不设学历门槛，不问出处。
@@ -154,8 +152,8 @@ function AboutPage() {
             ))}
           </div>
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-            本站是小型独立出版项目，不虚构编委姓名、头衔或机构。上表是岗位与职责边界，
-            不是一份看起来像大刊的假阵容；审稿人身份仅编辑部掌握。
+            本站是小型独立出版项目。上表只列真实岗位与职责，不虚构姓名、头衔或机构；
+            审稿人身份仅编辑部掌握。
           </p>
         </RevealSection>
 

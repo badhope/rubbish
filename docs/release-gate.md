@@ -154,7 +154,7 @@ Manifest，旧批准随旧 Manifest 一起失效。
 
 1. **单篇生命周期**：`draft → accepted → scheduled → published → corrected → retracted`
    还没有独立事件表；目前由 `publication_status + publish_at` 表达。
-2. **发布后校验**：发布完成后自动抓 `/`、`/papers`、`/sitemap.xml`、
+2. **发布后校验**：发布完成后自动抓 `/`、`/catalog`、`/sitemap.xml`、
    `/rss.xml` 和最新详情页，把 HTTP 状态与 TTFB 写进 Manifest 的
    `post_deploy` 字段。
 3. **定时发布失败通知**：现在写审计和日志，还没有给值班编辑发站内信/邮件。

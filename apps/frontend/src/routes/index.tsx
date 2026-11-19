@@ -161,9 +161,8 @@ function HomePage() {
               Rubbish
             </span>
           </h1>
-          <p className="mt-5 max-w-3xl text-[15px] leading-7 text-muted-foreground sm:text-xl sm:leading-9">
-            不是顶刊，是<span className="font-medium text-foreground">学术底刊</span>：
-            给不够完美、但值得留下的研究，一个正式、可引用的落点。
+          <p className="mt-5 max-w-4xl text-[15px] leading-7 text-muted-foreground sm:text-xl sm:leading-9">
+            认真写下的研究，值得一个正式位置。Rubbish 收方法诚实、材料可核查的稿子。
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Button asChild size="lg" className="button-shine h-12 px-6 text-sm sm:h-14 sm:px-7 sm:text-base">
@@ -344,8 +343,8 @@ function HomePage() {
           </blockquote>
           <div className="text-sm leading-7 text-muted-foreground">
             <p>
-              这里不是顶刊的候补席，也不是把失败研究换个包装的橱窗。我们只做一件事：
-              让不够完美、但方法诚实、材料可核查的工作，有一个正式、可引用的落点。
+              顶刊之外，还有读者。我们替不够完美、但方法诚实、材料可核查的研究，
+              留一个正式、可引用的位置。
             </p>
             <Link to="/about" search={{ tab: 'about' }} className="mt-4 inline-flex items-center gap-1 text-primary hover:underline">
               关于本刊与编委会 <ArrowRight className="h-4 w-4" />
@@ -418,7 +417,7 @@ function HomePage() {
         <div className="border-t border-border/70">
           <div className="mx-auto flex w-full max-w-[1100px] flex-wrap items-center justify-between gap-2 px-5 py-3 text-xs text-muted-foreground sm:px-8">
             <span>© {new Date().getFullYear()} Rubbish · An Academic Bottom Journal</span>
-            <span>保持诚实，保留余地。</span>
+            <span>认真写，诚实评，公开读。</span>
           </div>
         </div>
       </footer>

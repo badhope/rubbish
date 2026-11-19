@@ -318,7 +318,7 @@ function CatalogDetailPage() {
                 <Badge
                   variant="outline"
                   className="tabular-nums"
-                  title="站内热度（R 值）：阅读、下载、收藏的站内加权，不是学术评分。"
+                  title="站内热度（R 值）：阅读、下载、收藏的站内加权，只反映站内关注度，不计入学术评分。"
                 >
                   热度 {data.r_index.toFixed(1)}
                   {canSeeScores && data.quartile ? ` · ${data.quartile}` : ''}
@@ -505,7 +505,7 @@ function CatalogDetailPage() {
                   {data.r_factor != null && (
                     <MetaItem
                       label="站内热度"
-                      hint="R 值：阅读、收藏、评论的站内加权，只反映站内关注度，不是学术评分。"
+                      hint="R 值：阅读、收藏、评论的站内加权，只反映站内关注度，不计入学术评分。"
                       value={data.r_factor.toFixed(1)}
                     />
                   )}

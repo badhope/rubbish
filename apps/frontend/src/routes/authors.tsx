@@ -191,8 +191,8 @@ export function AuthorsPage() {
         <RevealSection>
           <h2 className="text-xl font-medium">结构规范</h2>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            本刊采用「结构化写作」：每一节都有明确的功能，不按功能写的稿件会在初审被退回补全，
-            而不是直接拒稿。以下规范对全部稿件同等适用——玩梗选题的论证同样要经得起结构审查。
+            本刊采用「结构化写作」：每一节都有明确功能。结构不完整的稿件，初审会退回补全，
+            并给作者一次修正机会。以下规范对全部稿件同等适用——玩梗选题的论证同样要经得起结构审查。
           </p>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             {[
@@ -247,7 +247,7 @@ export function AuthorsPage() {
               我们的判断只看三件事：<strong className="text-foreground">因果是否成立</strong>、
               <strong className="text-foreground">引用是否可核实</strong>、
               <strong className="text-foreground">结论是否超出证据</strong>。
-              这三项不过，文风再好也退；三项都过，用不用 AI 不是问题。
+              这三项不过，文风再好也退；三项都过，AI 用不用都能接受。
             </p>
             <p>
               完整的核查项（含常见症状与改写示例）见下方「AI 写作核查表」。
@@ -279,7 +279,7 @@ export function AuthorsPage() {
                 href: '/templates/rubbish-submission-template.tex',
                 icon: FileText,
                 title: 'LaTeX 模板',
-                body: '公式多的正经研究用它；xelatex 编译出 PDF 后直接投稿。',
+                body: '公式较多的研究可以用它；xelatex 编译出 PDF 后直接投稿。',
               },
               {
                 href: '/templates/rubbish-submission-template-word.md',

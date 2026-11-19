@@ -6,7 +6,7 @@
 
 **收录全球学术垃圾的开放获取期刊 — Submit · Review · Publish · Read，一个代码库跑完整个出版闭环**
 
-> 15 个后端模块 · 870 单元测试 · 68 条 E2E 用例 · 全链路严格类型
+> 16 个后端模块 · 870 单元测试 · Playwright E2E · 全链路严格类型
 
 **🌐 [English](README.md) · [简体中文](README.zh-CN.md)**
 
@@ -20,7 +20,7 @@
 [![Unit tests](https://img.shields.io/badge/unit_tests-870-10B981?style=flat-square&logo=pytest&logoColor=white)](#测试)
 [![E2E](https://img.shields.io/badge/E2E_specs-68-22C55E?style=flat-square&logo=playwright&logoColor=white)](#测试)
 
-**镜像仓库**：[GitHub](https://github.com/x33834/rubbish) · [GitHub](https://github.com/Morningstar202604/rubbish) · [GitCode](https://gitcode.com/badhope/rubbish) · [Gitee](https://gitee.com/badhope/rubbish)
+**镜像仓库**：[GitHub x33834](https://github.com/x33834/rubbish) · [GitHub Morningstar](https://github.com/Morningstar202604/rubbish) · [GitHub badhope](https://github.com/badhope/rubbish) · [GitCode](https://gitcode.com/badhope/rubbish) · [Gitee](https://gitee.com/badhope/rubbish)
 
 **[功能一览](#功能一览) · [界面预览](#界面预览) · [架构](#架构) · [快速开始](#快速开始) · [技术栈](#技术栈) · [测试](#测试) · [文档](#文档)**
 
@@ -33,7 +33,7 @@
 | | 是什么 | 展示性内容放在哪 |
 | --- | --- | --- |
 | **开源示例**（本仓库） | Rubbish 期刊平台的参考实现——克隆、自部署、二次开发。 | `site/` 宣传页、`docs/assets/`、README 截图 |
-| **生产服务**（[rubbish.argjiemi.cn](https://rubbish.argjiemi.cn)） | **正式上线的真实期刊**，不是演示站。运行中的应用不含截图图集等宣传内容——每个页面只服务于投稿、评审、刊出与阅读。 | 无——设计上已去展示化 |
+| **生产服务**（[rubbish.argjiemi.cn](https://rubbish.argjiemi.cn)） | **正式上线的真实期刊**，直接服务投稿、评审、刊出与阅读。运行中的应用不含截图图集等宣传内容。 | 无——设计上已去展示化 |
 
 ## 功能一览
 
@@ -44,8 +44,8 @@
 | **审稿人** | 审稿报告、盲审（单盲/双盲）、决定建议 |
 | **读者** | 公开目录检索、**邮箱验证码免密登录**、**阅读页字号/行距/宋黑排版控制**、**稿件结构自动检查（上传即报缺什么）**、**浏览器内在线阅读 Markdown（图表内联、图注、KaTeX，无需登录墙）**、跨设备阅读进度（游客本地保存）、关注作者、订阅通知、**主题封面卡片** |
 | **社区** | **独立讨论区（发帖/回帖/分类/置顶/锁定，登录即可发）**、论文读者评论区（公开可读、登录可评、本人/管理员可删且审计留痕）、游客模式本地存储 |
-| **身份与成长** | 四层身份（读者 → 作者 → 审稿人 → 编辑，与后端权限一一对应）、积分仅作荣誉统计不充当权限、27 枚成就徽章、个人中心（`/profile`）、公开的身份与评分规范（`/levels`）、审稿人申请通道 |
-| **期刊运营** | **双赛道一等公民（正经 / 荒诞，投稿必选、目录可筛、详情页徽章、统计分赛道）**、编辑部自设计指标（R 因子、荒诞指数，口径不公开）、**RQS v2.0 学术价值评分（七维：问题/论证/方法/证据/创新/诚信/表达，A+/A/B/C/D，诚信一票否决，D 级打回）**、**按月分期的定时发布（`publish_at` + 公开出版日历 `/archive`）**、首访公告、作者指南 / 政策规范 / 关于本刊页、投稿模板 |
+| **身份与成长** | 四层身份（读者 → 作者 → 审稿人 → 编辑，与后端权限一一对应）、积分仅作荣誉统计不充当权限、27 枚成就徽章、个人中心（`/me`）、公开的身份与评分规范（`/guide?tab=levels`）、审稿人申请通道 |
+| **期刊运营** | **论文与副刊双轨（学术论文 / 荒诞论文 / 副刊，投稿必选、目录可筛、详情页徽章、分轨统计）**、编辑部自设计指标（R 因子、荒诞指数，口径不公开）、**RQS v5.1 双轨评分（学术五维 / 荒诞六维含荒诞度；每维必给分，理由与正文证据选填）**、**按月分期的定时发布（`publish_at` + 公开出版日历 `/archive`）**、首访公告、作者指南 / 政策规范 / 关于本刊页、投稿模板 |
 | **管理员** | **用户提权为平台管理员**、**公告管理**、用户/卷/期/期刊管理、审计日志、批量导入（BibTeX / RIS / CSV / DOI / arXiv）、**一键发整期 / 改期** |
 
 **安全默认开启**：邮箱验证码登录（一次性哈希码 + 频率限制）、WebAuthn 通行密钥 + TOTP 双因素、JWT 服务端吊销与密钥轮换、注册验证码、全操作审计日志、多租户隔离（PostgreSQL RLS）。
@@ -54,17 +54,17 @@
 
 ## 界面预览
 
-| 公开门户 | 资源目录 | 在线阅读 |
+| 公开首页 | 论文目录 | 文章页 |
 | --- | --- | --- |
-| ![home](docs/assets/screenshots/rubbish-home.png) | ![catalog](docs/assets/screenshots/rubbish-catalog.png) | ![reader](docs/assets/screenshots/rubbish-reader.png) |
+| ![公开首页](docs/assets/screenshots/rubbish-home.png) | ![论文目录](docs/assets/screenshots/rubbish-catalog.png) | ![文章页](docs/assets/screenshots/rubbish-reader.png) |
 
-| 工作台概览 | 我的投稿 | 编辑工作台 |
+| 讨论区 | 卷期归档 | 本刊数据 |
 | --- | --- | --- |
-| ![dashboard](docs/assets/screenshots/rubbish-dashboard.png) | ![submissions](docs/assets/screenshots/07-my-submissions.png) | ![editor](docs/assets/screenshots/rubbish-editor.png) |
+| ![讨论区](docs/assets/screenshots/rubbish-forum.png) | ![卷期归档](docs/assets/screenshots/rubbish-archive.png) | ![本刊数据](docs/assets/screenshots/rubbish-about.png) |
 
-| 移动端目录 | 移动端详情 | 审稿工作台 |
+| 手机目录 | 手机文章页 | 界面总览 |
 | --- | --- | --- |
-| ![mobile catalog](docs/assets/screenshots/mobile-catalog.png) | ![mobile detail](docs/assets/screenshots/mobile-detail.png) | ![reviewer](docs/assets/screenshots/06-reviewer-workbench.png) |
+| ![手机目录](docs/assets/screenshots/mobile-catalog.png) | ![手机文章页](docs/assets/screenshots/mobile-detail.png) | ![界面总览](docs/assets/screenshots-overview.png) |
 
 ## 架构
 
