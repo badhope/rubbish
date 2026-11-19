@@ -23,6 +23,7 @@
 - 发帖改为移动端全屏、桌面端大面板；标题优先聚焦，版块收成“发到：… 修改”一行，默认取当前浏览的子板块。
 - 论坛编辑器 compact 工具栏只留加粗、斜体、链接、列表、表情、图片，固定单行。
 - 发帖草稿按 400ms 防抖写入本机；重新打开自动恢复，发布后清除。
+- 标题输入框按 Enter 直接进入正文；Esc 关闭发帖，Ctrl/⌘+Enter 发布。
 - `/desk` 独立页删除；主编桌并入 `/about?tab=desk`，邮件确认迁到 `/about/desk-subscribe`。
 - `/support` 独立页删除；成本账本并入 `/about?tab=support`。
 - sitemap 改用 `/catalog?section=` 与 `/catalog?volume=&issue=`，不再收录旧归档/栏目页。

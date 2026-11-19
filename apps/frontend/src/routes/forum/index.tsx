@@ -199,6 +199,7 @@ function ForumListPage() {
   const [open, setOpen] = useState(false)
   const [boardPickerOpen, setBoardPickerOpen] = useState(false)
   const titleRef = useRef<HTMLInputElement>(null)
+  const bodyRef = useRef<HTMLTextAreaElement>(null)
   const [form, setForm] = useState({
     title: paperId ? `讨论：${(paperTitle || `论文 #${paperId}`).slice(0, 170)}` : '',
     body: paperId ? `论文链接：/catalog/${paperId}\n\n` : '',
@@ -561,6 +562,12 @@ function ForumListPage() {
                 maxLength={200}
                 placeholder="标题：一句话说清你要讨论什么"
                 aria-label="帖子标题"
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+                    event.preventDefault()
+                    bodyRef.current?.focus()
+                  }
+                }}
                 className="w-full border-0 bg-transparent p-0 font-serif text-2xl leading-tight tracking-tight outline-none placeholder:text-muted-foreground/70"
               />
 
@@ -605,6 +612,7 @@ function ForumListPage() {
                   onUploadImage={uploadForumImage}
                   minHeight={360}
                   compact
+                  textareaRef={bodyRef}
                   onSubmitShortcut={publishTopic}
                   placeholder="说清背景、你的判断、以及希望得到什么回应。支持 Markdown、表情和图片。"
                 />

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type RefObject } from 'react'
 import {
   ChevronDown,
   BookMarked,
@@ -73,6 +73,8 @@ export interface MarkdownEditorProps {
   onSubmitShortcut?: () => void
   /** 进入输入场景时直接聚焦正文，移动端随之弹键盘。 */
   autoFocus?: boolean
+  /** 外部需要把焦点送回正文时使用（例如标题按回车）。 */
+  textareaRef?: RefObject<HTMLTextAreaElement | null>
 }
 
 interface ToolAction {
@@ -275,8 +277,13 @@ export function MarkdownEditor({
   compact = false,
   onSubmitShortcut,
   autoFocus = false,
+  textareaRef,
 }: MarkdownEditorProps) {
   const areaRef = useRef<HTMLTextAreaElement | null>(null)
+  const setAreaRef = (node: HTMLTextAreaElement | null) => {
+    areaRef.current = node
+    if (textareaRef) textareaRef.current = node
+  }
   const imageRef = useRef<HTMLInputElement | null>(null)
   const [tab, setTab] = useState<'edit' | 'split' | 'preview'>('edit')
   const [uploadingImage, setUploadingImage] = useState(false)
@@ -977,7 +984,7 @@ export function MarkdownEditor({
         >
           <div className="relative min-w-0">
             <textarea
-              ref={areaRef}
+              ref={setAreaRef}
               value={value}
               disabled={disabled}
               onChange={(e) => commit(e.target.value)}
