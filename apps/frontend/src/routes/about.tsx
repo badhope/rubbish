@@ -5,6 +5,7 @@ import { CoverArt } from '@/components/common/cover-art'
 import { RevealSection } from '@/components/common/reveal-section'
 import { JournalMetricsPage } from '@/components/about/journal-metrics'
 import { DeskPage } from '@/components/about/desk-page'
+import { SupportPage } from '@/components/about/support-page'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/about')({
@@ -14,17 +15,20 @@ export const Route = createFileRoute('/about')({
         ? 'metrics'
         : search.tab === 'desk'
           ? 'desk'
-          : 'about',
+          : search.tab === 'support'
+            ? 'support'
+            : 'about',
   }),
   component: AboutPage,
 })
 
-function AboutTabs({ active }: { active: 'about' | 'metrics' | 'desk' }) {
+function AboutTabs({ active }: { active: 'about' | 'metrics' | 'desk' | 'support' }) {
   return (
     <div className="mb-6 flex border-b">
       {[
         { value: 'about', label: '关于本刊' },
         { value: 'desk', label: '主编桌' },
+        { value: 'support', label: '成本公开' },
         { value: 'metrics', label: '本刊数据' },
       ].map((t) => (
         <Link
@@ -110,6 +114,14 @@ function AboutPage() {
       <div className="about-page mx-auto w-full max-w-[1100px]">
         <AboutTabs active="desk" />
         <DeskPage />
+      </div>
+    )
+  }
+  if (tab === 'support') {
+    return (
+      <div className="about-page mx-auto w-full max-w-[1100px]">
+        <AboutTabs active="support" />
+        <SupportPage />
       </div>
     )
   }
@@ -226,7 +238,7 @@ function AboutPage() {
           </p>
           <p className="mt-3 text-sm text-muted-foreground">
             本刊无广告、无付费墙，服务器与域名成本公开在这里：
-            <Link to="/support" className="ml-1 text-primary hover:underline">
+            <Link to="/about" search={{ tab: 'support' }} className="ml-1 text-primary hover:underline">
               成本账本
             </Link>
           </p>

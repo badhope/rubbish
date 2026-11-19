@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { createFileRoute, Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Clock3, Flame, Flag, Lock, Megaphone, MessageSquare, Pin, Plus } from 'lucide-react'
@@ -8,10 +8,7 @@ import { uploadForumImage } from '@/lib/forum'
 import { extractError } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
 import { PageHeader } from '@/components/common/page-header'
-import { FeedbackBoardPage } from '@/components/forum/feedback-board'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
-import { MarkdownEditor } from '@/components/common/markdown-editor'
-import { MarkdownExcerpt } from '@/components/common/markdown-content'
 import { Pagination } from '@/components/common/pagination'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -39,6 +36,13 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+
+const MarkdownEditor = lazy(() =>
+  import('@/components/common/markdown-editor').then((m) => ({ default: m.MarkdownEditor })),
+)
+const FeedbackBoardPage = lazy(() =>
+  import('@/components/forum/feedback-board').then((m) => ({ default: m.FeedbackBoardPage })),
+)
 
 export const Route = createFileRoute('/forum/')({
   component: ForumListPage,
@@ -125,6 +129,17 @@ function fmtRelative(iso: string): string {
   const days = Math.floor(hours / 24)
   if (days < 30) return `${days} 天前`
   return new Date(iso).toLocaleDateString('zh-CN')
+}
+
+function plainExcerpt(text: string): string {
+  return text
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/[#>*_~`]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 function ForumListPage() {
@@ -228,7 +243,11 @@ function ForumListPage() {
   const meta = listQ.data?.meta
 
   if (view === 'feedback') {
-    return <FeedbackBoardPage />
+    return (
+      <Suspense fallback={<Loading />}>
+        <FeedbackBoardPage />
+      </Suspense>
+    )
   }
 
   return (
@@ -354,18 +373,16 @@ function ForumListPage() {
           }
         />
       ) : (
-        <div className="space-y-2">
+        <div className="divide-y overflow-hidden rounded-lg border bg-card">
           {topics.map((t) => (
-            <Card
+            <div
               key={t.id}
               className={cn(
-                'group gap-0 rounded-xl p-0 transition-all',
-                'hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-sm',
+                'flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-muted/20',
                 // 编辑部公告用左侧主色条突出：公告不是普通帖子
                 t.category === 'notice' && 'border-l-4 border-l-primary',
               )}
             >
-              <CardContent className="flex items-start gap-3 px-4 py-3.5">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     {t.is_pinned && (
@@ -398,10 +415,9 @@ function ForumListPage() {
                       {t.title}
                     </Link>
                   </div>
-                  <MarkdownExcerpt
-                    text={t.body}
-                    className="mt-1 line-clamp-2 text-[13px] leading-6 text-muted-foreground"
-                  />
+                  <p className="mt-1 line-clamp-2 text-[13px] leading-6 text-muted-foreground">
+                    {plainExcerpt(t.body)}
+                  </p>
                   <p className="mt-1.5 text-[11px] text-muted-foreground">
                     {t.author?.display_name || t.author?.username || '已注销用户'} · 最后活跃{' '}
                     {fmtRelative(t.last_reply_at ?? t.created_at)}
@@ -435,8 +451,7 @@ function ForumListPage() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 )}
-              </CardContent>
-            </Card>
+            </div>
           ))}
         </div>
       )}
@@ -488,16 +503,18 @@ function ForumListPage() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="t-body">内容</Label>
-              <MarkdownEditor
-                value={form.body}
-                onChange={(body) => setForm((p) => ({ ...p, body }))}
-                onUploadImage={uploadForumImage}
-                minHeight={180}
-                compact
-                autoFocus
-                onSubmitShortcut={publishTopic}
-                placeholder="支持 Markdown。说清背景、你的判断、以及希望得到什么回应。"
-              />
+              <Suspense fallback={<div className="rounded-md border border-dashed px-3 py-6 text-sm text-muted-foreground">编辑器加载中…</div>}>
+                <MarkdownEditor
+                  value={form.body}
+                  onChange={(body) => setForm((p) => ({ ...p, body }))}
+                  onUploadImage={uploadForumImage}
+                  minHeight={180}
+                  compact
+                  autoFocus
+                  onSubmitShortcut={publishTopic}
+                  placeholder="支持 Markdown。说清背景、你的判断、以及希望得到什么回应。"
+                />
+              </Suspense>
               <p className="text-[11px] text-muted-foreground">
                 Ctrl / ⌘ + Enter 直接发布
               </p>

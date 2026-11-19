@@ -18,14 +18,16 @@
 - `/follows` 独立页删除；关注作者与订阅学科收进 `/me?tab=library&section=following`。
 - `/recommendations` 独立页删除；个性化推荐收进 `/me?tab=library&section=recommendations`。
 - 论坛回复改为在目标楼层下方内联展开，不再跳到底部输入框。
-- 论坛列表首屏把两级版块树收进一个版块选择器 + 排序工具栏，不再铺分类胶囊和子版块墙。
+- 论坛列表首屏把两级版块树收进一个版块选择器 + 排序工具栏，不再铺分类胶囊和子版块墙；帖子卡片改成索引行。
+- 论坛列表的编辑器与反馈墙改为按需加载，首屏不再静态加载 Markdown/KaTeX 渲染。
 - `/desk` 独立页删除；主编桌并入 `/about?tab=desk`，邮件确认迁到 `/about/desk-subscribe`。
+- `/support` 独立页删除；成本账本并入 `/about?tab=support`。
 - sitemap 改用 `/catalog?section=` 与 `/catalog?volume=&issue=`，不再收录旧归档/栏目页。
 
 ### Removed
 - 删除 `/tools` 路由、导航入口与后端 SPA 白名单。
-- 删除 `/authors`、`/help`、`/policies`、`/archive`、`/sections`、`/ingest`、`/feedback`、`/appeals`、`/follows`、`/recommendations`、`/desk` 路由文件；指南页面组件迁到 `components/guide/`。
-- 后端 SPA 白名单移除 `policies`、`help`、`rules`、`shop`、`archive`、`sections`、`ingest`、`feedback`、`appeals`、`follows`、`recommendations`、`desk`。
+- 删除 `/authors`、`/help`、`/policies`、`/archive`、`/sections`、`/ingest`、`/feedback`、`/appeals`、`/follows`、`/recommendations`、`/desk`、`/support` 路由文件；指南页面组件迁到 `components/guide/`。
+- 后端 SPA 白名单移除 `policies`、`help`、`rules`、`shop`、`archive`、`sections`、`ingest`、`feedback`、`appeals`、`follows`、`recommendations`、`desk`、`support`。
 
 ## [1.16.0] — 2026-11-19
 

@@ -19,7 +19,6 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as MeRouteImport } from './routes/me'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as SupportRouteImport } from './routes/support'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AboutDeskSubscribeRouteImport } from './routes/about_.desk-subscribe'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
@@ -95,11 +94,6 @@ const RegisterRoute = RegisterRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SupportRoute = SupportRouteImport.update({
-  id: '/support',
-  path: '/support',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
@@ -244,7 +238,6 @@ export interface FileRoutesByFullPath {
   '/me': typeof MeRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/support': typeof SupportRoute
   '/verify-email': typeof VerifyEmailRoute
   '/about/desk-subscribe': typeof AboutDeskSubscribeRoute
   '/admin/content': typeof AdminContentRoute
@@ -282,7 +275,6 @@ export interface FileRoutesByTo {
   '/me': typeof MeRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/support': typeof SupportRoute
   '/verify-email': typeof VerifyEmailRoute
   '/about/desk-subscribe': typeof AboutDeskSubscribeRoute
   '/admin/content': typeof AdminContentRoute
@@ -322,7 +314,6 @@ export interface FileRoutesById {
   '/me': typeof MeRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/support': typeof SupportRoute
   '/verify-email': typeof VerifyEmailRoute
   '/about_/desk-subscribe': typeof AboutDeskSubscribeRoute
   '/admin/content': typeof AdminContentRoute
@@ -363,7 +354,6 @@ export interface FileRouteTypes {
     | '/me'
     | '/register'
     | '/reset-password'
-    | '/support'
     | '/verify-email'
     | '/about/desk-subscribe'
     | '/admin/content'
@@ -401,7 +391,6 @@ export interface FileRouteTypes {
     | '/me'
     | '/register'
     | '/reset-password'
-    | '/support'
     | '/verify-email'
     | '/about/desk-subscribe'
     | '/admin/content'
@@ -440,7 +429,6 @@ export interface FileRouteTypes {
     | '/me'
     | '/register'
     | '/reset-password'
-    | '/support'
     | '/verify-email'
     | '/about_/desk-subscribe'
     | '/admin/content'
@@ -480,7 +468,6 @@ export interface RootRouteChildren {
   MeRoute: typeof MeRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
-  SupportRoute: typeof SupportRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   AboutDeskSubscribeRoute: typeof AboutDeskSubscribeRoute
   CatalogResourceIdRoute: typeof CatalogResourceIdRoute
@@ -572,13 +559,6 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/support': {
-      id: '/support'
-      path: '/support'
-      fullPath: '/support'
-      preLoaderRoute: typeof SupportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/verify-email': {
@@ -799,7 +779,6 @@ const rootRouteChildren: RootRouteChildren = {
   MeRoute: MeRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
-  SupportRoute: SupportRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   AboutDeskSubscribeRoute: AboutDeskSubscribeRoute,
   CatalogResourceIdRoute: CatalogResourceIdRoute,

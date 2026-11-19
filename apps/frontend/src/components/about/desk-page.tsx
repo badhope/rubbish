@@ -25,7 +25,8 @@ const PILLARS = [
     title: '底刊也要有账本',
     body:
       '服务器、域名、存储与排版工具都有成本。这里只公开实际账本，不开放收款，也不把任何外部款项带进评审。',
-    to: '/support',
+    to: '/about',
+    search: { tab: 'support' },
     label: '成本账本',
     icon: ReceiptText,
   },

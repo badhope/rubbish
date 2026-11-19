@@ -1,6 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, ReceiptText, ScrollText, ShieldCheck } from "lucide-react";
-import { PageHeader } from "@/components/common/page-header";
+
+import { ReceiptText, ScrollText, ShieldCheck } from "lucide-react";
 import { RevealSection } from "@/components/common/reveal-section";
 import { Card, CardContent } from "@/components/ui/card";
 import { MarkdownContent } from "@/components/common/markdown-content";
@@ -10,10 +9,6 @@ import {
   useSupportReports,
   type FinanceReport,
 } from "@/hooks/api/use-support";
-
-export const Route = createFileRoute("/support")({
-  component: SupportPage,
-});
 
 function CostTable({ report }: { report: FinanceReport }) {
   return (
@@ -228,25 +223,19 @@ function FinanceSection({
   );
 }
 
-function SupportPage() {
+export function SupportPage() {
   const reportsQ = useSupportReports();
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <Link
-        to="/"
-        className="mb-4 inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-primary"
-      >
-        <ArrowLeft className="mr-1 h-4 w-4" />
-        返回首页
-      </Link>
+    <div className="space-y-6">
+      <div className="border-b pb-4">
+        <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">COST LEDGER</p>
+        <h1 className="mt-1 font-serif text-2xl tracking-tight">成本公开</h1>
+        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+          本刊无广告、无付费墙。这里只公开服务器、域名与工具链的实际成本，不提供任何收款方式。
+        </p>
+      </div>
 
-      <PageHeader
-        title="成本公开"
-        description="本刊无广告、无付费墙。这里只公开服务器、域名与工具链的实际成本，不提供任何收款方式。"
-      />
-
-      <div className="space-y-6">
         <RevealSection>
           <Card>
             <CardContent className="p-6">
@@ -298,7 +287,6 @@ function SupportPage() {
             </CardContent>
           </Card>
         </RevealSection>
-      </div>
     </div>
   );
 }
