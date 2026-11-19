@@ -13,18 +13,15 @@ import {
   MessagesSquare,
   MoreVertical,
   Pencil,
-  Quote,
   Send,
   Share2,
   Trash2,
-  UserCheck,
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/use-auth'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import {
-  useClaimStatus,
   useDeleteResource,
   useRecordView,
   useResource,
@@ -40,7 +37,6 @@ import type {
 } from '@/lib/types'
 import { normalizeAbstract } from '@/lib/abstract'
 import { extractError, parseListField, sanitizeAuthors } from '@/lib/utils'
-import { formatCitation, type CitationStyle } from '@/lib/citation'
 import { safeHref } from '@/lib/url-safety'
 import {
   contentCategoryLabel,
@@ -48,7 +44,6 @@ import {
   displayTypeLabel,
   isScholarlyContent,
   languageLabel,
-  qualityGrade,
   statusLabel,
   type ContentKind,
 } from '@/lib/resource-labels'
@@ -83,12 +78,6 @@ import { FunArticle } from '@/components/catalog/fun-article'
 import { MetaItem } from '@/components/common/meta-item'
 import { ErrorState, LoadingSkeleton } from '@/components/common/state'
 
-const CITATION_STYLES: { value: CitationStyle; label: string }[] = [
-  { value: 'gb-t-7714', label: 'GB/T 7714' },
-  { value: 'apa', label: 'APA 7' },
-  { value: 'mla', label: 'MLA 9' },
-]
-
 // 详情页向访客开放（后端 GET /catalog/{id} 本就是公开接口）。
 // v5：点开即正文——标题/作者/标签后直接渲染 Markdown 正文，不再跳 /reader。
 export const Route = createFileRoute('/catalog/$resourceId')({
@@ -110,7 +99,7 @@ function CatalogDetailPage() {
     enabled: Number.isFinite(id) && id > 0,
   })
   const navigate = useNavigate()
-  const { isAdmin, isAuthenticated, user } = useAuth()
+  const { isAdmin, isAuthenticated } = useAuth()
 
   const { data, isLoading, isError, refetch } = useResource(id)
   const recordView = useRecordView()
@@ -131,7 +120,6 @@ function CatalogDetailPage() {
   const [eventOpen, setEventOpen] = useState(false)
   const [listOpen, setListOpen] = useState(false)
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false)
-  const claimStatus = useClaimStatus(id, true)
 
   // ManuscriptView 把 TOC 上提到这里，供右侧 sticky 侧栏渲染。
   const [toc, setToc] = useState<TocEntry[]>([])
@@ -176,8 +164,7 @@ function CatalogDetailPage() {
 
   const isScholarly = isScholarlyContent(data.content_category, data.content_track)
   const kind: ContentKind = contentTrackKind(data.content_category, data.content_track)
-  // 以 content_track 为唯一判据：essay=娱乐轨，隐藏全部学术区块；paper=论文轨，
-  // 学术区块必须保留。不猜摘要/CLC 是否存在。
+  // 以 content_track 为唯一判据：essay=自由创作，paper=研究档案。
   const isEssayTrack = data.content_track === 'essay'
   const isPaperTrack = data.content_track === 'paper'
   const cleanAuthors = sanitizeAuthors(data.authors)
@@ -185,16 +172,8 @@ function CatalogDetailPage() {
   const titleParts = (data.title || '').split(/\s*——\s*/)
   const titleMain = titleParts[0]
   const titleSub = titleParts.slice(1).join('——')
-  const currentUsername = user?.username?.trim().toLowerCase() ?? ''
-  const isAuthor =
-    !!currentUsername &&
-    cleanAuthors.some((a) => a.trim().toLowerCase() === currentUsername)
-  const ownerBound = claimStatus.data?.state === 'claimed'
-  const canClaim =
-    isAuthenticated && !isAuthor && !ownerBound && claimStatus.data?.claimable === true
 
-  // 娱乐轨直接走独立文章版式：不渲染摘要卡、CLC、引用、评审、PDF、R 评分，
-  // 也不使用论文页的侧栏与 3/4 封面。论文轨继续走下面的学术版式。
+  // 自由创作走独立版式，不渲染研究档案的概要、目录与侧栏。
   if (isEssayTrack) {
     return (
       <>
@@ -238,15 +217,6 @@ function CatalogDetailPage() {
       </>
     )
   }
-
-  // 评分细则与分区口径只对审稿/编辑端可见：后端详情接口已对非 staff
-  // 清空 quality_* / quartile，前端再按角色 gate 渲染，避免「尚未评分」占位。
-  const SCORE_STAFF_ROLES = new Set([
-    'reviewer', 'senior_reviewer', 'editor', 'section_editor',
-    'board_editor', 'deputy_editor', 'chief_editor', 'editor_in_chief',
-  ])
-  const canSeeScores =
-    isAdmin || (user?.roles ?? []).some((r) => SCORE_STAFF_ROLES.has(r))
 
   return (
     <div className={isMobile ? 'pb-20' : ''}>
@@ -292,18 +262,17 @@ function CatalogDetailPage() {
                 <Badge
                   variant="outline"
                   className="tabular-nums"
-                  title="站内热度（R 值）：阅读、下载、收藏的站内加权，只反映站内关注度，不计入学术评分。"
+                  title="社区热度：阅读、下载、收藏的站内加权，只反映社区关注度。"
                 >
                   热度 {data.r_index.toFixed(1)}
-                  {canSeeScores && data.quartile ? ` · ${data.quartile}` : ''}
                 </Badge>
               ) : null}
               {data.publication_status !== 'published' && (
                 <Badge variant="outline">{statusLabel(data.publication_status)}</Badge>
               )}
               {historyQ.data?.retracted && (
-                <Badge variant="destructive" title="本文已撤稿，原文保留用于记录，撤稿说明见下方公开日志。">
-                  已撤稿
+                <Badge variant="destructive" title="这份记录已撤回，内容保留用于站内记录，撤回说明见下方公开日志。">
+                  已撤回
                 </Badge>
               )}
             </div>
@@ -317,7 +286,7 @@ function CatalogDetailPage() {
             </h1>
             {historyQ.data?.retracted && (
               <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs leading-relaxed text-destructive">
-                本文已被撤稿。原文保留用于学术记录，撤稿原因与时间见“版本与公开记录”。
+                这份记录已撤回。内容保留用于站内记录，撤回原因与时间见“版本与公开记录”。
               </div>
             )}
             {/* 作者行：优先用 authors_detail（v5）；未认领者邮箱/单位为 null，绝不展示 PDF 抓出来的私人邮箱。 */}
@@ -351,43 +320,14 @@ function CatalogDetailPage() {
             </div>
           </div>
 
-          {/* 四轨导语/摘要卡：论文=摘要，科普=导语，娱乐/吐槽=不渲染 */}
+          {/* 概要卡：研究档案=概要，科普=导语，自由创作不渲染 */}
           {!isEssayTrack && (kind === 'paper' || kind === 'sci_pop') && data.abstract ? (
             <AbstractCard
               text={data.abstract}
               collapsible={isMobile}
-              label={kind === 'sci_pop' ? '导语' : '摘要'}
+              label={kind === 'sci_pop' ? '导语' : '概要'}
             />
           ) : null}
-
-          {/* 认领卡：仅 claimable && 已登录 && 非作者本人；点击进入 /claim/{id} 表单页 */}
-          {canClaim && (
-            <Card className="mb-4 border-dashed">
-              <CardContent className="flex flex-wrap items-center justify-between gap-3 py-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium">这篇文章还没有挂到任何站内账号名下</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    如果你是本文作者，可以发起认领，编辑部核实后会把文章挂到你的名下。
-                  </p>
-                </div>
-                <Button asChild size="sm" variant="outline">
-                  <Link to="/claim/$resourceId" params={{ resourceId: String(id) }}>
-                    <UserCheck className="h-4 w-4" />
-                    去认领
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-          {isAuthenticated && claimStatus.data?.mine && (
-            <Card className="mb-4 border-primary/30 bg-primary/5">
-              <CardContent className="py-3">
-                <p className="text-sm">
-                  你已提交认领申请（{claimStatus.data.mine.status === 'pending' ? '待编辑部审核' : claimStatus.data.mine.status === 'approved' ? '已批准' : '未通过'}）。
-                </p>
-              </CardContent>
-            </Card>
-          )}
 
           {/* 正文：ManuscriptView 内联渲染，window 原生滚动 */}
           {manuscriptError ? (
@@ -431,65 +371,25 @@ function CatalogDetailPage() {
               </Card>
             )}
 
-            {/* 论文轨：文章信息 + 关键词 + CLC */}
+            {/* 研究档案：只保留记录本身需要的元信息，不展示旧刊期、分类号与评分。 */}
             {isPaperTrack && (
-              <FoldCard title="文章信息" defaultOpen={!isMobile}>
+              <FoldCard title="记录信息" defaultOpen={!isMobile}>
                 <CardContent>
                   <MetaItem label="年份" value={String(data.year)} />
-                  <MetaItem label="来源" value={data.venue} />
-                  <MetaItem label="学科" value={data.discipline} />
-                  <MetaItem label="子学科" value={data.subdiscipline} />
+                  {data.venue ? <MetaItem label="原始出处" value={data.venue} /> : null}
+                  <MetaItem label="研究方向" value={data.discipline} />
+                  <MetaItem label="子方向" value={data.subdiscipline} />
                   <MetaItem label="站内编号" value={data.site_id} />
                   <MetaItem label="语言" value={languageLabel(data.language)} />
                   {data.keywords && data.keywords.length > 0 && (
                     <MetaItem label="关键词" value={data.keywords.join('；')} />
                   )}
-                  {data.clc_code && (
-                    <MetaItem label="中图分类号" value={`${data.clc_code}${data.clc_label ? ` · ${data.clc_label}` : ''}`} />
-                  )}
-                  {canSeeScores && data.quality_score != null && (
-                    <MetaItem
-                      label="评分"
-                      hint="百分制：90+ 顶刊级；80+ Q1；70+ Q2；60+ Q3；50+ Q4；低于 50 记为 R（未达发表线）。"
-                      value={
-                        <>
-                          {data.quality_score.toFixed(1)}
-                          <span className="ml-1 text-xs font-normal text-muted-foreground">/ 100</span>
-                          {(() => {
-                            const g = qualityGrade(data.quality_grade, data.quality_score)
-                            return g ? (
-                              <span className="ml-1.5 text-xs font-normal text-muted-foreground" title={g.description}>
-                                {g.label}
-                              </span>
-                            ) : null
-                          })()}
-                        </>
-                      }
-                    />
-                  )}
-                  {data.r_factor != null && (
-                    <MetaItem
-                      label="站内热度"
-                      hint="R 值：阅读、收藏、评论的站内加权，只反映站内关注度，不计入学术评分。"
-                      value={data.r_factor.toFixed(1)}
-                    />
-                  )}
-                  <MetaItem label="ISBN" value={data.isbn} />
                 </CardContent>
               </FoldCard>
             )}
 
-
-            <FoldCard title="阅读与影响" defaultOpen={false}>
+            <FoldCard title="阅读与互动" defaultOpen={false}>
               <CardContent>
-                {isPaperTrack && (
-                  <>
-                    <MetaItem label="R 指数" value={data.r_index != null ? String(data.r_index) : '—'} />
-                    {canSeeScores && (
-                      <MetaItem label="学科分区" value={data.quartile ?? '样本不足'} />
-                    )}
-                  </>
-                )}
                 <MetaItem label="阅读次数" value={String(data.reads ?? 0)} />
                 <MetaItem label="下载次数" value={String(data.downloads ?? 0)} />
                 <MetaItem label="收藏次数" value={String(data.saves ?? 0)} />
@@ -594,93 +494,6 @@ function CatalogDetailPage() {
             />
           )}
 
-          {!isEssayTrack && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">站内引用（非学术发表）</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <p className="rounded-md bg-muted/50 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-                {formatCitation(
-                  { ...data, authors: cleanAuthors.length > 0 ? cleanAuthors : data.authors },
-                  'gb-t-7714',
-                )}
-              </p>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="w-full">
-                    <Quote className="h-3.5 w-3.5" />
-                    复制引用格式
-                    <ChevronDown className="ml-auto h-3.5 w-3.5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-40">
-                  {CITATION_STYLES.map((style) => (
-                    <DropdownMenuItem
-                      key={style.value}
-                      onClick={() => {
-                        const cite = formatCitation(
-                          { ...data, authors: cleanAuthors.length > 0 ? cleanAuthors : data.authors },
-                          style.value,
-                        )
-                        if (!navigator.clipboard?.writeText) {
-                          toast.error('当前浏览器不支持自动复制，请手动选择')
-                          return
-                        }
-                        void navigator.clipboard.writeText(cite).then(
-                          () => toast.success(`${style.label} 引用已复制`),
-                          () => toast.error('复制失败，请手动选择'),
-                        )
-                      }}
-                    >
-                      {style.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <div className="grid grid-cols-2 gap-2">
-                <Button asChild variant="ghost" size="sm">
-                  <a href={`/api/export?ids=${id}&format=bibtex`} download>
-                    BibTeX
-                  </a>
-                </Button>
-                <Button asChild variant="ghost" size="sm">
-                  <a href={`/api/export?ids=${id}&format=ris`} download>
-                    RIS
-                  </a>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-          )}
-
-          {!isEssayTrack && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">文章信息</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-1.5 text-xs">
-              <MetaItem label="站内路径" value={`/catalog/${data.id}`} />
-              <MetaItem label="页码" value={data.pages || '—'} />
-              <MetaItem label="站内编号" value={data.site_id || '—'} />
-              
-              <MetaItem label="年份" value={String(data.year)} />
-              {isPaperTrack && data.clc_code && (
-                <MetaItem label="中图分类号" value={`${data.clc_code}${data.clc_label ? ` · ${data.clc_label}` : ''}`} />
-              )}
-              {canSeeScores && isPaperTrack && data.quality_score != null && (
-                <MetaItem
-                  label="评分"
-                  value={`${data.quality_score.toFixed(1)}${data.quality_grade ? `（${data.quality_grade}）` : ''}`}
-                />
-              )}
-              {isPaperTrack && data.r_factor != null && (
-                <MetaItem label="站内热度" value={data.r_factor.toFixed(1)} />
-              )}
-            </CardContent>
-          </Card>
-          )}
-
           <DeclarationsCard data={data} />
           {historyQ.data && <PublicHistoryCard history={historyQ.data} />}
 
@@ -691,7 +504,7 @@ function CatalogDetailPage() {
             </Button>
           ) : (
             <p className="rounded-lg border border-dashed bg-muted/30 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-              游客模式：可阅读与下载全部已刊内容。
+              游客模式：可阅读与下载全部公开内容。
               <Link to="/login" search={{ redirect: `/catalog/${id}` }} className="text-primary hover:underline">
                 登录
               </Link>
@@ -710,11 +523,11 @@ function CatalogDetailPage() {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem onClick={() => setEditOpen(true)}>
                   <Pencil className="h-4 w-4" />
-                  编辑题录
+                  编辑记录
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setEventOpen(true)}>
                   <FileText className="h-4 w-4" />
-                  记录更正 / 撤稿
+                  更正 / 撤回
                 </DropdownMenuItem>
                 {data.publication_status === 'draft' && (
                   <DropdownMenuItem
@@ -723,14 +536,14 @@ function CatalogDetailPage() {
                       updateMut.mutate(
                         { id, body: { publication_status: 'published' } },
                         {
-                          onSuccess: () => toast.success('已刊出'),
-                          onError: () => toast.error('刊出失败'),
+                          onSuccess: () => toast.success('已公开'),
+                          onError: () => toast.error('公开失败'),
                         },
                       )
                     }}
                   >
                     <Send className="h-4 w-4" />
-                    刊出
+                    公开
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem
@@ -813,7 +626,7 @@ function CatalogDetailPage() {
   )
 }
 
-// 管理员登记公开变更：事件只追加，读者能在文章页看到完整记录。
+// 管理员登记公开变更：事件只追加，读者能在记录页看到完整记录。
 function PublicEventDialog({
   open,
   onOpenChange,
@@ -858,7 +671,7 @@ function PublicEventDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>记录更正 / 撤稿 / 署名变更</DialogTitle>
+          <DialogTitle>更正 / 撤回 / 署名变更</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
@@ -869,7 +682,7 @@ function PublicEventDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="correction">更正</SelectItem>
-                <SelectItem value="retraction">撤稿</SelectItem>
+                <SelectItem value="retraction">撤回</SelectItem>
                 <SelectItem value="author_change">署名变更</SelectItem>
                 <SelectItem value="expression_of_concern">关注声明</SelectItem>
                 <SelectItem value="version">版本说明</SelectItem>
@@ -891,7 +704,7 @@ function PublicEventDialog({
               id="public-event-body"
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              placeholder="说明改了什么、为什么改、影响哪些结论。撤稿请写清原因。"
+              placeholder="说明改了什么、为什么改、影响哪些结论。撤回请写清原因。"
               rows={5}
             />
           </div>
@@ -914,9 +727,9 @@ function ScannedPdfFallback({ resourceId, hasFile }: { resourceId: number; hasFi
   return (
     <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/20">
       <CardContent className="py-6 text-center">
-        <p className="text-sm font-medium">本文原件为扫描版 PDF</p>
+        <p className="text-sm font-medium">这份记录的原件为扫描版 PDF</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          暂不支持在线阅读，可下载原件或等编辑部补 Word 版。
+          暂不支持在线阅读，可下载原件，或联系作者补 Word 版。
         </p>
         {hasFile && (
           <Button asChild variant="outline" size="sm" className="mt-3">
@@ -931,11 +744,11 @@ function ScannedPdfFallback({ resourceId, hasFile }: { resourceId: number; hasFi
   )
 }
 
-// 公开的版本与变更记录：更正、撤稿、署名变更、作者修回版本。
+// 公开的版本与变更记录：更正、撤回、署名变更、作者修回版本。
 // 只展示真实存在的事件；没有记录就不渲染“已核验”之类的空壳。
 const PUBLIC_EVENT_LABELS: Record<string, string> = {
   correction: '更正',
-  retraction: '撤稿',
+  retraction: '撤回',
   author_change: '署名变更',
   expression_of_concern: '关注声明',
   version: '版本说明',
@@ -1136,7 +949,7 @@ function EditDialog({
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="edit-abstract">摘要</Label>
+            <Label htmlFor="edit-abstract">概要</Label>
             <Textarea
               id="edit-abstract"
               value={form.abstract}
@@ -1214,7 +1027,7 @@ function EditDialog({
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="edit-pubstatus">刊出状态</Label>
+            <Label htmlFor="edit-pubstatus">公开状态</Label>
             <Select
               value={form.publication_status}
               onValueChange={(v) =>
@@ -1225,9 +1038,9 @@ function EditDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                  <SelectItem value="published">已发表（公开可见）</SelectItem>
-                  <SelectItem value="in_review">评审中（刊前预览）</SelectItem>
-                  <SelectItem value="draft">草稿（仅编辑部可见）</SelectItem>
+                  <SelectItem value="published">已公开（所有人可见）</SelectItem>
+                  <SelectItem value="in_review">整理中（仅自己可见）</SelectItem>
+                  <SelectItem value="draft">草稿（仅自己可见）</SelectItem>
                 </SelectContent>
               </Select>
           </div>
@@ -1247,8 +1060,8 @@ function EditDialog({
   )
 }
 
-// 摘要卡：可折叠，默认展开；科普轨标题写"导语"，论文轨写"摘要"。
-function AbstractCard({ text, collapsible, label = '摘要' }: { text: string; collapsible: boolean; label?: string }) {
+// 概要卡：可折叠，默认展开；科普轨标题写“导语”，研究档案写“概要”。
+function AbstractCard({ text, collapsible, label = '概要' }: { text: string; collapsible: boolean; label?: string }) {
   const body = normalizeAbstract(text)
   const [open, setOpen] = useState(!collapsible)
   const [overflowing, setOverflowing] = useState(false)
@@ -1459,7 +1272,7 @@ function AuthorRow({ detail, fallbackNames }: { detail: AuthorDetail[] | null; f
   ) : null
 }
 
-// 相关文章
+// 相关记录
 function RelatedResources({
   resourceId,
   discipline,
@@ -1482,7 +1295,7 @@ function RelatedResources({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">相关文章</CardTitle>
+        <CardTitle className="text-base">相关记录</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {items.map((r) => (

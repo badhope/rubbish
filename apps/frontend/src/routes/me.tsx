@@ -42,8 +42,6 @@ function MePage() {
   const search = Route.useSearch()
   const profile = useMeProfile()
   const account = useMe()
-  // 社区版不再暴露审稿入口；历史审稿数据与接口保留，但不在个人中心出现。
-  const reviewable = false
   const unread = useUnreadCount()
   const [notificationsOpen, setNotificationsOpen] = useState(Boolean(search.notifications))
 
@@ -59,8 +57,7 @@ function MePage() {
   const data = profile.data
 
   const requestedTab = search.tab ?? 'overview'
-  const activeTab: MeTabKey =
-    requestedTab === 'reviews' || requestedTab === 'submissions' ? 'overview' : requestedTab
+  const activeTab: MeTabKey = requestedTab
 
   const onTabChange = (tab: MeTabKey) => {
     void navigate({ to: '/me', search: { tab }, replace: true })
@@ -86,10 +83,7 @@ function MePage() {
 
       <div className="pt-6 sm:pt-7">
         {activeTab === 'overview' ? (
-          <MeOverview
-            reviewable={reviewable}
-            onOpenNotifications={() => setNotificationsOpen(true)}
-          />
+          <MeOverview onOpenNotifications={() => setNotificationsOpen(true)} />
         ) : null}
         {activeTab === 'library' ? <MeLibrary section={search.section} /> : null}
         {activeTab === 'points' ? <MePoints profile={data} /> : null}

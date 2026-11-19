@@ -8,22 +8,22 @@ const STEPS = [
   {
     icon: MessagesSquare,
     title: '先读',
-    body: '不登录也能读帖子和作品。遇到想接的话，再登录回复。',
+    body: '不登录也能读帖子和档案。遇到想接的话，再登录回复。',
   },
   {
     icon: LogIn,
     title: '登录',
-    body: '邮箱验证码或密码都行。登录后才有发帖、回复、收藏和举报入口。',
+    body: '邮箱验证码或密码都行。登录后才有发布、回复、收藏和举报入口。',
   },
   {
     icon: PenLine,
-    title: '发帖',
-    body: '右上角「发帖」，选版块、写标题、写正文。标题按回车会跳到正文。',
+    title: '发布',
+    body: '右上角「发布」，选版块、写标题、写正文。标题按回车会跳到正文。',
   },
   {
     icon: Keyboard,
-    title: '发布',
-    body: '正文写完后按 Ctrl / ⌘ + Enter 发布；也可以点底部「发布」。',
+    title: '继续接',
+    body: '正文写完后按 Ctrl / ⌘ + Enter 发布；也可以点底部「发布」。发完还能回来补记录。',
   },
 ]
 
@@ -36,7 +36,7 @@ const BASICS = [
   ['举报', '帖子、回复、用户主页都有举报入口。选类型、写理由，版主会在后台处理。'],
 ]
 
-export function HelpPage() {
+export function CommunityGuide() {
   return (
     <div className="mx-auto max-w-4xl">
       <Link
@@ -44,16 +44,16 @@ export function HelpPage() {
         className="mb-4 inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-primary"
       >
         <ArrowRight className="mr-1 h-4 w-4 rotate-180" />
-        返回论坛
+        返回社区
       </Link>
 
       <PageHeader
-        title="新手指南"
-        description="从读到发，只需要四步。注册后就能发帖，不需要先申请资格。"
+        title="社区指南"
+        description="从读到发，只需要四步。注册后就能发布，不需要先申请资格。"
         actions={
           <Button asChild>
             <Link to="/forum" search={{ compose: '1' }}>
-              直接发帖
+              直接发布
               <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
           </Button>
@@ -91,7 +91,7 @@ export function HelpPage() {
             {[
               ['举报处理', '版主按类型分派：隐私与侵权优先，广告和灌水其次。处理结果会留在审计记录里。'],
               ['内容维护', '合并重复帖、移版、锁定吵架帖；不替作者改正文。'],
-              ['规则变更', '论坛公约更新会发公告；重大变更提前 14 天公示。'],
+              ['规则变更', '社区公约更新会发公告；重大变更提前 14 天公示。'],
             ].map(([title, body]) => (
               <div key={title} className="border-t pt-3">
                 <p className="text-sm font-medium">{title}</p>
@@ -103,13 +103,13 @@ export function HelpPage() {
 
         <RevealSection className="flex flex-wrap gap-4 border-t pt-5 text-sm">
           <Link to="/forum" className="inline-flex items-center gap-1 text-primary hover:underline">
-            <MessagesSquare className="h-4 w-4" /> 逛论坛
+            <MessagesSquare className="h-4 w-4" /> 逛社区
           </Link>
           <Link to="/guide" search={{ tab: 'authors' }} className="inline-flex items-center gap-1 text-primary hover:underline">
-            <PenLine className="h-4 w-4" /> 创作指南
+            <PenLine className="h-4 w-4" /> 研究指南
           </Link>
           <Link to="/guide" search={{ tab: 'policies' }} className="inline-flex items-center gap-1 text-primary hover:underline">
-            <Flag className="h-4 w-4" /> 论坛公约
+            <Flag className="h-4 w-4" /> 社区公约
           </Link>
           <Link to="/me" className="inline-flex items-center gap-1 text-primary hover:underline">
             <Bookmark className="h-4 w-4" /> 我的收藏

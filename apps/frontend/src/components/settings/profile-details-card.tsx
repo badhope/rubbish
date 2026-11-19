@@ -6,7 +6,6 @@ import { extractError, cn } from '@/lib/utils'
 import type { UserProfileUpdate, UserResponse } from '@/lib/types'
 import { useUpdateProfile } from '@/hooks/api/use-auth'
 import { useUnlockAccent, useWallet } from '@/hooks/api/use-currency'
-import { useDisciplines } from '@/hooks/api/use-modules'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -82,13 +81,12 @@ const FIELDS: Array<{
   type?: 'text' | 'url'
 }> = [
   { key: 'display_name', label: '展示名', placeholder: '如：牛马程序员', maxLength: 100 },
-  { key: 'real_name', label: '真实姓名', placeholder: '选填，仅用于署名参考', maxLength: 100 },
-  { key: 'affiliation', label: '单位 / 学校', placeholder: '如：清华大学 / 北京大学', maxLength: 300 },
-  { key: 'department', label: '院系 / 部门', placeholder: '如：计算机系 / 信息学院', maxLength: 200 },
-  { key: 'academic_title', label: '职称 / 身份', placeholder: '如：本科生、讲师、独立研究者', maxLength: 100 },
+  { key: 'real_name', label: '真实姓名', placeholder: '选填，仅自己可见', maxLength: 100 },
+  { key: 'affiliation', label: '机构 / 组织', placeholder: '如：某大学、某实验室、独立研究', maxLength: 300 },
+  { key: 'department', label: '部门 / 小组', placeholder: '如：计算小组、内容团队', maxLength: 200 },
+  { key: 'academic_title', label: '身份标签', placeholder: '如：学生、工程师、独立研究者', maxLength: 100 },
   { key: 'location', label: '所在地', placeholder: '如：北京', maxLength: 100 },
   { key: 'website', label: '个人主页', placeholder: 'https://example.com', maxLength: 300, type: 'url' },
-  { key: 'google_scholar', label: 'Google Scholar', placeholder: 'https://scholar.google.com/…', maxLength: 300, type: 'url' },
 ]
 
 export function ProfileDetailsCard({ initial }: { initial?: UserResponse | null }) {
@@ -100,26 +98,10 @@ export function ProfileDetailsCard({ initial }: { initial?: UserResponse | null 
   const updateProfile = useUpdateProfile()
   const wallet = useWallet()
   const unlockAccent = useUnlockAccent()
-  const disciplines = useDisciplines()
   const saved = toForm(initial)
 
   const set = (key: keyof ProfileForm, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }))
-  }
-
-  const selectedDisciplines = new Set(form.reviewer_disciplines.split(',').filter(Boolean))
-  const toggleDiscipline = (slug: string) => {
-    const next = new Set(selectedDisciplines)
-    if (next.has(slug)) {
-      next.delete(slug)
-    } else {
-      if (next.size >= 10) {
-        toast.info('最多选择 10 个学科；更细的方向请写进能力标签')
-        return
-      }
-      next.add(slug)
-    }
-    set('reviewer_disciplines', [...next].sort().join(','))
   }
 
   const dirty = (Object.keys(form) as Array<keyof ProfileForm>).some(
@@ -297,7 +279,7 @@ export function ProfileDetailsCard({ initial }: { initial?: UserResponse | null 
           onClick={() => setShowMoreFields((value) => !value)}
           className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-primary"
         >
-          {showMoreFields ? '收起更多资料' : '更多资料（职称、所在地、主页、学者主页）'}
+          {showMoreFields ? '收起更多资料' : '更多资料（身份、所在地、个人主页）'}
           <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showMoreFields ? 'rotate-180' : ''}`} />
         </button>
 
@@ -418,55 +400,10 @@ export function ProfileDetailsCard({ initial }: { initial?: UserResponse | null 
             value={form.research_interests}
             maxLength={500}
             rows={2}
-            placeholder="如：多智能体系统、学术出版、内容治理、前端工程"
+            placeholder="如：多智能体系统、内容治理、前端工程、城市观察"
             onChange={(e) => set('research_interests', e.target.value)}
           />
           <p className="text-xs text-muted-foreground">用顿号或逗号分隔均可，最多 500 字。</p>
-        </div>
-
-        {(disciplines.data?.length ?? 0) > 0 && (
-          <div className="space-y-1.5">
-            <Label>审稿学科（多选，最多 10 个）</Label>
-            <div className="flex flex-wrap gap-2" data-testid="reviewer-discipline-picker">
-              {(disciplines.data ?? []).map((item) => {
-                const active = selectedDisciplines.has(item.slug)
-                return (
-                  <button
-                    key={item.slug}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => toggleDiscipline(item.slug)}
-                    className={cn(
-                      'flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs transition-colors',
-                      active
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'bg-background text-muted-foreground hover:bg-muted',
-                    )}
-                  >
-                    {item.name}
-                    {active && <Check className="h-3 w-3" />}
-                  </button>
-                )
-              })}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              来自平台学科词表，与投稿的学科分类同源；主编指派审稿人时按学科精确匹配并优先排序。
-            </p>
-          </div>
-        )}
-
-        <div className="space-y-1.5">
-          <Label htmlFor="profile-reviewer_tags">审稿能力标签（选填）</Label>
-          <Input
-            id="profile-reviewer_tags"
-            value={form.reviewer_tags}
-            maxLength={400}
-            placeholder="如：多智能体、知识图谱、因果推断、科学计量"
-            onChange={(e) => set('reviewer_tags', e.target.value)}
-          />
-          <p className="text-xs text-muted-foreground">
-            逗号分隔，最多 20 个；编辑分派审稿人时会在候选列表展示并参与匹配。只有你具备审稿人角色时才会实际用于分派。
-          </p>
         </div>
 
         <div className="space-y-1.5">

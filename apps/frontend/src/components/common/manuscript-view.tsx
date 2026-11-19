@@ -58,7 +58,7 @@ interface ManuscriptViewProps {
   contentTrack?: string | null;
   /** 页面已展示的标题；用于剥掉正文首行重复标题 */
   title?: string;
-  /** 页面已展示的摘要/导读；用于剥掉副刊正文开头重复的同一段 */
+  /** 页面已展示的概要/导读；用于剥掉正文开头重复的同一段 */
   abstract?: string | null;
 }
 
@@ -133,7 +133,7 @@ export function ManuscriptView({
   });
 
   // 渲染前剥离 Word 转换残留的 HTML 注释（只在渲染层，不改存储原文）。
-  // 再按轨道裁掉学术小节（fun/rant/sci_pop），并把原稿里的邮箱一律脱敏。
+  // 自由创作不渲染研究小节；原稿里的邮箱一律脱敏。
   // 兜底：若 effectiveKind=paper 但原稿以 Open Access 开头（说明 content_category 没标对），
   // 强制走 fun 分支剥刊头。
   const cleaned = (() => {
@@ -331,7 +331,7 @@ export function ManuscriptView({
       <div className="flex flex-1 items-center justify-center overflow-y-auto p-6">
         <EmptyState
           title="在线稿件加载失败"
-          description="这篇论文没有可用的在线稿件，请切换到 PDF 视图或直接下载。"
+          description="这份记录没有可用的在线正文，请切换到 PDF 视图或直接下载。"
           action={
             <Button variant="outline" size="sm" onClick={() => refetch()}>
               重试

@@ -18,16 +18,10 @@ type Prefs = {
 }
 
 const ROWS: Array<{ key: keyof Prefs; label: string; hint: string }> = [
-  { key: 'in_app_comment', label: '文章评论', hint: '有人评论你发表的文章时，在站内通知你' },
+  { key: 'in_app_comment', label: '记录评论', hint: '有人评论你发布的记录时，在站内通知你' },
   { key: 'in_app_forum', label: '论坛回复', hint: '有人回复你的帖子时，在站内通知你' },
-  { key: 'in_app_review', label: '审稿邀请与催审', hint: '指派、催审、裁决等审稿工作通知' },
-  { key: 'in_app_submission', label: '投稿进度', hint: '稿件录用、拒稿、返修等决定' },
-  { key: 'in_app_release', label: '定时发布告警', hint: '定时发布失败时通知编辑，避免期次静默错过排期' },
-  { key: 'email_comment', label: '文章评论邮件', hint: '额外发一封邮件；需要站点配置 SMTP 才会真正送达' },
+  { key: 'email_comment', label: '记录评论邮件', hint: '额外发一封邮件；需要站点配置 SMTP 才会真正送达' },
   { key: 'email_forum', label: '论坛回复邮件', hint: '额外发一封邮件；需要站点配置 SMTP 才会真正送达' },
-  { key: 'email_review', label: '审稿邮件', hint: '审稿指派与催审邮件' },
-  { key: 'email_submission', label: '投稿决定邮件', hint: '录用/拒稿等决定邮件' },
-  { key: 'email_release', label: '定时发布告警邮件', hint: '定时发布失败时的额外邮件通道' },
 ]
 
 export function NotificationPrefsCard() {

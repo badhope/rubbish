@@ -44,15 +44,14 @@ import { PageViewTracker } from '@/components/common/page-view-tracker'
 import { groupLabel, navLabel, text, useLang } from '@/lib/i18n'
 
 const NAV: NavItem[] = [
-  // 论坛优先：首页 / 论坛 / 作品 / 指南 / 我的。
-  // 期刊、投稿、审稿不再占一级入口；作品库只承担长文阅读，不承担“发表”叙事。
+  // 荒诞科研社区：首页 / 社区 / 档案 / 指南 / 我的。
   { to: '/', label: '首页', icon: Home, group: '一级入口' },
-  { to: '/forum', label: '论坛', icon: MessagesSquare, group: '一级入口' },
-  { to: '/catalog', label: '作品', icon: BookOpen, group: '一级入口' },
+  { to: '/forum', label: '社区', icon: MessagesSquare, group: '一级入口' },
+  { to: '/catalog', label: '档案', icon: BookOpen, group: '一级入口' },
   { to: '/guide', label: '指南', icon: Compass, group: '一级入口' },
   { to: '/me', label: '我的', icon: User, group: '一级入口' },
 
-  { to: '/about', label: '关于论坛', icon: Building2, group: '关于' },
+  { to: '/about', label: '关于社区', icon: Building2, group: '关于' },
   { to: '/admin', label: '管理后台', icon: Gavel, auth: true, adminOnly: true, group: '站点管理' },
 ]
 
@@ -241,7 +240,7 @@ export function AppShell() {
         <DropdownMenuItem asChild>
           <Link to="/me">
             <FileSignature className="h-4 w-4" />
-            我的作品
+            我的记录
           </Link>
         </DropdownMenuItem>
         {isAdmin && (
@@ -341,7 +340,7 @@ export function AppShell() {
               <span className="flex min-w-0 flex-col leading-none">
                 <span className="font-serif text-lg font-semibold tracking-tight">Rubbish</span>
                 <span className="mt-1 hidden truncate text-[10px] uppercase tracking-[0.28em] text-muted-foreground sm:block">
-                  Absurd Academic Writing Forum
+                  Absurd Research Community
                 </span>
               </span>
             </Link>
@@ -518,7 +517,7 @@ export function AppShell() {
                 <div className="min-w-0">
                   <p className="truncate text-xs font-medium">{displayName}</p>
                   <p className="truncate text-[10px] text-sidebar-foreground/55">
-                    {user.roles?.some((r) => ['chief_editor','editor_in_chief','admin'].includes(r)) ? '论坛管理员' : '创作者 / 读者'}
+                    {user.roles?.some((r) => ['chief_editor','editor_in_chief','admin'].includes(r)) ? '社区管理员' : '创作者 / 读者'}
                   </p>
                 </div>
               </div>
@@ -594,10 +593,10 @@ export function AppShell() {
           <form onSubmit={submitCmd} className="w-full max-w-xl overflow-hidden rounded-xl border bg-background shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 border-b px-4 py-3">
               <Search className="h-4 w-4 text-muted-foreground" />
-              <input autoFocus value={cmdQ} onChange={(e) => setCmdQ(e.target.value)} placeholder="搜索作品、帖子、作者、关键词…" className="h-9 flex-1 bg-transparent text-sm outline-none" />
+              <input autoFocus value={cmdQ} onChange={(e) => setCmdQ(e.target.value)} placeholder="搜索档案、帖子、作者、关键词…" className="h-9 flex-1 bg-transparent text-sm outline-none" />
               <kbd className="rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">Enter</kbd>
             </div>
-            <div className="px-4 py-2 text-[11px] text-muted-foreground">回车进入作品库；Esc 关闭。作品与帖子分开检索。</div>
+            <div className="px-4 py-2 text-[11px] text-muted-foreground">回车进入档案；Esc 关闭。档案与帖子分开检索。</div>
           </form>
         </div>
       )}

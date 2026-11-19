@@ -11,8 +11,8 @@ import { formatCoins } from './format'
 
 const IDENTITY_LABEL: Record<string, string> = {
   author: '创作者',
-  reviewer: '论坛志愿版主',
-  editor: '论坛管理员',
+  reviewer: '社区志愿版主',
+  editor: '社区管理员',
 }
 
 const ROLE_STYLE: Record<string, string> = {

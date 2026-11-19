@@ -19,7 +19,7 @@ export interface EssayGenreMeta {
 }
 
 export const ESSAY_GENRES: EssayGenreMeta[] = [
-  { value: 'joke', label: '学术整活', hint: '把论文格式用在最不该用的地方', emoji: '🧪' },
+  { value: 'joke', label: '荒诞整活', hint: '用最正经的写法处理最不该正经的事', emoji: '🧪' },
   { value: 'fiction', label: '小说故事', hint: '有情节，有角色，可能还有猫', emoji: '📖' },
   { value: 'review', label: '评论杂谈', hint: '认真评，认真跑题', emoji: '💬' },
   { value: 'guide', label: '指南攻略', hint: '不一定有用，但一定很具体', emoji: '🧭' },

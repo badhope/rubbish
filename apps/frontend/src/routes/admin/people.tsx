@@ -3,10 +3,9 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { requireAdminGuard } from '@/lib/route-guards'
 import { AdminSectionTabs, type AdminSectionItem } from '@/components/admin/admin-section-tabs'
 import UsersPage from '@/components/admin/pages/people/users'
-import RoleApplicationsPage from '@/components/admin/pages/people/role-applications'
 import ClaimsPage from '@/components/admin/pages/people/claims'
 
-type SectionKey = 'users' | 'roles' | 'claims'
+type SectionKey = 'users' | 'claims'
 
 interface PeopleSearch {
   section?: string
@@ -14,7 +13,6 @@ interface PeopleSearch {
 
 const SECTIONS: readonly AdminSectionItem<SectionKey>[] = [
   { key: 'users', label: '用户管理' },
-  { key: 'roles', label: '角色申请' },
   { key: 'claims', label: '认领审批' },
 ]
 
@@ -48,7 +46,6 @@ function AdminPeoplePage() {
     <div>
       <AdminSectionTabs items={SECTIONS} active={section} onChange={changeSection} label="用户域子段" />
       {section === 'users' ? <UsersPage /> : null}
-      {section === 'roles' ? <RoleApplicationsPage /> : null}
       {section === 'claims' ? <ClaimsPage /> : null}
     </div>
   )

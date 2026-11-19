@@ -32,7 +32,7 @@ const STICKERS = [
   { name: '裂开', src: '/stickers/crack.svg' },
   { name: '先睡', src: '/stickers/sleep.svg' },
   { name: '收到', src: '/stickers/got.svg' },
-  { name: '审稿人2', src: '/stickers/reviewer2.svg' },
+  { name: '研究员2', src: '/stickers/reviewer2.svg' },
 ]
 
 export function EmojiStickerPicker({

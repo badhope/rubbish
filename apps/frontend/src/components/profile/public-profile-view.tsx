@@ -174,7 +174,7 @@ export function PublicProfileView({
             </div>
             {profile.works.length === 0 ? (
               <p className="rounded-lg border border-dashed bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
-                还没有已发表作品。投稿录用或认领通过后会出现在这里。
+                还没有公开记录。发布或关联记录后会出现在这里。
               </p>
             ) : (
               <div className="grid gap-2 sm:grid-cols-2">

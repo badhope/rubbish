@@ -15,9 +15,9 @@ export function MeActionBar({
       className="flex flex-wrap items-center justify-between gap-3 border-b py-4"
     >
       <div className="min-w-0">
-        <p className="text-sm font-medium">去论坛说点什么</p>
+        <p className="text-sm font-medium">去社区说点什么</p>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          发帖、回复或贴一段草稿都可以；不用先写完整长文。
+          发布、回复或贴一段草稿都可以；不用先写完整记录。
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-1.5">
@@ -32,7 +32,7 @@ export function MeActionBar({
         </Button>
         <Button size="sm" asChild>
           <Link to="/forum" search={{ compose: '1' }}>
-            发布作品
+            发布研究
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </Button>

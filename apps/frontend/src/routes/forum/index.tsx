@@ -102,14 +102,14 @@ const CATEGORY_STYLE: Record<string, string> = {
 }
 
 const CATEGORY_LABEL: Record<string, string> = {
-  paper: '荒诞论文体',
-  method: '写作实验',
-  life: '学术生存',
-  collab: '共创组队',
+  paper: '研究记录',
+  method: '方法与复盘',
+  life: '科研生存',
+  collab: '组队招募',
   meta: '站务',
   notice: '公告',
-  discussion: '荒诞论文体',
-  question: '写作求助',
+  discussion: '研究讨论',
+  question: '求助',
   suggestion: '建议',
 }
 
@@ -187,7 +187,7 @@ function ForumListPage() {
     paperTitle?: string
     sort?: string
     view?: string
-    compose?: string
+    compose?: number
   }
   const view = search.view === 'feedback' ? 'feedback' : 'list'
   const category = search.category ?? 'all'
@@ -202,8 +202,8 @@ function ForumListPage() {
   const titleRef = useRef<HTMLInputElement>(null)
   const bodyRef = useRef<HTMLTextAreaElement>(null)
   const [form, setForm] = useState({
-    title: paperId ? `讨论：${(paperTitle || `论文 #${paperId}`).slice(0, 170)}` : '',
-    body: paperId ? `论文链接：/catalog/${paperId}\n\n` : '',
+    title: paperId ? `讨论：${(paperTitle || `研究记录 #${paperId}`).slice(0, 170)}` : '',
+    body: paperId ? `研究记录链接：/catalog/${paperId}\n\n` : '',
     board_id: null as number | null,
     paper_id: paperId,
   })
@@ -294,10 +294,10 @@ function ForumListPage() {
         : null
     setForm({
       title: paperId
-        ? `讨论：${(paperTitle || `论文 #${paperId}`).slice(0, 170)}`
+        ? `讨论：${(paperTitle || `研究记录 #${paperId}`).slice(0, 170)}`
         : usableDraft?.title ?? '',
       body: paperId
-        ? `论文链接：/catalog/${paperId}\n\n`
+        ? `研究记录链接：/catalog/${paperId}\n\n`
         : usableDraft?.body ?? '',
       board_id: storedBoardId ?? currentBoardId,
       paper_id: paperId,
@@ -307,7 +307,7 @@ function ForumListPage() {
   }
 
   useEffect(() => {
-    if (search.compose !== '1') return
+    if (search.compose !== 1) return
     if (!isAuthenticated) {
       void navigate({ to: '/login', search: { redirect: '/forum?compose=1' } })
       return
@@ -336,8 +336,8 @@ function ForumListPage() {
   return (
     <div className="mx-auto w-full max-w-4xl space-y-4">
       <PageHeader
-        title="论坛"
-        description="帖子、写作实验、作品讨论与站务反馈都在这里；登录即可发，不需要积分。"
+        title="社区"
+        description="研究计划、实验记录、失败复盘、组队与站务都在这里；登录即可发，不需要积分。"
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" asChild>
@@ -358,7 +358,7 @@ function ForumListPage() {
         <Card className="border-primary/30 bg-primary/5">
           <CardContent className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm">
             <span className="min-w-0">
-              正在为论文
+              正在围绕研究记录
               <Link
                 to="/catalog/$resourceId"
                 params={{ resourceId: String(paperId) }}
@@ -366,7 +366,7 @@ function ForumListPage() {
               >
                 {paperTitle || `#${paperId}`}
               </Link>
-              开一个讨论帖。
+              发起讨论。
             </span>
             <Button
               size="sm"
@@ -405,7 +405,7 @@ function ForumListPage() {
         </Select>
 
         <span className="text-xs text-muted-foreground">
-          {activeBoard ? `${activeBoard.total_topics} 帖` : '学术与站务'}
+          {activeBoard ? `${activeBoard.total_topics} 帖` : '研究与站务'}
         </span>
 
         <div className="ml-auto flex items-center gap-0.5 rounded-full border bg-muted/40 p-0.5">
@@ -441,7 +441,7 @@ function ForumListPage() {
       {listQ.isLoading ? (
         <Loading />
       ) : listQ.isError ? (
-        <ErrorState message="加载讨论失败" onRetry={() => listQ.refetch()} />
+        <ErrorState message="加载社区失败" onRetry={() => listQ.refetch()} />
       ) : topics.length === 0 ? (
         <EmptyState
           title="还没有人发帖"
@@ -462,7 +462,7 @@ function ForumListPage() {
               key={t.id}
               className={cn(
                 'flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-muted/20',
-                // 编辑部公告用左侧主色条突出：公告不是普通帖子
+                // 社区公告用左侧主色条突出：公告不是普通帖子
                 t.category === 'notice' && 'border-l-4 border-l-primary',
               )}
             >
@@ -477,7 +477,7 @@ function ForumListPage() {
                     {t.category === 'notice' ? (
                       <Badge className="gap-1 border border-transparent bg-primary text-primary-foreground">
                         <Megaphone className="h-3 w-3" />
-                        编辑部公告
+                        社区公告
                       </Badge>
                     ) : (
                       <Badge variant="outline" className={CATEGORY_STYLE[t.category]}>
@@ -558,8 +558,8 @@ function ForumListPage() {
         >
           <div className="flex items-center justify-between border-b px-4 py-3 sm:px-6">
             <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">NEW TOPIC</p>
-              <DialogTitle className="mt-1 font-serif text-xl tracking-tight">发新帖</DialogTitle>
+              <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">NEW STUDY</p>
+              <DialogTitle className="mt-1 font-serif text-xl tracking-tight">发布研究</DialogTitle>
             </div>
             <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="关闭发帖">
               <X className="h-4 w-4" />

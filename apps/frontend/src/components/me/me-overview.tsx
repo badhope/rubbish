@@ -28,7 +28,6 @@ function SectionHeading({
 export function MeOverview({
   onOpenNotifications,
 }: {
-  reviewable?: boolean
   onOpenNotifications: () => void
 }) {
   const notifications = useNotifications(1, 6)
@@ -37,7 +36,7 @@ export function MeOverview({
   return (
     <div className="space-y-8">
       <section>
-        <SectionHeading kicker="FORUM" title="论坛入口" />
+        <SectionHeading kicker="COMMUNITY" title="社区入口" />
         <div className="grid gap-3 border-y py-5 sm:grid-cols-2">
           <Link
             to="/forum"
@@ -45,9 +44,9 @@ export function MeOverview({
           >
             <MessagesSquare className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <span>
-              <span className="block text-sm font-medium">去论坛看看</span>
+              <span className="block text-sm font-medium">去社区看看</span>
               <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
-                读帖、回复、收藏；先聊起来，再写长文。
+                读帖、回复、收藏；先聊起来，再补记录。
               </span>
             </span>
           </Link>
@@ -58,9 +57,9 @@ export function MeOverview({
           >
             <PenLine className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <span>
-              <span className="block text-sm font-medium">发布作品或帖子</span>
+              <span className="block text-sm font-medium">发布研究记录或帖子</span>
               <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
-                标题和正文就够了；荒诞论文体也可以只是个帖子。
+                标题和正文就够了；一个计划、一段过程都可以先发。
               </span>
             </span>
           </Link>

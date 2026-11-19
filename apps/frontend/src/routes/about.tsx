@@ -16,7 +16,7 @@ function AboutTabs({ active }: { active: 'about' | 'support' }) {
   return (
     <div className="mb-6 flex border-b">
       {[
-        { value: 'about', label: '关于论坛' },
+        { value: 'about', label: '关于社区' },
         { value: 'support', label: '成本公开' },
       ].map((t) => (
         <Link
@@ -37,10 +37,10 @@ function AboutTabs({ active }: { active: 'about' | 'support' }) {
   )
 }
 
-// 论坛岗位：版主、策展、技术与治理；不虚构头衔。
+// 社区岗位：版主、策展、技术与治理；不虚构头衔。
 const ROLES = [
   {
-    name: '论坛版主',
+    name: '社区版主',
     role: '版块维护',
     duty: '处理举报、合并重复帖、维护版块秩序；不替作者改正文。',
   },
@@ -55,16 +55,16 @@ const ROLES = [
     duty: '维护发布、阅读、搜索、导出与长期可读性；不介入内容判断。',
   },
   {
-    name: '论坛治理',
+    name: '社区治理',
     role: '规则与申诉',
     duty: '受理侵权、隐私、人身攻击与版权投诉；利益冲突时回避。',
   },
 ]
 
 const TIMELINE = [
-  ['2026 年 10 月', 'Rubbish 论坛与作品库上线：帖子做讨论，长文做存档。'],
-  ['2026 年 11 月', '版块、创作指南与论坛公约开放；发帖不再需要任何资格审核。'],
-  ['现在', '帖子、长文、收藏、关注、举报与版务都在同一个论坛里。'],
+  ['2026 年 10 月', 'Rubbish 社区与档案上线：短帖做讨论，长记录做档案。'],
+  ['2026 年 11 月', '研究板块、社区指南与社区公约开放；发帖不再需要任何资格审核。'],
+  ['现在', '提问、记录、失败、复盘、组队和版务都在同一个社区里。'],
 ]
 
 function AboutPage() {
@@ -88,8 +88,8 @@ function AboutPage() {
       </Link>
 
       <PageHeader
-        title="关于论坛"
-        description="Rubbish 是一个荒诞论文体创作论坛：帖子是入口，长文是存档；用论文格式写，用论坛方式聊。"
+        title="关于社区"
+        description="Rubbish 是一个荒诞科研社区：把不正经的问题当正经课题做，把过程、失败和结果拿出来讨论。"
       />
       <AboutTabs active="about" />
 
@@ -97,18 +97,18 @@ function AboutPage() {
         <RevealSection className="max-w-3xl">
           <div>
             <p className="font-serif text-lg leading-relaxed">
-              「先有好问题，再有好文章。」
+              「正经地荒诞，公开地失败。」
             </p>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              Rubbish 从第一天就是一个论坛：帖子是入口，长文是存档。你可以只发三句话，
-              也可以把三句话写成一篇带摘要、方法、讨论和参考文献的荒诞论文体。
+              Rubbish 从第一天就是一个社区：帖子是入口，档案是长记录。你可以只发一个问题，
+              也可以把一次实验、一次失败、一段田野观察完整写下来。
             </p>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              论文格式在这里是写作道具：它让荒诞显得一本正经，也让认真的讨论有个清楚的骨架。
-              虚构内容标出来，真实材料给得能核查；剩下的交给读者。
+              这里欢迎研究计划、实验记录、田野笔记、失败复盘、组队招募和自由创作。
+              荒诞不是免掉方法的理由；设定要清楚，材料要能对上。
             </p>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              论坛不收任何费用，不卖置顶、不加精收费，也不把站内热度包装成学术指标。
+              社区不收任何费用，不卖置顶、不加精收费，也不把站内热度包装成正式评价。
             </p>
           </div>
         </RevealSection>
@@ -116,7 +116,7 @@ function AboutPage() {
         <RevealSection>
           <h2 className="flex items-center gap-2 text-xl font-medium">
             <Users className="h-5 w-5 text-primary" />
-            论坛岗位
+            社区岗位
           </h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             {ROLES.map((m) => (
@@ -132,12 +132,12 @@ function AboutPage() {
             ))}
           </div>
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-            以上是论坛岗位；不虚构姓名、头衔或机构，也不把版主写成“主编”。
+            以上是社区岗位；不虚构姓名、头衔或机构，也不给版主安上旧式头衔。
           </p>
         </RevealSection>
 
         <RevealSection>
-          <h2 className="text-xl font-medium">论坛简史</h2>
+          <h2 className="text-xl font-medium">社区简史</h2>
           <ol className="mt-4 space-y-4 border-l border-border pl-5">
             {TIMELINE.map(([when, what]) => (
               <li key={what} className="relative">
@@ -159,7 +159,7 @@ function AboutPage() {
           </h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             {[
-              ['虚构要标出来', '荒诞论文体、讽刺文学、思想实验，在标题区或正文开头写明“虚构创作”。'],
+              ['虚构要标出来', '荒诞研究、讽刺写作、思想实验，在标题区或正文开头写明“虚构创作”。'],
               ['真实材料可核查', '引用的文献、数据、图片给得出处；自己编的参考文献统一标注“虚构参考文献”。'],
               ['尊重真人隐私', '不点名真实个人、单位、病历与聊天记录；讽刺指向现象，不指向可识别的人。'],
               ['版权与处理', '盗图、洗稿、未经授权的搬运会被下架；人身攻击、隐私泄露与违法内容会被移除，作者可申诉。'],
@@ -176,10 +176,10 @@ function AboutPage() {
           <h2 className="text-xl font-medium">站点信息</h2>
           <dl className="mt-4 grid gap-4 sm:grid-cols-2">
             {[
-              { icon: ScrollText, label: '站点性质', value: '荒诞论文体创作论坛' },
+              { icon: ScrollText, label: '站点性质', value: '荒诞科研社区' },
               { icon: Globe, label: '访问与托管', value: '香港服务器与香港域名' },
               { icon: Building2, label: '运营', value: 'Rubbish 团队' },
-              { icon: ShieldCheck, label: '标识', value: '作品只有站内编号，不作学术评价' },
+              { icon: ShieldCheck, label: '标识', value: '研究记录只有站内编号，不作正式评价' },
             ].map(({ icon: Icon, label, value }) => (
               <div key={label} className="flex items-start gap-3 border-t pt-3">
                 <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -195,16 +195,16 @@ function AboutPage() {
         <RevealSection className="border-t pt-6">
           <h2 className="flex items-center gap-2 text-lg font-medium">
             <Mail className="h-5 w-5 text-primary" />
-            联系论坛
+            联系社区
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             版权、隐私、举报与申诉请发邮件到
             <a href="mailto:info@rubbishasci.cn" className="mx-1 text-primary hover:underline">
               info@rubbishasci.cn
             </a>
-            。论坛规则见
+            。社区规则见
             <Link to="/guide" search={{ tab: 'policies' }} className="mx-1 text-primary hover:underline">
-              论坛公约
+              社区公约
             </Link>
             。
           </p>

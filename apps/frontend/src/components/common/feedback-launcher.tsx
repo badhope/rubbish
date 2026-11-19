@@ -24,7 +24,7 @@ const KINDS = [
   { value: 'design', label: '版式与视觉问题' },
   { value: 'performance', label: '性能与加载问题' },
   { value: 'accessibility', label: '无障碍与移动端问题' },
-  { value: 'submission', label: '投稿与审稿咨询' },
+  { value: 'submission', label: '发布与内容咨询' },
   { value: 'other', label: '其他问题' },
 ] as const
 
@@ -101,7 +101,7 @@ export function FeedbackComposer({
             : window.location.pathname + window.location.search,
         images,
       })
-      toast.success('已提交，主编会收到')
+      toast.success('已提交，版主会收到')
       onOpenChange(false)
       setTitle('')
       setBody('')
@@ -117,9 +117,9 @@ export function FeedbackComposer({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>给编辑部提问题</DialogTitle>
+          <DialogTitle>给社区提问题</DialogTitle>
           <DialogDescription>
-            页面报错、内容有误、投稿疑问都可以写在这里。提交后会进入反馈墙并通知主编；反馈墙公开标题和正文，不显示提交人身份。
+            页面报错、内容有误、发布疑问都可以写在这里。提交后会进入反馈墙并通知版主；反馈墙公开标题和正文，不显示提交人身份。
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -203,7 +203,7 @@ export function FeedbackComposer({
             当前页面会自动附上：{typeof window !== 'undefined' ? window.location.pathname : '—'}
           </p>
           <Button className="w-full" onClick={submit} disabled={sending}>
-            {sending ? '提交中…' : '提交给主编'}
+            {sending ? '提交中…' : '提交给版主'}
           </Button>
           <Link
             to="/forum"
@@ -235,9 +235,9 @@ export function FeedbackLauncher() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="给编辑部提问题"
+        aria-label="给社区提问题"
         data-testid="feedback-launcher"
-        title="给编辑部提问题"
+        title="给社区提问题"
         className="fixed bottom-20 left-3 z-40 hidden h-11 items-center gap-1.5 rounded-full border bg-card/95 px-3 text-foreground shadow-lg backdrop-blur transition-colors hover:border-primary/50 hover:text-primary md:bottom-28 md:left-4 md:right-auto md:top-auto md:inline-flex"
       >
         <MessageSquareText className="h-4 w-4" />

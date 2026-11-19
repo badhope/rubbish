@@ -9,25 +9,25 @@ describe('homepage issue information', () => {
   })
 })
 
-describe('forum onboarding', () => {
-  it('points new writers to the forum composer, not submissions', () => {
-    const authors = readFileSync('src/components/guide/authors-page.tsx', 'utf8')
-    expect(authors).toContain('创作指南')
+describe('community onboarding', () => {
+  it('points new researchers to the community composer, not submissions', () => {
+    const authors = readFileSync('src/components/guide/research-guide.tsx', 'utf8')
+    expect(authors).toContain('研究指南')
     expect(authors).toContain('to="/forum"')
     expect(authors).not.toContain('to="/submissions"')
   })
 
-  it('keeps the guide to three forum tabs', () => {
+  it('keeps the guide to three community tabs', () => {
     const guide = source('guide')
-    expect(guide).toContain("label: '创作指南'")
-    expect(guide).toContain("label: '新手指南'")
-    expect(guide).toContain("label: '论坛公约'")
+    expect(guide).toContain("label: '研究指南'")
+    expect(guide).toContain("label: '社区指南'")
+    expect(guide).toContain("label: '社区公约'")
     expect(guide).not.toContain("label: '等级与规范'")
   })
 
-  it('describes the forum as the starting point, not a journal conversion', () => {
+  it('describes the community as the starting point, not a journal conversion', () => {
     const about = source('about')
-    expect(about).toContain('从第一天就是一个论坛')
+    expect(about).toContain('从第一天就是一个社区')
     expect(about).not.toContain('不是期刊')
     expect(about).not.toContain('停止期刊化')
   })

@@ -5,7 +5,7 @@ import { displayTypeLabel, isScholarlyContent } from '@/lib/resource-labels'
 import { essayGenreLabel } from '@/lib/essay-genres'
 import { Highlight } from '@/components/common/highlight'
 
-// 论文库的“索引行”：没有封面、没有卡片、没有阴影。
+// 研究档案的“索引行”：没有封面、没有卡片、没有阴影。
 // 一行只承担一件事：让读者在 390px 屏幕上也先看到标题，再决定要不要点。
 export function CatalogIndexRow({
   resource,
@@ -46,7 +46,6 @@ export function CatalogIndexRow({
         </span>
         <span className="mt-1 block text-[11px] leading-5 text-muted-foreground sm:text-xs">
           {meta}
-          {resource.clc_code ? ` · CLC ${resource.clc_code}` : ''}
         </span>
         {preview && (
           <span className="mt-2 line-clamp-2 text-[12px] leading-5 text-muted-foreground/80">

@@ -121,7 +121,7 @@ export function MePoints({ profile }: { profile: MeProfile }) {
         <SectionTitle
           kicker="SHOP"
           title="积分兑换"
-          hint="只兑换站内非现金权益；兑换后直接扣积分，库存与价格由主编配置。"
+          hint="只兑换站内非现金权益；兑换后直接扣积分，库存与价格由社区管理员配置。"
           action={
             <span className="font-mono text-xs text-muted-foreground">
               {items.data?.length ?? 0} 件
@@ -227,8 +227,8 @@ export function MePoints({ profile }: { profile: MeProfile }) {
         {!showLevels ? null : ownedIdentities.length === 0 ? (
           <p className="border-y py-5 text-sm text-muted-foreground">
             {profile.permission_role === 'editor_in_chief'
-              ? '主编为最高权限档，不参与等级轨。'
-              : '暂无等级轨。投稿或认领通过后会开始累计。'}
+              ? '管理员为最高权限档，不参与等级轨。'
+              : '暂无等级轨。发布或认领通过后会开始累计。'}
           </p>
         ) : (
           <div className="divide-y border-y">

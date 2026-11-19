@@ -1,8 +1,8 @@
 import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
-import { AuthorsPage } from '@/components/guide/authors-page'
-import { HelpPage } from '@/components/guide/help-page'
-import { PoliciesPage } from '@/components/guide/policies-page'
+import { ResearchGuide } from '@/components/guide/research-guide'
+import { CommunityGuide } from '@/components/guide/community-guide'
+import { CommunityRules } from '@/components/guide/community-rules'
 
 export const Route = createFileRoute('/guide')({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -19,9 +19,9 @@ export const Route = createFileRoute('/guide')({
 })
 
 const TABS = [
-  { value: 'authors', label: '创作指南', desc: '写什么、怎么写、怎么发' },
-  { value: 'help', label: '新手指南', desc: '读帖、发帖、回复与举报' },
-  { value: 'policies', label: '论坛公约', desc: '边界、版权与处理' },
+  { value: 'authors', label: '研究指南', desc: '立题、记录、复盘与发布' },
+  { value: 'help', label: '社区指南', desc: '阅读、发布、回复与举报' },
+  { value: 'policies', label: '社区公约', desc: '边界、版权与处理' },
 ] as const
 
 function GuidePage() {
@@ -50,11 +50,11 @@ function GuidePage() {
         ))}
       </div>
       {tab === 'help' ? (
-        <HelpPage />
+        <CommunityGuide />
       ) : tab === 'policies' ? (
-        <PoliciesPage />
+        <CommunityRules />
       ) : (
-        <AuthorsPage />
+        <ResearchGuide />
       )}
     </div>
   )

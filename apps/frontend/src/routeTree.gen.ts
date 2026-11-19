@@ -17,30 +17,22 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as GuideRouteImport } from './routes/guide'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MeRouteImport } from './routes/me'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
-import { Route as AboutDeskSubscribeRouteImport } from './routes/about_.desk-subscribe'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminContentRouteImport } from './routes/admin/content'
 import { Route as AdminEconomyRouteImport } from './routes/admin/economy'
-import { Route as AdminJournalRouteImport } from './routes/admin/journal'
 import { Route as AdminPeopleRouteImport } from './routes/admin/people'
 import { Route as AdminSystemRouteImport } from './routes/admin/system'
 import { Route as CatalogIndexRouteImport } from './routes/catalog/index'
 import { Route as CatalogResourceIdRouteImport } from './routes/catalog/$resourceId'
-import { Route as ClaimResourceIdRouteImport } from './routes/claim/$resourceId'
-import { Route as EditorCalibrationRouteImport } from './routes/editor/calibration'
 import { Route as ForumIndexRouteImport } from './routes/forum/index'
 import { Route as ForumTopicIdRouteImport } from './routes/forum/$topicId'
 import { Route as LibraryListIdRouteImport } from './routes/library/$listId'
-import { Route as ReviewIndexRouteImport } from './routes/review/index'
-import { Route as SubmissionsIndexRouteImport } from './routes/submissions/index'
-import { Route as SubmissionsNewRouteImport } from './routes/submissions/new'
-import { Route as SubmissionsPendingRouteImport } from './routes/submissions/pending'
 import { Route as UUsernameRouteImport } from './routes/u/$username'
 import { Route as AuthOidcCallbackRouteImport } from './routes/auth/oidc/callback'
-import { Route as AdminIssuesVolumeIssueRouteImport } from './routes/admin/issues.$volume.$issue'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -82,6 +74,11 @@ const MeRoute = MeRouteImport.update({
   path: '/me',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
@@ -97,11 +94,6 @@ const VerifyEmailRoute = VerifyEmailRouteImport.update({
   path: '/verify-email',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AboutDeskSubscribeRoute = AboutDeskSubscribeRouteImport.update({
-  id: '/about_/desk-subscribe',
-  path: '/about/desk-subscribe',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -115,11 +107,6 @@ const AdminContentRoute = AdminContentRouteImport.update({
 const AdminEconomyRoute = AdminEconomyRouteImport.update({
   id: '/economy',
   path: '/economy',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminJournalRoute = AdminJournalRouteImport.update({
-  id: '/journal',
-  path: '/journal',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminPeopleRoute = AdminPeopleRouteImport.update({
@@ -142,16 +129,6 @@ const CatalogResourceIdRoute = CatalogResourceIdRouteImport.update({
   path: '/catalog/$resourceId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ClaimResourceIdRoute = ClaimResourceIdRouteImport.update({
-  id: '/claim/$resourceId',
-  path: '/claim/$resourceId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EditorCalibrationRoute = EditorCalibrationRouteImport.update({
-  id: '/editor/calibration',
-  path: '/editor/calibration',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ForumIndexRoute = ForumIndexRouteImport.update({
   id: '/forum/',
   path: '/forum/',
@@ -167,26 +144,6 @@ const LibraryListIdRoute = LibraryListIdRouteImport.update({
   path: '/library/$listId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ReviewIndexRoute = ReviewIndexRouteImport.update({
-  id: '/review/',
-  path: '/review/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SubmissionsIndexRoute = SubmissionsIndexRouteImport.update({
-  id: '/submissions/',
-  path: '/submissions/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SubmissionsNewRoute = SubmissionsNewRouteImport.update({
-  id: '/submissions/new',
-  path: '/submissions/new',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SubmissionsPendingRoute = SubmissionsPendingRouteImport.update({
-  id: '/submissions/pending',
-  path: '/submissions/pending',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const UUsernameRoute = UUsernameRouteImport.update({
   id: '/u/$username',
   path: '/u/$username',
@@ -196,11 +153,6 @@ const AuthOidcCallbackRoute = AuthOidcCallbackRouteImport.update({
   id: '/auth/oidc/callback',
   path: '/auth/oidc/callback',
   getParentRoute: () => rootRouteImport,
-} as any)
-const AdminIssuesVolumeIssueRoute = AdminIssuesVolumeIssueRouteImport.update({
-  id: '/issues/$volume/$issue',
-  path: '/issues/$volume/$issue',
-  getParentRoute: () => AdminRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -212,30 +164,22 @@ export interface FileRoutesByFullPath {
   '/guide': typeof GuideRoute
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
+  '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/verify-email': typeof VerifyEmailRoute
-  '/about/desk-subscribe': typeof AboutDeskSubscribeRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/economy': typeof AdminEconomyRoute
-  '/admin/journal': typeof AdminJournalRoute
   '/admin/people': typeof AdminPeopleRoute
   '/admin/system': typeof AdminSystemRoute
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
-  '/claim/$resourceId': typeof ClaimResourceIdRoute
-  '/editor/calibration': typeof EditorCalibrationRoute
   '/forum/$topicId': typeof ForumTopicIdRoute
   '/library/$listId': typeof LibraryListIdRoute
-  '/submissions/new': typeof SubmissionsNewRoute
-  '/submissions/pending': typeof SubmissionsPendingRoute
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/catalog/': typeof CatalogIndexRoute
   '/forum/': typeof ForumIndexRoute
-  '/review/': typeof ReviewIndexRoute
-  '/submissions/': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
-  '/admin/issues/$volume/$issue': typeof AdminIssuesVolumeIssueRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -245,30 +189,22 @@ export interface FileRoutesByTo {
   '/guide': typeof GuideRoute
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
+  '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/verify-email': typeof VerifyEmailRoute
-  '/about/desk-subscribe': typeof AboutDeskSubscribeRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/economy': typeof AdminEconomyRoute
-  '/admin/journal': typeof AdminJournalRoute
   '/admin/people': typeof AdminPeopleRoute
   '/admin/system': typeof AdminSystemRoute
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
-  '/claim/$resourceId': typeof ClaimResourceIdRoute
-  '/editor/calibration': typeof EditorCalibrationRoute
   '/forum/$topicId': typeof ForumTopicIdRoute
   '/library/$listId': typeof LibraryListIdRoute
-  '/submissions/new': typeof SubmissionsNewRoute
-  '/submissions/pending': typeof SubmissionsPendingRoute
   '/u/$username': typeof UUsernameRoute
   '/admin': typeof AdminIndexRoute
   '/catalog': typeof CatalogIndexRoute
   '/forum': typeof ForumIndexRoute
-  '/review': typeof ReviewIndexRoute
-  '/submissions': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
-  '/admin/issues/$volume/$issue': typeof AdminIssuesVolumeIssueRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -280,30 +216,22 @@ export interface FileRoutesById {
   '/guide': typeof GuideRoute
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
+  '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/verify-email': typeof VerifyEmailRoute
-  '/about_/desk-subscribe': typeof AboutDeskSubscribeRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/economy': typeof AdminEconomyRoute
-  '/admin/journal': typeof AdminJournalRoute
   '/admin/people': typeof AdminPeopleRoute
   '/admin/system': typeof AdminSystemRoute
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
-  '/claim/$resourceId': typeof ClaimResourceIdRoute
-  '/editor/calibration': typeof EditorCalibrationRoute
   '/forum/$topicId': typeof ForumTopicIdRoute
   '/library/$listId': typeof LibraryListIdRoute
-  '/submissions/new': typeof SubmissionsNewRoute
-  '/submissions/pending': typeof SubmissionsPendingRoute
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/catalog/': typeof CatalogIndexRoute
   '/forum/': typeof ForumIndexRoute
-  '/review/': typeof ReviewIndexRoute
-  '/submissions/': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
-  '/admin/issues/$volume/$issue': typeof AdminIssuesVolumeIssueRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -316,30 +244,22 @@ export interface FileRouteTypes {
     | '/guide'
     | '/login'
     | '/me'
+    | '/privacy'
     | '/register'
     | '/reset-password'
     | '/verify-email'
-    | '/about/desk-subscribe'
     | '/admin/content'
     | '/admin/economy'
-    | '/admin/journal'
     | '/admin/people'
     | '/admin/system'
     | '/catalog/$resourceId'
-    | '/claim/$resourceId'
-    | '/editor/calibration'
     | '/forum/$topicId'
     | '/library/$listId'
-    | '/submissions/new'
-    | '/submissions/pending'
     | '/u/$username'
     | '/admin/'
     | '/catalog/'
     | '/forum/'
-    | '/review/'
-    | '/submissions/'
     | '/auth/oidc/callback'
-    | '/admin/issues/$volume/$issue'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -349,30 +269,22 @@ export interface FileRouteTypes {
     | '/guide'
     | '/login'
     | '/me'
+    | '/privacy'
     | '/register'
     | '/reset-password'
     | '/verify-email'
-    | '/about/desk-subscribe'
     | '/admin/content'
     | '/admin/economy'
-    | '/admin/journal'
     | '/admin/people'
     | '/admin/system'
     | '/catalog/$resourceId'
-    | '/claim/$resourceId'
-    | '/editor/calibration'
     | '/forum/$topicId'
     | '/library/$listId'
-    | '/submissions/new'
-    | '/submissions/pending'
     | '/u/$username'
     | '/admin'
     | '/catalog'
     | '/forum'
-    | '/review'
-    | '/submissions'
     | '/auth/oidc/callback'
-    | '/admin/issues/$volume/$issue'
   id:
     | '__root__'
     | '/'
@@ -383,30 +295,22 @@ export interface FileRouteTypes {
     | '/guide'
     | '/login'
     | '/me'
+    | '/privacy'
     | '/register'
     | '/reset-password'
     | '/verify-email'
-    | '/about_/desk-subscribe'
     | '/admin/content'
     | '/admin/economy'
-    | '/admin/journal'
     | '/admin/people'
     | '/admin/system'
     | '/catalog/$resourceId'
-    | '/claim/$resourceId'
-    | '/editor/calibration'
     | '/forum/$topicId'
     | '/library/$listId'
-    | '/submissions/new'
-    | '/submissions/pending'
     | '/u/$username'
     | '/admin/'
     | '/catalog/'
     | '/forum/'
-    | '/review/'
-    | '/submissions/'
     | '/auth/oidc/callback'
-    | '/admin/issues/$volume/$issue'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -418,22 +322,16 @@ export interface RootRouteChildren {
   GuideRoute: typeof GuideRoute
   LoginRoute: typeof LoginRoute
   MeRoute: typeof MeRoute
+  PrivacyRoute: typeof PrivacyRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
-  AboutDeskSubscribeRoute: typeof AboutDeskSubscribeRoute
   CatalogResourceIdRoute: typeof CatalogResourceIdRoute
-  ClaimResourceIdRoute: typeof ClaimResourceIdRoute
-  EditorCalibrationRoute: typeof EditorCalibrationRoute
   ForumTopicIdRoute: typeof ForumTopicIdRoute
   LibraryListIdRoute: typeof LibraryListIdRoute
-  SubmissionsNewRoute: typeof SubmissionsNewRoute
-  SubmissionsPendingRoute: typeof SubmissionsPendingRoute
   UUsernameRoute: typeof UUsernameRoute
   CatalogIndexRoute: typeof CatalogIndexRoute
   ForumIndexRoute: typeof ForumIndexRoute
-  ReviewIndexRoute: typeof ReviewIndexRoute
-  SubmissionsIndexRoute: typeof SubmissionsIndexRoute
   AuthOidcCallbackRoute: typeof AuthOidcCallbackRoute
 }
 
@@ -495,6 +393,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/register': {
       id: '/register'
       path: '/register'
@@ -516,13 +421,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VerifyEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/about_/desk-subscribe': {
-      id: '/about_/desk-subscribe'
-      path: '/about/desk-subscribe'
-      fullPath: '/about/desk-subscribe'
-      preLoaderRoute: typeof AboutDeskSubscribeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin/': {
       id: '/admin/'
       path: '/'
@@ -542,13 +440,6 @@ declare module '@tanstack/react-router' {
       path: '/economy'
       fullPath: '/admin/economy'
       preLoaderRoute: typeof AdminEconomyRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/journal': {
-      id: '/admin/journal'
-      path: '/journal'
-      fullPath: '/admin/journal'
-      preLoaderRoute: typeof AdminJournalRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/people': {
@@ -579,20 +470,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CatalogResourceIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/claim/$resourceId': {
-      id: '/claim/$resourceId'
-      path: '/claim/$resourceId'
-      fullPath: '/claim/$resourceId'
-      preLoaderRoute: typeof ClaimResourceIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/editor/calibration': {
-      id: '/editor/calibration'
-      path: '/editor/calibration'
-      fullPath: '/editor/calibration'
-      preLoaderRoute: typeof EditorCalibrationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/forum/': {
       id: '/forum/'
       path: '/forum'
@@ -614,34 +491,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LibraryListIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/review/': {
-      id: '/review/'
-      path: '/review'
-      fullPath: '/review/'
-      preLoaderRoute: typeof ReviewIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/submissions/': {
-      id: '/submissions/'
-      path: '/submissions'
-      fullPath: '/submissions/'
-      preLoaderRoute: typeof SubmissionsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/submissions/new': {
-      id: '/submissions/new'
-      path: '/submissions/new'
-      fullPath: '/submissions/new'
-      preLoaderRoute: typeof SubmissionsNewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/submissions/pending': {
-      id: '/submissions/pending'
-      path: '/submissions/pending'
-      fullPath: '/submissions/pending'
-      preLoaderRoute: typeof SubmissionsPendingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/u/$username': {
       id: '/u/$username'
       path: '/u/$username'
@@ -656,34 +505,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthOidcCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/issues/$volume/$issue': {
-      id: '/admin/issues/$volume/$issue'
-      path: '/issues/$volume/$issue'
-      fullPath: '/admin/issues/$volume/$issue'
-      preLoaderRoute: typeof AdminIssuesVolumeIssueRouteImport
-      parentRoute: typeof AdminRoute
-    }
   }
 }
 
 interface AdminRouteChildren {
   AdminContentRoute: typeof AdminContentRoute
   AdminEconomyRoute: typeof AdminEconomyRoute
-  AdminJournalRoute: typeof AdminJournalRoute
   AdminPeopleRoute: typeof AdminPeopleRoute
   AdminSystemRoute: typeof AdminSystemRoute
   AdminIndexRoute: typeof AdminIndexRoute
-  AdminIssuesVolumeIssueRoute: typeof AdminIssuesVolumeIssueRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminContentRoute: AdminContentRoute,
   AdminEconomyRoute: AdminEconomyRoute,
-  AdminJournalRoute: AdminJournalRoute,
   AdminPeopleRoute: AdminPeopleRoute,
   AdminSystemRoute: AdminSystemRoute,
   AdminIndexRoute: AdminIndexRoute,
-  AdminIssuesVolumeIssueRoute: AdminIssuesVolumeIssueRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
@@ -697,22 +535,16 @@ const rootRouteChildren: RootRouteChildren = {
   GuideRoute: GuideRoute,
   LoginRoute: LoginRoute,
   MeRoute: MeRoute,
+  PrivacyRoute: PrivacyRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   VerifyEmailRoute: VerifyEmailRoute,
-  AboutDeskSubscribeRoute: AboutDeskSubscribeRoute,
   CatalogResourceIdRoute: CatalogResourceIdRoute,
-  ClaimResourceIdRoute: ClaimResourceIdRoute,
-  EditorCalibrationRoute: EditorCalibrationRoute,
   ForumTopicIdRoute: ForumTopicIdRoute,
   LibraryListIdRoute: LibraryListIdRoute,
-  SubmissionsNewRoute: SubmissionsNewRoute,
-  SubmissionsPendingRoute: SubmissionsPendingRoute,
   UUsernameRoute: UUsernameRoute,
   CatalogIndexRoute: CatalogIndexRoute,
   ForumIndexRoute: ForumIndexRoute,
-  ReviewIndexRoute: ReviewIndexRoute,
-  SubmissionsIndexRoute: SubmissionsIndexRoute,
   AuthOidcCallbackRoute: AuthOidcCallbackRoute,
 }
 export const routeTree = rootRouteImport

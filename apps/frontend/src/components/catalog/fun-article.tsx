@@ -38,8 +38,6 @@ interface FunArticleProps {
   onEdit: () => void
   onDelete: () => void
   onSave: () => void
-  canClaim?: boolean
-  claimOpen?: boolean
 }
 
 export function FunArticle({
@@ -50,8 +48,6 @@ export function FunArticle({
   onEdit,
   onDelete,
   onSave,
-  canClaim,
-  claimOpen,
 }: FunArticleProps) {
   const genre = essayGenreMeta(data.content_genre)
   const [fatal, setFatal] = useState<unknown>(null)
@@ -187,15 +183,6 @@ export function FunArticle({
                 {author?.affiliation ? ` · ${author.affiliation}` : ''}
               </p>
             </div>
-            {claimOpen ? (
-              <Link
-                to="/claim/$resourceId"
-                params={{ resourceId: String(data.id) }}
-                className="shrink-0 whitespace-nowrap rounded-full border border-amber-300/80 px-2.5 py-1 text-[11px] text-amber-900 hover:bg-amber-50 dark:border-amber-500/30 dark:text-amber-200"
-              >
-                {canClaim ? '我是作者，去认领' : '作者认领'}
-              </Link>
-            ) : null}
           </div>
         </header>
 
@@ -236,7 +223,7 @@ export function FunArticle({
         ) : null}
 
         <p className="mt-8 border-t pt-4 text-[11px] leading-5 text-muted-foreground">
-          自由创作轨：不计分 · 不进站内热度 · 不走评审 · 不代表编辑部立场。正文里的“研究”“样本”“显著性”请默认在整活。
+          自由创作轨：不计分 · 不进站内热度 · 不走评审 · 不代表社区立场。正文里的“研究”“样本”“显著性”请默认在整活。
         </p>
 
         <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>

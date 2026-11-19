@@ -4,9 +4,9 @@
 
 # Rubbish
 
-**An absurd academic writing forum — post, write long-form, argue in the open.**
+**An absurd research community — ask, record, fail, review, argue in the open.**
 
-> 16 backend modules · forum + long-form works · Playwright E2E · strictly typed end to end
+> 16 backend modules · community + research archive · Playwright E2E · strictly typed end to end
 
 **🌐 [English](README.md) · [简体中文](README.zh-CN.md)**
 
@@ -32,18 +32,18 @@
 
 | | What it is | Where showcase content lives |
 | --- | --- | --- |
-| **Open-source example** (this repo) | Reference implementation of the Rubbish forum — clone it, self-host it, adapt it. | `site/`, `docs/assets/`, README screenshots |
-| **Production service** ([rubbish.argjiemi.cn](https://rubbish.argjiemi.cn)) | A public forum for absurd academic writing. The site is currently offline while the community build is being finished. | nowhere — de-showcased by design |
+| **Open-source example** (this repo) | Reference implementation of the Rubbish community — clone it, self-host it, adapt it. | `site/`, `docs/assets/`, README screenshots |
+| **Production service** ([rubbish.argjiemi.cn](https://rubbish.argjiemi.cn)) | A public absurd research community. The site is currently offline while the rebuild is being finished. | nowhere — de-showcased by design |
 
 ## Features
 
 | Role | Capability |
 | --- | --- |
-| **Writer** | Publish a long-form work or a forum post; markdown editor, draft autosave, paper-style metadata optional |
-| **Reader** | Public catalog, forum reading, in-reader typography controls, reading progress, follows and bookmarks |
+| **Writer** | Publish a research note or community post; markdown editor, draft autosave, optional metadata |
+| **Reader** | Public archive, community reading, typography controls, reading progress, follows and bookmarks |
 | **Community** | Boards, topics, replies, reactions, reports, feedback board, notifications; no login wall for reading |
 | **Moderator** | Report triage, content hide/restore, pin/lock, board management, audit trail |
-| **Admin** | Users and roles, content, points ledger, system health, announcements; no journal volumes or issues; forum operations only |
+| **Admin** | Users and roles, content, points ledger, system health, announcements; community operations only |
 
 **Secure by default**: passwordless email-code sign-in (hashed one-time codes, rate limited), WebAuthn passkeys + TOTP 2FA, server-side JWT revocation with key rotation, sign-up captcha, per-action audit logs, multi-tenant isolation (PostgreSQL RLS).
 
@@ -57,9 +57,9 @@
 
 | Forum | Works |
 | --- | --- |
-| ![Forum](docs/assets/screenshots/community-forum-desktop.png) | ![Works](docs/assets/screenshots/community-catalog-desktop.png) |
+| ![Community](docs/assets/screenshots/community-forum-desktop.png) | ![Archive](docs/assets/screenshots/community-catalog-desktop.png) |
 
-| About the forum | Forum rules |  |
+| About the community | Community rules |  |
 | --- | --- | --- |
 | ![About](docs/assets/screenshots/community-about-desktop.png) | ![Rules](docs/assets/screenshots/community-rules-desktop.png) | |
 
@@ -109,7 +109,7 @@ cd apps/backend && uv run pytest
 # Frontend (lint + typecheck + unit + build)
 cd apps/frontend && npm ci && npm run lint && npm run typecheck && npm test
 
-# E2E (submit → review → accept full journey)
+# E2E (register → publish → reply journey)
 cd apps/frontend && E2E_SPAWN_SERVER=1 npx playwright test
 ```
 

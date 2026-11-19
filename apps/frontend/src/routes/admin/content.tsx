@@ -6,9 +6,8 @@ import AnnouncementsPage from '@/components/admin/pages/content/announcements'
 import ForumBoardsPage from '@/components/admin/pages/content/forum-boards'
 import ReportsPage from '@/components/admin/pages/content/reports'
 import CommentsPage from '@/components/admin/pages/content/comments'
-import DeskSubscribersPage from '@/components/admin/pages/content/desk-subscribers'
 
-type SectionKey = 'announcements' | 'boards' | 'reports' | 'comments' | 'subscribers'
+type SectionKey = 'announcements' | 'boards' | 'reports' | 'comments'
 
 interface ContentSearch {
   section?: string
@@ -19,7 +18,6 @@ const SECTIONS: readonly AdminSectionItem<SectionKey>[] = [
   { key: 'boards', label: '版块' },
   { key: 'reports', label: '举报' },
   { key: 'comments', label: '评论' },
-  { key: 'subscribers', label: '邮件订阅' },
 ]
 
 function isSectionKey(value: string | undefined): value is SectionKey {
@@ -27,8 +25,7 @@ function isSectionKey(value: string | undefined): value is SectionKey {
     value === 'announcements' ||
     value === 'boards' ||
     value === 'reports' ||
-    value === 'comments' ||
-    value === 'subscribers'
+    value === 'comments'
   )
 }
 
@@ -61,7 +58,6 @@ function AdminContentPage() {
       {section === 'boards' ? <ForumBoardsPage /> : null}
       {section === 'reports' ? <ReportsPage /> : null}
       {section === 'comments' ? <CommentsPage /> : null}
-      {section === 'subscribers' ? <DeskSubscribersPage /> : null}
     </div>
   )
 }

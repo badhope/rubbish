@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 
-// 编辑部公告弹窗：只认设备，不认账号（游客也要看到）。
+// 社区公告弹窗：只认设备，不认账号（游客也要看到）。
 // 关闭后 30 天内不再自动弹出；公告换 slug 会重新出现；
 // 顶栏的「公告」按钮随时可重开。公告本身可在管理后台随时下线。
 const DISMISS_KEY = 'rubbish_announcement_dismissed'
@@ -57,7 +57,7 @@ const LEVEL_TEXT: Record<string, string> = {
 }
 
 const LEVEL_LABELS: Record<string, string> = {
-  info: '编辑部公告',
+  info: '社区公告',
   success: '好消息',
   warning: '重要通知',
   critical: '紧急公告',
@@ -110,7 +110,7 @@ export function AnnouncementDialog({
             {announcement.title}
           </DialogTitle>
           <DialogDescription className="sr-only">
-            来自 Rubbish 编辑部的公告，阅读后可关闭，30 天内不会再次自动弹出。
+            来自 Rubbish 社区的公告，阅读后可关闭，30 天内不会再次自动弹出。
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2 px-6 pb-2 text-sm leading-relaxed text-muted-foreground">
@@ -131,7 +131,7 @@ export function AnnouncementDialog({
               to="/catalog"
               className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
             >
-              浏览作品库 <ArrowRight className="h-3.5 w-3.5" />
+              浏览档案 <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
           <Button type="button" onClick={() => onOpenChange(false)}>
@@ -162,7 +162,7 @@ export function AnnouncementChip({
       type="button"
       onClick={onOpen}
       className="relative inline-flex items-center gap-1 rounded-full border bg-card px-2.5 py-1 text-xs text-foreground/80 transition-colors hover:border-primary/40 hover:text-foreground"
-      aria-label={seen ? '查看编辑部公告' : '查看未读的编辑部公告'}
+      aria-label={seen ? '查看社区公告' : '查看未读的社区公告'}
     >
       <Bell className="h-3.5 w-3.5" />
       公告

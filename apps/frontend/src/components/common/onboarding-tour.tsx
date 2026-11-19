@@ -8,9 +8,7 @@ const KEY = 'rubbish.onboarding.v1'
 
 /** 首次使用手把手引导：可跳过，只在本机显示一次。 */
 export function OnboardingTour() {
-  const { user, isAuthenticated, isAdmin } = useAuth()
-  const isEditor = isAdmin || (user?.roles ?? []).some((r) => ['editor', 'section_editor', 'board_editor', 'deputy_editor', 'chief_editor', 'editor_in_chief'].includes(r))
-  const isReviewer = (user?.roles ?? []).some((r) => ['reviewer', 'editor_in_chief'].includes(r))
+  const { isAuthenticated } = useAuth()
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState(0)
   const [expanded, setExpanded] = useState(false)
@@ -22,18 +20,16 @@ export function OnboardingTour() {
 
   const close = () => { try { localStorage.setItem(KEY, 'done') } catch { /* ignore */ } setOpen(false) }
 
-  // 不在设置、后台、审稿、投稿这些“正在办事”的页面弹浮层：
+  // 不在设置、后台这些“正在办事”的页面弹浮层：
   // 用户此刻要看表单和按钮，引导卡不能压住正文。
-  const busy = ['/settings', '/admin', '/review', '/editor', '/submissions', '/account']
+  const busy = ['/settings', '/admin', '/account']
     .some((prefix) => location.pathname === prefix || location.pathname.startsWith(prefix + '/'))
   if (!open || busy) return null
 
   const steps = [
-    { title: '先看五个入口', body: '顶部固定 首页 / 论文 / 投稿 / 讨论 / 我的；论文与副刊合并进目录，不再单独占一级入口。', to: '/catalog', search: { track: 'paper' }, label: '去论文' },
-    { title: isAuthenticated ? '投稿与进度' : '注册后投稿', body: isAuthenticated ? '在“我的提交”看审稿状态；每篇稿件的操作旁都有说明，遇到决定可提交申诉。' : '注册并登录后可投稿、认领作者位、提交申诉；论文轨会进入正式评审与计分。', to: isAuthenticated ? '/submissions' : '/login', label: isAuthenticated ? '我的提交' : '去登录' },
-    ...(isReviewer ? [{ title: '审稿工作台', body: '待审、已审、超期都在工作台；每条操作旁注写明了拒审、延期、提交意见的边界。', to: '/review', search: { tab: 'assignments' }, label: '进入审稿' }] : []),
-    ...(isEditor ? [{ title: '编辑工作台', body: '分派、催办、裁决与申诉待办集中在一处；受理撤回会下架作品，重审分数/分区要写处置说明。', to: '/submissions/pending', search: { stage: 'pipeline' }, label: '进入编辑部' }] : []),
-    { title: '遇到问题随时提', body: '分数、分区或撤回问题走“作者申诉”，会进入编辑部待办；站务问题见“常见问题”。', to: '/me', search: { tab: 'submissions', section: 'appeals' }, label: '作者申诉' },
+    { title: '先看五个入口', body: '顶部固定 首页 / 社区 / 档案 / 指南 / 我的。短帖在社区，长记录在档案。', to: '/forum', label: '去社区' },
+    { title: isAuthenticated ? '发布你的第一个问题' : '注册后就能发', body: '不用申请资格，也不用积分。先写清楚问题，发布后再慢慢补过程。', to: '/forum', search: { compose: '1' }, label: isAuthenticated ? '发布研究' : '去登录' },
+    { title: '把边界看清楚', body: '虚构要标注，材料要能对上，真人隐私不碰；其余交给社区讨论。', to: '/guide', search: { tab: 'policies' }, label: '看社区公约' },
   ]
   const current = steps[Math.min(step, steps.length - 1)]
 

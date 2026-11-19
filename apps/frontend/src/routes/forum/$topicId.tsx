@@ -71,12 +71,12 @@ interface ForumReply {
 }
 
 const CATEGORY_LABEL: Record<string, string> = {
-  paper: '论文沙龙',
-  method: '方法与写作',
-  life: '学术生存',
+  paper: '研究记录',
+  method: '方法与复盘',
+  life: '科研生存',
   collab: '组队招募',
   meta: '站务公告',
-  discussion: '讨论',
+  discussion: '研究讨论',
   suggestion: '建议',
   question: '求助',
   notice: '公告',
@@ -295,7 +295,7 @@ function ForumTopicPage() {
       setReply('')
       setReplyTo(null)
       void qc.invalidateQueries({ queryKey: ['forum'] })
-      toast.success(replyTo ? '已回复' : '已发表回复')
+      toast.success(replyTo ? '已回复' : '已发布回复')
     },
     onError: (err) => toast.error(extractError(err, '回复失败')),
   })
@@ -399,7 +399,7 @@ function ForumTopicPage() {
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        返回讨论区
+        返回社区
       </Link>
 
       <Card>
@@ -566,7 +566,7 @@ function ForumTopicPage() {
                     disabled={replyMut.isPending || reply.trim().length < 1}
                   >
                     <Send className="h-4 w-4" />
-                    {replyMut.isPending ? '发送中…' : '发表回复'}
+                    {replyMut.isPending ? '发送中…' : '发布回复'}
                   </Button>
                 </div>
               </>
