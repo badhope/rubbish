@@ -23,7 +23,7 @@ describe('onboarding guidance', () => {
  })
 
  it('allows authors who accepted the current rules to access submissions at L1', () => {
- const authors = source('authors')
+ const authors = readFileSync('src/components/guide/authors-page.tsx', 'utf8')
  expect(authors).not.toContain('currentLevel >=3')
  expect(authors).not.toContain('先确认社区规范（L2）')
  expect(authors).not.toContain('账号会升到 L3')

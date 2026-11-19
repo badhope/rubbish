@@ -56,6 +56,12 @@ export default defineConfig({
       testMatch: '**/mobile-shell.spec.ts',
       use: { ...devices['iPhone 13'], browserName: 'chromium' },
     },
+    {
+      name: 'mobile-review',
+      // 审稿闭环在手机视口再走一遍：同一套 /review、/submissions 壳，确认不是桌面专属。
+      testMatch: '**/submissions-review.spec.ts',
+      use: { ...devices['iPhone 13'], browserName: 'chromium' },
+    },
   ],
   webServer: [
     {

@@ -49,8 +49,8 @@ export async function loginViaUi(
   // exact:true 避免"确认密码"等带子串的 label 干扰（注册页就有两个密码框）
   await page.getByLabel('密码', { exact: true }).fill(creds.password)
   await page.getByRole('button', { name: '登录' }).click()
-  // 等 dashboard 出现（admin 普通用户都会跳过去）
-  await page.waitForURL(/\/dashboard/, { timeout: 15_000 })
+  // 1.17 起登录后统一落到 /me，不再有 /dashboard
+  await page.waitForURL(/\/me(?:[?#]|$)/, { timeout: 15_000 })
   await ensureAuthorReady(page)
   await dismissOnboarding(page)
 }
@@ -288,7 +288,7 @@ export async function fillSubmissionWizard(
   await page
     .getByTestId('wizard-body-editor')
     .locator('textarea')
-    .fill(`# 1 引言\n\nE2E 正文。\n\n# 参考文献\n\n[1] Rubbish E2E. 2026.`)
+    .fill(`# 1 引言\n\nE2E 正文。\n\n## 参考文献\n\n[1] Rubbish E2E. 2026.`)
   await page.getByRole('main').getByRole('button', { name: '下一步' }).click()
 
   await page.getByLabel(/作者（逗号分隔/).fill(input.authors)

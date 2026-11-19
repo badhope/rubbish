@@ -533,11 +533,13 @@ function SubmissionWizardPage() {
   const editLoadedRef = useRef<number | null>(null)
   useEffect(() => {
     if (!editId) return
-    if (editSubQ.data && editLoadedRef.current !== editId) {
-      editLoadedRef.current = editId
-      setForm(submissionToForm(editSubQ.data, editBodyQ.data?.content ?? ''))
-    }
-  }, [editId, editSubQ.data, editBodyQ.data?.content])
+    if (editLoadedRef.current === editId) return
+    // 详情和正文是两个请求：详情先回来时若先回填空正文，正文随后到达
+    // 也不会再触发（ref 已标记），移动端尤其容易丢正文。两者都结束再回填。
+    if (!editSubQ.data || editBodyQ.isLoading) return
+    editLoadedRef.current = editId
+    setForm(submissionToForm(editSubQ.data, editBodyQ.data?.content ?? ''))
+  }, [editId, editSubQ.data, editBodyQ.data?.content, editBodyQ.isLoading])
 
   // --- 新建模式：从 localStorage 恢复草稿 ---
   useEffect(() => {
