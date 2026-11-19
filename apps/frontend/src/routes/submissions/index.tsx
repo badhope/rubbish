@@ -12,7 +12,6 @@ import {
   ExternalLink,
   FileText,
   History,
-  LayoutPanelTop,
   Pencil,
   Plus,
   RefreshCw,
@@ -798,18 +797,6 @@ function SubmissionsPage() {
               {/* 操作区：可编辑状态下开放「修改稿件」（跳转四步向导）；大修/小修额外开放「重投」 */}
               {EDITABLE_STATUSES.includes(detail.status) && (
                 <div className="flex flex-wrap justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      void navigate({
-                        to: '/studio/$id',
-                        params: { id: String(detail.id) },
-                      })
-                    }}
-                  >
-                    <LayoutPanelTop className="h-4 w-4" />
-                    创作工作台
-                  </Button>
                   <Button
                     variant="outline"
                     onClick={() => {

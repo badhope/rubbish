@@ -44,7 +44,6 @@ import { Route as ForumTopicIdRouteImport } from './routes/forum/$topicId'
 import { Route as LibraryListIdRouteImport } from './routes/library/$listId'
 import { Route as ReviewAssignmentsRouteImport } from './routes/review/assignments'
 import { Route as ReviewBoardRouteImport } from './routes/review/board'
-import { Route as StudioIdRouteImport } from './routes/studio/$id'
 import { Route as SubmissionsIndexRouteImport } from './routes/submissions/index'
 import { Route as SubmissionsNewRouteImport } from './routes/submissions/new'
 import { Route as SubmissionsPendingRouteImport } from './routes/submissions/pending'
@@ -228,11 +227,6 @@ const ReviewBoardRoute = ReviewBoardRouteImport.update({
   path: '/review/board',
   getParentRoute: () => rootRouteImport,
 } as any)
-const StudioIdRoute = StudioIdRouteImport.update({
-  id: '/studio/$id',
-  path: '/studio/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SubmissionsIndexRoute = SubmissionsIndexRouteImport.update({
   id: '/submissions/',
   path: '/submissions/',
@@ -301,7 +295,6 @@ export interface FileRoutesByFullPath {
   '/library/$listId': typeof LibraryListIdRoute
   '/review/assignments': typeof ReviewAssignmentsRoute
   '/review/board': typeof ReviewBoardRoute
-  '/studio/$id': typeof StudioIdRoute
   '/submissions/new': typeof SubmissionsNewRoute
   '/submissions/pending': typeof SubmissionsPendingRoute
   '/u/$username': typeof UUsernameRoute
@@ -345,7 +338,6 @@ export interface FileRoutesByTo {
   '/library/$listId': typeof LibraryListIdRoute
   '/review/assignments': typeof ReviewAssignmentsRoute
   '/review/board': typeof ReviewBoardRoute
-  '/studio/$id': typeof StudioIdRoute
   '/submissions/new': typeof SubmissionsNewRoute
   '/submissions/pending': typeof SubmissionsPendingRoute
   '/u/$username': typeof UUsernameRoute
@@ -391,7 +383,6 @@ export interface FileRoutesById {
   '/library/$listId': typeof LibraryListIdRoute
   '/review/assignments': typeof ReviewAssignmentsRoute
   '/review/board': typeof ReviewBoardRoute
-  '/studio/$id': typeof StudioIdRoute
   '/submissions/new': typeof SubmissionsNewRoute
   '/submissions/pending': typeof SubmissionsPendingRoute
   '/u/$username': typeof UUsernameRoute
@@ -438,7 +429,6 @@ export interface FileRouteTypes {
     | '/library/$listId'
     | '/review/assignments'
     | '/review/board'
-    | '/studio/$id'
     | '/submissions/new'
     | '/submissions/pending'
     | '/u/$username'
@@ -482,7 +472,6 @@ export interface FileRouteTypes {
     | '/library/$listId'
     | '/review/assignments'
     | '/review/board'
-    | '/studio/$id'
     | '/submissions/new'
     | '/submissions/pending'
     | '/u/$username'
@@ -527,7 +516,6 @@ export interface FileRouteTypes {
     | '/library/$listId'
     | '/review/assignments'
     | '/review/board'
-    | '/studio/$id'
     | '/submissions/new'
     | '/submissions/pending'
     | '/u/$username'
@@ -568,7 +556,6 @@ export interface RootRouteChildren {
   LibraryListIdRoute: typeof LibraryListIdRoute
   ReviewAssignmentsRoute: typeof ReviewAssignmentsRoute
   ReviewBoardRoute: typeof ReviewBoardRoute
-  StudioIdRoute: typeof StudioIdRoute
   SubmissionsNewRoute: typeof SubmissionsNewRoute
   SubmissionsPendingRoute: typeof SubmissionsPendingRoute
   UUsernameRoute: typeof UUsernameRoute
@@ -827,13 +814,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReviewBoardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/studio/$id': {
-      id: '/studio/$id'
-      path: '/studio/$id'
-      fullPath: '/studio/$id'
-      preLoaderRoute: typeof StudioIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/submissions/': {
       id: '/submissions/'
       path: '/submissions'
@@ -935,7 +915,6 @@ const rootRouteChildren: RootRouteChildren = {
   LibraryListIdRoute: LibraryListIdRoute,
   ReviewAssignmentsRoute: ReviewAssignmentsRoute,
   ReviewBoardRoute: ReviewBoardRoute,
-  StudioIdRoute: StudioIdRoute,
   SubmissionsNewRoute: SubmissionsNewRoute,
   SubmissionsPendingRoute: SubmissionsPendingRoute,
   UUsernameRoute: UUsernameRoute,
