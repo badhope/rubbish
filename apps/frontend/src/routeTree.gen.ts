@@ -36,7 +36,6 @@ import { Route as DeskSubscribeRouteImport } from './routes/desk_.subscribe'
 import { Route as EditorCalibrationRouteImport } from './routes/editor/calibration'
 import { Route as EditorTriageRouteImport } from './routes/editor/triage'
 import { Route as EditorWorkbenchRouteImport } from './routes/editor/workbench'
-import { Route as FollowsIndexRouteImport } from './routes/follows/index'
 import { Route as ForumIndexRouteImport } from './routes/forum/index'
 import { Route as ForumTopicIdRouteImport } from './routes/forum/$topicId'
 import { Route as LibraryListIdRouteImport } from './routes/library/$listId'
@@ -185,11 +184,6 @@ const EditorWorkbenchRoute = EditorWorkbenchRouteImport.update({
   path: '/editor/workbench',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FollowsIndexRoute = FollowsIndexRouteImport.update({
-  id: '/follows/',
-  path: '/follows/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ForumIndexRoute = ForumIndexRouteImport.update({
   id: '/forum/',
   path: '/forum/',
@@ -286,7 +280,6 @@ export interface FileRoutesByFullPath {
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/catalog/': typeof CatalogIndexRoute
-  '/follows/': typeof FollowsIndexRoute
   '/forum/': typeof ForumIndexRoute
   '/submissions/': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
@@ -327,7 +320,6 @@ export interface FileRoutesByTo {
   '/u/$username': typeof UUsernameRoute
   '/admin': typeof AdminIndexRoute
   '/catalog': typeof CatalogIndexRoute
-  '/follows': typeof FollowsIndexRoute
   '/forum': typeof ForumIndexRoute
   '/submissions': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
@@ -370,7 +362,6 @@ export interface FileRoutesById {
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/catalog/': typeof CatalogIndexRoute
-  '/follows/': typeof FollowsIndexRoute
   '/forum/': typeof ForumIndexRoute
   '/submissions/': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
@@ -414,7 +405,6 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/admin/'
     | '/catalog/'
-    | '/follows/'
     | '/forum/'
     | '/submissions/'
     | '/auth/oidc/callback'
@@ -455,7 +445,6 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/admin'
     | '/catalog'
-    | '/follows'
     | '/forum'
     | '/submissions'
     | '/auth/oidc/callback'
@@ -497,7 +486,6 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/admin/'
     | '/catalog/'
-    | '/follows/'
     | '/forum/'
     | '/submissions/'
     | '/auth/oidc/callback'
@@ -534,7 +522,6 @@ export interface RootRouteChildren {
   SubmissionsPendingRoute: typeof SubmissionsPendingRoute
   UUsernameRoute: typeof UUsernameRoute
   CatalogIndexRoute: typeof CatalogIndexRoute
-  FollowsIndexRoute: typeof FollowsIndexRoute
   ForumIndexRoute: typeof ForumIndexRoute
   SubmissionsIndexRoute: typeof SubmissionsIndexRoute
   AuthOidcCallbackRoute: typeof AuthOidcCallbackRoute
@@ -732,13 +719,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EditorWorkbenchRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/follows/': {
-      id: '/follows/'
-      path: '/follows'
-      fullPath: '/follows/'
-      preLoaderRoute: typeof FollowsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/forum/': {
       id: '/forum/'
       path: '/forum'
@@ -877,7 +857,6 @@ const rootRouteChildren: RootRouteChildren = {
   SubmissionsPendingRoute: SubmissionsPendingRoute,
   UUsernameRoute: UUsernameRoute,
   CatalogIndexRoute: CatalogIndexRoute,
-  FollowsIndexRoute: FollowsIndexRoute,
   ForumIndexRoute: ForumIndexRoute,
   SubmissionsIndexRoute: SubmissionsIndexRoute,
   AuthOidcCallbackRoute: AuthOidcCallbackRoute,

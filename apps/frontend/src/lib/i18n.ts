@@ -25,7 +25,6 @@ const NAV_EN: Record<string, string> = {
   '/catalog': 'Papers',
   '/me': 'Me',
   '/submissions': 'My submissions',
-  '/follows': 'Following',
   '/recommendations': 'For you',
   '/review/assignments': 'Review desk',
   '/about': 'About & metrics',

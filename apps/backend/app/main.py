@@ -175,7 +175,6 @@ _SPA_ROUTE_PREFIXES = frozenset(
         "dashboard",
         "desk",
         "editor",
-        "follows",
         "forgot-password",
         "forum",
         "issues",

@@ -115,7 +115,7 @@ function MePage() {
         ) : null}
         {activeTab === 'submissions' ? <MeSubmissions section={search.section} /> : null}
         {activeTab === 'reviews' && reviewable ? <MeReviews reviewable={reviewable} /> : null}
-        {activeTab === 'library' ? <MeLibrary /> : null}
+        {activeTab === 'library' ? <MeLibrary section={search.section} /> : null}
         {activeTab === 'points' ? <MePoints profile={data} /> : null}
         {activeTab === 'settings' ? <MeSettings username={data.username} initialSection={search.section} /> : null}
       </div>

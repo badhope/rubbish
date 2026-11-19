@@ -32,6 +32,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { MeFollows } from './me-follows'
 import { shortDate } from './format'
 
 interface ListFormState {
@@ -39,7 +40,25 @@ interface ListFormState {
   description: string
 }
 
-export function MeLibrary() {
+function LibrarySectionNav({ active }: { active: 'library' | 'following' }) {
+  return (
+    <div className="flex flex-wrap gap-2 border-b pb-3">
+      <Button variant={active === 'library' ? 'default' : 'outline'} size="sm" asChild>
+        <Link to="/me" search={{ tab: 'library' }}>
+          阅读列表
+        </Link>
+      </Button>
+      <Button variant={active === 'following' ? 'default' : 'outline'} size="sm" asChild>
+        <Link to="/me" search={{ tab: 'library', section: 'following' }}>
+          关注与订阅
+        </Link>
+      </Button>
+    </div>
+  )
+}
+
+export function MeLibrary({ section }: { section?: string }) {
+  const isFollowing = section === 'following'
   const [page, setPage] = useState(1)
   const lists = useReadingLists(page, 12)
   const authors = useMyFollowedAuthors(1, 12)
@@ -52,6 +71,15 @@ export function MeLibrary() {
   const [editTarget, setEditTarget] = useState<ReadingListResponse | null>(null)
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [form, setForm] = useState<ListFormState>({ name: '', description: '' })
+
+  if (isFollowing) {
+    return (
+      <div className="space-y-5">
+        <LibrarySectionNav active="following" />
+        <MeFollows />
+      </div>
+    )
+  }
 
   if (lists.isLoading) return <Loading />
   if (lists.isError) return <ErrorState message="加载收藏失败" onRetry={() => lists.refetch()} />
@@ -107,6 +135,7 @@ export function MeLibrary() {
 
   return (
     <div className="space-y-8">
+      <LibrarySectionNav active="library" />
       <section>
         <div className="flex flex-wrap items-end justify-between gap-3 border-b pb-4">
           <div>
@@ -185,7 +214,7 @@ export function MeLibrary() {
             <h2 className="mt-1 font-serif text-xl tracking-tight">关注与订阅</h2>
           </div>
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/follows">
+            <Link to="/me" search={{ tab: 'library', section: 'following' }}>
               管理关注
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>

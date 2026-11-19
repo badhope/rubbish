@@ -1,8 +1,6 @@
 import { useState } from 'react'
-import { createFileRoute, redirect } from '@tanstack/react-router'
 import { Bookmark, Trash2, UserMinus } from 'lucide-react'
 import { toast } from 'sonner'
-import { getAuthState } from '@/lib/auth'
 import {
   useMyFollowedAuthors,
   useMySubscribedDisciplines,
@@ -10,7 +8,6 @@ import {
   useUnsubscribeDiscipline,
 } from '@/hooks/api/use-modules'
 import { extractError } from '@/lib/utils'
-import { PageHeader } from '@/components/common/page-header'
 import { Pagination } from '@/components/common/pagination'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
 import { Badge } from '@/components/ui/badge'
@@ -18,23 +15,17 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
-export const Route = createFileRoute('/follows/')({
-  beforeLoad: () => {
-    if (!getAuthState().isAuthenticated) throw redirect({ to: '/login', search: { redirect: '/follows' } })
-  },
-  component: FollowsPage,
-})
-
 type Tab = 'authors' | 'disciplines'
 
-function FollowsPage() {
+export function MeFollows() {
   const [tab, setTab] = useState<Tab>('authors')
   return (
     <div>
-      <PageHeader
-        title="关注与订阅"
-        description="管理你关注的作者和订阅的学科。"
-      />
+      <div className="border-b pb-4">
+        <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">FOLLOWING</p>
+        <h2 className="mt-1 font-serif text-xl tracking-tight">关注与订阅</h2>
+        <p className="mt-1 text-xs text-muted-foreground">管理你关注的作者和订阅的学科；有新论文时会出现在推荐里。</p>
+      </div>
       <Tabs
         value={tab}
         onValueChange={(v) => setTab(v as Tab)}
