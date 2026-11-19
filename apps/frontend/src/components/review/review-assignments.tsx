@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { createFileRoute, Link, redirect, useNavigate, useSearch } from '@tanstack/react-router'
+import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { Check, Download, Eye, FileText, X, Zap } from 'lucide-react'
 import { toast } from 'sonner'
-import { getAuthState } from '@/lib/auth'
 import {
   downloadSubmissionFile,
   useAcceptAssignment,
@@ -105,15 +104,8 @@ function SimilarityNotice({
   )
 }
 
-export const Route = createFileRoute('/review/assignments')({
-  beforeLoad: () => {
-    // 审稿工作台需要登录；具体 reviewer 角色由后端强制（403 由 UI 兜底）
-    if (!getAuthState().isAuthenticated) throw redirect({ to: '/login', search: { redirect: '/review/assignments' } })
-  },
-  component: ReviewWorkbenchPage,
-})
-
 interface ReviewSearch {
+  tab?: 'assignments'
   status?: AssignmentStatus | 'all'
   page?: number
 }
@@ -144,7 +136,7 @@ function statusBadge(status: AssignmentStatus) {
   }
 }
 
-function ReviewWorkbenchPage() {
+export function ReviewAssignments() {
   const navigate = useNavigate()
   const search = useSearch({ strict: false }) as ReviewSearch
   const statusTab = (search.status ?? 'all') as AssignmentStatus | 'all'
@@ -174,8 +166,8 @@ function ReviewWorkbenchPage() {
 
   const updateSearch = (patch: Partial<ReviewSearch>) => {
     void navigate({
-      to: '/review/assignments',
-      search: { ...search, ...patch },
+      to: '/review',
+      search: { tab: 'assignments', ...search, ...patch },
       replace: true,
     })
   }

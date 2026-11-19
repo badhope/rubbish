@@ -61,7 +61,8 @@ const WORKFLOWS: {
     {
       title: "审稿工作台",
       desc: "邀请 · 评审 · 意见",
-      to: "/review/assignments",
+      to: "/review",
+      search: { tab: "assignments" },
       icon: ClipboardCheck,
     },
     {

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { Eye, UserCheck } from 'lucide-react'
 import { useAuthStore } from '@/lib/auth'
@@ -10,11 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-export const Route = createFileRoute('/review/board')({
-  component: ReviewBoardPage,
-})
-
-function ReviewBoardPage() {
+export function ReviewBoard() {
   const { data, isLoading, isError, refetch } = useReviewBoard()
   const interest = useExpressReviewInterest()
   const token = useAuthStore((s) => s.token)

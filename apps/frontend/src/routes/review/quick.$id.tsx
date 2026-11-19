@@ -100,7 +100,7 @@ function QuickReviewPage() {
         }
       }
       toast.success(files.length ? '快速评审与附件已提交' : '快速评审已提交')
-      void navigate({ to: '/review/assignments' })
+      void navigate({ to: '/review', search: { tab: 'assignments' } })
     } catch (err) {
       toast.error(extractError(err, '提交失败'))
     }
@@ -123,7 +123,7 @@ function QuickReviewPage() {
         title="快速评审"
         description="为手机端准备的单页评审：上面读稿，下面打分，提交后即可回到任务列表。"
         actions={
-          <Link to="/review/assignments">
+          <Link to="/review" search={{ tab: 'assignments' }}>
             <Button variant="outline" size="sm">
               <ArrowLeft className="mr-1 h-4 w-4" aria-hidden />
               返回工作台
@@ -212,7 +212,7 @@ function QuickReviewPage() {
             </CardContent>
           </Card>
           <div className="sticky bottom-0 flex gap-2 border-t bg-background/95 px-1 py-3 backdrop-blur">
-            <Button type="button" variant="outline" onClick={() => void navigate({ to: '/review/assignments' })}>
+            <Button type="button" variant="outline" onClick={() => void navigate({ to: '/review', search: { tab: 'assignments' } })}>
               取消
             </Button>
             <Button type="submit" className="flex-1" disabled={submitMut.isPending}>

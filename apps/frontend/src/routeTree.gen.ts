@@ -34,8 +34,7 @@ import { Route as EditorCalibrationRouteImport } from './routes/editor/calibrati
 import { Route as ForumIndexRouteImport } from './routes/forum/index'
 import { Route as ForumTopicIdRouteImport } from './routes/forum/$topicId'
 import { Route as LibraryListIdRouteImport } from './routes/library/$listId'
-import { Route as ReviewAssignmentsRouteImport } from './routes/review/assignments'
-import { Route as ReviewBoardRouteImport } from './routes/review/board'
+import { Route as ReviewIndexRouteImport } from './routes/review/index'
 import { Route as SubmissionsIndexRouteImport } from './routes/submissions/index'
 import { Route as SubmissionsNewRouteImport } from './routes/submissions/new'
 import { Route as SubmissionsPendingRouteImport } from './routes/submissions/pending'
@@ -169,14 +168,9 @@ const LibraryListIdRoute = LibraryListIdRouteImport.update({
   path: '/library/$listId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ReviewAssignmentsRoute = ReviewAssignmentsRouteImport.update({
-  id: '/review/assignments',
-  path: '/review/assignments',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReviewBoardRoute = ReviewBoardRouteImport.update({
-  id: '/review/board',
-  path: '/review/board',
+const ReviewIndexRoute = ReviewIndexRouteImport.update({
+  id: '/review/',
+  path: '/review/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SubmissionsIndexRoute = SubmissionsIndexRouteImport.update({
@@ -238,14 +232,13 @@ export interface FileRoutesByFullPath {
   '/editor/calibration': typeof EditorCalibrationRoute
   '/forum/$topicId': typeof ForumTopicIdRoute
   '/library/$listId': typeof LibraryListIdRoute
-  '/review/assignments': typeof ReviewAssignmentsRoute
-  '/review/board': typeof ReviewBoardRoute
   '/submissions/new': typeof SubmissionsNewRoute
   '/submissions/pending': typeof SubmissionsPendingRoute
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/catalog/': typeof CatalogIndexRoute
   '/forum/': typeof ForumIndexRoute
+  '/review/': typeof ReviewIndexRoute
   '/submissions/': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
   '/review/quick/$id': typeof ReviewQuickIdRoute
@@ -273,14 +266,13 @@ export interface FileRoutesByTo {
   '/editor/calibration': typeof EditorCalibrationRoute
   '/forum/$topicId': typeof ForumTopicIdRoute
   '/library/$listId': typeof LibraryListIdRoute
-  '/review/assignments': typeof ReviewAssignmentsRoute
-  '/review/board': typeof ReviewBoardRoute
   '/submissions/new': typeof SubmissionsNewRoute
   '/submissions/pending': typeof SubmissionsPendingRoute
   '/u/$username': typeof UUsernameRoute
   '/admin': typeof AdminIndexRoute
   '/catalog': typeof CatalogIndexRoute
   '/forum': typeof ForumIndexRoute
+  '/review': typeof ReviewIndexRoute
   '/submissions': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
   '/review/quick/$id': typeof ReviewQuickIdRoute
@@ -310,14 +302,13 @@ export interface FileRoutesById {
   '/editor/calibration': typeof EditorCalibrationRoute
   '/forum/$topicId': typeof ForumTopicIdRoute
   '/library/$listId': typeof LibraryListIdRoute
-  '/review/assignments': typeof ReviewAssignmentsRoute
-  '/review/board': typeof ReviewBoardRoute
   '/submissions/new': typeof SubmissionsNewRoute
   '/submissions/pending': typeof SubmissionsPendingRoute
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/catalog/': typeof CatalogIndexRoute
   '/forum/': typeof ForumIndexRoute
+  '/review/': typeof ReviewIndexRoute
   '/submissions/': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
   '/review/quick/$id': typeof ReviewQuickIdRoute
@@ -348,14 +339,13 @@ export interface FileRouteTypes {
     | '/editor/calibration'
     | '/forum/$topicId'
     | '/library/$listId'
-    | '/review/assignments'
-    | '/review/board'
     | '/submissions/new'
     | '/submissions/pending'
     | '/u/$username'
     | '/admin/'
     | '/catalog/'
     | '/forum/'
+    | '/review/'
     | '/submissions/'
     | '/auth/oidc/callback'
     | '/review/quick/$id'
@@ -383,14 +373,13 @@ export interface FileRouteTypes {
     | '/editor/calibration'
     | '/forum/$topicId'
     | '/library/$listId'
-    | '/review/assignments'
-    | '/review/board'
     | '/submissions/new'
     | '/submissions/pending'
     | '/u/$username'
     | '/admin'
     | '/catalog'
     | '/forum'
+    | '/review'
     | '/submissions'
     | '/auth/oidc/callback'
     | '/review/quick/$id'
@@ -419,14 +408,13 @@ export interface FileRouteTypes {
     | '/editor/calibration'
     | '/forum/$topicId'
     | '/library/$listId'
-    | '/review/assignments'
-    | '/review/board'
     | '/submissions/new'
     | '/submissions/pending'
     | '/u/$username'
     | '/admin/'
     | '/catalog/'
     | '/forum/'
+    | '/review/'
     | '/submissions/'
     | '/auth/oidc/callback'
     | '/review/quick/$id'
@@ -451,13 +439,12 @@ export interface RootRouteChildren {
   EditorCalibrationRoute: typeof EditorCalibrationRoute
   ForumTopicIdRoute: typeof ForumTopicIdRoute
   LibraryListIdRoute: typeof LibraryListIdRoute
-  ReviewAssignmentsRoute: typeof ReviewAssignmentsRoute
-  ReviewBoardRoute: typeof ReviewBoardRoute
   SubmissionsNewRoute: typeof SubmissionsNewRoute
   SubmissionsPendingRoute: typeof SubmissionsPendingRoute
   UUsernameRoute: typeof UUsernameRoute
   CatalogIndexRoute: typeof CatalogIndexRoute
   ForumIndexRoute: typeof ForumIndexRoute
+  ReviewIndexRoute: typeof ReviewIndexRoute
   SubmissionsIndexRoute: typeof SubmissionsIndexRoute
   AuthOidcCallbackRoute: typeof AuthOidcCallbackRoute
   ReviewQuickIdRoute: typeof ReviewQuickIdRoute
@@ -640,18 +627,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LibraryListIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/review/assignments': {
-      id: '/review/assignments'
-      path: '/review/assignments'
-      fullPath: '/review/assignments'
-      preLoaderRoute: typeof ReviewAssignmentsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/review/board': {
-      id: '/review/board'
-      path: '/review/board'
-      fullPath: '/review/board'
-      preLoaderRoute: typeof ReviewBoardRouteImport
+    '/review/': {
+      id: '/review/'
+      path: '/review'
+      fullPath: '/review/'
+      preLoaderRoute: typeof ReviewIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/submissions/': {
@@ -746,13 +726,12 @@ const rootRouteChildren: RootRouteChildren = {
   EditorCalibrationRoute: EditorCalibrationRoute,
   ForumTopicIdRoute: ForumTopicIdRoute,
   LibraryListIdRoute: LibraryListIdRoute,
-  ReviewAssignmentsRoute: ReviewAssignmentsRoute,
-  ReviewBoardRoute: ReviewBoardRoute,
   SubmissionsNewRoute: SubmissionsNewRoute,
   SubmissionsPendingRoute: SubmissionsPendingRoute,
   UUsernameRoute: UUsernameRoute,
   CatalogIndexRoute: CatalogIndexRoute,
   ForumIndexRoute: ForumIndexRoute,
+  ReviewIndexRoute: ReviewIndexRoute,
   SubmissionsIndexRoute: SubmissionsIndexRoute,
   AuthOidcCallbackRoute: AuthOidcCallbackRoute,
   ReviewQuickIdRoute: ReviewQuickIdRoute,

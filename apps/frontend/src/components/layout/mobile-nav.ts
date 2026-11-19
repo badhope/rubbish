@@ -48,7 +48,7 @@ export const MOBILE_TABS: MobileTab[] = [
 // 折叠菜单（header 右上角"⋯"弹出）：收进抽屉时代的次级入口，
 // 避免删抽屉后指标/卷期/政策/关于/后台等入口失联。
 export const MOBILE_MORE: MobileMoreItem[] = [
-  { to: '/review/assignments', label: '审稿工作台', icon: ClipboardCheck, auth: true, roles: ['reviewer', 'senior_reviewer', 'editor_in_chief'], group: '工作台' },
+  { to: '/review', search: { tab: 'assignments' }, label: '我的审稿', icon: ClipboardCheck, auth: true, roles: ['reviewer', 'senior_reviewer', 'editor_in_chief'], group: '工作台' },
   {
     to: '/submissions/pending',
     search: { stage: 'pipeline' },
@@ -58,7 +58,7 @@ export const MOBILE_MORE: MobileMoreItem[] = [
     roles: ['editor', 'section_editor', 'board_editor', 'deputy_editor', 'chief_editor', 'editor_in_chief'],
     group: '工作台',
   },
-  { to: '/review/board', label: '审稿广场', icon: Eye, group: '期刊' },
+  { to: '/review', search: { tab: 'board' }, label: '审稿广场', icon: Eye, group: '期刊' },
   { to: '/about', label: '关于与指标', icon: Building2, group: '期刊' },
   { to: '/guide', label: '投稿与操作指南', icon: PenLine, group: '期刊' },
   { to: '/forum', search: { view: 'feedback' }, label: '反馈与建议', icon: MessageSquareText, group: '设置' },

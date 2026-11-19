@@ -49,7 +49,7 @@ export function MeReviews({ reviewable }: { reviewable: boolean }) {
           </p>
         </div>
         <Button variant="outline" size="sm" asChild>
-          <Link to="/review/assignments">
+          <Link to="/review" search={{ tab: 'assignments' }}>
             打开审稿工作台
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>

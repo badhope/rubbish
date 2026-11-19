@@ -56,8 +56,9 @@ const NAV: NavItem[] = [
 
   // 我的工作：只放需要登录的个人链路。
   {
-    to: '/review/assignments',
-    label: '审稿工作台',
+    to: '/review',
+    search: { tab: 'assignments' },
+    label: '我的审稿',
     icon: ClipboardCheck,
     auth: true,
     roles: ['reviewer', 'senior_reviewer', 'editor_in_chief'],
@@ -76,7 +77,7 @@ const NAV: NavItem[] = [
   },
 
   // 期刊门面：栏目和卷期都收进 /catalog 的筛选；这里只保留审稿广场、关于、指南。
-  { to: '/review/board', label: '审稿广场', icon: Eye, group: '期刊' },
+  { to: '/review', search: { tab: 'board' }, label: '审稿广场', icon: Eye, group: '期刊' },
   { to: '/about', label: '关于与指标', icon: Building2, group: '期刊' },
   { to: '/guide', label: '投稿指南', icon: PenLine, group: '期刊' },
 
@@ -91,14 +92,24 @@ const PUBLIC_NAV = NAV.slice(0, 5)
 const WORK_ROUTE_PREFIXES = [
   '/admin',
   '/editor',
-  '/review/assignments',
   '/review/quick',
   '/submissions/pending',
 ]
 
-function isWorkRoute(pathname: string): boolean {
+function isWorkRoute(pathname: string, search?: Record<string, unknown>): boolean {
+  if (pathname === '/review') return search?.tab === 'assignments'
   return WORK_ROUTE_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  )
+}
+
+function matchesNavSearch(
+  expected: Record<string, string> | undefined,
+  current: Record<string, unknown> | undefined,
+): boolean {
+  if (!expected) return true
+  return Object.entries(expected).every(
+    ([key, value]) => String(current?.[key] ?? '') === value,
   )
 }
 
@@ -149,6 +160,7 @@ export function AppShell() {
   const displayName = user?.display_name || user?.username || ''
   const navigate = useNavigate()
   const location = useLocation()
+  const currentSearch = location.search as Record<string, unknown>
   const logoutMut = useLogout()
   const lang = useLang()
 
@@ -162,7 +174,10 @@ export function AppShell() {
 
   // 当前页面所在的组自动展开，用户不用先找自己在哪。
   // 只依赖字符串，不依赖每次 render 都新建的 visibleNav，否则用户手动切组会被重置。
-  const activeItem = visibleNav.find((item) => item.to === activePath)
+  const activeItem = visibleNav.find(
+    (item) =>
+      item.to === activePath && matchesNavSearch(item.search, currentSearch),
+  )
   const activeGroup = activeItem?.group
   const activeSubgroup = activeItem?.subgroup
   useEffect(() => {
@@ -261,9 +276,9 @@ export function AppShell() {
         </DropdownMenuItem>
         {(user.roles?.includes('reviewer') || user.roles?.includes('senior_reviewer') || user.roles?.includes('editor_in_chief') || isAdmin) && (
           <DropdownMenuItem asChild>
-            <Link to="/review/assignments">
+            <Link to="/review" search={{ tab: 'assignments' }}>
               <ClipboardCheck className="h-4 w-4" />
-              {text('审稿工作台', lang)}
+              {text('我的审稿', lang)}
             </Link>
           </DropdownMenuItem>
         )}
@@ -311,7 +326,8 @@ export function AppShell() {
 
   const renderNavLink = (item: NavItem) => {
     const Icon = item.icon
-    const active = item.to === activePath
+    const active =
+      item.to === activePath && matchesNavSearch(item.search, currentSearch)
     return (
       <Link
         key={item.to}
@@ -353,7 +369,7 @@ export function AppShell() {
 
   // 公开页壳：桌面顶部 5 导航，不再套工作台全局左栏。
   // 工作台 / 后台 / 审稿指派仍走下面的业务左栏。
-  if (!isWorkRoute(location.pathname)) {
+  if (!isWorkRoute(location.pathname, currentSearch)) {
     const publicActive = resolvePublicNavPath(location.pathname)
     return (
       <div className="min-h-screen bg-background">

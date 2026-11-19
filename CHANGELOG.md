@@ -22,6 +22,7 @@
 - 论坛列表的编辑器与反馈墙改为按需加载，首屏不再静态加载 Markdown/KaTeX 渲染。
 - `/catalog` 删除封面网格视图与 `CatalogGridCard` 死组件，只保留默认索引和表格列表。
 - 初筛队列 `/editor/triage` 并入 `/submissions/pending?stage=triage`，编辑流水线 `/editor/workbench` 并入 `?stage=pipeline`，两个独立路由删除，导航与快捷入口同步。
+- 审稿工作台 `/review/assignments` 与审稿广场 `/review/board` 合并为 `/review` 单壳，用 `?tab=assignments|board` 切换；公开广场仍按公开页外壳判断。
 - 发帖改为移动端全屏、桌面端大面板；标题优先聚焦，版块收成“发到：… 修改”一行，默认取当前浏览的子板块。
 - 论坛编辑器 compact 工具栏只留加粗、斜体、链接、列表、表情、图片，固定单行。
 - 发帖草稿按 400ms 防抖写入本机；重新打开自动恢复，发布后清除。
