@@ -298,6 +298,11 @@ function ForumTopicPage() {
     onError: (err) => toast.error(extractError(err, '回复失败')),
   })
 
+  const sendReply = () => {
+    if (replyMut.isPending || reply.trim().length < 1) return
+    replyMut.mutate()
+  }
+
   const deleteMut = useMutation({
     mutationFn: async () => (await api.delete(`/forum/topics/${id}`)).data,
     onSuccess: () => {
@@ -524,6 +529,9 @@ function ForumTopicPage() {
                   onChange={setReply}
                   onUploadImage={uploadForumImage}
                   minHeight={160}
+                  compact
+                  autoFocus
+                  onSubmitShortcut={sendReply}
                   placeholder={
                     replyTo
                       ? `回复 @${replyTo.author?.username ?? '对方'}：说清你同意哪一点、补充什么证据。`
@@ -532,10 +540,10 @@ function ForumTopicPage() {
                 />
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] text-muted-foreground">
-                    登录即可回复；请针对内容，不针对人。
+                    登录即可回复；Ctrl / ⌘ + Enter 发送；请针对内容，不针对人。
                   </span>
                   <Button
-                    onClick={() => replyMut.mutate()}
+                    onClick={sendReply}
                     disabled={replyMut.isPending || reply.trim().length < 1}
                   >
                     <Send className="h-4 w-4" />

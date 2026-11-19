@@ -67,6 +67,12 @@ export interface MarkdownEditorProps {
   snapshotKey?: string
   /** Studio 工作台：显示学术插入菜单（公式/脚注/图注/表题/参考文献/交叉引用）。 */
   academicTools?: boolean
+  /** 社区发帖/回复：只保留输入、排版、表情、图片；隐藏查找、大纲、专注、分栏等重工具。 */
+  compact?: boolean
+  /** 社区输入框的 Ctrl/Cmd+Enter 发布动作。 */
+  onSubmitShortcut?: () => void
+  /** 进入输入场景时直接聚焦正文，移动端随之弹键盘。 */
+  autoFocus?: boolean
 }
 
 interface ToolAction {
@@ -266,6 +272,9 @@ export function MarkdownEditor({
   onUploadImage,
   snapshotKey,
   academicTools = false,
+  compact = false,
+  onSubmitShortcut,
+  autoFocus = false,
 }: MarkdownEditorProps) {
   const areaRef = useRef<HTMLTextAreaElement | null>(null)
   const imageRef = useRef<HTMLInputElement | null>(null)
@@ -622,6 +631,11 @@ export function MarkdownEditor({
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     const modifier = e.ctrlKey || e.metaKey
+    if (modifier && e.key === 'Enter' && onSubmitShortcut) {
+      e.preventDefault()
+      onSubmitShortcut()
+      return
+    }
     if (modifier && !e.altKey) {
       const key = e.key.toLowerCase()
       if (key === 'z') {
@@ -692,22 +706,26 @@ export function MarkdownEditor({
           disabled={disabled}
           onPick={applyTool}
         />
-        <TableMenu
-          disabled={disabled}
-          onInsert={() => applyTool(TABLE)}
-          onEdit={applyTableEdit}
-        />
-        {academicTools && <AcademicMenu disabled={disabled} onInsert={insertText} />}
-        <ToolButton
-          tool={{ label: '↶', title: '撤销（Ctrl+Z）' }}
-          disabled={disabled || !canUndo}
-          onPick={undo}
-        />
-        <ToolButton
-          tool={{ label: '↷', title: '重做（Ctrl+Shift+Z）' }}
-          disabled={disabled || !canRedo}
-          onPick={redo}
-        />
+        {!compact && (
+          <>
+            <TableMenu
+              disabled={disabled}
+              onInsert={() => applyTool(TABLE)}
+              onEdit={applyTableEdit}
+            />
+            {academicTools && <AcademicMenu disabled={disabled} onInsert={insertText} />}
+            <ToolButton
+              tool={{ label: '↶', title: '撤销（Ctrl+Z）' }}
+              disabled={disabled || !canUndo}
+              onPick={undo}
+            />
+            <ToolButton
+              tool={{ label: '↷', title: '重做（Ctrl+Shift+Z）' }}
+              disabled={disabled || !canRedo}
+              onPick={redo}
+            />
+          </>
+        )}
         <EmojiStickerPicker onInsert={insertText} disabled={disabled} />
         {onUploadImage && (
           <>
@@ -735,7 +753,7 @@ export function MarkdownEditor({
         )}
 
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          {snapshotKey && (
+          {!compact && snapshotKey && (
             <Button
               type="button"
               variant="ghost"
@@ -749,46 +767,50 @@ export function MarkdownEditor({
               版本
             </Button>
           )}
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            aria-label="查找替换"
-            title="查找替换（Ctrl+F）"
-            onClick={() => setFindOpen((open) => !open)}
-            className="h-7 gap-1 px-1.5 text-xs text-muted-foreground"
-          >
-            <Search className="h-3.5 w-3.5" />
-            查找
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            aria-label="文档大纲"
-            title="文档大纲"
-            onClick={() => setOutlineOpen((open) => !open)}
-            className="h-7 gap-1 px-1.5 text-xs text-muted-foreground"
-          >
-            <ListTree className="h-3.5 w-3.5" />
-            大纲
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            aria-label="专注模式"
-            title={focusMode ? '退出专注模式' : '专注模式'}
-            onClick={() => setFocusMode((active) => !active)}
-            className="h-7 gap-1 px-1.5 text-xs text-muted-foreground"
-          >
-            {focusMode ? (
-              <X className="h-3.5 w-3.5" />
-            ) : (
-              <Focus className="h-3.5 w-3.5" />
-            )}
-            {focusMode ? '退出' : '专注'}
-          </Button>
+          {!compact && (
+            <>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                aria-label="查找替换"
+                title="查找替换（Ctrl+F）"
+                onClick={() => setFindOpen((open) => !open)}
+                className="h-7 gap-1 px-1.5 text-xs text-muted-foreground"
+              >
+                <Search className="h-3.5 w-3.5" />
+                查找
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                aria-label="文档大纲"
+                title="文档大纲"
+                onClick={() => setOutlineOpen((open) => !open)}
+                className="h-7 gap-1 px-1.5 text-xs text-muted-foreground"
+              >
+                <ListTree className="h-3.5 w-3.5" />
+                大纲
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                aria-label="专注模式"
+                title={focusMode ? '退出专注模式' : '专注模式'}
+                onClick={() => setFocusMode((active) => !active)}
+                className="h-7 gap-1 px-1.5 text-xs text-muted-foreground"
+              >
+                {focusMode ? (
+                  <X className="h-3.5 w-3.5" />
+                ) : (
+                  <Focus className="h-3.5 w-3.5" />
+                )}
+                {focusMode ? '退出' : '专注'}
+              </Button>
+            </>
+          )}
           <span
             className="text-xs tabular-nums text-muted-foreground"
             data-testid="md-char-count"
@@ -803,9 +825,11 @@ export function MarkdownEditor({
               <TabsTrigger value="edit" className="h-7 px-2 text-xs">
                 编辑
               </TabsTrigger>
-              <TabsTrigger value="split" className="h-7 px-2 text-xs">
-                分栏
-              </TabsTrigger>
+              {!compact && (
+                <TabsTrigger value="split" className="h-7 px-2 text-xs">
+                  分栏
+                </TabsTrigger>
+              )}
               <TabsTrigger value="preview" className="h-7 px-2 text-xs">
                 预览
               </TabsTrigger>
@@ -945,6 +969,7 @@ export function MarkdownEditor({
                 placeholder ? `Markdown 正文：${placeholder}` : 'Markdown 正文'
               }
               placeholder={placeholder}
+              autoFocus={autoFocus}
               spellCheck={false}
               style={{ minHeight }}
               className="w-full resize-y rounded-b-lg bg-transparent px-3 py-2 font-mono text-sm leading-6 outline-none placeholder:text-muted-foreground disabled:opacity-50"

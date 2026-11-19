@@ -206,6 +206,18 @@ function ForumListPage() {
     onError: (err) => toast.error(extractError(err, '举报失败')),
   })
 
+  const publishTopic = () => {
+    if (
+      createMut.isPending ||
+      !form.board_id ||
+      form.title.trim().length < 2 ||
+      form.body.trim().length < 2
+    ) {
+      return
+    }
+    createMut.mutate()
+  }
+
   const openComposer = () => {
     if (!isAuthenticated) {
       void navigate({ to: '/login', search: { redirect: '/forum' } })
@@ -537,8 +549,14 @@ function ForumListPage() {
                 onChange={(body) => setForm((p) => ({ ...p, body }))}
                 onUploadImage={uploadForumImage}
                 minHeight={180}
+                compact
+                autoFocus
+                onSubmitShortcut={publishTopic}
                 placeholder="支持 Markdown。说清背景、你的判断、以及希望得到什么回应。"
               />
+              <p className="text-[11px] text-muted-foreground">
+                Ctrl / ⌘ + Enter 直接发布
+              </p>
             </div>
           </div>
           <DialogFooter>
@@ -546,7 +564,7 @@ function ForumListPage() {
               取消
             </Button>
             <Button
-              onClick={() => createMut.mutate()}
+              onClick={publishTopic}
               disabled={createMut.isPending || !form.board_id || form.title.trim().length < 2 || form.body.trim().length < 2}
             >
               {createMut.isPending ? '发布中…' : '发布'}

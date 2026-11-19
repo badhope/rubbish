@@ -12,6 +12,7 @@
 - `/submissions` 页头只保留“新建提交”，主编工作台收进用户菜单。
 - `/catalog/new` 删除；管理员资源录入收进 `/admin/journal?section=resources`。
 - `/studio/$id` 删除；稿件修改统一走 `/submissions/new?edit=<id>`，审稿意见继续在投稿详情中展示。
+- Markdown 编辑器新增 `compact` 模式：论坛发帖/回复隐藏查找、大纲、专注、版本、表格、分栏，保留输入、基础排版、表情、图片；正文自动聚焦，Ctrl/⌘+Enter 可直接发布。
 - sitemap 改用 `/catalog?section=` 与 `/catalog?volume=&issue=`，不再收录旧归档/栏目页。
 
 ### Removed
