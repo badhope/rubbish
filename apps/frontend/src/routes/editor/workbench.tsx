@@ -323,7 +323,7 @@ function EditorWorkbenchPage() {
         description="五栏流水线：待指派 → 评审中 → 返修中 → 待裁决 → 已决定。"
         actions={
           <>
-            <Link to="/editor/triage">
+            <Link to="/submissions/pending" search={{ stage: 'triage' }}>
               <Button variant="outline" size="sm">
                 <FileText className="mr-1 h-4 w-4" aria-hidden />
                 初筛队列

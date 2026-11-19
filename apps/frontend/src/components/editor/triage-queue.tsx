@@ -1,13 +1,7 @@
 import { useState } from "react";
-import {
-  createFileRoute,
-  Link,
-  redirect,
-  useNavigate,
-} from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, Clock, FilePlus2, Send, Undo2, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import { getAuthState } from "@/lib/auth";
 import { useTriageQueue, useTriageSubmission } from "@/hooks/api/use-modules";
 import type { SubmissionResponse } from "@/lib/types";
 import { PageHeader } from "@/components/common/page-header";
@@ -31,23 +25,6 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-export const Route = createFileRoute("/editor/triage")({
-  beforeLoad: () => {
-    const state = getAuthState();
-    if (!state.isAuthenticated) throw redirect({ to: "/login" });
-    const roles = state.user?.roles ?? [];
-    if (
-      !state.isAdmin &&
-      !roles.some((r) =>
-        ["editor", "section_editor", "editor_in_chief"].includes(r),
-      )
-    ) {
-      throw redirect({ to: "/403" });
-    }
-  },
-  component: TriagePage,
-});
-
 type Action = "return_for_revision" | "desk_reject" | "request_materials";
 
 function ageLabel(iso: string): string {
@@ -56,7 +33,7 @@ function ageLabel(iso: string): string {
   return `${Math.floor(hours / 24)} 天`;
 }
 
-function TriagePage() {
+export function TriageQueue() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const { data, isLoading, isError, refetch } = useTriageQueue(page, 20);

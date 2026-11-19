@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { waitingChip } from '@/components/common/waiting-chip'
+import { TriageQueue } from '@/components/editor/triage-queue'
 import { getAuthState } from '@/lib/auth'
 import { normalizeAbstract } from '@/lib/abstract'
 import { useAuth } from '@/hooks/use-auth'
@@ -118,6 +119,7 @@ const STATUS_TABS: { value: StatusTab; label: string }[] = [
 interface PendingSearch {
   status?: StatusTab
   page?: number
+  stage?: 'triage'
 }
 
 function statusBadge(status: string) {
@@ -238,6 +240,10 @@ function PendingSubmissionsPage() {
   const decisionReportsQ = useSubmissionReports(decisionTarget?.id ?? 0)
   const decisionMatrixQ = useReviewMatrix(decisionTarget?.id ?? 0)
 
+  if (search.stage === 'triage') {
+    return <TriageQueue />
+  }
+
   const updateSearch = (patch: Partial<PendingSearch>) => {
     void navigate({
       to: '/submissions/pending',
@@ -303,6 +309,14 @@ function PendingSubmissionsPage() {
       <PageHeader
         title="初筛工作台"
         description="分配审稿人、查看审稿报告、做最终决定。支持按状态筛选全部提交。"
+        actions={
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/submissions/pending" search={{ stage: 'triage' }}>
+              <ClipboardList className="mr-1 h-4 w-4" />
+              初筛队列
+            </Link>
+          </Button>
+        }
       />
 
       {isSectionOnly && (

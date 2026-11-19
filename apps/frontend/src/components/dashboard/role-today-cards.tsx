@@ -136,7 +136,8 @@ function EditorTodayCard() {
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
         <Link
-          to="/editor/triage"
+          to="/submissions/pending"
+          search={{ stage: 'triage' }}
           className="flex items-center justify-between rounded-md border border-dashed px-3 py-2 transition-colors hover:border-primary/40 hover:bg-muted/30"
         >
           <span className="text-xs text-muted-foreground">待初筛</span>
