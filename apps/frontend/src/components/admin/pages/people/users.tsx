@@ -63,7 +63,7 @@ const ROLE_LABELS: Record<AssignableRole, string> = {
   senior_reviewer: '资深审稿人',
   editor: '编辑',
   section_editor: '栏目编辑',
-  shop_manager: '商城主编',
+  shop_manager: '积分管理员',
   author: '作者',
   reader: '读者',
 }

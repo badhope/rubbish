@@ -128,7 +128,7 @@ export function MePoints({ profile }: { profile: MeProfile }) {
         />
         {items.isLoading ? <p className="border-y py-6 text-sm text-muted-foreground">加载货架…</p> : null}
         {!items.isLoading && (items.data?.length ?? 0) === 0 ? (
-          <p className="border-y py-6 text-sm text-muted-foreground">商城还没有上架货品。</p>
+          <p className="border-y py-6 text-sm text-muted-foreground">积分货架还没有上架货品。</p>
         ) : null}
         {(items.data?.length ?? 0) > 0 ? (
           <div className="divide-y border-y">

@@ -157,7 +157,6 @@ export const keys = {
   gamification: {
     profile: () => ['gamification', 'profile'] as const,
     ladder: () => ['gamification', 'ladder'] as const,
-    checkin: () => ['gamification', 'checkin'] as const,
   },
   announcements: {
     active: () => ['announcements', 'active'] as const,

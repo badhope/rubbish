@@ -144,7 +144,7 @@ async def _ensure_review_roles(session: AsyncSession, tenant: Tenant) -> None:
         (ROLE_BOARD_EDITOR, "Editorial board (screening, assigning reviewers, recommendation)"),
         (ROLE_EDITOR, "Editor (assign reviewers + desk screening)"),
         (ROLE_REVIEWER, "Peer reviewer (accept/decline invitations + submit reports)"),
-        (ROLE_SHOP_MANAGER, "Shop manager (R-coin shop catalog, pricing and issuance rules)"),
+        (ROLE_SHOP_MANAGER, "Points manager (points catalog, pricing and issuance rules)"),
     ):
         existing = (
             await session.execute(

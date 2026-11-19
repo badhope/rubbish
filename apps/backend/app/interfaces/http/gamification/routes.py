@@ -38,7 +38,7 @@ async def require_shop_manager(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    """商城后台专用：主编/副主编，或被单独授予 shop_manager 的账号。"""
+    """积分后台专用：主编/副主编，或被单独授予 shop_manager 的账号。"""
     if current_user.is_admin:
         return current_user
     if await user_has_role(db, current_user, "editor_in_chief") or await user_has_role(
@@ -50,7 +50,7 @@ async def require_shop_manager(
         detail={
             "code": "insufficient_permission",
             "required_role": "shop_manager",
-            "message": "需要商城主编权限。",
+            "message": "需要积分管理权限。",
         },
     )
 
@@ -203,15 +203,6 @@ async def acknowledge_rules(
     return {"rules_version": CURRENT_RULES_VERSION}
 
 
-@router.get("/checkin")
-async def get_checkin_status(
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-) -> dict[str, object]:
-    """每日签到状态：今日是否已签、连续天数、累计天数与 XP 口径。"""
-    return await service.checkin_status(db, current_user)
-
-
 @router.get("/wallet")
 async def get_wallet(
     current_user: User = Depends(get_current_user),
@@ -242,18 +233,6 @@ async def post_unlock_accent(
         return await currency.unlock_accent(db, current_user)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
-
-
-@router.post("/checkin")
-async def post_daily_checkin(
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-) -> dict[str, object]:
-    """执行每日签到（每天一次，重复签到幂等返回当前状态）。
-
-    连续每满 7 天额外发放 weekly_bonus（见 service.daily_checkin）。
-    """
-    return await service.daily_checkin(db, current_user)
 
 
 @router.get("/users/{user_id}/level", response_model=PublicUserLevel)

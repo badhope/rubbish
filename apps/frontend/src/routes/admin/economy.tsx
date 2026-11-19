@@ -4,21 +4,21 @@ import { requireShopManagerGuard } from '@/lib/route-guards'
 import { useAuth } from '@/hooks/use-auth'
 import { AdminSectionTabs, type AdminSectionItem } from '@/components/admin/admin-section-tabs'
 import FinancePage from '@/components/admin/pages/economy/finance'
-import ShopPage from '@/components/admin/pages/economy/shop'
+import PointsPage from '@/components/admin/pages/economy/points'
 
-type SectionKey = 'shop' | 'finance'
+type SectionKey = 'points' | 'finance'
 
 interface EconomySearch {
   section?: string
 }
 
 const ALL_SECTIONS: readonly AdminSectionItem<SectionKey>[] = [
-  { key: 'shop', label: '积分' },
+  { key: 'points', label: '积分' },
   { key: 'finance', label: '成本账本' },
 ]
 
 function isSectionKey(value: string | undefined): value is SectionKey {
-  return value === 'shop' || value === 'finance'
+  return value === 'points' || value === 'finance'
 }
 
 export const Route = createFileRoute('/admin/economy')({
@@ -35,14 +35,14 @@ function AdminEconomyPage() {
   const roles = user?.roles ?? []
   const canFinance =
     isAdmin || roles.some((role) => ['chief_editor', 'deputy_editor', 'editor_in_chief'].includes(role))
-  const sections = canFinance ? ALL_SECTIONS : ALL_SECTIONS.filter((item) => item.key === 'shop')
-  const [section, setSection] = useState<SectionKey>('shop')
+  const sections = canFinance ? ALL_SECTIONS : ALL_SECTIONS.filter((item) => item.key === 'points')
+  const [section, setSection] = useState<SectionKey>('points')
   const { section: sectionParam } = Route.useSearch()
 
   useEffect(() => {
     if (!isSectionKey(sectionParam)) return
     if (sectionParam === 'finance' && !canFinance) {
-      setSection('shop')
+      setSection('points')
       return
     }
     setSection(sectionParam)
@@ -56,8 +56,8 @@ function AdminEconomyPage() {
 
   return (
     <div>
-      <AdminSectionTabs items={sections} active={section} onChange={changeSection} label="经济域子段" />
-      {section === 'shop' ? <ShopPage /> : null}
+      <AdminSectionTabs items={sections} active={section} onChange={changeSection} label="积分与账本子段" />
+      {section === 'points' ? <PointsPage /> : null}
       {section === 'finance' && canFinance ? <FinancePage /> : null}
     </div>
   )

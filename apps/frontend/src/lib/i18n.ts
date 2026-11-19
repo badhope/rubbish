@@ -36,7 +36,7 @@ const NAV_EN: Record<string, string> = {
   '/guide': 'Submission guide',
   '/admin': 'Admin overview',
   '/admin/people': 'People',
-  '/admin/economy': 'Economy',
+  '/admin/economy': 'Points & ledger',
   '/admin/content': 'Content',
   '/admin/journal': 'Journal',
   '/admin/system': 'System',

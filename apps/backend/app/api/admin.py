@@ -76,7 +76,7 @@ ROLE_LABELS = {
     "board_editor": "编委",
     "deputy_editor": "副主编",
     "chief_editor": "主编",
-    "shop_manager": "商城主编",
+    "shop_manager": "积分管理员",
 }
 
 

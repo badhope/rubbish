@@ -34,7 +34,7 @@ const DOMAINS = [
     icon: CalendarDays,
     paths: ['/admin/journal', '/admin/issues'],
   },
-  { key: 'economy', label: '经济', to: '/admin/economy', icon: Wallet, paths: ['/admin/economy'] },
+  { key: 'economy', label: '积分与账本', to: '/admin/economy', icon: Wallet, paths: ['/admin/economy'] },
   {
     key: 'system',
     label: '系统',

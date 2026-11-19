@@ -226,7 +226,7 @@ export default function FinanceAdminPage() {
   return (
     <div className="mx-auto max-w-5xl">
       <PageHeader
-        title="季度财务公开"
+        title="季度成本账本"
         description="只录真实发生的收入与支出；没有对账单或票据的项目不要发布。公开页只展示已发布版本。"
         actions={
           <Button onClick={startNew}>

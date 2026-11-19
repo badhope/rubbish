@@ -36,7 +36,7 @@ export function requireChiefGuard(): void {
   }
 }
 
-/** 商城后台：主编/副主编，或单独授予 shop_manager 的账号。 */
+/** 积分后台：主编/副主编，或单独授予 shop_manager 的账号。 */
 export function requireShopManagerGuard(): void {
   const state = getAuthState()
   if (!state.isAuthenticated) redirectToLogin()

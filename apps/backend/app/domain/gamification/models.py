@@ -253,7 +253,7 @@ class CoinPolicy(Base, TenantScopedMixin):
 
 
 class CoinShopItem(Base, TenantScopedMixin):
-    """商城货品。stock 为 NULL 表示不限量；0 表示售罄。"""
+    """积分货品。stock 为 NULL 表示不限量；0 表示售罄。"""
 
     __tablename__ = "coin_shop_items"
 

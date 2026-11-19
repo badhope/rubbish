@@ -30,7 +30,7 @@ const emptyItem = {
   sort_order: 0,
 }
 
-export default function AdminShopPage() {
+export default function AdminPointsPage() {
   const config = useCoinConfig()
   const items = useAdminShopItems()
   const createItem = useCreateShopItem()

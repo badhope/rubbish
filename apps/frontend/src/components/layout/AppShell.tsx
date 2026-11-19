@@ -124,7 +124,7 @@ function resolvePublicNavPath(pathname: string): string | undefined {
   }
   if (pathname === '/forum' || pathname.startsWith('/forum/')) return '/forum'
   if (
-    ['/me', '/dashboard', '/settings', '/security', '/notifications', '/library', '/follows', '/recommendations', '/shop', '/levels', '/wallet', '/checkin', '/appeals', '/claim'].some(
+    ['/me', '/library', '/follows', '/recommendations', '/appeals', '/claim'].some(
       (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
     )
   ) {

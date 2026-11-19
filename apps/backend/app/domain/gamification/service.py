@@ -510,19 +510,6 @@ async def _checkin_dates(db: AsyncSession, user: User) -> set[str]:
     return {r for r in rows.scalars() if r}
 
 
-async def checkin_status(db: AsyncSession, user: User) -> dict[str, object]:
-    """今日是否已签 + 连续天数 + 累计签到天数。"""
-    dates = await _checkin_dates(db, user)
-    today = _today_str()
-    return {
-        "checked_in_today": today in dates,
-        "streak": _current_streak(dates, today),
-        "total": len(dates),
-        "daily_xp": XP_RULES.get(_CHECKIN_ACTION, 0),
-        "weekly_bonus_xp": XP_RULES.get(_CHECKIN_BONUS_ACTION, 0),
-    }
-
-
 async def daily_checkin(db: AsyncSession, user: User) -> dict[str, object]:
     """执行每日签到。重复签到不是错误：返回当前状态（awarded=False）。"""
     today = _today_str()
@@ -575,7 +562,6 @@ async def daily_checkin(db: AsyncSession, user: User) -> dict[str, object]:
 
 __all__ = [
     "award",
-    "checkin_status",
     "collect_metrics",
     "daily_checkin",
     "evaluate_badges",

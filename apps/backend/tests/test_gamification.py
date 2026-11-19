@@ -304,36 +304,33 @@ async def test_quality_form_and_prompt_are_public(client: AsyncClient) -> None:
     assert "output_schema" in prompt.json()
 
 
-async def test_daily_checkin_idempotent_and_streak(client: AsyncClient, test_user: dict) -> None:
-    """每日签到：首次 +2 XP，重复签到幂等，状态口径一致。"""
+async def test_wallet_checkin_idempotent_and_streak(client: AsyncClient, test_user: dict) -> None:
+    """每日签到统一走钱包接口：首次发 XP + 积分，重复签到幂等。"""
     headers = auth_headers(test_user)
-    before = (await client.get("/api/gamification/checkin", headers=headers)).json()
+    before = (await client.get("/api/gamification/wallet", headers=headers)).json()
     assert before["checked_in_today"] is False
     assert before["streak"] == 0
+    assert before["total_checkins"] == 0
+    assert before["balance"] == 0
 
-    first = await client.post("/api/gamification/checkin", headers=headers)
+    first = await client.post("/api/gamification/wallet/checkin", headers=headers)
     assert first.status_code == 200
     body = first.json()
-    assert body["awarded"] is True
     assert body["checked_in_today"] is True
     assert body["streak"] == 1
-    assert body["total"] == 1
+    assert body["total_checkins"] == 1
+    assert body["balance"] == 1
 
-    # 重复签到：幂等，不重复加分
     me1 = (await client.get("/api/gamification/me", headers=headers)).json()
-    again = await client.post("/api/gamification/checkin", headers=headers)
+    again = await client.post("/api/gamification/wallet/checkin", headers=headers)
     assert again.status_code == 200
-    assert again.json()["awarded"] is False
+    assert again.json()["checked_in_today"] is True
+    assert again.json()["streak"] == 1
+    assert again.json()["balance"] == body["balance"]
     me2 = (await client.get("/api/gamification/me", headers=headers)).json()
     assert me2["xp"] == me1["xp"]
 
-    # 状态端点与签到端点口径一致
-    status = (await client.get("/api/gamification/checkin", headers=headers)).json()
-    assert status["checked_in_today"] is True
-    assert status["streak"] == 1
-    assert status["total"] == 1
-
 
 async def test_checkin_requires_auth(client: AsyncClient) -> None:
-    r = await client.post("/api/gamification/checkin")
+    r = await client.post("/api/gamification/wallet/checkin")
     assert r.status_code in (401, 403)
