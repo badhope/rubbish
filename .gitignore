@@ -190,3 +190,6 @@ backups/**/*.sql.gz
 backups/**/*.tar.gz
 backups/**/*.key
 backups/**/decrypted/
+
+# pytest/fuse temp artifacts
+apps/backend/.fuse*

@@ -236,7 +236,7 @@ class TenantContextMiddleware:
             tenant = result.scalar_one_or_none()
             if tenant is not None:
                 return tenant.id
-            tenant = Tenant(slug=slug, name=f"Bootstrap ({slug})", tenant_type="journal")
+            tenant = Tenant(slug=slug, name=f"Bootstrap ({slug})", tenant_type="community")
             session.add(tenant)
             await session.commit()
             await session.refresh(tenant)

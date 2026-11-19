@@ -76,9 +76,16 @@ interface BoardNode {
 
 /** 旧分类到新版块 slug 的兼容映射：老链接和旧客户端不 404。 */
 const LEGACY_SLUG: Record<string, string> = {
-  discussion: 'paper',
-  question: 'method',
-  notice: 'meta',
+  paper: 'discussion',
+  'paper-reading': 'discussion',
+  'paper-repro': 'discussion',
+  method: 'discussion',
+  writing: 'discussion',
+  stats: 'discussion',
+  question: 'discussion',
+  life: 'survival',
+  meta: 'announcements',
+  notice: 'announcements',
   suggestion: 'feedback',
 }
 
@@ -90,27 +97,47 @@ function collectBoards(nodes: BoardNode[], depth = 0): Array<BoardNode & { depth
 }
 
 const CATEGORY_STYLE: Record<string, string> = {
+  planning: 'bg-muted text-foreground border-border',
+  'lab-notes': 'bg-muted text-foreground border-border',
+  'field-notes': 'bg-muted text-foreground border-border',
+  failures: 'bg-muted text-foreground border-border',
+  discussion: 'bg-muted text-foreground border-border',
+  survival: 'bg-muted text-foreground border-border',
+  collab: 'bg-muted text-foreground border-border',
+  announcements: 'border-primary/25 bg-primary/10 text-primary',
+  feedback: 'bg-muted text-foreground border-border',
+  research: 'border-primary/25 bg-primary/10 text-primary',
+  life: 'bg-muted text-foreground border-border',
+  site: 'border-primary/25 bg-primary/10 text-primary',
+  // 旧帖子未回填前的兜底
   paper: 'bg-muted text-foreground border-border',
   method: 'bg-muted text-foreground border-border',
-  life: 'bg-muted text-foreground border-border',
-  collab: 'bg-muted text-foreground border-border',
   meta: 'border-primary/25 bg-primary/10 text-primary',
   notice: 'border-primary/25 bg-primary/10 text-primary',
-  discussion: 'bg-muted text-foreground border-border',
   question: 'bg-muted text-foreground border-border',
   suggestion: 'bg-muted text-foreground border-border',
 }
 
 const CATEGORY_LABEL: Record<string, string> = {
-  paper: '研究记录',
-  method: '方法与复盘',
-  life: '科研生存',
-  collab: '组队招募',
-  meta: '站务',
-  notice: '公告',
+  planning: '研究计划',
+  'lab-notes': '实验记录',
+  'field-notes': '田野观察',
+  failures: '失败档案',
   discussion: '研究讨论',
-  question: '求助',
-  suggestion: '建议',
+  survival: '科研生存',
+  collab: '组队招募',
+  announcements: '社区公告',
+  feedback: '意见反馈',
+  research: '研究',
+  life: '科研生活',
+  site: '站务',
+  // 旧帖子未回填前的兜底
+  paper: '研究讨论',
+  method: '研究讨论',
+  meta: '社区公告',
+  notice: '社区公告',
+  question: '研究讨论',
+  suggestion: '意见反馈',
 }
 
 /** 相对时间：讨论列表的活跃信号比绝对时间更直观。 */
@@ -463,7 +490,7 @@ function ForumListPage() {
               className={cn(
                 'flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-muted/20',
                 // 社区公告用左侧主色条突出：公告不是普通帖子
-                t.category === 'notice' && 'border-l-4 border-l-primary',
+                (t.category === 'notice' || t.category === 'announcements') && 'border-l-4 border-l-primary',
               )}
             >
                 <div className="min-w-0 flex-1">
@@ -474,7 +501,7 @@ function ForumListPage() {
                         置顶
                       </Badge>
                     )}
-                    {t.category === 'notice' ? (
+                    {(t.category === 'notice' || t.category === 'announcements') ? (
                       <Badge className="gap-1 border border-transparent bg-primary text-primary-foreground">
                         <Megaphone className="h-3 w-3" />
                         社区公告

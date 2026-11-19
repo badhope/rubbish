@@ -21,7 +21,7 @@ Idempotency:
 
 from __future__ import annotations
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -29,6 +29,8 @@ from app.core.db import async_session_factory
 from app.core.logging import get_logger
 from app.core.security import hash_password
 from app.core.tenant import TENANT_CONTEXT_VAR
+from app.domain.forum.defaults import BOARD_TREE
+from app.domain.forum.models import ForumBoard
 from app.models import Role, Tenant, User, UserRole
 
 logger = get_logger("rubbish.bootstrap")
@@ -52,7 +54,7 @@ async def _ensure_bootstrap_tenant(session: AsyncSession) -> Tenant:
     tenant = Tenant(
         slug=slug,
         name=f"Bootstrap ({slug})",
-        tenant_type="journal",
+        tenant_type="community",
         is_active=True,
     )
     session.add(tenant)
@@ -99,6 +101,35 @@ async def _ensure_admin_user(session: AsyncSession, tenant: Tenant) -> None:
     )
 
 
+async def _ensure_default_forum_boards(session: AsyncSession, tenant: Tenant) -> None:
+    """Seed the community board tree once per tenant.
+
+    Idempotent: an existing tree is left untouched. Migration 060 handles
+    existing production tenants; this covers fresh installs and new tenants.
+    """
+    count = await session.scalar(
+        select(func.count()).select_from(ForumBoard).where(ForumBoard.tenant_id == tenant.id)
+    )
+    if count:
+        return
+    ids: dict[str, int] = {}
+    for slug, parent_slug, name, description, sort_order in BOARD_TREE:
+        board = ForumBoard(
+            tenant_id=tenant.id,
+            parent_id=ids.get(parent_slug) if parent_slug else None,
+            slug=slug,
+            name=name,
+            description=description,
+            sort_order=sort_order,
+            is_active=True,
+        )
+        session.add(board)
+        await session.flush()
+        ids[slug] = board.id
+    await session.commit()
+    logger.info("default_forum_boards_created", tenant_id=str(tenant.id), count=len(ids))
+
+
 async def run_bootstrap() -> None:
     """Ensure the bootstrap tenant and initial admin user exist.
 
@@ -129,6 +160,7 @@ async def run_bootstrap() -> None:
         # reviewer/editor flows directly.
         await _ensure_review_roles(session, tenant)
         await _ensure_admin_roles(session, tenant)
+        await _ensure_default_forum_boards(session, tenant)
 
 
 async def _ensure_review_roles(session: AsyncSession, tenant: Tenant) -> None:

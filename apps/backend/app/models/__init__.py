@@ -86,7 +86,7 @@ class Tenant(Base):
     slug: Mapped[str] = mapped_column(String(64), index=True)
     name: Mapped[str] = mapped_column(String(255))
     # Type enables future expansion: 'journal' | 'press' | 'server' | 'institution'.
-    tenant_type: Mapped[str] = mapped_column(String(32), default="journal")
+    tenant_type: Mapped[str] = mapped_column(String(32), default="community")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     # Arbitrary key/value settings — replaces OJS-style ``*_settings`` tables.
     settings: Mapped[dict[str, Any] | None] = mapped_column(JSONBVariant, nullable=True)

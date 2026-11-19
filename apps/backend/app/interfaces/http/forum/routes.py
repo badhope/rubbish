@@ -7,7 +7,7 @@
 - 发帖/回帖：登录即可（不设积分门槛——参考前面身份体系 3.0 的原则）
 - 置顶/锁定/删除他人帖子：编辑或管理员（版主权限）
 
-版块设计：五个**平铺**版块（论文沙龙/方法与写作/学术生存/组队招募/站务公告），
+版块设计：树形社区版块（研究计划/实验记录/田野观察/失败档案/研究讨论/科研生存/组队招募/站务），
 不做树状子版。本刊是期刊社区，不是大型论坛；五个版块足够让帖子有归属，
 又不会在冷启动阶段把每个子版都做成空壳。
 """
@@ -100,41 +100,70 @@ async def get_forum_image(filename: str) -> Response:
 # 五个平铺版块：荒诞论文体 / 写作实验 / 学术生存 / 共创组队 / 站务。
 # 旧分类保留为兼容别名（历史帖子和既有测试仍可直接写入），列表查询按版块聚合。
 ForumCategory = Literal[
+    "planning",
+    "lab-notes",
+    "field-notes",
+    "failures",
+    "discussion",
+    "survival",
+    "collab",
+    "announcements",
+    "feedback",
+    # 兼容旧客户端/旧帖
     "paper",
     "method",
     "life",
-    "collab",
     "meta",
     "notice",
-    "discussion",
     "question",
     "suggestion",
 ]
 
 CATEGORY_LABELS: dict[str, str] = {
-    "paper": "荒诞论文体",
-    "method": "写作实验",
-    "life": "学术生存",
-    "collab": "共创组队",
-    "meta": "站务",
-    "notice": "公告",
-    "discussion": "荒诞论文体",
-    "question": "写作求助",
-    "suggestion": "建议",
+    "planning": "研究计划",
+    "lab-notes": "实验记录",
+    "field-notes": "田野观察",
+    "failures": "失败档案",
+    "discussion": "研究讨论",
+    "survival": "科研生存",
+    "collab": "组队招募",
+    "announcements": "社区公告",
+    "feedback": "意见反馈",
+    # 旧分类仍可读，但不再作为新帖入口
+    "paper": "研究讨论",
+    "method": "研究讨论",
+    "life": "科研生存",
+    "meta": "社区公告",
+    "notice": "社区公告",
+    "question": "研究讨论",
+    "suggestion": "意见反馈",
 }
 
 # 版块 -> 实际落库的分类集合。旧帖不用搬家也能出现在新版块下。
 CATEGORY_BOARD: dict[str, tuple[str, ...]] = {
-    "paper": ("paper", "discussion"),
-    "method": ("method", "question"),
-    "meta": ("meta", "notice", "suggestion"),
+    "planning": ("planning",),
+    "lab-notes": ("lab-notes",),
+    "field-notes": ("field-notes",),
+    "failures": ("failures",),
+    "discussion": ("discussion",),
+    "survival": ("survival",),
+    "collab": ("collab",),
+    "announcements": ("announcements",),
+    "feedback": ("feedback",),
+    # 旧客户端按旧分类发帖时，回退到新版块
+    "paper": ("discussion",),
+    "method": ("discussion",),
+    "question": ("discussion",),
+    "life": ("survival",),
+    "meta": ("announcements",),
+    "notice": ("announcements",),
+    "suggestion": ("feedback",),
 }
-
 
 class TopicCreate(BaseModel):
     title: str = Field(min_length=2, max_length=200)
     body: str = Field(min_length=2, max_length=20000)
-    category: ForumCategory = "paper"
+    category: ForumCategory = "discussion"
     # 树形版块：新客户端传 board_id；旧客户端只传 category 仍然兼容。
     board_id: int | None = Field(default=None, ge=1)
     board_slug: str | None = Field(default=None, max_length=40)
