@@ -44,7 +44,7 @@ import type {
 import { typeLabel } from '@/lib/resource-labels'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import { useCapabilities } from '@/hooks/use-capabilities'
-import { extractError } from '@/lib/utils'
+import { cn, extractError } from '@/lib/utils'
 import { normalizeAbstract } from '@/lib/abstract'
 import { PageHeader } from '@/components/common/page-header'
 import { Pagination } from '@/components/common/pagination'
@@ -69,7 +69,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 
 // 注册 router state 的 preset 字段：ingest 页通过 navigate state 传预填数据，
@@ -279,20 +278,32 @@ function SubmissionsPage() {
         }
       />
 
-      <Tabs
-        value={statusTab}
-        onValueChange={(v) =>
-          updateSearch({ status: v as SubmissionStatus | 'all', page: 1 })
-        }
+      <div
+        role="tablist"
+        aria-label="按投稿状态筛选"
+        className="mb-5 flex items-center gap-1 overflow-x-auto border-b pb-2"
       >
-        <TabsList className="!grid !h-auto grid-cols-4 justify-start gap-1 overflow-visible p-1 sm:!inline-flex sm:!h-9 sm:flex-nowrap">
-          {STATUS_TABS.map((t) => (
-            <TabsTrigger key={t.value} value={t.value} className="h-8 px-2.5 text-xs">
+        {STATUS_TABS.map((t) => {
+          const active = statusTab === t.value
+          return (
+            <button
+              key={t.value}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => updateSearch({ status: t.value, page: 1 })}
+              className={cn(
+                'shrink-0 rounded-md px-2.5 py-1.5 text-xs transition-colors',
+                active
+                  ? 'bg-primary/10 font-medium text-primary'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+              )}
+            >
               {t.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+            </button>
+          )
+        })}
+      </div>
 
       {isLoading ? (
         <Loading />
