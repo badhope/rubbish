@@ -81,7 +81,7 @@ export function MeReviews({ reviewable }: { reviewable: boolean }) {
                   <AssignmentStatusBadge status={item.status} />
                   {canOpen ? (
                     <Button variant="ghost" size="sm" asChild>
-                      <Link to="/review/quick/$id" params={{ id: String(item.id) }}>
+                      <Link to="/review" search={{ tab: 'assignments' }}>
                         打开
                         <ArrowRight className="h-3.5 w-3.5" />
                       </Link>

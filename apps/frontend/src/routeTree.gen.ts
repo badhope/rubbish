@@ -40,7 +40,6 @@ import { Route as SubmissionsNewRouteImport } from './routes/submissions/new'
 import { Route as SubmissionsPendingRouteImport } from './routes/submissions/pending'
 import { Route as UUsernameRouteImport } from './routes/u/$username'
 import { Route as AuthOidcCallbackRouteImport } from './routes/auth/oidc/callback'
-import { Route as ReviewQuickIdRouteImport } from './routes/review/quick.$id'
 import { Route as AdminIssuesVolumeIssueRouteImport } from './routes/admin/issues.$volume.$issue'
 
 const IndexRoute = IndexRouteImport.update({
@@ -198,11 +197,6 @@ const AuthOidcCallbackRoute = AuthOidcCallbackRouteImport.update({
   path: '/auth/oidc/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ReviewQuickIdRoute = ReviewQuickIdRouteImport.update({
-  id: '/review/quick/$id',
-  path: '/review/quick/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminIssuesVolumeIssueRoute = AdminIssuesVolumeIssueRouteImport.update({
   id: '/issues/$volume/$issue',
   path: '/issues/$volume/$issue',
@@ -241,7 +235,6 @@ export interface FileRoutesByFullPath {
   '/review/': typeof ReviewIndexRoute
   '/submissions/': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
-  '/review/quick/$id': typeof ReviewQuickIdRoute
   '/admin/issues/$volume/$issue': typeof AdminIssuesVolumeIssueRoute
 }
 export interface FileRoutesByTo {
@@ -275,7 +268,6 @@ export interface FileRoutesByTo {
   '/review': typeof ReviewIndexRoute
   '/submissions': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
-  '/review/quick/$id': typeof ReviewQuickIdRoute
   '/admin/issues/$volume/$issue': typeof AdminIssuesVolumeIssueRoute
 }
 export interface FileRoutesById {
@@ -311,7 +303,6 @@ export interface FileRoutesById {
   '/review/': typeof ReviewIndexRoute
   '/submissions/': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
-  '/review/quick/$id': typeof ReviewQuickIdRoute
   '/admin/issues/$volume/$issue': typeof AdminIssuesVolumeIssueRoute
 }
 export interface FileRouteTypes {
@@ -348,7 +339,6 @@ export interface FileRouteTypes {
     | '/review/'
     | '/submissions/'
     | '/auth/oidc/callback'
-    | '/review/quick/$id'
     | '/admin/issues/$volume/$issue'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -382,7 +372,6 @@ export interface FileRouteTypes {
     | '/review'
     | '/submissions'
     | '/auth/oidc/callback'
-    | '/review/quick/$id'
     | '/admin/issues/$volume/$issue'
   id:
     | '__root__'
@@ -417,7 +406,6 @@ export interface FileRouteTypes {
     | '/review/'
     | '/submissions/'
     | '/auth/oidc/callback'
-    | '/review/quick/$id'
     | '/admin/issues/$volume/$issue'
   fileRoutesById: FileRoutesById
 }
@@ -447,7 +435,6 @@ export interface RootRouteChildren {
   ReviewIndexRoute: typeof ReviewIndexRoute
   SubmissionsIndexRoute: typeof SubmissionsIndexRoute
   AuthOidcCallbackRoute: typeof AuthOidcCallbackRoute
-  ReviewQuickIdRoute: typeof ReviewQuickIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -669,13 +656,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthOidcCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/review/quick/$id': {
-      id: '/review/quick/$id'
-      path: '/review/quick/$id'
-      fullPath: '/review/quick/$id'
-      preLoaderRoute: typeof ReviewQuickIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin/issues/$volume/$issue': {
       id: '/admin/issues/$volume/$issue'
       path: '/issues/$volume/$issue'
@@ -734,7 +714,6 @@ const rootRouteChildren: RootRouteChildren = {
   ReviewIndexRoute: ReviewIndexRoute,
   SubmissionsIndexRoute: SubmissionsIndexRoute,
   AuthOidcCallbackRoute: AuthOidcCallbackRoute,
-  ReviewQuickIdRoute: ReviewQuickIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -92,7 +92,6 @@ const PUBLIC_NAV = NAV.slice(0, 5)
 const WORK_ROUTE_PREFIXES = [
   '/admin',
   '/editor',
-  '/review/quick',
   '/submissions/pending',
 ]
 

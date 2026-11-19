@@ -95,8 +95,8 @@ export function MeOverview({
             {pendingReviews.map((item) => (
               <Link
                 key={`assignment-${item.id}`}
-                to="/review/quick/$id"
-                params={{ id: String(item.id) }}
+                to="/review"
+                search={{ tab: 'assignments' }}
                 className="group flex items-start gap-3 py-3.5 transition-colors hover:bg-primary/[0.03] sm:items-center"
               >
                 <ClipboardCheck className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground sm:mt-0" />
