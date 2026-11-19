@@ -12,7 +12,6 @@ import {
   ExternalLink,
   FileText,
   History,
-  LayoutDashboard,
   LayoutPanelTop,
   Pencil,
   Plus,
@@ -36,7 +35,6 @@ import {
   useSubmissionVersions,
   useSaveAuthorResponse,
   useUploadSubmissionFile,
-  useMeProfile,
 } from '@/hooks/api/use-modules'
 import type {
   IngestResource,
@@ -146,10 +144,6 @@ function statusHint(status: string): string {
 
 function SubmissionsPage() {
   const navigate = useNavigate()
-  const { data: meProfile } = useMeProfile()
-  const canOpenWorkbench = Boolean(
-    meProfile && ['editor', 'editor_in_chief'].includes(meProfile.permission_role),
-  )
   // 上传约束来自服务端（/capabilities），前端不再维护第二份规则。
   const caps = useCapabilities()
   const uploadMaxMb = Math.round((caps.data?.upload_max_bytes ?? 50 * 1024 * 1024) / 1024 / 1024)
@@ -271,23 +265,9 @@ function SubmissionsPage() {
     <div>
       <PageHeader
         title="我的提交"
-        description="查看你提交的资源及审核状态；也可以从 BibTeX、RIS、CSV、JSON 或文献 ID 导入已有题录。"
+        description="查看你提交的资源及审核状态；新建投稿时可直接用 DOI、arXiv、PubMed 等编号导入题录。"
         actions={
           <>
-            {canOpenWorkbench && (
-              <Button variant="outline" asChild>
-                <Link to="/editor/workbench">
-                  <LayoutDashboard className="h-4 w-4" />
-                  主编工作台
-                </Link>
-              </Button>
-            )}
-            <Button variant="outline" asChild>
-              <Link to="/ingest">
-                <Upload className="h-4 w-4" />
-                从文献导入
-              </Link>
-            </Button>
             <Button
               onClick={() => {
                 void navigate({ to: '/submissions/new' })

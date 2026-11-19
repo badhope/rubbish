@@ -24,7 +24,7 @@ export function OnboardingTour() {
 
   // 不在设置、后台、审稿、投稿这些“正在办事”的页面弹浮层：
   // 用户此刻要看表单和按钮，引导卡不能压住正文。
-  const busy = ['/settings', '/admin', '/review', '/editor', '/submissions', '/ingest', '/account']
+  const busy = ['/settings', '/admin', '/review', '/editor', '/submissions', '/account']
     .some((prefix) => location.pathname === prefix || location.pathname.startsWith(prefix + '/'))
   if (!open || busy) return null
 

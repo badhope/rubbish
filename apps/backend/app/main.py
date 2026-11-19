@@ -178,7 +178,6 @@ _SPA_ROUTE_PREFIXES = frozenset(
         "follows",
         "forgot-password",
         "forum",
-        "ingest",
         "issues",
         "journal-metrics",
         "levels",

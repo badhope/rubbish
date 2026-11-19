@@ -35,6 +35,7 @@ import {
   useUpdateSubmission,
   useUploadSubmissionFile,
   useConvertSubmissionPreview,
+  useFetchIngest,
   previewUploadedSourcePages,
 } from '@/hooks/api/use-modules'
 import { MarkdownEditor } from '@/components/common/markdown-editor'
@@ -50,6 +51,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import type {
+  FetchSource,
   IngestResource,
   SubmissionCreate,
   SubmissionResponse,
@@ -60,6 +62,7 @@ import { ARTICLE_SECTION_OPTIONS } from '@/lib/article-sections'
 import { extractError, parseListField } from '@/lib/utils'
 import { checkManuscript, type ManuscriptIssue } from '@/lib/manuscript-checks'
 import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -684,6 +687,30 @@ function SubmissionWizardPage() {
     setForm((prev) => ({ ...prev, [key]: value }))
   }
 
+  // 导入只覆盖题录字段，保留作者手写的正文、声明与附件；
+  // 导入不是新流程，只是题录步骤里的一个填表捷径。
+  const applyIngest = (resource: IngestResource) => {
+    const imported = presetToForm(resource)
+    setForm((prev) => ({
+      ...prev,
+      title: imported.title || prev.title,
+      type: imported.type || prev.type,
+      authors: imported.authors || prev.authors,
+      year: imported.year || prev.year,
+      discipline:
+        imported.discipline && imported.discipline !== 'unknown'
+          ? imported.discipline
+          : prev.discipline,
+      subdiscipline: imported.subdiscipline || prev.subdiscipline,
+      abstract: imported.abstract || prev.abstract,
+      preview: imported.preview || prev.preview,
+      keywords: imported.keywords || prev.keywords,
+      venue: imported.venue || prev.venue,
+      doi: imported.doi || prev.doi,
+    }))
+    toast.success('已填入题录，请核对作者、年份与摘要')
+  }
+
   const goTo = (next: number) => {
     setVisited((prev) => {
       const copy = [...prev]
@@ -1051,6 +1078,7 @@ function SubmissionWizardPage() {
                 set={set}
                 fieldError={fieldError}
                 doiEntryEnabled={caps.data?.doi_author_entry_enabled ?? true}
+                onImport={applyIngest}
               />
             )}
             {step === 1 && (
@@ -1196,16 +1224,96 @@ function SubmissionWizardPage() {
 // 子步骤组件
 // ---------------------------------------------------------------------------
 
+const INGEST_SOURCES: { value: FetchSource; label: string; placeholder: string }[] = [
+  { value: 'crossref', label: 'Crossref', placeholder: 'DOI，例如 10.1000/xyz123' },
+  { value: 'arxiv', label: 'arXiv', placeholder: 'arXiv ID，例如 2401.00001' },
+  { value: 'pubmed', label: 'PubMed', placeholder: 'PMID，例如 12345678' },
+  { value: 'openalex', label: 'OpenAlex', placeholder: 'DOI 或 OpenAlex ID' },
+  { value: 'semantic_scholar', label: 'Semantic Scholar', placeholder: 'DOI 或 S2 paper ID' },
+]
+
+function IngestQuickFill({ onImport }: { onImport: (resource: IngestResource) => void }) {
+  const fetchMut = useFetchIngest()
+  const [source, setSource] = useState<FetchSource>('crossref')
+  const [identifier, setIdentifier] = useState('')
+  const placeholder =
+    INGEST_SOURCES.find((item) => item.value === source)?.placeholder ?? 'DOI 或文献 ID'
+
+  const importRecord = async () => {
+    const id = identifier.trim()
+    if (!id) {
+      toast.error('先填 DOI、arXiv ID 或 PMID')
+      return
+    }
+    try {
+      const resource = await fetchMut.mutateAsync({ source, id })
+      onImport(resource)
+      setIdentifier('')
+    } catch (err) {
+      toast.error(extractError(err, '没有查到这条文献，请检查编号或换一个来源'))
+    }
+  }
+
+  return (
+    <div className="rounded-lg border bg-muted/25 p-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-1">
+        <label className="text-sm font-medium">从文献导入题录</label>
+        <span className="text-[11px] text-muted-foreground">
+          只填题录，不覆盖正文；导入后仍可修改
+        </span>
+      </div>
+      <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+        <Select value={source} onValueChange={(value) => setSource(value as FetchSource)}>
+          <SelectTrigger className="h-9 w-full sm:w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {INGEST_SOURCES.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Input
+          value={identifier}
+          placeholder={placeholder}
+          className="h-9 min-w-0 flex-1"
+          onChange={(event) => setIdentifier(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault()
+              void importRecord()
+            }
+          }}
+        />
+        <Button
+          type="button"
+          size="sm"
+          className="h-9 shrink-0"
+          onClick={() => void importRecord()}
+          disabled={fetchMut.isPending}
+        >
+          {fetchMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+          导入
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 function StepBibliography({
   form,
   set,
   fieldError,
   doiEntryEnabled,
+  onImport,
 }: {
   form: WizardForm
   set: <K extends keyof WizardForm>(key: K, value: WizardForm[K]) => void
   fieldError: (key: string) => boolean
   doiEntryEnabled: boolean
+  onImport: (resource: IngestResource) => void
 }) {
   return (
     <div className="space-y-5">
@@ -1215,6 +1323,8 @@ function StepBibliography({
           这一步写清「这是什么文章」。摘要、关键词、中图分类号是检索与评审的硬门槛。
         </p>
       </div>
+
+      <IngestQuickFill onImport={onImport} />
 
       {/* 稿件类型：学术论文 / 荒诞论文 / 副刊 */}
       <div className="space-y-2">

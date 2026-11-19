@@ -42,7 +42,6 @@ import { Route as EditorWorkbenchRouteImport } from './routes/editor/workbench'
 import { Route as FollowsIndexRouteImport } from './routes/follows/index'
 import { Route as ForumIndexRouteImport } from './routes/forum/index'
 import { Route as ForumTopicIdRouteImport } from './routes/forum/$topicId'
-import { Route as IngestIndexRouteImport } from './routes/ingest/index'
 import { Route as LibraryListIdRouteImport } from './routes/library/$listId'
 import { Route as ReviewAssignmentsRouteImport } from './routes/review/assignments'
 import { Route as ReviewBoardRouteImport } from './routes/review/board'
@@ -220,11 +219,6 @@ const ForumTopicIdRoute = ForumTopicIdRouteImport.update({
   path: '/forum/$topicId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IngestIndexRoute = IngestIndexRouteImport.update({
-  id: '/ingest/',
-  path: '/ingest/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LibraryListIdRoute = LibraryListIdRouteImport.update({
   id: '/library/$listId',
   path: '/library/$listId',
@@ -322,7 +316,6 @@ export interface FileRoutesByFullPath {
   '/catalog/': typeof CatalogIndexRoute
   '/follows/': typeof FollowsIndexRoute
   '/forum/': typeof ForumIndexRoute
-  '/ingest/': typeof IngestIndexRoute
   '/submissions/': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
   '/review/quick/$id': typeof ReviewQuickIdRoute
@@ -368,7 +361,6 @@ export interface FileRoutesByTo {
   '/catalog': typeof CatalogIndexRoute
   '/follows': typeof FollowsIndexRoute
   '/forum': typeof ForumIndexRoute
-  '/ingest': typeof IngestIndexRoute
   '/submissions': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
   '/review/quick/$id': typeof ReviewQuickIdRoute
@@ -416,7 +408,6 @@ export interface FileRoutesById {
   '/catalog/': typeof CatalogIndexRoute
   '/follows/': typeof FollowsIndexRoute
   '/forum/': typeof ForumIndexRoute
-  '/ingest/': typeof IngestIndexRoute
   '/submissions/': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
   '/review/quick/$id': typeof ReviewQuickIdRoute
@@ -465,7 +456,6 @@ export interface FileRouteTypes {
     | '/catalog/'
     | '/follows/'
     | '/forum/'
-    | '/ingest/'
     | '/submissions/'
     | '/auth/oidc/callback'
     | '/review/quick/$id'
@@ -511,7 +501,6 @@ export interface FileRouteTypes {
     | '/catalog'
     | '/follows'
     | '/forum'
-    | '/ingest'
     | '/submissions'
     | '/auth/oidc/callback'
     | '/review/quick/$id'
@@ -558,7 +547,6 @@ export interface FileRouteTypes {
     | '/catalog/'
     | '/follows/'
     | '/forum/'
-    | '/ingest/'
     | '/submissions/'
     | '/auth/oidc/callback'
     | '/review/quick/$id'
@@ -600,7 +588,6 @@ export interface RootRouteChildren {
   CatalogIndexRoute: typeof CatalogIndexRoute
   FollowsIndexRoute: typeof FollowsIndexRoute
   ForumIndexRoute: typeof ForumIndexRoute
-  IngestIndexRoute: typeof IngestIndexRoute
   SubmissionsIndexRoute: typeof SubmissionsIndexRoute
   AuthOidcCallbackRoute: typeof AuthOidcCallbackRoute
   ReviewQuickIdRoute: typeof ReviewQuickIdRoute
@@ -839,13 +826,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForumTopicIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/ingest/': {
-      id: '/ingest/'
-      path: '/ingest'
-      fullPath: '/ingest/'
-      preLoaderRoute: typeof IngestIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/library/$listId': {
       id: '/library/$listId'
       path: '/library/$listId'
@@ -983,7 +963,6 @@ const rootRouteChildren: RootRouteChildren = {
   CatalogIndexRoute: CatalogIndexRoute,
   FollowsIndexRoute: FollowsIndexRoute,
   ForumIndexRoute: ForumIndexRoute,
-  IngestIndexRoute: IngestIndexRoute,
   SubmissionsIndexRoute: SubmissionsIndexRoute,
   AuthOidcCallbackRoute: AuthOidcCallbackRoute,
   ReviewQuickIdRoute: ReviewQuickIdRoute,

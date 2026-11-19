@@ -110,7 +110,7 @@ function resolvePublicNavPath(pathname: string): string | undefined {
   ) {
     return '/catalog'
   }
-  if (pathname === '/submissions' || pathname.startsWith('/submissions/') || pathname.startsWith('/ingest')) {
+  if (pathname === '/submissions' || pathname.startsWith('/submissions/')) {
     return '/submissions'
   }
   if (pathname === '/forum' || pathname.startsWith('/forum/')) return '/forum'
