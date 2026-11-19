@@ -1100,67 +1100,6 @@ export interface ReviewModeResponse {
   review_mode: ReviewMode
 }
 
-// --- Volume / Issue management (admin) ---
-export interface VolumeInfo {
-  volume: string
-  articleCount: number
-  issueCount: number
-  issues: IssueInfo[]
-  id?: number
-  title?: string | null
-  year?: number | null
-}
-
-export interface IssueInfo {
-  issue: string
-  articleCount: number
-  firstYear: number
-  lastYear: number
-  id?: number
-  title?: string | null
-  status?: 'draft' | 'scheduled' | 'live' | 'archived' | string
-  coverImage?: string | null
-}
-
-/** First-class volume registry row returned by /admin/journal/volumes. */
-export interface JournalIssue {
-  id: number
-  volumeId: number
-  volume: string
-  number: string
-  title: string | null
-  intro: string | null
-  coverImage: string | null
-  status: 'draft' | 'scheduled' | 'live' | 'archived'
-  publishAt: string | null
-  publishedAt: string | null
-  articleCount: number
-  resources?: Array<{
-    id: number
-    title: string
-    publicationStatus: string
-    issuePart: string | null
-  }>
-}
-
-export interface JournalVolume {
-  id: number
-  number: string
-  title: string | null
-  year: number | null
-  description: string | null
-  coverImage: string | null
-  issueCount: number
-  articleCount: number
-  issues: JournalIssue[]
-}
-
-export interface JournalSettings {
-  issn: string
-  publisher: string
-  short_container_title: string
-}
-
 // --- Export ---
 
 // --- Gamification / 身份体系 ---

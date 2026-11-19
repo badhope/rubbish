@@ -21,30 +21,25 @@ export const SHELL_I18N_ENABLED = false
 
 const NAV_EN: Record<string, string> = {
   '/': 'Home',
-  '/forum': 'Forum',
-  '/catalog': 'Papers',
+  '/forum': 'Community',
+  '/catalog': 'Archive',
   '/me': 'Me',
-  '/submissions': 'My submissions',
-  '/review': 'Review desk',
-  '/about': 'About & metrics',
-  '/guide': 'Submission guide',
+  '/about': 'About',
+  '/guide': 'Guide',
   '/admin': 'Admin overview',
   '/admin/people': 'People',
   '/admin/economy': 'Points & ledger',
   '/admin/content': 'Content',
-  '/admin/journal': 'Journal',
   '/admin/system': 'System',
 }
 
 const GROUP_EN: Record<string, string> = {
   一级入口: 'Primary',
   我的工作: 'Workspace',
-  期刊: 'Journal',
   站点管理: 'Site admin',
   总览: 'Overview',
   用户与权限: 'Users & access',
   内容与论坛: 'Content & forum',
-  期刊与发布: 'Journal & release',
   系统与安全: 'System & security',
 }
 

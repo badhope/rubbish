@@ -40,6 +40,7 @@ async def test_robots_advertises_sitemap(client: AsyncClient) -> None:
     assert "Sitemap:" in r.text
     assert "/sitemap.xml" in r.text
     assert "Disallow: /api/" in r.text
+    assert "/oai" not in r.text
 
 
 async def test_sitemap_lists_only_published(client: AsyncClient, admin_user: dict) -> None:
@@ -55,18 +56,18 @@ async def test_sitemap_lists_only_published(client: AsyncClient, admin_user: dic
     assert not any(str(draft) in loc for loc in locs)
 
 
-async def test_head_metadata_carries_citation_tags(
+async def test_head_metadata_carries_community_metadata(
     client: AsyncClient, admin_user: dict, db_session
 ) -> None:
     rid = await _create(client, admin_user)
-    index_html = "<html><head><title>Rubbish — 开放获取期刊</title></head><body></body></html>"
+    index_html = "<html><head><title>Rubbish — 荒诞科研社区</title></head><body></body></html>"
     request = _FakeRequest()
 
     body, status = await build_index_html(index_html, f"catalog/{rid}", request, db_session)
     assert status == "200"
-    assert 'name="citation_title"' in body
-    assert 'name="citation_author"' in body
-    assert 'name="citation_pdf_url"' in body
+    assert '"@type": "CreativeWork"' in body
+    assert '"@type": "BreadcrumbList"' in body
+    assert 'citation_' not in body
     assert "<title>SEO 可见论文 &lt;script&gt;alert(1)&lt;/script&gt; — Rubbish</title>" in body
     # Escaped, never raw: a title must not be able to close the tag.
     assert "<script>alert(1)</script>" not in body
@@ -76,10 +77,10 @@ async def test_head_metadata_noindex_for_draft(
     client: AsyncClient, admin_user: dict, db_session
 ) -> None:
     rid = await _create(client, admin_user, title="草稿标题", publication_status="draft")
-    index_html = "<html><head><title>Rubbish — 开放获取期刊</title></head><body></body></html>"
+    index_html = "<html><head><title>Rubbish — 荒诞科研社区</title></head><body></body></html>"
     body, _ = await build_index_html(index_html, f"catalog/{rid}", _FakeRequest(), db_session)
     assert 'name="robots" content="noindex"' in body
-    assert 'name="citation_title"' not in body
+    assert '"@type": "CreativeWork"' not in body
 
 
 async def test_capabilities_reports_console_email(client: AsyncClient, monkeypatch) -> None:
@@ -134,6 +135,7 @@ async def test_robots_allows_ai_crawlers(client: AsyncClient) -> None:
     for bot in ("GPTBot", "ClaudeBot", "PerplexityBot", "Google-Extended"):
         assert f"User-agent: {bot}" in r.text
     assert "/llms.txt" in r.text
+    assert "/oai" not in r.text
 
 
 async def test_sitemap_has_lastmod(client: AsyncClient, admin_user: dict) -> None:
@@ -148,24 +150,28 @@ async def test_llms_txt_lists_public_entries(client: AsyncClient, admin_user: di
     assert r.status_code == 200
     assert r.headers["content-type"].startswith("text/plain")
     assert f"/catalog/{rid}" in r.text
+    assert "学术底刊" not in r.text
+    assert "/api/ai/" not in r.text
 
 
-async def test_sitemap_lists_catalog_sections_and_issues(
+async def test_sitemap_does_not_expose_legacy_academic_queries(
     client: AsyncClient, admin_user: dict
 ) -> None:
     await _create(client, admin_user, volume="1", issue="03")
     root = ET.fromstring((await client.get("/sitemap.xml")).text)
     locs = [e.text or "" for e in root.iter() if e.tag.endswith("loc")]
-    assert any("/catalog?section=research" in loc for loc in locs)
-    assert any("/catalog?volume=1&issue=03" in loc for loc in locs)
+    assert any("/catalog" == loc.rsplit("/", 1)[-1] or loc.endswith("/catalog") for loc in locs)
+    assert not any("/catalog?section=" in loc for loc in locs)
+    assert not any("/catalog?volume=" in loc for loc in locs)
 
 
-async def test_article_schema_has_license_and_breadcrumb(
+async def test_article_schema_has_breadcrumb(
     client: AsyncClient, admin_user: dict, db_session
 ) -> None:
     rid = await _create(client, admin_user)
-    index_html = "<html><head><title>Rubbish — 开放获取期刊</title></head><body></body></html>"
+    index_html = "<html><head><title>Rubbish — 荒诞科研社区</title></head><body></body></html>"
     body, _ = await build_index_html(index_html, f"catalog/{rid}", _FakeRequest(), db_session)
     assert '"@type": "BreadcrumbList"' in body
     assert '"isAccessibleForFree": true' in body
-    assert "creativecommons.org/licenses/by/4.0" in body
+    assert '"@type": "Periodical"' not in body
+    assert 'citation_' not in body

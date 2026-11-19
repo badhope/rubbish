@@ -30,7 +30,6 @@ from tenacity import (
 from app import __version__
 from app.api import (
     admin,
-    ai,
     auth,
     capabilities,
     gdpr,
@@ -38,7 +37,6 @@ from app.api import (
     me,
     metrics,
     modules,
-    oai,
     privacy,
     seo,
     tenant_hosts,
@@ -47,7 +45,6 @@ from app.api import (
     webauthn,
 )
 from app.api.oidc import router as oidc_router
-from app.interfaces.http.catalog.journal_routes import router as journal_admin_router
 from app.core.bootstrap import run_bootstrap
 from app.core.config import settings
 from app.core.db import check_db_connection, dispose_engine, get_db
@@ -321,12 +318,10 @@ app.include_router(capabilities.router, prefix="/api")
 app.include_router(seo.router)
 app.include_router(two_factor.router, prefix="/api")
 app.include_router(gdpr.router, prefix="/api")
-app.include_router(ai.router, prefix="/api")
 app.include_router(auth.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
 app.include_router(me.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
-app.include_router(journal_admin_router, prefix="/api")
 app.include_router(tenant_hosts.router, prefix="/api")
 app.include_router(modules.router, prefix="/api")
 
@@ -336,7 +331,6 @@ app.include_router(telemetry.router, prefix="/api")
 app.include_router(support.router, prefix="/api")
 app.include_router(support.admin_router, prefix="/api")
 # OAI-PMH 2.0 元数据收割端点（DOAJ/CNKI/图书馆联盟索引对接，根路径挂载）。
-app.include_router(oai.router)
 # WebAuthn / Passkeys as an alternative to TOTP 2FA.
 app.include_router(webauthn.router, prefix="/api")
 # OIDC routes always mount; each endpoint 503s when OIDC is not configured

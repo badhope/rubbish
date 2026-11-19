@@ -27,11 +27,11 @@ CONTACT_EMAIL = "info@rubbishasci.cn"
 PRIVACY_POLICY_MD = f"""\
 # Rubbish 隐私政策
 
-_最后更新：2026-10-22_
+_最后更新：2026-11-20_
 
 ## 我们是谁
 
-Rubbish（rubbish.argjiemi.cn）是一份学术底刊，由本站编辑部运营。
+Rubbish（rubbish.argjiemi.cn）是一个荒诞科研社区，由本站运营。
 隐私相关事宜请联系 `{CONTACT_EMAIL}`。
 
 ## 我们收集哪些数据
@@ -39,14 +39,14 @@ Rubbish（rubbish.argjiemi.cn）是一份学术底刊，由本站编辑部运营
 注册账号时收集：
 
 - 邮箱地址（用于登录与密码找回）。
-- 用户名（公开显示的作者名）。
+- 用户名（公开显示的社区昵称）。
 - 密码（以 bcrypt 哈希存储，我们无法看到明文）。
 - 账号创建时间。
 
 使用服务时还会收集：
 
-- 你提交、评审或收藏的稿件与文献记录。
-- 你填写的审稿意见与评分。
+- 你发布的帖子、回复、评论与档案记录。
+- 你的公开个人资料、关注关系、收藏与阅读进度。
 - 安全审计所需的 IP 地址与请求时间。
 - 匿名页面访问记录：仅路径与来源页，不含 IP、User-Agent 或账号身份，用于统计内容阅读量，保留 90 天。
 - Cookie：一个 HttpOnly 的登录刷新令牌，以及（如启用）CSRF 双提交 Cookie。
@@ -55,8 +55,8 @@ Rubbish（rubbish.argjiemi.cn）是一份学术底刊，由本站编辑部运营
 
 ## 用途
 
-- 提供登录、投稿、评审、阅读等核心服务。
-- 防止滥用（限流、暴力破解防护）。
+- 提供登录、发帖、回复、档案阅读与收藏等核心服务。
+- 防止滥用（限流、暴力破解防护、举报处理）。
 - 记录账号操作审计日志，保留 {AUDIT_LOG_RETENTION_DAYS} 天。
 
 ## 保留期限
@@ -169,7 +169,7 @@ def _render_html(markdown_text: str) -> str:
 <body>
 <main>
 {chr(10).join(body)}
-<footer>© 2026 Rubbish · 开放获取期刊 · <a href="/">返回首页</a></footer>
+<footer>© 2026 Rubbish · 荒诞科研社区 · <a href="/">返回首页</a></footer>
 </main>
 </body>
 </html>"""

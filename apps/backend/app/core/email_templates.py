@@ -32,7 +32,7 @@ def _shell(title: str, body_html: str, footer_note: str = "") -> str:
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#fff;border:1px solid {LINE};border-radius:10px;">
     <tr><td style="padding:22px 26px 6px;">
       <div style="font-size:20px;font-weight:700;color:{INK};letter-spacing:.5px;">{site}</div>
-      <div style="margin-top:4px;font-size:12px;color:{MUTED};">学术底刊 · Academic Bottom Journal</div>
+      <div style="margin-top:4px;font-size:12px;color:{MUTED};">荒诞科研社区 · Absurd Research Community</div>
     </td></tr>
     <tr><td style="padding:14px 26px 4px;">
       <h1 style="margin:0 0 12px;font-size:17px;line-height:1.5;color:{INK};">{escape(title)}</h1>
@@ -40,10 +40,10 @@ def _shell(title: str, body_html: str, footer_note: str = "") -> str:
     </td></tr>
     <tr><td style="padding:18px 26px 22px;">
       <div style="border-top:1px solid {LINE};padding-top:14px;font-size:12px;color:{MUTED};line-height:1.7;">
-        {footer_note or "本邮件由 Rubbish 编辑部系统自动发送，请勿直接回复。"}<br>
+        {footer_note or "本邮件由 Rubbish 社区系统自动发送，请勿直接回复。"}<br>
         <a href="{escape(base)}" style="color:{ACCENT};text-decoration:none;">{escape(base or site)}</a>
-        · 官方读者一群：1084870548<br>
-        <span style="color:{MUTED};">防钓鱼提示：本刊官方域名只有一个（rubbish.argjiemi.cn），
+        · 社区群：1084870548<br>
+        <span style="color:{MUTED};">防钓鱼提示：Rubbish 官方域名只有一个（rubbish.argjiemi.cn），
         其他域名发来的"Rubbish"邮件均非官方；官方邮件不会索要你的密码。</span>
       </div>
     </td></tr>
@@ -112,7 +112,7 @@ def email_login_code(code: str, expire_minutes: int) -> tuple[str, str, str]:
         "\n"
         f"{expire_minutes} 分钟内有效，仅可使用一次。\n"
         "如果不是你在请求登录，请忽略本邮件——验证码作废不会影响你的账号。\n"
-        "本邮件由 Rubbish 编辑部系统发送（rubbish.argjiemi.cn）。"
+        "本邮件由 Rubbish 社区系统发送（rubbish.argjiemi.cn）。"
     )
     body_html = (
         f'<p style="margin:0 0 14px;">你正在登录 <strong>{escape(settings.site_name)}</strong>。'
@@ -122,7 +122,7 @@ def email_login_code(code: str, expire_minutes: int) -> tuple[str, str, str]:
         f'text-align:center;">{escape(code)}</div>'
         f'<p style="margin:0 0 8px;font-size:13px;color:{MUTED};">'
         f"{expire_minutes} 分钟内有效，仅可使用一次。请勿把验证码告诉任何人——"
-        f"编辑部工作人员不会向你索要验证码。</p>"
+        f"站点管理员不会向你索要验证码。</p>"
     )
     return subject, text, _shell(title="登录验证码", body_html=body_html)
 
@@ -133,14 +133,14 @@ def duplicate_registration(username: str) -> tuple[str, str, str]:
         f"你好，{username}：\n\n"
         "我们注意到有人使用你的邮箱地址尝试注册新账号。\n\n"
         "如果这是你本人操作，可以忽略本邮件，你的现有账号不受影响。\n"
-        "如果不是你本人操作，请考虑修改密码并联系编辑部。\n"
+        "如果不是你本人操作，请考虑修改密码并联系站点管理。\n"
     )
     html = _shell(
         "有人尝试用你的邮箱注册",
         f"<p>你好，{escape(username)}：</p>"
         "<p>我们注意到有人使用你的邮箱地址尝试注册新账号。</p>"
         "<p>如果这是你本人操作，可以忽略本邮件，你的现有账号不受影响。<br>"
-        "如果不是你本人操作，请考虑修改密码并联系编辑部。</p>",
+        "如果不是你本人操作，请考虑修改密码并联系站点管理。</p>",
     )
     return subject, text, html
 
@@ -149,8 +149,8 @@ def account_created(
     username: str, role_label: str, link: str, note: str = ""
 ) -> tuple[str, str, str]:
     """Invitation for an account created by an editor (no self-registration)."""
-    subject = f"{settings.site_name}：你的编辑部账号已创建"
-    note_text = f"\n编辑留言：{note}\n" if note else ""
+    subject = f"{settings.site_name}：你的管理账号已创建"
+    note_text = f"\n邀请留言：{note}\n" if note else ""
     note_html = (
         f'<div style="margin:14px 0;padding:10px 14px;background:{PAPER};'
         f"border-left:3px solid {ACCENT};font-size:13px;color:{INK};"
@@ -160,24 +160,24 @@ def account_created(
     )
     text = (
         f"你好，{username}：\n\n"
-        f"编辑部已为你创建 {settings.site_name} 账号，角色：{role_label}。\n"
+        f"站点管理已为你创建 {settings.site_name} 账号，角色：{role_label}。\n"
         f"{note_text}"
         f"请打开以下页面，使用邮箱验证码登录并设置个人资料：\n{link}\n\n"
         "登录时选择「邮箱验证码登录」，验证码会发送到本邮箱。\n"
-        "如果这不是你本人预期的安排，请直接回复编辑部或忽略本邮件。\n"
+        "如果这不是你本人预期的安排，请直接回复站点管理或忽略本邮件。\n"
     )
     html = _shell(
-        "你的编辑部账号已创建",
+        "你的管理账号已创建",
         f"<p>你好，{escape(username)}：</p>"
-        f"<p>编辑部已为你创建 <strong>{escape(settings.site_name)}</strong> 账号，"
+        f"<p>站点管理已为你创建 <strong>{escape(settings.site_name)}</strong> 账号，"
         f"角色：<strong>{escape(role_label)}</strong>。</p>"
-        + (f"<p>编辑留言：</p>{note_html}" if note else "")
+        + (f"<p>邀请留言：</p>{note_html}" if note else "")
         + "<p>请使用邮箱验证码登录并设置个人资料：</p>"
         + _button("登录并设置", link)
         + '<p style="margin-top:16px;font-size:12px;color:'
         + MUTED
         + ';">登录时选择「邮箱验证码登录」，验证码会发送到本邮箱。'
-        "如果这不是你本人预期的安排，请直接回复编辑部或忽略本邮件。</p>",
+        "如果这不是你本人预期的安排，请直接回复站点管理或忽略本邮件。</p>",
     )
     return subject, text, html
 
@@ -356,14 +356,14 @@ def desk_subscribe_confirm(
         "感谢你想订阅 Rubbish 的主编桌邮件。\n\n"
         f"请打开以下链接确认订阅：\n{confirm_url}\n\n"
         f"链接 {expire_days} 天内有效。确认后只会在季度公开信、"
-        "编辑部重要更新时发信，不会推送每篇论文。\n"
+        "社区重要更新时发信，不会推送每一条帖子。\n"
         f"如果不想订阅，可直接退订：\n{unsubscribe_url}\n"
         "若不是你本人操作，请忽略本邮件，不会产生订阅。\n"
     )
     html = _shell(
         "确认订阅主编桌邮件",
         "<p>感谢你想订阅 <strong>Rubbish 主编桌邮件</strong>。</p>"
-        "<p>我们只会发送季度公开信与编辑部重要更新，不推送每篇论文，"
+        "<p>我们只会发送季度公开信与社区重要更新，不推送每一条帖子，"
         "也不把邮箱用于营销。</p>"
         + _button("确认订阅", confirm_url)
         + f'<p style="margin-top:16px;font-size:12px;color:{MUTED};">'

@@ -1,16 +1,14 @@
-"""Crawler-facing endpoints: robots.txt, sitemap.xml and SPA head metadata.
+"""Crawler-facing endpoints for the community.
 
-The SPA serves a single index.html for every route, so without help a
-crawler sees one title and one description for the whole site and cannot
-discover article URLs. These routes cover the two halves of the problem:
+The SPA serves one ``index.html`` for every route, so crawlers need explicit
+titles, descriptions, Open Graph tags and a sitemap. This module owns:
 
-- ``robots.txt`` / ``sitemap.xml`` tell crawlers what exists.
-- ``inject_head_metadata`` rewrites the served index.html per path so
-  article pages carry their own title, description, Open Graph tags and
-  the Google Scholar ``citation_*`` tags that make PDFs indexable.
+- ``robots.txt`` / ``sitemap.xml`` / ``llms.txt`` / RSS
+- per-path ``<head>`` metadata for the SPA shell
+- structured data for public archive records
 
-Only published resources are ever exposed. All interpolated values are
-HTML-escaped; a title containing ``</title><script>`` must not become one.
+Only published records are exposed. All interpolated values are HTML-escaped.
+There is no academic citation metadata and no machine submission endpoint.
 """
 
 from __future__ import annotations
@@ -26,45 +24,40 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.db import get_db
 from app.domain.catalog.models import Resource
-from app.domain.catalog.sections import SECTION_LABELS, SECTIONS
 from app.domain.catalog.visibility import public_conditions
 from app.models import Tenant
 
 router = APIRouter(tags=["seo"])
 
 SITE_NAME = "Rubbish"
-JOURNAL_TITLE = "Rubbish — 学术底刊"
+SITE_TITLE = "Rubbish — 荒诞科研社区"
 DEFAULT_DESCRIPTION = (
-    "Rubbish 是一份学术底刊：在线投稿、编辑评审、录用后全文免费开放，覆盖论文、图书、数据集与教程。"
+    "Rubbish 是一个荒诞科研社区：用帖子讨论研究计划、实验记录、失败复盘与科研生存，"
+    "用档案保存值得留下的长记录。"
 )
 
-# 每个公开入口都应有自己的标题与描述；共用默认 title 会让 12 个页面在
-# 搜索结果里看起来像同一个页面，也无法告诉读者这一页具体能做什么。
-SECTION_PAGE_LABELS: dict[str, str] = {
-    **{s["slug"]: s["label"] for s in SECTIONS},
-    **SECTION_LABELS,
-}
-SECTION_PAGE_SLUGS = set(SECTION_PAGE_LABELS)
-
 PAGE_META: dict[str, tuple[str, str]] = {
-    "": ("Rubbish — 开放获取期刊", DEFAULT_DESCRIPTION),
-    "papers": (
-        "论文 · 学术与荒诞分区",
-        "按学科、年份与分区浏览 Rubbish 论文；学术论文与荒诞论文分轨展示，不混在一起。",
+    "": (SITE_TITLE, DEFAULT_DESCRIPTION),
+    "catalog": (
+        "档案 · 研究记录与自由创作",
+        "按实证研究、荒诞研究与自由创作浏览社区档案；每条记录都标明是不是虚构。",
     ),
-    "catalog": ("全部目录", "按类型、学科、年份筛选 Rubbish 已刊内容，支持列表与九宫格视图。"),
-    "fun": (
-        "副刊 · 小说、吐槽与指南",
-        "Rubbish 副刊：小说、吐槽、指南与诗歌；不是论文，也不冒充论文。",
+    "forum": (
+        "社区 · 讨论、记录与组队",
+        "研究计划、实验记录、田野观察、失败档案、科研生存与组队招募都在这。",
     ),
-    "forum": ("讨论区", "围绕投稿、写作、审稿与学术生存的公开讨论；发帖前请先看版规。"),
-    "about": ("关于 Rubbish", "Rubbish 的定位、编辑流程、开放获取政策与联系方式。"),
-    "guide": ("作者指南", "投稿格式、图表规范、评审流程与常见退稿原因。"),
-    "journal-metrics": (
-        "期刊指标",
-        "Rubbish 公开指标：论文轨规模、学科构成、阅读与下载；样本不足的指标不硬凑数字。",
+    "about": (
+        "关于 Rubbish",
+        "Rubbish 是一个荒诞科研社区：帖子做讨论，档案做长记录，注册后就能发。",
     ),
-    "support": ("成本公开", "Rubbish 的季度成本账本与编辑部来信；不开放赞助或收款。"),
+    "guide": (
+        "指南 · 怎么在这里发一条像样的内容",
+        "研究可以荒诞，方法要能对上；虚构要标出来，引用不能伪造。",
+    ),
+    "privacy": (
+        "隐私政策",
+        "Rubbish 只收集运行社区所必需的数据，不使用广告追踪。",
+    ),
 }
 
 
@@ -105,8 +98,6 @@ CRAWLER_RULES = [
     "Disallow: /api/",
     "Disallow: /admin",
     "Disallow: /dashboard",
-    "Disallow: /submissions",
-    "Disallow: /review",
     "Disallow: /me",
     "Disallow: /notifications",
     "Disallow: /library",
@@ -132,9 +123,7 @@ async def robots(request: Request) -> Response:
     for bot in AI_CRAWLERS:
         lines.extend([f"User-agent: {bot}", *CRAWLER_RULES, ""])
     lines.append(f"Sitemap: {_root(request)}/sitemap.xml")
-    lines.append(f"# OAI-PMH: {_root(request)}/oai")
     lines.append(f"# LLM guide: {_root(request)}/llms.txt")
-    lines.append(f"# AI agent policy: {_root(request)}/ai.txt")
     body = "\n".join(lines) + "\n"
     return Response(
         content=body.encode("utf-8"),
@@ -145,36 +134,30 @@ async def robots(request: Request) -> Response:
 
 @router.get("/ai.txt", response_class=Response, include_in_schema=False)
 async def ai_txt(request: Request) -> Response:
-    """给 AI Agent 的机器可读边界说明。
-
-    公开文章可以读；管理端、个人数据与写接口必须走授权。
-    投稿不接受账号密码，只能用用户在设置页创建的个人 Token。
-    """
+    """给 AI Agent 的机器可读边界说明。"""
     root = _root(request)
     body = f"""# Rubbish AI Agent Policy
 
 ## 可以做什么
-- 读取公开文章、目录、论坛与 OAI-PMH：允许，遵守 /robots.txt。
+- 读取公开页面、档案、社区帖子与 RSS，遵守 /robots.txt。
 - 引用时保留标题、作者、出处与原文链接。
-- 通过 MCP 或 REST 投稿：需要用户本人在 {root}/me?tab=settings&section=ai 创建的个人 Token。
 
 ## 不可以做什么
-- 不要尝试登录、抓取 /admin、/settings、/review、/submissions 或他人数据。
-- 不接受账号密码、Cookie 或会话令牌作为投稿凭据。
-- 不要绕过限流、验证码、敏感词或站内相似度检查。
-- 不要批量注册账号、刷积分或伪造引用。
+- 不要尝试登录、抓取 /admin、/me、/notifications 或他人数据。
+- 本站没有机器投稿 API；发帖与回复需要用户在网页登录后手动操作。
+- 不要批量注册账号、刷积分、伪造引用或绕过限流与审核。
 
-## API
-- 能力说明：GET {root}/api/ai/capabilities
-- 投稿：POST {root}/api/ai/submissions
-- 认证：X-API-Key: rbk_...（用户可随时撤销）
-- 幂等：Idempotency-Key
-- 限流：每个 Token 每小时 10 篇
+## 公开入口
+- 首页：{root}/
+- 社区：{root}/forum
+- 档案：{root}/catalog
+- 指南：{root}/guide
+- 关于：{root}/about
 - 机器可读站点说明：{root}/llms.txt
 
 ## 联系方式
-- 站点政策：{root}/guide?tab=policies
-- 滥用举报：{root}/support
+- 站点政策：{root}/guide
+- 隐私政策：{root}/privacy
 """
     return Response(
         content=body.encode("utf-8"),
@@ -189,32 +172,19 @@ async def sitemap(request: Request, db: AsyncSession = Depends(get_db)) -> Respo
     urls: list[tuple[str, str, str, str | None]] = [
         (f"{root}/", "weekly", "1.0", None),
         (f"{root}/catalog", "daily", "0.9", None),
-        (f"{root}/catalog", "daily", "0.9", None),
-        (f"{root}/catalog?track=essay", "daily", "0.8", None),
-        (f"{root}/forum", "daily", "0.7", None),
-        (f"{root}/catalog?sort=issue", "weekly", "0.7", None),
-        (f"{root}/about", "monthly", "0.6", None),
+        (f"{root}/forum", "daily", "0.8", None),
         (f"{root}/guide", "monthly", "0.6", None),
-        (f"{root}/about?tab=metrics", "monthly", "0.6", None),
-        (f"{root}/support", "monthly", "0.4", None),
+        (f"{root}/about", "monthly", "0.6", None),
         (f"{root}/privacy", "yearly", "0.3", None),
     ]
-    for slug in sorted(SECTION_PAGE_SLUGS):
-        urls.append((f"{root}/catalog?section={slug}", "weekly", "0.6", None))
     rows = await _published_resources(db)
-    for volume, issue in sorted(
-        {(str(r.volume), str(r.issue)) for r in rows if r.volume and r.issue}
-    ):
-        urls.append(
-            (f"{root}/catalog?volume={volume}&issue={issue}", "monthly", "0.5", None)
-        )
     for r in rows:
         lastmod = r.publish_at or r.updated_at or r.created_at
         urls.append(
             (
                 f"{root}/catalog/{r.id}",
                 "monthly",
-                "0.8",
+                "0.7",
                 lastmod.date().isoformat() if lastmod else None,
             )
         )
@@ -238,41 +208,26 @@ async def sitemap(request: Request, db: AsyncSession = Depends(get_db)) -> Respo
 
 @router.get("/llms.txt", response_class=Response, include_in_schema=False)
 async def llms_txt(request: Request, db: AsyncSession = Depends(get_db)) -> Response:
-    """Machine-readable guide for LLM crawlers and answer engines.
-
-    Plain text, no auth, only published records. Keeps the site's public
-    scope obvious without requiring an agent to parse the SPA.
-    """
+    """Machine-readable guide for LLM crawlers and answer engines."""
     root = _root(request)
     rows = await _published_resources(db, limit=200)
     lines = [
         "# Rubbish",
         "",
-        "> Rubbish 是一份学术底刊，收录论文、荒诞论文、副刊与讨论。",
-        "> 所有已刊文章全文免费开放；审稿与编辑流程公开在 /guide。",
+        "> Rubbish 是一个荒诞科研社区。帖子做讨论，档案做长记录。",
+        "> 公开内容可读；管理端与个人数据需要授权。",
         "",
         "## 核心入口",
         f"- [首页]({root}/)",
-        f"- [论文]({root}/catalog)",
-        f"- [副刊]({root}/catalog?track=essay)",
-        f"- [全部目录]({root}/catalog)",
-        f"- [栏目]({root}/catalog)",
-        f"- [往期目录]({root}/catalog?sort=issue)",
-        f"- [讨论区]({root}/forum)",
-        f"- [作者指南]({root}/guide)",
-        f"- [期刊政策]({root}/guide?tab=policies)",
-        f"- [期刊指标]({root}/about?tab=metrics)",
+        f"- [社区]({root}/forum)",
+        f"- [档案]({root}/catalog)",
+        f"- [指南]({root}/guide)",
+        f"- [关于]({root}/about)",
+        f"- [隐私政策]({root}/privacy)",
         f"- [RSS]({root}/rss.xml)",
-        f"- [OAI-PMH]({root}/oai)",
         f"- [Sitemap]({root}/sitemap.xml)",
         "",
-        "## 栏目",
-        *[
-            f"- [{SECTION_PAGE_LABELS[slug]}]({root}/catalog?section={slug})"
-            for slug in sorted(SECTION_PAGE_SLUGS)
-        ],
-        "",
-        "## 最新文章",
+        "## 最新档案",
     ]
     for r in rows[:50]:
         abstract = " ".join((r.abstract or "").split())[:180]
@@ -285,17 +240,10 @@ async def llms_txt(request: Request, db: AsyncSession = Depends(get_db)) -> Resp
     lines.extend(
         [
             "",
-            "## 引用与抓取",
-            "- 文章页含 citation_* 与 ScholarlyArticle JSON-LD。",
-            "- 允许检索与 AI 爬虫抓取公开页面；/admin、/review、/submissions 等私有路径禁止。",
+            "## 抓取边界",
+            "- 只抓公开页面；/admin、/me、/notifications、/library 禁止。",
+            "- 本站没有机器投稿 API；发帖与回复需要用户手动操作。",
             f"- Sitemap: {root}/sitemap.xml",
-            "",
-            "## AI 投稿",
-            f"- 能力说明：GET {root}/api/ai/capabilities",
-            f"- 用户创建 Token：{root}/me?tab=settings&section=ai",
-            f"- 投稿端点：POST {root}/api/ai/submissions（X-API-Key: rbk_...）",
-            "- 不接受账号密码；Token 可撤销，每 Token 每小时最多 10 篇。",
-            f"- Agent 边界：{root}/ai.txt",
             "",
         ]
     )
@@ -309,11 +257,7 @@ async def llms_txt(request: Request, db: AsyncSession = Depends(get_db)) -> Resp
 @router.get("/feed.xml", response_class=Response, include_in_schema=False)
 @router.get("/rss.xml", response_class=Response, include_in_schema=False)
 async def rss_feed(request: Request, db: AsyncSession = Depends(get_db)) -> Response:
-    """RSS 2.0 feed of the latest published records.
-
-    期刊站标配：读者可用任意 RSS 阅读器订阅新刊，聚合器与索引服务也可直接
-    收割。仅含已刊出内容；摘要截断 500 字；全部字段 HTML 转义。
-    """
+    """RSS 2.0 feed of the latest published archive records."""
     from email.utils import format_datetime
 
     root = _root(request)
@@ -341,15 +285,13 @@ async def rss_feed(request: Request, db: AsyncSession = Depends(get_db)) -> Resp
         '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel>'
         f"<title>{site}</title>"
         f"<link>{html.escape(root)}</link>"
-        f"<description>{site} · 学术底刊 · 最新发表</description>"
+        f"<description>{site} · 荒诞科研社区 · 最新档案</description>"
         "<language>zh-cn</language>"
         f'<atom:link href="{html.escape(root)}/feed.xml" rel="self" type="application/rss+xml"/>'
         + (f"<lastBuildDate>{format_datetime(latest)}</lastBuildDate>" if latest else "")
         + "".join(items)
         + "</channel></rss>"
     )
-    # 显式以 UTF-8 字节输出：Starlette 对 str 内容默认按 latin-1 编码，
-    # 中文会变成乱码（线上实测 "开放获取" → "寮€鏀捐幏"）。
     return Response(
         content=body.encode("utf-8"),
         media_type="application/rss+xml; charset=utf-8",
@@ -391,52 +333,11 @@ def _meta_tags(
     )
 
 
-def _publication_date(r: Resource) -> str:
-    """Prefer the real publication date; fall back to the year only."""
+def _record_date(r: Resource) -> str:
+    """Use the real publish date when present; fall back to the year."""
     if r.publish_at is not None:
         return r.publish_at.date().isoformat()
     return str(int(r.year))
-
-
-def _citation_tags(r: Resource, root: str) -> str:
-    """Google Scholar / Highwire ``citation_*`` tags for one article."""
-    parts = [
-        f'<meta name="citation_title" content="{html.escape(r.title, quote=True)}" />',
-    ]
-    for author in r.authors or []:
-        parts.append(
-            f'<meta name="citation_author" content="{html.escape(str(author), quote=True)}" />'
-        )
-    parts.append(f'<meta name="citation_publication_date" content="{_publication_date(r)}" />')
-    parts.append(f'<meta name="citation_journal_title" content="{JOURNAL_TITLE}" />')
-    if r.volume:
-        parts.append(
-            f'<meta name="citation_volume" content="{html.escape(str(r.volume), quote=True)}" />'
-        )
-    if r.issue:
-        parts.append(
-            f'<meta name="citation_issue" content="{html.escape(str(r.issue), quote=True)}" />'
-        )
-    if r.pages:
-        parts.append(
-            f'<meta name="citation_firstpage" content="{html.escape(str(r.pages).split("-")[0], quote=True)}" />'
-        )
-    if r.doi:
-        parts.append(f'<meta name="citation_doi" content="{html.escape(r.doi, quote=True)}" />')
-    if r.abstract:
-        parts.append(
-            f'<meta name="citation_abstract" content="{html.escape(r.abstract[:2000], quote=True)}" />'
-        )
-    parts.append(
-        f'<meta name="citation_abstract_html_url" content="{html.escape(root, quote=True)}/catalog/{r.id}" />'
-    )
-    parts.append(
-        f'<meta name="citation_pdf_url" content="{html.escape(root, quote=True)}/api/catalog/{r.id}/export?format=pdf" />'
-    )
-    parts.append(
-        f'<meta name="citation_language" content="{html.escape(r.language, quote=True)}" />'
-    )
-    return "\n".join(parts)
 
 
 async def build_index_html(
@@ -445,18 +346,14 @@ async def build_index_html(
     request: Request,
     db: AsyncSession,
 ) -> tuple[str, str]:
-    """Return ``(html, status)`` for a SPA route.
-
-    Only ``/`` and ``/catalog/{id}`` get route-specific metadata; every
-    other SPA path keeps the default title (crawlers reach the rest
-    through the sitemap anyway).
-    """
+    """Return ``(html, status)`` for a SPA route."""
     root = _root(request)
     path = full_path.strip("/")
-    title, description = PAGE_META.get(path, (JOURNAL_TITLE, DEFAULT_DESCRIPTION))
+    title, description = PAGE_META.get(path, (SITE_TITLE, DEFAULT_DESCRIPTION))
     extra = ""
     status = "200"
     og_type = "website"
+
     if path.startswith("catalog/") and path.split("/", 1)[1].isdigit():
         tenant = (
             await db.execute(select(Tenant).where(Tenant.slug == settings.bootstrap_tenant_slug))
@@ -473,46 +370,41 @@ async def build_index_html(
                 )
             ).scalar_one_or_none()
         if resource is None:
-            # Unpublished or absent: do not leak existence, and do not let
-            # the page be indexed under the wrong title.
-            title = f"未找到该文章 — {SITE_NAME}"
+            # Unpublished or absent: do not leak existence.
+            title = f"未找到这条记录 — {SITE_NAME}"
             description = DEFAULT_DESCRIPTION
             extra = '<meta name="robots" content="noindex" />\n'
             status = "404"
         else:
             title = f"{resource.title} — {SITE_NAME}"
             description = (resource.abstract or DEFAULT_DESCRIPTION)[:300]
-            extra = _citation_tags(resource, root)
             og_type = "article"
             updated_at = resource.updated_at or resource.created_at or resource.publish_at
+            published = _record_date(resource)
             payload: dict[str, Any] = {
                 "@context": "https://schema.org",
-                "@type": "ScholarlyArticle",
+                "@type": "CreativeWork",
                 "headline": resource.title,
                 "author": [{"@type": "Person", "name": str(a)} for a in resource.authors or []],
-                "datePublished": _publication_date(resource),
+                "datePublished": published,
                 "dateModified": (
-                    updated_at.date().isoformat() if updated_at else _publication_date(resource)
+                    updated_at.date().isoformat() if updated_at else published
                 ),
                 "abstract": (resource.abstract or "")[:2000],
                 "url": f"{root}/catalog/{resource.id}",
                 "mainEntityOfPage": {"@type": "WebPage", "@id": f"{root}/catalog/{resource.id}"},
-                "isPartOf": {"@type": "Periodical", "name": JOURNAL_TITLE, "url": f"{root}/"},
+                "isPartOf": {"@type": "WebSite", "name": SITE_NAME, "url": f"{root}/"},
                 "publisher": {"@type": "Organization", "name": SITE_NAME, "url": f"{root}/"},
                 "isAccessibleForFree": True,
-                "license": "https://creativecommons.org/licenses/by/4.0/",
                 "inLanguage": resource.language or "zh",
                 "image": f"{root}/og-cover.png",
             }
             if resource.keywords:
                 payload["keywords"] = ", ".join(str(k) for k in resource.keywords)
-            published = _publication_date(resource)
-            extra += (
-                f'\n<meta property="article:published_time" content="{html.escape(published, quote=True)}" />'
-                f'\n<meta property="article:section" content="{html.escape(resource.discipline or "论文", quote=True)}" />'
+            extra = (
+                f'<meta property="article:published_time" content="{html.escape(published, quote=True)}" />'
+                '<meta property="article:section" content="档案" />\n'
             )
-            if resource.doi:
-                payload["identifier"] = f"https://doi.org/{resource.doi}"
             breadcrumb = {
                 "@context": "https://schema.org",
                 "@type": "BreadcrumbList",
@@ -521,7 +413,7 @@ async def build_index_html(
                     {
                         "@type": "ListItem",
                         "position": 2,
-                        "name": "全部目录",
+                        "name": "档案",
                         "item": f"{root}/catalog",
                     },
                     {
@@ -544,7 +436,7 @@ async def build_index_html(
             "@context": "https://schema.org",
             "@type": "WebSite",
             "name": SITE_NAME,
-            "alternateName": "Rubbish Journal",
+            "alternateName": "Rubbish Community",
             "url": f"{root}/",
             "description": DEFAULT_DESCRIPTION,
             "potentialAction": {
@@ -573,8 +465,6 @@ async def build_index_html(
         root=root,
         og_type=og_type,
     )
-    # 不依赖 index.html 里的标题恰好等于 JOURNAL_TITLE：容器重建、前端改版
-    # 或旧模板缓存都会让精确替换失效，页面就会退回全站默认标题。
     out = index_html
     start = out.find("<title>")
     end = out.find("</title>", start) if start >= 0 else -1

@@ -428,43 +428,6 @@ class ContentReport(Base, TenantScopedMixin):
     )
 
 
-class ApiToken(Base, TenantScopedMixin):
-    """个人 API Token，供 MCP / 脚本以用户身份投稿。
-
-    只存 SHA-256 哈希，明文仅在创建时返回一次；撤销立即生效。
-    作用域目前只有 ``submission:write`` 与 ``profile:read``，避免一个
-    token 意外获得管理权限。``last_used_at`` / ``request_count`` 用于
-    后台审计和异常频率观察。
-    """
-
-    __tablename__ = "api_tokens"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
-    )
-    name: Mapped[str] = mapped_column(String(60), nullable=False)
-    token_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
-    token_prefix: Mapped[str] = mapped_column(String(16), nullable=False)
-    scopes: Mapped[str] = mapped_column(
-        String(200), nullable=False, default="submission:write profile:read"
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utcnow, nullable=False
-    )
-    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    request_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    # 投稿小时窗：最多 10 篇/小时，防止自动化刷稿。
-    window_started_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    window_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-
-    __table_args__ = (Index("ix_api_tokens_tenant_user", "tenant_id", "user_id", "created_at"),)
-
-
 class DeskSubscriber(Base, TenantScopedMixin):
     """主编桌邮件订阅人。
 
@@ -536,7 +499,6 @@ class FinanceReport(Base, TenantScopedMixin):
 
 
 __all__ = [
-    "ApiToken",
     "AuditLog",
     "Base",
     "ContentReport",
