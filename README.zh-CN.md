@@ -4,9 +4,9 @@
 
 # Rubbish
 
-**收录全球学术垃圾的开放获取期刊 — Submit · Review · Publish · Read，一个代码库跑完整个出版闭环**
+**荒诞论文体创作社区 — 写论文、发帖子、认真吵架。这里不是期刊。**
 
-> 16 个后端模块 · 870 单元测试 · Playwright E2E · 全链路严格类型
+> 16 个后端模块 · 论坛 + 长文作品 · Playwright E2E · 全链路严格类型
 
 **🌐 [English](README.md) · [简体中文](README.zh-CN.md)**
 
@@ -32,21 +32,18 @@
 
 | | 是什么 | 展示性内容放在哪 |
 | --- | --- | --- |
-| **开源示例**（本仓库） | Rubbish 期刊平台的参考实现——克隆、自部署、二次开发。 | `site/` 宣传页、`docs/assets/`、README 截图 |
-| **生产服务**（[rubbish.argjiemi.cn](https://rubbish.argjiemi.cn)） | **正式上线的真实期刊**，直接服务投稿、评审、刊出与阅读。运行中的应用不含截图图集等宣传内容。 | 无——设计上已去展示化 |
+| **开源示例**（本仓库） | Rubbish 社区的参考实现——克隆、自部署、二次开发。 | `site/`、`docs/assets/`、README 截图 |
+| **生产服务**（[rubbish.argjiemi.cn](https://rubbish.argjiemi.cn)） | 面向公众的荒诞论文体创作社区。社区版收尾期间站点暂时下线。 | 无——设计上已去展示化 |
 
 ## 功能一览
 
 | 角色 | 能力 |
 | --- | --- |
-| **作者** | 新建投稿（附 PDF）、多版本修订、跟踪审核状态（待审/大修/小修/录用/拒稿） |
-| **编辑** | 审稿人指派、裁决（含编辑备注）、稿件管理工作台 |
-| **审稿人** | 审稿报告、盲审（单盲/双盲）、决定建议 |
-| **读者** | 公开目录检索、**邮箱验证码免密登录**、**阅读页字号/行距/宋黑排版控制**、**稿件结构自动检查（上传即报缺什么）**、**浏览器内在线阅读 Markdown（图表内联、图注、KaTeX，无需登录墙）**、跨设备阅读进度（游客本地保存）、关注作者、订阅通知、**主题封面卡片** |
-| **社区** | **独立讨论区（发帖/回帖/分类/置顶/锁定，登录即可发）**、论文读者评论区（公开可读、登录可评、本人/管理员可删且审计留痕）、游客模式本地存储 |
-| **身份与成长** | 四层身份（读者 → 作者 → 审稿人 → 编辑，与后端权限一一对应）、积分仅作荣誉统计不充当权限、27 枚成就徽章、个人中心（`/me`）、公开的身份与评分规范（`/guide?tab=levels`）、审稿人申请通道 |
-| **期刊运营** | **论文与副刊双轨（学术论文 / 荒诞论文 / 副刊，投稿必选、目录可筛、详情页徽章、分轨统计）**、编辑部自设计指标（R 因子、荒诞指数，口径不公开）、**RQS v5.1 双轨评分（学术五维 / 荒诞六维含荒诞度；每维必给分，理由与正文证据选填）**、**按月分期的定时发布（`publish_at` + 公开出版日历 `/archive`）**、首访公告、作者指南 / 政策规范 / 关于本刊页、投稿模板 |
-| **管理员** | **用户提权为平台管理员**、**公告管理**、用户/卷/期/期刊管理、审计日志、批量导入（BibTeX / RIS / CSV / DOI / arXiv）、**一键发整期 / 改期** |
+| **创作者** | 发布长文作品或社区帖子；Markdown 编辑器、草稿自动保存、论文体元数据可选 |
+| **读者** | 公开作品库、论坛阅读、字号/行高/字体控制、阅读进度、关注与收藏 |
+| **社区** | 版块、主题、回复、表情回应、举报、反馈板、通知；阅读不设登录墙 |
+| **版主** | 举报处理、内容隐藏/恢复、置顶/锁定、版块管理、审计留痕 |
+| **管理员** | 用户与角色、内容、积分账本、系统健康、公告；不再管理卷期 |
 
 **安全默认开启**：邮箱验证码登录（一次性哈希码 + 频率限制）、WebAuthn 通行密钥 + TOTP 双因素、JWT 服务端吊销与密钥轮换、注册验证码、全操作审计日志、多租户隔离（PostgreSQL RLS）。
 
@@ -54,23 +51,19 @@
 
 ## 界面预览
 
-| 公开首页 | 论文目录 | 文章页 |
+| 首页（桌面） | 首页（手机） | 作品库 |
 | --- | --- | --- |
-| ![公开首页](docs/assets/screenshots/rubbish-home.png) | ![论文目录](docs/assets/screenshots/rubbish-catalog.png) | ![文章页](docs/assets/screenshots/rubbish-reader.png) |
+| ![首页桌面](docs/assets/screenshots/community-home-desktop.png) | ![首页手机](docs/assets/screenshots/community-home-mobile.png) | ![作品库](docs/assets/screenshots/community-catalog-desktop.png) |
 
-| 讨论区 | 卷期归档 | 本刊数据 |
+| 关于社区 | 社区公约 |  |
 | --- | --- | --- |
-| ![讨论区](docs/assets/screenshots/rubbish-forum.png) | ![卷期归档](docs/assets/screenshots/rubbish-archive.png) | ![本刊数据](docs/assets/screenshots/rubbish-about.png) |
-
-| 手机目录 | 手机文章页 | 界面总览 |
-| --- | --- | --- |
-| ![手机目录](docs/assets/screenshots/mobile-catalog.png) | ![手机文章页](docs/assets/screenshots/mobile-detail.png) | ![界面总览](docs/assets/screenshots-overview.png) |
+| ![关于社区](docs/assets/screenshots/community-about-desktop.png) | ![社区公约](docs/assets/screenshots/community-rules-desktop.png) | |
 
 ## 架构
 
 ![architecture](docs/assets/architecture.svg)
 
-**核心流程**：投稿 → 分配审稿人 → 盲审 → 编辑裁决 → 收录公开目录 → 在线阅读。
+**核心流程**：发帖 → 讨论 → 收藏 → 阅读 → 举报 → 处理。
 
 ![workflow](docs/assets/workflow.svg)
 

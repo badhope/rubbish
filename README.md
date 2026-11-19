@@ -4,9 +4,9 @@
 
 # Rubbish
 
-**An open-access journal for the world's academic rubbish — Submit · Review · Publish · Read, the entire publishing loop in one codebase**
+**An absurd academic writing community — write papers, post drafts, argue in the open. Not a journal.**
 
-> 16 backend modules · 870 unit tests · Playwright E2E · strictly typed end to end
+> 16 backend modules · forum + long-form works · Playwright E2E · strictly typed end to end
 
 **🌐 [English](README.md) · [简体中文](README.zh-CN.md)**
 
@@ -32,20 +32,18 @@
 
 | | What it is | Where showcase content lives |
 | --- | --- | --- |
-| **Open-source example** (this repo) | Reference implementation of the Rubbish journal platform — clone it, self-host it, adapt it. | `site/` marketing pages, `docs/assets/`, README screenshots |
-| **Production service** ([rubbish.argjiemi.cn](https://rubbish.argjiemi.cn)) | A **live journal in production**, serving submission, review, publication and reading. The running app carries no screenshot galleries or promo material. | nowhere — de-showcased by design |
+| **Open-source example** (this repo) | Reference implementation of the Rubbish community — clone it, self-host it, adapt it. | `site/`, `docs/assets/`, README screenshots |
+| **Production service** ([rubbish.argjiemi.cn](https://rubbish.argjiemi.cn)) | A public community for absurd academic writing. The site is currently offline while the community build is being finished. | nowhere — de-showcased by design |
 
 ## Features
 
 | Role | Capability |
 | --- | --- |
-| **Author** | Submit manuscripts (with PDF), multi-version revisions, track review status (pending / major / minor / accept / reject) |
-| **Editor** | Assign reviewers, decide (with editorial notes), manuscript management workbench |
-| **Reviewer** | Review reports, blind review (single / double), decision recommendation |
-| **Reader** | Public catalog search, **passwordless email-code sign-in**, **in-reader typography controls (font size / line height / serif)**, **instant manuscript structure check on upload**, **in-browser reading (pdf.js) — no login wall**, cross-device reading progress (local-storage fallback for guests), follow authors, subscribe |
-| **Community** | Reader comments on published papers (public read, login to post, owner/admin delete with audit), **independent discussion board (post / reply / categories / pin / lock, login to post)**, guest mode with local storage |
-| **Journal** | **Two paper tracks (academic / absurd) plus a separate supplement**, required at submission, filterable in the catalog and labelled on detail pages; editorial metrics (R factor, absurdity index) with hidden methodology, author guide / policies / about pages, submission templates |
-| **Admin** | Users (search / suspend / **promote to platform admin** / grant & revoke roles) / volumes / issues / journals management, **announcement management**, audit logs, batch import (BibTeX / RIS / CSV / DOI / arXiv), **one-click issue publish & reschedule** |
+| **Writer** | Publish a long-form work or a forum post; markdown editor, draft autosave, paper-style metadata optional |
+| **Reader** | Public catalog, forum reading, in-reader typography controls, reading progress, follows and bookmarks |
+| **Community** | Boards, topics, replies, reactions, reports, feedback board, notifications; no login wall for reading |
+| **Moderator** | Report triage, content hide/restore, pin/lock, board management, audit trail |
+| **Admin** | Users and roles, content, points ledger, system health, announcements; no journal volumes or issues |
 
 **Secure by default**: passwordless email-code sign-in (hashed one-time codes, rate limited), WebAuthn passkeys + TOTP 2FA, server-side JWT revocation with key rotation, sign-up captcha, per-action audit logs, multi-tenant isolation (PostgreSQL RLS).
 
@@ -53,23 +51,19 @@
 
 ## Screenshots
 
-| Public home | Paper catalog | Article page |
+| Home (desktop) | Home (mobile) | Works |
 | --- | --- | --- |
-| ![Public home](docs/assets/screenshots/rubbish-home.png) | ![Paper catalog](docs/assets/screenshots/rubbish-catalog.png) | ![Article page](docs/assets/screenshots/rubbish-reader.png) |
+| ![Home desktop](docs/assets/screenshots/community-home-desktop.png) | ![Home mobile](docs/assets/screenshots/community-home-mobile.png) | ![Works](docs/assets/screenshots/community-catalog-desktop.png) |
 
-| Forum | Volume archive | Journal data |
+| About the community | Community rules |  |
 | --- | --- | --- |
-| ![Forum](docs/assets/screenshots/rubbish-forum.png) | ![Volume archive](docs/assets/screenshots/rubbish-archive.png) | ![Journal data](docs/assets/screenshots/rubbish-about.png) |
-
-| Mobile catalog | Mobile article | Interface overview |
-| --- | --- | --- |
-| ![Mobile catalog](docs/assets/screenshots/mobile-catalog.png) | ![Mobile article](docs/assets/screenshots/mobile-detail.png) | ![Interface overview](docs/assets/screenshots-overview.png) |
+| ![About](docs/assets/screenshots/community-about-desktop.png) | ![Rules](docs/assets/screenshots/community-rules-desktop.png) | |
 
 ## Architecture
 
 ![architecture](docs/assets/architecture.svg)
 
-**Core flow**: Submit → assign reviewers → blind review → editor decision → publish to public catalog → read online.
+**Core flow**: Post → discuss → collect → read → report → moderate.
 
 ![workflow](docs/assets/workflow.svg)
 
