@@ -9,7 +9,6 @@ import {
   useShopItems,
 } from '@/hooks/api/use-shop'
 import { useCheckin, useWallet } from '@/hooks/api/use-currency'
-import type { MeProfile } from '@/hooks/api/use-modules'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { extractError } from '@/lib/utils'
@@ -38,7 +37,7 @@ function SectionTitle({
   )
 }
 
-export function MePoints({ profile }: { profile: MeProfile }) {
+export function MePoints() {
   const wallet = useWallet()
   const checkin = useCheckin()
   const items = useShopItems()
@@ -46,10 +45,7 @@ export function MePoints({ profile }: { profile: MeProfile }) {
   const buy = usePurchaseItem()
   const [buyingId, setBuyingId] = useState<number | null>(null)
   const [showAllShop, setShowAllShop] = useState(false)
-  const [showLevels, setShowLevels] = useState(false)
   const [showLedger, setShowLedger] = useState(false)
-
-  const ownedIdentities = profile.identities.filter((identity) => identity in profile.levels)
 
   const onCheckin = async () => {
     try {
@@ -202,70 +198,6 @@ export function MePoints({ profile }: { profile: MeProfile }) {
             </ul>
           </div>
         ) : null}
-      </section>
-
-      <section>
-        <SectionTitle
-          kicker="LEVELS"
-          title="身份等级"
-          hint="等级只在同一身份内累计；不跨身份比较，也不兑换权限。"
-          action={
-            <div className="flex items-center gap-1">
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/guide" search={{ tab: 'help' }}>
-                  积分说明
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setShowLevels((value) => !value)}>
-                {showLevels ? '收起' : `展开 ${ownedIdentities.length} 条`}
-                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showLevels ? 'rotate-180' : ''}`} />
-              </Button>
-            </div>
-          }
-        />
-        {!showLevels ? null : ownedIdentities.length === 0 ? (
-          <p className="border-y py-5 text-sm text-muted-foreground">
-            {profile.permission_role === 'editor_in_chief'
-              ? '管理员为最高权限档，不参与等级轨。'
-              : '暂无等级轨。发布或认领通过后会开始累计。'}
-          </p>
-        ) : (
-          <div className="divide-y border-y">
-            {ownedIdentities.map((identity) => {
-              const level = profile.levels[identity]
-              const pct = Math.max(0, Math.min(1, level.progress))
-              return (
-                <div key={identity} className="grid gap-2 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-6">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex h-6 min-w-11 items-center justify-center border border-primary/25 bg-primary/10 px-2 font-mono text-xs font-semibold text-primary">
-                        {level.level_label}
-                      </span>
-                      <span className="text-sm font-medium">{level.identity_name}</span>
-                      <span className="font-mono text-[11px] text-muted-foreground">{level.points} 分</span>
-                    </div>
-                    <div className="mt-2 h-1 w-full max-w-sm overflow-hidden rounded-full bg-muted">
-                      <div className="h-full rounded-full bg-primary" style={{ width: `${pct * 100}%` }} />
-                    </div>
-                    <p className="mt-1 text-[11px] text-muted-foreground">
-                      {level.next_threshold === null
-                        ? '已达当前身份最高等级'
-                        : `距下一级还差 ${level.to_next} 分（${level.next_threshold} 分升级）`}
-                    </p>
-                  </div>
-                  <Link
-                    to="/me"
-                    search={{ tab: 'points' }}
-                    className="hidden text-xs text-muted-foreground hover:text-primary sm:block"
-                  >
-                    查看流水
-                  </Link>
-                </div>
-              )
-            })}
-          </div>
-        )}
       </section>
 
       <section>

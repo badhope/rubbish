@@ -11,8 +11,8 @@ import { formatCoins } from './format'
 
 const IDENTITY_LABEL: Record<string, string> = {
   author: '创作者',
-  reviewer: '社区志愿版主',
-  editor: '社区管理员',
+  reviewer: '版主',
+  editor: '内容管理员',
 }
 
 const ROLE_STYLE: Record<string, string> = {
@@ -44,7 +44,7 @@ export function MeIdentityHeader({
           </Avatar>
           <div className="min-w-0">
             <p className="editorial-kicker text-[10px] tracking-[0.24em] text-muted-foreground">
-              MY DESK · 个人中心
+              个人中心
             </p>
             <h1 className="mt-1 font-serif text-2xl leading-tight tracking-tight sm:text-3xl">
               {displayName}

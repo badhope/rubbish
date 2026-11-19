@@ -132,18 +132,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             await _warn_if_db_role_bypasses_rls()
         await run_bootstrap()
 
-    if not settings.is_test:
-        # 后台维护任务（审稿催办）：单节点进程内调度，随应用生命周期启停。
-        from app.application.scheduler import start_scheduler
-
-        start_scheduler()
-
     yield
 
     if not settings.is_test:
-        from app.application.scheduler import stop_scheduler
-
-        await stop_scheduler()
         # Close the rate-limiter store (releases the Redis client) before
         # tearing down the engine / other resources that may depend on it.
         await close_rate_limiter_store()

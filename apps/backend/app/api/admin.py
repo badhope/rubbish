@@ -33,13 +33,10 @@ from app.core.key_rotation import _active_secret_keys, _signing_key, reload_sett
 from app.core.logging import get_logger
 from app.core.security import hash_password
 from app.core.site_settings import get_all_site_flags, set_site_flag
-from app.domain.review.blinding import get_review_mode, set_review_mode
 from app.models import AuditLog, Role, User, UserRole
 from app.schemas import (
     AdminUserCreate,
     AdminUserCreateResponse,
-    ReviewModeResponse,
-    ReviewModeUpdate,
     RoleAssign,
     SiteSettingsResponse,
     SiteSettingsUpdate,
@@ -52,7 +49,6 @@ logger = get_logger("rubbish.admin")
 
 # Allowlist of assignable role names; mirrors Role.name values. Admin
 # privilege is governed by User.is_admin, not by role membership.
-# senior_reviewer（L6 资深审稿人）与 reviewer 共用评审端点，仅资格差异。
 #
 # 作者/读者不再作为可分配角色：读者身份 = 注册即得，作者身份 = 确认
 # 《投稿规范》即得（users.rules_ack_version），二者是"身份"不是"角色"，
@@ -69,13 +65,13 @@ ASSIGNABLE_ROLES = {
 }
 
 ROLE_LABELS = {
-    "reviewer": "审稿人",
-    "senior_reviewer": "资深审稿人",
-    "editor": "编辑",
-    "section_editor": "栏目编辑",
-    "board_editor": "编委",
-    "deputy_editor": "副主编",
-    "chief_editor": "主编",
+    "reviewer": "版主",
+    "senior_reviewer": "资深版主",
+    "editor": "内容管理员",
+    "section_editor": "分区管理员",
+    "board_editor": "内容策展",
+    "deputy_editor": "副站长",
+    "chief_editor": "站长",
     "shop_manager": "积分管理员",
 }
 
@@ -636,53 +632,6 @@ async def list_audit_logs(
     ]
 
 
-# ---------------------------------------------------------------------------
-# Journal settings（租户级配置；目前只有评审模式）
-# ---------------------------------------------------------------------------
-
-
-@router.get("/settings/review-mode", response_model=ReviewModeResponse)
-async def get_review_mode_setting(
-    db: AsyncSession = Depends(get_db),
-    current_admin: User = Depends(require_admin),
-) -> ReviewModeResponse:
-    """读取本租户的评审模式（single_blind / double_blind）。"""
-    tenant_id = require_tenant_id()
-    return ReviewModeResponse(review_mode=await get_review_mode(db, tenant_id))
-
-
-@router.patch("/settings/review-mode", response_model=ReviewModeResponse)
-async def update_review_mode_setting(
-    payload: ReviewModeUpdate,
-    db: AsyncSession = Depends(get_db),
-    current_admin: User = Depends(require_admin),
-) -> ReviewModeResponse:
-    """切换本租户的评审模式。
-
-    切换即时生效，但只影响此后的「审稿人读取稿件」请求 —— 已经看过
-    作者姓名的审稿人无法被"取消知晓"，这一点在 UI 上要向管理员说明。
-    """
-    tenant_id = require_tenant_id()
-    try:
-        await set_review_mode(db, tenant_id, payload.review_mode)
-    except LookupError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found"
-        ) from exc
-    db.add(
-        AuditLog(
-            tenant_id=tenant_id,
-            actor_user_id=current_admin.id,
-            action="admin.settings.review_mode",
-            target_type="tenant",
-            target_id=str(tenant_id),
-            payload={"review_mode": payload.review_mode},
-        )
-    )
-    await db.commit()
-    return ReviewModeResponse(review_mode=payload.review_mode)
-
-
 @router.get("/settings/site", response_model=SiteSettingsResponse)
 async def get_site_settings(
     db: AsyncSession = Depends(get_db),
@@ -719,34 +668,6 @@ async def update_site_settings(
         await db.commit()
     flags = await get_all_site_flags(db, tenant_id)
     return SiteSettingsResponse(**flags)
-
-
-@router.post("/maintenance/review-reminders")
-async def trigger_review_reminders(
-    current_admin: User = Depends(require_admin),
-    db: AsyncSession = Depends(get_db),
-) -> dict[str, Any]:
-    """手动触发一轮审稿催办（运维/排障用）。
-
-    定时任务每 6 小时自动跑一次；此端点让管理员在需要时立即执行，
-    返回本轮检查/催办/发信的计数。催办本身幂等（3 天窗口内不重置）。
-    """
-    from app.domain.submission.review_reminders import run_overdue_reminders
-
-    tenant_id = require_tenant_id()
-    stats = await run_overdue_reminders(db, tenant_id=tenant_id)
-    db.add(
-        AuditLog(
-            tenant_id=tenant_id,
-            actor_user_id=current_admin.id,
-            action="admin.maintenance.review_reminders",
-            target_type="tenant",
-            target_id=str(tenant_id),
-            payload=dict(stats),
-        )
-    )
-    await db.commit()
-    return stats
 
 
 @router.get("/maintenance/email-status")

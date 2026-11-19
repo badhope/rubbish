@@ -41,40 +41,9 @@ export interface FinanceReportList {
   total: number;
 }
 
-export interface SubscriptionStatus {
-  mail_configured: boolean;
-  confirmed_count: number;
-  pending_count: number;
-}
-
-export interface TokenResult {
-  ok: boolean;
-  status: "confirmed" | "unsubscribed" | "invalid" | "expired";
-  email_masked: string | null;
-  message: string;
-}
-
-export interface DeskSubscriber {
-  id: number;
-  email: string;
-  status: string;
-  source: string;
-  created_at: string;
-  confirmed_at: string | null;
-  unsubscribed_at: string | null;
-}
-
-export interface SubscriberList {
-  items: DeskSubscriber[];
-  total: number;
-}
-
 const supportKeys = {
   reports: ["support", "reports"] as const,
-  subscription: ["support", "subscription"] as const,
   adminReports: ["admin", "finance-reports"] as const,
-  subscribers: (status?: string) =>
-    ["admin", "desk-subscribers", status ?? "all"] as const,
 };
 
 export function useSupportReports(limit = 8) {
@@ -90,59 +59,11 @@ export function useSupportReports(limit = 8) {
   });
 }
 
-export function useSupportSubscription() {
-  return useQuery<SubscriptionStatus>({
-    queryKey: supportKeys.subscription,
-    queryFn: async () =>
-      (await api.get<SubscriptionStatus>("/support/subscription")).data,
-    staleTime: 60_000,
-  });
-}
-
-export function useSubscribeDesk() {
-  return useMutation({
-    mutationFn: async (payload: { email: string; source?: string }) =>
-      (
-        await api.post<{ ok: boolean; message: string }>(
-          "/support/subscribe",
-          payload,
-        )
-      ).data,
-    onError: (err) => toast.error(extractError(err, "订阅失败，请稍后再试")),
-  });
-}
-
-export function useConfirmSubscription() {
-  return useMutation({
-    mutationFn: async (token: string) =>
-      (await api.post<TokenResult>("/support/confirm", { token })).data,
-  });
-}
-
-export function useUnsubscribe() {
-  return useMutation({
-    mutationFn: async (token: string) =>
-      (await api.post<TokenResult>("/support/unsubscribe", { token })).data,
-  });
-}
-
 export function useAdminFinanceReports() {
   return useQuery<FinanceReportList>({
     queryKey: supportKeys.adminReports,
     queryFn: async () =>
       (await api.get<FinanceReportList>("/admin/finance/reports")).data,
-  });
-}
-
-export function useAdminDeskSubscribers(status?: string) {
-  return useQuery<SubscriberList>({
-    queryKey: supportKeys.subscribers(status),
-    queryFn: async () =>
-      (
-        await api.get<SubscriberList>("/admin/desk/subscribers", {
-          params: { status, limit: 200 },
-        })
-      ).data,
   });
 }
 

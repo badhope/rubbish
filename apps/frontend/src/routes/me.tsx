@@ -86,7 +86,7 @@ function MePage() {
           <MeOverview onOpenNotifications={() => setNotificationsOpen(true)} />
         ) : null}
         {activeTab === 'library' ? <MeLibrary section={search.section} /> : null}
-        {activeTab === 'points' ? <MePoints profile={data} /> : null}
+        {activeTab === 'points' ? <MePoints /> : null}
         {activeTab === 'settings' ? <MeSettings username={data.username} initialSection={search.section} /> : null}
       </div>
 

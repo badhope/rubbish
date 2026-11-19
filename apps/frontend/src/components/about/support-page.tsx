@@ -149,7 +149,7 @@ function FinanceSection({
           <div className="mt-4 rounded-md bg-muted/25 px-4 py-3">
             <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
               <ScrollText className="h-3.5 w-3.5" />
-              主编公开信
+              季度说明
             </div>
             <MarkdownContent
               text={latest.summary_md}

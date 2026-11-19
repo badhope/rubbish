@@ -247,7 +247,7 @@ export default function AdminPointsPage() {
             <div className="space-y-1.5">
               <Label>效果</Label>
               <select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={newItem.effect} onChange={(e) => setNewItem({ ...newItem, effect: e.target.value as 'none' | 'accent_unlock' })}>
-                <option value="none">人工发货（下单后主编处理）</option>
+                <option value="none">人工发货（下单后管理员处理）</option>
                 <option value="accent_unlock">自动解锁主页主题色</option>
               </select>
             </div>

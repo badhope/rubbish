@@ -1,65 +1,9 @@
-"""P2 public accountability: desk subscription + quarterly finance ledger."""
+"""P2 public accountability: quarterly finance ledger."""
 
 from __future__ import annotations
 
-import re
-
 from conftest import auth_headers
 from httpx import AsyncClient
-
-TOKEN_RE = re.compile(r"token=([A-Za-z0-9_-]+)&action=confirm")
-
-
-async def test_desk_subscribe_double_opt_in_and_unsubscribe(
-    client: AsyncClient, fake_email_sender
-) -> None:
-    r = await client.post("/api/support/subscribe", json={"email": "reader@example.com"})
-    assert r.status_code == 202, r.text
-    assert "确认邮件已发送" in r.json()["message"]
-    assert len(fake_email_sender.outbox) == 1
-    mail = fake_email_sender.last()
-    assert mail["to"] == "reader@example.com"
-    token = TOKEN_RE.search(mail["body"])
-    assert token, mail["body"]
-
-    status = await client.get("/api/support/subscription")
-    assert status.status_code == 200
-    assert status.json()["pending_count"] == 1
-    assert status.json()["confirmed_count"] == 0
-
-    # Public form must not become an email bomb: a second submit inside the
-    # cooldown window is accepted but does not send another message.
-    second = await client.post("/api/support/subscribe", json={"email": "reader@example.com"})
-    assert second.status_code == 202
-    assert len(fake_email_sender.outbox) == 1
-
-    confirmed = await client.post("/api/support/confirm", json={"token": token.group(1)})
-    assert confirmed.status_code == 200, confirmed.text
-    assert confirmed.json()["status"] == "confirmed"
-    assert confirmed.json()["email_masked"] == "re***@example.com"
-    status = await client.get("/api/support/subscription")
-    assert status.json()["confirmed_count"] == 1
-    assert status.json()["pending_count"] == 0
-
-    # Confirmed addresses do not receive another confirmation when resubmitted.
-    again = await client.post("/api/support/subscribe", json={"email": "reader@example.com"})
-    assert again.status_code == 202
-    assert len(fake_email_sender.outbox) == 1
-
-    unsub = await client.post("/api/support/unsubscribe", json={"token": token.group(1)})
-    assert unsub.status_code == 200
-    assert unsub.json()["status"] == "unsubscribed"
-    status = await client.get("/api/support/subscription")
-    assert status.json()["confirmed_count"] == 0
-
-
-async def test_desk_subscribe_invalid_email(client: AsyncClient) -> None:
-    r = await client.post("/api/support/subscribe", json={"email": "not-an-email"})
-    assert r.status_code == 422
-
-    r = await client.post("/api/support/confirm", json={"token": "x" * 32})
-    assert r.status_code == 200
-    assert r.json()["status"] == "invalid"
 
 
 async def test_finance_report_draft_then_publish(client: AsyncClient, admin_user: dict) -> None:
@@ -114,8 +58,6 @@ async def test_finance_report_draft_then_publish(client: AsyncClient, admin_user
 
 async def test_finance_requires_admin(client: AsyncClient, test_user: dict) -> None:
     r = await client.get("/api/admin/finance/reports", headers=auth_headers(test_user))
-    assert r.status_code == 403
-    r = await client.get("/api/admin/desk/subscribers", headers=auth_headers(test_user))
     assert r.status_code == 403
 
 

@@ -56,13 +56,13 @@ const ASSIGNABLE_ROLES: AssignableRole[] = [
 ]
 
 const ROLE_LABELS: Record<AssignableRole, string> = {
-  chief_editor: '主编',
-  deputy_editor: '副主编',
-  board_editor: '编委',
-  reviewer: '审稿人',
-  senior_reviewer: '资深审稿人',
-  editor: '编辑',
-  section_editor: '栏目编辑',
+  chief_editor: '站长',
+  deputy_editor: '副站长',
+  board_editor: '内容策展',
+  reviewer: '版主',
+  senior_reviewer: '资深版主',
+  editor: '内容管理员',
+  section_editor: '分区管理员',
   shop_manager: '积分管理员',
   author: '作者',
   reader: '读者',

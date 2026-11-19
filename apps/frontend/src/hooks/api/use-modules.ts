@@ -43,8 +43,6 @@ import type {
   ResourceStats,
   ResourceUpdate,
   ReviewMatrixResponse,
-  ReviewMode,
-  ReviewModeResponse,
   SiteSettingsResponse,
   ReviewDraftResponse,
   ReviewReportResponse,
@@ -127,15 +125,8 @@ export const keys = {
     usersSearch: (limit = 50, offset = 0, query = '') =>
       ['admin', 'users', limit, offset, query] as const,
     audit: (limit = 50, offset = 0) => ['admin', 'audit', limit, offset] as const,
-    reviewMode: () => ['admin', 'review-mode'] as const,
     siteSettings: () => ['admin', 'site-settings'] as const,
-    volumes: () => ['admin', 'volumes'] as const,
-    issues: (volume: string) => ['admin', 'issues', volume] as const,
-    journalSettings: () => ['admin', 'journal-settings'] as const,
     claims: (status: string) => ['admin', 'claims', status] as const,
-    releaseIssues: () => ['admin', 'releases', 'issues'] as const,
-    releaseManifests: (volume: string, issue: string) =>
-      ['admin', 'releases', 'manifests', volume, issue] as const,
   },
   claims: {
     status: (resourceId: number) => ['claims', 'status', resourceId] as const,
@@ -1723,15 +1714,6 @@ export function usePutAuthors() {
   })
 }
 
-// 期刊评审模式（单盲 / 双盲）——租户级设置
-export function useReviewMode() {
-  return useQuery<ReviewModeResponse>({
-    queryKey: keys.admin.reviewMode(),
-    queryFn: async () =>
-      (await api.get<ReviewModeResponse>('/admin/settings/review-mode')).data,
-  })
-}
-
 export function useSiteSettings() {
   return useQuery<SiteSettingsResponse>({
     queryKey: keys.admin.siteSettings(),
@@ -1747,22 +1729,8 @@ export function useUpdateSiteSettings() {
       (await api.patch<SiteSettingsResponse>('/admin/settings/site', patch)).data,
     onSuccess: (data) => {
       qc.setQueryData(keys.admin.siteSettings(), data)
-      // 注册页与投稿表单都读 /capabilities，切换后立即使旧缓存失效。
+      // 注册页与社区表单都读 /capabilities，切换后立即使旧缓存失效。
       void qc.invalidateQueries({ queryKey: ['capabilities'] })
-    },
-  })
-}
-
-export function useSetReviewMode() {
-  const qc = useQueryClient()
-  return useMutation<ReviewModeResponse, Error, ReviewMode>({
-    mutationFn: async (review_mode) =>
-      (await api.patch<ReviewModeResponse>('/admin/settings/review-mode', { review_mode }))
-        .data,
-    onSuccess: (data) => {
-      qc.setQueryData(keys.admin.reviewMode(), data)
-      // 审稿人看到的稿件内容随模式变化，相关缓存需失效
-      void qc.invalidateQueries({ queryKey: ['review'] })
     },
   })
 }
@@ -1811,35 +1779,10 @@ export interface MeProfile {
   rules_accepted: boolean
 }
 
-export interface MePointEvent {
-  reason: string
-  label: string
-  delta: number
-  note: string | null
-  created_at: string
-}
-
-export interface MePointsLedger {
-  identity: string
-  identity_name: string
-  snapshot: MeIdentityLevel
-  events: MePointEvent[]
-}
-
 export function useMeProfile() {
   return useQuery<MeProfile>({
     queryKey: ['me', 'profile'],
     queryFn: async () => (await api.get<MeProfile>('/me/profile')).data,
-    staleTime: 60_000,
-  })
-}
-
-export function useMePoints(identity: string) {
-  return useQuery<MePointsLedger>({
-    queryKey: ['me', 'points', identity],
-    queryFn: async () =>
-      (await api.get<MePointsLedger>('/me/points', { params: { identity } })).data,
-    enabled: !!identity,
     staleTime: 60_000,
   })
 }
@@ -2232,54 +2175,5 @@ export function useExpressReviewInterest() {
       toast.success('已记录审稿意愿，主编会在指派时看到')
       void qc.invalidateQueries({ queryKey: ['review', 'board'] })
     },
-  })
-}
-
-export interface SectionPart { slug: string; label: string; count: number; track_counts?: { paper: number; essay: number } }
-export interface ArticleSection { slug: string; label: string; description: string; count: number; track_counts?: { paper: number; essay: number }; parts: SectionPart[] }
-export interface SectionsResponse { data: ArticleSection[]; uncategorized: number }
-
-export function useArticleSections() {
-  return useQuery<SectionsResponse>({
-    queryKey: ['catalog', 'sections'],
-    queryFn: async () => (await api.get<SectionsResponse>('/catalog/sections')).data,
-    staleTime: 60_000,
-    // 栏目页每栏的 paper/essay 计数是库里聚合值，停留时每分钟刷新。
-    refetchInterval: 60_000,
-  })
-}
-
-export interface AppealRow {
-  id: number; resource_id: number; user_id: number; username: string
-  resource_title: string; kind: 'withdraw' | 'rescore' | 'rescore_zone'
-  reason: string; status: 'pending' | 'accepted' | 'rejected'
-  editor_note?: string | null; created_at: string; decided_at?: string | null
-}
-export function useMyAppeals() {
-  return useQuery<{ data: AppealRow[] }>({
-    queryKey: ['appeals', 'mine'],
-    queryFn: async () => (await api.get<{ data: AppealRow[] }>('/catalog/appeals/mine')).data,
-  })
-}
-export function useAppeals(status?: string) {
-  return useQuery<{ data: AppealRow[] }>({
-    queryKey: ['appeals', 'inbox', status ?? 'all'],
-    queryFn: async () => (await api.get<{ data: AppealRow[] }>('/catalog/appeals', { params: status ? { status } : {} })).data,
-  })
-}
-export function useSubmitAppeal() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async ({ resourceId, kind, reason }: { resourceId: number; kind: string; reason: string }) =>
-      (await api.post(`/catalog/${resourceId}/appeal`, { kind, reason })).data,
-    onSuccess: () => { void qc.invalidateQueries({ queryKey: ['appeals'] }) },
-  })
-}
-export function useDecideAppeal() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async ({ id, status, editorNote }: { id: number; status: 'accepted' | 'rejected'; editorNote: string }) =>
-      (await api.post(`/catalog/appeals/${id}/decide`, { status, editor_note: editorNote })).data,
-    onSuccess: () => { void qc.invalidateQueries({ queryKey: ['appeals'] }) },
   })
 }
