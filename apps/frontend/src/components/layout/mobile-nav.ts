@@ -12,7 +12,6 @@ import {
   MessageSquareText,
   type LucideIcon,
   User,
-  ShoppingBag,
 } from 'lucide-react'
 
 export interface MobileTab {
@@ -66,5 +65,4 @@ export const MOBILE_MORE: MobileMoreItem[] = [
   { to: '/guide', label: '投稿与操作指南', icon: PenLine, group: '期刊' },
   { to: '/feedback', label: '反馈与建议', icon: MessageSquareText, group: '设置' },
   { to: '/admin', label: '管理后台', icon: Gavel, auth: true, adminOnly: true, group: '管理' },
-  { to: '/admin/economy', label: '积分管理', icon: ShoppingBag, auth: true, roles: ['chief_editor', 'deputy_editor', 'editor_in_chief', 'shop_manager'], group: '管理' },
 ]
