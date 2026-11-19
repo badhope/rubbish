@@ -1916,3 +1916,48 @@ html {
   padding-left: 0;
   padding-right: 0;
 }
+
+/* 论坛编辑器：沿用开源 @uiw/react-md-editor，只把外框、字体和颜色接回站点。 */
+.forum-md-editor .w-md-editor {
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--background);
+  box-shadow: none;
+  overflow: hidden;
+}
+.forum-md-editor .w-md-editor-toolbar {
+  border-bottom: 1px solid var(--border);
+  background: var(--muted);
+  padding: 4px 6px;
+}
+.forum-md-editor .w-md-editor-toolbar ul {
+  flex-wrap: wrap;
+  gap: 1px;
+}
+.forum-md-editor .w-md-editor-toolbar li > button {
+  color: var(--muted-foreground);
+  border-radius: 4px;
+  height: 24px;
+  min-width: 24px;
+}
+.forum-md-editor .w-md-editor-toolbar li > button:hover {
+  color: var(--foreground);
+  background: var(--background);
+}
+.forum-md-editor .w-md-editor-text,
+.forum-md-editor .w-md-editor-text-pre,
+.forum-md-editor .w-md-editor-text-input {
+  font-family: var(--font-sans, ui-sans-serif, system-ui) !important;
+  font-size: 0.9375rem !important;
+  line-height: 1.8 !important;
+}
+.forum-md-editor .w-md-editor-text-input {
+  color: var(--foreground) !important;
+  caret-color: var(--primary);
+}
+.forum-md-editor .w-md-editor-text-pre > code {
+  color: var(--foreground) !important;
+}
+.forum-md-editor .w-md-editor-area {
+  background: var(--background);
+}

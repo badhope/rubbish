@@ -88,7 +88,7 @@ export function ReviewBoard() {
                     </Button>
                   ) : (
                     <Button asChild size="sm" variant="outline">
-                      <Link to="/me" search={{ tab: 'points', section: 'levels' }}>先申请审稿人资格</Link>
+                      <Link to="/forum">去论坛发帖</Link>
                     </Button>
                   )}
                 </div>

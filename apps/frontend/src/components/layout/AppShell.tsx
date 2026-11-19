@@ -44,15 +44,15 @@ import { PageViewTracker } from '@/components/common/page-view-tracker'
 import { groupLabel, navLabel, text, useLang } from '@/lib/i18n'
 
 const NAV: NavItem[] = [
-  // 社区优先：首页 / 社区 / 作品 / 指南 / 我的。
+  // 论坛优先：首页 / 论坛 / 作品 / 指南 / 我的。
   // 期刊、投稿、审稿不再占一级入口；作品库只承担长文阅读，不承担“发表”叙事。
   { to: '/', label: '首页', icon: Home, group: '一级入口' },
-  { to: '/forum', label: '社区', icon: MessagesSquare, group: '一级入口' },
+  { to: '/forum', label: '论坛', icon: MessagesSquare, group: '一级入口' },
   { to: '/catalog', label: '作品', icon: BookOpen, group: '一级入口' },
   { to: '/guide', label: '指南', icon: Compass, group: '一级入口' },
   { to: '/me', label: '我的', icon: User, group: '一级入口' },
 
-  { to: '/about', label: '关于社区', icon: Building2, group: '关于' },
+  { to: '/about', label: '关于论坛', icon: Building2, group: '关于' },
   { to: '/admin', label: '管理后台', icon: Gavel, auth: true, adminOnly: true, group: '站点管理' },
 ]
 
@@ -341,7 +341,7 @@ export function AppShell() {
               <span className="flex min-w-0 flex-col leading-none">
                 <span className="font-serif text-lg font-semibold tracking-tight">Rubbish</span>
                 <span className="mt-1 hidden truncate text-[10px] uppercase tracking-[0.28em] text-muted-foreground sm:block">
-                  Absurd Academic Writing Community
+                  Absurd Academic Writing Forum
                 </span>
               </span>
             </Link>
@@ -518,7 +518,7 @@ export function AppShell() {
                 <div className="min-w-0">
                   <p className="truncate text-xs font-medium">{displayName}</p>
                   <p className="truncate text-[10px] text-sidebar-foreground/55">
-                    {user.roles?.some((r) => ['chief_editor','editor_in_chief','admin'].includes(r)) ? '社区管理员' : '创作者 / 读者'}
+                    {user.roles?.some((r) => ['chief_editor','editor_in_chief','admin'].includes(r)) ? '论坛管理员' : '创作者 / 读者'}
                   </p>
                 </div>
               </div>

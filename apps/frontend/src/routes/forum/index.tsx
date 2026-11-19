@@ -33,8 +33,8 @@ import {
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 
-const MarkdownEditor = lazy(() =>
-  import('@/components/common/markdown-editor').then((m) => ({ default: m.MarkdownEditor })),
+const ForumEditor = lazy(() =>
+  import('@/components/forum/forum-editor').then((m) => ({ default: m.ForumEditor })),
 )
 const FeedbackBoardPage = lazy(() =>
   import('@/components/forum/feedback-board').then((m) => ({ default: m.FeedbackBoardPage })),
@@ -336,8 +336,8 @@ function ForumListPage() {
   return (
     <div className="mx-auto w-full max-w-4xl space-y-4">
       <PageHeader
-        title="社区"
-        description="荒诞论文体、写作实验、学术生存与站务反馈都在这里；发帖登录即可，不需要积分。"
+        title="论坛"
+        description="帖子、写作实验、作品讨论与站务反馈都在这里；登录即可发，不需要积分。"
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" asChild>
@@ -619,15 +619,14 @@ function ForumListPage() {
               </div>
 
               <Suspense fallback={<div className="rounded-md border border-dashed px-3 py-6 text-sm text-muted-foreground">编辑器加载中…</div>}>
-                <MarkdownEditor
+                <ForumEditor
                   value={form.body}
                   onChange={(body) => setForm((p) => ({ ...p, body }))}
                   onUploadImage={uploadForumImage}
                   minHeight={360}
-                  compact
                   textareaRef={bodyRef}
                   onSubmitShortcut={publishTopic}
-                  placeholder="说清背景、你的判断、以及希望得到什么回应。支持 Markdown、表情和图片。"
+                  placeholder="说清背景、你的判断、以及希望得到什么回应。支持标题、引用、列表、表情和图片。"
                 />
               </Suspense>
             </div>

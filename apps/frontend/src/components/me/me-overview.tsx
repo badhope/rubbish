@@ -37,7 +37,7 @@ export function MeOverview({
   return (
     <div className="space-y-8">
       <section>
-        <SectionHeading kicker="COMMUNITY" title="社区入口" />
+        <SectionHeading kicker="FORUM" title="论坛入口" />
         <div className="grid gap-3 border-y py-5 sm:grid-cols-2">
           <Link
             to="/forum"
@@ -45,9 +45,9 @@ export function MeOverview({
           >
             <MessagesSquare className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <span>
-              <span className="block text-sm font-medium">去社区看看</span>
+              <span className="block text-sm font-medium">去论坛看看</span>
               <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
-                读帖、回复、收藏；讨论比投稿更接近这里的主业。
+                读帖、回复、收藏；先聊起来，再写长文。
               </span>
             </span>
           </Link>

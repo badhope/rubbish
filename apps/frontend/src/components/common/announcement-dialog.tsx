@@ -121,18 +121,17 @@ export function AnnouncementDialog({
         <DialogFooter className="flex-row flex-wrap items-center justify-between gap-3 border-t bg-background/60 p-4 sm:justify-between">
           <div className="flex flex-wrap gap-4">
             <Link
-              to="/me"
-              search={{ tab: 'points', section: 'levels' }}
+              to="/guide"
+              search={{ tab: 'help' }}
               className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
             >
-              查看等级与投稿规范 <ArrowRight className="h-3.5 w-3.5" />
+              查看论坛指南 <ArrowRight className="h-3.5 w-3.5" />
             </Link>
             <Link
               to="/catalog"
-              search={{ sort: 'issue' }}
               className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
             >
-              本期目录 <ArrowRight className="h-3.5 w-3.5" />
+              浏览作品库 <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
           <Button type="button" onClick={() => onOpenChange(false)}>

@@ -60,7 +60,7 @@ const DOMAINS: {
   icon: typeof Gavel
 }[] = [
   {
-    title: '内容与社区',
+    title: '内容与论坛',
     desc: '公告、版块、评论审核、举报',
     to: '/admin/content',
     icon: Layers,

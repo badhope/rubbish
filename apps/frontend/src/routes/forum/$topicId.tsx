@@ -21,7 +21,7 @@ import { uploadForumImage } from '@/lib/forum'
 import { extractError } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
-import { MarkdownEditor } from '@/components/common/markdown-editor'
+import { ForumEditor } from '@/components/forum/forum-editor'
 import { MarkdownContent } from '@/components/common/markdown-content'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -354,12 +354,11 @@ function ForumTopicPage() {
         <div className="mb-2 text-[11px] text-muted-foreground">
           回复 @{target.author?.display_name || target.author?.username || '已注销用户'}
         </div>
-        <MarkdownEditor
+        <ForumEditor
           value={reply}
           onChange={setReply}
           onUploadImage={uploadForumImage}
           minHeight={120}
-          compact
           autoFocus
           onSubmitShortcut={sendReply}
           placeholder="写在这条回复下面；Ctrl / ⌘ + Enter 发送"
@@ -380,7 +379,7 @@ function ForumTopicPage() {
   const share = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href)
-      toast.success('链接已复制，可以发给同门或审稿人')
+      toast.success('链接已复制，可以发给同好或朋友')
     } catch {
       toast.error('复制失败，请手动复制地址栏')
     }
@@ -549,19 +548,18 @@ function ForumTopicPage() {
           <CardContent className="space-y-2 py-4">
             {isAuthenticated ? (
               <>
-                <MarkdownEditor
+                <ForumEditor
                   value={reply}
                   onChange={setReply}
                   onUploadImage={uploadForumImage}
                   minHeight={160}
-                  compact
                   autoFocus
                   onSubmitShortcut={sendReply}
-                  placeholder="写下你的回应…（支持 Markdown、表情和站内表情包）"
+                  placeholder="写下你的回应…（支持标题、引用、列表、表情和站内表情包）"
                 />
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] text-muted-foreground">
-                    登录即可回复；Ctrl / ⌘ + Enter 发送；请针对内容，不针对人。
+                    Ctrl / ⌘ + Enter 发送；请针对内容，不针对人。
                   </span>
                   <Button
                     onClick={sendReply}

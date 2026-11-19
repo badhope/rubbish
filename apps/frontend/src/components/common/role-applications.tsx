@@ -183,7 +183,7 @@ export function RoleApplicationsSection() {
               rows={4}
               value={statement}
               onChange={(ev) => setStatement(ev.target.value.slice(0, 2000))}
-              placeholder="申请说明（至少 20 字）：你的研究方向、审稿经验或参与社区的情况。"
+              placeholder="申请说明（至少 20 字）：你的写作方向、版务经验或参与论坛的情况。"
             />
             <div className="flex gap-2">
               <Button size="sm" disabled={submitting} onClick={() => void submit(role)}>

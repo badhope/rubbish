@@ -277,38 +277,12 @@ function CatalogDetailPage() {
               </Badge>
               {isEssayTrack && (
                 <Badge className="border-amber-400/60 bg-amber-100 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
-                  副刊轨 · 不计分
-                </Badge>
-              )}
-              {data.is_special_issue && (
-                <Badge
-                  className="border-rose-300/70 bg-rose-50 text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200"
-                  title={data.special_issue_reason ?? '篇幅超过上限，经编辑部特许收录'}
-                >
-                  特别篇
+                  自由创作
                 </Badge>
               )}
               {!isEssayTrack && data.content_category ? (
                 <Badge variant="outline" className="bg-primary/10 text-primary border-primary/25">
                   {contentCategoryLabel(data.content_category)}
-                </Badge>
-              ) : null}
-              {!isEssayTrack && data.peer_review_status && data.peer_review_status !== 'not_applicable' ? (
-                <Badge
-                  variant="outline"
-                  title={
-                    data.peer_review_status === 'peer_reviewed'
-                      ? `已收到 ${data.peer_review_reports ?? 0} 份评审报告；审稿人身份不公开。`
-                      : data.peer_review_status === 'editorial_import'
-                        ? '历史导入稿件，未经过外审；不以“同行评审”名义展示。'
-                        : '有投稿与编辑审稿记录，但暂无外审报告；不以“同行评审”名义展示。'
-                  }
-                >
-                  {data.peer_review_status === 'peer_reviewed'
-                    ? `同行评审 · ${data.peer_review_reports ?? 0} 份报告`
-                    : data.peer_review_status === 'editorial_import'
-                      ? '历史导入 · 未外审'
-                      : '编辑审稿 · 未外审'}
                 </Badge>
               ) : null}
               {!isEssayTrack &&
@@ -505,65 +479,6 @@ function CatalogDetailPage() {
               </FoldCard>
             )}
 
-            {/* 论文轨：评审信息 RQS（仅审稿/编辑端可见） */}
-            {isPaperTrack && canSeeScores && (
-              <FoldCard title="评审信息（评审质量分）" defaultOpen={!isMobile}>
-                <CardContent>
-                  <div className="mb-3 flex flex-wrap items-center gap-2">
-                    {(() => {
-                      const grade = qualityGrade(data.quality_grade, data.quality_score)
-                      if (!grade) {
-                        return <span className="text-sm text-muted-foreground">尚未评分</span>
-                      }
-                      return (
-                        <>
-                          <Badge variant="outline" className={grade.className}>
-                            {grade.label}
-                          </Badge>
-                          <span className="font-serif text-2xl font-semibold tabular-nums">
-                            {data.quality_score?.toFixed(1)}
-                            <span className="ml-1 text-sm font-normal text-muted-foreground">/ 100</span>
-                          </span>
-                        </>
-                      )
-                    })()}
-                  </div>
-                  {(() => {
-                    const comment = (data.quality_breakdown as Record<string, unknown> | null)?.comment
-                    return typeof comment === 'string' && comment.trim() ? (
-                      <div className="mt-3 rounded-md border bg-muted/40 p-3">
-                        <p className="mb-1 text-xs font-medium text-muted-foreground">编辑部评价</p>
-                        <p className="text-sm leading-relaxed">{comment}</p>
-                      </div>
-                    ) : null
-                  })()}
-                  {data.quality_breakdown && (
-                    <div className="mt-3 space-y-1.5">
-                      {Object.entries(data.quality_breakdown)
-                        .filter(([key]) => key !== 'comment')
-                        .map(([key, dim]) => (
-                          <div key={key} className="flex items-center gap-2 text-xs">
-                            <span className="w-24 shrink-0 text-muted-foreground">{dim.label}</span>
-                            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                              <div
-                                className="h-full rounded-full bg-primary/70"
-                                style={{ width: `${Math.min(100, (dim.score / Math.max(dim.max, 1)) * 100)}%` }}
-                              />
-                            </div>
-                            <span className="w-14 shrink-0 text-right tabular-nums text-muted-foreground">
-                              {dim.score} / {dim.max}
-                            </span>
-                          </div>
-                        ))}
-                    </div>
-                  )}
-                  <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-                    评分为七维加权（问题价值 / 论证链 / 方法透明度 / 证据强度 / 创新与定位 /
-                    学术诚信 / 表达清晰度，按稿件类型另有分档权重，学术诚信 0 分一票否决）。
-                  </p>
-                </CardContent>
-              </FoldCard>
-            )}
 
             <FoldCard title="阅读与影响" defaultOpen={false}>
               <CardContent>

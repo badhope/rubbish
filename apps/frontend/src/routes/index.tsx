@@ -94,7 +94,7 @@ function HomePage() {
             <span className="flex flex-col leading-none">
               <span className="font-serif text-base font-semibold tracking-tight">Rubbish</span>
               <span className="mt-1 hidden text-[9px] uppercase tracking-[0.28em] text-muted-foreground sm:block">
-                Absurd Academic Writing Community
+                Absurd Academic Writing Forum
               </span>
             </span>
           </Link>
@@ -148,7 +148,7 @@ function HomePage() {
         <div className="relative mx-auto flex min-h-[calc(100svh-3.5rem)] w-full max-w-[1200px] flex-col items-center justify-center px-5 pb-16 pt-10 text-center sm:px-8">
           <p className="flex items-center gap-2 text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
             <span aria-hidden className="h-1.5 w-1.5 rotate-45 bg-primary" />
-            Open Community · Absurd Academia
+            Open Forum · Absurd Academia
             <span aria-hidden className="h-1.5 w-1.5 rotate-45 bg-primary" />
           </p>
           <h1 className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-6">
@@ -161,12 +161,12 @@ function HomePage() {
             </span>
           </h1>
           <p className="mt-5 max-w-4xl text-[15px] leading-7 text-muted-foreground sm:text-xl sm:leading-9">
-            把荒诞写成论文，把论文写成现场。这里不发表，只让好玩的坏学术被认真读完。
+            把荒诞写成论文，把论文写成现场。写下来，发出去，让人接。
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Button asChild size="lg" className="button-shine h-12 px-6 text-sm sm:h-14 sm:px-7 sm:text-base">
               <Link to="/forum">
-                逛社区 <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
+                逛论坛 <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="h-12 px-6 text-sm sm:h-14 sm:px-7 sm:text-base">
@@ -249,9 +249,9 @@ function HomePage() {
           </div>
         ) : (
           <div className="border-y border-border/70 py-10 text-sm text-muted-foreground">
-            本周精选还在整理，先去社区看看大家在写什么。
+            本周精选还在整理，先去论坛看看大家在写什么。
             <Link to="/forum" className="ml-2 text-primary hover:underline">
-              打开社区
+              打开论坛
             </Link>
           </div>
         )}
@@ -330,14 +330,14 @@ function HomePage() {
 
       {/* 编辑部手记：不占一整墙，只留一段可读的判断。 */}
       <section className="mx-auto w-full max-w-[1100px] px-5 py-14 sm:px-8 sm:py-20">
-        <SectionHeading label="Editor's Note · 社区手记" title="为什么做这个社区" />
+        <SectionHeading label="Editor's Note · 论坛手记" title="这个论坛怎么长出来" />
         <div className="grid gap-8 md:grid-cols-[minmax(0,7fr)_minmax(0,4fr)] md:gap-12">
           <blockquote className="border-l-2 border-primary pl-5 sm:pl-7">
             <p className="font-serif text-2xl leading-relaxed sm:text-3xl">
               好笑的荒诞，也值得被认真对待；好读的坏学术，也应该有地方被读完。
             </p>
             <footer className="mt-4 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-              —— Rubbish 社区
+              —— Rubbish 论坛
             </footer>
           </blockquote>
           <div className="text-sm leading-7 text-muted-foreground">
@@ -346,7 +346,7 @@ function HomePage() {
               留一个能被认真读完的位置。
             </p>
             <Link to="/about" search={{ tab: 'about' }} className="mt-4 inline-flex items-center gap-1 text-primary hover:underline">
-              关于社区与版主 <ArrowRight className="h-4 w-4" />
+              关于论坛与版主 <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
@@ -367,11 +367,11 @@ function HomePage() {
           <div className="flex flex-wrap gap-3 md:justify-end">
             <Button asChild size="lg" variant="secondary" className="h-12 px-6">
               <Link to="/forum" search={{ compose: '1' }}>
-                {isAuthenticated ? '去社区发布' : '免费注册发帖'} <ArrowRight className="h-4 w-4" />
+                {isAuthenticated ? '去论坛发布' : '免费注册发帖'} <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="h-12 border-primary-foreground/30 bg-transparent px-6 text-primary-foreground hover:bg-primary-foreground/10">
-              <Link to="/guide" search={{ tab: 'authors' }}>社区指南</Link>
+              <Link to="/guide" search={{ tab: 'authors' }}>论坛指南</Link>
             </Button>
           </div>
         </div>
@@ -385,17 +385,17 @@ function HomePage() {
               <span className="font-serif text-xl font-semibold">Rubbish</span>
             </div>
             <p className="mt-2 text-xs leading-6 text-muted-foreground">
-              Absurd Academic Writing Community · 荒诞论文体社区
+              Absurd Academic Writing Forum · 荒诞论文体论坛
               <br />
-              独立实验社区 · 不是出版机构 · 不收取任何费用
+              独立创作论坛 · 不收取任何费用
             </p>
           </div>
           <div>
             <p className="mb-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">阅读</p>
             <ul className="space-y-1.5 text-sm">
               <li><Link to="/catalog" className="hover:text-primary">全部作品</Link></li>
-              <li><Link to="/guide" search={{ tab: 'authors' }} className="hover:text-primary">社区指南</Link></li>
-              <li><Link to="/guide" search={{ tab: 'policies' }} className="hover:text-primary">社区公约</Link></li>
+              <li><Link to="/guide" search={{ tab: 'authors' }} className="hover:text-primary">论坛指南</Link></li>
+              <li><Link to="/guide" search={{ tab: 'policies' }} className="hover:text-primary">论坛公约</Link></li>
             </ul>
           </div>
           <div>
@@ -407,14 +407,14 @@ function HomePage() {
                 </a>
               </li>
               <li className="text-muted-foreground">QQ 群：1084870548</li>
-              <li><Link to="/about" search={{ tab: 'about' }} className="hover:text-primary">关于社区</Link></li>
+              <li><Link to="/about" search={{ tab: 'about' }} className="hover:text-primary">关于论坛</Link></li>
               <li><Link to="/guide" search={{ tab: 'help' }} className="hover:text-primary">使用帮助</Link></li>
             </ul>
           </div>
         </div>
         <div className="border-t border-border/70">
           <div className="mx-auto flex w-full max-w-[1100px] flex-wrap items-center justify-between gap-2 px-5 py-3 text-xs text-muted-foreground sm:px-8">
-            <span>© {new Date().getFullYear()} Rubbish · Absurd Academic Writing Community</span>
+            <span>© {new Date().getFullYear()} Rubbish · Absurd Academic Writing Forum</span>
             <span>认真写，大胆荒诞，公开读。</span>
           </div>
         </div>
@@ -461,7 +461,7 @@ function ForumPulse() {
   return (
     <section className="mx-auto w-full max-w-[1100px] px-5 py-14 sm:px-8 sm:py-20">
       <SectionHeading
-        label="Community · 动态"
+        label="Forum · 动态"
         title="正在讨论"
         action={
           <Link to="/forum" className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary">

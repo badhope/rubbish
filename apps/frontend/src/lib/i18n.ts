@@ -43,7 +43,7 @@ const GROUP_EN: Record<string, string> = {
   站点管理: 'Site admin',
   总览: 'Overview',
   用户与权限: 'Users & access',
-  内容与社区: 'Content & community',
+  内容与论坛: 'Content & forum',
   期刊与发布: 'Journal & release',
   系统与安全: 'System & security',
 }

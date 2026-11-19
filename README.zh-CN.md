@@ -4,7 +4,7 @@
 
 # Rubbish
 
-**荒诞论文体创作社区 — 写论文、发帖子、认真吵架。这里不是期刊。**
+**荒诞论文体创作论坛 — 发帖、写长文、认真讨论。**
 
 > 16 个后端模块 · 论坛 + 长文作品 · Playwright E2E · 全链路严格类型
 
@@ -32,16 +32,16 @@
 
 | | 是什么 | 展示性内容放在哪 |
 | --- | --- | --- |
-| **开源示例**（本仓库） | Rubbish 社区的参考实现——克隆、自部署、二次开发。 | `site/`、`docs/assets/`、README 截图 |
-| **生产服务**（[rubbish.argjiemi.cn](https://rubbish.argjiemi.cn)） | 面向公众的荒诞论文体创作社区。社区版收尾期间站点暂时下线。 | 无——设计上已去展示化 |
+| **开源示例**（本仓库） | Rubbish 论坛的参考实现——克隆、自部署、二次开发。 | `site/`、`docs/assets/`、README 截图 |
+| **生产服务**（[rubbish.argjiemi.cn](https://rubbish.argjiemi.cn)） | 面向公众的荒诞论文体创作论坛。论坛版收尾期间站点暂时下线。 | 无——设计上已去展示化 |
 
 ## 功能一览
 
 | 角色 | 能力 |
 | --- | --- |
-| **创作者** | 发布长文作品或社区帖子；Markdown 编辑器、草稿自动保存、论文体元数据可选 |
+| **创作者** | 发布长文作品或论坛帖子；Markdown 编辑器、草稿自动保存、论文体元数据可选 |
 | **读者** | 公开作品库、论坛阅读、字号/行高/字体控制、阅读进度、关注与收藏 |
-| **社区** | 版块、主题、回复、表情回应、举报、反馈板、通知；阅读不设登录墙 |
+| **论坛** | 版块、主题、回复、表情回应、举报、反馈板、通知；阅读不设登录墙 |
 | **版主** | 举报处理、内容隐藏/恢复、置顶/锁定、版块管理、审计留痕 |
 | **管理员** | 用户与角色、内容、积分账本、系统健康、公告；不再管理卷期 |
 
@@ -51,13 +51,17 @@
 
 ## 界面预览
 
-| 首页（桌面） | 首页（手机） | 作品库 |
-| --- | --- | --- |
-| ![首页桌面](docs/assets/screenshots/community-home-desktop.png) | ![首页手机](docs/assets/screenshots/community-home-mobile.png) | ![作品库](docs/assets/screenshots/community-catalog-desktop.png) |
+| 首页（桌面） | 首页（手机） |
+| --- | --- |
+| ![首页桌面](docs/assets/screenshots/community-home-desktop.png) | ![首页手机](docs/assets/screenshots/community-home-mobile.png) |
 
-| 关于社区 | 社区公约 |  |
+| 论坛 | 作品库 |
+| --- | --- |
+| ![论坛](docs/assets/screenshots/community-forum-desktop.png) | ![作品库](docs/assets/screenshots/community-catalog-desktop.png) |
+
+| 关于论坛 | 论坛公约 |  |
 | --- | --- | --- |
-| ![关于社区](docs/assets/screenshots/community-about-desktop.png) | ![社区公约](docs/assets/screenshots/community-rules-desktop.png) | |
+| ![关于论坛](docs/assets/screenshots/community-about-desktop.png) | ![论坛公约](docs/assets/screenshots/community-rules-desktop.png) | |
 
 ## 架构
 

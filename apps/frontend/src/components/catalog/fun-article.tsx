@@ -76,7 +76,7 @@ export function FunArticle({
             className="inline-flex min-h-[36px] shrink-0 items-center whitespace-nowrap text-sm text-muted-foreground hover:text-amber-700"
           >
             <ChevronLeft className="mr-1 h-4 w-4" />
-            副刊
+            自由创作
           </Link>
           <div className="flex min-w-0 items-center gap-0.5">
             <Button
@@ -115,13 +115,13 @@ export function FunArticle({
             {data.has_markdown ? (
               <>
                 <Button asChild variant="ghost" size="sm" className="h-8 shrink-0 gap-1 px-2 text-muted-foreground">
-                  <a href={`/api/catalog/${data.id}/export?format=pdf&v=27`} download aria-label="下载副刊 PDF">
+                  <a href={`/api/catalog/${data.id}/export?format=pdf&v=27`} download aria-label="下载自由创作 PDF">
                     <FileDown className="h-4 w-4" />
                     PDF
                   </a>
                 </Button>
                 <Button asChild variant="ghost" size="sm" className="h-8 shrink-0 gap-1 px-2 text-muted-foreground">
-                  <a href={`/api/catalog/${data.id}/export?format=docx&v=27`} download aria-label="下载副刊 Word">
+                  <a href={`/api/catalog/${data.id}/export?format=docx&v=27`} download aria-label="下载自由创作 Word">
                     <FileDown className="h-4 w-4" />
                     Word
                   </a>
@@ -236,7 +236,7 @@ export function FunArticle({
         ) : null}
 
         <p className="mt-8 border-t pt-4 text-[11px] leading-5 text-muted-foreground">
-          副刊轨：不计分 · 不进站内热度 · 不走评审 · 不代表编辑部立场。正文里的“研究”“样本”“显著性”请默认在整活。
+          自由创作轨：不计分 · 不进站内热度 · 不走评审 · 不代表编辑部立场。正文里的“研究”“样本”“显著性”请默认在整活。
         </p>
 
         <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>

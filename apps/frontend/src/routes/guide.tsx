@@ -2,24 +2,26 @@ import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { AuthorsPage } from '@/components/guide/authors-page'
 import { HelpPage } from '@/components/guide/help-page'
-import { LevelsPage } from '@/components/guide/levels-page'
 import { PoliciesPage } from '@/components/guide/policies-page'
 
 export const Route = createFileRoute('/guide')({
   validateSearch: (search: Record<string, unknown>) => ({
     tab:
-      search.tab === 'help' || search.tab === 'policies' || search.tab === 'levels'
-        ? search.tab
-        : 'authors',
+      search.tab === 'help'
+        ? 'help'
+        : search.tab === 'policies'
+          ? 'policies'
+          : search.tab === 'levels'
+            ? 'help'
+            : 'authors',
   }),
   component: GuidePage,
 })
 
 const TABS = [
-  { value: 'authors', label: '创作指南', desc: '选题、格式、发布与讨论' },
-  { value: 'help', label: '使用指南', desc: '发帖、回复、举报与设置' },
-  { value: 'policies', label: '社区公约', desc: '内容边界、版权与处理' },
-  { value: 'levels', label: '等级与规范', desc: '身份等级、权限与计分口径' },
+  { value: 'authors', label: '创作指南', desc: '写什么、怎么写、怎么发' },
+  { value: 'help', label: '新手指南', desc: '读帖、发帖、回复与举报' },
+  { value: 'policies', label: '论坛公约', desc: '边界、版权与处理' },
 ] as const
 
 function GuidePage() {
@@ -51,8 +53,6 @@ function GuidePage() {
         <HelpPage />
       ) : tab === 'policies' ? (
         <PoliciesPage />
-      ) : tab === 'levels' ? (
-        <LevelsPage />
       ) : (
         <AuthorsPage />
       )}

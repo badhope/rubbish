@@ -108,8 +108,8 @@ export function MePoints({ profile }: { profile: MeProfile }) {
               </Button>
             )}
             <Button variant="outline" size="sm" asChild>
-              <Link to="/guide" search={{ tab: 'levels' }}>
-                等级与规则
+              <Link to="/guide" search={{ tab: 'help' }}>
+                积分说明
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </Button>
@@ -212,8 +212,8 @@ export function MePoints({ profile }: { profile: MeProfile }) {
           action={
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="sm" asChild>
-                <Link to="/guide" search={{ tab: 'levels' }}>
-                  完整等级表
+                <Link to="/guide" search={{ tab: 'help' }}>
+                  积分说明
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </Button>

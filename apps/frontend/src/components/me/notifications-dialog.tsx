@@ -84,7 +84,7 @@ export function NotificationsDialog({
           {notifications.isLoading ? <Loading /> : null}
           {!notifications.isLoading && (notifications.data?.data.length ?? 0) === 0 ? (
             <div className="py-14 text-center text-sm text-muted-foreground">
-              还没有通知。稿件状态变化、审稿邀请会出现在这里。
+              还没有通知。有人回复、提到你或关注的人发帖时会出现在这里。
             </div>
           ) : null}
           <ul className="divide-y">

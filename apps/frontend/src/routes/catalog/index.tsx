@@ -132,7 +132,7 @@ export function CatalogListPage() {
   // 目录首页采用「可复现随机」：每次进入/点“换一批”换 seed，分页仍稳定；
   // 搜索时回到相关度/新近排序，避免随机打乱检索结果。
   const [feedSeed, setFeedSeed] = useState(() => Math.floor(Math.random() * 2147483646) + 1)
-  const randomFeed = Boolean(search.track || search.kind) && !search.q && !search.author && !search.doi && !search.clc
+  const randomFeed = Boolean(search.track || search.kind) && !search.q && !search.author && true
 
   const params = {
     q: search.q || undefined,
@@ -592,7 +592,7 @@ function CatalogHub() {
     <div className="mx-auto w-full max-w-[1320px]">
       <PageHeader
         title="作品库"
-        description="一个入口，三类写作：严肃写作、荒诞论文体、自由创作。没有卷期，也没有“发表”。"
+        description="论坛里的长文存档：严肃写作、荒诞论文体、自由创作。想发短帖去论坛，想写长文放这里。"
       />
 
       <section className="mt-10 border-t pt-7">
@@ -912,32 +912,6 @@ function CatalogFilterFields({
           }}
         />
       </div>
-      <div className="space-y-1.5">
-        <label className="text-xs text-muted-foreground">DOI</label>
-        <Input
-          placeholder="10.xxxx/..."
-          defaultValue={search.doi ?? ''}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              const v = (e.target as HTMLInputElement).value.trim()
-              updateSearch({ doi: v || undefined, page: 1 })
-            }
-          }}
-        />
-      </div>
-      <div className="space-y-1.5">
-        <label className="text-xs text-muted-foreground">中图分类号</label>
-        <Input
-          placeholder="如 TP / I24"
-          defaultValue={search.clc ?? ''}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              const v = (e.target as HTMLInputElement).value.trim().toUpperCase()
-              updateSearch({ clc: v || undefined, page: 1 })
-            }
-          }}
-        />
-      </div>
     </div>
   )
 }
@@ -965,8 +939,6 @@ function MobileFilters({
     search.year_from,
     search.year_to,
     search.author,
-    search.doi,
-    search.clc,
     search.section,
     search.volume,
     search.issue,
@@ -1055,8 +1027,6 @@ function DesktopFilters({
     search.year_from,
     search.year_to,
     search.author,
-    search.doi,
-    search.clc,
     search.section,
     search.volume,
     search.issue,

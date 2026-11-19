@@ -55,8 +55,8 @@ export function FunCatalog({
     updateSearch({ ...patch, page: 1 })
   }
 
-  // 编辑部栏目说明不跟普通副刊稿抢头图：抽成顶部一条紧凑说明栏，
-  // 首篇推荐也只从真正的副刊稿里选，避免推荐永远落在公告上；顺序由随机目录决定。
+  // 编辑部栏目说明不跟普通自由创作稿抢头图：抽成顶部一条紧凑说明栏，
+  // 首篇推荐也只从真正的自由创作稿里选，避免推荐永远落在公告上；顺序由随机目录决定。
   const editorialNotes = data?.data.filter(isEditorialNote) ?? []
   const stories = data?.data.filter((r) => !isEditorialNote(r)) ?? []
   const featuredId = stories[0]?.id
@@ -64,7 +64,7 @@ export function FunCatalog({
 
   return (
     <div className="w-full">
-      {/* 第一屏只回答“这是副刊、怎么搜、有哪些文体”，不往下露推荐和列表。 */}
+      {/* 第一屏只回答“这是自由创作、怎么搜、有哪些文体”，不往下露推荐和列表。 */}
       <section className="mx-auto flex min-h-[100svh] w-full max-w-[1320px] flex-col justify-start px-0 pb-24 pt-10 sm:pt-16">
       <header className="relative border-t pt-6 sm:pt-8">
         <div>
@@ -76,12 +76,12 @@ export function FunCatalog({
               <Link to="/catalog" search={{ track: 'paper' }} className="rounded-full px-2.5 py-0.5 text-muted-foreground hover:text-foreground">
                 论文
               </Link>
-              <span className="rounded-full bg-primary px-2.5 py-0.5 font-medium text-primary-foreground">副刊</span>
+              <span className="rounded-full bg-primary px-2.5 py-0.5 font-medium text-primary-foreground">自由创作</span>
             </div>
           </div>
           <div className="mt-2 flex flex-wrap items-end gap-x-3 gap-y-1">
             <h1 className="section-title text-2xl font-semibold tracking-tight sm:text-4xl">
-              副刊
+              自由创作
             </h1>
             <span className="pb-0.5 text-xs text-muted-foreground sm:pb-1 sm:text-sm">
               不正经研究所，认真你就输了
@@ -172,7 +172,7 @@ export function FunCatalog({
           </div>
         </div>
       </div>
-      <ScrollCue label="向下浏览副刊" className="mt-16 pb-6 sm:mt-24 sm:pb-10" />
+      <ScrollCue label="向下浏览自由创作" className="mt-16 pb-6 sm:mt-24 sm:pb-10" />
       </section>
 
       {isLoading ? (
@@ -190,7 +190,7 @@ export function FunCatalog({
         </div>
       ) : isError ? (
         <div className="mt-6">
-          <ErrorState message="副刊没打开" onRetry={onRetry} />
+          <ErrorState message="自由创作没打开" onRetry={onRetry} />
         </div>
       ) : !data || data.data.length === 0 ? (
         <div className="mt-6">
