@@ -1,4 +1,4 @@
-import { lazy, Suspense, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { createFileRoute, Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Clock3, Flame, Flag, Lock, Megaphone, MessageSquare, Pin, Plus, X } from 'lucide-react'
@@ -138,6 +138,44 @@ function plainExcerpt(text: string): string {
     .trim()
 }
 
+const FORUM_DRAFT_KEY = 'rubbish:forum-draft:v1'
+
+interface ForumDraft {
+  title: string
+  body: string
+  board_id: number | null
+  paper_id: number | null
+}
+
+function readForumDraft(): ForumDraft | null {
+  try {
+    const raw = window.localStorage.getItem(FORUM_DRAFT_KEY)
+    if (!raw) return null
+    const value = JSON.parse(raw) as Partial<ForumDraft>
+    if (typeof value.title !== 'string' || typeof value.body !== 'string') return null
+    return {
+      title: value.title,
+      body: value.body,
+      board_id: typeof value.board_id === 'number' ? value.board_id : null,
+      paper_id: typeof value.paper_id === 'number' ? value.paper_id : null,
+    }
+  } catch {
+    return null
+  }
+}
+
+function saveForumDraft(draft: ForumDraft) {
+  try {
+    if (!draft.title.trim() && !draft.body.trim()) {
+      window.localStorage.removeItem(FORUM_DRAFT_KEY)
+      return
+    }
+    window.localStorage.setItem(FORUM_DRAFT_KEY, JSON.stringify(draft))
+  } catch {
+    // 本机存储不可用时，草稿自动保存静默降级。
+  }
+}
+
 function ForumListPage() {
   const navigate = useNavigate()
   const qc = useQueryClient()
@@ -167,6 +205,12 @@ function ForumListPage() {
     board_id: null as number | null,
     paper_id: paperId,
   })
+
+  useEffect(() => {
+    if (!open) return
+    const timer = window.setTimeout(() => saveForumDraft(form), 400)
+    return () => window.clearTimeout(timer)
+  }, [form, open])
 
   const boardsQ = useQuery({
     queryKey: ['forum', 'boards'],
@@ -200,6 +244,11 @@ function ForumListPage() {
       void qc.invalidateQueries({ queryKey: ['forum'] })
       setOpen(false)
       setForm({ title: '', body: '', board_id: defaultBoardId, paper_id: null })
+      try {
+        window.localStorage.removeItem(FORUM_DRAFT_KEY)
+      } catch {
+        // ignore
+      }
       void navigate({ to: '/forum/$topicId', params: { topicId: String(data.id) } })
     },
     onError: (err) => toast.error(extractError(err, '发布失败')),
@@ -229,7 +278,22 @@ function ForumListPage() {
       void navigate({ to: '/login', search: { redirect: '/forum' } })
       return
     }
-    setForm((prev) => ({ ...prev, board_id: prev.board_id ?? currentBoardId }))
+    const stored = paperId ? null : readForumDraft()
+    const usableDraft = stored?.paper_id === null ? stored : null
+    const storedBoardId =
+      usableDraft?.board_id && leafBoards.some((b) => b.id === usableDraft.board_id)
+        ? usableDraft.board_id
+        : null
+    setForm({
+      title: paperId
+        ? `讨论：${(paperTitle || `论文 #${paperId}`).slice(0, 170)}`
+        : usableDraft?.title ?? '',
+      body: paperId
+        ? `论文链接：/catalog/${paperId}\n\n`
+        : usableDraft?.body ?? '',
+      board_id: storedBoardId ?? currentBoardId,
+      paper_id: paperId,
+    })
     setBoardPickerOpen(false)
     setOpen(true)
   }
@@ -551,7 +615,7 @@ function ForumListPage() {
           <div className="border-t px-4 py-3 sm:px-6">
             <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
               <span className="text-[11px] text-muted-foreground">
-                Ctrl / ⌘ + Enter 发布 · 正文 {form.body.length} 字
+                草稿自动保存在本机 · Ctrl / ⌘ + Enter 发布 · 正文 {form.body.length} 字
               </span>
               <div className="flex items-center gap-2">
                 <Button variant="ghost" onClick={() => setOpen(false)}>

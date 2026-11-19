@@ -685,27 +685,46 @@ export function MarkdownEditor({
       )}
       data-testid={testId ?? 'markdown-editor'}
     >
-      <div className="flex flex-wrap items-center gap-1 border-b px-2 py-1.5">
-        <ToolMenu
-          label="标题"
-          tools={HEADING_TOOLS}
-          disabled={disabled}
-          onPick={applyTool}
-        />
-        <ToolButton tool={BOLD} disabled={disabled} onPick={applyTool} />
-        <ToolButton tool={ITALIC} disabled={disabled} onPick={applyTool} />
-        <ToolMenu
-          label="段落"
-          tools={PARAGRAPH_TOOLS}
-          disabled={disabled}
-          onPick={applyTool}
-        />
-        <ToolMenu
-          label="插入"
-          tools={INSERT_TOOLS}
-          disabled={disabled}
-          onPick={applyTool}
-        />
+      <div className={cn(
+          'flex items-center gap-1 border-b px-2 py-1.5',
+          compact ? 'flex-nowrap overflow-x-auto' : 'flex-wrap',
+        )}>
+        {compact ? (
+          <>
+            <ToolButton tool={BOLD} disabled={disabled} onPick={applyTool} />
+            <ToolButton tool={ITALIC} disabled={disabled} onPick={applyTool} />
+            <ToolButton tool={LINK} disabled={disabled} onPick={applyTool} />
+            <ToolMenu
+              label="列表"
+              tools={[LIST, ORDERED, QUOTE]}
+              disabled={disabled}
+              onPick={applyTool}
+            />
+          </>
+        ) : (
+          <>
+            <ToolMenu
+              label="标题"
+              tools={HEADING_TOOLS}
+              disabled={disabled}
+              onPick={applyTool}
+            />
+            <ToolButton tool={BOLD} disabled={disabled} onPick={applyTool} />
+            <ToolButton tool={ITALIC} disabled={disabled} onPick={applyTool} />
+            <ToolMenu
+              label="段落"
+              tools={PARAGRAPH_TOOLS}
+              disabled={disabled}
+              onPick={applyTool}
+            />
+            <ToolMenu
+              label="插入"
+              tools={INSERT_TOOLS}
+              disabled={disabled}
+              onPick={applyTool}
+            />
+          </>
+        )}
         {!compact && (
           <>
             <TableMenu
