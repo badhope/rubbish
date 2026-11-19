@@ -173,7 +173,6 @@ _SPA_ROUTE_PREFIXES = frozenset(
         "catalog",
         "claim",
         "dashboard",
-        "desk",
         "editor",
         "forgot-password",
         "forum",

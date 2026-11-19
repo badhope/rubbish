@@ -1,13 +1,8 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { ArrowRight, Feather, Gavel, ReceiptText } from 'lucide-react'
-import { PageHeader } from '@/components/common/page-header'
 import { RevealSection } from '@/components/common/reveal-section'
 import { Card, CardContent } from '@/components/ui/card'
 import { DeskSubscribeCard } from '@/components/desk/subscribe-card'
-
-export const Route = createFileRoute('/desk')({
-  component: DeskPage,
-})
 
 const PILLARS = [
   {
@@ -57,21 +52,16 @@ const NOTES = [
   },
 ]
 
-function DeskPage() {
+export function DeskPage() {
   return (
-    <div className="mx-auto w-full max-w-4xl">
-      <Link
-        to="/"
-        className="mb-4 inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-primary"
-      >
-        <ArrowRight className="mr-1 h-4 w-4 rotate-180" />
-        返回首页
-      </Link>
-
-      <PageHeader
-        title="主编桌"
-        description="陆止于海，Rubbish 主编。这是公开的主编工作笔记：为什么做、怎么判断、钱花在哪。"
-      />
+    <div className="space-y-6">
+      <div className="border-b pb-4">
+        <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">EDITOR'S DESK</p>
+        <h1 className="mt-1 font-serif text-2xl tracking-tight">主编桌</h1>
+        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+          陆止于海，Rubbish 主编。这是公开的主编工作笔记：为什么做、怎么判断、钱花在哪。
+        </p>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
         {PILLARS.map((pillar) => {

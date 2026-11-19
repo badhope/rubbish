@@ -13,7 +13,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as R403RouteImport } from './routes/403'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteImport } from './routes/admin'
-import { Route as DeskRouteImport } from './routes/desk'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as GuideRouteImport } from './routes/guide'
 import { Route as LoginRouteImport } from './routes/login'
@@ -22,6 +21,7 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
+import { Route as AboutDeskSubscribeRouteImport } from './routes/about_.desk-subscribe'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminContentRouteImport } from './routes/admin/content'
 import { Route as AdminEconomyRouteImport } from './routes/admin/economy'
@@ -31,7 +31,6 @@ import { Route as AdminSystemRouteImport } from './routes/admin/system'
 import { Route as CatalogIndexRouteImport } from './routes/catalog/index'
 import { Route as CatalogResourceIdRouteImport } from './routes/catalog/$resourceId'
 import { Route as ClaimResourceIdRouteImport } from './routes/claim/$resourceId'
-import { Route as DeskSubscribeRouteImport } from './routes/desk_.subscribe'
 import { Route as EditorCalibrationRouteImport } from './routes/editor/calibration'
 import { Route as EditorTriageRouteImport } from './routes/editor/triage'
 import { Route as EditorWorkbenchRouteImport } from './routes/editor/workbench'
@@ -66,11 +65,6 @@ const AboutRoute = AboutRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DeskRoute = DeskRouteImport.update({
-  id: '/desk',
-  path: '/desk',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -111,6 +105,11 @@ const SupportRoute = SupportRouteImport.update({
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
   id: '/verify-email',
   path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutDeskSubscribeRoute = AboutDeskSubscribeRouteImport.update({
+  id: '/about_/desk-subscribe',
+  path: '/about/desk-subscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -156,11 +155,6 @@ const CatalogResourceIdRoute = CatalogResourceIdRouteImport.update({
 const ClaimResourceIdRoute = ClaimResourceIdRouteImport.update({
   id: '/claim/$resourceId',
   path: '/claim/$resourceId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DeskSubscribeRoute = DeskSubscribeRouteImport.update({
-  id: '/desk_/subscribe',
-  path: '/desk/subscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EditorCalibrationRoute = EditorCalibrationRouteImport.update({
@@ -244,7 +238,6 @@ export interface FileRoutesByFullPath {
   '/403': typeof R403Route
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
-  '/desk': typeof DeskRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/guide': typeof GuideRoute
   '/login': typeof LoginRoute
@@ -253,6 +246,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/support': typeof SupportRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/about/desk-subscribe': typeof AboutDeskSubscribeRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/journal': typeof AdminJournalRoute
@@ -260,7 +254,6 @@ export interface FileRoutesByFullPath {
   '/admin/system': typeof AdminSystemRoute
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
   '/claim/$resourceId': typeof ClaimResourceIdRoute
-  '/desk/subscribe': typeof DeskSubscribeRoute
   '/editor/calibration': typeof EditorCalibrationRoute
   '/editor/triage': typeof EditorTriageRoute
   '/editor/workbench': typeof EditorWorkbenchRoute
@@ -283,7 +276,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/403': typeof R403Route
   '/about': typeof AboutRoute
-  '/desk': typeof DeskRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/guide': typeof GuideRoute
   '/login': typeof LoginRoute
@@ -292,6 +284,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/support': typeof SupportRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/about/desk-subscribe': typeof AboutDeskSubscribeRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/journal': typeof AdminJournalRoute
@@ -299,7 +292,6 @@ export interface FileRoutesByTo {
   '/admin/system': typeof AdminSystemRoute
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
   '/claim/$resourceId': typeof ClaimResourceIdRoute
-  '/desk/subscribe': typeof DeskSubscribeRoute
   '/editor/calibration': typeof EditorCalibrationRoute
   '/editor/triage': typeof EditorTriageRoute
   '/editor/workbench': typeof EditorWorkbenchRoute
@@ -324,7 +316,6 @@ export interface FileRoutesById {
   '/403': typeof R403Route
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
-  '/desk': typeof DeskRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/guide': typeof GuideRoute
   '/login': typeof LoginRoute
@@ -333,6 +324,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/support': typeof SupportRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/about_/desk-subscribe': typeof AboutDeskSubscribeRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/economy': typeof AdminEconomyRoute
   '/admin/journal': typeof AdminJournalRoute
@@ -340,7 +332,6 @@ export interface FileRoutesById {
   '/admin/system': typeof AdminSystemRoute
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
   '/claim/$resourceId': typeof ClaimResourceIdRoute
-  '/desk_/subscribe': typeof DeskSubscribeRoute
   '/editor/calibration': typeof EditorCalibrationRoute
   '/editor/triage': typeof EditorTriageRoute
   '/editor/workbench': typeof EditorWorkbenchRoute
@@ -366,7 +357,6 @@ export interface FileRouteTypes {
     | '/403'
     | '/about'
     | '/admin'
-    | '/desk'
     | '/forgot-password'
     | '/guide'
     | '/login'
@@ -375,6 +365,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/support'
     | '/verify-email'
+    | '/about/desk-subscribe'
     | '/admin/content'
     | '/admin/economy'
     | '/admin/journal'
@@ -382,7 +373,6 @@ export interface FileRouteTypes {
     | '/admin/system'
     | '/catalog/$resourceId'
     | '/claim/$resourceId'
-    | '/desk/subscribe'
     | '/editor/calibration'
     | '/editor/triage'
     | '/editor/workbench'
@@ -405,7 +395,6 @@ export interface FileRouteTypes {
     | '/'
     | '/403'
     | '/about'
-    | '/desk'
     | '/forgot-password'
     | '/guide'
     | '/login'
@@ -414,6 +403,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/support'
     | '/verify-email'
+    | '/about/desk-subscribe'
     | '/admin/content'
     | '/admin/economy'
     | '/admin/journal'
@@ -421,7 +411,6 @@ export interface FileRouteTypes {
     | '/admin/system'
     | '/catalog/$resourceId'
     | '/claim/$resourceId'
-    | '/desk/subscribe'
     | '/editor/calibration'
     | '/editor/triage'
     | '/editor/workbench'
@@ -445,7 +434,6 @@ export interface FileRouteTypes {
     | '/403'
     | '/about'
     | '/admin'
-    | '/desk'
     | '/forgot-password'
     | '/guide'
     | '/login'
@@ -454,6 +442,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/support'
     | '/verify-email'
+    | '/about_/desk-subscribe'
     | '/admin/content'
     | '/admin/economy'
     | '/admin/journal'
@@ -461,7 +450,6 @@ export interface FileRouteTypes {
     | '/admin/system'
     | '/catalog/$resourceId'
     | '/claim/$resourceId'
-    | '/desk_/subscribe'
     | '/editor/calibration'
     | '/editor/triage'
     | '/editor/workbench'
@@ -486,7 +474,6 @@ export interface RootRouteChildren {
   R403Route: typeof R403Route
   AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRouteWithChildren
-  DeskRoute: typeof DeskRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   GuideRoute: typeof GuideRoute
   LoginRoute: typeof LoginRoute
@@ -495,9 +482,9 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SupportRoute: typeof SupportRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
+  AboutDeskSubscribeRoute: typeof AboutDeskSubscribeRoute
   CatalogResourceIdRoute: typeof CatalogResourceIdRoute
   ClaimResourceIdRoute: typeof ClaimResourceIdRoute
-  DeskSubscribeRoute: typeof DeskSubscribeRoute
   EditorCalibrationRoute: typeof EditorCalibrationRoute
   EditorTriageRoute: typeof EditorTriageRoute
   EditorWorkbenchRoute: typeof EditorWorkbenchRoute
@@ -543,13 +530,6 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/desk': {
-      id: '/desk'
-      path: '/desk'
-      fullPath: '/desk'
-      preLoaderRoute: typeof DeskRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -606,6 +586,13 @@ declare module '@tanstack/react-router' {
       path: '/verify-email'
       fullPath: '/verify-email'
       preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about_/desk-subscribe': {
+      id: '/about_/desk-subscribe'
+      path: '/about/desk-subscribe'
+      fullPath: '/about/desk-subscribe'
+      preLoaderRoute: typeof AboutDeskSubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -669,13 +656,6 @@ declare module '@tanstack/react-router' {
       path: '/claim/$resourceId'
       fullPath: '/claim/$resourceId'
       preLoaderRoute: typeof ClaimResourceIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/desk_/subscribe': {
-      id: '/desk_/subscribe'
-      path: '/desk/subscribe'
-      fullPath: '/desk/subscribe'
-      preLoaderRoute: typeof DeskSubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/editor/calibration': {
@@ -813,7 +793,6 @@ const rootRouteChildren: RootRouteChildren = {
   R403Route: R403Route,
   AboutRoute: AboutRoute,
   AdminRoute: AdminRouteWithChildren,
-  DeskRoute: DeskRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   GuideRoute: GuideRoute,
   LoginRoute: LoginRoute,
@@ -822,9 +801,9 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SupportRoute: SupportRoute,
   VerifyEmailRoute: VerifyEmailRoute,
+  AboutDeskSubscribeRoute: AboutDeskSubscribeRoute,
   CatalogResourceIdRoute: CatalogResourceIdRoute,
   ClaimResourceIdRoute: ClaimResourceIdRoute,
-  DeskSubscribeRoute: DeskSubscribeRoute,
   EditorCalibrationRoute: EditorCalibrationRoute,
   EditorTriageRoute: EditorTriageRoute,
   EditorWorkbenchRoute: EditorWorkbenchRoute,

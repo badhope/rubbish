@@ -4,20 +4,27 @@ import { PageHeader } from '@/components/common/page-header'
 import { CoverArt } from '@/components/common/cover-art'
 import { RevealSection } from '@/components/common/reveal-section'
 import { JournalMetricsPage } from '@/components/about/journal-metrics'
+import { DeskPage } from '@/components/about/desk-page'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/about')({
   validateSearch: (search: Record<string, unknown>) => ({
-    tab: search.tab === 'metrics' ? 'metrics' : 'about',
+    tab:
+      search.tab === 'metrics'
+        ? 'metrics'
+        : search.tab === 'desk'
+          ? 'desk'
+          : 'about',
   }),
   component: AboutPage,
 })
 
-function AboutTabs({ active }: { active: 'about' | 'metrics' }) {
+function AboutTabs({ active }: { active: 'about' | 'metrics' | 'desk' }) {
   return (
     <div className="mb-6 flex border-b">
       {[
         { value: 'about', label: '关于本刊' },
+        { value: 'desk', label: '主编桌' },
         { value: 'metrics', label: '本刊数据' },
       ].map((t) => (
         <Link
@@ -95,6 +102,14 @@ function AboutPage() {
       <div className="about-page mx-auto w-full max-w-[1100px]">
         <AboutTabs active="metrics" />
         <JournalMetricsPage embedded />
+      </div>
+    )
+  }
+  if (tab === 'desk') {
+    return (
+      <div className="about-page mx-auto w-full max-w-[1100px]">
+        <AboutTabs active="desk" />
+        <DeskPage />
       </div>
     )
   }

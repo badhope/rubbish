@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { createFileRoute, Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronRight, Clock3, Flame, Flag, Lock, Megaphone, MessageSquare, Pin, Plus } from 'lucide-react'
+import { Clock3, Flame, Flag, Lock, Megaphone, MessageSquare, Pin, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import { uploadForumImage } from '@/lib/forum'
@@ -89,15 +89,6 @@ function collectBoards(nodes: BoardNode[], depth = 0): Array<BoardNode & { depth
   ])
 }
 
-function findRoot(nodes: BoardNode[], slug: string): BoardNode | null {
-  for (const node of nodes) {
-    if (node.slug === slug) return node
-    const child = findRoot(node.children, slug)
-    if (child) return node
-  }
-  return null
-}
-
 const CATEGORY_STYLE: Record<string, string> = {
   paper: 'bg-muted text-foreground border-border',
   method: 'bg-muted text-foreground border-border',
@@ -173,7 +164,6 @@ function ForumListPage() {
   const leafBoards = allBoards.filter((b) => b.children.length === 0)
   const defaultBoardId = leafBoards.find((b) => b.slug === 'paper-reading')?.id ?? leafBoards[0]?.id ?? null
   const normalizedCategory = LEGACY_SLUG[category] ?? category
-  const activeRoot = normalizedCategory === 'all' ? null : findRoot(boardTree, normalizedCategory)
   const activeBoard = normalizedCategory === 'all' ? null : allBoards.find((b) => b.slug === normalizedCategory)
 
   const listQ = useQuery({
@@ -245,7 +235,7 @@ function ForumListPage() {
     <div className="mx-auto w-full max-w-4xl space-y-4">
       <PageHeader
         title="讨论"
-        description="学术交流与站务反馈两大父板块，向下细分到论文精读、复现与数据、写作与投稿、统计与方法等子板块。发帖登录即可，不需要积分。"
+        description="学术交流、方法与写作、站务反馈都在这里；发帖登录即可，不需要积分。"
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" asChild>
@@ -287,95 +277,36 @@ function ForumListPage() {
         </Card>
       ) : null}
 
-      <div className="space-y-2">
-        <div className="flex flex-wrap items-center gap-1.5" role="tablist" aria-label="论坛父板块">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={category === 'all'}
-            onClick={() => updateSearch({ category: undefined, page: 1 })}
-            className={cn(
-              'rounded-full border px-3.5 py-1.5 text-sm transition-colors',
-              category === 'all'
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'bg-card hover:border-primary/30',
-            )}
-          >
-            全部
-            <span className="ml-1 text-[10px] opacity-70">{allBoards.find((b) => b.slug === 'academic')?.total_topics ?? 0} 学术 · {allBoards.find((b) => b.slug === 'site')?.total_topics ?? 0} 站务</span>
-          </button>
-          {boardTree.map((root) => (
-            <button
-              key={root.slug}
-              type="button"
-              role="tab"
-              aria-selected={normalizedCategory === root.slug}
-              onClick={() => updateSearch({ category: root.slug, page: 1 })}
-              className={cn(
-                'rounded-full border px-3.5 py-1.5 text-sm transition-colors',
-                normalizedCategory === root.slug
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'bg-card hover:border-primary/30',
-              )}
-            >
-              {root.name}
-              <span className="ml-1 text-[10px] opacity-70">{root.total_topics} 帖</span>
-            </button>
-          ))}
-        </div>
-
-        {activeRoot ? (
-          <div className="space-y-1.5 rounded-xl border bg-muted/30 p-2">
-            <button
-              type="button"
-              onClick={() => updateSearch({ category: activeRoot.slug, page: 1 })}
-              className={cn(
-                'w-full rounded-lg border px-2.5 py-1 text-left text-xs transition-colors',
-                normalizedCategory === activeRoot.slug
-                  ? 'border-primary bg-primary/10 text-primary'
-                  : 'bg-background hover:border-primary/25',
-              )}
-            >
-              <span className="font-medium">{activeRoot.name}</span>
-              <span className="ml-1 text-[10px] text-muted-foreground">{activeRoot.total_topics} 帖</span>
-            </button>
-            {collectBoards(activeRoot.children).map((child) => (
-              <button
-                key={child.slug}
-                type="button"
-                onClick={() => updateSearch({ category: child.slug, page: 1 })}
-                style={{ marginLeft: `${child.depth * 14}px` }}
-                className={cn(
-                  'flex items-center gap-1 rounded-lg border px-2.5 py-1 text-left text-xs transition-colors',
-                  normalizedCategory === child.slug
-                    ? 'border-primary bg-primary/10 text-primary'
-                    : 'bg-background hover:border-primary/25',
-                )}
-              >
-                {child.depth > 0 ? <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden="true" /> : null}
-                <span className="min-w-0 truncate">{child.name}</span>
-                <span className="ml-auto text-[10px] text-muted-foreground">{child.total_topics}</span>
-              </button>
+      <div className="flex flex-wrap items-center gap-2 border-y py-2.5">
+        <Select
+          value={activeBoard ? normalizedCategory : 'all'}
+          onValueChange={(v) => updateSearch({ category: v === 'all' ? undefined : v, page: 1 })}
+        >
+          <SelectTrigger className="h-8 w-[210px] text-xs" aria-label="选择版块">
+            <SelectValue placeholder="全部版块" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">全部版块</SelectItem>
+            {boardTree.map((root) => (
+              <SelectItem key={root.slug} value={root.slug}>
+                {root.name}（{root.total_topics} 帖）
+              </SelectItem>
             ))}
-          </div>
-        ) : null}
-      </div>
+            {boardTree.flatMap((root) =>
+              collectBoards(root.children).map((child) => (
+                <SelectItem key={child.slug} value={child.slug}>
+                  {child.path}（{child.total_topics}）
+                </SelectItem>
+              )),
+            )}
+          </SelectContent>
+        </Select>
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        {category === 'all' ? (
-          <span className="text-xs text-muted-foreground">
-            {normalizedCategory === 'all' ? '全部板块' : activeBoard?.name ?? '当前板块'}，{sort === 'hot' ? '按回复数排' : '按最近活跃排'}
-          </span>
-        ) : (
-          <button
-            type="button"
-            onClick={() => updateSearch({ category: undefined, page: 1 })}
-            className="text-xs text-muted-foreground underline-offset-4 hover:underline"
-          >
-            ← 看全部版块
-          </button>
-        )}
-        <div className="flex items-center gap-0.5 rounded-full border bg-muted/40 p-0.5">
+        <span className="text-xs text-muted-foreground">
+          {activeBoard ? `${activeBoard.total_topics} 帖` : '学术与站务'}
+        </span>
+
+        <div className="ml-auto flex items-center gap-0.5 rounded-full border bg-muted/40 p-0.5">
           <button
             type="button"
             onClick={() => updateSearch({ sort: 'latest', page: 1 })}

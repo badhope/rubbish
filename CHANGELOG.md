@@ -18,12 +18,14 @@
 - `/follows` 独立页删除；关注作者与订阅学科收进 `/me?tab=library&section=following`。
 - `/recommendations` 独立页删除；个性化推荐收进 `/me?tab=library&section=recommendations`。
 - 论坛回复改为在目标楼层下方内联展开，不再跳到底部输入框。
+- 论坛列表首屏把两级版块树收进一个版块选择器 + 排序工具栏，不再铺分类胶囊和子版块墙。
+- `/desk` 独立页删除；主编桌并入 `/about?tab=desk`，邮件确认迁到 `/about/desk-subscribe`。
 - sitemap 改用 `/catalog?section=` 与 `/catalog?volume=&issue=`，不再收录旧归档/栏目页。
 
 ### Removed
 - 删除 `/tools` 路由、导航入口与后端 SPA 白名单。
-- 删除 `/authors`、`/help`、`/policies`、`/archive`、`/sections`、`/ingest`、`/feedback`、`/appeals`、`/follows`、`/recommendations` 路由文件；指南页面组件迁到 `components/guide/`。
-- 后端 SPA 白名单移除 `policies`、`help`、`rules`、`shop`、`archive`、`sections`、`ingest`、`feedback`、`appeals`、`follows`、`recommendations`。
+- 删除 `/authors`、`/help`、`/policies`、`/archive`、`/sections`、`/ingest`、`/feedback`、`/appeals`、`/follows`、`/recommendations`、`/desk` 路由文件；指南页面组件迁到 `components/guide/`。
+- 后端 SPA 白名单移除 `policies`、`help`、`rules`、`shop`、`archive`、`sections`、`ingest`、`feedback`、`appeals`、`follows`、`recommendations`、`desk`。
 
 ## [1.16.0] — 2026-11-19
 

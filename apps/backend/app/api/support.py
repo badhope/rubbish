@@ -223,8 +223,8 @@ async def subscribe(
     sent = False
     if send_mail and raw_token:
         base = _site_base()
-        confirm_url = f"{base}/desk/subscribe?token={raw_token}&action=confirm"
-        unsubscribe_url = f"{base}/desk/subscribe?token={raw_token}&action=unsubscribe"
+        confirm_url = f"{base}/about/desk-subscribe?token={raw_token}&action=confirm"
+        unsubscribe_url = f"{base}/about/desk-subscribe?token={raw_token}&action=unsubscribe"
         subject, text, html = desk_subscribe_confirm(confirm_url, unsubscribe_url, 7)
         try:
             await email_module.get_email_sender().send(

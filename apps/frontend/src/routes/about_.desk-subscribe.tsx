@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-export const Route = createFileRoute("/desk_/subscribe")({
+export const Route = createFileRoute("/about_/desk-subscribe")({
   validateSearch: (
     search: Record<string, unknown>,
   ): { token?: string; action?: "confirm" | "unsubscribe" } => ({
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/desk_/subscribe")({
 });
 
 function DeskSubscribePage() {
-  const { token, action } = useSearch({ from: "/desk_/subscribe" });
+  const { token, action } = useSearch({ from: "/about_/desk-subscribe" });
   const confirm = useConfirmSubscription();
   const unsubscribe = useUnsubscribe();
   const result = action === "unsubscribe" ? unsubscribe.data : confirm.data;
@@ -38,7 +38,7 @@ function DeskSubscribePage() {
   return (
     <div className="mx-auto max-w-xl">
       <Link
-        to="/desk"
+        to="/about" search={{ tab: "desk" }}
         className="mb-4 inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-primary"
       >
         <ArrowLeft className="mr-1 h-4 w-4" />
@@ -92,7 +92,7 @@ function DeskSubscribePage() {
                   </p>
                 ) : null}
                 <Link
-                  to="/desk"
+                  to="/about" search={{ tab: "desk" }}
                   className="mt-3 inline-flex text-sm text-primary hover:underline"
                 >
                   返回主编桌
