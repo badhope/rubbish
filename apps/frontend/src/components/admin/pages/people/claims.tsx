@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { createFileRoute } from '@tanstack/react-router'
 import { toast } from 'sonner'
-import { requireAdminGuard } from '@/lib/route-guards'
 import { useAdminClaims, useDecideClaim, useAssignOwner } from '@/hooks/api/use-modules'
 import type { AdminClaimEntry } from '@/lib/types'
 import { extractError, formatDateTime } from '@/lib/utils'
@@ -23,12 +21,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 
-export const Route = createFileRoute('/admin/claims')({
-  beforeLoad: () => {
-    requireAdminGuard()
-  },
-  component: ClaimsAdminPage,
-})
+
 
 const STATUS_LABEL: Record<string, string> = {
   pending: '待审',
@@ -52,7 +45,7 @@ const EVIDENCE_LABEL: Record<string, string> = {
  * 作者认领审批台（v5）：卡片列表。
  * 通过/驳回/驳回后指定给其他申请人（逐位调用 assign-owner）。
  */
-function ClaimsAdminPage() {
+export default function ClaimsAdminPage() {
   const [statusFilter, setStatusFilter] = useState<'pending' | 'approved' | 'rejected'>('pending')
   const decideMut = useDecideClaim()
   const assignMut = useAssignOwner()

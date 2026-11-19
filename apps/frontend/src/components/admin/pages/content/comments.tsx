@@ -1,9 +1,7 @@
 import { useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
 import { Check, X } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { requireAdminGuard } from '@/lib/route-guards'
 import { extractError } from '@/lib/utils'
 import {
   useAdminComments,
@@ -30,12 +28,7 @@ import { Label } from '@/components/ui/label'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 
-export const Route = createFileRoute('/admin/comments')({
-  beforeLoad: () => {
-    requireAdminGuard()
-  },
-  component: AdminCommentsPage,
-})
+
 
 type TabValue = CommentModerationStatus
 
@@ -51,7 +44,7 @@ const STATUS_BADGE: Record<TabValue, 'secondary' | 'default' | 'destructive'> = 
   rejected: 'destructive',
 }
 
-function AdminCommentsPage() {
+export default function AdminCommentsPage() {
   const [tab, setTab] = useState<TabValue>('pending')
   const [page, setPage] = useState(1)
   const [rejectTarget, setRejectTarget] = useState<AdminCommentRow | null>(null)

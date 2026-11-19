@@ -1,11 +1,9 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
 import { Download, Mail } from "lucide-react";
 import {
   useAdminDeskSubscribers,
   type DeskSubscriber,
 } from "@/hooks/api/use-support";
-import { requireAdminGuard } from "@/lib/route-guards";
 import { PageHeader } from "@/components/common/page-header";
 import { EmptyState, Loading } from "@/components/common/state";
 import { Badge } from "@/components/ui/badge";
@@ -19,10 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export const Route = createFileRoute("/admin/desk-subscribers")({
-  beforeLoad: () => requireAdminGuard(),
-  component: DeskSubscribersAdminPage,
-});
+
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "待确认",
@@ -62,7 +57,7 @@ function exportCsv(rows: DeskSubscriber[]) {
   URL.revokeObjectURL(url);
 }
 
-function DeskSubscribersAdminPage() {
+export default function DeskSubscribersAdminPage() {
   const [status, setStatus] = useState<string>("confirmed");
   const subscribers = useAdminDeskSubscribers(
     status === "all" ? undefined : status,

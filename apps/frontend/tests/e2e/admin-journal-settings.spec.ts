@@ -19,7 +19,7 @@ test.describe('admin: journal settings', () => {
     const page = await ctx.newPage()
     try {
       await loginViaUi(page, ADMIN)
-      await page.goto('/admin/settings')
+      await page.goto('/admin/journal?section=settings')
       const single = page.getByTestId('review-mode-single_blind')
       await single.waitFor({ state: 'visible', timeout: 10_000 })
       if (!(await single.getByRole('radio').isChecked())) {
@@ -35,7 +35,7 @@ test.describe('admin: journal settings', () => {
     page,
   }) => {
     await loginViaUi(page, ADMIN)
-    await page.goto('/admin/settings')
+    await page.goto('/admin/journal?section=settings')
 
     await expect(page.getByRole('heading', { name: '期刊设置' })).toBeVisible()
 
@@ -64,7 +64,7 @@ test.describe('admin: journal settings', () => {
   })
 
   test('non-admin cannot reach journal settings', async ({ page }) => {
-    await page.goto('/admin/settings')
+    await page.goto('/admin/journal?section=settings')
     // 未登录 / 非管理员被 beforeLoad 重定向到登录页
     await expect(page).toHaveURL(/\/login/)
   })

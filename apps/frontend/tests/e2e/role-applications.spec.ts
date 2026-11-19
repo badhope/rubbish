@@ -84,7 +84,7 @@ test.describe('role applications', () => {
 
   test('admin queue renders Chinese status chips and the reject dialog', async ({ page }) => {
     await loginViaUi(page, ADMIN)
-    await page.goto('/admin/role-applications')
+    await page.goto('/admin/people?section=roles')
     await expect(page.getByRole('heading', { name: '角色申请审批' })).toBeVisible()
     // 状态筛选按钮用中文标签，而不是原始 status 值
     await expect(page.getByRole('button', { name: '待审' })).toBeVisible()
@@ -99,7 +99,7 @@ test.describe('role applications', () => {
     const user = nextTestUser('noqueue')
     await registerAndVerifyViaUi(page, user)
     await loginViaUi(page, user)
-    await page.goto('/admin/role-applications')
+    await page.goto('/admin/people?section=roles')
     // 已登录但无权 → /403（requireAdminGuard 的既有约定）
     await expect(page).toHaveURL(/\/403/, { timeout: 10_000 })
     await ctx.close()

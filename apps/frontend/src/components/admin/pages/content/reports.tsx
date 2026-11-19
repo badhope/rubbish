@@ -1,11 +1,9 @@
 import { useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Ban, Check, ShieldAlert, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { api } from '@/lib/api'
-import { requireAdminGuard } from '@/lib/route-guards'
 import { extractError } from '@/lib/utils'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
@@ -23,12 +21,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
-export const Route = createFileRoute('/admin/reports')({
-  beforeLoad: () => {
-    requireAdminGuard()
-  },
-  component: AdminReportsPage,
-})
+
 
 type ReportStatus = 'open' | 'resolved' | 'rejected'
 type ReportAction = 'dismiss' | 'remove_content' | 'suspend_author'
@@ -65,7 +58,7 @@ function fmtTime(iso: string): string {
   return new Date(iso).toLocaleString('zh-CN', { hour12: false })
 }
 
-function AdminReportsPage() {
+export default function AdminReportsPage() {
   const qc = useQueryClient()
   const [tab, setTab] = useState<ReportStatus>('open')
   const [target, setTarget] = useState<{ row: ForumReportRow; action: ReportAction } | null>(null)

@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { ArrowLeft, Search } from 'lucide-react'
-import { requireAdminGuard } from '@/lib/route-guards'
 import { useIssueList } from '@/hooks/api/use-modules'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
@@ -17,22 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 
-interface IssuesSearch {
-  volume?: string
-}
-
-export const Route = createFileRoute('/admin/issues/')({
-  beforeLoad: () => {
-    requireAdminGuard()
-  },
-  validateSearch: (search: Record<string, unknown>): IssuesSearch => ({
-    volume: typeof search.volume === 'string' ? search.volume : undefined,
-  }),
-  component: AdminIssuesPage,
-})
-
-function AdminIssuesPage() {
-  const { volume } = Route.useSearch()
+export default function AdminIssuesPage({ volume }: { volume?: string }) {
   const [query, setQuery] = useState('')
   const { data, isLoading, isError, refetch } = useIssueList(volume ?? '')
   // 用 useMemo 固定引用：直接写 `data?.items ?? []` 每渲染都是新数组，
@@ -53,7 +37,7 @@ function AdminIssuesPage() {
           description="请从卷管理页面选择一个卷来查看其期列表。"
           actions={
             <Button asChild variant="outline" size="sm">
-              <Link to="/admin/volumes">
+              <Link to="/admin/journal" search={{ section: "volumes" }}>
                 <ArrowLeft className="mr-1 h-4 w-4" />
                 返回卷列表
               </Link>
@@ -65,7 +49,7 @@ function AdminIssuesPage() {
           description="请先访问卷管理页面，选择要查看的卷。"
           action={
             <Button asChild variant="outline" size="sm">
-              <Link to="/admin/volumes">浏览卷列表</Link>
+              <Link to="/admin/journal" search={{ section: "volumes" }}>浏览卷列表</Link>
             </Button>
           }
         />
@@ -84,7 +68,7 @@ function AdminIssuesPage() {
               <Badge variant="secondary">{issues.length} 期</Badge>
             ) : null}
             <Button asChild variant="outline" size="sm">
-              <Link to="/admin/volumes">
+              <Link to="/admin/journal" search={{ section: "volumes" }}>
                 <ArrowLeft className="mr-1 h-4 w-4" />
                 返回卷列表
               </Link>

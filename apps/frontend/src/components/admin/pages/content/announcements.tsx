@@ -1,11 +1,9 @@
 import { useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Megaphone, Pencil, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import { extractError } from '@/lib/utils'
-import { requireAdminGuard } from '@/lib/route-guards'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
@@ -30,12 +28,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 
-export const Route = createFileRoute('/admin/announcements')({
-  beforeLoad: () => {
-    requireAdminGuard()
-  },
-  component: AnnouncementsAdminPage,
-})
+
 
 interface Announcement {
   id: number
@@ -79,7 +72,7 @@ const LEVEL_LABELS: Record<string, string> = {
  * 此前公告只能改数据库——编辑部想发一条「本期已刊出」的提示都得找人
  * 改 SQL。公告是编辑部对外的第一句话，必须由编辑部自己掌握。
  */
-function AnnouncementsAdminPage() {
+export default function AnnouncementsAdminPage() {
   const qc = useQueryClient()
   const [editing, setEditing] = useState<Announcement | null>(null)
   const [form, setForm] = useState<AnnouncementForm>(EMPTY)

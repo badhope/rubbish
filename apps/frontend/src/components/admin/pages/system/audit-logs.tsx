@@ -1,6 +1,4 @@
 import { useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
-import { requireAdminGuard } from '@/lib/route-guards'
 import { useAdminAuditLogs } from '@/hooks/api/use-modules'
 import { PageHeader } from '@/components/common/page-header'
 import { Pagination } from '@/components/common/pagination'
@@ -11,14 +9,8 @@ import { inferTotalPagesFromFullPage } from '@/lib/utils'
 
 const PAGE_SIZE = 50
 
-export const Route = createFileRoute('/admin/audit-logs')({
-  beforeLoad: () => {
-    requireAdminGuard()
-  },
-  component: AuditLogsPage,
-})
 
-function AuditLogsPage() {
+export default function AuditLogsPage() {
   const [page, setPage] = useState(1)
   const offset = (page - 1) * PAGE_SIZE
   const { data, isLoading, isError, refetch } = useAdminAuditLogs(

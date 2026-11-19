@@ -110,7 +110,7 @@ function AdminIssueDetailPage() {
               {publishMut.isPending ? '发布中…' : '发布本期'}
             </Button>
             <Button asChild variant="outline" size="sm">
-              <Link to="/admin/issues" search={{ volume }}>
+              <Link to="/admin/journal" search={{ section: "issues" }}>
                 <ArrowLeft className="mr-1 h-4 w-4" />
                 返回期列表
               </Link>

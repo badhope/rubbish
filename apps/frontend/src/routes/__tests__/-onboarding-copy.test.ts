@@ -31,6 +31,6 @@ describe('onboarding guidance', () => {
  })
 
  it('describes the XP thresholds and acceptance requirement accurately', () => {
- expect(source('levels')).not.toContain('L1–L3 随确认动作解锁')
+ expect(readFileSync('src/components/guide/levels-page.tsx', 'utf8')).not.toContain('L1–L3 随确认动作解锁')
  })
 })

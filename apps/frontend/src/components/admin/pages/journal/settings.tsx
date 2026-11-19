@@ -1,9 +1,7 @@
 import { useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
 import { AxiosError } from 'axios'
 import { Info } from 'lucide-react'
 import { toast } from 'sonner'
-import { requireAdminGuard } from '@/lib/route-guards'
 import {
   useReviewMode,
   useSetReviewMode,
@@ -23,12 +21,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 
-export const Route = createFileRoute('/admin/settings')({
-  beforeLoad: () => {
-    requireAdminGuard()
-  },
-  component: AdminSettingsPage,
-})
+
 
 const REVIEW_MODE_OPTIONS: {
   value: ReviewMode
@@ -49,7 +42,7 @@ const REVIEW_MODE_OPTIONS: {
   },
 ]
 
-function AdminSettingsPage() {
+export default function AdminSettingsPage() {
   const { data, isLoading, isError, refetch } = useReviewMode()
   const setMode = useSetReviewMode()
   const site = useSiteSettings()

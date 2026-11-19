@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
 import { MoreHorizontal, Plus, Search } from 'lucide-react'
 import { toast } from 'sonner'
-import { requireAdminGuard } from '@/lib/route-guards'
 import { useAdminUsers, useAssignRole, useCreateAdminUser, useRevokeRole, useSetUserActive, useSetUserAdmin } from '@/hooks/api/use-modules'
 import { useAuth } from '@/hooks/use-auth'
 import type { AssignableRole, UserResponse } from '@/lib/types'
@@ -70,14 +68,9 @@ const ROLE_LABELS: Record<AssignableRole, string> = {
   reader: '读者',
 }
 
-export const Route = createFileRoute('/admin/users')({
-  beforeLoad: () => {
-    requireAdminGuard()
-  },
-  component: AdminUsersPage,
-})
 
-function AdminUsersPage() {
+
+export default function AdminUsersPage() {
   const [page, setPage] = useState(1)
   const [query, setQuery] = useState('')
   const [createOpen, setCreateOpen] = useState(false)

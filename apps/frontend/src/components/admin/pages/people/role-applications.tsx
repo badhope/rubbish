@@ -1,10 +1,8 @@
 import { useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import { extractError } from '@/lib/utils'
-import { requireAdminGuard } from '@/lib/route-guards'
 import { PageHeader } from '@/components/common/page-header'
 import { Pagination } from '@/components/common/pagination'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
@@ -22,12 +20,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 
-export const Route = createFileRoute('/admin/role-applications')({
-  beforeLoad: () => {
-    requireAdminGuard()
-  },
-  component: RoleApplicationsAdminPage,
-})
+
 
 interface ApplicationRow {
   id: number
@@ -64,7 +57,7 @@ const STATUS_VARIANT: Record<string, 'default' | 'destructive' | 'outline' | 'se
 
 const PAGE_SIZE = 20
 
-function RoleApplicationsAdminPage() {
+export default function RoleApplicationsAdminPage() {
   const qc = useQueryClient()
   const [page, setPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState<'pending' | 'approved' | 'rejected' | 'all'>(

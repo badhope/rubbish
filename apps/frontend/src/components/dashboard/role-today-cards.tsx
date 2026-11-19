@@ -247,7 +247,7 @@ function ChiefTodayCard() {
         </div>
         {isAdmin ? (
           <Link
-            to="/admin/system-health"
+            to="/admin/system"
             className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
           >
             完整体检 <ArrowRight className="h-3.5 w-3.5" aria-hidden />

@@ -14,7 +14,7 @@ const NAV = [
   '/catalog',
   '/submissions',
   '/submissions/pending',
-  '/admin/settings',
+  '/admin/journal',
 ].map(item)
 
 describe('resolveActiveNavPath', () => {
@@ -66,7 +66,7 @@ const roleItems: NavItem[] = [
     auth: true,
     roles: ['editor', 'section_editor'],
   },
-  { to: '/admin/users', label: '用户管理', icon: null as unknown as LucideIcon, adminOnly: true },
+  { to: '/admin/people', label: '用户管理', icon: null as unknown as LucideIcon, adminOnly: true },
 ]
 
 describe('filterNav', () => {
@@ -101,7 +101,7 @@ describe('filterNav', () => {
       '/submissions',
       '/review/assignments',
       '/submissions/pending',
-      '/admin/users',
+      '/admin/people',
     ])
   })
 })

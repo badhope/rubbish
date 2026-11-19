@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { ChevronRight, Search } from 'lucide-react'
-import { requireAdminGuard } from '@/lib/route-guards'
 import { useVolumeList } from '@/hooks/api/use-modules'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
@@ -16,14 +15,9 @@ import {
   TableRow,
 } from '@/components/ui/table'
 
-export const Route = createFileRoute('/admin/volumes')({
-  beforeLoad: () => {
-    requireAdminGuard()
-  },
-  component: AdminVolumesPage,
-})
 
-function AdminVolumesPage() {
+
+export default function AdminVolumesPage() {
   const [query, setQuery] = useState('')
   const { data, isLoading, isError, refetch } = useVolumeList()
   // 用 useMemo 固定引用：直接写 `data?.items ?? []` 每渲染都是新数组，
@@ -93,8 +87,8 @@ function AdminVolumesPage() {
                   <TableCell>{v.articleCount} 篇</TableCell>
                   <TableCell>
                     <Link
-                      to="/admin/issues"
-                      search={{ volume: v.volume }}
+                      to="/admin/journal"
+                      search={{ section: "issues", volume: v.volume }}
                       className="inline-flex items-center text-muted-foreground hover:text-foreground"
                     >
                       <ChevronRight className="h-4 w-4" />

@@ -40,6 +40,7 @@ const WORKFLOWS: {
   title: string;
   desc: string;
   to: string;
+  search?: Record<string, string>;
   icon: typeof Gavel;
 }[][] = [
   [
@@ -64,7 +65,8 @@ const WORKFLOWS: {
     {
       title: "认领审批",
       desc: "作者认领存量文章",
-      to: "/admin/claims",
+      to: "/admin/people",
+      search: { section: "claims" },
       icon: FileSignature,
     },
   ],
@@ -72,31 +74,36 @@ const WORKFLOWS: {
     {
       title: "期管理",
       desc: "组期 · 排期 · 一键刊出",
-      to: "/admin/issues",
+      to: "/admin/journal",
+      search: { section: "issues" },
       icon: CalendarDays,
     },
     {
       title: "发布门禁",
       desc: "检查 · Manifest · 发布/排期",
-      to: "/admin/releases",
+      to: "/admin/journal",
+      search: { section: "releases" },
       icon: Rocket,
     },
     {
       title: "卷管理",
       desc: "卷结构与覆盖范围",
-      to: "/admin/volumes",
+      to: "/admin/journal",
+      search: { section: "volumes" },
       icon: Layers,
     },
     {
       title: "公告管理",
       desc: "首屏公告板",
-      to: "/admin/announcements",
+      to: "/admin/content",
+      search: { section: "announcements" },
       icon: Megaphone,
     },
     {
       title: "社区版块",
       desc: "三级树 · 停用 · 排序",
-      to: "/admin/forum-boards",
+      to: "/admin/content",
+      search: { section: "boards" },
       icon: Layers,
     },
   ],
@@ -104,49 +111,57 @@ const WORKFLOWS: {
     {
       title: "用户管理",
       desc: "角色 · 状态 · 检索",
-      to: "/admin/users",
+      to: "/admin/people",
+      search: { section: "users" },
       icon: Users,
     },
     {
       title: "评论审核",
       desc: "待审 · 通过 · 拒绝",
-      to: "/admin/comments",
+      to: "/admin/content",
+      search: { section: "comments" },
       icon: MessageSquare,
     },
     {
       title: "角色申请",
       desc: "审稿人/编辑申请审批",
-      to: "/admin/role-applications",
+      to: "/admin/people",
+      search: { section: "roles" },
       icon: ClipboardCheck,
     },
     {
       title: "举报处置",
       desc: "驳回 · 删内容 · 停用作者",
-      to: "/admin/reports",
+      to: "/admin/content",
+      search: { section: "reports" },
       icon: Flag,
     },
     {
       title: "财务公开",
       desc: "季度成本 · 公开信草稿",
-      to: "/admin/finance",
+      to: "/admin/economy",
+      search: { section: "finance" },
       icon: ReceiptText,
     },
     {
       title: "邮件订阅",
       desc: "主编桌读者名单 · 导出",
-      to: "/admin/desk-subscribers",
+      to: "/admin/content",
+      search: { section: "subscribers" },
       icon: Mail,
     },
     {
       title: "系统健康",
       desc: "数据库 · 迁移 · 磁盘 · 积压",
-      to: "/admin/system-health",
+      to: "/admin/system",
+      search: { section: "health" },
       icon: Activity,
     },
     {
       title: "审计日志",
       desc: "全站敏感操作留痕",
-      to: "/admin/audit-logs",
+      to: "/admin/system",
+      search: { section: "audit" },
       icon: ShieldCheck,
     },
   ],
@@ -201,18 +216,19 @@ function AdminDashboard() {
           <div className="grid gap-4 sm:grid-cols-3">
             {lane.map((item) => (
               <Link
-                key={item.to}
+                key={item.title}
                 to={item.to}
+                search={item.search}
                 className="group rounded-xl border bg-card p-4 shadow-sm transition-shadow hover:shadow-md"
               >
                 <div className="mb-2 flex items-center justify-between">
                   <item.icon className="h-5 w-5 text-primary" />
-                  {item.to === "/admin/claims" && pendingCount > 0 ? (
+                  {item.title === "认领审批" && pendingCount > 0 ? (
                     <Badge variant="destructive" className="ml-auto mr-2">
                       {pendingCount} 待处理
                     </Badge>
                   ) : null}
-                  {item.to === "/admin/comments" && pendingComments > 0 ? (
+                  {item.title === "评论审核" && pendingComments > 0 ? (
                     <Badge variant="destructive" className="ml-auto mr-2">
                       {pendingComments} 待审
                     </Badge>

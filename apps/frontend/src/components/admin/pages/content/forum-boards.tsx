@@ -1,11 +1,9 @@
 import { useMemo, useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowUpDown, Pencil, Plus, Power, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { api } from '@/lib/api'
-import { requireAdminGuard } from '@/lib/route-guards'
 import { extractError } from '@/lib/utils'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
@@ -31,12 +29,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 
-export const Route = createFileRoute('/admin/forum-boards')({
-  beforeLoad: () => {
-    requireAdminGuard()
-  },
-  component: AdminForumBoardsPage,
-})
+
 
 interface AdminBoard {
   id: number
@@ -67,7 +60,7 @@ const EMPTY_FORM: BoardForm = {
   is_active: true,
 }
 
-function AdminForumBoardsPage() {
+export default function AdminForumBoardsPage() {
   const qc = useQueryClient()
   const [editing, setEditing] = useState<BoardForm | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<AdminBoard | null>(null)

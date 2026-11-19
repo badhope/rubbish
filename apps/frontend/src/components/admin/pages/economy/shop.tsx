@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
 import { Coins, Package, Plus, QrCode, Save, ShoppingBag } from 'lucide-react'
 import { toast } from 'sonner'
-import { requireShopManagerGuard } from '@/lib/route-guards'
 import {
   useAdminShopItems,
   useCoinConfig,
@@ -24,10 +22,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 
-export const Route = createFileRoute('/admin/shop')({
-  beforeLoad: () => requireShopManagerGuard(),
-  component: AdminShopPage,
-})
 
 const emptyItem = {
   name: '',
@@ -38,7 +32,7 @@ const emptyItem = {
   sort_order: 0,
 }
 
-function AdminShopPage() {
+export default function AdminShopPage() {
   const config = useCoinConfig()
   const items = useAdminShopItems()
   const createItem = useCreateShopItem()

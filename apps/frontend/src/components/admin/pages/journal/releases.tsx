@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import {
   AlertTriangle,
   ArrowLeft,
@@ -12,7 +12,6 @@ import {
   RotateCcw,
   ShieldCheck,
 } from 'lucide-react'
-import { requireAdminGuard } from '@/lib/route-guards'
 import {
   useApproveRelease,
   useCheckRelease,
@@ -37,12 +36,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 
-export const Route = createFileRoute('/admin/releases')({
-  beforeLoad: () => {
-    requireAdminGuard()
-  },
-  component: AdminReleasesPage,
-})
+
 
 const STATE_LABEL: Record<string, string> = {
   draft: '有草稿',
@@ -82,7 +76,7 @@ function StatusPill({ manifest }: { manifest: ReleaseManifest }) {
   return <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${cls}`}>{label}</span>
 }
 
-function AdminReleasesPage() {
+export default function AdminReleasesPage() {
   const { data, isLoading, isError, refetch } = useReleaseIssues()
   const [volume, setVolume] = useState('')
   const [issue, setIssue] = useState('')
@@ -553,7 +547,7 @@ function AdminReleasesPage() {
       )}
 
       <Button asChild variant="ghost" size="sm">
-        <Link to="/admin/issues">
+        <Link to="/admin/journal" search={{ section: "issues" }}>
           <ArrowLeft className="mr-1 h-4 w-4" />
           返回期管理
         </Link>

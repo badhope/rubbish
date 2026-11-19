@@ -89,7 +89,7 @@ const NAV: NavItem[] = [
 
   // admin 组：只保留一个后台入口；具体管理页收进 /admin 的分组卡片。
   { to: '/admin', label: '管理后台', icon: Gavel, auth: true, adminOnly: true, group: '站点管理' },
-  { to: '/admin/shop', label: 'R 币商城', icon: ShoppingBag, auth: true, roles: ['chief_editor', 'deputy_editor', 'editor_in_chief', 'shop_manager'], group: '站点管理' },
+  { to: '/admin/economy', label: 'R 币商城', icon: ShoppingBag, auth: true, roles: ['chief_editor', 'deputy_editor', 'editor_in_chief', 'shop_manager'], group: '站点管理' },
 ]
 
 const PUBLIC_NAV = NAV.slice(0, 5)

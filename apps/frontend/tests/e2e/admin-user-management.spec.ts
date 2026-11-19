@@ -18,7 +18,7 @@ import {
 test.describe('admin: user management', () => {
   test('admin can search users by username', async ({ page }) => {
     await loginViaUi(page, ADMIN)
-    await page.goto('/admin/users')
+    await page.goto('/admin/people')
     await expect(page.getByRole('heading', { name: '用户管理' })).toBeVisible()
     // admin 是 bootstrap 建的最老账号，列表按注册时间倒序分页——
     // E2E 库累积用户后会掉出第一页，所以直接搜索而不是断言首屏可见。
@@ -42,7 +42,7 @@ test.describe('admin: user management', () => {
     const adminCtx = await browser.newContext()
     const adminPage = await adminCtx.newPage()
     await loginViaUi(adminPage, ADMIN)
-    await adminPage.goto('/admin/users')
+    await adminPage.goto('/admin/people')
 
     // 搜索目标用户
     await adminPage.getByPlaceholder('搜索用户名或邮箱').fill(target.username)
@@ -100,7 +100,7 @@ test.describe('admin: user management', () => {
     const adminCtx = await browser.newContext()
     const adminPage = await adminCtx.newPage()
     await loginViaUi(adminPage, ADMIN)
-    await adminPage.goto('/admin/users')
+    await adminPage.goto('/admin/people')
     await adminPage.getByPlaceholder('搜索用户名或邮箱').fill(target.username)
     await expect(adminPage.getByText(target.email)).toBeVisible()
 
@@ -145,7 +145,7 @@ test.describe('admin: user management', () => {
 
   test('admin cannot disable own account (button disabled for self)', async ({ page }) => {
     await loginViaUi(page, ADMIN)
-    await page.goto('/admin/users')
+    await page.goto('/admin/people')
     await page.getByPlaceholder('搜索用户名或邮箱').fill('admin')
     // admin 自己那行的操作按钮 disabled
     const row = page.locator('tr', { hasText: 'admin@e2e.test' }).first()
@@ -165,7 +165,7 @@ test.describe('admin: user management', () => {
     const adminCtx = await browser.newContext()
     const page = await adminCtx.newPage()
     await loginViaUi(page, ADMIN)
-    await page.goto('/admin/users')
+    await page.goto('/admin/people')
     await page.getByPlaceholder('搜索用户名或邮箱').fill(target.username)
     await expect(page.getByText(target.email)).toBeVisible({ timeout: 5_000 })
 
@@ -183,7 +183,7 @@ test.describe('admin: user management', () => {
     await expect(page.getByText('已分配 审稿人 角色')).toBeVisible({ timeout: 5_000 })
 
     // 访问 audit-logs，应该能看到刚产生的 action
-    await page.goto('/admin/audit-logs')
+    await page.goto('/admin/system?section=audit')
     await expect(page.getByRole('heading', { name: '审计日志' })).toBeVisible()
     await expect(page.getByText('user.assign_role').first()).toBeVisible({
       timeout: 10_000,
@@ -198,7 +198,7 @@ test.describe('admin: user management', () => {
     const page = await ctx.newPage()
     await registerAndVerifyViaUi(page, user)
     await loginViaUi(page, user)
-    await page.goto('/admin/audit-logs')
+    await page.goto('/admin/system?section=audit')
     // 已登录但无权 → /403（requireAdminGuard 0.8 起把"未登录"和"越权"分开）
     await expect(page).toHaveURL(/\/403/)
     await ctx.close()

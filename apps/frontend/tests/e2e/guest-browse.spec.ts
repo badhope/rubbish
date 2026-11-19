@@ -109,9 +109,9 @@ test.describe('guest browse', () => {
   })
 
   test('admin pages bounce to /login for guests', async ({ page }) => {
-    await page.goto('/admin/users')
+    await page.goto('/admin/people')
     await expect(page).toHaveURL(/\/login/)
-    await page.goto('/admin/audit-logs')
+    await page.goto('/admin/system?section=audit')
     await expect(page).toHaveURL(/\/login/)
   })
 

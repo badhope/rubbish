@@ -32,22 +32,11 @@ import { Route as SupportRouteImport } from './routes/support'
 import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
-import { Route as AdminAnnouncementsRouteImport } from './routes/admin/announcements'
-import { Route as AdminAuditLogsRouteImport } from './routes/admin/audit-logs'
-import { Route as AdminClaimsRouteImport } from './routes/admin/claims'
-import { Route as AdminCommentsRouteImport } from './routes/admin/comments'
-import { Route as AdminDeskSubscribersRouteImport } from './routes/admin/desk-subscribers'
-import { Route as AdminFinanceRouteImport } from './routes/admin/finance'
-import { Route as AdminForumBoardsRouteImport } from './routes/admin/forum-boards'
+import { Route as AdminContentRouteImport } from './routes/admin/content'
+import { Route as AdminEconomyRouteImport } from './routes/admin/economy'
 import { Route as AdminJournalRouteImport } from './routes/admin/journal'
-import { Route as AdminReleasesRouteImport } from './routes/admin/releases'
-import { Route as AdminReportsRouteImport } from './routes/admin/reports'
-import { Route as AdminRoleApplicationsRouteImport } from './routes/admin/role-applications'
-import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
-import { Route as AdminShopRouteImport } from './routes/admin/shop'
-import { Route as AdminSystemHealthRouteImport } from './routes/admin/system-health'
-import { Route as AdminUsersRouteImport } from './routes/admin/users'
-import { Route as AdminVolumesRouteImport } from './routes/admin/volumes'
+import { Route as AdminPeopleRouteImport } from './routes/admin/people'
+import { Route as AdminSystemRouteImport } from './routes/admin/system'
 import { Route as ArchiveIssueRouteImport } from './routes/archive_.$issue'
 import { Route as CatalogIndexRouteImport } from './routes/catalog/index'
 import { Route as CatalogResourceIdRouteImport } from './routes/catalog/$resourceId'
@@ -70,7 +59,6 @@ import { Route as SubmissionsIndexRouteImport } from './routes/submissions/index
 import { Route as SubmissionsNewRouteImport } from './routes/submissions/new'
 import { Route as SubmissionsPendingRouteImport } from './routes/submissions/pending'
 import { Route as UUsernameRouteImport } from './routes/u/$username'
-import { Route as AdminIssuesIndexRouteImport } from './routes/admin/issues/index'
 import { Route as AuthOidcCallbackRouteImport } from './routes/auth/oidc/callback'
 import { Route as ReviewQuickIdRouteImport } from './routes/review/quick.$id'
 import { Route as AdminIssuesVolumeIssueRouteImport } from './routes/admin/issues.$volume.$issue'
@@ -190,39 +178,14 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminAnnouncementsRoute = AdminAnnouncementsRouteImport.update({
-  id: '/announcements',
-  path: '/announcements',
+const AdminContentRoute = AdminContentRouteImport.update({
+  id: '/content',
+  path: '/content',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminAuditLogsRoute = AdminAuditLogsRouteImport.update({
-  id: '/audit-logs',
-  path: '/audit-logs',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminClaimsRoute = AdminClaimsRouteImport.update({
-  id: '/claims',
-  path: '/claims',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminCommentsRoute = AdminCommentsRouteImport.update({
-  id: '/comments',
-  path: '/comments',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminDeskSubscribersRoute = AdminDeskSubscribersRouteImport.update({
-  id: '/desk-subscribers',
-  path: '/desk-subscribers',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminFinanceRoute = AdminFinanceRouteImport.update({
-  id: '/finance',
-  path: '/finance',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminForumBoardsRoute = AdminForumBoardsRouteImport.update({
-  id: '/forum-boards',
-  path: '/forum-boards',
+const AdminEconomyRoute = AdminEconomyRouteImport.update({
+  id: '/economy',
+  path: '/economy',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminJournalRoute = AdminJournalRouteImport.update({
@@ -230,44 +193,14 @@ const AdminJournalRoute = AdminJournalRouteImport.update({
   path: '/journal',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminReleasesRoute = AdminReleasesRouteImport.update({
-  id: '/releases',
-  path: '/releases',
+const AdminPeopleRoute = AdminPeopleRouteImport.update({
+  id: '/people',
+  path: '/people',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminReportsRoute = AdminReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminRoleApplicationsRoute = AdminRoleApplicationsRouteImport.update({
-  id: '/role-applications',
-  path: '/role-applications',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminSettingsRoute = AdminSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminShopRoute = AdminShopRouteImport.update({
-  id: '/shop',
-  path: '/shop',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminSystemHealthRoute = AdminSystemHealthRouteImport.update({
-  id: '/system-health',
-  path: '/system-health',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminUsersRoute = AdminUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminVolumesRoute = AdminVolumesRouteImport.update({
-  id: '/volumes',
-  path: '/volumes',
+const AdminSystemRoute = AdminSystemRouteImport.update({
+  id: '/system',
+  path: '/system',
   getParentRoute: () => AdminRoute,
 } as any)
 const ArchiveIssueRoute = ArchiveIssueRouteImport.update({
@@ -380,11 +313,6 @@ const UUsernameRoute = UUsernameRouteImport.update({
   path: '/u/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminIssuesIndexRoute = AdminIssuesIndexRouteImport.update({
-  id: '/issues/',
-  path: '/issues/',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AuthOidcCallbackRoute = AuthOidcCallbackRouteImport.update({
   id: '/auth/oidc/callback',
   path: '/auth/oidc/callback',
@@ -424,22 +352,11 @@ export interface FileRoutesByFullPath {
   '/support': typeof SupportRoute
   '/tools': typeof ToolsRoute
   '/verify-email': typeof VerifyEmailRoute
-  '/admin/announcements': typeof AdminAnnouncementsRoute
-  '/admin/audit-logs': typeof AdminAuditLogsRoute
-  '/admin/claims': typeof AdminClaimsRoute
-  '/admin/comments': typeof AdminCommentsRoute
-  '/admin/desk-subscribers': typeof AdminDeskSubscribersRoute
-  '/admin/finance': typeof AdminFinanceRoute
-  '/admin/forum-boards': typeof AdminForumBoardsRoute
+  '/admin/content': typeof AdminContentRoute
+  '/admin/economy': typeof AdminEconomyRoute
   '/admin/journal': typeof AdminJournalRoute
-  '/admin/releases': typeof AdminReleasesRoute
-  '/admin/reports': typeof AdminReportsRoute
-  '/admin/role-applications': typeof AdminRoleApplicationsRoute
-  '/admin/settings': typeof AdminSettingsRoute
-  '/admin/shop': typeof AdminShopRoute
-  '/admin/system-health': typeof AdminSystemHealthRoute
-  '/admin/users': typeof AdminUsersRoute
-  '/admin/volumes': typeof AdminVolumesRoute
+  '/admin/people': typeof AdminPeopleRoute
+  '/admin/system': typeof AdminSystemRoute
   '/archive/$issue': typeof ArchiveIssueRoute
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
   '/catalog/new': typeof CatalogNewRoute
@@ -465,7 +382,6 @@ export interface FileRoutesByFullPath {
   '/submissions/': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
   '/review/quick/$id': typeof ReviewQuickIdRoute
-  '/admin/issues/': typeof AdminIssuesIndexRoute
   '/admin/issues/$volume/$issue': typeof AdminIssuesVolumeIssueRoute
 }
 export interface FileRoutesByTo {
@@ -490,22 +406,11 @@ export interface FileRoutesByTo {
   '/support': typeof SupportRoute
   '/tools': typeof ToolsRoute
   '/verify-email': typeof VerifyEmailRoute
-  '/admin/announcements': typeof AdminAnnouncementsRoute
-  '/admin/audit-logs': typeof AdminAuditLogsRoute
-  '/admin/claims': typeof AdminClaimsRoute
-  '/admin/comments': typeof AdminCommentsRoute
-  '/admin/desk-subscribers': typeof AdminDeskSubscribersRoute
-  '/admin/finance': typeof AdminFinanceRoute
-  '/admin/forum-boards': typeof AdminForumBoardsRoute
+  '/admin/content': typeof AdminContentRoute
+  '/admin/economy': typeof AdminEconomyRoute
   '/admin/journal': typeof AdminJournalRoute
-  '/admin/releases': typeof AdminReleasesRoute
-  '/admin/reports': typeof AdminReportsRoute
-  '/admin/role-applications': typeof AdminRoleApplicationsRoute
-  '/admin/settings': typeof AdminSettingsRoute
-  '/admin/shop': typeof AdminShopRoute
-  '/admin/system-health': typeof AdminSystemHealthRoute
-  '/admin/users': typeof AdminUsersRoute
-  '/admin/volumes': typeof AdminVolumesRoute
+  '/admin/people': typeof AdminPeopleRoute
+  '/admin/system': typeof AdminSystemRoute
   '/archive/$issue': typeof ArchiveIssueRoute
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
   '/catalog/new': typeof CatalogNewRoute
@@ -531,7 +436,6 @@ export interface FileRoutesByTo {
   '/submissions': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
   '/review/quick/$id': typeof ReviewQuickIdRoute
-  '/admin/issues': typeof AdminIssuesIndexRoute
   '/admin/issues/$volume/$issue': typeof AdminIssuesVolumeIssueRoute
 }
 export interface FileRoutesById {
@@ -558,22 +462,11 @@ export interface FileRoutesById {
   '/support': typeof SupportRoute
   '/tools': typeof ToolsRoute
   '/verify-email': typeof VerifyEmailRoute
-  '/admin/announcements': typeof AdminAnnouncementsRoute
-  '/admin/audit-logs': typeof AdminAuditLogsRoute
-  '/admin/claims': typeof AdminClaimsRoute
-  '/admin/comments': typeof AdminCommentsRoute
-  '/admin/desk-subscribers': typeof AdminDeskSubscribersRoute
-  '/admin/finance': typeof AdminFinanceRoute
-  '/admin/forum-boards': typeof AdminForumBoardsRoute
+  '/admin/content': typeof AdminContentRoute
+  '/admin/economy': typeof AdminEconomyRoute
   '/admin/journal': typeof AdminJournalRoute
-  '/admin/releases': typeof AdminReleasesRoute
-  '/admin/reports': typeof AdminReportsRoute
-  '/admin/role-applications': typeof AdminRoleApplicationsRoute
-  '/admin/settings': typeof AdminSettingsRoute
-  '/admin/shop': typeof AdminShopRoute
-  '/admin/system-health': typeof AdminSystemHealthRoute
-  '/admin/users': typeof AdminUsersRoute
-  '/admin/volumes': typeof AdminVolumesRoute
+  '/admin/people': typeof AdminPeopleRoute
+  '/admin/system': typeof AdminSystemRoute
   '/archive_/$issue': typeof ArchiveIssueRoute
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
   '/catalog/new': typeof CatalogNewRoute
@@ -599,7 +492,6 @@ export interface FileRoutesById {
   '/submissions/': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
   '/review/quick/$id': typeof ReviewQuickIdRoute
-  '/admin/issues/': typeof AdminIssuesIndexRoute
   '/admin/issues/$volume/$issue': typeof AdminIssuesVolumeIssueRoute
 }
 export interface FileRouteTypes {
@@ -627,22 +519,11 @@ export interface FileRouteTypes {
     | '/support'
     | '/tools'
     | '/verify-email'
-    | '/admin/announcements'
-    | '/admin/audit-logs'
-    | '/admin/claims'
-    | '/admin/comments'
-    | '/admin/desk-subscribers'
-    | '/admin/finance'
-    | '/admin/forum-boards'
+    | '/admin/content'
+    | '/admin/economy'
     | '/admin/journal'
-    | '/admin/releases'
-    | '/admin/reports'
-    | '/admin/role-applications'
-    | '/admin/settings'
-    | '/admin/shop'
-    | '/admin/system-health'
-    | '/admin/users'
-    | '/admin/volumes'
+    | '/admin/people'
+    | '/admin/system'
     | '/archive/$issue'
     | '/catalog/$resourceId'
     | '/catalog/new'
@@ -668,7 +549,6 @@ export interface FileRouteTypes {
     | '/submissions/'
     | '/auth/oidc/callback'
     | '/review/quick/$id'
-    | '/admin/issues/'
     | '/admin/issues/$volume/$issue'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -693,22 +573,11 @@ export interface FileRouteTypes {
     | '/support'
     | '/tools'
     | '/verify-email'
-    | '/admin/announcements'
-    | '/admin/audit-logs'
-    | '/admin/claims'
-    | '/admin/comments'
-    | '/admin/desk-subscribers'
-    | '/admin/finance'
-    | '/admin/forum-boards'
+    | '/admin/content'
+    | '/admin/economy'
     | '/admin/journal'
-    | '/admin/releases'
-    | '/admin/reports'
-    | '/admin/role-applications'
-    | '/admin/settings'
-    | '/admin/shop'
-    | '/admin/system-health'
-    | '/admin/users'
-    | '/admin/volumes'
+    | '/admin/people'
+    | '/admin/system'
     | '/archive/$issue'
     | '/catalog/$resourceId'
     | '/catalog/new'
@@ -734,7 +603,6 @@ export interface FileRouteTypes {
     | '/submissions'
     | '/auth/oidc/callback'
     | '/review/quick/$id'
-    | '/admin/issues'
     | '/admin/issues/$volume/$issue'
   id:
     | '__root__'
@@ -760,22 +628,11 @@ export interface FileRouteTypes {
     | '/support'
     | '/tools'
     | '/verify-email'
-    | '/admin/announcements'
-    | '/admin/audit-logs'
-    | '/admin/claims'
-    | '/admin/comments'
-    | '/admin/desk-subscribers'
-    | '/admin/finance'
-    | '/admin/forum-boards'
+    | '/admin/content'
+    | '/admin/economy'
     | '/admin/journal'
-    | '/admin/releases'
-    | '/admin/reports'
-    | '/admin/role-applications'
-    | '/admin/settings'
-    | '/admin/shop'
-    | '/admin/system-health'
-    | '/admin/users'
-    | '/admin/volumes'
+    | '/admin/people'
+    | '/admin/system'
     | '/archive_/$issue'
     | '/catalog/$resourceId'
     | '/catalog/new'
@@ -801,7 +658,6 @@ export interface FileRouteTypes {
     | '/submissions/'
     | '/auth/oidc/callback'
     | '/review/quick/$id'
-    | '/admin/issues/'
     | '/admin/issues/$volume/$issue'
   fileRoutesById: FileRoutesById
 }
@@ -1017,53 +873,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/announcements': {
-      id: '/admin/announcements'
-      path: '/announcements'
-      fullPath: '/admin/announcements'
-      preLoaderRoute: typeof AdminAnnouncementsRouteImport
+    '/admin/content': {
+      id: '/admin/content'
+      path: '/content'
+      fullPath: '/admin/content'
+      preLoaderRoute: typeof AdminContentRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/audit-logs': {
-      id: '/admin/audit-logs'
-      path: '/audit-logs'
-      fullPath: '/admin/audit-logs'
-      preLoaderRoute: typeof AdminAuditLogsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/claims': {
-      id: '/admin/claims'
-      path: '/claims'
-      fullPath: '/admin/claims'
-      preLoaderRoute: typeof AdminClaimsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/comments': {
-      id: '/admin/comments'
-      path: '/comments'
-      fullPath: '/admin/comments'
-      preLoaderRoute: typeof AdminCommentsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/desk-subscribers': {
-      id: '/admin/desk-subscribers'
-      path: '/desk-subscribers'
-      fullPath: '/admin/desk-subscribers'
-      preLoaderRoute: typeof AdminDeskSubscribersRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/finance': {
-      id: '/admin/finance'
-      path: '/finance'
-      fullPath: '/admin/finance'
-      preLoaderRoute: typeof AdminFinanceRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/forum-boards': {
-      id: '/admin/forum-boards'
-      path: '/forum-boards'
-      fullPath: '/admin/forum-boards'
-      preLoaderRoute: typeof AdminForumBoardsRouteImport
+    '/admin/economy': {
+      id: '/admin/economy'
+      path: '/economy'
+      fullPath: '/admin/economy'
+      preLoaderRoute: typeof AdminEconomyRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/journal': {
@@ -1073,60 +894,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminJournalRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/releases': {
-      id: '/admin/releases'
-      path: '/releases'
-      fullPath: '/admin/releases'
-      preLoaderRoute: typeof AdminReleasesRouteImport
+    '/admin/people': {
+      id: '/admin/people'
+      path: '/people'
+      fullPath: '/admin/people'
+      preLoaderRoute: typeof AdminPeopleRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/reports': {
-      id: '/admin/reports'
-      path: '/reports'
-      fullPath: '/admin/reports'
-      preLoaderRoute: typeof AdminReportsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/role-applications': {
-      id: '/admin/role-applications'
-      path: '/role-applications'
-      fullPath: '/admin/role-applications'
-      preLoaderRoute: typeof AdminRoleApplicationsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/settings': {
-      id: '/admin/settings'
-      path: '/settings'
-      fullPath: '/admin/settings'
-      preLoaderRoute: typeof AdminSettingsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/shop': {
-      id: '/admin/shop'
-      path: '/shop'
-      fullPath: '/admin/shop'
-      preLoaderRoute: typeof AdminShopRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/system-health': {
-      id: '/admin/system-health'
-      path: '/system-health'
-      fullPath: '/admin/system-health'
-      preLoaderRoute: typeof AdminSystemHealthRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/users': {
-      id: '/admin/users'
-      path: '/users'
-      fullPath: '/admin/users'
-      preLoaderRoute: typeof AdminUsersRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/volumes': {
-      id: '/admin/volumes'
-      path: '/volumes'
-      fullPath: '/admin/volumes'
-      preLoaderRoute: typeof AdminVolumesRouteImport
+    '/admin/system': {
+      id: '/admin/system'
+      path: '/system'
+      fullPath: '/admin/system'
+      preLoaderRoute: typeof AdminSystemRouteImport
       parentRoute: typeof AdminRoute
     }
     '/archive_/$issue': {
@@ -1283,13 +1062,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/issues/': {
-      id: '/admin/issues/'
-      path: '/issues'
-      fullPath: '/admin/issues/'
-      preLoaderRoute: typeof AdminIssuesIndexRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/auth/oidc/callback': {
       id: '/auth/oidc/callback'
       path: '/auth/oidc/callback'
@@ -1315,46 +1087,22 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
-  AdminAnnouncementsRoute: typeof AdminAnnouncementsRoute
-  AdminAuditLogsRoute: typeof AdminAuditLogsRoute
-  AdminClaimsRoute: typeof AdminClaimsRoute
-  AdminCommentsRoute: typeof AdminCommentsRoute
-  AdminDeskSubscribersRoute: typeof AdminDeskSubscribersRoute
-  AdminFinanceRoute: typeof AdminFinanceRoute
-  AdminForumBoardsRoute: typeof AdminForumBoardsRoute
+  AdminContentRoute: typeof AdminContentRoute
+  AdminEconomyRoute: typeof AdminEconomyRoute
   AdminJournalRoute: typeof AdminJournalRoute
-  AdminReleasesRoute: typeof AdminReleasesRoute
-  AdminReportsRoute: typeof AdminReportsRoute
-  AdminRoleApplicationsRoute: typeof AdminRoleApplicationsRoute
-  AdminSettingsRoute: typeof AdminSettingsRoute
-  AdminShopRoute: typeof AdminShopRoute
-  AdminSystemHealthRoute: typeof AdminSystemHealthRoute
-  AdminUsersRoute: typeof AdminUsersRoute
-  AdminVolumesRoute: typeof AdminVolumesRoute
+  AdminPeopleRoute: typeof AdminPeopleRoute
+  AdminSystemRoute: typeof AdminSystemRoute
   AdminIndexRoute: typeof AdminIndexRoute
-  AdminIssuesIndexRoute: typeof AdminIssuesIndexRoute
   AdminIssuesVolumeIssueRoute: typeof AdminIssuesVolumeIssueRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
-  AdminAnnouncementsRoute: AdminAnnouncementsRoute,
-  AdminAuditLogsRoute: AdminAuditLogsRoute,
-  AdminClaimsRoute: AdminClaimsRoute,
-  AdminCommentsRoute: AdminCommentsRoute,
-  AdminDeskSubscribersRoute: AdminDeskSubscribersRoute,
-  AdminFinanceRoute: AdminFinanceRoute,
-  AdminForumBoardsRoute: AdminForumBoardsRoute,
+  AdminContentRoute: AdminContentRoute,
+  AdminEconomyRoute: AdminEconomyRoute,
   AdminJournalRoute: AdminJournalRoute,
-  AdminReleasesRoute: AdminReleasesRoute,
-  AdminReportsRoute: AdminReportsRoute,
-  AdminRoleApplicationsRoute: AdminRoleApplicationsRoute,
-  AdminSettingsRoute: AdminSettingsRoute,
-  AdminShopRoute: AdminShopRoute,
-  AdminSystemHealthRoute: AdminSystemHealthRoute,
-  AdminUsersRoute: AdminUsersRoute,
-  AdminVolumesRoute: AdminVolumesRoute,
+  AdminPeopleRoute: AdminPeopleRoute,
+  AdminSystemRoute: AdminSystemRoute,
   AdminIndexRoute: AdminIndexRoute,
-  AdminIssuesIndexRoute: AdminIssuesIndexRoute,
   AdminIssuesVolumeIssueRoute: AdminIssuesVolumeIssueRoute,
 }
 

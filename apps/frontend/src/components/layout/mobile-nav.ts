@@ -68,5 +68,5 @@ export const MOBILE_MORE: MobileMoreItem[] = [
   { to: '/tools', label: '写作工具', icon: Wrench, group: '期刊' },
   { to: '/feedback', label: '反馈与建议', icon: MessageSquareText, group: '设置' },
   { to: '/admin', label: '管理后台', icon: Gavel, auth: true, adminOnly: true, group: '管理' },
-  { to: '/admin/shop', label: 'R 币商城', icon: ShoppingBag, auth: true, roles: ['chief_editor', 'deputy_editor', 'editor_in_chief', 'shop_manager'], group: '管理' },
+  { to: '/admin/economy', label: 'R 币商城', icon: ShoppingBag, auth: true, roles: ['chief_editor', 'deputy_editor', 'editor_in_chief', 'shop_manager'], group: '管理' },
 ]

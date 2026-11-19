@@ -15,69 +15,33 @@ const DOMAINS = [
   {
     key: 'people',
     label: '用户',
-    to: '/admin/users',
+    to: '/admin/people',
     icon: Users,
-    paths: ['/admin/users', '/admin/role-applications', '/admin/claims'],
+    paths: ['/admin/people'],
   },
   {
     key: 'content',
     label: '内容',
-    to: '/admin/announcements',
+    to: '/admin/content',
     icon: FileText,
-    paths: [
-      '/admin/announcements',
-      '/admin/forum-boards',
-      '/admin/reports',
-      '/admin/comments',
-      '/admin/desk-subscribers',
-    ],
+    paths: ['/admin/content'],
   },
   {
     key: 'journal',
     label: '期刊',
-    to: '/admin/issues',
+    to: '/admin/journal',
     icon: CalendarDays,
-    paths: ['/admin/volumes', '/admin/issues', '/admin/releases', '/admin/journal', '/admin/settings'],
+    paths: ['/admin/journal', '/admin/issues'],
   },
-  { key: 'economy', label: '经济', to: '/admin/finance', icon: Wallet, paths: ['/admin/shop', '/admin/finance'] },
+  { key: 'economy', label: '经济', to: '/admin/economy', icon: Wallet, paths: ['/admin/economy'] },
   {
     key: 'system',
     label: '系统',
-    to: '/admin/system-health',
+    to: '/admin/system',
     icon: ShieldCheck,
-    paths: ['/admin/system-health', '/admin/audit-logs'],
+    paths: ['/admin/system'],
   },
 ] as const
-
-const SUB_NAV: Record<string, { to: string; label: string }[]> = {
-  people: [
-    { to: '/admin/users', label: '用户管理' },
-    { to: '/admin/role-applications', label: '角色申请' },
-    { to: '/admin/claims', label: '认领审批' },
-  ],
-  content: [
-    { to: '/admin/announcements', label: '公告' },
-    { to: '/admin/forum-boards', label: '版块' },
-    { to: '/admin/reports', label: '举报' },
-    { to: '/admin/comments', label: '评论' },
-    { to: '/admin/desk-subscribers', label: '邮件订阅' },
-  ],
-  journal: [
-    { to: '/admin/volumes', label: '卷' },
-    { to: '/admin/issues', label: '期' },
-    { to: '/admin/releases', label: '发布' },
-    { to: '/admin/journal', label: '期刊信息' },
-    { to: '/admin/settings', label: '期刊设置' },
-  ],
-  economy: [
-    { to: '/admin/finance', label: '财务' },
-    { to: '/admin/shop', label: '商城' },
-  ],
-  system: [
-    { to: '/admin/system-health', label: '系统健康' },
-    { to: '/admin/audit-logs', label: '审计日志' },
-  ],
-}
 
 function isActive(pathname: string, path: string) {
   return pathname === path || (path !== '/admin' && pathname.startsWith(`${path}/`))
@@ -86,7 +50,6 @@ function isActive(pathname: string, path: string) {
 export function AdminShell() {
   const pathname = useLocation({ select: (state) => state.pathname })
   const activeDomain = DOMAINS.find((domain) => domain.paths.some((path) => isActive(pathname, path)))
-  const subNav = activeDomain ? SUB_NAV[activeDomain.key] : undefined
 
   return (
     <div className="w-full">
@@ -100,7 +63,7 @@ export function AdminShell() {
               <h1 className="mt-1 font-serif text-lg tracking-tight sm:text-xl">后台管理</h1>
             </div>
             <p className="hidden max-w-[260px] text-right text-[11px] leading-relaxed text-muted-foreground sm:block">
-              按业务域切换，表单仍在各自子页；权限、审计和分页共用一套规则。
+              按业务域切换，子段在同一页内切换；权限、审计和分页共用一套规则。
             </p>
           </div>
 
@@ -126,26 +89,6 @@ export function AdminShell() {
             })}
           </nav>
 
-          {subNav ? (
-            <nav aria-label="当前业务域子页" className="scrollbar-none -mx-1 flex gap-1 overflow-x-auto border-t">
-              {subNav.map((item) => {
-                const active = isActive(pathname, item.to)
-                return (
-                  <Link
-                    key={item.to}
-                    to={item.to}
-                    data-active={active ? 'true' : 'false'}
-                    className={cn(
-                      'inline-flex min-h-[36px] shrink-0 items-center px-2.5 text-[11px] transition-colors sm:text-xs',
-                      active ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground',
-                    )}
-                  >
-                    {item.label}
-                  </Link>
-                )
-              })}
-            </nav>
-          ) : null}
         </div>
       </header>
       <Outlet />

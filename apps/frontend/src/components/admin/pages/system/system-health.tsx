@@ -1,18 +1,12 @@
 import { useEffect, useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
 import { Activity, AlertTriangle, CheckCircle2, KeyRound, Mail, RefreshCw, Send, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
-import { requireAdminGuard } from '@/lib/route-guards'
 import { PageHeader } from '@/components/common/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-export const Route = createFileRoute('/admin/system-health')({
-  beforeLoad: () => requireAdminGuard(),
-  component: SystemHealthPage,
-})
 
 type Check = {
   key: string
@@ -58,7 +52,7 @@ function StatusIcon({ status }: { status: Check['status'] }) {
   return <XCircle className="h-4 w-4 text-destructive" />
 }
 
-export function SystemHealthPage() {
+export default function SystemHealthPage() {
   const [data, setData] = useState<Health | null>(null)
   const [security, setSecurity] = useState<SecurityStatus | null>(null)
   const [email, setEmail] = useState<EmailStatus | null>(null)

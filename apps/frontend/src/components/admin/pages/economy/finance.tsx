@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
 import { FilePlus2, Pencil, ReceiptText, Trash2 } from "lucide-react";
 import {
   formatCny,
@@ -11,7 +10,6 @@ import {
   type FinanceReportPayload,
   type MoneyItem,
 } from "@/hooks/api/use-support";
-import { requireAdminGuard } from "@/lib/route-guards";
 import { PageHeader } from "@/components/common/page-header";
 import { EmptyState, Loading } from "@/components/common/state";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
@@ -29,10 +27,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-export const Route = createFileRoute("/admin/finance")({
-  beforeLoad: () => requireAdminGuard(),
-  component: FinanceAdminPage,
-});
+
 
 interface EditableItem {
   label: string;
@@ -168,7 +163,7 @@ function ItemEditor({
   );
 }
 
-function FinanceAdminPage() {
+export default function FinanceAdminPage() {
   const reports = useAdminFinanceReports();
   const save = useSaveFinanceReport();
   const remove = useDeleteFinanceReport();
