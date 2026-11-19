@@ -29,7 +29,6 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SectionsRouteImport } from './routes/sections'
 import { Route as SupportRouteImport } from './routes/support'
-import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminContentRouteImport } from './routes/admin/content'
@@ -161,11 +160,6 @@ const SectionsRoute = SectionsRouteImport.update({
 const SupportRoute = SupportRouteImport.update({
   id: '/support',
   path: '/support',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ToolsRoute = ToolsRouteImport.update({
-  id: '/tools',
-  path: '/tools',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
@@ -350,7 +344,6 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/sections': typeof SectionsRoute
   '/support': typeof SupportRoute
-  '/tools': typeof ToolsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/economy': typeof AdminEconomyRoute
@@ -404,7 +397,6 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/sections': typeof SectionsRoute
   '/support': typeof SupportRoute
-  '/tools': typeof ToolsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/economy': typeof AdminEconomyRoute
@@ -460,7 +452,6 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/sections': typeof SectionsRoute
   '/support': typeof SupportRoute
-  '/tools': typeof ToolsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/economy': typeof AdminEconomyRoute
@@ -517,7 +508,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sections'
     | '/support'
-    | '/tools'
     | '/verify-email'
     | '/admin/content'
     | '/admin/economy'
@@ -571,7 +561,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sections'
     | '/support'
-    | '/tools'
     | '/verify-email'
     | '/admin/content'
     | '/admin/economy'
@@ -626,7 +615,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sections'
     | '/support'
-    | '/tools'
     | '/verify-email'
     | '/admin/content'
     | '/admin/economy'
@@ -682,7 +670,6 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SectionsRoute: typeof SectionsRoute
   SupportRoute: typeof SupportRoute
-  ToolsRoute: typeof ToolsRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   ArchiveIssueRoute: typeof ArchiveIssueRoute
   CatalogResourceIdRoute: typeof CatalogResourceIdRoute
@@ -850,13 +837,6 @@ declare module '@tanstack/react-router' {
       path: '/support'
       fullPath: '/support'
       preLoaderRoute: typeof SupportRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/tools': {
-      id: '/tools'
-      path: '/tools'
-      fullPath: '/tools'
-      preLoaderRoute: typeof ToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/verify-email': {
@@ -1129,7 +1109,6 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SectionsRoute: SectionsRoute,
   SupportRoute: SupportRoute,
-  ToolsRoute: ToolsRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   ArchiveIssueRoute: ArchiveIssueRoute,
   CatalogResourceIdRoute: CatalogResourceIdRoute,

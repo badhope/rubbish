@@ -162,7 +162,7 @@
 - [x] 3.3 导出前字段校验：纯函数 `export_field_warnings` + `GET /api/export/preflight`；前端导出前弹窗列出缺标题/作者/年份/DOI；引用导出补 JATS 格式。
 - [x] 3.3 多篇合并 PDF/Word、逐篇 ZIP、整期全文 ZIP：`/api/export/documents` 与 `/api/export/issue`；前端已接「合并 PDF / 合并 Word / 逐篇 ZIP / 整期全文 ZIP」。
 - [x] 3.3 统一转换契约：同一份 Markdown 的标题/作者/摘要/关键词/正文/表格在 PDF 与 DOCX 两个出口均有断言。
-- [x] 3.4 独立引用生成器（GB/T 7714、APA、MLA、BibTeX、RIS，一键复制）与图/表编号、参考文献序号、重复段落检查：新增公开 `/tools`，全部浏览器本地计算。
+- [x] 3.4 独立引用生成器（GB/T 7714、APA、MLA、BibTeX、RIS，一键复制）与图/表编号、参考文献序号、重复段落检查：原 `/tools` 页面已于 2026-11-19 删除；引用生成保留在文章详情，编校检查在投稿编辑器内复用。
 - [x] 3.4 批量导入预览后的字段映射与冲突合并：CSV 表头支持中英文别名自动识别、逐列改映射/显式忽略（`__ignore__` 压住后端别名回退）、DOI/标题重复合并；后端 `ParseRequest.column_map` 与测试已补。
 - [x] 分页缓存键修正：`useMySubmissions` / `usePendingSubmissions` / `useMyReviewAssignments` 等把 `pageSize` 纳入 query key，避免 Dashboard 用 1 条把列表页 20 条的缓存覆盖。
 - [x] 期号页 JSON-LD `PublicationIssue`，与 canonical 路由、整期 PDF 一并落地。

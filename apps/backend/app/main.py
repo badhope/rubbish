@@ -200,7 +200,6 @@ _SPA_ROUTE_PREFIXES = frozenset(
         "submissions",
         "studio",
         "support",
-        "tools",
         "verify-email",
         "fun",
         "sections",

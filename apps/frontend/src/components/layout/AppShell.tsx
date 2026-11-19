@@ -21,7 +21,6 @@ import {
   FileSignature,
   MessagesSquare,
   X,
-  Wrench,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { OnboardingTour } from '@/components/common/onboarding-tour'
@@ -85,7 +84,6 @@ const NAV: NavItem[] = [
   { to: '/archive', label: '卷期归档', icon: CalendarDays, group: '期刊' },
   { to: '/about', label: '关于与指标', icon: Building2, group: '期刊' },
   { to: '/guide', label: '投稿指南', icon: PenLine, group: '期刊' },
-  { to: '/tools', label: '写作工具', icon: Wrench, group: '期刊' },
 
   // admin 组：只保留一个后台入口；具体管理页收进 /admin 的分组卡片。
   { to: '/admin', label: '管理后台', icon: Gavel, auth: true, adminOnly: true, group: '站点管理' },
