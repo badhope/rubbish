@@ -8,6 +8,7 @@ import {
   Wallet,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/hooks/use-auth'
 
 /** 后台统一壳：六个业务域共用一条页签，子页仍保留各自的表单与权限。 */
 const DOMAINS = [
@@ -49,7 +50,14 @@ function isActive(pathname: string, path: string) {
 
 export function AdminShell() {
   const pathname = useLocation({ select: (state) => state.pathname })
-  const activeDomain = DOMAINS.find((domain) => domain.paths.some((path) => isActive(pathname, path)))
+  const { user, isAdmin } = useAuth()
+  const roles = user?.roles ?? []
+  const canEconomy =
+    isAdmin || roles.some((role) => ['chief_editor', 'deputy_editor', 'editor_in_chief', 'shop_manager'].includes(role))
+  const visibleDomains = isAdmin
+    ? DOMAINS
+    : DOMAINS.filter((domain) => domain.key === 'economy' && canEconomy)
+  const activeDomain = visibleDomains.find((domain) => domain.paths.some((path) => isActive(pathname, path)))
 
   return (
     <div className="w-full">
@@ -68,7 +76,7 @@ export function AdminShell() {
           </div>
 
           <nav aria-label="后台业务域" className="scrollbar-none -mx-1 mt-3 flex gap-1 overflow-x-auto">
-            {DOMAINS.map((domain) => {
+            {visibleDomains.map((domain) => {
               const Icon = domain.icon
               const active = domain.key === activeDomain?.key
               return (
