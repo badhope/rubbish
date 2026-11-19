@@ -21,6 +21,8 @@ import type {
   IssueInfo,
   IssuePlanEntry,
   IssuePlanResponse,
+  JournalIssue,
+  JournalVolume,
   JournalMetrics,
   JournalSettings,
   LadderResponse,
@@ -1808,12 +1810,87 @@ interface VolumeStatsRow {
   volume: string
   issue_count: number
   article_count: number
+  id?: number | null
+  title?: string | null
+  year?: number | null
   issues: Array<{
     issue: string
     article_count: number
     first_year: number | null
     last_year: number | null
+    id?: number | null
+    title?: string | null
+    status?: string | null
+    cover_image?: string | null
   }>
+}
+
+interface JournalIssueRow {
+  id: number
+  volume_id: number
+  volume: string
+  number: string
+  title: string | null
+  intro: string | null
+  cover_image: string | null
+  status: JournalIssue['status']
+  publish_at: string | null
+  published_at: string | null
+  article_count: number
+  resources?: Array<{
+    id: number
+    title: string
+    publication_status: string
+    issue_part: string | null
+  }>
+}
+
+interface JournalVolumeRow {
+  id: number
+  number: string
+  title: string | null
+  year: number | null
+  description: string | null
+  cover_image: string | null
+  issue_count: number
+  article_count: number
+  issues: JournalIssueRow[]
+}
+
+function mapJournalIssue(row: JournalIssueRow): JournalIssue {
+  return {
+    id: row.id,
+    volumeId: row.volume_id,
+    volume: row.volume,
+    number: row.number,
+    title: row.title,
+    intro: row.intro,
+    coverImage: row.cover_image,
+    status: row.status,
+    publishAt: row.publish_at,
+    publishedAt: row.published_at,
+    articleCount: row.article_count,
+    resources: row.resources?.map((resource) => ({
+      id: resource.id,
+      title: resource.title,
+      publicationStatus: resource.publication_status,
+      issuePart: resource.issue_part,
+    })),
+  }
+}
+
+function mapJournalVolume(row: JournalVolumeRow): JournalVolume {
+  return {
+    id: row.id,
+    number: row.number,
+    title: row.title,
+    year: row.year,
+    description: row.description,
+    coverImage: row.cover_image,
+    issueCount: row.issue_count,
+    articleCount: row.article_count,
+    issues: (row.issues ?? []).map(mapJournalIssue),
+  }
 }
 
 function useVolumeStats() {
@@ -1846,12 +1923,19 @@ export function useVolumeList() {
               volume: v.volume,
               articleCount: v.article_count,
               issueCount: v.issue_count,
+              id: v.id ?? undefined,
+              title: v.title ?? null,
+              year: v.year ?? null,
               issues: (v.issues ?? [])
                 .map((i): IssueInfo => ({
                   issue: i.issue,
                   articleCount: i.article_count,
                   firstYear: i.first_year ?? 0,
                   lastYear: i.last_year ?? 0,
+                  id: i.id ?? undefined,
+                  title: i.title ?? null,
+                  status: i.status ?? undefined,
+                  coverImage: i.cover_image ?? null,
                 }))
                 .sort((a, b) => sortDesc(a.issue, b.issue)),
             }))
@@ -1873,6 +1957,10 @@ export function useIssueList(volume: string) {
               articleCount: i.article_count,
               firstYear: i.first_year ?? 0,
               lastYear: i.last_year ?? 0,
+              id: i.id ?? undefined,
+              title: i.title ?? null,
+              status: i.status ?? undefined,
+              coverImage: i.cover_image ?? null,
             }))
             .sort((a, b) => sortDesc(a.issue, b.issue)),
         }
@@ -2559,5 +2647,159 @@ export function useDecideAppeal() {
     mutationFn: async ({ id, status, editorNote }: { id: number; status: 'accepted' | 'rejected'; editorNote: string }) =>
       (await api.post(`/catalog/appeals/${id}/decide`, { status, editor_note: editorNote })).data,
     onSuccess: () => { void qc.invalidateQueries({ queryKey: ['appeals'] }) },
+  })
+}
+
+// --- Journal registry (Volume/Issue first-class objects) ---
+
+export function useJournalVolumes() {
+  return useQuery<JournalVolume[]>({
+    queryKey: ['admin', 'journal', 'volumes'],
+    queryFn: async () => {
+      const response = await api.get<{ items: JournalVolumeRow[] }>('/admin/journal/volumes')
+      return response.data.items
+        .map(mapJournalVolume)
+        .map((volume) => ({
+          ...volume,
+          issues: [...volume.issues].sort((a, b) => sortDesc(a.number, b.number)),
+        }))
+        .sort((a, b) => sortDesc(a.number, b.number))
+    },
+    staleTime: 30_000,
+  })
+}
+
+function useInvalidateJournal() {
+  const qc = useQueryClient()
+  return () => {
+    void qc.invalidateQueries({ queryKey: ['admin', 'journal', 'volumes'] })
+    void qc.invalidateQueries({ queryKey: ['admin', 'volumes'] })
+  }
+}
+
+export function useCreateVolume() {
+  const invalidate = useInvalidateJournal()
+  return useMutation({
+    mutationFn: async (payload: { number: string; title?: string | null; year?: number | null; description?: string | null; cover_image?: string | null }) =>
+      (await api.post('/admin/journal/volumes', payload)).data,
+    onSuccess: invalidate,
+  })
+}
+
+export function useUpdateVolume() {
+  const invalidate = useInvalidateJournal()
+  return useMutation({
+    mutationFn: async ({ id, ...payload }: { id: number; number?: string; title?: string | null; year?: number | null; description?: string | null; cover_image?: string | null }) =>
+      (await api.patch(`/admin/journal/volumes/${id}`, payload)).data,
+    onSuccess: invalidate,
+  })
+}
+
+export function useCreateIssue() {
+  const invalidate = useInvalidateJournal()
+  return useMutation({
+    mutationFn: async ({ volumeId, ...payload }: { volumeId: number; number: string; title?: string | null; intro?: string | null; cover_image?: string | null; status?: JournalIssue['status']; publish_at?: string | null }) =>
+      (await api.post(`/admin/journal/volumes/${volumeId}/issues`, payload)).data,
+    onSuccess: invalidate,
+  })
+}
+
+export function useUpdateIssue() {
+  const invalidate = useInvalidateJournal()
+  return useMutation({
+    mutationFn: async ({ id, ...payload }: { id: number; number?: string; title?: string | null; intro?: string | null; cover_image?: string | null; status?: JournalIssue['status']; publish_at?: string | null }) =>
+      (await api.patch(`/admin/journal/issues/${id}`, payload)).data,
+    onSuccess: invalidate,
+  })
+}
+
+export function useAssignIssueResources() {
+  const invalidate = useInvalidateJournal()
+  return useMutation({
+    mutationFn: async ({ issueId, resourceIds }: { issueId: number; resourceIds: number[] }) =>
+      (await api.post(`/admin/journal/issues/${issueId}/resources`, { resource_ids: resourceIds })).data,
+    onSuccess: invalidate,
+  })
+}
+
+export function useRemoveIssueResource() {
+  const invalidate = useInvalidateJournal()
+  return useMutation({
+    mutationFn: async ({ issueId, resourceId }: { issueId: number; resourceId: number }) =>
+      (await api.delete(`/admin/journal/issues/${issueId}/resources/${resourceId}`)).data,
+    onSuccess: invalidate,
+  })
+}
+
+export function usePublishIssueContainer() {
+  const invalidate = useInvalidateJournal()
+  return useMutation({
+    mutationFn: async (issueId: number) => (await api.post(`/admin/journal/issues/${issueId}/publish`)).data,
+    onSuccess: invalidate,
+  })
+}
+
+export interface PublicIssue {
+  id: number
+  volume: string
+  volumeTitle: string | null
+  year: number | null
+  number: string
+  title: string | null
+  intro: string | null
+  coverImage: string | null
+  status: string
+  publishAt: string | null
+  publishedAt: string | null
+  articleCount: number
+}
+
+interface PublicIssueRow {
+  id: number
+  volume: string
+  volume_title: string | null
+  year: number | null
+  number: string
+  title: string | null
+  intro: string | null
+  cover_image: string | null
+  status: string
+  publish_at: string | null
+  published_at: string | null
+  article_count: number
+}
+
+export function usePublicIssues() {
+  return useQuery<PublicIssue[]>({
+    queryKey: ['catalog', 'issues', 'public'],
+    queryFn: async () => {
+      const response = await api.get<{ data: PublicIssueRow[] }>('/catalog/issues')
+      return response.data.data
+        .map((row) => ({
+          id: row.id,
+          volume: row.volume,
+          volumeTitle: row.volume_title,
+          year: row.year,
+          number: row.number,
+          title: row.title,
+          intro: row.intro,
+          coverImage: row.cover_image,
+          status: row.status,
+          publishAt: row.publish_at,
+          publishedAt: row.published_at,
+          articleCount: row.article_count,
+        }))
+        .sort((a, b) => sortDesc(a.volume, b.volume) || -sortDesc(a.number, b.number))
+    },
+    staleTime: 60_000,
+  })
+}
+
+
+export function useDeleteIssue() {
+  const invalidate = useInvalidateJournal()
+  return useMutation({
+    mutationFn: async (issueId: number) => (await api.delete(`/admin/journal/issues/${issueId}`)).data,
+    onSuccess: invalidate,
   })
 }

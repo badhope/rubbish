@@ -28,12 +28,28 @@ from app.api.deps import require_admin, require_tenant_id
 from app.core.config import settings
 from app.core.db import get_db
 from app.core.time import utcnow
-from app.domain.catalog.models import Resource
+from app.domain.catalog.models import Issue, Resource, Volume
 from app.domain.release.gate import check_issue
 from app.domain.release.models import ReleaseManifest
 from app.models import AuditLog, User
 
 router = APIRouter(prefix="/admin/releases", tags=["release"])
+
+
+async def _issue_id_for(db: AsyncSession, tenant_id: UUID, volume: str, issue: str) -> int | None:
+    row = (
+        await db.execute(
+            select(Issue.id)
+            .join(Volume, Volume.id == Issue.volume_id)
+            .where(
+                Issue.tenant_id == tenant_id,
+                Volume.number == volume,
+                Issue.number == issue,
+            )
+        )
+    ).scalar_one_or_none()
+    return int(row) if row is not None else None
+
 
 MANIFEST_TRANSITIONS = {
     "blocked": {"ready"},
@@ -292,6 +308,7 @@ async def create_release_check(
         tenant_id=tenant_id,
         volume=payload.volume,
         issue=payload.issue,
+        issue_id=await _issue_id_for(db, tenant_id, payload.volume, payload.issue),
         status=result["status"],
         content_hash=result["content_hash"],
         resource_count=result["resource_count"],
@@ -544,6 +561,7 @@ async def rollback_release(
         tenant_id=tenant_id,
         volume=payload.volume,
         issue=payload.issue,
+        issue_id=await _issue_id_for(db, tenant_id, payload.volume, payload.issue),
         status="published",
         content_hash=target.content_hash,
         resource_count=target.resource_count,

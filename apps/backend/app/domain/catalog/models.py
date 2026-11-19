@@ -84,6 +84,15 @@ class Resource(Base, TenantScopedMixin):
     # Journal metadata (Phase 1)
     volume: Mapped[str | None] = mapped_column(String(50), nullable=True)
     issue: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    # 卷期一等对象（2026-11-19）：Issue 是真实记录，Resource.issue_id 是归属。
+    # volume/issue 字符串保留为兼容快照，公开筛选与旧 API 仍可读；新写入以
+    # issue_id 为准，并在同步层回写字符串，避免两套数据漂移。
+    issue_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("issues.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     pages: Mapped[str | None] = mapped_column(String(50), nullable=True)
     issn: Mapped[str | None] = mapped_column(String(20), nullable=True)
     isbn: Mapped[str | None] = mapped_column(String(20), nullable=True)
@@ -99,6 +108,8 @@ class Resource(Base, TenantScopedMixin):
     # 单列索引不需要：公开面过滤永远是 (tenant_id, publish_at) 组合，
     # 复合索引已覆盖；多余的 index=True 会让 alembic metadata 与迁移漂移。
     publish_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    journal_issue: Mapped[Issue | None] = relationship(back_populates="resources")
+
     # 下载计数：公开 /api/catalog/{id}/file 每次命中 +1，用于 R 指数
     # （见 app/modules/catalog/engagement.py）。只做原子自增，不做行锁。
     download_count: Mapped[int] = mapped_column(
@@ -417,4 +428,74 @@ class PageView(Base, TenantScopedMixin):
     referrer: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False
+    )
+
+
+class Volume(Base, TenantScopedMixin):
+    """A journal volume (e.g. Vol. 1). First-class since 2026-11-19.
+
+    ``number`` is the human label used in URLs and citations; it is not an
+    integer because legacy volumes can be "1A" or "S1". Uniqueness is per tenant.
+    """
+
+    __tablename__ = "volumes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    number: Mapped[str] = mapped_column(String(50), nullable=False)
+    title: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    cover_image: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
+    )
+
+    issues: Mapped[list[Issue]] = relationship(
+        back_populates="volume", cascade="all, delete-orphan", order_by="Issue.number"
+    )
+
+    __table_args__ = (UniqueConstraint("tenant_id", "number", name="uq_volumes_tenant_number"),)
+
+
+class Issue(Base, TenantScopedMixin):
+    """A journal issue, the publishable unit.
+
+    Status:
+    - ``draft``: being assembled, invisible to readers
+    - ``scheduled``: approved, has a future ``publish_at``
+    - ``live``: visible to readers (subject to ``publish_at``)
+    - ``archived``: kept for history, no longer promoted
+    """
+
+    __tablename__ = "issues"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    volume_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("volumes.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    number: Mapped[str] = mapped_column(String(50), nullable=False)
+    title: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    intro: Mapped[str | None] = mapped_column(Text, nullable=True)
+    cover_image: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="draft", server_default="draft"
+    )
+    publish_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
+    )
+
+    volume: Mapped[Volume] = relationship(back_populates="issues")
+    resources: Mapped[list[Resource]] = relationship(back_populates="journal_issue")
+
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "volume_id", "number", name="uq_issues_tenant_volume_number"),
+        Index("ix_issues_tenant_status", "tenant_id", "status"),
     )

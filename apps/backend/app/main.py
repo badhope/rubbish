@@ -47,6 +47,7 @@ from app.api import (
     webauthn,
 )
 from app.api.oidc import router as oidc_router
+from app.interfaces.http.catalog.journal_routes import router as journal_admin_router
 from app.core.bootstrap import run_bootstrap
 from app.core.config import settings
 from app.core.db import check_db_connection, dispose_engine, get_db
@@ -344,6 +345,7 @@ app.include_router(auth.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
 app.include_router(me.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
+app.include_router(journal_admin_router, prefix="/api")
 app.include_router(tenant_hosts.router, prefix="/api")
 app.include_router(modules.router, prefix="/api")
 

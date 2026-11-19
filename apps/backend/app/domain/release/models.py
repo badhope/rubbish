@@ -25,6 +25,9 @@ class ReleaseManifest(Base, TenantScopedMixin):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     volume: Mapped[str] = mapped_column(String(50), nullable=False)
     issue: Mapped[str] = mapped_column(String(50), nullable=False)
+    issue_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("issues.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     # blocked | ready | scheduled | published | superseded
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="blocked")
     content_hash: Mapped[str] = mapped_column(String(64), nullable=False)

@@ -44,7 +44,15 @@ from app.core.schemas import PaginationMeta
 from app.core.time import utcnow
 from app.domain.catalog.engagement import compute_engagement, journal_metrics
 from app.domain.catalog.genre import classify_essay_genre
-from app.domain.catalog.models import Appeal, AuthorClaim, Resource, ResourcePublicEvent
+from app.domain.catalog.journal import sync_resource_issue
+from app.domain.catalog.models import (
+    Appeal,
+    AuthorClaim,
+    Issue,
+    Resource,
+    ResourcePublicEvent,
+    Volume,
+)
 from app.domain.catalog.visibility import as_aware, is_public, public_conditions
 from app.interfaces.http.catalog.ontology_routes import router as ontology_router
 from app.interfaces.http.catalog.schemas import (
@@ -253,6 +261,7 @@ async def list_resources(
     doi: str | None = Query(default=None, max_length=200),
     volume: str | None = None,
     issue: str | None = None,
+    issue_id: int | None = Query(default=None, ge=1),
     section: str | None = None,
     issue_part: str | None = None,
     # 中图分类号前缀筛选（P0）：?clc=TP 命中 TP / TP3 / TP311.13 等。
@@ -334,6 +343,13 @@ async def list_resources(
         # （publish_at 在未来）对读者不可见，也不确认存在性。
         for condition in public_conditions():
             stmt = stmt.where(condition)
+        # A paper assigned to a draft/scheduled issue is not public yet,
+        # even if its own publication_status is published. Unassigned legacy
+        # rows stay visible via issue_id IS NULL.
+        live_issue_ids = select(Issue.id).where(
+            Issue.tenant_id == tenant_id, Issue.status == "live"
+        )
+        stmt = stmt.where(or_(Resource.issue_id.is_(None), Resource.issue_id.in_(live_issue_ids)))
     if type is not None:
         stmt = stmt.where(Resource.type == type)
     cats = _expand_categories(category)
@@ -382,6 +398,8 @@ async def list_resources(
         stmt = stmt.where(Resource.volume == volume)
     if issue:
         stmt = stmt.where(Resource.issue == issue)
+    if issue_id is not None:
+        stmt = stmt.where(Resource.issue_id == issue_id)
     if section:
         # 顶层栏目（this-week）在库里的稿件挂在分部（editorial / world-view /
         # research-highlights）上，只按顶层 slug 精确匹配会得到 0 篇；这里
@@ -558,6 +576,114 @@ async def get_stats(
     )
 
 
+@router.get("/issues")
+async def list_public_issues(
+    db: AsyncSession = Depends(get_db),
+    viewer: User | None = Depends(get_current_user_optional),
+) -> dict[str, Any]:
+    """公开期列表：只返回 live 期，draft/scheduled 不泄露。"""
+    tenant_id = require_tenant_id()
+    rows = (
+        await db.execute(
+            select(Issue, Volume.number, Volume.title, Volume.year)
+            .join(Volume, Volume.id == Issue.volume_id)
+            .where(Issue.tenant_id == tenant_id, Issue.status == "live")
+            .order_by(Volume.number.desc(), Issue.number.desc())
+        )
+    ).all()
+    counts = (
+        await db.execute(
+            select(Resource.issue_id, func.count(Resource.id))
+            .where(
+                Resource.tenant_id == tenant_id,
+                Resource.issue_id.is_not(None),
+                *public_conditions(),
+            )
+            .group_by(Resource.issue_id)
+        )
+    ).all()
+    count_map = {int(issue_id): int(count) for issue_id, count in counts if issue_id is not None}
+    data = [
+        {
+            "id": issue.id,
+            "volume": volume_number,
+            "volume_title": volume_title,
+            "year": volume_year,
+            "number": issue.number,
+            "title": issue.title,
+            "intro": issue.intro,
+            "cover_image": issue.cover_image,
+            "status": issue.status,
+            "publish_at": issue.publish_at.isoformat() if issue.publish_at else None,
+            "published_at": issue.published_at.isoformat() if issue.published_at else None,
+            "article_count": count_map.get(issue.id, 0),
+        }
+        for issue, volume_number, volume_title, volume_year in rows
+    ]
+    return {"data": data}
+
+
+@router.get("/issues/{issue_id}")
+async def get_public_issue(
+    issue_id: int,
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """公开期详情：期名、导语、封面与本期已可见文章。"""
+    tenant_id = require_tenant_id()
+    row = (
+        await db.execute(
+            select(Issue, Volume.number, Volume.title, Volume.year)
+            .join(Volume, Volume.id == Issue.volume_id)
+            .where(
+                Issue.tenant_id == tenant_id,
+                Issue.id == issue_id,
+                Issue.status == "live",
+            )
+        )
+    ).first()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Issue not found")
+    issue, volume_number, volume_title, volume_year = row
+    resources = list(
+        (
+            await db.execute(
+                select(Resource).where(
+                    Resource.tenant_id == tenant_id,
+                    Resource.issue_id == issue.id,
+                    *public_conditions(),
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+    return {
+        "id": issue.id,
+        "volume": volume_number,
+        "volume_title": volume_title,
+        "year": volume_year,
+        "number": issue.number,
+        "title": issue.title,
+        "intro": issue.intro,
+        "cover_image": issue.cover_image,
+        "status": issue.status,
+        "publish_at": issue.publish_at.isoformat() if issue.publish_at else None,
+        "published_at": issue.published_at.isoformat() if issue.published_at else None,
+        "article_count": len(resources),
+        "resources": [
+            {
+                "id": resource.id,
+                "title": resource.title,
+                "authors": resource.authors,
+                "year": resource.year,
+                "issue_part": resource.issue_part,
+                "article_section": resource.article_section,
+            }
+            for resource in resources
+        ],
+    }
+
+
 @router.get("/volumes/stats", response_model=VolumeSummaryList)
 async def get_volume_stats(
     track: str | None = Query(default=None, pattern="^(paper|essay)$"),
@@ -609,9 +735,62 @@ async def get_volume_stats(
                 )
             )
 
+    # Merge first-class issue metadata and, for admins, empty issues that
+    # have no resources yet. Public callers only see live issues; draft and
+    # scheduled containers must not leak before release.
+    issue_rows = await db.execute(
+        select(Issue, Volume.number)
+        .join(Volume, Volume.id == Issue.volume_id)
+        .where(Issue.tenant_id == tenant_id)
+    )
+    issue_meta: dict[tuple[str, str], IssueSummary] = {}
+    for issue, volume_number in issue_rows.all():
+        if not (viewer and viewer.is_admin) and issue.status != "live":
+            continue
+        key = (str(volume_number), str(issue.number))
+        issue_meta[key] = IssueSummary(
+            issue=str(issue.number),
+            article_count=0,
+            id=issue.id,
+            title=issue.title,
+            status=issue.status,
+            cover_image=issue.cover_image,
+        )
+        summary = volumes.setdefault(
+            str(volume_number),
+            VolumeSummary(volume=str(volume_number), issue_count=0, article_count=0, issues=[]),
+        )
+        if summary.id is None:
+            summary.id = issue.volume_id
+    volume_rows = await db.execute(select(Volume).where(Volume.tenant_id == tenant_id))
+    for volume_row in volume_rows.scalars().all():
+        summary = volumes.setdefault(
+            str(volume_row.number),
+            VolumeSummary(volume=str(volume_row.number), issue_count=0, article_count=0, issues=[]),
+        )
+        summary.id = volume_row.id
+        summary.title = volume_row.title
+        summary.year = volume_row.year
+
+    for summary in volumes.values():
+        # Attach metadata to aggregated issue rows; create empty issues for
+        # admins so a newly created draft is visible in the registry.
+        existing = {item.issue: item for item in summary.issues}
+        for (volume_number, issue_number), meta in issue_meta.items():
+            if volume_number != summary.volume:
+                continue
+            if issue_number in existing:
+                target = existing[issue_number]
+                target.id = meta.id
+                target.title = meta.title
+                target.status = meta.status
+                target.cover_image = meta.cover_image
+            else:
+                summary.issues.append(meta)
+        summary.issue_count = len([item for item in summary.issues if item.issue])
+        summary.issues.sort(key=lambda item: item.issue, reverse=True)
+
     data = sorted(volumes.values(), key=lambda v: v.volume, reverse=True)
-    for summary in data:
-        summary.issues.sort(key=lambda i: i.issue, reverse=True)
     return VolumeSummaryList(data=data)
 
 
@@ -2945,17 +3124,29 @@ async def get_resource(
         Resource.id == resource_id,
         Resource.tenant_id == tenant_id,
     )
+    can_preview_unpublished = bool(viewer and viewer.is_admin)
     if viewer is None or not viewer.is_admin:
         # 404 rather than 403: an unpublished record should not even
         # confirm its existence to the public. Editors and the linked
         # submission's author may preview drafts (刊前预览).
-        if not await _can_preview_unpublished(db, viewer, resource_id, tenant_id):
+        can_preview_unpublished = await _can_preview_unpublished(db, viewer, resource_id, tenant_id)
+        if not can_preview_unpublished:
             for condition in public_conditions():
                 stmt = stmt.where(condition)
     result = await db.execute(stmt)
     resource = result.scalar_one_or_none()
     if resource is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
+    if resource.issue_id is not None and not can_preview_unpublished:
+        issue_status = (
+            await db.execute(
+                select(Issue.status).where(
+                    Issue.id == resource.issue_id, Issue.tenant_id == tenant_id
+                )
+            )
+        ).scalar_one_or_none()
+        if issue_status != "live":
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
     response = ResourceResponse.model_validate(resource)
     # Whether a downloadable manuscript exists: the file endpoint only
     # serves resources backed by a submission, so check that link once
@@ -3115,6 +3306,7 @@ async def create_resource(
         # 转成 409 而不是 500；begin_nested 让 flush 失败后事务仍可回滚续用。
         async with db.begin_nested():
             await db.flush()
+        await sync_resource_issue(db, resource)
         # Audit: log identifiers only — full payload is the Resource row itself.
         # 与资源写入同一事务（S-3）：第二个 commit 挂掉不会留下「有变更无审计」。
         db.add(
@@ -3229,6 +3421,8 @@ async def update_resource(
             resource.content_genre = classify_essay_genre(
                 resource.title, category=resource.content_category, resource_id=resource.id
             )
+
+    await sync_resource_issue(db, resource)
 
     # Audit: record which fields the admin touched (values may be large,
     # so we log field names only; the Resource row keeps the new state).

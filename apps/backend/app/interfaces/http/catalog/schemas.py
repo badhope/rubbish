@@ -418,6 +418,11 @@ class IssueSummary(BaseModel):
     article_count: int
     first_year: int | None = None
     last_year: int | None = None
+    # First-class issue registry fields (optional for backward compatibility).
+    id: int | None = None
+    title: str | None = None
+    status: str | None = None
+    cover_image: str | None = None
 
 
 class VolumeSummary(BaseModel):
@@ -432,6 +437,10 @@ class VolumeSummary(BaseModel):
     issue_count: int
     article_count: int
     issues: list[IssueSummary] = []
+    # First-class volume registry fields.
+    id: int | None = None
+    title: str | None = None
+    year: int | None = None
 
 
 class VolumeSummaryList(BaseModel):

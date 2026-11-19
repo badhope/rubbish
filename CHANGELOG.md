@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.18.0] — 2026-11-19
+
+### Added
+- Volume / Issue 一等对象：`volumes`、`issues` 表与 `resources.issue_id`、`release_manifests.issue_id`；迁移 `059_volume_issue_objects` 从旧卷期字符串回填并保留兼容快照。
+- 后台卷期注册表：新建卷、新建空期、编辑卷名/期名/导语/封面、删除空期、期状态 draft/scheduled/live/archived、文章批量移入/移出。
+- 公开 `/api/catalog/issues` 与 `/api/catalog/issues/{id}`；目录支持 `?issue_id=` 一期筛选，草稿/排期期不会泄露。
+
+### Changed
+- 后台卷期页从表格改为可展开卷卡片 + 期卡片，空期也可见；`/admin/issues/$volume/$issue` 改为文章卡片与「移入文章」对话框。
+- 卷期号按自然数排序，避免第 10 卷排到第 9 卷前面。
+
 ## [1.17.0] — 2026-11-19
 
 ### Changed

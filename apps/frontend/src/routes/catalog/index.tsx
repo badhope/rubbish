@@ -10,7 +10,7 @@ import {
   exportResources,
   useCatalogStats,
   useResources,
-  useIssueList,
+  usePublicIssues,
   useVolumeList,
   type ExportPreflightResponse,
   type AnyExportFormat,
@@ -89,6 +89,8 @@ interface CatalogSearch {
   volume?: string
   /** 期号；必须与 volume 一起使用。 */
   issue?: string
+  /** 一期一等对象 ID；公开筛选优先用它。 */
+  issue_id?: number
   /** 目录排序；issue=按卷期顺序。 */
   sort?: 'issue'
   page?: number
@@ -154,6 +156,7 @@ export function CatalogListPage() {
     section: search.section || undefined,
     volume: search.volume || undefined,
     issue: search.volume ? search.issue || undefined : undefined,
+    issue_id: search.issue_id,
     page: search.page || 1,
     page_size: 10,
     sort: search.sort === 'issue' ? ('issue' as const) : randomFeed ? ('random' as const) : undefined,
@@ -786,7 +789,8 @@ function CatalogFilterFields({
 }) {
   const { data: stats } = useCatalogStats()
   const { data: volumes } = useVolumeList()
-  const { data: issues } = useIssueList(search.volume ?? '')
+  const { data: publicIssues } = usePublicIssues()
+  const issues = (publicIssues ?? []).filter((issue) => issue.volume === search.volume)
   const facetDisciplines = Object.keys(stats?.by_discipline ?? {})
   return (
     <div className={className}>
@@ -854,6 +858,7 @@ function CatalogFilterFields({
               updateSearch({
                 volume: v === 'all' ? undefined : v,
                 issue: undefined,
+                issue_id: undefined,
                 page: 1,
               })
             }
@@ -871,20 +876,30 @@ function CatalogFilterFields({
             </SelectContent>
           </Select>
           <Select
-            value={search.issue ?? 'all'}
+            value={search.issue_id ? String(search.issue_id) : 'all'}
             disabled={!search.volume}
-            onValueChange={(v) =>
-              updateSearch({ issue: v === 'all' ? undefined : v, page: 1 })
-            }
+            onValueChange={(value) => {
+              if (value === 'all') {
+                updateSearch({ issue: undefined, issue_id: undefined, page: 1 })
+                return
+              }
+              const picked = issues.find((issue) => String(issue.id) === value)
+              updateSearch({
+                issue: undefined,
+                issue_id: picked?.id,
+                volume: picked?.volume ?? search.volume,
+                page: 1,
+              })
+            }}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="全部期" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">全部期</SelectItem>
-              {(issues?.items ?? []).map((issue) => (
-                <SelectItem key={issue.issue} value={issue.issue}>
-                  第 {issue.issue} 期
+              {issues.map((issue) => (
+                <SelectItem key={issue.id} value={String(issue.id)}>
+                  第 {issue.number} 期{issue.title ? ` · ${issue.title}` : ''}
                 </SelectItem>
               ))}
             </SelectContent>
