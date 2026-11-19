@@ -10,9 +10,9 @@ import { cn } from '@/lib/utils'
 import { formatCoins } from './format'
 
 const IDENTITY_LABEL: Record<string, string> = {
-  author: '作者',
-  reviewer: '审稿人',
-  editor: '编辑',
+  author: '创作者',
+  reviewer: '社区审阅者',
+  editor: '社区管理员',
 }
 
 const ROLE_STYLE: Record<string, string> = {

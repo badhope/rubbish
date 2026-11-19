@@ -15,7 +15,7 @@ const SUB_TABS = [
   { key: 'profile', label: '资料' },
   { key: 'security', label: '安全' },
   { key: 'notifications', label: '通知' },
-  { key: 'ai', label: 'AI 投稿' },
+  { key: 'ai', label: 'AI 写作' },
 ] as const
 
 type SettingsSubTab = (typeof SUB_TABS)[number]['key']
@@ -37,7 +37,7 @@ export function MeSettings({ username, initialSection }: { username: string; ini
           <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">SETTINGS</p>
           <h2 className="mt-1 font-serif text-xl tracking-tight">账号设置</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            资料、安全、通知与 AI 投稿都在这里；留空不会覆盖已有内容。
+            资料、安全、通知与 AI 写作设置都在这里；留空不会覆盖已有内容。
           </p>
         </div>
         <Button variant="ghost" size="sm" asChild>

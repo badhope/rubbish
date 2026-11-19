@@ -232,7 +232,7 @@ export function SupportPage() {
         <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">COST LEDGER</p>
         <h1 className="mt-1 font-serif text-2xl tracking-tight">成本公开</h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          本刊无广告、无付费墙。这里只公开服务器、域名与工具链的实际成本，不提供任何收款方式。
+          本站无广告、无付费墙。这里只公开服务器、域名与工具链的实际成本，不提供任何收款方式。
         </p>
       </div>
 
@@ -245,9 +245,9 @@ export function SupportPage() {
               </h2>
               <ul className="mt-3 space-y-2.5">
                 {[
-                  "服务器与对象存储：全部已刊出论文的 PDF 与在线稿托管。",
-                  "域名与证书：rubbish.argjiemi.cn 的续费与 HTTPS。",
-                  "审稿与出版工具链：排版、DOI 注册与邮件服务的运行成本。",
+                  "服务器与对象存储：作品、帖子、图片与备份托管。",
+                  "域名与证书：站点域名续费与 HTTPS。",
+                  "社区工具链：搜索、邮件、备份与内容审核的运行成本。",
                   "本页只做成本公开，不开放赞助、募捐、充值或任何收款入口。",
                 ].map((para) => (
                   <li
@@ -281,7 +281,7 @@ export function SupportPage() {
                 收款说明
               </h2>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                本页不展示二维码、银行账号、支付链接或转账方式，也不接受任何与投稿、评审、展示位置挂钩的款项。
+                本页不展示二维码、银行账号、支付链接或转账方式，也不接受任何与发帖、加精、置顶或展示位置挂钩的款项。
                 如未来恢复成本分摊，会先确认运营主体、税务与合规依据，再单独公告。
               </p>
             </CardContent>

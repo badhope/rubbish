@@ -16,9 +16,9 @@ export const Route = createFileRoute('/guide')({
 })
 
 const TABS = [
-  { value: 'authors', label: '投稿指南', desc: '栏目、格式、评审与计分' },
-  { value: 'help', label: '操作指南', desc: '作者 / 审稿人 / 编辑该点哪里' },
-  { value: 'policies', label: '政策规范', desc: '投稿、评审、更正与伦理' },
+  { value: 'authors', label: '创作指南', desc: '选题、格式、发布与讨论' },
+  { value: 'help', label: '使用指南', desc: '发帖、回复、举报与设置' },
+  { value: 'policies', label: '社区公约', desc: '内容边界、版权与处理' },
   { value: 'levels', label: '等级与规范', desc: '身份等级、权限与计分口径' },
 ] as const
 

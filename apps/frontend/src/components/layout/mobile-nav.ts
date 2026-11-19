@@ -1,11 +1,9 @@
 import {
   BookOpen,
-  ClipboardCheck,
   Gavel,
   Home,
-  Eye,
   Building2,
-  PenLine,
+  Compass,
   MessagesSquare,
   MessageSquareText,
   type LucideIcon,
@@ -33,34 +31,22 @@ export interface MobileMoreItem {
 }
 
 // 折叠菜单分组顺序
-export const MOBILE_MORE_GROUP_ORDER = ['我的', '工作台', '期刊', '管理', '消息', '内容与社区', '用户与权限', '期刊与发布', '系统与安全', '设置'] as const
+export const MOBILE_MORE_GROUP_ORDER = ['我的', '管理', '消息', '设置'] as const
 
 // 底部固定 5 Tab：首页 / 论文 / 投稿 / 社区 / 我的。
 // 论文入口进入总目录，学术与荒诞在目录页内分区；副刊不再单列一级。
 export const MOBILE_TABS: MobileTab[] = [
   { to: '/', label: '首页', icon: Home },
-  { to: '/catalog', label: '论文', icon: BookOpen },
-  { to: '/submissions', label: '投稿', icon: PenLine },
   { to: '/forum', label: '社区', icon: MessagesSquare },
+  { to: '/catalog', label: '作品', icon: BookOpen },
+  { to: '/guide', label: '指南', icon: Compass },
   { to: '/me', label: '我的', icon: User },
 ]
 
 // 折叠菜单（header 右上角"⋯"弹出）：收进抽屉时代的次级入口，
 // 避免删抽屉后指标/卷期/政策/关于/后台等入口失联。
 export const MOBILE_MORE: MobileMoreItem[] = [
-  { to: '/review', search: { tab: 'assignments' }, label: '我的审稿', icon: ClipboardCheck, auth: true, roles: ['reviewer', 'senior_reviewer', 'editor_in_chief'], group: '工作台' },
-  {
-    to: '/submissions/pending',
-    search: { stage: 'pipeline' },
-    label: '编辑工作台',
-    icon: Gavel,
-    auth: true,
-    roles: ['editor', 'section_editor', 'board_editor', 'deputy_editor', 'chief_editor', 'editor_in_chief'],
-    group: '工作台',
-  },
-  { to: '/review', search: { tab: 'board' }, label: '审稿广场', icon: Eye, group: '期刊' },
-  { to: '/about', label: '关于与指标', icon: Building2, group: '期刊' },
-  { to: '/guide', label: '投稿与操作指南', icon: PenLine, group: '期刊' },
+  { to: '/about', label: '关于社区', icon: Building2, group: '我的' },
   { to: '/forum', search: { view: 'feedback' }, label: '反馈与建议', icon: MessageSquareText, group: '设置' },
   { to: '/admin', label: '管理后台', icon: Gavel, auth: true, adminOnly: true, group: '管理' },
 ]

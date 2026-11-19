@@ -5,12 +5,10 @@ import {
   Building2,
   ChevronDown,
   ChevronLeft,
-  ClipboardCheck,
-  Eye,
+  Compass,
   Gavel,
   Home,
   Menu,
-  PenLine,
   Search,
   ShieldCheck,
   User,
@@ -46,42 +44,15 @@ import { PageViewTracker } from '@/components/common/page-view-tracker'
 import { groupLabel, navLabel, text, useLang } from '@/lib/i18n'
 
 const NAV: NavItem[] = [
-  // 一级入口固定五项：首页 / 论文 / 副刊 / 讨论 / 我的。
-  // 栏目、卷期、指标等期刊门面退到「期刊」二级组，不再和社区抢一级入口。
+  // 社区优先：首页 / 社区 / 作品 / 指南 / 我的。
+  // 期刊、投稿、审稿不再占一级入口；作品库只承担长文阅读，不承担“发表”叙事。
   { to: '/', label: '首页', icon: Home, group: '一级入口' },
-  { to: '/catalog', label: '论文', icon: BookOpen, group: '一级入口' },
-  { to: '/submissions', label: '投稿', icon: PenLine, group: '一级入口' },
   { to: '/forum', label: '社区', icon: MessagesSquare, group: '一级入口' },
+  { to: '/catalog', label: '作品', icon: BookOpen, group: '一级入口' },
+  { to: '/guide', label: '指南', icon: Compass, group: '一级入口' },
   { to: '/me', label: '我的', icon: User, group: '一级入口' },
 
-  // 我的工作：只放需要登录的个人链路。
-  {
-    to: '/review',
-    search: { tab: 'assignments' },
-    label: '我的审稿',
-    icon: ClipboardCheck,
-    auth: true,
-    roles: ['reviewer', 'senior_reviewer', 'editor_in_chief'],
-    group: '我的工作',
-    subgroup: '编辑与投稿',
-  },
-  {
-    to: '/submissions/pending',
-    search: { stage: 'pipeline' },
-    label: '编辑工作台',
-    icon: Gavel,
-    auth: true,
-    roles: ['editor', 'section_editor', 'board_editor', 'deputy_editor', 'chief_editor', 'editor_in_chief'],
-    group: '我的工作',
-    subgroup: '编辑与投稿',
-  },
-
-  // 期刊门面：栏目和卷期都收进 /catalog 的筛选；这里只保留审稿广场、关于、指南。
-  { to: '/review', search: { tab: 'board' }, label: '审稿广场', icon: Eye, group: '期刊' },
-  { to: '/about', label: '关于与指标', icon: Building2, group: '期刊' },
-  { to: '/guide', label: '投稿指南', icon: PenLine, group: '期刊' },
-
-  // admin 组：只保留一个后台入口；具体管理页收进 /admin 的分组卡片。
+  { to: '/about', label: '关于社区', icon: Building2, group: '关于' },
   { to: '/admin', label: '管理后台', icon: Gavel, auth: true, adminOnly: true, group: '站点管理' },
 ]
 
@@ -268,27 +239,11 @@ export function AppShell() {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link to="/submissions">
+          <Link to="/me">
             <FileSignature className="h-4 w-4" />
-            我的提交
+            我的作品
           </Link>
         </DropdownMenuItem>
-        {(user.roles?.includes('reviewer') || user.roles?.includes('senior_reviewer') || user.roles?.includes('editor_in_chief') || isAdmin) && (
-          <DropdownMenuItem asChild>
-            <Link to="/review" search={{ tab: 'assignments' }}>
-              <ClipboardCheck className="h-4 w-4" />
-              {text('我的审稿', lang)}
-            </Link>
-          </DropdownMenuItem>
-        )}
-        {(user.roles?.some((r) => ['editor', 'section_editor', 'board_editor', 'deputy_editor', 'chief_editor', 'editor_in_chief'].includes(r)) || isAdmin) && (
-          <DropdownMenuItem asChild>
-            <Link to="/submissions/pending" search={{ stage: 'pipeline' }}>
-              <Gavel className="h-4 w-4" />
-              {text('编辑工作台', lang)}
-            </Link>
-          </DropdownMenuItem>
-        )}
         {isAdmin && (
           <DropdownMenuItem asChild>
             <Link to="/admin">
@@ -386,7 +341,7 @@ export function AppShell() {
               <span className="flex min-w-0 flex-col leading-none">
                 <span className="font-serif text-lg font-semibold tracking-tight">Rubbish</span>
                 <span className="mt-1 hidden truncate text-[10px] uppercase tracking-[0.28em] text-muted-foreground sm:block">
-                  An Academic Bottom Journal
+                  Absurd Academic Writing Community
                 </span>
               </span>
             </Link>
@@ -563,13 +518,13 @@ export function AppShell() {
                 <div className="min-w-0">
                   <p className="truncate text-xs font-medium">{displayName}</p>
                   <p className="truncate text-[10px] text-sidebar-foreground/55">
-                    {user.roles?.some((r) => ['chief_editor','editor_in_chief'].includes(r)) ? '主编' : user.roles?.includes('reviewer') ? '审稿人' : '作者 / 读者'}
+                    {user.roles?.some((r) => ['chief_editor','editor_in_chief','admin'].includes(r)) ? '社区管理员' : '创作者 / 读者'}
                   </p>
                 </div>
               </div>
             ) : (
               <div className="space-y-2">
-                <p className="text-[11px] leading-relaxed text-sidebar-foreground/70">登录后可投稿、认领与跟踪审稿。</p>
+                <p className="text-[11px] leading-relaxed text-sidebar-foreground/70">登录后可发帖、评论、收藏与关注。</p>
                 <Button asChild size="sm" className="h-8 w-full text-xs"><Link to="/login">登录 / 注册</Link></Button>
               </div>
             )}
@@ -639,10 +594,10 @@ export function AppShell() {
           <form onSubmit={submitCmd} className="w-full max-w-xl overflow-hidden rounded-xl border bg-background shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 border-b px-4 py-3">
               <Search className="h-4 w-4 text-muted-foreground" />
-              <input autoFocus value={cmdQ} onChange={(e) => setCmdQ(e.target.value)} placeholder="搜索论文、副刊、作者、关键词…" className="h-9 flex-1 bg-transparent text-sm outline-none" />
+              <input autoFocus value={cmdQ} onChange={(e) => setCmdQ(e.target.value)} placeholder="搜索作品、帖子、作者、关键词…" className="h-9 flex-1 bg-transparent text-sm outline-none" />
               <kbd className="rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">Enter</kbd>
             </div>
-            <div className="px-4 py-2 text-[11px] text-muted-foreground">回车进入目录；Esc 关闭。论文与副刊分轨展示。</div>
+            <div className="px-4 py-2 text-[11px] text-muted-foreground">回车进入作品库；Esc 关闭。作品与帖子分开检索。</div>
           </form>
         </div>
       )}

@@ -97,7 +97,7 @@ async def get_forum_image(filename: str) -> Response:
     return Response(content=contents, media_type=mime, headers=IMAGE_CACHE_HEADERS)
 
 
-# 五个平铺版块：论文沙龙 / 方法与写作 / 学术生存 / 组队招募 / 站务公告。
+# 五个平铺版块：荒诞论文体 / 写作实验 / 学术生存 / 共创组队 / 站务。
 # 旧分类保留为兼容别名（历史帖子和既有测试仍可直接写入），列表查询按版块聚合。
 ForumCategory = Literal[
     "paper",
@@ -112,14 +112,14 @@ ForumCategory = Literal[
 ]
 
 CATEGORY_LABELS: dict[str, str] = {
-    "paper": "论文沙龙",
-    "method": "方法与写作",
+    "paper": "荒诞论文体",
+    "method": "写作实验",
     "life": "学术生存",
-    "collab": "组队招募",
-    "meta": "站务公告",
+    "collab": "共创组队",
+    "meta": "站务",
     "notice": "公告",
-    "discussion": "讨论",
-    "question": "求助",
+    "discussion": "荒诞论文体",
+    "question": "写作求助",
     "suggestion": "建议",
 }
 

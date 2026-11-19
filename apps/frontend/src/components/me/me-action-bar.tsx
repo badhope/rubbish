@@ -15,9 +15,9 @@ export function MeActionBar({
       className="flex flex-wrap items-center justify-between gap-3 border-b py-4"
     >
       <div className="min-w-0">
-        <p className="text-sm font-medium">开始下一篇</p>
+        <p className="text-sm font-medium">去社区说点什么</p>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          空白、提纲或文件都可以；投稿向导会分步保存。
+          发帖、回复或贴一段草稿都可以；这里不需要走投稿流程。
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-1.5">
@@ -31,8 +31,8 @@ export function MeActionBar({
           ) : null}
         </Button>
         <Button size="sm" asChild>
-          <Link to="/submissions/new">
-            新建投稿
+          <Link to="/forum" search={{ compose: '1' }}>
+            发布作品
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </Button>

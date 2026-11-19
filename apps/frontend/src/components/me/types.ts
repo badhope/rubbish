@@ -1,6 +1,6 @@
 export const ME_TABS = [
   { key: 'overview', label: '概览' },
-  { key: 'submissions', label: '投稿' },
+  { key: 'submissions', label: '作品' },
   { key: 'reviews', label: '审稿' },
   { key: 'library', label: '收藏' },
   { key: 'points', label: '积分' },

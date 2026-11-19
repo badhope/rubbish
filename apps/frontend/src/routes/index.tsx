@@ -76,7 +76,6 @@ function HomePage() {
   const paperTotal = stats.data?.by_type?.paper
   const funTotal = funStats.data?.total
 
-  const submitTo = isAuthenticated ? '/submissions' : '/register'
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -95,7 +94,7 @@ function HomePage() {
             <span className="flex flex-col leading-none">
               <span className="font-serif text-base font-semibold tracking-tight">Rubbish</span>
               <span className="mt-1 hidden text-[9px] uppercase tracking-[0.28em] text-muted-foreground sm:block">
-                An Academic Bottom Journal
+                Absurd Academic Writing Community
               </span>
             </span>
           </Link>
@@ -149,7 +148,7 @@ function HomePage() {
         <div className="relative mx-auto flex min-h-[calc(100svh-3.5rem)] w-full max-w-[1200px] flex-col items-center justify-center px-5 pb-16 pt-10 text-center sm:px-8">
           <p className="flex items-center gap-2 text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
             <span aria-hidden className="h-1.5 w-1.5 rotate-45 bg-primary" />
-            Open Access · Bottom Journal
+            Open Community · Absurd Academia
             <span aria-hidden className="h-1.5 w-1.5 rotate-45 bg-primary" />
           </p>
           <h1 className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-6">
@@ -162,17 +161,17 @@ function HomePage() {
             </span>
           </h1>
           <p className="mt-5 max-w-4xl text-[15px] leading-7 text-muted-foreground sm:text-xl sm:leading-9">
-            认真写下的研究，值得一个正式位置。Rubbish 收方法诚实、材料可核查的稿子。
+            把荒诞写成论文，把论文写成现场。这里不发表，只让好玩的坏学术被认真读完。
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Button asChild size="lg" className="button-shine h-12 px-6 text-sm sm:h-14 sm:px-7 sm:text-base">
-              <Link to="/catalog">
-                读一篇 <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
+              <Link to="/forum">
+                逛社区 <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="h-12 px-6 text-sm sm:h-14 sm:px-7 sm:text-base">
-              <Link to={submitTo}>
-                <PenLine className="h-4 w-4 sm:h-5 sm:w-5" /> 投一篇
+              <Link to="/forum" search={{ compose: '1' }}>
+                <PenLine className="h-4 w-4 sm:h-5 sm:w-5" /> 发布作品
               </Link>
             </Button>
           </div>
@@ -185,11 +184,11 @@ function HomePage() {
       {/* 本期主稿：一个区块只给一篇，不做并列卡片。 */}
       <section className="mx-auto w-full max-w-[1320px] px-5 py-14 sm:px-8 sm:py-20">
         <SectionHeading
-          label="Featured · 本期主稿"
+          label="Featured · 本周精选"
           title="先读这一篇"
           action={
             <Link to="/catalog" search={{ track: 'paper' }} className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary">
-              本期目录 <ChevronRight className="h-4 w-4" />
+              全部作品 <ChevronRight className="h-4 w-4" />
             </Link>
           }
         />
@@ -250,9 +249,9 @@ function HomePage() {
           </div>
         ) : (
           <div className="border-y border-border/70 py-10 text-sm text-muted-foreground">
-            本期主稿仍在编辑中，先去目录看看已上线的文章。
-            <Link to="/catalog" className="ml-2 text-primary hover:underline">
-              打开目录
+            本周精选还在整理，先去社区看看大家在写什么。
+            <Link to="/forum" className="ml-2 text-primary hover:underline">
+              打开社区
             </Link>
           </div>
         )}
@@ -262,11 +261,11 @@ function HomePage() {
       <section className="border-y border-border/70 bg-muted/20">
         <div className="mx-auto w-full max-w-[1100px] px-5 py-14 sm:px-8 sm:py-20">
           <SectionHeading
-            label="Contents · 目录"
-            title="从三条索引进入"
+            label="Works · 作品"
+            title="三种读法"
             action={
               <Link to="/catalog" className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary">
-                全部目录 <ChevronRight className="h-4 w-4" />
+                全部作品 <ChevronRight className="h-4 w-4" />
               </Link>
             }
           />
@@ -275,13 +274,13 @@ function HomePage() {
               <span className="w-10 shrink-0 font-mono text-sm text-muted-foreground">01</span>
               <span className="min-w-0 flex-1">
                 <span className="flex flex-wrap items-baseline gap-x-3">
-                  <span className="font-serif text-2xl transition-colors group-hover:text-primary sm:text-3xl">学术论文</span>
+                  <span className="font-serif text-2xl transition-colors group-hover:text-primary sm:text-3xl">严肃写作</span>
                   <span className="text-xs text-muted-foreground">
                     <Count value={serious} ready={Boolean(stats.data)} /> 篇
                   </span>
                 </span>
                 <span className="mt-1 block text-sm leading-6 text-muted-foreground">
-                  真实问题、可核查材料、正经论证；按学术五维评审。
+                  真实问题、可核查材料、正经论证；先把事情写清楚。
                 </span>
               </span>
               <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
@@ -290,13 +289,13 @@ function HomePage() {
               <span className="w-10 shrink-0 font-mono text-sm text-muted-foreground">02</span>
               <span className="min-w-0 flex-1">
                 <span className="flex flex-wrap items-baseline gap-x-3">
-                  <span className="font-serif text-2xl transition-colors group-hover:text-primary sm:text-3xl">荒诞论文</span>
+                  <span className="font-serif text-2xl transition-colors group-hover:text-primary sm:text-3xl">荒诞论文体</span>
                   <span className="text-xs text-muted-foreground">
                     <Count value={absurd} ready={Boolean(stats.data)} /> 篇
                   </span>
                 </span>
                 <span className="mt-1 block text-sm leading-6 text-muted-foreground">
-                  论文格式、一本正经地论证荒诞命题；荒诞度单独计分。
+                  用论文格式一本正经地论证荒诞命题；越认真越好笑。
                 </span>
               </span>
               <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
@@ -305,13 +304,13 @@ function HomePage() {
               <span className="w-10 shrink-0 font-mono text-sm text-muted-foreground">03</span>
               <span className="min-w-0 flex-1">
                 <span className="flex flex-wrap items-baseline gap-x-3">
-                  <span className="font-serif text-2xl transition-colors group-hover:text-primary sm:text-3xl">副刊</span>
+                  <span className="font-serif text-2xl transition-colors group-hover:text-primary sm:text-3xl">自由创作</span>
                   <span className="text-xs text-muted-foreground">
                     <Count value={funTotal} ready={Boolean(funStats.data)} /> 篇
                   </span>
                 </span>
                 <span className="mt-1 block text-sm leading-6 text-muted-foreground">
-                  小说、随笔、评论、诗歌与指南；不套论文体，不做学术评分。
+                  小说、随笔、评论、诗歌与指南；不套论文体，只谈写得好不好。
                 </span>
               </span>
               <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
@@ -319,11 +318,11 @@ function HomePage() {
           </div>
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-sm">
             <span className="text-xs text-muted-foreground">
-              已上线 <Count value={paperTotal} ready={Boolean(stats.data)} /> 篇论文 ·{' '}
-              <Count value={funTotal} ready={Boolean(funStats.data)} /> 篇副刊
+              已收录 <Count value={paperTotal} ready={Boolean(stats.data)} /> 篇写作 ·{' '}
+              <Count value={funTotal} ready={Boolean(funStats.data)} /> 篇自由创作
             </span>
             <Link to="/catalog" search={{ sort: 'issue' }} className="inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-primary">
-              按期浏览 <ChevronRight className="h-4 w-4" />
+              换一批 <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
@@ -331,23 +330,23 @@ function HomePage() {
 
       {/* 编辑部手记：不占一整墙，只留一段可读的判断。 */}
       <section className="mx-auto w-full max-w-[1100px] px-5 py-14 sm:px-8 sm:py-20">
-        <SectionHeading label="Editor's Note · 编辑部手记" title="为什么做这本底刊" />
+        <SectionHeading label="Editor's Note · 社区手记" title="为什么做这个社区" />
         <div className="grid gap-8 md:grid-cols-[minmax(0,7fr)_minmax(0,4fr)] md:gap-12">
           <blockquote className="border-l-2 border-primary pl-5 sm:pl-7">
             <p className="font-serif text-2xl leading-relaxed sm:text-3xl">
-              可信的知识不应该有围墙。每一篇经过严格评审的研究，都值得被世界看见。
+              好笑的荒诞，也值得被认真对待；好读的坏学术，也应该有地方被读完。
             </p>
             <footer className="mt-4 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-              —— Rubbish 编辑部
+              —— Rubbish 社区
             </footer>
           </blockquote>
           <div className="text-sm leading-7 text-muted-foreground">
             <p>
-              顶刊之外，还有读者。我们替不够完美、但方法诚实、材料可核查的研究，
-              留一个正式、可引用的位置。
+              论文体之外，还有读者。我们替不够正经、但写得好玩、脑洞可核查的荒诞，
+              留一个能被认真读完的位置。
             </p>
             <Link to="/about" search={{ tab: 'about' }} className="mt-4 inline-flex items-center gap-1 text-primary hover:underline">
-              关于本刊与编委会 <ArrowRight className="h-4 w-4" />
+              关于社区与版主 <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
@@ -359,20 +358,20 @@ function HomePage() {
       <section className="border-t border-border/70 bg-primary text-primary-foreground">
         <div className="mx-auto grid w-full max-w-[1100px] gap-8 px-5 py-14 sm:px-8 sm:py-20 md:grid-cols-[1fr_auto] md:items-center">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.3em] text-primary-foreground/60">Submit</p>
-            <h2 className="mt-2 font-serif text-3xl sm:text-4xl">把你的稿件放上来</h2>
+            <p className="text-[10px] uppercase tracking-[0.3em] text-primary-foreground/60">Publish</p>
+            <h2 className="mt-2 font-serif text-3xl sm:text-4xl">把你的荒诞论文体放上来</h2>
             <p className="mt-3 max-w-xl text-sm leading-7 text-primary-foreground/75">
-              论文与副刊共用一套投稿入口；先完成基本信息，再上传正文。录用后全文开放，不需要介绍信，也不收费用。
+              长文与短帖共用一套发布入口；先写标题，再把正文贴进来。发布后全文开放，不收费用。
             </p>
           </div>
           <div className="flex flex-wrap gap-3 md:justify-end">
             <Button asChild size="lg" variant="secondary" className="h-12 px-6">
-              <Link to={submitTo}>
-                {isAuthenticated ? '进入我的投稿' : '免费注册投稿'} <ArrowRight className="h-4 w-4" />
+              <Link to="/forum" search={{ compose: '1' }}>
+                {isAuthenticated ? '去社区发布' : '免费注册发帖'} <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="h-12 border-primary-foreground/30 bg-transparent px-6 text-primary-foreground hover:bg-primary-foreground/10">
-              <Link to="/guide" search={{ tab: 'authors' }}>投稿指南</Link>
+              <Link to="/guide" search={{ tab: 'authors' }}>社区指南</Link>
             </Button>
           </div>
         </div>
@@ -386,18 +385,17 @@ function HomePage() {
               <span className="font-serif text-xl font-semibold">Rubbish</span>
             </div>
             <p className="mt-2 text-xs leading-6 text-muted-foreground">
-              An Academic Bottom Journal · 学术底刊
+              Absurd Academic Writing Community · 荒诞论文体社区
               <br />
-              独立实验项目 · 非正式出版机构 · 不收取任何费用
+              独立实验社区 · 不是出版机构 · 不收取任何费用
             </p>
           </div>
           <div>
             <p className="mb-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">阅读</p>
             <ul className="space-y-1.5 text-sm">
-              <li><Link to="/catalog" className="hover:text-primary">全部目录</Link></li>
-              <li><Link to="/catalog" search={{ sort: 'issue' }} className="hover:text-primary">按期浏览</Link></li>
-              <li><Link to="/guide" search={{ tab: 'authors' }} className="hover:text-primary">投稿指南</Link></li>
-              <li><Link to="/guide" search={{ tab: 'policies' }} className="hover:text-primary">期刊政策</Link></li>
+              <li><Link to="/catalog" className="hover:text-primary">全部作品</Link></li>
+              <li><Link to="/guide" search={{ tab: 'authors' }} className="hover:text-primary">社区指南</Link></li>
+              <li><Link to="/guide" search={{ tab: 'policies' }} className="hover:text-primary">社区公约</Link></li>
             </ul>
           </div>
           <div>
@@ -409,15 +407,15 @@ function HomePage() {
                 </a>
               </li>
               <li className="text-muted-foreground">QQ 群：1084870548</li>
-              <li><Link to="/about" search={{ tab: 'about' }} className="hover:text-primary">关于本刊</Link></li>
+              <li><Link to="/about" search={{ tab: 'about' }} className="hover:text-primary">关于社区</Link></li>
               <li><Link to="/guide" search={{ tab: 'help' }} className="hover:text-primary">使用帮助</Link></li>
             </ul>
           </div>
         </div>
         <div className="border-t border-border/70">
           <div className="mx-auto flex w-full max-w-[1100px] flex-wrap items-center justify-between gap-2 px-5 py-3 text-xs text-muted-foreground sm:px-8">
-            <span>© {new Date().getFullYear()} Rubbish · An Academic Bottom Journal</span>
-            <span>认真写，诚实评，公开读。</span>
+            <span>© {new Date().getFullYear()} Rubbish · Absurd Academic Writing Community</span>
+            <span>认真写，大胆荒诞，公开读。</span>
           </div>
         </div>
       </footer>
@@ -441,15 +439,15 @@ function ForumPulse() {
   if (topics.length === 0) return null
 
   const label: Record<string, string> = {
-    paper: '论文沙龙',
-    method: '方法与写作',
+    paper: '荒诞论文体',
+    method: '写作实验',
     life: '学术生存',
-    collab: '组队招募',
-    meta: '站务公告',
+    collab: '共创组队',
+    meta: '站务',
     notice: '公告',
-    discussion: '论文沙龙',
-    question: '方法与写作',
-    suggestion: '站务公告',
+    discussion: '荒诞论文体',
+    question: '写作求助',
+    suggestion: '建议',
   }
   const rel = (iso: string | null) => {
     if (!iso) return ''

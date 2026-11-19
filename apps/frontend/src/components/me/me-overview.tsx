@@ -1,19 +1,8 @@
 import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
-import {
-  ArrowRight,
-  Bell,
-  ClipboardCheck,
-  FileText,
-  Inbox,
-} from 'lucide-react'
-import {
-  useMyReviewAssignments,
-  useMySubmissions,
-  useNotifications,
-} from '@/hooks/api/use-modules'
+import { ArrowRight, Bell, MessagesSquare, PenLine } from 'lucide-react'
+import { useNotifications } from '@/hooks/api/use-modules'
 import { Button } from '@/components/ui/button'
-import { AssignmentStatusBadge, SubmissionStatusBadge } from './me-status'
 import { shortDate } from './format'
 
 function SectionHeading({
@@ -37,83 +26,45 @@ function SectionHeading({
 }
 
 export function MeOverview({
-  reviewable,
   onOpenNotifications,
 }: {
-  reviewable: boolean
+  reviewable?: boolean
   onOpenNotifications: () => void
 }) {
-  const submissions = useMySubmissions(undefined, 1, 5)
-  const assignments = useMyReviewAssignments(undefined, 1, 5, { enabled: reviewable })
-  const notifications = useNotifications(1, 4)
-
-  const pendingSubmissions =
-    submissions.data?.data.filter((item) =>
-      ['pending', 'under_review', 'major_revision', 'minor_revision'].includes(item.status),
-    ) ?? []
-  const pendingReviews =
-    assignments.data?.data.filter((item) => ['pending', 'accepted'].includes(item.status)) ?? []
+  const notifications = useNotifications(1, 6)
   const latestNotifications = notifications.data?.data ?? []
 
   return (
     <div className="space-y-8">
       <section>
-        <SectionHeading
-          kicker="TO DO"
-          title="待办"
-          action={
-            <span className="font-mono text-xs text-muted-foreground">
-              {pendingSubmissions.length + pendingReviews.length} 项
+        <SectionHeading kicker="COMMUNITY" title="社区入口" />
+        <div className="grid gap-3 border-y py-5 sm:grid-cols-2">
+          <Link
+            to="/forum"
+            className="group flex items-start gap-3 rounded-lg border p-4 transition-colors hover:border-primary/40 hover:bg-primary/[0.03]"
+          >
+            <MessagesSquare className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <span>
+              <span className="block text-sm font-medium">去社区看看</span>
+              <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
+                读帖、回复、收藏；讨论比投稿更接近这里的主业。
+              </span>
             </span>
-          }
-        />
-        {pendingSubmissions.length === 0 && pendingReviews.length === 0 ? (
-          <div className="flex items-center gap-3 border-y py-5 text-sm text-muted-foreground">
-            <Inbox className="h-4 w-4" />
-            没有待处理事项。新的投稿状态和审稿邀请会出现在这里。
-          </div>
-        ) : (
-          <div className="divide-y border-y">
-            {pendingSubmissions.map((item) => (
-              <Link
-                key={`submission-${item.id}`}
-                to="/me"
-                search={{ tab: 'submissions' }}
-                className="group flex items-start gap-3 py-3.5 transition-colors hover:bg-primary/[0.03] sm:items-center"
-              >
-                <FileText className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground sm:mt-0" />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium">{item.title}</span>
-                  <span className="mt-0.5 block text-[11px] text-muted-foreground">
-                    {item.type === 'paper' ? '论文' : item.type} · {shortDate(item.submitted_at)}
-                  </span>
-                </span>
-                <SubmissionStatusBadge status={item.status} />
-                <ArrowRight className="hidden h-3.5 w-3.5 text-muted-foreground group-hover:text-primary sm:block" />
-              </Link>
-            ))}
-            {pendingReviews.map((item) => (
-              <Link
-                key={`assignment-${item.id}`}
-                to="/review"
-                search={{ tab: 'assignments' }}
-                className="group flex items-start gap-3 py-3.5 transition-colors hover:bg-primary/[0.03] sm:items-center"
-              >
-                <ClipboardCheck className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground sm:mt-0" />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium">
-                    {item.submission_title ?? `审稿任务 #${item.id}`}
-                  </span>
-                  <span className="mt-0.5 block text-[11px] text-muted-foreground">
-                    {item.due_date ? `截止 ${shortDate(item.due_date)}` : `受邀 ${shortDate(item.invited_at)}`}
-                  </span>
-                </span>
-                <AssignmentStatusBadge status={item.status} />
-                <ArrowRight className="hidden h-3.5 w-3.5 text-muted-foreground group-hover:text-primary sm:block" />
-              </Link>
-            ))}
-          </div>
-        )}
+          </Link>
+          <Link
+            to="/forum"
+            search={{ compose: '1' }}
+            className="group flex items-start gap-3 rounded-lg border p-4 transition-colors hover:border-primary/40 hover:bg-primary/[0.03]"
+          >
+            <PenLine className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <span>
+              <span className="block text-sm font-medium">发布作品或帖子</span>
+              <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
+                标题和正文就够了；荒诞论文体也可以只是个帖子。
+              </span>
+            </span>
+          </Link>
+        </div>
       </section>
 
       <section>
@@ -154,21 +105,6 @@ export function MeOverview({
           </div>
         )}
       </section>
-
-      {!reviewable ? (
-        <section className="border-t pt-5 text-sm">
-          <p className="font-medium">想参与审稿？</p>
-          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            审稿人需要先满足作者等级与质量分要求，再由编辑部审批授予。你可以在等级页查看资格并提交申请。
-          </p>
-          <Button variant="outline" size="sm" className="mt-3" asChild>
-            <Link to="/guide" search={{ tab: 'levels' }}>
-              查看审稿资格
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </Button>
-        </section>
-      ) : null}
     </div>
   )
 }

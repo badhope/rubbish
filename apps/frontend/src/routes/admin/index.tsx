@@ -2,8 +2,6 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import {
   Activity,
   ArrowRight,
-  CalendarDays,
-  ClipboardCheck,
   FileSignature,
   Gavel,
   Layers,
@@ -27,7 +25,7 @@ export const Route = createFileRoute('/admin/')({
   component: AdminDashboard,
 })
 
-// 总览只回答两件事：现在有什么要处理、五个管理域分别在哪。
+// 总览只回答两件事：社区现在有什么要处理、管理域分别在哪。
 // 具体表单和子段留在各域页，不在这里复制一遍入口卡片墙。
 const PENDING_QUEUE: {
   title: string
@@ -37,20 +35,6 @@ const PENDING_QUEUE: {
   icon: typeof Gavel
   count?: 'claims' | 'comments'
 }[] = [
-  {
-    title: '初筛队列',
-    desc: '选题、格式与范围',
-    to: '/submissions/pending',
-    search: { stage: 'triage' },
-    icon: ClipboardCheck,
-  },
-  {
-    title: '编辑流水线',
-    desc: '指派、催办、裁决与冲突',
-    to: '/submissions/pending',
-    search: { stage: 'pipeline' },
-    icon: Gavel,
-  },
   {
     title: '认领审批',
     desc: '作者认领存量文章',
@@ -75,12 +59,6 @@ const DOMAINS: {
   to: string
   icon: typeof Gavel
 }[] = [
-  {
-    title: '期刊与发布',
-    desc: '卷、期、组期、发布门禁与回滚',
-    to: '/admin/journal',
-    icon: CalendarDays,
-  },
   {
     title: '内容与社区',
     desc: '公告、版块、评论审核、举报',

@@ -102,14 +102,14 @@ const CATEGORY_STYLE: Record<string, string> = {
 }
 
 const CATEGORY_LABEL: Record<string, string> = {
-  paper: '论文沙龙',
-  method: '方法与写作',
+  paper: '荒诞论文体',
+  method: '写作实验',
   life: '学术生存',
-  collab: '组队招募',
-  meta: '站务公告',
+  collab: '共创组队',
+  meta: '站务',
   notice: '公告',
-  discussion: '讨论',
-  question: '求助',
+  discussion: '荒诞论文体',
+  question: '写作求助',
   suggestion: '建议',
 }
 
@@ -187,6 +187,7 @@ function ForumListPage() {
     paperTitle?: string
     sort?: string
     view?: string
+    compose?: string
   }
   const view = search.view === 'feedback' ? 'feedback' : 'list'
   const category = search.category ?? 'all'
@@ -274,6 +275,12 @@ function ForumListPage() {
     createMut.mutate()
   }
 
+  const currentBoardId = activeBoard
+    ? activeBoard.children.length > 0
+      ? collectBoards(activeBoard.children).find((b) => b.children.length === 0)?.id ?? activeBoard.id
+      : activeBoard.id
+    : defaultBoardId
+
   const openComposer = () => {
     if (!isAuthenticated) {
       void navigate({ to: '/login', search: { redirect: '/forum' } })
@@ -299,16 +306,22 @@ function ForumListPage() {
     setOpen(true)
   }
 
+  useEffect(() => {
+    if (search.compose !== '1') return
+    if (!isAuthenticated) {
+      void navigate({ to: '/login', search: { redirect: '/forum?compose=1' } })
+      return
+    }
+    openComposer()
+    // openComposer 每次渲染都会重新创建；只在 compose 参数变化时触发一次。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.compose, isAuthenticated])
+
   const updateSearch = (patch: Record<string, unknown>) => {
     void navigate({ to: '/forum', search: { ...search, ...patch }, replace: true })
   }
 
   const selectedBoard = allBoards.find((b) => b.id === form.board_id)
-  const currentBoardId = activeBoard
-    ? activeBoard.children.length > 0
-      ? collectBoards(activeBoard.children).find((b) => b.children.length === 0)?.id ?? activeBoard.id
-      : activeBoard.id
-    : defaultBoardId
   const topics: ForumTopic[] = listQ.data?.data ?? []
   const meta = listQ.data?.meta
 
@@ -323,8 +336,8 @@ function ForumListPage() {
   return (
     <div className="mx-auto w-full max-w-4xl space-y-4">
       <PageHeader
-        title="讨论"
-        description="学术交流、方法与写作、站务反馈都在这里；发帖登录即可，不需要积分。"
+        title="社区"
+        description="荒诞论文体、写作实验、学术生存与站务反馈都在这里；发帖登录即可，不需要积分。"
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" asChild>

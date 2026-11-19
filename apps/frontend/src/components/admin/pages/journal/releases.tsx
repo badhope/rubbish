@@ -76,10 +76,10 @@ function StatusPill({ manifest }: { manifest: ReleaseManifest }) {
   return <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${cls}`}>{label}</span>
 }
 
-export default function AdminReleasesPage() {
+export default function AdminReleasesPage({ initialVolume, initialIssue }: { initialVolume?: string; initialIssue?: string }) {
   const { data, isLoading, isError, refetch } = useReleaseIssues()
-  const [volume, setVolume] = useState('')
-  const [issue, setIssue] = useState('')
+  const [volume, setVolume] = useState(initialVolume ?? '')
+  const [issue, setIssue] = useState(initialIssue ?? '')
   const [checked, setChecked] = useState<ReleaseManifest | null>(null)
   const [scheduleAt, setScheduleAt] = useState('')
   const [approvalNote, setApprovalNote] = useState('')

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { getAuthState } from '@/lib/auth'
-import { useAuth } from '@/hooks/use-auth'
 import {
   useMeProfile,
   useUnreadCount,
@@ -12,8 +11,6 @@ import { MeIdentityHeader } from '@/components/me/me-identity-header'
 import { MeActionBar } from '@/components/me/me-action-bar'
 import { MeTabNav } from '@/components/me/me-tab-nav'
 import { MeOverview } from '@/components/me/me-overview'
-import { MeSubmissions } from '@/components/me/me-submissions'
-import { MeReviews } from '@/components/me/me-reviews'
 import { MeLibrary } from '@/components/me/me-library'
 import { MePoints } from '@/components/me/me-points'
 import { MeSettings } from '@/components/me/me-settings'
@@ -43,16 +40,10 @@ export const Route = createFileRoute('/me')({
 function MePage() {
   const navigate = useNavigate()
   const search = Route.useSearch()
-  const { user } = useAuth()
   const profile = useMeProfile()
   const account = useMe()
-  const reviewAccess = Boolean(
-    profile.data &&
-      (profile.data.identities.includes('reviewer') ||
-        profile.data.permission_role === 'reviewer' ||
-        profile.data.permission_role === 'editor_in_chief' ||
-        (user?.roles ?? []).some((role) => ['reviewer', 'senior_reviewer'].includes(role))),
-  )
+  // 社区版不再暴露审稿入口；历史审稿数据与接口保留，但不在个人中心出现。
+  const reviewable = false
   const unread = useUnreadCount()
   const [notificationsOpen, setNotificationsOpen] = useState(Boolean(search.notifications))
 
@@ -66,11 +57,10 @@ function MePage() {
   }
 
   const data = profile.data
-  const reviewable = reviewAccess
 
   const requestedTab = search.tab ?? 'overview'
   const activeTab: MeTabKey =
-    requestedTab === 'reviews' && !reviewable ? 'overview' : requestedTab
+    requestedTab === 'reviews' || requestedTab === 'submissions' ? 'overview' : requestedTab
 
   const onTabChange = (tab: MeTabKey) => {
     void navigate({ to: '/me', search: { tab }, replace: true })
@@ -78,8 +68,6 @@ function MePage() {
 
   const tabs = [
     { key: 'overview' as const, label: '概览' },
-    { key: 'submissions' as const, label: '投稿' },
-    ...(reviewable ? [{ key: 'reviews' as const, label: '审稿' }] : []),
     { key: 'library' as const, label: '收藏' },
     { key: 'points' as const, label: '积分' },
     { key: 'settings' as const, label: '设置' },
@@ -103,8 +91,6 @@ function MePage() {
             onOpenNotifications={() => setNotificationsOpen(true)}
           />
         ) : null}
-        {activeTab === 'submissions' ? <MeSubmissions section={search.section} /> : null}
-        {activeTab === 'reviews' && reviewable ? <MeReviews reviewable={reviewable} /> : null}
         {activeTab === 'library' ? <MeLibrary section={search.section} /> : null}
         {activeTab === 'points' ? <MePoints profile={data} /> : null}
         {activeTab === 'settings' ? <MeSettings username={data.username} initialSection={search.section} /> : null}

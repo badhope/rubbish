@@ -111,7 +111,7 @@ export function RegisterPage() {
         <CardHeader>
           <CardTitle className="text-2xl">注册</CardTitle>
           <CardDescription>
-          创建 Rubbish 账号，即可投稿、审稿与在线阅读。
+          创建 Rubbish 账号，即可发帖、评论与在线阅读。
           {capabilities.isFetched && !emailDelivery && (
             <span className="mt-2 block text-xs text-muted-foreground">
               当前站点未开通邮件服务：注册后可直接用邮箱和密码登录，邮箱验证与找回密码暂不可用，
