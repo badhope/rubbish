@@ -62,7 +62,7 @@ function CalibrationPage() {
         title="审稿人季度校准"
         description="看每位审稿人相对同稿共识的平均偏移与推荐分布；只用于定向沟通，不自动降级或封禁。"
         actions={
-          <Link to="/editor/workbench">
+          <Link to="/submissions/pending" search={{ stage: 'pipeline' }}>
             <Button variant="outline" size="sm">
               <ArrowLeft className="mr-1 h-4 w-4" aria-hidden />
               返回工作台

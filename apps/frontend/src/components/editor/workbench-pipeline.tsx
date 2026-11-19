@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { createFileRoute, Link, redirect } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import {
   AlertTriangle,
   CheckCircle2,
@@ -18,7 +18,6 @@ import {
   XCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { getAuthState } from '@/lib/auth'
 import {
   useBatchAssign,
   useCancelAssignment,
@@ -68,18 +67,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-export const Route = createFileRoute('/editor/workbench')({
-  beforeLoad: () => {
-    const state = getAuthState()
-    if (!state.isAuthenticated) throw redirect({ to: '/login', search: { redirect: '/editor/workbench' } })
-    const roles = state.user?.roles ?? []
-    if (!state.isAdmin && !roles.some((r) => ['editor', 'section_editor', 'editor_in_chief'].includes(r))) {
-      throw redirect({ to: '/403' })
-    }
-  },
-  component: EditorWorkbenchPage,
-})
-
 type ColumnKey = 'to_assign' | 'in_review' | 'rework' | 'to_decide' | 'decided'
 
 const COLUMN_META: { key: ColumnKey; title: string; accent: string }[] = [
@@ -90,7 +77,7 @@ const COLUMN_META: { key: ColumnKey; title: string; accent: string }[] = [
   { key: 'decided', title: '已决定', accent: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40' },
 ]
 
-function EditorWorkbenchPage() {
+export function EditorPipeline() {
   const { data, isLoading, isError, refetch } = useEditorWorkbench()
   const candidates = useReviewerCandidates(200)
   const disciplines = useDisciplines()
@@ -319,10 +306,15 @@ function EditorWorkbenchPage() {
   return (
     <div>
       <PageHeader
-        title="主编工作台"
+        title="编辑流水线"
         description="五栏流水线：待指派 → 评审中 → 返修中 → 待裁决 → 已决定。"
         actions={
           <>
+            <Link to="/submissions/pending">
+              <Button variant="outline" size="sm">
+                待审列表
+              </Button>
+            </Link>
             <Link to="/submissions/pending" search={{ stage: 'triage' }}>
               <Button variant="outline" size="sm">
                 <FileText className="mr-1 h-4 w-4" aria-hidden />

@@ -45,15 +45,17 @@ const WORKFLOWS: {
 }[][] = [
   [
     {
-      title: "主编工作台",
+      title: "编辑流水线",
       desc: "指派 · 催办 · 裁决 · 冲突",
-      to: "/editor/workbench",
+      to: "/submissions/pending",
+      search: { stage: "pipeline" },
       icon: Gavel,
     },
     {
-      title: "初筛工作台",
+      title: "初筛队列",
       desc: "初审 · 送审 · 推荐",
       to: "/submissions/pending",
+      search: { stage: "triage" },
       icon: ClipboardCheck,
     },
     {

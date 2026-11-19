@@ -50,8 +50,9 @@ export const MOBILE_TABS: MobileTab[] = [
 export const MOBILE_MORE: MobileMoreItem[] = [
   { to: '/review/assignments', label: '审稿工作台', icon: ClipboardCheck, auth: true, roles: ['reviewer', 'senior_reviewer', 'editor_in_chief'], group: '工作台' },
   {
-    to: '/editor/workbench',
-    label: '主编工作台',
+    to: '/submissions/pending',
+    search: { stage: 'pipeline' },
+    label: '编辑工作台',
     icon: Gavel,
     auth: true,
     roles: ['editor', 'section_editor', 'board_editor', 'deputy_editor', 'chief_editor', 'editor_in_chief'],

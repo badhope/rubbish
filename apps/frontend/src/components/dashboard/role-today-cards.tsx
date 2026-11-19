@@ -128,7 +128,8 @@ function EditorTodayCard() {
           </div>
         </div>
         <Link
-          to="/editor/workbench"
+          to="/submissions/pending"
+          search={{ stage: 'pipeline' }}
           className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
         >
           编辑台 <ArrowRight className="h-3.5 w-3.5" aria-hidden />
@@ -144,14 +145,16 @@ function EditorTodayCard() {
           <span className="font-semibold tabular-nums">{triageCount}</span>
         </Link>
         <Link
-          to="/editor/workbench"
+          to="/submissions/pending"
+          search={{ stage: 'pipeline' }}
           className="flex items-center justify-between rounded-md border border-dashed px-3 py-2 transition-colors hover:border-primary/40 hover:bg-muted/30"
         >
           <span className="text-xs text-muted-foreground">待指派</span>
           <span className="font-semibold tabular-nums">{toAssign}</span>
         </Link>
         <Link
-          to="/editor/workbench"
+          to="/submissions/pending"
+          search={{ stage: 'pipeline' }}
           className="flex items-center justify-between rounded-md border border-dashed px-3 py-2 transition-colors hover:border-primary/40 hover:bg-muted/30"
         >
           <span className="flex items-center gap-1 text-xs text-muted-foreground">

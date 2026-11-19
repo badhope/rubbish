@@ -65,8 +65,9 @@ const NAV: NavItem[] = [
     subgroup: '编辑与投稿',
   },
   {
-    to: '/editor/workbench',
-    label: '主编工作台',
+    to: '/submissions/pending',
+    search: { stage: 'pipeline' },
+    label: '编辑工作台',
     icon: Gavel,
     auth: true,
     roles: ['editor', 'section_editor', 'board_editor', 'deputy_editor', 'chief_editor', 'editor_in_chief'],
@@ -268,9 +269,9 @@ export function AppShell() {
         )}
         {(user.roles?.some((r) => ['editor', 'section_editor', 'board_editor', 'deputy_editor', 'chief_editor', 'editor_in_chief'].includes(r)) || isAdmin) && (
           <DropdownMenuItem asChild>
-            <Link to="/editor/workbench">
+            <Link to="/submissions/pending" search={{ stage: 'pipeline' }}>
               <Gavel className="h-4 w-4" />
-              {text('主编工作台', lang)}
+              {text('编辑工作台', lang)}
             </Link>
           </DropdownMenuItem>
         )}

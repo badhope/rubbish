@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { createFileRoute, Link, redirect, useNavigate, useSearch } from '@tanstack/react-router'
 import {
   ClipboardList,
+  Columns3,
   Download,
   Eye,
   FileText,
@@ -13,6 +14,7 @@ import {
 import { toast } from 'sonner'
 import { waitingChip } from '@/components/common/waiting-chip'
 import { TriageQueue } from '@/components/editor/triage-queue'
+import { EditorPipeline } from '@/components/editor/workbench-pipeline'
 import { getAuthState } from '@/lib/auth'
 import { normalizeAbstract } from '@/lib/abstract'
 import { useAuth } from '@/hooks/use-auth'
@@ -88,11 +90,23 @@ export const Route = createFileRoute('/submissions/pending')({
     const { isAuthenticated, isAdmin, user } = getAuthState()
     if (!isAuthenticated) throw redirect({ to: '/login' })
     const roles = user?.roles ?? []
-    if (!isAdmin && !roles.some((r) => ['editor', 'section_editor', 'editor_in_chief'].includes(r))) {
+    if (
+      !isAdmin &&
+      !roles.some((r) =>
+        [
+          'editor',
+          'section_editor',
+          'board_editor',
+          'deputy_editor',
+          'chief_editor',
+          'editor_in_chief',
+        ].includes(r),
+      )
+    ) {
       throw redirect({ to: '/me' })
     }
   },
-  component: PendingSubmissionsPage,
+  component: PendingPage,
 })
 
 const DECISION_OPTIONS: { value: EditorDecision; label: string; hint?: string }[] = [
@@ -119,7 +133,7 @@ const STATUS_TABS: { value: StatusTab; label: string }[] = [
 interface PendingSearch {
   status?: StatusTab
   page?: number
-  stage?: 'triage'
+  stage?: 'triage' | 'pipeline'
 }
 
 function statusBadge(status: string) {
@@ -200,6 +214,13 @@ function decisionDisabledReason(s: SubmissionResponse): string | undefined {
   return canOpenDecision(s) ? undefined : '当前状态不可裁决'
 }
 
+function PendingPage() {
+  const search = useSearch({ strict: false }) as PendingSearch
+  if (search.stage === 'triage') return <TriageQueue />
+  if (search.stage === 'pipeline') return <EditorPipeline />
+  return <PendingSubmissionsPage />
+}
+
 function PendingSubmissionsPage() {
   const navigate = useNavigate()
   const search = useSearch({ strict: false }) as PendingSearch
@@ -239,10 +260,6 @@ function PendingSubmissionsPage() {
   // 做决定时内嵌审稿报告摘要：推荐 + 评分 + 编辑保密意见，编辑不必另开弹窗
   const decisionReportsQ = useSubmissionReports(decisionTarget?.id ?? 0)
   const decisionMatrixQ = useReviewMatrix(decisionTarget?.id ?? 0)
-
-  if (search.stage === 'triage') {
-    return <TriageQueue />
-  }
 
   const updateSearch = (patch: Partial<PendingSearch>) => {
     void navigate({
@@ -310,12 +327,20 @@ function PendingSubmissionsPage() {
         title="初筛工作台"
         description="分配审稿人、查看审稿报告、做最终决定。支持按状态筛选全部提交。"
         actions={
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/submissions/pending" search={{ stage: 'triage' }}>
-              <ClipboardList className="mr-1 h-4 w-4" />
-              初筛队列
-            </Link>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/submissions/pending" search={{ stage: 'pipeline' }}>
+                <Columns3 className="mr-1 h-4 w-4" />
+                流水线
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/submissions/pending" search={{ stage: 'triage' }}>
+                <ClipboardList className="mr-1 h-4 w-4" />
+                初筛队列
+              </Link>
+            </Button>
+          </div>
         }
       />
 

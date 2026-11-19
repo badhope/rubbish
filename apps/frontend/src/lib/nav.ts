@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 
 export interface NavItem {
   to: string
+  search?: Record<string, string>
   label: string
   icon: LucideIcon
   auth?: boolean

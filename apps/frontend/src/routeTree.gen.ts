@@ -31,7 +31,6 @@ import { Route as CatalogIndexRouteImport } from './routes/catalog/index'
 import { Route as CatalogResourceIdRouteImport } from './routes/catalog/$resourceId'
 import { Route as ClaimResourceIdRouteImport } from './routes/claim/$resourceId'
 import { Route as EditorCalibrationRouteImport } from './routes/editor/calibration'
-import { Route as EditorWorkbenchRouteImport } from './routes/editor/workbench'
 import { Route as ForumIndexRouteImport } from './routes/forum/index'
 import { Route as ForumTopicIdRouteImport } from './routes/forum/$topicId'
 import { Route as LibraryListIdRouteImport } from './routes/library/$listId'
@@ -155,11 +154,6 @@ const EditorCalibrationRoute = EditorCalibrationRouteImport.update({
   path: '/editor/calibration',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EditorWorkbenchRoute = EditorWorkbenchRouteImport.update({
-  id: '/editor/workbench',
-  path: '/editor/workbench',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ForumIndexRoute = ForumIndexRouteImport.update({
   id: '/forum/',
   path: '/forum/',
@@ -242,7 +236,6 @@ export interface FileRoutesByFullPath {
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
   '/claim/$resourceId': typeof ClaimResourceIdRoute
   '/editor/calibration': typeof EditorCalibrationRoute
-  '/editor/workbench': typeof EditorWorkbenchRoute
   '/forum/$topicId': typeof ForumTopicIdRoute
   '/library/$listId': typeof LibraryListIdRoute
   '/review/assignments': typeof ReviewAssignmentsRoute
@@ -278,7 +271,6 @@ export interface FileRoutesByTo {
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
   '/claim/$resourceId': typeof ClaimResourceIdRoute
   '/editor/calibration': typeof EditorCalibrationRoute
-  '/editor/workbench': typeof EditorWorkbenchRoute
   '/forum/$topicId': typeof ForumTopicIdRoute
   '/library/$listId': typeof LibraryListIdRoute
   '/review/assignments': typeof ReviewAssignmentsRoute
@@ -316,7 +308,6 @@ export interface FileRoutesById {
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
   '/claim/$resourceId': typeof ClaimResourceIdRoute
   '/editor/calibration': typeof EditorCalibrationRoute
-  '/editor/workbench': typeof EditorWorkbenchRoute
   '/forum/$topicId': typeof ForumTopicIdRoute
   '/library/$listId': typeof LibraryListIdRoute
   '/review/assignments': typeof ReviewAssignmentsRoute
@@ -355,7 +346,6 @@ export interface FileRouteTypes {
     | '/catalog/$resourceId'
     | '/claim/$resourceId'
     | '/editor/calibration'
-    | '/editor/workbench'
     | '/forum/$topicId'
     | '/library/$listId'
     | '/review/assignments'
@@ -391,7 +381,6 @@ export interface FileRouteTypes {
     | '/catalog/$resourceId'
     | '/claim/$resourceId'
     | '/editor/calibration'
-    | '/editor/workbench'
     | '/forum/$topicId'
     | '/library/$listId'
     | '/review/assignments'
@@ -428,7 +417,6 @@ export interface FileRouteTypes {
     | '/catalog/$resourceId'
     | '/claim/$resourceId'
     | '/editor/calibration'
-    | '/editor/workbench'
     | '/forum/$topicId'
     | '/library/$listId'
     | '/review/assignments'
@@ -461,7 +449,6 @@ export interface RootRouteChildren {
   CatalogResourceIdRoute: typeof CatalogResourceIdRoute
   ClaimResourceIdRoute: typeof ClaimResourceIdRoute
   EditorCalibrationRoute: typeof EditorCalibrationRoute
-  EditorWorkbenchRoute: typeof EditorWorkbenchRoute
   ForumTopicIdRoute: typeof ForumTopicIdRoute
   LibraryListIdRoute: typeof LibraryListIdRoute
   ReviewAssignmentsRoute: typeof ReviewAssignmentsRoute
@@ -632,13 +619,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EditorCalibrationRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/editor/workbench': {
-      id: '/editor/workbench'
-      path: '/editor/workbench'
-      fullPath: '/editor/workbench'
-      preLoaderRoute: typeof EditorWorkbenchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/forum/': {
       id: '/forum/'
       path: '/forum'
@@ -764,7 +744,6 @@ const rootRouteChildren: RootRouteChildren = {
   CatalogResourceIdRoute: CatalogResourceIdRoute,
   ClaimResourceIdRoute: ClaimResourceIdRoute,
   EditorCalibrationRoute: EditorCalibrationRoute,
-  EditorWorkbenchRoute: EditorWorkbenchRoute,
   ForumTopicIdRoute: ForumTopicIdRoute,
   LibraryListIdRoute: LibraryListIdRoute,
   ReviewAssignmentsRoute: ReviewAssignmentsRoute,
