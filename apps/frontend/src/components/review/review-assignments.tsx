@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useSearch } from '@tanstack/react-router'
-import { Check, Download, Eye, FileText, X, Zap } from 'lucide-react'
+import { useNavigate, useSearch } from '@tanstack/react-router'
+import { Check, Download, Eye, FileText, X } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   downloadSubmissionFile,
@@ -16,7 +16,7 @@ import {
 } from '@/hooks/api/use-modules'
 import type { AssignmentStatus, ReviewSubmit } from '@/lib/types'
 import { typeLabel } from '@/lib/resource-labels'
-import { extractError } from '@/lib/utils'
+import { cn, extractError } from '@/lib/utils'
 import { isSafeExternalUrl, safeHref } from '@/lib/url-safety'
 import { PageHeader } from '@/components/common/page-header'
 import { ReviewerConflictCard } from '@/components/review/reviewer-conflict-card'
@@ -41,7 +41,6 @@ import {
 } from '@/components/review/rubric-score-fields'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -334,23 +333,32 @@ export function ReviewAssignments() {
         <div className="mt-1">审稿时请按上述版式与编辑规范核对结构、图表题注、参考文献和篇幅分档。</div>
       </div>
 
-      <Tabs
-        value={statusTab}
-        onValueChange={(v) =>
-          updateSearch({
-            status: v as AssignmentStatus | 'all',
-            page: 1,
-          })
-        }
+      <div
+        role="tablist"
+        aria-label="按审稿状态筛选"
+        className="mb-5 flex items-center gap-1 overflow-x-auto border-b pb-2"
       >
-        <TabsList className="!grid !h-auto grid-cols-4 justify-start gap-1 overflow-visible p-1 sm:!inline-flex sm:!h-9 sm:flex-nowrap">
-          {STATUS_TABS.map((t) => (
-            <TabsTrigger key={t.value} value={t.value} className="h-8 px-2.5 text-xs">
+        {STATUS_TABS.map((t) => {
+          const active = statusTab === t.value
+          return (
+            <button
+              key={t.value}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => updateSearch({ status: t.value, page: 1 })}
+              className={cn(
+                'shrink-0 rounded-md px-2.5 py-1.5 text-xs transition-colors',
+                active
+                  ? 'bg-primary/10 font-medium text-primary'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+              )}
+            >
               {t.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+            </button>
+          )
+        })}
+      </div>
 
       {isLoading ? (
         <LoadingSkeleton rows={4} />
@@ -362,12 +370,12 @@ export function ReviewAssignments() {
           description="编辑分配审稿任务后会显示在这里。"
         />
       ) : (
-        <div className="space-y-4">
+        <div className="divide-y border-y">
           {data.data.map((a) => (
-            <Card key={a.id}>
-              <CardContent className="space-y-3">
-                <div className="space-y-1">
-                  <h3 className="font-medium">
+            <div key={a.id} className="py-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0 space-y-1">
+                  <h3 className="text-sm font-medium leading-snug">
                     {a.submission_title ?? `#${a.submission_id}`}
                   </h3>
                   <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -382,14 +390,11 @@ export function ReviewAssignments() {
                       <span>· 截止 {new Date(a.due_date).toLocaleString()}</span>
                     )}
                     {a.completed_at && (
-                      <span>
-                        · 完成于 {new Date(a.completed_at).toLocaleString()}
-                      </span>
+                      <span>· 完成于 {new Date(a.completed_at).toLocaleString()}</span>
                     )}
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  {/* 审稿人在 pending/accepted/completed 都可查看完整稿件（declined/cancelled 不可） */}
                   {['pending', 'accepted', 'completed'].includes(a.status) && (
                     <Button
                       variant="outline"
@@ -419,16 +424,9 @@ export function ReviewAssignments() {
                     </>
                   )}
                   {a.status === 'accepted' && (
-                    <>
-                      <Button size="sm" onClick={() => openReviewForm(a.id)}>
-                        <FileText className="h-4 w-4" /> 填写审稿报告
-                      </Button>
-                      <Link to="/review/quick/$id" params={{ id: String(a.id) }}>
-                        <Button size="sm" variant="outline">
-                          <Zap className="h-4 w-4" /> 手机快速评审
-                        </Button>
-                      </Link>
-                    </>
+                    <Button size="sm" onClick={() => openReviewForm(a.id)}>
+                      <FileText className="h-4 w-4" /> 填写审稿报告
+                    </Button>
                   )}
                   {a.status === 'completed' && (
                     <Badge variant="outline" className="gap-1">
@@ -436,20 +434,20 @@ export function ReviewAssignments() {
                     </Badge>
                   )}
                 </div>
-                {a.status === 'completed' && a.report_id && (
-                  <div className="mt-2 flex flex-wrap items-center gap-2 border-t pt-2">
-                    <ReviewAttachmentLinks
-                      reportId={a.report_id}
-                      attachments={a.attachments}
-                    />
-                    <ReviewAttachmentUploadButton
-                      reportId={a.report_id}
-                      onUploaded={() => void refetch()}
-                    />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+              </div>
+              {a.status === 'completed' && a.report_id && (
+                <div className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3">
+                  <ReviewAttachmentLinks
+                    reportId={a.report_id}
+                    attachments={a.attachments}
+                  />
+                  <ReviewAttachmentUploadButton
+                    reportId={a.report_id}
+                    onUploaded={() => void refetch()}
+                  />
+                </div>
+              )}
+            </div>
           ))}
         </div>
       )}
