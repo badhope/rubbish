@@ -8,8 +8,9 @@ import IssuesPage from '@/components/admin/pages/journal/issues'
 import ReleasesPage from '@/components/admin/pages/journal/releases'
 import JournalInfoPage from '@/components/admin/pages/journal/journal'
 import SettingsPage from '@/components/admin/pages/journal/settings'
+import { NewResourcePage } from '@/components/admin/pages/journal/new-resource'
 
-type SectionKey = 'volumes' | 'issues' | 'releases' | 'info' | 'settings'
+type SectionKey = 'volumes' | 'issues' | 'releases' | 'info' | 'resources' | 'settings'
 
 interface JournalSearch {
   section?: string
@@ -21,11 +22,12 @@ const SECTIONS: readonly AdminSectionItem<SectionKey>[] = [
   { key: 'issues', label: '期' },
   { key: 'releases', label: '发布' },
   { key: 'info', label: '期刊信息' },
+  { key: 'resources', label: '资源录入' },
   { key: 'settings', label: '期刊设置' },
 ]
 
 function isSectionKey(value: string | undefined): value is SectionKey {
-  return value === 'volumes' || value === 'issues' || value === 'releases' || value === 'info' || value === 'settings'
+  return value === 'volumes' || value === 'issues' || value === 'releases' || value === 'info' || value === 'resources' || value === 'settings'
 }
 
 export const Route = createFileRoute('/admin/journal')({
@@ -60,6 +62,7 @@ function AdminJournalPage() {
       {section === 'issues' ? <IssuesPage volume={effectiveVolume} /> : null}
       {section === 'releases' ? <ReleasesPage /> : null}
       {section === 'info' ? <JournalInfoPage /> : null}
+      {section === 'resources' ? <NewResourcePage /> : null}
       {section === 'settings' ? <SettingsPage /> : null}
     </div>
   )

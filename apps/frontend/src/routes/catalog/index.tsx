@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute, Link, useNavigate, useSearch } from '@tanstack/react-router'
-import { AlertTriangle, ChevronDown, Download, FileDown, Plus, RefreshCw, SlidersHorizontal } from 'lucide-react'
+import { AlertTriangle, ChevronDown, Download, FileDown, RefreshCw, SlidersHorizontal } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/use-auth'
 import { useIsMobile } from '@/hooks/use-is-mobile'
@@ -120,7 +120,7 @@ const EXPORT_FORMATS: { format: AnyExportFormat; label: string }[] = [
 export function CatalogListPage() {
   const navigate = useNavigate()
   const search = useSearch({ strict: false }) as CatalogSearch
-  const { isAdmin, isAuthenticated } = useAuth()
+  const { isAuthenticated } = useAuth()
   const isMobile = useIsMobile()
 
   // 轨道切换 → 后端 ?track=paper|essay（按 content_track 过滤，与旧 content_category 解耦）。
@@ -298,16 +298,6 @@ export function CatalogListPage() {
             : effectiveTrack === 'paper'
               ? '学术论文与荒诞论文各自独立分区：一种认真研究，一种用论文格式认真论证荒诞。'
               : '论文与副刊分属两本刊；论文内部再分学术论文与荒诞论文。'
-        }
-        actions={
-          isAdmin && !(!search.q && effectiveTrack === 'paper') ? (
-            <Button asChild>
-              <Link to="/catalog/new">
-                <Plus className="h-4 w-4" />
-                新建资源
-              </Link>
-            </Button>
-          ) : undefined
         }
       />
 

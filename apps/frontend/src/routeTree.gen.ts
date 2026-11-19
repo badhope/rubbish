@@ -33,7 +33,6 @@ import { Route as AdminPeopleRouteImport } from './routes/admin/people'
 import { Route as AdminSystemRouteImport } from './routes/admin/system'
 import { Route as CatalogIndexRouteImport } from './routes/catalog/index'
 import { Route as CatalogResourceIdRouteImport } from './routes/catalog/$resourceId'
-import { Route as CatalogNewRouteImport } from './routes/catalog/new'
 import { Route as ClaimResourceIdRouteImport } from './routes/claim/$resourceId'
 import { Route as DeskSubscribeRouteImport } from './routes/desk_.subscribe'
 import { Route as EditorCalibrationRouteImport } from './routes/editor/calibration'
@@ -174,11 +173,6 @@ const CatalogResourceIdRoute = CatalogResourceIdRouteImport.update({
   path: '/catalog/$resourceId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CatalogNewRoute = CatalogNewRouteImport.update({
-  id: '/catalog/new',
-  path: '/catalog/new',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ClaimResourceIdRoute = ClaimResourceIdRouteImport.update({
   id: '/claim/$resourceId',
   path: '/claim/$resourceId',
@@ -298,7 +292,6 @@ export interface FileRoutesByFullPath {
   '/admin/people': typeof AdminPeopleRoute
   '/admin/system': typeof AdminSystemRoute
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
-  '/catalog/new': typeof CatalogNewRoute
   '/claim/$resourceId': typeof ClaimResourceIdRoute
   '/desk/subscribe': typeof DeskSubscribeRoute
   '/editor/calibration': typeof EditorCalibrationRoute
@@ -343,7 +336,6 @@ export interface FileRoutesByTo {
   '/admin/people': typeof AdminPeopleRoute
   '/admin/system': typeof AdminSystemRoute
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
-  '/catalog/new': typeof CatalogNewRoute
   '/claim/$resourceId': typeof ClaimResourceIdRoute
   '/desk/subscribe': typeof DeskSubscribeRoute
   '/editor/calibration': typeof EditorCalibrationRoute
@@ -390,7 +382,6 @@ export interface FileRoutesById {
   '/admin/people': typeof AdminPeopleRoute
   '/admin/system': typeof AdminSystemRoute
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
-  '/catalog/new': typeof CatalogNewRoute
   '/claim/$resourceId': typeof ClaimResourceIdRoute
   '/desk_/subscribe': typeof DeskSubscribeRoute
   '/editor/calibration': typeof EditorCalibrationRoute
@@ -438,7 +429,6 @@ export interface FileRouteTypes {
     | '/admin/people'
     | '/admin/system'
     | '/catalog/$resourceId'
-    | '/catalog/new'
     | '/claim/$resourceId'
     | '/desk/subscribe'
     | '/editor/calibration'
@@ -483,7 +473,6 @@ export interface FileRouteTypes {
     | '/admin/people'
     | '/admin/system'
     | '/catalog/$resourceId'
-    | '/catalog/new'
     | '/claim/$resourceId'
     | '/desk/subscribe'
     | '/editor/calibration'
@@ -529,7 +518,6 @@ export interface FileRouteTypes {
     | '/admin/people'
     | '/admin/system'
     | '/catalog/$resourceId'
-    | '/catalog/new'
     | '/claim/$resourceId'
     | '/desk_/subscribe'
     | '/editor/calibration'
@@ -571,7 +559,6 @@ export interface RootRouteChildren {
   SupportRoute: typeof SupportRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   CatalogResourceIdRoute: typeof CatalogResourceIdRoute
-  CatalogNewRoute: typeof CatalogNewRoute
   ClaimResourceIdRoute: typeof ClaimResourceIdRoute
   DeskSubscribeRoute: typeof DeskSubscribeRoute
   EditorCalibrationRoute: typeof EditorCalibrationRoute
@@ -763,13 +750,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CatalogResourceIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/catalog/new': {
-      id: '/catalog/new'
-      path: '/catalog/new'
-      fullPath: '/catalog/new'
-      preLoaderRoute: typeof CatalogNewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/claim/$resourceId': {
       id: '/claim/$resourceId'
       path: '/claim/$resourceId'
@@ -946,7 +926,6 @@ const rootRouteChildren: RootRouteChildren = {
   SupportRoute: SupportRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   CatalogResourceIdRoute: CatalogResourceIdRoute,
-  CatalogNewRoute: CatalogNewRoute,
   ClaimResourceIdRoute: ClaimResourceIdRoute,
   DeskSubscribeRoute: DeskSubscribeRoute,
   EditorCalibrationRoute: EditorCalibrationRoute,

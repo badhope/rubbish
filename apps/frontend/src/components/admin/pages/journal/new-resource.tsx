@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { AxiosError } from 'axios'
 import { toast } from 'sonner'
-import { requireAdminGuard } from '@/lib/route-guards'
 import { parseListField } from '@/lib/utils'
 import { DISCIPLINES } from '@/lib/disciplines'
 import { ARTICLE_SECTION_OPTIONS } from '@/lib/article-sections'
@@ -21,13 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-
-export const Route = createFileRoute('/catalog/new')({
-  beforeLoad: () => {
-    requireAdminGuard()
-  },
-  component: NewResourcePage,
-})
 
 const TYPE_OPTIONS: { value: ResourceType; label: string }[] = [
   { value: 'paper', label: '论文' },
@@ -68,7 +60,7 @@ interface FormState {
   slug: string
 }
 
-function NewResourcePage() {
+export function NewResourcePage() {
   const navigate = useNavigate()
   const createMut = useCreateResource()
 

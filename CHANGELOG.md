@@ -10,6 +10,7 @@
 - `/archive`、`/sections` 独立路由删除；栏目、卷、期与按期排序并入 `/catalog` 筛选。
 - `/ingest` 独立页删除；投稿向导第一步新增“从文献导入题录”，支持 Crossref、arXiv、PubMed、OpenAlex、Semantic Scholar 编号导入；只覆盖题录字段，不覆盖正文。
 - `/submissions` 页头只保留“新建提交”，主编工作台收进用户菜单。
+- `/catalog/new` 删除；管理员资源录入收进 `/admin/journal?section=resources`。
 - sitemap 改用 `/catalog?section=` 与 `/catalog?volume=&issue=`，不再收录旧归档/栏目页。
 
 ### Removed
