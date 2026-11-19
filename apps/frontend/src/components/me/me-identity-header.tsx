@@ -72,7 +72,7 @@ export function MeIdentityHeader({
         <div className="flex shrink-0 flex-wrap items-stretch gap-2">
           <Link
             to="/me"
-            search={{ tab: 'coins' }}
+            search={{ tab: 'points' }}
             className="desk-stat group flex min-w-[132px] items-center gap-3 border px-3 py-2.5 transition-colors hover:border-primary/40"
           >
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -80,7 +80,7 @@ export function MeIdentityHeader({
             </span>
             <span className="min-w-0">
               <span className="block text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                R COIN
+                POINTS
               </span>
               <span className="block font-mono text-lg font-semibold leading-tight text-primary">
                 {formatCoins(balance)}

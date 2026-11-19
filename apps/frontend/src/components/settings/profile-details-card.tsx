@@ -153,7 +153,7 @@ export function ProfileDetailsCard({ initial }: { initial?: UserResponse | null 
       await unlockAccent.mutateAsync()
       toast.success('已解锁自定义主题色')
     } catch (err) {
-      toast.error(extractError(err, 'R 币不足，先签到攒币'))
+      toast.error(extractError(err, '积分不足，先签到攒积分'))
     }
   }
 
@@ -333,7 +333,7 @@ export function ProfileDetailsCard({ initial }: { initial?: UserResponse | null 
             <Label>主页主题色</Label>
             {!accentUnlocked && (
               <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                <LockKeyhole className="h-3 w-3" /> 100 R 币解锁
+                <LockKeyhole className="h-3 w-3" /> 100 积分解锁
               </span>
             )}
           </div>
@@ -347,7 +347,7 @@ export function ProfileDetailsCard({ initial }: { initial?: UserResponse | null 
                   disabled={!accentUnlocked && !active}
                   onClick={() => {
                     if (!accentUnlocked && !active) {
-                      toast.info('先花 100 R 币解锁自定义主题色')
+                      toast.info('先花 100 积分解锁自定义主题色')
                       return
                     }
                     set('accent_color', accent.value)

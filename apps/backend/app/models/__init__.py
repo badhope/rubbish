@@ -231,7 +231,7 @@ class User(Base, TenantScopedMixin):
     profile_visibility: Mapped[str] = mapped_column(
         String(16), nullable=False, default="public", server_default="public"
     )
-    # --- R 币（迁移 033）：可消费的社区货币，与 XP/等级完全分开 ---
+    # --- 站内积分（迁移 033）：只记录贡献与消费，与 XP/等级完全分开 ---
     coin_balance: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0, server_default="0"
     )

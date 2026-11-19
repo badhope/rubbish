@@ -1,4 +1,4 @@
-"""Public profile customization + R coin wallet smoke tests."""
+"""Public profile customization + points wallet smoke tests."""
 
 from __future__ import annotations
 
@@ -72,7 +72,6 @@ async def test_wallet_checkin_is_idempotent(client: AsyncClient, test_user: dict
     wallet = await client.get("/api/gamification/wallet", headers=auth_headers(test_user))
     assert wallet.status_code == 200
     assert wallet.json()["balance"] == first.json()["balance"]
-    assert wallet.json()["coin_per_yuan"] == 100
     assert any(e["reason"] == "checkin.daily" for e in wallet.json()["recent"])
 
 
@@ -138,6 +137,6 @@ async def test_admin_can_set_rule_and_daily_cap(
     assert res.json()["is_active"] is False
 
     checkin = await client.post("/api/gamification/wallet/checkin", headers=auth_headers(test_user))
-    # 签到仍发 XP，但 R 币规则被停用，钱包余额不增加。
+    # 签到仍发 XP，但积分规则被停用，钱包余额不增加。
     assert checkin.status_code == 200
     assert checkin.json()["balance"] == 0

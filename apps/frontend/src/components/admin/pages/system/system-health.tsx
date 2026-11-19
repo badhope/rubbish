@@ -219,7 +219,7 @@ export default function SystemHealthPage() {
                 <p className="font-medium tabular-nums">{data.counts.new_users_24h ?? '—'}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">24h 发放 R 币</p>
+                <p className="text-xs text-muted-foreground">24h 发放积分</p>
                 <p className="font-medium tabular-nums">{data.counts.coin_issued_24h ?? '—'}</p>
               </div>
               <div>

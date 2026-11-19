@@ -169,7 +169,7 @@ async def award_points(
             note=note,
         )
     )
-    # 同一业务动作顺带发 R 币（独立 identity，不影响身份等级）。
+    # 同一业务动作顺带发积分（独立 identity，不影响身份等级）。
     from app.domain.gamification import currency
 
     await currency.award_for_reason(db, user, reason, ref_type=ref_type, ref_id=ref_id)

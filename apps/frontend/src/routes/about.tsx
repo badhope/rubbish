@@ -210,9 +210,9 @@ function AboutPage() {
             编辑部邮箱：<a href="mailto:info@rubbishasci.cn" className="font-medium text-primary hover:underline">info@rubbishasci.cn</a>
           </p>
           <p className="mt-3 text-sm text-muted-foreground">
-            本刊无广告、无付费墙，运行成本靠读者自愿支持：
+            本刊无广告、无付费墙，服务器与域名成本公开在这里：
             <Link to="/support" className="ml-1 text-primary hover:underline">
-              支持本刊
+              成本账本
             </Link>
           </p>
         </RevealSection>

@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
-import { ArrowRight, CheckCheck, Coins, Gift, QrCode, ShoppingBag, Sparkles } from 'lucide-react'
+import { ArrowRight, CheckCheck, Coins, Gift, ShoppingBag, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   useMyPurchases,
   usePurchaseItem,
-  useShopExchange,
   useShopItems,
 } from '@/hooks/api/use-shop'
 import { useCheckin, useWallet } from '@/hooks/api/use-currency'
@@ -39,12 +38,11 @@ function SectionTitle({
   )
 }
 
-export function MeCoins({ profile }: { profile: MeProfile }) {
+export function MePoints({ profile }: { profile: MeProfile }) {
   const wallet = useWallet()
   const checkin = useCheckin()
   const items = useShopItems()
   const purchases = useMyPurchases()
-  const exchange = useShopExchange()
   const buy = usePurchaseItem()
   const [buyingId, setBuyingId] = useState<number | null>(null)
   const [showAllShop, setShowAllShop] = useState(false)
@@ -54,7 +52,7 @@ export function MeCoins({ profile }: { profile: MeProfile }) {
   const onCheckin = async () => {
     try {
       const result = await checkin.mutateAsync()
-      if (result.checked_in_today) toast.success('签到成功，R 币已到账')
+      if (result.checked_in_today) toast.success('签到成功，积分已到账')
       else toast.info('今天已经签到过了')
     } catch (err) {
       toast.error(extractError(err, '签到失败'))
@@ -78,21 +76,21 @@ export function MeCoins({ profile }: { profile: MeProfile }) {
       <section>
         <SectionTitle
           kicker="BALANCE"
-          title="R 币"
-          hint="站内货币；100 R 对应 1 元购买力。日常收入有上限，不鼓励刷量。"
+          title="积分"
+          hint="站内积分，无现金价值；不可充值、不可兑换现金、不可转让。日常收入有上限，不鼓励刷量。"
         />
         <div className="grid gap-4 border-y py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
           <div>
             <p className="font-serif text-4xl leading-none tracking-tight text-primary">
               {formatCoins(wallet.data?.balance)}
-              <span className="ml-2 font-sans text-sm font-normal text-muted-foreground">R</span>
+              <span className="ml-2 font-sans text-sm font-normal text-muted-foreground">积分</span>
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
-              约 ¥{wallet.data?.balance_yuan?.toFixed(2) ?? '0.00'} · 累计获得 {formatCoins(wallet.data?.total_earned)} R
+              累计获得 {formatCoins(wallet.data?.total_earned)} 积分
             </p>
             <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
-              <span>今日收入上限 {wallet.data?.daily_earn_cap ?? 5} R</span>
-              <span>本月全站已发 {wallet.data?.monthly_issued ?? 0} / {wallet.data?.monthly_issue_cap ?? 5000} R</span>
+              <span>今日收入上限 {wallet.data?.daily_earn_cap ?? 5} 积分</span>
+              <span>本月全站已发 {wallet.data?.monthly_issued ?? 0} / {wallet.data?.monthly_issue_cap ?? 5000} 积分</span>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -104,7 +102,7 @@ export function MeCoins({ profile }: { profile: MeProfile }) {
             ) : (
               <Button size="sm" onClick={() => void onCheckin()} disabled={checkin.isPending}>
                 <Coins className="h-3.5 w-3.5" />
-                {checkin.isPending ? '签到中…' : '签到领 R'}
+                {checkin.isPending ? '签到中…' : '签到领积分'}
               </Button>
             )}
             <Button variant="outline" size="sm" asChild>
@@ -120,8 +118,8 @@ export function MeCoins({ profile }: { profile: MeProfile }) {
       <section>
         <SectionTitle
           kicker="SHOP"
-          title="可兑换"
-          hint="兑换后直接扣 R；库存与价格由主编配置。"
+          title="积分兑换"
+          hint="只兑换站内非现金权益；兑换后直接扣积分，库存与价格由主编配置。"
           action={
             <span className="font-mono text-xs text-muted-foreground">
               {items.data?.length ?? 0} 件
@@ -159,7 +157,7 @@ export function MeCoins({ profile }: { profile: MeProfile }) {
                   </div>
                   <div className="flex shrink-0 items-center justify-between gap-4 sm:justify-end">
                     <div className="text-right">
-                      <p className="font-mono text-sm font-semibold text-primary">{formatCoins(item.price_coin)} R</p>
+                      <p className="font-mono text-sm font-semibold text-primary">{formatCoins(item.price_coin)} 积分</p>
                       <p className="text-[10px] text-muted-foreground">
                         {item.stock === null ? '不限量' : soldOut ? '已售罄' : `剩 ${item.stock} 件`}
                       </p>
@@ -171,7 +169,7 @@ export function MeCoins({ profile }: { profile: MeProfile }) {
                       onClick={() => void onBuy(item.id, item.name)}
                     >
                       <ShoppingBag className="h-3.5 w-3.5" />
-                      {soldOut ? '已售罄' : insufficient ? 'R 不足' : buyingId === item.id ? '兑换中…' : '兑换'}
+                      {soldOut ? '已售罄' : insufficient ? '积分不足' : buyingId === item.id ? '兑换中…' : '兑换'}
                     </Button>
                   </div>
                 </div>
@@ -196,43 +194,13 @@ export function MeCoins({ profile }: { profile: MeProfile }) {
                 <li key={purchase.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-xs">
                   <span>{purchase.item_name}</span>
                   <span className="text-muted-foreground">{purchase.note || purchase.status}</span>
-                  <span className="font-mono text-primary">-{formatCoins(purchase.price_coin)} R</span>
+                  <span className="font-mono text-primary">-{formatCoins(purchase.price_coin)} 积分</span>
                 </li>
               ))}
             </ul>
           </div>
         ) : null}
       </section>
-
-      {exchange.data?.enabled ? (
-        <section>
-          <SectionTitle
-            kicker="EXCHANGE"
-            title="兑现"
-            hint="按主编配置的方式申请；付款前核对账户，不要向任何人提供验证码或密码。"
-          />
-          <div className="flex flex-wrap items-start gap-4 border-y py-4">
-            <QrCode className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-            <div className="min-w-0 flex-1 space-y-1 text-sm">
-              <p>
-                比例 <strong>{exchange.data.coin_per_yuan} R = ¥1</strong> · 最低 <strong>{exchange.data.min_coin} R</strong> 起兑
-              </p>
-              {exchange.data.method ? <p className="text-muted-foreground">方式：{exchange.data.method}</p> : null}
-              {exchange.data.account ? <p>账户 / 联系人：{exchange.data.account}</p> : null}
-              {exchange.data.note ? (
-                <p className="whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">{exchange.data.note}</p>
-              ) : null}
-            </div>
-            {exchange.data.qr_url ? (
-              <img
-                src={exchange.data.qr_url}
-                alt="主编配置的收款码"
-                className="h-24 w-24 border bg-white object-contain p-1"
-              />
-            ) : null}
-          </div>
-        </section>
-      ) : null}
 
       <section>
         <SectionTitle
@@ -280,7 +248,7 @@ export function MeCoins({ profile }: { profile: MeProfile }) {
                   </div>
                   <Link
                     to="/me"
-                    search={{ tab: 'coins' }}
+                    search={{ tab: 'points' }}
                     className="hidden text-xs text-muted-foreground hover:text-primary sm:block"
                   >
                     查看流水
@@ -293,9 +261,9 @@ export function MeCoins({ profile }: { profile: MeProfile }) {
       </section>
 
       <section>
-        <SectionTitle kicker="LEDGER" title="R 币流水" hint="只展示最近记录；完整流水以服务端为准。" />
+        <SectionTitle kicker="LEDGER" title="积分流水" hint="只展示最近记录；完整流水以服务端为准。" />
         {(wallet.data?.recent.length ?? 0) === 0 ? (
-          <p className="border-y py-5 text-sm text-muted-foreground">还没有 R 币记录。</p>
+          <p className="border-y py-5 text-sm text-muted-foreground">还没有积分记录。</p>
         ) : (
           <ul className="divide-y border-y">
             {wallet.data?.recent.map((event, index) => (

@@ -29,9 +29,9 @@ const PILLARS = [
   {
     title: '底刊也要有账本',
     body:
-      '服务器、域名、存储与排版工具都要花钱。赞助完全自愿，不与投稿、评审、展示位置挂钩；本刊不卖版面。',
+      '服务器、域名、存储与排版工具都有成本。这里只公开实际账本，不开放收款，也不把任何外部款项带进评审。',
     to: '/support',
-    label: '赞助去向',
+    label: '成本账本',
     icon: ReceiptText,
   },
 ]
@@ -147,7 +147,7 @@ function DeskPage() {
       <section className="mt-10 rounded-lg border border-dashed bg-muted/20 p-5">
         <h2 className="font-serif text-lg font-medium">编辑部的边界</h2>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          主编对每篇稿件的最终去留有决定权，但不能替作者补实验、不能绕过审稿证据，也不能把赞助关系带进判断。
+          主编对每篇稿件的最终去留有决定权，但不能替作者补实验、不能绕过审稿证据，也不能把任何外部款项带进判断。
           可核对的口径写在
           <Link to="/policies" className="mx-1 text-primary hover:underline">
             期刊政策

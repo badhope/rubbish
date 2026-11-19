@@ -3,7 +3,7 @@ export const ME_TABS = [
   { key: 'submissions', label: '投稿' },
   { key: 'reviews', label: '审稿' },
   { key: 'library', label: '收藏' },
-  { key: 'coins', label: 'R 币' },
+  { key: 'points', label: '积分' },
   { key: 'settings', label: '设置' },
 ] as const
 

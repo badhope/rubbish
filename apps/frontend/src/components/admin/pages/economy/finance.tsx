@@ -305,7 +305,7 @@ export default function FinanceAdminPage() {
             <div className="grid gap-5 lg:grid-cols-2">
               <ItemEditor
                 title="收入"
-                hint="赞助、利息等；没有就留空"
+                hint="利息、杂项等；没有就留空"
                 items={form.income}
                 onChange={(income) => setForm({ ...form, income })}
               />

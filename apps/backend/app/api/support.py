@@ -1,6 +1,7 @@
-"""Public support surface + admin ledger for the P2 brand/funding work.
+"""Public cost-transparency surface + admin ledger.
 
-Two concerns share one module because they are both "public accountability":
+The module no longer handles donations or payment collection; it only
+publishes the quarterly cost ledger and the editor newsletter.
 
 - ``/support/subscribe``: double opt-in email list for the editor's desk.
   Only a SHA-256 hash of the token is stored; the raw token appears once in

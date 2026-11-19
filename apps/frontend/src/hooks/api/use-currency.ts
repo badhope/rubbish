@@ -19,8 +19,6 @@ export interface CoinRuleView {
 
 export interface CurrencySummary {
   balance: number
-  balance_yuan: number
-  coin_per_yuan: number
   daily_earn_cap: number
   monthly_issue_cap: number
   monthly_issued: number

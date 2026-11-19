@@ -78,7 +78,7 @@ async def update_me(
     Disabling your own account is permitted — it's the closest thing to
     "delete me" we offer without data-loss risk; an admin can re-enable.
     """
-    # 自定义主题色是 R 币消费项：未解锁前只允许保持默认色。
+    # 自定义主题色是积分消费项：未解锁前只允许保持默认色。
     if (
         "accent_color" in payload.model_fields_set
         and payload.accent_color is not None
@@ -87,7 +87,7 @@ async def update_me(
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="自定义主题色需要先在 R 币钱包解锁",
+            detail="自定义主题色需要先在积分中心解锁",
         )
 
     email_changed = payload.email is not None and payload.email != current_user.email

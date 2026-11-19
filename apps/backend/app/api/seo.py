@@ -167,7 +167,7 @@ async def ai_txt(request: Request) -> Response:
 - 不要尝试登录、抓取 /admin、/settings、/review、/submissions 或他人数据。
 - 不接受账号密码、Cookie 或会话令牌作为投稿凭据。
 - 不要绕过限流、验证码、敏感词或站内相似度检查。
-- 不要批量注册账号、刷 R 币或伪造引用。
+- 不要批量注册账号、刷积分或伪造引用。
 
 ## API
 - 能力说明：GET {root}/api/ai/capabilities

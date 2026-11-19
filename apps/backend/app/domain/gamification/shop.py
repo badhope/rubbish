@@ -1,4 +1,4 @@
-"""R 币商城 — 货品目录、购买、主编管理口径。"""
+"""积分兑换 — 货品目录、兑换、主编管理口径。"""
 
 from __future__ import annotations
 
@@ -126,7 +126,7 @@ async def purchase(db: AsyncSession, user: User, item_id: int) -> dict[str, Any]
         raise ShopError("你已经解锁过自定义主题色")
     balance = int(user.coin_balance or 0)
     if balance < item.price_coin:
-        raise ShopError(f"R 币不足，还差 {item.price_coin - balance} R")
+        raise ShopError(f"积分不足，还差 {item.price_coin - balance} 积分")
 
     # 原子扣减：余额守卫 + 行锁 + CHECK 约束三重防线。rowcount!=1 → 余额不足。
     debit = await db.execute(
@@ -140,7 +140,7 @@ async def purchase(db: AsyncSession, user: User, item_id: int) -> dict[str, Any]
         .execution_options(synchronize_session=False)
     )
     if debit.rowcount != 1:
-        raise ShopError("R 币不足")
+        raise ShopError("积分不足")
 
     if item.stock is not None:
         restock = await db.execute(

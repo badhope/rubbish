@@ -9,7 +9,7 @@ interface QuickActionProps {
   count?: number | null
   icon: LucideIcon
   to?: '/me'
-  tab?: 'submissions' | 'reviews' | 'library' | 'coins' | 'overview' | 'settings'
+  tab?: 'submissions' | 'reviews' | 'library' | 'points' | 'overview' | 'settings'
   onClick?: () => void
   accent?: boolean
 }

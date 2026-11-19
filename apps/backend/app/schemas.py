@@ -244,7 +244,7 @@ class UserResponse(BaseModel):
     accent_color: str = "#2f5d46"
     contact_email: str | None = None
     profile_visibility: str = "public"
-    # R 币余额（只读；写入走 /gamification/wallet）
+    # 积分余额（只读；写入走 /gamification/wallet）
     coin_balance: int = 0
     accent_unlocked: bool = False
     # 当前用户在本租户内被授予的角色名列表（如 ["reviewer", "editor"]）

@@ -684,7 +684,7 @@ async def create_topic(
     )
     await db.commit()
     await db.refresh(topic)
-    # 社区活跃奖励：发主题按后台规则（默认 1 R 币）；失败不影响发帖本身。
+    # 社区活跃奖励：发主题按后台规则（默认 1 积分）；失败不影响发帖本身。
     try:
         from app.domain.gamification import currency
 
@@ -800,7 +800,7 @@ async def create_reply(
                 )
     await db.commit()
     await db.refresh(reply)
-    # 回帖按后台规则（默认 0 R 币，防止灌水）；失败不影响回帖本身。
+    # 回帖按后台规则（默认 0 积分，防止灌水）；失败不影响回帖本身。
     try:
         from app.domain.gamification import currency
 

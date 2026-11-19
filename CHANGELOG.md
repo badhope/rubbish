@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.16.0] — 2026-11-19
+
+### Changed
+- R 币体系临时改为“积分”：用户侧 `/me?tab=points`、后台“积分管理”统一命名；积分只记录贡献与站内非现金消费，不可购买、不可兑换现金、不可转账、不可转让，不设人民币锚定。
+- 公开 `/support` 页面重写为“成本公开”：删除二维码、收款账号、银行转账、赞助入口与 `VITE_SUPPORT_*` 构建变量，只保留季度成本账本与成本说明。
+- `about`、`desk`、订阅卡、后台财务提示同步改为成本公开口径。
+
+### Removed
+- 删除 `/gamification/shop/exchange`、`/gamification/admin/coin/exchange` 与后台兑换/收款码表单。
+- 删除重复的 `profile/wallet-card.tsx` 与前端未引用的旧签到 hooks。
+- `wallet_summary` 不再返回 `balance_yuan`、`coin_per_yuan`。
+
+### Fixed
+- 旧 `/me?tab=coins` 入口统一迁移到 `points`；`profile-details-card` 的解锁文案改为积分。
+
 ## [1.15.1] — 2026-11-18
 
 ### Changed

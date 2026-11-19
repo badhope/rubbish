@@ -39,7 +39,7 @@ export function DeskSubscribeCard() {
                 订阅主编桌季度信
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                只发季度成本公开信和编辑部重要更新，不推送每篇论文，不用于赞助或营销。
+                只发季度成本公开信和编辑部重要更新，不推送每篇论文，不用于营销。
                 邮箱只用于这件事，可随时一键退订。
               </p>
               <p className="mt-1 text-xs text-muted-foreground">

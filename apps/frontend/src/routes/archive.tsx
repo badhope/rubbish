@@ -285,7 +285,7 @@ function ArchivePage() {
         </Link>
         <Link
           to="/me"
-          search={{ tab: 'coins', section: 'levels' }}
+          search={{ tab: 'points', section: 'levels' }}
           className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
         >
           评分与等级规范 <ArrowRight className="h-3.5 w-3.5" />

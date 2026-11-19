@@ -68,7 +68,7 @@ async def test_finance_report_draft_then_publish(client: AsyncClient, admin_user
         "quarter": 4,
         "title": "2026 Q4 账本：先把账记清楚",
         "summary_md": "本季只登记实际支出。",
-        "income_items": [{"label": "读者赞助", "amount_cents": 12000, "note": ""}],
+        "income_items": [{"label": "其他收入", "amount_cents": 12000, "note": ""}],
         "expense_items": [
             {"label": "VPS", "amount_cents": 9000, "note": "季度合计"},
             {"label": "域名", "amount_cents": 1500, "note": ""},

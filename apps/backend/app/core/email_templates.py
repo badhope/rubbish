@@ -364,7 +364,7 @@ def desk_subscribe_confirm(
         "确认订阅主编桌邮件",
         "<p>感谢你想订阅 <strong>Rubbish 主编桌邮件</strong>。</p>"
         "<p>我们只会发送季度公开信与编辑部重要更新，不推送每篇论文，"
-        "也不把邮箱用于赞助或营销。</p>"
+        "也不把邮箱用于营销。</p>"
         + _button("确认订阅", confirm_url)
         + f'<p style="margin-top:16px;font-size:12px;color:{MUTED};">'
         f"链接 {expire_days} 天内有效。若不想订阅，"

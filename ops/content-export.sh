@@ -116,7 +116,7 @@ cat > "$OUT/README.md" <<EOF
 | \`resources.csv\` | ${nres} 篇已发表论文/副刊的元数据（标题、作者、摘要、关键词、分类、卷期页、DOI、统计数） |
 | \`content/<track>/<slug>.md\` | ${nmd} 篇正文 Markdown，路径与 \`resources.csv\` 的 \`slug\` 一一对应 |
 | \`disciplines.csv\` \`subdisciplines.csv\` | 学科分类字典 |
-| \`coin_rules.csv\` \`coin_shop_items.csv\` \`roles.csv\` | R 币规则、商城条目、角色定义等纯配置 |
+| \`coin_rules.csv\` \`coin_shop_items.csv\` \`roles.csv\` | 积分规则、积分货架、角色定义等纯配置 |
 | \`checksums.sha256\` | 全部文件的 SHA-256，用于校验 |
 | \`missing-bodies.tsv\` | 若有正文缺失记录会列在这里（正常应为空） |
 

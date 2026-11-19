@@ -1959,39 +1959,6 @@ export function useMePoints(identity: string) {
   })
 }
 
-export interface CheckinStatus {
-  checked_in_today: boolean
-  streak: number
-  total: number
-  daily_xp: number
-  weekly_bonus_xp: number
-}
-
-export interface CheckinResult extends CheckinStatus {
-  awarded: boolean
-  bonus_awarded: boolean
-}
-
-export function useCheckinStatus(options?: { enabled?: boolean }) {
-  return useQuery<CheckinStatus>({
-    queryKey: keys.gamification.checkin(),
-    queryFn: async () => (await api.get<CheckinStatus>('/gamification/checkin')).data,
-    enabled: options?.enabled ?? true,
-    staleTime: 30_000,
-  })
-}
-
-export function useDailyCheckin() {
-  const qc = useQueryClient()
-  return useMutation<CheckinResult, unknown, void>({
-    mutationFn: async () => (await api.post<CheckinResult>('/gamification/checkin')).data,
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: keys.gamification.checkin() })
-      void qc.invalidateQueries({ queryKey: keys.gamification.profile() })
-    },
-  })
-}
-
 export function useLadder() {
   return useQuery<LadderResponse>({
     queryKey: keys.gamification.ladder(),

@@ -13,8 +13,8 @@ interface EconomySearch {
 }
 
 const ALL_SECTIONS: readonly AdminSectionItem<SectionKey>[] = [
-  { key: 'shop', label: '商城' },
-  { key: 'finance', label: '财务' },
+  { key: 'shop', label: '积分' },
+  { key: 'finance', label: '成本账本' },
 ]
 
 function isSectionKey(value: string | undefined): value is SectionKey {

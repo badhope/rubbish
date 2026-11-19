@@ -1,16 +1,16 @@
-"""R 币（可消费社区货币） — 稀缺锚定 + 钱包快照 + 台账。
+"""站内积分 — 只记录贡献与消费，不具备任何现金价值。
 
-发行锚：**100 R = 1 元人民币的站内购买力**（不充值、不提现、不转账）。
-发放规则和上限都可被主编在后台调整；默认值刻意压低，避免超发：
+积分不可充值、不可兑换现金、不可转账、不可转让；只能用于站内非现金权益。
+发放规则和上限都可被主编在后台调整，默认值刻意压低，避免刷量：
 
-- 每日签到 1 R（100 天 = 1 元）
-- 连续 7 天额外 2 R
-- 论坛发主题 1 R / 天，回帖默认 0
-- 认领 10 R、审稿 5 R、录用 20 R、裁决 3 R
-- 单用户日常收入每日最多 5 R；审稿、录用、认领、裁决等一次性劳务奖励不受此限，但计入全站月发行上限
+- 每日签到 1 积分
+- 连续 7 天额外 2 积分
+- 论坛发主题 1 积分 / 天，回帖默认 0
+- 认领 10 积分、审稿 5 积分、录用 20 积分、裁决 3 积分
+- 单用户日常收入每日最多 5 积分；审稿、录用、认领、裁决等一次性奖励不受此限，但计入全站月发放上限
 
 事实源是 ``point_events.identity='coin'`` 的 append-only 流水；余额在
-``users.coin_balance`` 做快照。所有发放都先过规则、每日上限、月度发行上限
+``users.coin_balance`` 做快照。所有发放都先过规则、每日上限、月度发放上限
 和幂等唯一约束，四道闸门任一不过就不发。
 """
 
@@ -28,10 +28,11 @@ from app.domain.gamification.service import _checkin_dates, _current_streak, _to
 from app.models import User
 
 COIN_IDENTITY = "coin"
-COIN_PER_YUAN_DEFAULT = 100
+# 历史字段兼容值：只用于旧 policy 行的 ORM 构造，不对外展示、不参与积分计算。
+LEGACY_COIN_ANCHOR_DEFAULT = 100
 DAILY_EARN_CAP_DEFAULT = 5
 MONTHLY_ISSUE_CAP_DEFAULT = 5000
-# 一次性劳务奖励不能因为当天签到过就被 5 R 日常上限吞掉；它们仍受月发行上限约束。
+# 一次性奖励不能因为当天签到过就被 5 积分日常上限吞掉；它们仍受月发放上限约束。
 DAILY_CAP_EXEMPT_REASONS = frozenset(
     {"claim.approve", "review.completed", "submission.accepted", "editor.decision"}
 )
@@ -111,7 +112,7 @@ async def _load_policy(db: AsyncSession, user: User) -> CoinPolicy:
     # 迁移前的老租户没有 policy 行：返回临时默认值，不写库。
     return CoinPolicy(
         tenant_id=user.tenant_id,
-        coin_per_yuan=COIN_PER_YUAN_DEFAULT,
+        coin_per_yuan=LEGACY_COIN_ANCHOR_DEFAULT,
         daily_earn_cap=DAILY_EARN_CAP_DEFAULT,
         monthly_issue_cap=MONTHLY_ISSUE_CAP_DEFAULT,
     )
@@ -160,7 +161,7 @@ async def award(
     note: str | None = None,
     commit: bool = False,
 ) -> bool:
-    """给用户发 R 币；规则、日上限、月上限、幂等四道闸门全过才发。"""
+    """给用户发积分；规则、日上限、月发放上限、幂等四道闸门全过才发。"""
     rule = (await _load_rules(db, user)).get(reason)
     if rule is not None and not rule.is_active:
         return False
@@ -182,7 +183,7 @@ async def award(
         .with_for_update()
         .execution_options(populate_existing=True)
     )
-    # 租户月发行总量竞态：锁该租户唯一 coin_policy 行（uq_coin_policy_tenant）
+    # 租户月发放总量竞态：锁该租户唯一 coin_policy 行（uq_coin_policy_tenant）
     # 再做 monthly 检查。老租户无 policy 行时用临时默认值（无可锁行）。
     policy_row = (
         await db.execute(
@@ -194,7 +195,7 @@ async def award(
         if policy_row is not None
         else CoinPolicy(
             tenant_id=user.tenant_id,
-            coin_per_yuan=COIN_PER_YUAN_DEFAULT,
+            coin_per_yuan=LEGACY_COIN_ANCHOR_DEFAULT,
             daily_earn_cap=DAILY_EARN_CAP_DEFAULT,
             monthly_issue_cap=MONTHLY_ISSUE_CAP_DEFAULT,
         )
@@ -255,7 +256,7 @@ async def award(
 async def award_for_reason(
     db: AsyncSession, user: User, reason: str, *, ref_type: str, ref_id: str
 ) -> bool:
-    """把已有的身份积分动作映射成 R 币收入（金额读后台规则）。"""
+    """把已有的身份动作映射成积分收入（金额读后台规则）。"""
     return await award(db, user, reason, ref_type=ref_type, ref_id=ref_id)
 
 
@@ -313,8 +314,6 @@ async def wallet_summary(db: AsyncSession, user: User) -> dict[str, Any]:
         ]
     return {
         "balance": int(user.coin_balance or 0),
-        "balance_yuan": round(int(user.coin_balance or 0) / policy.coin_per_yuan, 2),
-        "coin_per_yuan": policy.coin_per_yuan,
         "daily_earn_cap": policy.daily_earn_cap,
         "monthly_issue_cap": policy.monthly_issue_cap,
         "monthly_issued": await monthly_issued(db, user.tenant_id),
@@ -342,7 +341,7 @@ async def unlock_accent(db: AsyncSession, user: User) -> dict[str, Any]:
     if user.accent_unlocked:
         return {"unlocked": True, "balance": int(user.coin_balance or 0)}
     if int(user.coin_balance or 0) < ACCENT_PRICE:
-        raise ValueError(f"R 币不足，解锁自定义主题色需要 {ACCENT_PRICE} R 币")
+        raise ValueError(f"积分不足，解锁自定义主题色需要 {ACCENT_PRICE} 积分")
     stamp = _today_str()
     db.add(
         PointEvent(

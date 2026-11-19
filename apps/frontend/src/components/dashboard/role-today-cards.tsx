@@ -274,7 +274,7 @@ function ChiefTodayCard() {
             ))}
           </div>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            24h 新用户 {data.counts.new_users_24h ?? "—"} · 发放 R 币{" "}
+            24h 新用户 {data.counts.new_users_24h ?? "—"} · 发放积分{" "}
             {data.counts.coin_issued_24h ?? "—"}
             {data.disk_used_pct != null ? ` · 磁盘 ${data.disk_used_pct}%` : ""}
           </p>

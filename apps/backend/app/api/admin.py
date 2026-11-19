@@ -1252,7 +1252,7 @@ async def system_health(
         db_latency_ms = None
 
     # 轻量反作弊信号：只做聚合，不记录 IP、不暴露账号明细。
-    # 24h 新用户暴增或 R 币集中发放时健康页转为“需关注”，
+    # 24h 新用户暴增或积分集中发放时健康页转为“需关注”，
     # 便于人工复核；不是自动封禁。
     cutoff = datetime.now(UTC) - timedelta(hours=24)
     for key, sql in (
@@ -1399,7 +1399,7 @@ async def system_health(
             if counts.get("new_users_24h", 0) >= 20 or counts.get("coin_issued_24h", 0) >= 5000
             else "ok",
             "detail": f"新用户 {counts.get('new_users_24h', -1)} · "
-            f"发放 R 币 {counts.get('coin_issued_24h', -1)}",
+            f"发放积分 {counts.get('coin_issued_24h', -1)}",
         },
     ]
     overall = (

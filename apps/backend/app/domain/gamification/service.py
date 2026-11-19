@@ -470,7 +470,7 @@ def window_start(days: int = 30) -> datetime:
 
 
 # ---------------------------------------------------------------------------
-# 每日签到（货币/激励体系的一部分）
+# 每日签到（积分/激励体系的一部分）
 # 口径：每天一次 checkin.daily（ref_id=UTC 日期，台账唯一约束天然幂等）；
 # 连续天数按「今天或昨天收尾的连续日」计；每满 7 天额外发 checkin.weekly_bonus。
 # ---------------------------------------------------------------------------
@@ -531,7 +531,7 @@ async def daily_checkin(db: AsyncSession, user: User) -> dict[str, object]:
     if awarded:
         dates = await _checkin_dates(db, user)
         streak = _current_streak(dates, today)
-        # R 币签到收入：与 XP 同一事务，签到成功才发。
+        # 积分签到收入：与 XP 同一事务，签到成功才发。
         from app.domain.gamification import currency
 
         await currency.award(

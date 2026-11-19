@@ -208,7 +208,7 @@ class PointEvent(Base, TenantScopedMixin):
 
 
 class CoinRule(Base, TenantScopedMixin):
-    """R 币发放规则（主编可在后台调整金额与每日上限）。"""
+    """积分发放规则（主编可在后台调整金额与每日上限）。"""
 
     __tablename__ = "coin_rules"
     __table_args__ = (UniqueConstraint("tenant_id", "reason", name="uq_coin_rule_tenant_reason"),)
@@ -226,7 +226,11 @@ class CoinRule(Base, TenantScopedMixin):
 
 
 class CoinPolicy(Base, TenantScopedMixin):
-    """R 币发行口径：汇率锚、单用户日上限、全站月度发行上限。"""
+    """积分发放口径：单用户日上限、全站月度发放上限。
+
+    ``coin_per_yuan`` 与 ``exchange_*`` 是历史字段，已停用且不再对外暴露；
+    保留列只为兼容旧数据，不参与积分计算。
+    """
 
     __tablename__ = "coin_policy"
     __table_args__ = (UniqueConstraint("tenant_id", name="uq_coin_policy_tenant"),)
@@ -235,7 +239,7 @@ class CoinPolicy(Base, TenantScopedMixin):
     coin_per_yuan: Mapped[int] = mapped_column(Integer, nullable=False, default=100)
     daily_earn_cap: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
     monthly_issue_cap: Mapped[int] = mapped_column(Integer, nullable=False, default=5000)
-    # 兑换 / 收款方式（主编配置，前台展示；不自动打款）
+    # 历史字段：已停用，不再对外读写。
     exchange_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     exchange_method: Mapped[str] = mapped_column(String(80), nullable=False, default="")
     exchange_qr_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
@@ -270,7 +274,7 @@ class CoinShopItem(Base, TenantScopedMixin):
 
 
 class CoinPurchase(Base, TenantScopedMixin):
-    """R 币消费流水（事实源仍是 point_events，这里记录订单履约状态）。"""
+    """积分消费流水（事实源仍是 point_events，这里记录订单履约状态）。"""
 
     __tablename__ = "coin_purchases"
 

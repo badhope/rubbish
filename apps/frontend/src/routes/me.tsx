@@ -18,7 +18,7 @@ import { MeOverview } from '@/components/me/me-overview'
 import { MeSubmissions } from '@/components/me/me-submissions'
 import { MeReviews } from '@/components/me/me-reviews'
 import { MeLibrary } from '@/components/me/me-library'
-import { MeCoins } from '@/components/me/me-coins'
+import { MePoints } from '@/components/me/me-points'
 import { MeSettings } from '@/components/me/me-settings'
 import { NotificationsDialog } from '@/components/me/notifications-dialog'
 import { isMeTab, type MeTabKey } from '@/components/me/types'
@@ -87,7 +87,7 @@ function MePage() {
     { key: 'submissions' as const, label: '投稿' },
     ...(reviewable ? [{ key: 'reviews' as const, label: '审稿' }] : []),
     { key: 'library' as const, label: '收藏' },
-    { key: 'coins' as const, label: 'R 币' },
+    { key: 'points' as const, label: '积分' },
     { key: 'settings' as const, label: '设置' },
   ]
 
@@ -116,7 +116,7 @@ function MePage() {
         {activeTab === 'submissions' ? <MeSubmissions /> : null}
         {activeTab === 'reviews' && reviewable ? <MeReviews reviewable={reviewable} /> : null}
         {activeTab === 'library' ? <MeLibrary /> : null}
-        {activeTab === 'coins' ? <MeCoins profile={data} /> : null}
+        {activeTab === 'points' ? <MePoints profile={data} /> : null}
         {activeTab === 'settings' ? <MeSettings username={data.username} initialSection={search.section} /> : null}
       </div>
 
