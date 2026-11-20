@@ -42,6 +42,8 @@ const KIND_LABELS: Record<string, string> = {
 
 const KIND_ORDER = ['bug', 'suggestion', 'content', 'design', 'performance', 'accessibility', 'submission', 'other']
 
+const PAGE_SIZE = 12
+
 type StatusTab = 'all' | 'open' | 'resolved'
 
 function formatDate(value: string): string {
@@ -56,6 +58,7 @@ export function FeedbackBoardPage() {
   const [target, setTarget] = useState<FeedbackItem | null>(null)
   const [composeOpen, setComposeOpen] = useState(false)
   const [note, setNote] = useState('')
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const { isAdmin } = useAuth()
   const qc = useQueryClient()
 
@@ -88,6 +91,7 @@ export function FeedbackBoardPage() {
   })
 
   const items = query.data?.data ?? []
+  const visibleItems = items.slice(0, visibleCount)
   const openCount = query.data?.open_count ?? 0
   const resolvedCount = query.data?.resolved_count ?? 0
   const kindCounts = query.data?.kind_counts ?? {}
@@ -132,7 +136,10 @@ export function FeedbackBoardPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Tabs
           value={status}
-          onValueChange={(v) => setStatus(v as StatusTab)}
+          onValueChange={(v) => {
+            setStatus(v as StatusTab)
+            setVisibleCount(PAGE_SIZE)
+          }}
         >
           <div className="overflow-x-auto pb-1">
             <TabsList className="w-max">
@@ -146,7 +153,10 @@ export function FeedbackBoardPage() {
           按类型
           <select
             value={kindFilter}
-            onChange={(event) => setKindFilter(event.target.value)}
+            onChange={(event) => {
+              setKindFilter(event.target.value)
+              setVisibleCount(PAGE_SIZE)
+            }}
             className="h-9 rounded-md border bg-background px-2 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <option value="all">全部类型</option>
@@ -170,8 +180,9 @@ export function FeedbackBoardPage() {
             description="页面右侧「提问题」提交后，会出现在这里。"
           />
         ) : (
-          <div className="space-y-3">
-            {items.map((item) => (
+          <>
+            <div className="space-y-3">
+            {visibleItems.map((item) => (
               <Card key={item.id} className={item.status === 'open' ? 'border-l-4 border-l-amber-500' : 'border-l-4 border-l-emerald-500'}>
                 <CardContent className="py-4">
                   <div className="flex flex-wrap items-center gap-2">
@@ -232,6 +243,17 @@ export function FeedbackBoardPage() {
               </Card>
             ))}
           </div>
+          {visibleItems.length < items.length ? (
+            <div className="mt-4 flex justify-center">
+              <Button
+                variant="outline"
+                onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
+              >
+                加载更多（还剩 {items.length - visibleItems.length} 条）
+              </Button>
+            </div>
+          ) : null}
+          </>
         )}
       </div>
 
