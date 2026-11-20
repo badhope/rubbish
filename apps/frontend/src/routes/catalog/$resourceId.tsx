@@ -22,6 +22,7 @@ import { toast } from 'sonner'
 import { useAuth } from '@/hooks/use-auth'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import {
+  useClaimStatus,
   useDeleteResource,
   useRecordView,
   useResource,
@@ -72,6 +73,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { AddToListDialog } from '@/components/common/add-to-list-dialog'
 import { BottomSheet } from '@/components/common/bottom-sheet'
+import { ClaimDialog } from '@/components/catalog/claim-dialog'
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
 import { Comments } from '@/components/common/comments'
 import { FunArticle } from '@/components/catalog/fun-article'
@@ -93,13 +95,14 @@ function CatalogDetailPage() {
     enabled: Number.isFinite(id) && id > 0,
   })
   const discussCount: number = forumQ.data?.meta?.total ?? 0
+  const { isAdmin, isAuthenticated } = useAuth()
   const historyQ = useQuery<ResourceHistory>({
     queryKey: ['catalog', 'history', id],
     queryFn: async () => (await api.get(`/catalog/${id}/history`)).data,
     enabled: Number.isFinite(id) && id > 0,
   })
+  const claimStatus = useClaimStatus(Number.isFinite(id) && id > 0 ? id : null, isAuthenticated)
   const navigate = useNavigate()
-  const { isAdmin, isAuthenticated } = useAuth()
 
   const { data, isLoading, isError, refetch } = useResource(id)
   const recordView = useRecordView()
@@ -119,6 +122,7 @@ function CatalogDetailPage() {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [eventOpen, setEventOpen] = useState(false)
   const [listOpen, setListOpen] = useState(false)
+  const [claimOpen, setClaimOpen] = useState(false)
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false)
 
   // ManuscriptView 把 TOC 上提到这里，供右侧 sticky 侧栏渲染。
@@ -317,6 +321,14 @@ function CatalogDetailPage() {
                   <span className="truncate">讨论{discussCount ? ` · ${discussCount}` : ''}</span>
                 </Link>
               </Button>
+              {isAuthenticated && claimStatus.data?.claimable ? (
+                <Button variant="outline" size="sm" className="min-w-0" onClick={() => setClaimOpen(true)}>
+                  <span className="truncate">认领这篇记录</span>
+                </Button>
+              ) : null}
+              {isAuthenticated && claimStatus.data?.state === 'pending_review' && claimStatus.data.mine ? (
+                <Badge variant="outline" className="self-center">认领审批中</Badge>
+              ) : null}
             </div>
           </div>
 
@@ -611,6 +623,15 @@ function CatalogDetailPage() {
 
       {isAuthenticated && (
         <AddToListDialog resourceId={id} open={listOpen} onOpenChange={setListOpen} />
+      )}
+
+      {isAuthenticated && claimOpen && (
+        <ClaimDialog
+          open={claimOpen}
+          onOpenChange={setClaimOpen}
+          resourceId={id}
+          authors={data.authors_detail ?? null}
+        />
       )}
 
       <ConfirmDialog

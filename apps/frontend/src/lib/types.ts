@@ -358,6 +358,7 @@ export interface ClaimSubmitRequest {
   author_position: number
   evidence_type: ClaimEvidenceType
   evidence_value: string
+  note?: string | null
 }
 
 export interface ClaimSubmitResponse {

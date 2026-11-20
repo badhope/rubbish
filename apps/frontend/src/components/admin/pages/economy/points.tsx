@@ -1,48 +1,29 @@
 import { useEffect, useState } from 'react'
-import { Coins, Package, Plus, Save, ShoppingBag } from 'lucide-react'
+import { Coins, Save } from 'lucide-react'
 import { toast } from 'sonner'
 import {
-  useAdminShopItems,
   useCoinConfig,
-  useCreateShopItem,
   useUpdateCoinPolicy,
   useUpdateCoinRule,
-  useUpdateShopItem,
-  type ShopItem,
-} from '@/hooks/api/use-shop'
+} from '@/hooks/api/use-coin-config'
 import { extractError } from '@/lib/utils'
 import { PageHeader } from '@/components/common/page-header'
 import { Loading } from '@/components/common/state'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-
-
-const emptyItem = {
-  name: '',
-  description: '',
-  price_coin: 100,
-  stock: '' as string,
-  effect: 'none' as 'none' | 'accent_unlock',
-  sort_order: 0,
-}
 
 export default function AdminPointsPage() {
   const config = useCoinConfig()
-  const items = useAdminShopItems()
-  const createItem = useCreateShopItem()
-  const updateItem = useUpdateShopItem()
   const updateRule = useUpdateCoinRule()
   const updatePolicy = useUpdateCoinPolicy()
+  // 旧审稿、投稿、编辑裁决和零额度回复不再占界面；只保留社区当前四类动作。
+  const currentReasons = new Set(['checkin.daily', 'checkin.weekly_bonus', 'forum.topic', 'claim.approve'])
+  const rules = config.data?.rules.filter((rule) => currentReasons.has(rule.reason)) ?? []
 
   const [policy, setPolicy] = useState({ daily_earn_cap: 5, monthly_issue_cap: 5000 })
   const [ruleEdits, setRuleEdits] = useState<Record<string, { amount: number; daily_cap: number; is_active: boolean }>>({})
-  const [newItem, setNewItem] = useState(emptyItem)
-  const [editingId, setEditingId] = useState<number | null>(null)
-  const [editItem, setEditItem] = useState(emptyItem)
 
   useEffect(() => {
     if (!config.data) return
@@ -74,74 +55,11 @@ export default function AdminPointsPage() {
     }
   }
 
-  const submitNewItem = async () => {
-    if (!newItem.name.trim()) {
-      toast.error('货品名称不能为空')
-      return
-    }
-    try {
-      await createItem.mutateAsync({
-        name: newItem.name,
-        description: newItem.description,
-        price_coin: newItem.price_coin,
-        stock: newItem.stock === '' ? null : Number(newItem.stock),
-        is_active: true,
-        sort_order: newItem.sort_order,
-        effect: newItem.effect,
-        cover_url: null,
-      })
-      setNewItem(emptyItem)
-      toast.success('货品已上架')
-    } catch (err) {
-      toast.error(extractError(err, '上架失败'))
-    }
-  }
-
-  const beginEdit = (item: ShopItem) => {
-    setEditingId(item.id)
-    setEditItem({
-      name: item.name,
-      description: item.description,
-      price_coin: item.price_coin,
-      stock: item.stock === null ? '' : String(item.stock),
-      effect: item.effect,
-      sort_order: item.sort_order,
-    })
-  }
-
-  const saveEdit = async () => {
-    if (editingId === null) return
-    try {
-      await updateItem.mutateAsync({
-        id: editingId,
-        name: editItem.name,
-        description: editItem.description,
-        price_coin: editItem.price_coin,
-        stock: editItem.stock === '' ? null : Number(editItem.stock),
-        effect: editItem.effect,
-        sort_order: editItem.sort_order,
-      })
-      setEditingId(null)
-      toast.success('货品已更新')
-    } catch (err) {
-      toast.error(extractError(err, '更新失败'))
-    }
-  }
-
-  const toggleActive = async (item: ShopItem) => {
-    try {
-      await updateItem.mutateAsync({ id: item.id, is_active: !item.is_active })
-      toast.success(item.is_active ? '已下架' : '已上架')
-    } catch (err) {
-      toast.error(extractError(err, '操作失败'))
-    }
-  }
-
   return (
     <div className="space-y-8">
       <PageHeader
-        title="积分兑换与发放"
-        description="积分只记录贡献与站内消费，无现金价值、不可兑换、不可转让。你可以在这里设置每日/月度发放上限、每个动作发多少积分，以及上架/下架站内非现金权益。"
+        title="积分规则"
+        description="积分是社区贡献值：无现金价值、不可充值、不可转让。只保留签到、发帖、认领通过这几类社区动作。"
       />
 
       {config.isLoading ? <Loading /> : null}
@@ -188,7 +106,7 @@ export default function AdminPointsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {config.data.rules.map((rule) => {
+            {rules.map((rule) => {
               const edit = ruleEdits[rule.reason] ?? rule
               return (
                 <div key={rule.reason} className="grid items-end gap-3 rounded-lg border p-3 sm:grid-cols-[1.4fr_0.8fr_0.8fr_auto]">
@@ -219,109 +137,6 @@ export default function AdminPointsPage() {
           </CardContent>
         </Card>
       ) : null}
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Plus className="h-4 w-4" /> 上架新货品
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>名称</Label>
-              <Input value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} placeholder="例如：主页封面模板" />
-            </div>
-            <div className="space-y-1.5">
-              <Label>价格（积分）</Label>
-              <Input type="number" min={1} value={newItem.price_coin} onChange={(e) => setNewItem({ ...newItem, price_coin: Number(e.target.value) })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>库存（留空 = 不限量）</Label>
-              <Input type="number" min={0} value={newItem.stock} onChange={(e) => setNewItem({ ...newItem, stock: e.target.value })} placeholder="不限量" />
-            </div>
-            <div className="space-y-1.5">
-              <Label>排序（越小越前）</Label>
-              <Input type="number" min={0} value={newItem.sort_order} onChange={(e) => setNewItem({ ...newItem, sort_order: Number(e.target.value) })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>效果</Label>
-              <select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={newItem.effect} onChange={(e) => setNewItem({ ...newItem, effect: e.target.value as 'none' | 'accent_unlock' })}>
-                <option value="none">人工发货（下单后管理员处理）</option>
-                <option value="accent_unlock">自动解锁主页主题色</option>
-              </select>
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label>说明</Label>
-            <Textarea rows={3} value={newItem.description} onChange={(e) => setNewItem({ ...newItem, description: e.target.value })} placeholder="写清买家能得到什么、怎么履约。" />
-          </div>
-          <Button onClick={() => void submitNewItem()} disabled={createItem.isPending}>
-            <ShoppingBag className="h-4 w-4" /> 上架
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Package className="h-4 w-4" /> 在售 / 已下架货品
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {items.isLoading ? <Loading /> : null}
-          {items.data?.map((item) => (
-            <div key={item.id} className="space-y-3 rounded-xl border p-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="flex flex-wrap items-center gap-2 font-medium">
-                    {item.name}
-                    <Badge variant={item.is_active ? 'secondary' : 'outline'}>{item.is_active ? '在售' : '已下架'}</Badge>
-                    {item.effect === 'accent_unlock' ? <Badge variant="outline">自动发货</Badge> : null}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">{item.description || '暂无说明'}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold tabular-nums text-primary">{item.price_coin} 积分</span>
-                  <Button size="sm" variant="outline" onClick={() => beginEdit(item)}>编辑</Button>
-                  <Button size="sm" variant="ghost" onClick={() => void toggleActive(item)}>
-                    {item.is_active ? '下架' : '上架'}
-                  </Button>
-                </div>
-              </div>
-
-              {editingId === item.id ? (
-                <div className="grid gap-3 rounded-lg bg-muted/30 p-3 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <Label>名称</Label>
-                    <Input value={editItem.name} onChange={(e) => setEditItem({ ...editItem, name: e.target.value })} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>价格（积分）</Label>
-                    <Input type="number" min={1} value={editItem.price_coin} onChange={(e) => setEditItem({ ...editItem, price_coin: Number(e.target.value) })} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>库存（留空 = 不限量）</Label>
-                    <Input type="number" min={0} value={editItem.stock} onChange={(e) => setEditItem({ ...editItem, stock: e.target.value })} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>排序</Label>
-                    <Input type="number" min={0} value={editItem.sort_order} onChange={(e) => setEditItem({ ...editItem, sort_order: Number(e.target.value) })} />
-                  </div>
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <Label>说明</Label>
-                    <Textarea rows={2} value={editItem.description} onChange={(e) => setEditItem({ ...editItem, description: e.target.value })} />
-                  </div>
-                  <div className="flex gap-2 sm:col-span-2">
-                    <Button size="sm" onClick={() => void saveEdit()} disabled={updateItem.isPending}>保存</Button>
-                    <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>取消</Button>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          ))}
-        </CardContent>
-      </Card>
     </div>
   )
 }

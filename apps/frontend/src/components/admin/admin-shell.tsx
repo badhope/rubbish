@@ -9,7 +9,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
 
-/** 后台统一壳：五个业务域共用一条页签；期刊卷期不再暴露为后台入口。 */
+/** 后台统一壳：总览 + 四个业务域共用一条页签；期刊卷期不再暴露为后台入口。 */
 const DOMAINS = [
   { key: 'overview', label: '总览', to: '/admin', icon: Gauge, paths: ['/admin'] },
   {
@@ -26,7 +26,7 @@ const DOMAINS = [
     icon: FileText,
     paths: ['/admin/content'],
   },
-  { key: 'economy', label: '积分与账本', to: '/admin/economy', icon: Wallet, paths: ['/admin/economy'] },
+  { key: 'economy', label: '积分', to: '/admin/economy', icon: Wallet, paths: ['/admin/economy'] },
   {
     key: 'system',
     label: '系统',

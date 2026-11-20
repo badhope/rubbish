@@ -17,7 +17,7 @@ const SECTIONS: readonly AdminSectionItem<SectionKey>[] = [
 ]
 
 function isSectionKey(value: string | undefined): value is SectionKey {
-  return value === 'users' || value === 'roles' || value === 'claims'
+  return value === 'users' || value === 'claims'
 }
 
 export const Route = createFileRoute('/admin/people')({

@@ -1,41 +1,11 @@
-import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { ArrowLeft, Building2, Globe, Mail, ScrollText, ShieldCheck, Users } from 'lucide-react'
 import { PageHeader } from '@/components/common/page-header'
 import { RevealSection } from '@/components/common/reveal-section'
-import { SupportPage } from '@/components/about/support-page'
-import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/about')({
-  validateSearch: (search: Record<string, unknown>) => ({
-    tab: search.tab === 'support' ? 'support' : 'about',
-  }),
   component: AboutPage,
 })
-
-function AboutTabs({ active }: { active: 'about' | 'support' }) {
-  return (
-    <div className="mb-6 flex border-b">
-      {[
-        { value: 'about', label: '关于社区' },
-        { value: 'support', label: '成本公开' },
-      ].map((t) => (
-        <Link
-          key={t.value}
-          to="/about"
-          search={{ tab: t.value }}
-          className={cn(
-            'border-b-2 px-0 py-2.5 pr-8 text-sm font-medium transition-colors',
-            active === t.value
-              ? 'border-primary text-foreground'
-              : 'border-transparent text-muted-foreground hover:text-foreground',
-          )}
-        >
-          {t.label}
-        </Link>
-      ))}
-    </div>
-  )
-}
 
 // 社区岗位：版主、策展、技术与治理；不虚构头衔。
 const ROLES = [
@@ -68,15 +38,6 @@ const TIMELINE = [
 ]
 
 function AboutPage() {
-  const { tab } = useSearch({ from: '/about' })
-  if (tab === 'support') {
-    return (
-      <div className="about-page mx-auto w-full max-w-[1100px]">
-        <AboutTabs active="support" />
-        <SupportPage />
-      </div>
-    )
-  }
   return (
     <div className="about-page mx-auto w-full max-w-[1100px]">
       <Link
@@ -91,7 +52,6 @@ function AboutPage() {
         title="关于社区"
         description="Rubbish 是一个荒诞科研社区：把不正经的问题当正经课题做，把过程、失败和结果拿出来讨论。"
       />
-      <AboutTabs active="about" />
 
       <div className="space-y-10">
         <RevealSection className="max-w-3xl">

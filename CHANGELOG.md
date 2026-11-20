@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.19.11] — 2026-11-21
+
+- Removed the empty public cost ledger and its admin tab; the site does not charge, so there is no ledger to publish.
+- Turned points into a pure contribution score: removed the unused points shop and all store UI, deactivated the eight unsold reward rows, and kept only the earn policy, rules, check-in and ledger.
+- Restored author claiming on the article page as a single dialog, so the existing admin claim queue has a real user path again.
+- Added 301 redirects for legacy links such as `/submissions`, `/dashboard`, `/papers`, `/shop`, `/review` and `/claim/:id`; they now land on the current community, archive, guide or article page instead of the SPA 404.
+- Replaced the stale issue-launch popup with a current community-open notice and deactivated the obsolete nightly-maintenance notice.
+- Filled the remaining eleven article covers from the existing cover library; no resource is missing a cover.
+
 ## [1.19.10] — 2026-11-20
 
 - Added the missing `users.role`, `submissions.clc_code`, `submissions.clc_label`, and `submissions.content_track` migrations so fresh PostgreSQL databases match the models.

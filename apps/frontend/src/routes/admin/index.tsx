@@ -2,11 +2,11 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import {
   Activity,
   ArrowRight,
+  Coins,
   FileSignature,
   Gavel,
   Layers,
   MessageSquare,
-  ReceiptText,
   Users,
 } from 'lucide-react'
 
@@ -72,10 +72,10 @@ const DOMAINS: {
     icon: Users,
   },
   {
-    title: '积分与财务',
-    desc: '积分、账本、成本公开',
+    title: '积分规则',
+    desc: '发放口径、每个动作的积分',
     to: '/admin/economy',
-    icon: ReceiptText,
+    icon: Coins,
   },
   {
     title: '系统与安全',
@@ -96,7 +96,7 @@ function AdminDashboard() {
     <div className="w-full max-w-6xl space-y-8">
       <PageHeader
         title="站点总览"
-        description={`欢迎，${user?.username ?? '管理员'}。先处理待办，再进入五个管理域。`}
+        description={`欢迎，${user?.username ?? '管理员'}。先处理待办，再进入四个管理域。`}
       />
 
       <AdminAnalyticsPanel />
@@ -150,7 +150,7 @@ function AdminDashboard() {
           <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
             DOMAINS
           </p>
-          <h2 className="mt-1 font-serif text-xl tracking-tight">五个管理域</h2>
+          <h2 className="mt-1 font-serif text-xl tracking-tight">四个管理域</h2>
         </div>
         <div className="divide-y border-y">
           {DOMAINS.map((item) => (
