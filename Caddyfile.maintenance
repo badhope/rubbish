@@ -22,6 +22,10 @@ www.rubbish.argjiemi.cn, argjiemi.cn, www.argjiemi.cn {
 		format json
 	}
 
+	# 旧社区入口统一回首页，避免历史链接直接落到 404。
+	@legacy_community path /forum* /login* /register* /guide* /catalog* /submissions* /review* /about* /me* /admin*
+	redir @legacy_community / 302
+
 	# 常见扫描/后门探测路径，直接 404。
 	@probes path /.env* /.git* /.svn* /.aws* /.ssh* /wp-admin* /wp-login* /xmlrpc.php* /phpmyadmin* /pma* /vendor* /server-status* /actuator* /config.json /config.yml /docker-compose.yml
 	respond @probes 404
