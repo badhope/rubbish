@@ -2,7 +2,7 @@
 
 ## [1.19.10] — 2026-11-20
 
-- Added the missing `users.role` migration so fresh PostgreSQL databases match the authorization model.
+- Added the missing `users.role`, `submissions.clc_code`, `submissions.clc_label`, and `submissions.content_track` migrations so fresh PostgreSQL databases match the models.
 - Purged legacy review artifacts and stale frontend builds from repository history; the published tree now contains only the community product.
 - Rewrote repository docs as English-first with linked Chinese translations, and removed stale journal deployment copy.
 

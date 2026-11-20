@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import sqlalchemy as sa
 
-from alembic import op
+from alembic import context, op
 
 revision = "062_users_role_axis"
 down_revision = "061_forum_fiction_flag"
@@ -23,6 +23,13 @@ depends_on = None
 
 
 def upgrade() -> None:
+    if context.is_offline_mode():
+        # Offline SQL generation is PostgreSQL-only; this mirrors the column
+        # that production already has, without requiring a live inspector.
+        op.execute(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(32) NOT NULL DEFAULT 'user'"
+        )
+        return
     bind = op.get_bind()
     columns = {column["name"] for column in sa.inspect(bind).get_columns("users")}
     if "role" not in columns:
