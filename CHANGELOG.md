@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.19.10] — 2026-11-20
+
+- Added the missing `users.role` migration so fresh PostgreSQL databases match the authorization model.
+- Purged legacy review artifacts and stale frontend builds from repository history; the published tree now contains only the community product.
+- Rewrote repository docs as English-first with linked Chinese translations, and removed stale journal deployment copy.
+
 ## [1.19.9] — 2026-11-20
 
 - Removed the remaining editorial APIs and UI: AI submission tokens, OAI-PMH, volume/issue management, legacy catalog issue exports, appeal routes, reviewer workbench triggers, and the editor-desk mailing list.
