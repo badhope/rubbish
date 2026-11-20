@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useMemo, useState, type ReactNode } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
@@ -21,7 +21,6 @@ import { uploadForumImage } from '@/lib/forum'
 import { extractError } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
-import { ForumEditor } from '@/components/forum/forum-editor'
 import { MarkdownContent } from '@/components/common/markdown-content'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -33,6 +32,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
+
+const ForumEditor = lazy(() =>
+  import('@/components/forum/forum-editor').then((m) => ({ default: m.ForumEditor })),
+)
 
 export const Route = createFileRoute('/forum/$topicId')({
   component: ForumTopicPage,
@@ -362,15 +365,17 @@ function ForumTopicPage() {
         <div className="mb-2 text-[11px] text-muted-foreground">
           回复 @{target.author?.display_name || target.author?.username || '已注销用户'}
         </div>
-        <ForumEditor
-          value={reply}
-          onChange={setReply}
-          onUploadImage={uploadForumImage}
-          minHeight={120}
-          autoFocus
-          onSubmitShortcut={sendReply}
-          placeholder="写在这条回复下面；Ctrl / ⌘ + Enter 发送"
-        />
+        <Suspense fallback={<div className="flex h-[120px] items-center justify-center rounded-md border bg-muted/20 text-xs text-muted-foreground">编辑器加载中…</div>}>
+          <ForumEditor
+            value={reply}
+            onChange={setReply}
+            onUploadImage={uploadForumImage}
+            minHeight={120}
+            autoFocus
+            onSubmitShortcut={sendReply}
+            placeholder="写在这条回复下面；Ctrl / ⌘ + Enter 发送"
+          />
+        </Suspense>
         <div className="mt-2 flex items-center justify-end gap-2">
           <Button variant="ghost" size="sm" onClick={cancelReply}>
             取消
@@ -561,15 +566,17 @@ function ForumTopicPage() {
           <CardContent className="space-y-2 py-4">
             {isAuthenticated ? (
               <>
-                <ForumEditor
-                  value={reply}
-                  onChange={setReply}
-                  onUploadImage={uploadForumImage}
-                  minHeight={160}
-                  autoFocus
-                  onSubmitShortcut={sendReply}
-                  placeholder="写下你的回应…（支持标题、引用、列表、表情和站内表情包）"
-                />
+                <Suspense fallback={<div className="flex h-[160px] items-center justify-center rounded-md border bg-muted/20 text-xs text-muted-foreground">编辑器加载中…</div>}>
+                  <ForumEditor
+                    value={reply}
+                    onChange={setReply}
+                    onUploadImage={uploadForumImage}
+                    minHeight={160}
+                    autoFocus
+                    onSubmitShortcut={sendReply}
+                    placeholder="写下你的回应…（支持标题、引用、列表、表情和站内表情包）"
+                  />
+                </Suspense>
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] text-muted-foreground">
                     Ctrl / ⌘ + Enter 发送；请针对内容，不针对人。
