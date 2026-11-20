@@ -12,7 +12,10 @@ from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.pool import StaticPool
 
 _MIGRATION_PATH = (
-    Path(__file__).resolve().parents[1] / "alembic" / "versions" / "056_drop_legacy_backup_tables.py"
+    Path(__file__).resolve().parents[1]
+    / "alembic"
+    / "versions"
+    / "056_drop_legacy_backup_tables.py"
 )
 
 

@@ -422,9 +422,7 @@ async def list_reviewer_candidates(
         slug: name
         for slug, name in (
             await db.execute(
-                select(Discipline.slug, Discipline.name).where(
-                    Discipline.tenant_id == tenant_id
-                )
+                select(Discipline.slug, Discipline.name).where(Discipline.tenant_id == tenant_id)
             )
         ).all()
     }

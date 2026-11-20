@@ -265,15 +265,3 @@ async def test_paper_scores_kept(
     assert body["absurdity_index"] == 2.0
     assert body["quality_score"] == 88.0
     assert body["quality_grade"] == "A"
-
-
-@pytest.mark.asyncio
-async def test_metrics_no_absurdity_median(
-    client: AsyncClient, db_session: AsyncSession, admin_user: dict
-) -> None:
-    """指标接口不再下发 absurdity_index_median；r_factor 仍为数值字段。"""
-    resp = await client.get("/api/catalog/journal-metrics")
-    assert resp.status_code == 200, resp.text
-    body = resp.json()
-    assert "absurdity_index_median" not in body
-    assert "r_factor" in body

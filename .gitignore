@@ -160,16 +160,11 @@ apps/frontend/test-results/
 apps/backend/.coverage
 apps/backend/e2e_test*.db
 apps/backend/deploy_demo.db*
-apps/backend/prebuilt-static/assets/
 dist.tar.gz
 .tmp-*.log
 dist.tgz
 
-# 旧静态备份/构建产物与用户实物（不得入库）
-apps/backend/prebuilt-static.bak*/
-apps/backend/prebuilt-static.old/
-apps/backend/prebuilt-static/covers/
-apps/backend/prebuilt-static/templates/
+# 不应入库的用户实物与本地配置
 *.docx
 *.pdf
 .env
@@ -184,12 +179,13 @@ apps/frontend/.tanstack/
 /logs/caddy/*.log
 /logs/caddy/*.log.gz
 
-# 生产备份：只允许提交加密归档与脱敏导出，明文数据库/上传卷/密钥不得入库
-backups/**/*.sql
-backups/**/*.sql.gz
-backups/**/*.tar.gz
-backups/**/*.key
-backups/**/decrypted/
+# Production backups stay outside the repository
+/backups/
 
 # pytest/fuse temp artifacts
 apps/backend/.fuse*
+
+# Legacy review artifacts stay outside the repository
+/pending-orig/
+/review-pack/
+/render.yaml

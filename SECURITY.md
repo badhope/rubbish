@@ -1,122 +1,49 @@
-# Security Policy
+# Security policy
 
-## Supported Versions
+**English · [简体中文](SECURITY.zh-CN.md)**
 
-Only the latest release on `main` receives security updates. Older tags are
-not patched in-place; please upgrade.
+## Supported version
 
-| Branch  | Supported |
-|---------|-----------|
-| `main`  | ✅ Active  |
-| older   | ❌ No      |
+Only `main` receives security fixes. Tags and archived branches are not patched.
 
-## Reporting a Vulnerability
+## Reporting
 
-**Do not open a public GitHub issue for security reports.** Use one of the
-private channels below:
+Do not open a public issue for a vulnerability.
 
-1. **GitHub Security Advisories** (preferred) — open a private draft on the
-   GitHub Security tab. The repo owner is automatically CC'd and the report
-   stays private until disclosure is agreed.
-2. **Email** — reach the maintainer via the address listed on the
-   GitHub profile. (Avoid pasting secrets in the issue title.)
+- Open a private draft in the repository's **Security Advisories** tab, or
+- email `info@rubbishasci.cn` with the subject `Rubbish security`.
 
-Please include:
+Include the affected endpoint or file, reproduction steps, impact, and any suggested fix. Do not include real user data or live credentials. You will get an acknowledgement within 3 working days and a status update within 10 days.
 
-- Description of the vulnerability + attack scenario
-- Steps to reproduce (PoC script / curl trace preferred)
-- Potential impact (auth bypass? RCE? data exfiltration?)
-- Suggested fix (if you have one)
+## Scope
 
-You should receive a first response within **72 hours**. Fixes are
-typically shipped within **30 days** for high-severity issues, coordinated
-with the reporter for responsible disclosure.
+In scope:
 
-## Built-in Security Layers
+- authentication, session handling, password reset, TOTP, and OIDC;
+- tenant isolation and PostgreSQL row-level security;
+- access control on archive drafts, community moderation, and admin routes;
+- upload handling, path traversal, and content-type confusion;
+- stored/reflected XSS, CSRF, SSRF, and SQL injection;
+- privacy leaks in exports, RSS, sitemap, logs, or error pages.
 
-### Authentication & session
+Out of scope:
 
-| Layer | Implementation |
-|-------|---------------|
-| Password hashing | bcrypt with per-row salt, cost factor 12 |
-| Access tokens | JWT (HS256) — short-lived, signed with the **current** key from the rotation chain |
-| Refresh tokens | JWT in `httpOnly`, `Secure`, `SameSite=strict` cookie; version counter (`token_version`) on the user model lets admins force a global re-login |
-| 2FA | TOTP (RFC 6238) per-user secret encrypted at rest with Fernet; 10 single-use backup codes hashed with SHA-256 |
-| OIDC SSO | PKCE required by default; `state` parameter is a short-lived JWT (defence against CSRF on the callback) |
-| Rate-limit | Sliding window per IP + route, pluggable store (in-memory default, Redis backend for multi-node) |
+- denial of service caused by unrealistic traffic volumes;
+- missing headers on a local development server;
+- reports that require a compromised administrator account;
+- social engineering of maintainers.
 
-### Authorisation
+## Built-in protections
 
-- App-layer query filter by `tenant_id` + PostgreSQL RLS as a second
-  enforcement layer.
-- `get_current_user` rejects `is_active=False` users with **401** before
-  leaking any account state.
-- Admin-only endpoints (`/api/admin/*`) check the `is_admin` flag after
-  token validation.
-- GDPR endpoints (`/api/users/me/export|delete|restore`) use a
-  *soft-delete-aware* dependency so users in the 30-day grace window
-  can still call `restore`.
+- bcrypt password hashing and short-lived access tokens;
+- refresh-token rotation with reuse detection;
+- optional TOTP two-factor authentication;
+- PostgreSQL row-level security with `FORCE ROW LEVEL SECURITY`;
+- per-IP and per-address rate limits;
+- upload limits, filename normalization, and content-type checks;
+- audit logs for administrative actions;
+- encrypted production backups; the key is never stored in the repository.
 
-### Secrets & rotation
+## Disclosure
 
-- All secrets live in environment variables — never in the repo
-  (`.gitleaks.toml` blocks them).
-- JWT secret rotation is online: `POST /api/admin/reload-secret-keys`
-  rebuilds the active key list without restarting the process.
-  New tokens are signed with the newest key; old tokens remain
-  verifiable during the rotation window.
-- On user-initiated account deletion, `token_version` is incremented,
-  immediately invalidating every active session.
-
-### Transport & headers
-
-- `SecurityHeadersMiddleware` ships: `CSP`, `HSTS`,
-  `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`,
-  `Permissions-Policy`.
-- CORS allowlist, `TrustedProxies` for `X-Forwarded-For`.
-- Cookies are `SameSite=strict`; `Secure` is auto-enabled in production.
-
-### Audit & monitoring
-
-- Every privileged admin action is recorded per tenant in the audit
-  log table.
-- GitHub Actions run **gitleaks** + **CodeQL** + **pip-audit** on every
-  push and PR.
-- Dependabot opens weekly PRs for vulnerable dependencies; patch &
-  minor updates are auto-squash-merged.
-
-## Local Security Tooling
-
-```bash
-# Backend
-cd apps/backend
-uv run bandit -r app                 # static security lint
-uv run pip-audit                     # PyPI dependency CVE scan
-uv run ruff check .                  # style + bug categories
-uv run mypy app                      # type-based bug detection
-uv run pytest                        # includes security regression tests
-
-# Frontend
-cd apps/frontend
-npm run lint
-npm run typecheck
-npm audit                            # npm dependency CVE scan
-```
-
-## Incident Response
-
-If a secret or vulnerability is exposed:
-
-1. **Rotate immediately** (treat the leaked value as public).
-2. For JWT keys: update `RUBBISH_SECRET_KEY` and
-   `RUBBISH_PREVIOUS_SECRET_KEYS` in every environment, then
-   call `POST /api/admin/reload-secret-keys`.
-3. **Audit access** via `GET /api/audit-logs` (admin).
-4. **Notify** through a GitHub Security Advisory.
-5. **Force re-auth** by bumping `token_version` on affected users via
-   `PATCH /api/admin/users/{id}`.
-
-## Disclaimer
-
-This software is provided "as is" without warranty. The maintainer is
-not liable for damages arising from its use.
+We coordinate a fix and a release before publishing details. Credit is given unless the reporter prefers to stay anonymous.

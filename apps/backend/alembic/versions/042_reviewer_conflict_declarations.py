@@ -78,9 +78,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.execute(
-        "DROP POLICY IF EXISTS tenant_isolation ON reviewer_conflict_declarations"
-    )
+    op.execute("DROP POLICY IF EXISTS tenant_isolation ON reviewer_conflict_declarations")
     op.execute("ALTER TABLE reviewer_conflict_declarations NO FORCE ROW LEVEL SECURITY")
     op.execute("ALTER TABLE reviewer_conflict_declarations DISABLE ROW LEVEL SECURITY")
     op.drop_index(

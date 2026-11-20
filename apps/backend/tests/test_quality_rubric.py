@@ -287,9 +287,9 @@ def test_prompt_stability_same_answers_same_scores() -> None:
 def test_review_scores_accept_only_required_scores() -> None:
     from app.interfaces.http.review.routes import _normalize_review_scores
 
-    dimensions = {
-        k: {"score": 80} for k, _, _ in dimensions_for("academic")
-    }
+    dimensions = {k: {"score": 80} for k, _, _ in dimensions_for("academic")}
     result = _normalize_review_scores({"track": "academic", "dimensions": dimensions})
     assert result["score"] == 80.0
-    assert all(item["reason"] == "" and item["evidence"] == "" for item in result["dimensions"].values())
+    assert all(
+        item["reason"] == "" and item["evidence"] == "" for item in result["dimensions"].values()
+    )

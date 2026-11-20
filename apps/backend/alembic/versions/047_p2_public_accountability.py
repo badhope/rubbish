@@ -50,9 +50,7 @@ def upgrade() -> None:
         sa.Column("email", sa.String(length=320), nullable=False),
         sa.Column("token_hash", sa.String(length=64), nullable=False),
         sa.Column("token_expires_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column(
-            "status", sa.String(length=20), nullable=False, server_default="pending"
-        ),
+        sa.Column("status", sa.String(length=20), nullable=False, server_default="pending"),
         sa.Column("source", sa.String(length=40), nullable=False, server_default="desk"),
         sa.Column("last_email_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column(

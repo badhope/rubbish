@@ -31,9 +31,9 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v4
 
-      - uses: actions/configure-pages@v6
+      - uses: actions/configure-pages@v5
 
       - name: Stage site + shared assets
         # 页面里引用的是仓库内的 docs/assets（截图/logo/演示视频）。
@@ -45,10 +45,10 @@ jobs:
           mkdir -p _site/docs
           cp -R docs/assets _site/docs/assets
 
-      - uses: actions/upload-pages-artifact@v5
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@v4

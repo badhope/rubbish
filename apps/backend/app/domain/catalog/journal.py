@@ -8,6 +8,7 @@ between the two representations so they cannot drift silently.
 
 from __future__ import annotations
 
+from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import select
@@ -18,7 +19,7 @@ from app.domain.catalog.models import Issue, Resource, Volume
 from app.domain.catalog.visibility import as_aware
 
 
-def _issue_status(publication_status: str | None, publish_at) -> str:
+def _issue_status(publication_status: str | None, publish_at: datetime | None) -> str:
     if publication_status != "published":
         return "draft"
     moment = as_aware(publish_at) if publish_at else None
@@ -34,7 +35,7 @@ async def resolve_issue(
     volume: str | None,
     issue: str | None,
     publication_status: str | None = None,
-    publish_at=None,
+    publish_at: datetime | None = None,
     create: bool = True,
 ) -> Issue | None:
     """Find or create the Issue matching legacy strings.

@@ -302,15 +302,6 @@ export interface ResourceResponse extends ResourceBase {
   clc_label?: string | null
   /** 站内热度：单篇 R 指数（详情接口返回） */
   r_factor?: number | null
-  /** 评审来源公开口径（详情接口返回；不展示审稿人身份/报告正文） */
-  peer_review_status?:
-    | 'peer_reviewed'
-    | 'editorial_review'
-    | 'editorial_import'
-    | 'not_applicable'
-    | null
-  /** 已提交的评审报告数量（0 表示没有外审报告） */
-  peer_review_reports?: number
   /** 结构化作者列表（v5）：未认领者 email/affiliation/user_id 为 null，
    *  前端绝不能从 PDF/Word 抓私人邮箱展示。 */
   authors_detail?: AuthorDetail[] | null

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rubbish — 荒诞科研社区</title>
+<meta name="description" content="Rubbish 是一个荒诞科研社区：把不正经的问题当正经课题做，提问、记录、失败、复盘，都在这里。" />
+<meta name="keywords" content="荒诞科研, 研究社区, 失败复盘, 思想实验, Rubbish" />
+<style>
+  :root {
+    --ink: #1c1b18;
+    --muted: #6b675f;
+    --paper: #f7f6f2;
+    --line: #ded9cd;
+    --green: #1f5b46;
+    --green-soft: #e7efe9;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Noto Serif SC", "Songti SC", Georgia, serif;
+    line-height: 1.7;
+  }
+  a { color: inherit; }
+  .wrap { width: min(1040px, calc(100% - 48px)); margin: 0 auto; }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 0; border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .brand .mark { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 6px; background: var(--green); color: #fff; font-family: Georgia, serif; font-size: 22px; }
+  .brand b { font-size: 20px; letter-spacing: .02em; }
+  .brand span { display: block; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 9px; letter-spacing: .18em; color: var(--muted); }
+  .actions { display: flex; gap: 10px; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 40px; padding: 0 16px; border: 1px solid var(--line);
+    border-radius: 8px; text-decoration: none; font-family: ui-sans-serif, system-ui, sans-serif;
+    font-size: 13px; background: transparent;
+  }
+  .btn.primary { background: var(--green); border-color: var(--green); color: #fff; }
+  .hero { padding: 84px 0 64px; border-bottom: 1px solid var(--line); }
+  .eyebrow { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 10px; letter-spacing: .24em; color: var(--green); }
+  h1 { margin: 14px 0 10px; font-size: clamp(40px, 7vw, 76px); line-height: 1.05; letter-spacing: -.02em; }
+  .lead { max-width: 620px; margin: 0; color: var(--muted); font-size: 17px; }
+  .hero .actions { margin-top: 26px; }
+  section { padding: 52px 0; border-bottom: 1px solid var(--line); }
+  .kicker { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 10px; letter-spacing: .2em; color: var(--muted); }
+  h2 { margin: 8px 0 20px; font-size: clamp(24px, 3vw, 34px); line-height: 1.2; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+  .item { border-top: 1px solid var(--line); padding-top: 14px; }
+  .item h3 { margin: 0 0 6px; font-size: 17px; }
+  .item p { margin: 0; color: var(--muted); font-size: 14px; }
+  .rules { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 40px; padding: 0; margin: 0; list-style: none; }
+  .rules li { border-top: 1px solid var(--line); padding-top: 10px; font-size: 14px; color: var(--muted); }
+  .rules b { display: block; color: var(--ink); font-size: 14px; margin-bottom: 2px; }
+  .shots { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; align-items: start; }
+  .shots img { width: 100%; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+  .shots .side { display: grid; gap: 16px; }
+  footer { padding: 28px 0 40px; color: var(--muted); font-family: ui-sans-serif, system-ui, sans-serif; font-size: 12px; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  @media (max-width: 760px) {
+    .wrap { width: min(100% - 32px, 680px); }
+    .hero { padding: 54px 0 42px; }
+    .grid, .rules, .shots { grid-template-columns: 1fr; }
+    .shots .side { grid-template-columns: 1fr 1fr; }
+    header .actions .btn:not(.primary) { display: none; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="/">
+    <span class="mark">R</span>
+    <div><b>Rubbish</b><span>ABSURD RESEARCH COMMUNITY</span></div>
+  </a>
+  <div class="actions">
+    <a class="btn" href="index.html">English</a>
+    <a class="btn" href="https://rubbish.argjiemi.cn/guide?tab=policies">社区公约</a>
+    <a class="btn primary" href="https://rubbish.argjiemi.cn/forum">进入社区</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero" style="border-bottom: 0">
+    <p class="eyebrow">一个荒诞科研社区</p>
+    <h1>把不正经的问题，<br />认真研究一遍。</h1>
+    <p class="lead">提问、立题、记录、失败、复盘。你可以只发一个问题，也可以把一次实验或一段田野观察完整写下来；有人接，就继续做。</p>
+    <div class="actions">
+      <a class="btn primary" href="https://rubbish.argjiemi.cn/forum">逛社区</a>
+      <a class="btn" href="https://rubbish.argjiemi.cn/forum?compose=1">发布研究</a>
+    </div>
+  </section>
+
+  <section>
+    <p class="kicker">三种入口，一个社区</p>
+    <h2>不用先成为研究员</h2>
+    <div class="grid">
+      <div class="item"><h3>研究计划</h3><p>一个问题、为什么值得做、打算怎么做。先立项，再找同伴。</p></div>
+      <div class="item"><h3>记录与复盘</h3><p>实验日志、田野笔记、失败复盘。过程可以粗糙，材料要对得上。</p></div>
+      <div class="item"><h3>自由创作</h3><p>小说、随笔、评论、诗歌、指南。不套研究格式，只看写得好不好、讨论值不值得接。</p></div>
+    </div>
+  </section>
+
+  <section>
+    <p class="kicker">社区公约</p>
+    <h2>先把话说清楚</h2>
+    <ul class="rules">
+      <li><b>虚构要标出来</b>荒诞研究、讽刺写作、思想实验，在标题区或正文开头写明“虚构创作”。</li>
+      <li><b>真实材料可核查</b>引用的文献、数据、图片给得出处；自己编的参考文献标注“虚构参考文献”。</li>
+      <li><b>尊重真人隐私</b>不点名真实个人、单位、病历与聊天记录；讽刺指向现象，不指向可识别的人。</li>
+      <li><b>版权与处理</b>盗图、洗稿、未经授权的搬运会被下架；侵权与隐私投诉优先处理。</li>
+    </ul>
+  </section>
+
+  <section>
+    <p class="kicker">界面</p>
+    <h2>社区、档案与个人中心</h2>
+    <div class="shots">
+      <img src="docs/assets/screenshots/community-home-desktop.png" alt="Rubbish 社区首页桌面" loading="lazy" />
+      <div class="side">
+        <img src="docs/assets/screenshots/community-catalog-desktop.png" alt="Rubbish 档案" loading="lazy" />
+        <img src="docs/assets/screenshots/community-rules-desktop.png" alt="Rubbish 社区公约" loading="lazy" />
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Rubbish 社区 · 香港服务器与香港域名</span>
+    <span>版权、隐私与申诉：<a href="mailto:info@rubbishasci.cn">info@rubbishasci.cn</a></span>
+  </div>
+</footer>
+</body>
+</html>

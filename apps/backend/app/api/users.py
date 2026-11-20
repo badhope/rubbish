@@ -109,9 +109,7 @@ async def update_me(
 
         tenant_id = require_tenant_id()
         known = set(
-            (
-                await db.execute(select(Discipline.slug).where(Discipline.tenant_id == tenant_id))
-            )
+            (await db.execute(select(Discipline.slug).where(Discipline.tenant_id == tenant_id)))
             .scalars()
             .all()
         )

@@ -50,6 +50,10 @@ def test_foundation_does_not_import_business_or_inbound() -> None:
         for name in _imports(path):
             if rel == "core/modules.py" and name.startswith("app.modules"):
                 continue
+            # bootstrap is the composition/seed root (default forum boards);
+            # it runs once at startup before request handling.
+            if rel == "core/bootstrap.py" and name.startswith("app.domain.forum"):
+                continue
             if name.startswith(("app.domain", "app.interfaces", "app.modules")):
                 offenders.append(f"{rel} -> {name}")
     assert not offenders, "foundation layer imports business/inbound:\n" + "\n".join(offenders)

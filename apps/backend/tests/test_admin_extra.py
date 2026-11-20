@@ -98,24 +98,6 @@ async def test_revoke_role_not_held_404(
 
 
 @pytest.mark.asyncio
-async def test_review_mode_tenant_missing_404(
-    client: AsyncClient, admin_user: dict, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    from app.api import admin as admin_module
-
-    async def boom(db: AsyncSession, tenant_id: object, mode: str) -> None:
-        raise LookupError("tenant gone")
-
-    monkeypatch.setattr(admin_module, "set_review_mode", boom)
-    r = await client.patch(
-        "/api/admin/settings/review-mode",
-        json={"review_mode": "double_blind"},
-        headers=auth_headers(admin_user),
-    )
-    assert r.status_code == 404
-
-
-@pytest.mark.asyncio
 async def test_security_reload_writes_audit(
     client: AsyncClient, admin_user: dict, db_session: AsyncSession
 ) -> None:

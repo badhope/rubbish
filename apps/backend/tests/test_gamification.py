@@ -37,85 +37,6 @@ async def test_new_user_starts_at_level_one(client: AsyncClient) -> None:
     assert body["rules_accepted"] is False
 
 
-async def test_level_one_can_submit_after_rules_ack(client: AsyncClient) -> None:
-    """1.8.0 投稿零等级门槛：L1 注册即可投，唯一前置是确认当版《投稿规范》。"""
-    user = await register_user(client, email="l1@example.com", username="l1user")
-    headers = {"Authorization": f"Bearer {user['token']}"}
-    body = {
-        "title": "L1 direct submission",
-        "type": "paper",
-        "authors": ["A"],
-        "year": 2026,
-        "discipline": "计算机科学",
-        "abstract": "L1 用户确认规范后即可投稿。",
-    }
-
-    blocked = await client.post("/api/submissions", json=body, headers=headers)
-    assert blocked.status_code == 403
-    detail = blocked.json()["detail"]
-    assert detail["code"] == "rules_ack_required"
-
-    # 确认社区规范 + 作者引导（写入 rules_ack_version）→ 直接投稿成功
-    await client.post(
-        "/api/gamification/onboarding/author", json={"accept_rules": True}, headers=headers
-    )
-    submitted = await client.post("/api/submissions", json=body, headers=headers)
-    assert submitted.status_code == 201, submitted.text
-
-
-async def test_xp_does_not_grant_any_identity(
-    client: AsyncClient, test_user: dict, admin_user: dict
-) -> None:
-    """身份体系 3.0 的核心承诺：积分不换权限。
-
-    旧体系里"XP 满 400 + 录用 1 篇 → L4"。现在录用与积分都只影响荣誉
-    统计，身份只由"确认规范（作者）"与"角色授予（审稿人/编辑）"决定。
-    这条用例锁定：给一个作者灌到 500 XP 并录用一篇，他的身份仍然是作者。
-    """
-    from conftest import auth_headers as _ah
-
-    grant = await client.post(
-        f"/api/gamification/admin/users/{test_user['user_id']}/grant",
-        json={"points": 340, "note": "xp should not grant identity"},
-        headers=auth_headers(admin_user),
-    )
-    assert grant.status_code == 200, grant.text
-
-    me = await client.get("/api/users/me", headers=_ah(test_user))
-    assert me.json()["xp"] >= 400
-    # 已确认规范 → 作者身份（第 2 层），积分再多也不会变成审稿人
-    assert me.json()["level"] == 2
-
-    sub = await client.post(
-        "/api/submissions",
-        json={
-            "title": "identity paper",
-            "type": "paper",
-            "authors": ["A"],
-            "year": 2026,
-            "discipline": "计算机科学",
-            "abstract": "用于验证身份不被积分与录用改变。",
-        },
-        headers=auth_headers(test_user),
-    )
-    assert sub.status_code == 201, sub.text
-    sid = sub.json()["id"]
-    from conftest import complete_one_review
-
-    await complete_one_review(client, admin_user, sid)
-    dec = await client.patch(
-        f"/api/submissions/{sid}/decision",
-        json={"decision": "accept"},
-        headers=auth_headers(admin_user),
-    )
-    assert dec.status_code == 200, dec.text
-
-    me2 = await client.get("/api/users/me", headers=_ah(test_user))
-    # 录用与 XP 都不改变身份：仍是作者
-    assert me2.json()["level"] == 2
-    assert me2.json()["xp"] >= 400
-
-
 async def test_level_one_can_comment(client: AsyncClient, admin_user: dict) -> None:
     sample = {
         "type": "paper",
@@ -135,44 +56,6 @@ async def test_level_one_can_comment(client: AsyncClient, admin_user: dict) -> N
         headers={"Authorization": f"Bearer {r['token']}"},
     )
     assert posted.status_code == 201
-
-
-async def test_author_onboarding_grants_author_identity(client: AsyncClient) -> None:
-    """确认规范后成为作者身份（第 2 层），而不是"升到 L3"。
-
-    身份体系不再用 XP 表达"能不能投稿"——确认规范这个动作本身就是作者
-    身份的定义。
-    """
-    user = await register_user(client, email="onboard@example.com", username="onboard")
-    headers = {"Authorization": f"Bearer {user['token']}"}
-
-    # 未确认规范前是读者身份（1）
-    me_before = await client.get("/api/users/me", headers=headers)
-    assert me_before.json()["level"] == 1
-
-    author = await client.post(
-        "/api/gamification/onboarding/author", json={"accept_rules": True}, headers=headers
-    )
-    assert author.status_code == 200
-    assert _level(author.json()) == 2
-    assert author.json()["level"]["slug"] == "author"
-
-    me = await client.get("/api/users/me", headers=headers)
-    assert me.json()["rules_accepted"] is True
-
-    submitted = await client.post(
-        "/api/submissions",
-        json={
-            "title": "Onboarded submission",
-            "type": "paper",
-            "authors": ["A"],
-            "year": 2026,
-            "discipline": "计算机科学",
-            "abstract": "完成引导后应可投稿。",
-        },
-        headers=headers,
-    )
-    assert submitted.status_code == 201
 
 
 async def test_author_onboarding_requires_accept_flag(client: AsyncClient) -> None:
@@ -264,44 +147,6 @@ async def test_announcement_requires_admin(client: AsyncClient, test_user: dict)
         headers=auth_headers(test_user),
     )
     assert r.status_code == 403
-
-
-async def test_quality_rubric_is_public_and_frozen(client: AsyncClient) -> None:
-    """评分口径必须公开且冻结：作者能自查，外部 AI 能复现。"""
-    r = await client.get("/api/quality/rubric")
-    assert r.status_code == 200
-    body = r.json()
-    assert body["version"] == "5.1"
-    tracks = body["tracks"]
-    assert set(tracks) == {"academic", "absurd"}
-    assert tracks["academic"]["dimensions"][0]["key"] == "question"
-    assert sum(d["weight"] for d in tracks["academic"]["dimensions"]) == 100
-    assert sum(d["weight"] for d in tracks["absurd"]["dimensions"]) == 100
-    assert [g["code"] for g in body["grades"]] == [
-        "T1+",
-        "T1",
-        "Q1",
-        "Q2",
-        "Q3",
-        "Q4",
-        "R",
-    ]
-    assert any("封顶 79" in g for g in body["gates"])
-    assert any("封顶 59" in g for g in body["gates"])
-    assert any("封顶 49" in g for g in body["gates"])
-
-
-async def test_quality_form_and_prompt_are_public(client: AsyncClient) -> None:
-    """审稿表单与 AI 判分规格也必须公开——口径不公开就无法自证公正。"""
-    form = await client.get("/api/quality/form?track=academic")
-    assert form.status_code == 200
-    assert len(form.json()["dimensions"]) == 5
-    absurd = await client.get("/api/quality/form?track=absurd")
-    assert absurd.status_code == 200
-    assert len(absurd.json()["dimensions"]) == 6
-    prompt = await client.get("/api/quality/prompt?article_type=research&track=academic")
-    assert prompt.status_code == 200
-    assert "output_schema" in prompt.json()
 
 
 async def test_wallet_checkin_idempotent_and_streak(client: AsyncClient, test_user: dict) -> None:

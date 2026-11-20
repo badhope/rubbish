@@ -72,9 +72,21 @@ ACADEMIC_CHECK_ITEMS: tuple[CheckItem, ...] = (
 
 ABSURD_CHECK_ITEMS: tuple[CheckItem, ...] = (
     # --- 荒诞度 ---
-    CheckItem("x_degree", "absurdity", "正文是否有至少 3 处可指认的荒诞信号（反讽/悖论/夸张/错位/冷面幽默）？", 2),
-    CheckItem("x_degree_function", "absurdity", "荒诞写法是否在推进论点或暴露制度荒谬，而不是纯装饰？", 2),
-    CheckItem("x_degree_control", "absurdity", "荒诞语气是否有收束与边界，读完后仍能回到论文/叙事框架？", 2),
+    CheckItem(
+        "x_degree",
+        "absurdity",
+        "正文是否有至少 3 处可指认的荒诞信号（反讽/悖论/夸张/错位/冷面幽默）？",
+        2,
+    ),
+    CheckItem(
+        "x_degree_function", "absurdity", "荒诞写法是否在推进论点或暴露制度荒谬，而不是纯装饰？", 2
+    ),
+    CheckItem(
+        "x_degree_control",
+        "absurdity",
+        "荒诞语气是否有收束与边界，读完后仍能回到论文/叙事框架？",
+        2,
+    ),
     # --- 荒诞设定与原创 ---
     CheckItem("x_new", "concept", "设定是否真的荒诞且新，不是把普通吐槽换个说法？", 2),
     CheckItem("x_nonsense", "concept", "“无中生有”的部分是否有明确边界（读者知道哪里在胡说）？", 2),

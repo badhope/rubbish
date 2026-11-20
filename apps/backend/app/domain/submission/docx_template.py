@@ -27,9 +27,9 @@
 
 from __future__ import annotations
 
-import os
 import base64
 import io
+import os
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -170,14 +170,13 @@ def _green_rule(paragraph: Any, *, size: str = "8") -> None:
     ppr.append(borders)
 
 
-
 def _split_title(title: str) -> tuple[str, str]:
     """把“主标题——副标题”拆成两行；没有副标题就原样返回。"""
     t = (title or "").strip()
     for sep in ("——", " — ", "—"):
         i = t.find(sep)
         if 0 < i < len(t) - 2:
-            return t[:i].strip(), t[i + len(sep):].strip()
+            return t[:i].strip(), t[i + len(sep) :].strip()
     return t, ""
 
 
@@ -357,7 +356,11 @@ def _add_picture(doc: Any, src: str, base_dir: Path | None) -> bool:
             url = (
                 f"http://localhost:{os.environ.get('PORT', '8000')}" + src
                 if src.startswith("/api/")
-                else src.replace("https://rubbish.argjiemi.cn", f"http://localhost:{os.environ.get('PORT', '8000')}", 1)
+                else src.replace(
+                    "https://rubbish.argjiemi.cn",
+                    f"http://localhost:{os.environ.get('PORT', '8000')}",
+                    1,
+                )
                 if src.startswith("https://rubbish.argjiemi.cn")
                 else src
             )

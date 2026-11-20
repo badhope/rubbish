@@ -1,130 +1,95 @@
 <div align="center">
 
-<img src="docs/assets/logo-horizontal.svg" alt="Rubbish" width="320" />
+<img src="docs/assets/logo-horizontal.svg" alt="Rubbish" width="300" />
 
 # Rubbish
 
-**An absurd research community — ask, record, fail, review, argue in the open.**
+**A self-hostable absurd research community — ask odd questions, keep honest notes, publish failures, argue in the open.**
 
-> 16 backend modules · community + research archive · Playwright E2E · strictly typed end to end
+**English · [简体中文](README.zh-CN.md)**
 
-**🌐 [English](README.md) · [简体中文](README.zh-CN.md)**
-
-[![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm--Noncommercial--1.0.0-orange.svg?style=flat-square)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.12+-3776AB.svg?logo=python&logoColor=white&style=flat-square)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.139-009688.svg?logo=fastapi&logoColor=white&style=flat-square)](https://fastapi.tiangolo.com/)
-[![React](https://img.shields.io/badge/React-19-61DAFB.svg?logo=react&logoColor=white&style=flat-square)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6.svg?logo=typescript&logoColor=white&style=flat-square)](https://www.typescriptlang.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1.svg?logo=postgresql&logoColor=white&style=flat-square)](https://www.postgresql.org/)
-[![Docker](https://img.shields.io/badge/Docker_Compose-2496ED.svg?logo=docker&logoColor=white&style=flat-square)](https://docs.docker.com/compose/)
-[![Unit tests](https://img.shields.io/badge/unit_tests-870-10B981?style=flat-square&logo=pytest&logoColor=white)](#testing)
-[![E2E](https://img.shields.io/badge/E2E_specs-68-22C55E?style=flat-square&logo=playwright&logoColor=white)](#testing)
-
-**Mirrors**: [GitHub x33834](https://github.com/x33834/rubbish) · [GitHub Morningstar](https://github.com/Morningstar202604/rubbish) · [GitHub badhope](https://github.com/badhope/rubbish) · [GitCode](https://gitcode.com/badhope/rubbish) · [Gitee](https://gitee.com/badhope/rubbish)
-
-**[Features](#features) · [Screenshots](#screenshots) · [Architecture](#architecture) · [Quick Start](#quick-start) · [Tech Stack](#tech-stack) · [Testing](#testing) · [Docs](#docs)**
+[![CI](https://github.com/badhope/rubbish/actions/workflows/ci.yml/badge.svg)](https://github.com/badhope/rubbish/actions/workflows/ci.yml)
+[![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm--Noncommercial--1.0.0-orange.svg)](LICENSE)
 
 </div>
 
----
+Rubbish is a place for research that does not fit the usual format. Post a plan before you know the answer, log what actually happened, keep the failed attempts, and let other people question the result. Long notes can be collected into an archive; short threads stay in the community.
 
-## Positioning: open-source example vs. production service
+It is one FastAPI service, one React app, and PostgreSQL. You can run the whole thing on a single small server.
 
-| | What it is | Where showcase content lives |
-| --- | --- | --- |
-| **Open-source example** (this repo) | Reference implementation of the Rubbish community — clone it, self-host it, adapt it. | `site/`, `docs/assets/`, README screenshots |
-| **Production service** ([rubbish.argjiemi.cn](https://rubbish.argjiemi.cn)) | A public absurd research community. The site is currently offline while the rebuild is being finished. | nowhere — de-showcased by design |
+## What you can do
 
-## Features
+- **Discuss in boards.** Research plans, experiment logs, field notes, failure archives, lab-life talk, and team-finding each have their own board.
+- **Publish an archive entry.** Longer records get a stable page with a readable body, version history, downloads, comments, and related work.
+- **Mark fiction as fiction.** Community posts can carry a visible fiction badge, so imagined work never passes as a real record.
+- **Follow what matters.** Bookmarks, reading progress, author follows, notifications, and topic subscriptions work across devices.
+- **Keep moderation practical.** Reports, board management, announcements, audit logs, and a small admin area are built in.
+- **Run it yourself.** Docker Compose, automatic HTTPS through Caddy, Alembic migrations, and PostgreSQL row-level security are already wired up.
 
-| Role | Capability |
-| --- | --- |
-| **Writer** | Publish a research note or community post; markdown editor, draft autosave, optional metadata |
-| **Reader** | Public archive, community reading, typography controls, reading progress, follows and bookmarks |
-| **Community** | Boards, topics, replies, reactions, reports, feedback board, notifications; no login wall for reading |
-| **Moderator** | Report triage, content hide/restore, pin/lock, board management, audit trail |
-| **Admin** | Users and roles, content, points ledger, system health, announcements; community operations only |
-
-**Secure by default**: passwordless email-code sign-in (hashed one-time codes, rate limited), WebAuthn passkeys + TOTP 2FA, server-side JWT revocation with key rotation, sign-up captcha, per-action audit logs, multi-tenant isolation (PostgreSQL RLS).
-
-**Lightweight deployment**: single-node `docker compose up`; PostgreSQL for production, SQLite + single-port service for dev/demo.
-
-## Screenshots
-
-| Home (desktop) | Home (mobile) |
-| --- | --- | --- |
-| ![Home desktop](docs/assets/screenshots/community-home-desktop.png) | ![Home mobile](docs/assets/screenshots/community-home-mobile.png) |
-
-| Forum | Works |
-| --- | --- |
-| ![Community](docs/assets/screenshots/community-forum-desktop.png) | ![Archive](docs/assets/screenshots/community-catalog-desktop.png) |
-
-| About the community | Community rules |  |
-| --- | --- | --- |
-| ![About](docs/assets/screenshots/community-about-desktop.png) | ![Rules](docs/assets/screenshots/community-rules-desktop.png) | |
-
-## Architecture
-
-![architecture](docs/assets/architecture.svg)
-
-**Core flow**: Post → discuss → collect → read → report → moderate.
-
-![workflow](docs/assets/workflow.svg)
-
-## Quick Start
-
-### Option 1: Docker Compose (recommended, one command)
+## Quick start
 
 ```bash
-docker compose up -d
-# open http://localhost:8000
+git clone https://github.com/badhope/rubbish.git
+cd rubbish
+cp .env.example .env
+# Set SITE_DOMAIN, POSTGRES_PASSWORD, RUBBISH_SECRET_KEY, RUBBISH_FERNET_KEY, RUBBISH_ADMIN_PASSWORD
+docker compose up -d --build
 ```
 
-### Option 2: Single-port dev/demo service (no containers)
+Open `https://<your-domain>` and check `https://<your-domain>/api/health`. The first startup runs the database migrations.
+
+For local development without Docker:
 
 ```bash
+# backend
 cd apps/backend
-cp .env.example .env          # adjust secrets as needed
-uv sync --group dev --locked  # install dependencies
-uv run alembic upgrade head   # initialize the database
-uv run python deploy_server.py
-# backend API + frontend static assets + uploads, all on http://localhost:8000
+uv sync
+uv run alembic upgrade head
+uv run python e2e_run_server.py
+
+# frontend, in another terminal
+cd apps/frontend
+npm ci
+npm run dev
 ```
 
-## Tech Stack
+The frontend runs on `http://localhost:5173`; the API runs on `http://localhost:8000`.
 
-| Layer | Technology |
-| --- | --- |
-| Frontend | React 19 · TypeScript 5.9 · TanStack Router/Query · Tailwind CSS v4 · pdf.js |
-| Backend | FastAPI · SQLAlchemy 2 (async) · Alembic · PostgreSQL 17 / SQLite |
-| Security | WebAuthn · TOTP · JWT denylist · bcrypt · CSP headers |
-| Quality | pytest (870) · Playwright E2E (68) · ruff · mypy strict · npm audit |
+## Project layout
 
-## Testing
-
-```bash
-# Backend (unit + migration consistency)
-cd apps/backend && uv run pytest
-
-# Frontend (lint + typecheck + unit + build)
-cd apps/frontend && npm ci && npm run lint && npm run typecheck && npm test
-
-# E2E (register → publish → reply journey)
-cd apps/frontend && E2E_SPAWN_SERVER=1 npx playwright test
-```
-
-## Data backup
-
-- A complete encrypted snapshot of the production database and uploads, plus a readable public-content export, lives in [`backups/rubbish-20261120`](backups/rubbish-20261120/README.md).
-- The snapshot contains 274 resources, 104 users, 310 legacy submissions, 10 forum topics, and 2,948 uploaded files. The encryption key is not committed.
+| Path | Purpose |
+|---|---|
+| `apps/backend` | FastAPI app, domain modules, Alembic migrations, tests |
+| `apps/frontend` | React + TypeScript SPA, board UI, reader, admin shell |
+| `infra/` | Docker, Caddy, and deployment helpers |
+| `ops/` | Server maintenance and release scripts |
+| `docs/` | Product notes, architecture, deployment, and screenshots |
 
 ## Docs
 
-- [Architecture deep dive](docs/ARCHITECTURE.md) · [Deployment guide](DEPLOY.md)
-- [Contributing](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
+| Document | English | 中文 |
+|---|---|---|
+| Product and vocabulary | [docs/POSITIONING.md](docs/POSITIONING.md) | [docs/POSITIONING.zh-CN.md](docs/POSITIONING.zh-CN.md) |
+| Architecture | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | [docs/ARCHITECTURE.zh-CN.md](docs/ARCHITECTURE.zh-CN.md) |
+| Deployment | [DEPLOY.md](DEPLOY.md) | [DEPLOY.zh-CN.md](DEPLOY.zh-CN.md) |
+| Contributing | [CONTRIBUTING.md](CONTRIBUTING.md) | [CONTRIBUTING.zh-CN.md](CONTRIBUTING.zh-CN.md) |
+| Security | [SECURITY.md](SECURITY.md) | [SECURITY.zh-CN.md](SECURITY.zh-CN.md) |
+
+## Checks
+
+```bash
+cd apps/backend
+uv run ruff check .
+uv run mypy app --exclude 'app/domain/submission' --exclude 'app/domain/ingest' \
+  --exclude 'app/interfaces/http/submission' --exclude 'app/interfaces/http/review'
+uv run pytest -q
+
+cd ../frontend
+npm run lint
+npm run typecheck
+npm run build
+```
 
 ## License
 
-Code is released under [PolyForm Noncommercial 1.0.0](LICENSE): free to use, modify, and redistribute for **learning, research, and noncommercial purposes only** — commercial use, paid services, and bundling into charged products are not permitted.
-
-Papers and site content remain the property of their authors.
+Source code is available under the [PolyForm Noncommercial License 1.0.0](LICENSE). Commercial use needs a separate agreement.

@@ -52,7 +52,9 @@ async def pg_factory() -> AsyncGenerator[async_sessionmaker[AsyncSession], None]
         await conn.execute(
             text(f"GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO {probe}")
         )
-        await conn.execute(text(f"GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO {probe}"))
+        await conn.execute(
+            text(f"GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO {probe}")
+        )
     await admin_engine.dispose()
 
     probe_url = url.set(username=probe, password="probe")

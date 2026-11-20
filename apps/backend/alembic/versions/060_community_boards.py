@@ -10,6 +10,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import sqlalchemy as sa
+
 from alembic import op
 
 revision = "060_community_boards"
@@ -72,7 +73,10 @@ def upgrade() -> None:
                 {"tid": tenant_id},
             )
         # 旧版块先清空引用再删除；不删除帖子。
-        bind.execute(sa.text("UPDATE forum_topics SET board_id = NULL WHERE tenant_id = :tid"), {"tid": tenant_id})
+        bind.execute(
+            sa.text("UPDATE forum_topics SET board_id = NULL WHERE tenant_id = :tid"),
+            {"tid": tenant_id},
+        )
         bind.execute(sa.text("DELETE FROM forum_boards WHERE tenant_id = :tid"), {"tid": tenant_id})
 
         ids: dict[str, int] = {}
@@ -125,7 +129,9 @@ def upgrade() -> None:
             {"board_id": ids["discussion"], "tid": tenant_id},
         )
 
-    bind.execute(sa.text("UPDATE tenants SET tenant_type = 'community' WHERE tenant_type = 'journal'"))
+    bind.execute(
+        sa.text("UPDATE tenants SET tenant_type = 'community' WHERE tenant_type = 'journal'")
+    )
 
 
 def downgrade() -> None:

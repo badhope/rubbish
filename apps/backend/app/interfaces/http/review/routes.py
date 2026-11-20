@@ -292,7 +292,7 @@ async def delete_review_draft(
 @router.get("/board")
 async def review_board(
     viewer: User | None = Depends(get_current_user_optional),
-    tenant_id = Depends(require_tenant_id),
+    tenant_id=Depends(require_tenant_id),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
     """公开的「审稿围观」列表。
@@ -302,17 +302,21 @@ async def review_board(
     直接表达审稿意愿，由编辑部在指派台处理。
     """
     rows = (
-        await db.execute(
-            select(Submission)
-            .where(
-                Submission.tenant_id == tenant_id,
-                Submission.status == "under_review",
+        (
+            await db.execute(
+                select(Submission)
+                .where(
+                    Submission.tenant_id == tenant_id,
+                    Submission.status == "under_review",
+                )
+                .options(selectinload(Submission.review_assignments))
+                .order_by(desc(Submission.submitted_at), desc(Submission.id))
+                .limit(50)
             )
-            .options(selectinload(Submission.review_assignments))
-            .order_by(desc(Submission.submitted_at), desc(Submission.id))
-            .limit(50)
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     can_apply = False
     if viewer is not None:
@@ -333,7 +337,9 @@ async def review_board(
                 "discipline": sub.discipline,
                 "subdiscipline": sub.subdiscipline,
                 "submitted_at": sub.submitted_at.isoformat() if sub.submitted_at else None,
-                "reviewer_count": len([a for a in assignments if a.status in ("accepted", "completed")]),
+                "reviewer_count": len(
+                    [a for a in assignments if a.status in ("accepted", "completed")]
+                ),
                 "already_assigned": bool(mine),
             }
         )
@@ -344,7 +350,7 @@ async def review_board(
 async def express_review_interest(
     submission_id: int,
     current_user: User = Depends(require_reviewer),
-    tenant_id = Depends(require_tenant_id),
+    tenant_id=Depends(require_tenant_id),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
     """审稿人表达审稿意愿；不直接改变指派状态，由主编在指派台决定。"""
@@ -384,14 +390,18 @@ async def express_review_interest(
     )
     # 让主编在站内通知里直接看到审稿意愿，而不是只留在审计日志。
     editor_ids = (
-        await db.execute(
-            select(User.id).where(
-                User.tenant_id == tenant_id,
-                User.role == "editor_in_chief",
-                User.is_active.is_(True),
+        (
+            await db.execute(
+                select(User.id).where(
+                    User.tenant_id == tenant_id,
+                    User.role == "editor_in_chief",
+                    User.is_active.is_(True),
+                )
             )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     for editor_id in editor_ids:
         await notifications.create(
             db,

@@ -1,30 +1,24 @@
-# 许可与定位说明
+# Notices
 
-Rubbish 以 **PolyForm Noncommercial 1.0.0** 发布（全文见 `LICENSE`）。
+**English · [简体中文](NOTICE.zh-CN.md)**
 
-## 为什么选 PolyForm Noncommercial（此前是 AGPL-3.0）
+## License
 
-Rubbish 是一个**纯公益**的开放获取期刊项目：代码与站点不收费、不放广告、
-不做数据变现。我们开放源码，是希望它被**学习、研究和非商业地复用**——
-不希望任何人拿它直接做收费生意。AGPL 解决的是"闭源 SaaS 不回馈上游"，
-但仍然允许商用；PolyForm Noncommercial 直接把**商业用途**排除在外：
+Rubbish is released under the **PolyForm Noncommercial License 1.0.0**. The full text is in [`LICENSE`](LICENSE).
 
-- **允许**：学习、研究、教学、个人项目、业余爱好、慈善/教育/科研等
-  非商业机构的使用，以及任何非商业目的的修改与再分发；
-- **不允许**：出售、出租、收费提供服务，或把本软件（及其衍生作品）
-  捆绑、集成进收费产品；
-- **再分发**：必须保留本许可证与版权声明（Required Notice）。
+You may study, modify, self-host, teach with, and redistribute the software for noncommercial purposes. You may not sell it, rent it, charge for access to it, or bundle it into a paid product. Redistributions must keep the license and the required copyright notice.
 
-换言之：拿去学习、自建、做实验，随便；拿去赚钱，不行。
+## Content
 
-## 公益条款（非许可附加条件）
+- Authors keep the copyright to what they publish.
+- Rubbish receives a non-exclusive license to display, archive, and back up that content.
+- Public archive metadata may be indexed by noncommercial discovery services. Bulk scraping for model training or resale is not permitted.
+- Fiction must be marked as fiction. Uploading someone else's private material without permission is not allowed.
 
-- 本站不出售版面费，不设订阅墙，不投放广告，不做读者数据变现。
-- 文章的著作权归作者所有；本站只取得展示与长期保存所需的非独占许可。
-- 目录元数据通过公开接口提供，允许任何索引系统免费收割（仅限非商业用途）。
+## Trademarks
 
-## 第三方依赖
+The Rubbish name and logo identify this project. Forks may keep the code but should use a different name and logo when they run a public service.
 
-第三方依赖各自保留原许可证；`apps/backend/pyproject.toml` 与
-`apps/frontend/package.json` 为唯一依赖清单。发布二进制或容器镜像时请一并
-保留依赖的许可证文本。
+## Third-party components
+
+Dependencies keep their own licenses. The authoritative lists are `apps/backend/pyproject.toml` and `apps/frontend/package.json`. When distributing a container image or binary, include the license texts of the bundled dependencies.

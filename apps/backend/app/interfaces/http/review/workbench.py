@@ -289,14 +289,18 @@ async def editor_workbench(
 
     # 审稿广场的申请意愿：只读审计日志，按稿件聚合后带给主编工作台。
     interest_rows = (
-        await db.execute(
-            select(AuditLog).where(
-                AuditLog.tenant_id == tenant_id,
-                AuditLog.action == "review.interest",
-                AuditLog.target_type == "submission",
+        (
+            await db.execute(
+                select(AuditLog).where(
+                    AuditLog.tenant_id == tenant_id,
+                    AuditLog.action == "review.interest",
+                    AuditLog.target_type == "submission",
+                )
             )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     interest_by_sub: dict[int, list[str]] = {}
     for row in interest_rows:
         try:

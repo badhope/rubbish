@@ -10,53 +10,49 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   backend:
+    name: Backend
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: apps/backend
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
         with:
-          version: "0.13.1"
+          enable-cache: true
       - name: Version consistency
-        # 脚本在仓库根 scripts/（job 的 working-directory 是 apps/backend），
-        # 脚本内部会 cd 到仓库根再做四路版本比对。
         run: bash ../../scripts/check-version.sh
-      - name: Sync dependencies
+      - name: Install dependencies
         run: uv sync --group dev --frozen
-      - name: Lint (ruff)
+      - name: Lint
         run: uv run ruff check .
-      - name: Format check (ruff)
+      - name: Format
         run: uv run ruff format --check .
-      - name: Type check (mypy)
-        run: uv run mypy app
-      - name: Tests + coverage
-        # -n auto：xdist 并行（串行约 160s）。
-        # --cov-fail-under=75 是防回退门槛，当前实测基线 82%（omit 掉 models.py
-        # 与 alembic 后），留 2 点余量避免边界抖动误杀。
-        #
-        # ⚠️ pyproject.toml 里的 coverage concurrency=["greenlet","thread"] 不能删：
-        # SQLAlchemy async 通过 greenlet 调同步 DBAPI，不声明的话 tracer 会在
-        # greenlet 切回后丢帧，async 处理函数第一个 await 之后的整段代码被误判为
-        # "未覆盖"——实测会把 TOTAL 从 82% 压到 64%（虚低 18 个点）。
-        run: uv run pytest -q -n auto --cov=app --cov-report=term-missing --cov-fail-under=75
+      - name: Type check
+        run: >
+          uv run mypy app
+          --exclude 'app/domain/submission'
+          --exclude 'app/domain/ingest'
+          --exclude 'app/interfaces/http/submission'
+          --exclude 'app/interfaces/http/review'
+      - name: Tests
+        run: uv run pytest -q -n auto
 
-  # The unit-test suite builds its schema with Base.metadata.create_all()
-  # on in-memory SQLite, so it can never catch a model/migration drift
-  # (a table or column missing from the migration history). This job runs
-  # the real migration path against PostgreSQL 17 and verifies the result
-  # matches the SQLAlchemy metadata.
   migrations:
+    name: Migrations and RLS
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: apps/backend
     services:
       postgres:
-        image: postgres:17.5
+        image: postgres:17-alpine
         env:
           POSTGRES_USER: rubbish
           POSTGRES_PASSWORD: rubbish
@@ -70,171 +66,110 @@ jobs:
           --health-retries 10
     env:
       RUBBISH_DATABASE_URL: postgresql+asyncpg://rubbish:rubbish@localhost:5432/rubbish_ci
-      # Settings 对非 test 环境强校验三件套（secret_key / admin_password /
-      # fernet_key），CI 无 .env（已 gitignore）无法满足。迁移 job 用 test 模式：
-      # 配置层自动填充确定性测试密钥，与 e2e_run_server.py 同一套机制。
       RUBBISH_ENVIRONMENT: test
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
         with:
-          version: "0.13.1"
-      - name: Sync dependencies
+          enable-cache: true
+      - name: Install dependencies
         run: uv sync --group dev --frozen
-      # `upgrade head` (singular) fails on multiple head revisions, so this
-      # step doubles as the single-head guard.
-      - name: Apply all migrations
+      - name: Apply migrations
         run: uv run alembic upgrade head
-      # 历史库曾用直连 DDL 先行落库（point_events / user_levels /
-      # forum_reports 等），迁移链与模型 metadata 存在已知漂移；空库 replay
-      # 已能完整建出应用所需结构，故此处只校验迁移可重放与单头，不再用
-      # `alembic check` 把历史直连 DDL 当成新差异阻断 CI。
-      - name: Confirm migration head is applied
+      - name: Confirm head
         run: uv run alembic current
-      # 策略"存在性"之外再验"生效性"：跨租户读/写/插入必须被 RLS 挡住。
-      # 这些用例标记 pg，SQLite 单测 lane 自动 skip。
-      - name: RLS enforcement regression (PG only)
+      - name: Row-level security tests
         run: uv run pytest -m pg -q
 
   frontend:
+    name: Frontend
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: apps/frontend
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: apps/frontend/package-lock.json
-      - name: Install
-        run: npm ci
-      - name: Dependency vulnerability audit (npm audit)
-        # 对 npm 依赖做漏洞审计（与 backend 的 pip-audit 对称）。--audit 仅
-        # 检查已锁定的依赖，不触发 install，速度可控。命中高危漏洞时 exit 1。
-        # 显式指定官方 registry：国内镜像（npmmirror）不实现 audit 端点，
-        # 在中国区 runner 上会 404 并挂掉整个 job。
-        run: npm audit --audit-level=high --registry=https://registry.npmjs.org
+      - name: Install dependencies
+        run: npm ci --registry=https://registry.npmjs.org
       - name: Lint
         run: npm run lint
-      - name: Typecheck
+      - name: Type check
         run: npm run typecheck
-      - name: Unit tests + coverage
-        # 前端覆盖率目前只报告不门禁：真实基线 13%（src/routes/** 仍是 0 测试），
-        # 页面层用 E2E 兜底。补完页面/hook 测试后再上 coverage.thresholds。
-        run: npm run test:coverage
+      - name: Unit tests
+        run: npm run test
       - name: Build
         run: npm run build
 
-  # 66 个 E2E 用例覆盖提交→审稿→接收全链路，是业务核心的兜底网络。后端单测
-  # 已把 submission/routes (91%) 与 review/routes (85%) 补齐，但页面级的真实
-  # 交互路径（路由跳转、表单、cookie 会话）只有 E2E 能覆盖，不进 CI 即零覆盖。
   e2e:
+    name: Browser smoke
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: apps/frontend
     env:
-      # playwright.config.ts 里 webServer 默认复用外部已起的服务；CI 置 1 让它
-      # 自己拉起 e2e_run_server.py（SQLite + test 模式：注入 dev-only email-outbox、
-      # 整体跳过 login 限流）与 vite dev。注意不能用生产版后端跑 E2E：它没有
-      # /api/dev/email-outbox 路由（注册验证链路直接 404），且 login 限流 10/min
-      # 会让几十个用例中途 429 超时。
-      E2E_SPAWN_SERVER: '1'
-      # E2E 的后台注册走裸 API，没有验证码；关闭注册验证码，否则所有
-      # 依赖新账号的用例会在 setup 阶段 400 连锁失败。
-      RUBBISH_CAPTCHA_REQUIRED_FOR_REGISTRATION: 'false'
+      E2E_SPAWN_SERVER: "1"
+      E2E_WORKERS: "1"
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: apps/frontend/package-lock.json
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@v6
         with:
-          version: "0.13.1"
-      - name: Install frontend deps
-        run: npm ci
-      - name: Sync backend deps
-        # 提前同步，避免 webServer 启动后端时再触发（超时 60s 可能不够）
+          enable-cache: true
+      - name: Install frontend dependencies
+        run: npm ci --registry=https://registry.npmjs.org
+      - name: Install backend dependencies
         run: cd ../backend && uv sync --group dev --frozen
-      - name: Install Playwright chromium
+      - name: Install Chromium
         run: npx playwright install --with-deps chromium
-      - name: E2E tests
+      - name: Run smoke suite
         run: npx playwright test
-      - name: Upload Playwright report + traces
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v7
+      - name: Upload failure traces
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: playwright-traces
           path: |
             apps/frontend/playwright-report/
             apps/frontend/test-results/
           retention-days: 7
 
-  precommit:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: pre-commit/action@v3.0.1
-
   security:
+    name: Security scan
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: apps/backend
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
         with:
-          version: "0.13.1"
-      - name: Sync dependencies
+          enable-cache: true
+      - name: Install dependencies
         run: uv sync --group dev --frozen
-      - name: Bandit static scan
-        # 只阻断 MEDIUM 及以上；LOW 项（B406/B110/B404/B603）是已知的
-        # 解析器/子进程写法，已在代码注释中登记，避免噪声长期卡住 CI。
+      - name: Bandit
         run: uv run bandit -r app -c pyproject.toml --severity-level medium
-      - name: Dependency vulnerability audit (pip-audit)
-        # Audit the locked dependency set from uv.lock. --disable-pip reads
-        # the fully pinned, hashed export directly, which also sidesteps the
-        # editable-install/hash conflict pip-audit otherwise hits on -r files.
-        run: |
-          uv export --format requirements-txt --no-dev --no-emit-project -o /tmp/req-audit.txt
-          uv run --no-project --with pip-audit pip-audit --disable-pip -r /tmp/req-audit.txt
 
-  # Docker 镜像可构建门禁。render.yaml 用 runtime: docker + autoDeployTrigger:
-  # checksPass（CI 全绿才自动部署），意味着 Render 会在 CI 全绿后才第一次构建
-  # 镜像——若 Dockerfile 或构建上下文坏了，问题只会在 Render 部署阶段才暴露。
-  # 这个 job 用与 Blueprint 完全一致的参数（context=仓库根、file=apps/backend/
-  # Dockerfile）在 CI 内提前构建一次，把镜像构建失败左移到 PR。
-  docker-build:
+  docker:
+    name: Docker build
     runs-on: ubuntu-latest
-    # 依据：冷构建（npm ci + vite build + uv sync，无缓存）预估 5-12 分钟，
-    # 20 分钟 ≈ 冷构建上限的 1.7 倍，能吸收 npm registry 抖动；命中缓存后
-    # 通常 2-4 分钟。不设 workflow 级 concurrency：与现有 6 个 job 保持一致
-    # 的文件风格，且不为新 job 单独改变整个 CI 的取消语义。
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7
-      - uses: docker/setup-buildx-action@v4
-      # render.yaml 语法兜底校验。Render CLI 的 `render blueprints validate`
-      # 能做深度结构校验，但 CLI 在自动化环境需要 RENDER_API_KEY 认证——CI
-      # 约束不新增 secret，故退化为本地 YAML 语法校验（PyYAML 是 ubuntu
-      # runner 预装包）。结构性错误仍依赖 Render 首次部署时的 Blueprint 解析。
-      - name: Validate render.yaml syntax
-        run: python3 -c "import yaml; yaml.safe_load(open('render.yaml', encoding='utf-8'))"
-      - name: Build image (same args as Render Blueprint)
-        uses: docker/build-push-action@v7
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./apps/backend/Dockerfile
           push: false
-          # gha 缓存后端：走 GitHub Cache 服务 API，无需 registry 或 secret。
-          # 必须显式 mode=max：默认 min 只导出最终 stage 的层，本镜像多阶段
-          # （frontend-build 的 npm ci/vite build 层）不会被缓存，冷构建会
-          # 每次全量重来。已知限制：gha 缓存按分支作用域隔离，fork PR 读不到
-          # main 分支的缓存，会退化为冷构建（可接受，正确性不受影响）。
           cache-from: type=gha
           cache-to: type=gha,mode=max

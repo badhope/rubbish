@@ -7,6 +7,7 @@ csrf/captcha 在生产未显式配置时默认开（SPA 已回显 X-CSRF-Token�
 from __future__ import annotations
 
 import pytest
+
 from app.core.config import Settings
 
 _FERNET = "88Q2Rl3-2UqzRfG_3tyKUPUDp9CP81YuJp2dLSkQa_0="

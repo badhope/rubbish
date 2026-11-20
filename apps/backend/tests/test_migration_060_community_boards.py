@@ -117,7 +117,9 @@ def test_060_rebuilds_board_tree_and_moves_topics() -> None:
         feedback_id = conn.execute(
             text("SELECT id FROM forum_boards WHERE slug = 'feedback'")
         ).scalar_one()
-        tenant_type = conn.execute(text("SELECT tenant_type FROM tenants WHERE id = 't1'")).scalar_one()
+        tenant_type = conn.execute(
+            text("SELECT tenant_type FROM tenants WHERE id = 't1'")
+        ).scalar_one()
 
     assert len(boards) == 12
     assert tenant_type == "community"

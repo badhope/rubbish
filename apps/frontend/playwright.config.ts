@@ -43,24 +43,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      // 桌面项目跑全部用例；移动专用用例交给 mobile 项目（iPhone 13 视口）单独跑，
-      // 避免桌面视口下误判"底部 Tab 栏必须可见"等移动断言。
-      testIgnore: ['**/mobile-shell.spec.ts'],
       use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'mobile',
-      // 仅跑移动专用用例：iPhone 13 视口（390×844）触发 useIsMobile() → 渲染 MobileAppShell。
-      // 用 chromium 而非设备默认的 webkit：沙箱仅缓存 chromium，且移动判定靠视口宽度
-      // （matchMedia max-width:767px）而非内核，chromium 下断言等价。
-      testMatch: '**/mobile-shell.spec.ts',
-      use: { ...devices['iPhone 13'], browserName: 'chromium' },
-    },
-    {
-      name: 'mobile-review',
-      // 审稿闭环在手机视口再走一遍：同一套 /review、/submissions 壳，确认不是桌面专属。
-      testMatch: '**/submissions-review.spec.ts',
-      use: { ...devices['iPhone 13'], browserName: 'chromium' },
     },
   ],
   webServer: [

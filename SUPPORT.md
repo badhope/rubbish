@@ -1,37 +1,33 @@
-# 获取帮助
+# Support
 
-Rubbish 仍处于 pre-alpha 阶段,以下是获取帮助与反馈问题的几种途径,请按顺序尝试。
+**English · [简体中文](SUPPORT.zh-CN.md)**
 
-## 1. 先读文档
+## Read first
 
-| 想了解 | 看这里 |
+| Question | Document |
 |---|---|
-| 项目定位、模块、快速开始 | [README](README.md) |
-| 架构契约、租户隔离、模块依赖 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
-| 邮件后端 / OIDC SSO 接入 | [docs/integrations.md](docs/integrations.md) |
-| 配置项完整列表 | [`apps/backend/app/core/config.py`](apps/backend/app/core/config.py) |
-| 贡献流程 | [CONTRIBUTING.md](CONTRIBUTING.md) |
-| 安全策略 | [SECURITY.md](SECURITY.md) |
+| What is Rubbish? | [README](README.md) |
+| How do I run it? | [DEPLOY.md](DEPLOY.md) |
+| How is it built? | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
+| SMTP and OIDC | [docs/integrations.md](docs/integrations.md) |
+| Contributing | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| Security issue | [SECURITY.md](SECURITY.md) — do not open a public issue |
 
-## 2. 搜索已有 issue
+## Ask a question
 
-提问前请先在 GitHub 的 issue 列表搜索关键词,可能已经有人问过同样的问题。
+Search existing issues first. If nothing matches, open an issue with:
 
-## 3. 提 issue
+- what you expected and what happened;
+- the smallest steps that reproduce it;
+- your OS, Python / Node version, and whether you used Docker;
+- relevant logs, with secrets and user data removed.
 
-如果文档没解答你的问题,请按下面的类型选择对应的入口:
+Use the `question` label for usage questions and `bug` for reproducible failures.
 
-- **Bug 报告 / 功能请求** → 使用仓库的 issue 模板
-- **安全漏洞** → 不要公开提 issue,见 [SECURITY.md](SECURITY.md) 私密上报流程
-- **使用疑问 / 设计讨论** → issue 加 `question` 标签
+## Security and privacy
 
-提 issue 时请尽量提供:
+Report vulnerabilities privately through [SECURITY.md](SECURITY.md). For a privacy request about your account or content, email `info@rubbishasci.cn`.
 
-- 复现步骤(尽量小而清晰)
-- 期望行为 / 实际行为
-- 环境(OS、Python / Node 版本、Docker 版本、是否生产部署)
-- 相关日志或截图
+## License
 
-## 4. 授权与商用
-
-本仓库采用 [MIT License](LICENSE),允许商业与非商业用途,无需单独授权。
+The source is under the [PolyForm Noncommercial License 1.0.0](LICENSE). Commercial use needs a separate agreement.

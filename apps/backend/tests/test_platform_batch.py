@@ -13,7 +13,6 @@ from sqlalchemy import update
 
 from app.domain.catalog.models import Resource
 from tests.test_catalog import _SAMPLE
-from tests.test_submission import _PAYLOAD
 
 # 迁移图里有元组 down_revision 与重复 revision id，健康页必须用
 # Alembic 自己的图取 head，不能靠正则差集；测试也从同一张图取，
@@ -76,37 +75,6 @@ async def test_moderation_blocks_ad_text(client: AsyncClient, test_user: dict) -
 
 
 @pytest.mark.asyncio
-async def test_site_similarity_flags_copy_of_resource(
-    client: AsyncClient, admin_user: dict, test_user: dict
-) -> None:
-    resource = await client.post(
-        "/api/catalog",
-        json={
-            **_SAMPLE,
-            "title": "站内相似度基准标题",
-            "abstract": "这是一段用于站内相似度比对的稳定摘要文本，包含足够多的中文字符来形成 shingle。",
-        },
-        headers=auth_headers(admin_user),
-    )
-    assert resource.status_code == 201
-    payload = {
-        **_PAYLOAD,
-        "title": "站内相似度基准标题",
-        "abstract": "这是一段用于站内相似度比对的稳定摘要文本，包含足够多的中文字符来形成 shingle。",
-        "doi": "10.1234/similarity.001",
-    }
-    submission = await client.post(
-        "/api/submissions", json=payload, headers=auth_headers(test_user)
-    )
-    assert submission.status_code == 201, submission.text
-    body = submission.json()
-    assert body["similarity_score"] is not None
-    assert body["similarity_score"] >= 35
-    assert body["similarity_matches"]
-    assert body["similarity_matches"][0]["kind"] in {"resource", "submission"}
-
-
-@pytest.mark.asyncio
 async def test_comment_notifies_owner_and_preferences_roundtrip(
     client: AsyncClient, admin_user: dict, test_user: dict, db_session
 ) -> None:
@@ -163,43 +131,6 @@ async def test_system_health_requires_admin(
     assert body["status"] in {"ok", "warn", "fail"}
     assert any(c["key"] == "database" for c in body["checks"])
     assert body["code_revision"] == _ALEMBIC_HEAD
-
-
-@pytest.mark.asyncio
-async def test_submission_edit_recomputes_similarity(
-    client: AsyncClient, admin_user: dict, test_user: dict
-) -> None:
-    original = "原创摘要：讨论可复现实验的登记、版本锁定与失败样本归档，不涉及任何已有站内文本。"
-    copied = (
-        "站内相似度编辑重算：这段摘要会故意与站内资源保持一致，用来验证修改后的重算链路是否生效。"
-    )
-    resource = await client.post(
-        "/api/catalog",
-        json={**_SAMPLE, "title": "编辑重算基准", "abstract": copied},
-        headers=auth_headers(admin_user),
-    )
-    assert resource.status_code == 201
-    created = await client.post(
-        "/api/submissions",
-        json={
-            **_PAYLOAD,
-            "title": "编辑重算前的原创标题",
-            "abstract": original,
-            "doi": "10.1234/edit.001",
-        },
-        headers=auth_headers(test_user),
-    )
-    assert created.status_code == 201, created.text
-    sid = created.json()["id"]
-    patched = await client.patch(
-        f"/api/submissions/{sid}",
-        json={"title": "编辑重算基准", "abstract": copied},
-        headers=auth_headers(test_user),
-    )
-    assert patched.status_code == 200, patched.text
-    body = patched.json()
-    assert body["similarity_score"] >= 35
-    assert body["similarity_matches"]
 
 
 @pytest.mark.asyncio

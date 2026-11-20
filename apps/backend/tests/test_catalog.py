@@ -196,9 +196,6 @@ async def test_get_by_id(client: AsyncClient, admin_user: dict) -> None:
     body = response.json()
     assert body["id"] == rid
     assert body["title"] == "A Test Paper"
-    # 直接创建、没有关联投稿的历史记录，不能冒充“同行评审”。
-    assert body["peer_review_status"] == "editorial_import"
-    assert body["peer_review_reports"] == 0
 
 
 async def test_get_returns_404_for_missing(client: AsyncClient) -> None:
@@ -540,37 +537,6 @@ async def test_stats_and_facets_exclude_drafts(client: AsyncClient, admin_user: 
 # ---------------------------------------------------------------------------
 # R 指数：公开指标必须可解释、可复算，且不伪造引用数据
 # ---------------------------------------------------------------------------
-
-
-async def test_journal_metrics_are_public_and_empty_safe(client: AsyncClient) -> None:
-    r = await client.get("/api/catalog/journal-metrics")
-    assert r.status_code == 200
-    body = r.json()
-    # 空库：计数为 0，但比率必须为 null（"样本不足"），不能伪装成 0%。
-    assert body["published_total"] == 0
-    assert body["acceptance_rate"] is None
-    assert body["avg_review_days"] is None
-    assert body["open_access_rate"] is None
-    # 0.5.0 起：口径不进公开响应，只给数值（R1 契约）。
-    assert "r_index_formula" not in body
-    assert body["r_factor"] is None
-    assert body["self_citation_rate"] == 0.0
-
-
-async def test_journal_metrics_counts_published_only(client: AsyncClient, admin_user: dict) -> None:
-    await client.post(
-        "/api/catalog",
-        json={**_SAMPLE, "title": "Metrics Public"},
-        headers={"Authorization": f"Bearer {admin_user['token']}"},
-    )
-    await client.post(
-        "/api/catalog",
-        json={**_SAMPLE, "title": "Metrics Draft", "publication_status": "draft"},
-        headers={"Authorization": f"Bearer {admin_user['token']}"},
-    )
-    body = (await client.get("/api/catalog/journal-metrics")).json()
-    assert body["published_total"] == 1
-    assert body["open_access_rate"] == 100.0
 
 
 async def test_quartile_needs_minimum_sample(client: AsyncClient, admin_user: dict) -> None:

@@ -67,7 +67,7 @@ async def test_head_metadata_carries_community_metadata(
     assert status == "200"
     assert '"@type": "CreativeWork"' in body
     assert '"@type": "BreadcrumbList"' in body
-    assert 'citation_' not in body
+    assert "citation_" not in body
     assert "<title>SEO 可见论文 &lt;script&gt;alert(1)&lt;/script&gt; — Rubbish</title>" in body
     # Escaped, never raw: a title must not be able to close the tag.
     assert "<script>alert(1)</script>" not in body
@@ -174,4 +174,4 @@ async def test_article_schema_has_breadcrumb(
     assert '"@type": "BreadcrumbList"' in body
     assert '"isAccessibleForFree": true' in body
     assert '"@type": "Periodical"' not in body
-    assert 'citation_' not in body
+    assert "citation_" not in body

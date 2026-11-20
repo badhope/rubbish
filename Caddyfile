@@ -26,7 +26,7 @@ www.rubbish.argjiemi.cn, argjiemi.cn, www.argjiemi.cn {
 	@probes path /.env* /.git* /.svn* /.aws* /.ssh* /wp-admin* /wp-login* /xmlrpc.php* /phpmyadmin* /pma* /vendor* /server-status* /actuator* /config.json /config.yml /docker-compose.yml
 	respond @probes 404
 
-	# 全站请求体上限：投稿 PDF 最大 50MB，留 10MB 余量；超过直接 413，不进应用内存。
+	# 全站请求体上限：上传文件最大 50MB，留 10MB 余量；超过直接 413，不进应用内存。
 	request_body {
 		max_size 60MB
 	}
@@ -44,10 +44,6 @@ www.rubbish.argjiemi.cn, argjiemi.cn, www.argjiemi.cn {
 		-Server
 		-Via
 	}
-
-	# 旧投稿地址永久跳转到当前投稿页。
-	@legacySubmit path /submit /submit/
-	redir @legacySubmit /submissions/new 301
 
 	# 健康检查直通，便于平台探活与 uptime 监控。
 	handle /api/health* {

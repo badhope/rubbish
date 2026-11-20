@@ -45,9 +45,6 @@ yarn-error.log*
 Thumbs.db
 
 # Project specific
-**/*.md
-# 例外：预构建静态里的 Markdown 模板/规范必须进镜像（否则 /templates/*.md 404）
-!apps/backend/prebuilt-static/**/*.md
-.github
+**/*.md.github
 .trae
 screenshots

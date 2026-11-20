@@ -19,9 +19,7 @@ from app.domain.submission.models import Submission
 from app.interfaces.http.submission.schemas import SubmissionListResponse, SubmissionResponse
 
 
-async def _get_or_404(
-    db: AsyncSession, submission_id: int, *, lock: bool = False
-) -> Submission:
+async def _get_or_404(db: AsyncSession, submission_id: int, *, lock: bool = False) -> Submission:
     """Fetch a submission by id (scoped to current tenant) or raise 404.
 
     ``lock=True`` adds ``FOR UPDATE`` so concurrent decisions/assignments

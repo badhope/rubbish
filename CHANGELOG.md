@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.19.9] — 2026-11-20
+
+- Removed the remaining editorial APIs and UI: AI submission tokens, OAI-PMH, volume/issue management, legacy catalog issue exports, appeal routes, reviewer workbench triggers, and the editor-desk mailing list.
+- Replaced the personal identity ladder with community permission labels: member, moderator, content editor, site owner. Points remain reputation only.
+- Removed peer-review provenance fields from archive responses and deleted the corresponding frontend types.
+- Reworked the privacy policy and transactional email templates around community data, not manuscripts and reviews.
+- Fixed archive export helpers that were accidentally removed with the old JATS and issue-export routes.
+- Pruned tests for retired editorial modules; full backend suite is green again. Added a compact community smoke E2E suite.
+- Rewrote repository documentation as English-first with linked Chinese translations, and removed stale journal copy from deployment files.
+
 ## [1.19.1] — 2026-11-20
 
 - 论坛化第二轮：导航、首页、指南、关于页、论坛公约、作品库、SEO、README 与营销页统一为“论坛”口径，删除“从期刊转过来 / 不是期刊”叙事。

@@ -27,7 +27,7 @@ branch_labels = None
 depends_on = None
 
 
-def _rls(table: str) -> None:
+def _enable_rls(table: str) -> None:
     bind = op.get_bind()
     if bind.dialect.name != "postgresql":
         return
@@ -53,10 +53,16 @@ def upgrade() -> None:
         sa.Column("description", sa.Text(), nullable=True),
         sa.Column("cover_image", sa.String(500), nullable=True),
         sa.Column(
-            "created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
+            "created_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
         ),
         sa.Column(
-            "updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
+            "updated_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
         ),
         sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"], ondelete="CASCADE"),
         sa.UniqueConstraint("tenant_id", "number", name="uq_volumes_tenant_number"),
@@ -76,10 +82,16 @@ def upgrade() -> None:
         sa.Column("publish_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("published_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column(
-            "created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
+            "created_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
         ),
         sa.Column(
-            "updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")
+            "updated_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
         ),
         sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["volume_id"], ["volumes.id"], ondelete="CASCADE"),
@@ -183,8 +195,8 @@ def upgrade() -> None:
         """
     )
 
-    _rls("volumes")
-    _rls("issues")
+    _enable_rls("volumes")
+    _enable_rls("issues")
 
 
 def downgrade() -> None:
@@ -195,7 +207,9 @@ def downgrade() -> None:
             op.execute(f"ALTER TABLE {table} NO FORCE ROW LEVEL SECURITY")
             op.execute(f"ALTER TABLE {table} DISABLE ROW LEVEL SECURITY")
     op.drop_index("ix_release_manifests_issue_id", table_name="release_manifests")
-    op.drop_constraint("fk_release_manifests_issue_id_issues", "release_manifests", type_="foreignkey")
+    op.drop_constraint(
+        "fk_release_manifests_issue_id_issues", "release_manifests", type_="foreignkey"
+    )
     op.drop_column("release_manifests", "issue_id")
     op.drop_index("ix_resources_issue_id", table_name="resources")
     op.drop_constraint("fk_resources_issue_id_issues", "resources", type_="foreignkey")

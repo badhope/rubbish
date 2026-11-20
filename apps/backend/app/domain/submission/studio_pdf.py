@@ -100,12 +100,35 @@ def _sup(text: str) -> str:
 
 
 _GREEK = {
-    "alpha": "α", "beta": "β", "gamma": "γ", "delta": "δ", "epsilon": "ε",
-    "zeta": "ζ", "eta": "η", "theta": "θ", "lambda": "λ", "mu": "μ",
-    "nu": "ν", "xi": "ξ", "pi": "π", "rho": "ρ", "sigma": "σ", "tau": "τ",
-    "phi": "φ", "chi": "χ", "psi": "ψ", "omega": "ω",
-    "Gamma": "Γ", "Delta": "Δ", "Theta": "Θ", "Lambda": "Λ", "Pi": "Π",
-    "Sigma": "Σ", "Phi": "Φ", "Psi": "Ψ", "Omega": "Ω",
+    "alpha": "α",
+    "beta": "β",
+    "gamma": "γ",
+    "delta": "δ",
+    "epsilon": "ε",
+    "zeta": "ζ",
+    "eta": "η",
+    "theta": "θ",
+    "lambda": "λ",
+    "mu": "μ",
+    "nu": "ν",
+    "xi": "ξ",
+    "pi": "π",
+    "rho": "ρ",
+    "sigma": "σ",
+    "tau": "τ",
+    "phi": "φ",
+    "chi": "χ",
+    "psi": "ψ",
+    "omega": "ω",
+    "Gamma": "Γ",
+    "Delta": "Δ",
+    "Theta": "Θ",
+    "Lambda": "Λ",
+    "Pi": "Π",
+    "Sigma": "Σ",
+    "Phi": "Φ",
+    "Psi": "Ψ",
+    "Omega": "Ω",
 }
 _SUP_DIGITS = str.maketrans("0123456789+-n", "⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻ⁿ")
 
@@ -144,6 +167,7 @@ def _math_html(fragment: str) -> str:
     fragment = re.sub(r"\$\$(.+?)\$\$", block, fragment, flags=re.S)
     fragment = re.sub(r"\$(.+?)\$", inline, fragment, flags=re.S)
     return fragment
+
 
 _AUTHOR_SUP = re.compile(r"^([^0-9*]+?)\s*([0-9,，\s]*)(\*?)$")
 
@@ -189,8 +213,6 @@ def _affiliations_html(affiliations: str) -> str:
     return "<br/>".join(out)
 
 
-
-
 def _strip_meta_sections(body_md: str) -> str:
     """去掉正文开头重复的「摘要 / 关键词」块（元信息已在题录区印过一次）。"""
     import re
@@ -212,8 +234,6 @@ def _strip_meta_sections(body_md: str) -> str:
         flags=re.S,
     )
     return text.lstrip("\n")
-
-
 
 
 def _inline_image_sources(fragment: str) -> str:
@@ -243,7 +263,11 @@ def _inline_image_sources(fragment: str) -> str:
         url = (
             f"http://localhost:{os.environ.get('PORT', '8000')}" + src
             if src.startswith("/api/")
-            else src.replace("https://rubbish.argjiemi.cn", f"http://localhost:{os.environ.get('PORT', '8000')}", 1)
+            else src.replace(
+                "https://rubbish.argjiemi.cn",
+                f"http://localhost:{os.environ.get('PORT', '8000')}",
+                1,
+            )
         )
         try:
             req = Request(url, headers={"User-Agent": "rubbish-studio-pdf/1.0"})
@@ -276,11 +300,9 @@ def build_studio_html(meta: dict[str, Any], body_md: str) -> str:
 
     meta_parts = []
     if meta.get("clc"):
-        meta_parts.append(
-            f"中图分类号 <span class=\"num\">{_esc(meta['clc'])}</span>"
-        )
+        meta_parts.append(f'中图分类号 <span class="num">{_esc(meta["clc"])}</span>')
     if meta.get("doi"):
-        meta_parts.append(f"DOI <span class=\"num\">{_esc(meta['doi'])}</span>")
+        meta_parts.append(f'DOI <span class="num">{_esc(meta["doi"])}</span>')
     if meta.get("funding"):
         meta_parts.append(f"基金：{_esc(meta['funding'])}")
     meta_line = "　·　".join(meta_parts)
@@ -314,12 +336,12 @@ def build_studio_html(meta: dict[str, Any], body_md: str) -> str:
     )
 
     return f"""<html><body>
-<div class="title{' xlong' if len(title) > 28 else (' long' if len(title) > 22 else '')}">{_esc(title)}</div>
-{f'<div class="subtitle">——{_esc(subtitle)}</div>' if subtitle else ''}
-<div class="authors">{_author_html(authors) or '作者未填写'}</div>
-{f'<div class="affs">{_affiliations_html(meta.get("affiliations",""))}</div>' if meta.get('affiliations') else ''}
-{f'<div class="meta">{meta_line}</div>' if meta_line else ''}
-{f'<div class="cite">{cite_line}</div>' if cite_line else ''}
+<div class="title{" xlong" if len(title) > 28 else (" long" if len(title) > 22 else "")}">{_esc(title)}</div>
+{f'<div class="subtitle">——{_esc(subtitle)}</div>' if subtitle else ""}
+<div class="authors">{_author_html(authors) or "作者未填写"}</div>
+{f'<div class="affs">{_affiliations_html(meta.get("affiliations", ""))}</div>' if meta.get("affiliations") else ""}
+{f'<div class="meta">{meta_line}</div>' if meta_line else ""}
+{f'<div class="cite">{cite_line}</div>' if cite_line else ""}
 {abstract_html}
 {keywords_html}
 {_inline_image_sources(_math_html(md_to_html(_strip_meta_sections(body_md))))}

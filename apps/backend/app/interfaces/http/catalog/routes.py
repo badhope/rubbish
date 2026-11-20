@@ -13,6 +13,8 @@ import hashlib
 import mimetypes
 import os
 import re
+import shutil
+import subprocess
 import tempfile
 from datetime import datetime
 from pathlib import Path
@@ -42,7 +44,7 @@ from app.core.db import get_db, paginate
 from app.core.logging import get_logger
 from app.core.schemas import PaginationMeta
 from app.core.time import utcnow
-from app.domain.catalog.engagement import compute_engagement, journal_metrics
+from app.domain.catalog.engagement import compute_engagement
 from app.domain.catalog.genre import classify_essay_genre
 from app.domain.catalog.journal import sync_resource_issue
 from app.domain.catalog.models import (
@@ -51,14 +53,11 @@ from app.domain.catalog.models import (
     Issue,
     Resource,
     ResourcePublicEvent,
-    Volume,
 )
 from app.domain.catalog.visibility import as_aware, is_public, public_conditions
 from app.interfaces.http.catalog.ontology_routes import router as ontology_router
 from app.interfaces.http.catalog.schemas import (
     FacetBucket,
-    IssueSummary,
-    JournalMetrics,
     ResourceCreate,
     ResourceFacets,
     ResourceHistoryResponse,
@@ -70,8 +69,6 @@ from app.interfaces.http.catalog.schemas import (
     ResourceStats,
     ResourceUpdate,
     ResourceVersionItem,
-    VolumeSummary,
-    VolumeSummaryList,
 )
 from app.models import AuditLog, Role, User, UserRole
 
@@ -1447,6 +1444,342 @@ async def get_resource_manuscript_image(
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image not found")
 
 
+# 导出件缓存：PDF 生成线上实测 40s/13MB，同一篇第二次点下载不该再烧 CPU。
+# 缓存键 = 内容哈希，正文/标题/署名任一变化都会自然失效。
+_EXPORT_CACHE_TTL_SECONDS = 14 * 24 * 3600
+
+
+def _export_cache_root() -> Path:
+    root = Path(
+        os.environ.get("RUBBISH_EXPORT_CACHE_DIR")
+        or (Path(tempfile.gettempdir()) / "rubbish-export-cache")
+    )
+    root.mkdir(parents=True, exist_ok=True)
+    return root
+
+
+def _redact_essay_sensitive(md_text: str, resource) -> str:
+    """娱乐轨正文里的个人邮箱/手机号对读者隐藏。
+
+    论文轨保留通信作者邮箱（学术惯例）；娱乐轨是面向大众的创作，
+    联系方式不应出现在网页、Word、PDF 任一出口。之前只改了在线阅读
+    接口，下载件仍原样打印，这里统一收口。
+    """
+    if (getattr(resource, "content_track", "") or "").lower() != "essay":
+        return md_text
+    import re as _re
+
+    md_text = _re.sub(r"[\w.+-]+@[\w-]+\.[\w.]+", "[邮箱已隐藏]", md_text)
+    md_text = _re.sub(r"(?<!\d)1[3-9]\d{9}(?!\d)", "[手机号已隐藏]", md_text)
+    return md_text
+
+
+def _site_id_for(resource) -> str:
+    """本站刊号：R-六位刊号-YYYYMMDD-四位流水。
+
+    流水取 resources.id（全站自增），因此按刊号排序与按入库时间排序一致。
+    这不是 DOI，官方 DOI 仍由作者另行注册后填入 resources.doi。
+    """
+    from app.core.config import settings
+
+    created = getattr(resource, "created_at", None)
+    rid = getattr(resource, "id", None)
+    if not created or rid is None:
+        return ""
+    code = (settings.publication_code or "000001").strip()
+    return f"R-{code}-{created:%Y%m%d}-{int(rid):04d}"
+
+
+def _clean_export_abstract(text: str) -> str:
+    """剥离误存进 abstract 的 PDF 首页元数据。
+
+    少数旧稿把「RUBBISH / 篇名 / 作者 / 单位 / Keywords / DOI」整块塞进摘要字段，
+    导出后会在「摘要：」后面重复一遍作者与刊头。这里只在摘要以 RUBBISH 开头时
+    生效：取最后一条元数据行（DOI/收稿/关键词）之后的正文作为真摘要；没有正文
+    就留空，绝不把作者名单当摘要印出去。
+    """
+    raw = (text or "").strip()
+    if not raw.lstrip().startswith("RUBBISH"):
+        return _strip_export_abstract_prefix(raw)
+    lines = raw.splitlines()
+    cut = -1
+    for idx, line in enumerate(lines):
+        if re.match(
+            r"^\s*(DOI\s*[:：]|Received\b|Accepted\b|Keywords?\s*[:：]|关键词\s*[:：])",
+            line,
+            re.I,
+        ):
+            cut = idx
+    if cut < 0:
+        return ""
+    body = " ".join(" ".join(lines[cut + 1 :]).split())
+    return _strip_export_abstract_prefix(body)
+
+
+_CE_RE = re.compile(r"[†*]?\s*Contributed\s+equally[^.]*\.", re.I)
+
+
+def _strip_export_abstract_prefix(text: str) -> str:
+    """继续剥掉摘要开头的作者脚注与 Keywords 行。"""
+    raw = (text or "").strip()
+    m = _CE_RE.search(raw)
+    if m and m.start() < 1200:
+        raw = raw[m.end() :].strip()
+    km = re.search(r"Keywords?\s*[:：]", raw, re.I)
+    if km and km.start() < 260:
+        tail = raw[km.end() :]
+        # 关键词用分号分隔；取第一段 160 字内最后一个分号后的正文
+        cut = max(tail.rfind("；", 0, 160), tail.rfind(";", 0, 160))
+        if cut > 0:
+            raw = tail[cut + 1 :].strip()
+    raw = re.sub(r"^[†*\s]+", "", raw)
+    return raw
+
+
+def _localize_catalog_images(md_text: str, resource_id: int, submission) -> str:
+    """把正文里的 /api/catalog/{id}/img/{n} 换成本地缓存绝对路径。
+
+    下载件由同步的 python-docx 在请求线程里生成；若让它再 HTTP 请求
+    同站 /img/{n}，单 worker 会被自己阻塞，4 张图就把下载拖过 30 秒，
+    反向代理直接断开（线上 118 实测 SSL EOF）。图片缓存本来就在
+    storage 的 `<markdown_stem>.img/` 下，直接读本地文件即可。
+    """
+    from app.core.config import get_settings
+    from app.core.storage import get_storage
+
+    if not submission or not submission.markdown_path:
+        return md_text
+    try:
+        if get_storage().backend != "local":
+            return md_text
+        storage_root = Path(get_settings().storage_path)
+        md_path = storage_root / submission.markdown_path
+        img_dir = md_path.parent / f"{md_path.stem}.img"
+        if not img_dir.is_dir():
+            return md_text
+    except Exception:
+        return md_text
+
+    pattern = re.compile(rf"(?:https://rubbish\.argjiemi\.cn)?/api/catalog/{resource_id}/img/(\d+)")
+
+    def _replace(match: re.Match) -> str:
+        n = match.group(1)
+        candidates = sorted(img_dir.glob(f"{n}.*"))
+        return str(candidates[0]) if candidates else match.group(0)
+
+    return pattern.sub(_replace, md_text)
+
+
+def _docx_meta_for_resource(resource, md_text: str):
+    """统一的下载件元数据：作者单位取 authors_meta，不把刊名当单位；
+    关键词只取作者关键词，不拼内部学科标签；卷期/页码/DOI 一并带入。"""
+    from app.domain.submission.docx_template import Meta as DocxMeta
+
+    affs = []
+    for item in getattr(resource, "authors_meta", None) or []:
+        if isinstance(item, dict):
+            aff = (item.get("affiliation") or "").strip()
+            if aff and aff not in affs:
+                affs.append(aff)
+    if not affs:
+        # 作者正文里常见的“姓名（单位）”行：只认行首且括号前的名字确实
+        # 是本文作者。此前抓“前 800 字里第一个括号”，会把 PADA 缩写里的
+        # “（光周期）”、正文注释“（注：不含金钱交易）”印成作者单位。
+        _authors = {(a or "").strip() for a in (getattr(resource, "authors", None) or [])}
+        for _line in (md_text or "").splitlines()[:20]:
+            _line = _line.strip()
+            if not _line or _line.startswith("#"):
+                continue
+            m = re.match(r"^([^。；\n]{2,40})（([^）]{1,40})）", _line)
+            if not m:
+                continue
+            _name, _aff = m.group(1).strip(" 　*"), m.group(2).strip()
+            if not _name or not _aff:
+                continue
+            if _name not in _authors and not any(_name.endswith(a) for a in _authors if a):
+                continue
+            if re.search(r"通讯作者|作者简介|收稿日期|基金项目|注：|图\s*\d|表\s*\d", _aff):
+                continue
+            affs = [_aff]
+            break
+    # 找不到单位就留空：绝不能把刊名“Rubbish”印成作者单位。
+
+    kws = [k.strip(" 　*~；;，,。.") for k in (getattr(resource, "keywords", None) or [])]
+    kws = [k for k in kws if k]
+    if not kws:
+        # 元数据关键词为空时，从正文关键词行回填；否则模板不印关键词、
+        # 正文里的“## 关键词”又会被当成一级章节编号（4 篇命中）。
+        m = re.search(r"^\s*\**\s*关键词[：:]\s*(.+)$", md_text or "", re.M)
+        if not m:
+            # `## 关键词` 独占一行、内容在下一段的旧稿（301/294/199/80）。
+            m2 = re.search(
+                r"^#{1,6}\s*关键词\s*$\s*\n+([^#]+?)(?=\n#{1,6}|$)",
+                md_text or "",
+                re.M | re.S,
+            )
+            if m2:
+                _raw = " ".join(m2.group(1).split())
+                kws = [k.strip(" 　*~；;，,。.") for k in re.split(r"[；;]", _raw)]
+                kws = [k for k in kws if k]
+        elif m:
+            kws = [k.strip(" 　*~；;，,。.") for k in re.split(r"[；;]", m.group(1))]
+            kws = [k for k in kws if k]
+    # 摘要优先从正文的 `## 摘要` 重算：上传器曾把标题/作者/单位/Keywords
+    # 整块塞进 resources.abstract，导出后“导读”后面跟着一串作者信息。
+    from app.domain.submission.docx_template import parse_meta as _parse_meta
+
+    _parsed = _parse_meta(md_text or "", fallback_title=getattr(resource, "title", "") or "")
+    _abs = (_parsed.abstract or "").strip()
+    _title = (getattr(resource, "title", "") or "").strip()
+    if (
+        len(_abs) >= 60
+        and not _abs.startswith("RUBBISH")
+        and not (_title and _abs.startswith(_title))
+    ):
+        _abstract = _abs
+    else:
+        _abstract = getattr(resource, "abstract", "") or ""
+
+    _raw_authors = [
+        str(a).strip() for a in (getattr(resource, "authors", None) or []) if str(a).strip()
+    ]
+    _clean_authors = []
+    for _a in _raw_authors:
+        _core = _title.split("——")[0].strip() if _title else ""
+        _hit = (
+            _title
+            if (_title and _a.startswith(_title))
+            else (_core if (_core and _a.startswith(_core)) else "")
+        )
+        if _hit:
+            _tail = _a[len(_hit) :].strip()
+            # 77：“篇名 M uzi”被整段存进作者字段，去掉篇名后还原成 Muzi。
+            _tail = _tail.replace(" ", "") if len(_tail) <= 20 else _tail
+            _a = _tail or _a
+        _a = re.sub(r"[\*†]+$", "", _a).strip()
+        if _a:
+            _clean_authors.append(_a)
+    _abstract = _clean_export_abstract(_abstract)
+    return DocxMeta(
+        title=getattr(resource, "title", "") or "",
+        authors=_clean_authors,
+        affiliations=affs,
+        abstract=_abstract,
+        keywords=kws,
+        doi=(getattr(resource, "doi", None) or "").strip(),
+        site_id=_site_id_for(resource),
+        volume=str(getattr(resource, "volume", None) or ""),
+        issue=str(getattr(resource, "issue", None) or ""),
+        pages=(getattr(resource, "pages", None) or "").strip(),
+        year=str(getattr(resource, "year", None) or ""),
+        track=(getattr(resource, "content_track", None) or ""),
+    )
+
+
+def _studio_meta_for_resource(resource, md_text: str, meta=None) -> dict[str, object]:
+    """Catalog 条目 → Studio 排版元信息（与投稿工作台共用一套 PDF 内核）。"""
+    meta = meta or _docx_meta_for_resource(resource, md_text)
+    return {
+        "title": meta.title,
+        "authors": list(meta.authors),
+        "affiliations": "\n".join(meta.affiliations),
+        "abstract": meta.abstract,
+        "keywords": list(meta.keywords),
+        "doi": meta.doi,
+        "clc": getattr(resource, "clc_code", None) or "",
+        "funding": getattr(resource, "funding", None) or "",
+        "year": meta.year,
+        "volume": meta.volume,
+        "issue": meta.issue,
+        "pages": meta.pages,
+        "site_id": meta.site_id,
+        "track": meta.track,
+        "license": getattr(resource, "license", None) or "",
+    }
+
+
+def _export_cache_path(cache_key: str, ext: str) -> Path:
+    return _export_cache_root() / f"{cache_key}.{ext}"
+
+
+def _pdf_page_png(pdf_path: Path, page: int) -> tuple[Path, int]:
+    """把已生成的 PDF 某一页渲染成 PNG，供前端秒开预览。
+
+    优先用 Poppler 的 pdftoppm：线上 PDF 由 LibreOffice 生成，字体是
+    CID Type 0C；PyMuPDF 1.28 在部分 CID 字体上会把字形映射成错误码位，
+    文字层正常但像素全是乱码。Poppler 对这类 PDF 的渲染已验证正常。
+    PyMuPDF 仅作为未安装 poppler-utils 时的兼容兜底。
+
+    pdf.js 直接打开 2.6 MB / 91 页的 PDF 时，移动端要等十几秒，
+    还可能撞上 45 秒超时。服务端只回一页图片，首屏稳定在几百 KB
+    以内，翻页再取下一页；预览和下载件仍是同一份 PDF。
+    """
+    import pymupdf
+
+    with pymupdf.open(str(pdf_path)) as document:
+        total = document.page_count
+        target = max(1, min(page, total))
+
+    # 新后缀刻意不和旧 PyMuPDF 缓存共用，避免线上继续命中坏图。
+    image_path = pdf_path.with_suffix(f".p{target}.poppler.png")
+    if image_path.is_file():
+        return image_path, total
+
+    import tempfile
+
+    pdftoppm = shutil.which("pdftoppm")
+    if pdftoppm:
+        tmpdir = Path(tempfile.mkdtemp(prefix="rubbish-preview-"))
+        prefix = tmpdir / "page"
+        try:
+            subprocess.run(
+                [
+                    pdftoppm,
+                    "-f",
+                    str(target),
+                    "-l",
+                    str(target),
+                    "-r",
+                    "108",
+                    "-png",
+                    str(pdf_path),
+                    str(prefix),
+                ],
+                check=True,
+                capture_output=True,
+                timeout=45,
+            )
+            produced = sorted(tmpdir.glob("page-*.png"))
+            if produced:
+                produced[0].replace(image_path)
+                return image_path, total
+        except (OSError, subprocess.SubprocessError):
+            # 渲染失败时继续走 PyMuPDF 兜底，不能把整页预览打成 500。
+            pass
+        finally:
+            shutil.rmtree(tmpdir, ignore_errors=True)
+
+    # 兜底：poppler 未安装或执行失败时仍返回一页图（可能受字体映射影响）。
+    with pymupdf.open(str(pdf_path)) as document:
+        pixmap = document.load_page(target - 1).get_pixmap(
+            matrix=pymupdf.Matrix(1.5, 1.5), alpha=False
+        )
+        pixmap.save(str(image_path))
+    return image_path, total
+
+
+def _prune_export_cache(root: Path) -> None:
+    import time
+
+    cutoff = time.time() - _EXPORT_CACHE_TTL_SECONDS
+    try:
+        for f in root.iterdir():
+            if f.is_file() and f.stat().st_mtime < cutoff:
+                f.unlink(missing_ok=True)
+    except OSError:
+        pass
+
+
 @router.get("/{resource_id}/export")
 async def export_resource_manuscript(
     resource_id: int,
@@ -1953,9 +2286,6 @@ async def get_resource(
         )
     ).scalar_one_or_none()
     response.has_markdown = has_markdown is not None
-    response.peer_review_status, response.peer_review_reports = await _peer_review_provenance(
-        db, resource, tenant_id
-    )
     engagement = (await compute_engagement(db, [resource])).get(resource.id)
     if engagement is not None:
         response.reads = engagement.reads
@@ -2773,5 +3103,3 @@ def _appeal_row(a: Appeal, username: str, title: str) -> dict[str, object]:
         "created_at": a.created_at.isoformat() if a.created_at else None,
         "decided_at": a.decided_at.isoformat() if a.decided_at else None,
     }
-
-

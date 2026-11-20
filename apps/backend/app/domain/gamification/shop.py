@@ -139,7 +139,7 @@ async def purchase(db: AsyncSession, user: User, item_id: int) -> dict[str, Any]
         .values(coin_balance=User.coin_balance - item.price_coin)
         .execution_options(synchronize_session=False)
     )
-    if debit.rowcount != 1:
+    if getattr(debit, "rowcount", 0) != 1:
         raise ShopError("积分不足")
 
     if item.stock is not None:
@@ -149,12 +149,12 @@ async def purchase(db: AsyncSession, user: User, item_id: int) -> dict[str, Any]
             .values(stock=CoinShopItem.stock - 1)
             .execution_options(synchronize_session=False)
         )
-        if restock.rowcount != 1:
+        if getattr(restock, "rowcount", 0) != 1:
             # 售罄：抛错回滚整个事务（含上面的扣款），不会负库存/扣钱不发货。
             raise ShopError("货品已售罄")
 
     status = "paid"
-    note = "待主编人工发货"
+    note = "待管理员人工发货"
     if item.effect == "accent_unlock":
         user.accent_unlocked = True
         status = "fulfilled"

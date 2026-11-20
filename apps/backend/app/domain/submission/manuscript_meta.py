@@ -45,11 +45,7 @@ def parse_author(raw: str) -> dict[str, Any]:
     raw = (raw or "").strip()
     m = _AUTHOR_SUP.match(raw)
     if m and (m.group(2).strip() or m.group(3)):
-        numbers = [
-            int(n)
-            for n in re.split(r"[，,\s]+", m.group(2).strip())
-            if n.isdigit()
-        ]
+        numbers = [int(n) for n in re.split(r"[，,\s]+", m.group(2).strip()) if n.isdigit()]
         return {
             "name": m.group(1).strip(),
             "affiliations": numbers,

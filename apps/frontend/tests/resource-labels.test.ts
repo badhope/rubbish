@@ -15,9 +15,9 @@ describe('resource label helpers', () => {
   })
 
   it('maps resource types and statuses', () => {
-    expect(typeLabel('paper')).toBe('论文')
+    expect(typeLabel('paper')).toBe('研究记录')
     expect(typeLabel('dataset')).toBe('数据集')
-    expect(statusLabel('in_review')).toBe('评审中')
+    expect(statusLabel('in_review')).toBe('整理中')
     expect(statusLabel(undefined)).toBe('—')
   })
 

@@ -1,48 +1,37 @@
-# 行为准则
+# Code of conduct
 
-## 我们的承诺
+**English · [简体中文](CODE_OF_CONDUCT.zh-CN.md)**
 
-为了营造一个开放、友好、协作的社区,所有参与者承诺:无论年龄、体型、可见或不可见的
-残疾、族裔、性别认同与表达、经验水平、教育、社会经济地位、国籍、个人外貌、种族、
-宗教或性取向如何,都能在没有骚扰的情况下参与本项目。
+## Our commitment
 
-我们承诺以促进开放、包容、多元化、健康社区的方式行动与互动。
+We want this project to be a place where people can disagree about ideas without being attacked as people. Participation should be free of harassment regardless of age, body size, visible or invisible disability, ethnicity, sex characteristics, gender identity and expression, experience, education, socio-economic status, nationality, personal appearance, race, religion, or sexual identity and orientation.
 
-## 我们的准则
+## Expected behavior
 
-### 期望行为
+- Assume the other person is acting in good faith.
+- Critique the claim, the method, or the code — not the person.
+- Give credit and accept correction.
+- Keep private information private.
+- Respect a request to stop a line of discussion.
 
-- 对他人示以同理与善意
-- 尊重不同观点与经验
-- 给予建设性反馈,也优雅地接受反馈
-- 承担责任,向受我们错误影响的人道歉,并从中学习
-- 关注的不只是个人,更是整个社区的整体福祉
+## Unacceptable behavior
 
-### 不可接受行为
+- Sexualized language or imagery, and unwelcome sexual attention.
+- Insults, personal attacks, or political and religious campaigning.
+- Harassment in public or private, including sustained disruption.
+- Publishing someone's private information without permission.
+- Other conduct that a reasonable person would consider inappropriate in a professional setting.
 
-- 使用性化语言或意象、性关注或挑逗行为
-- 钓鱼、侮辱或贬损的评论,人身或政治攻击
-- 公开或私下骚扰
-- 未经明确许可发布他人私人信息(如物理地址或电子邮箱)
-- 其他在专业环境下可被合理认定为不当的行为
+## Moderation
 
-## 维护职责
+Maintainers may edit, hide, or remove content and may temporarily or permanently ban accounts. Moderation decisions are based on behavior, not on the popularity of the person or the idea. A maintainer who is involved in a dispute should step away from handling it.
 
-社区维护者负责澄清与执行本行为准则,并将视情况公正地采取适当措施。
+Report conduct issues privately to `info@rubbishasci.cn`. Include links or screenshots and what outcome you are asking for. Reports are handled as confidentially as possible.
 
-维护者有权删除、编辑或拒绝不符合本行为准则的评论、提交、代码、wiki 编辑、issue
-和其他贡献。
+## Scope
 
-## 适用范围
+This policy applies in the repository, issue tracker, pull requests, community boards, and any space where someone is representing the project.
 
-本行为准则在所有社区空间生效,也适用于个人在公开空间代表项目或社区时。
+## Attribution
 
-## 执行
-
-若有人违反本准则,请通过 GitHub issue 或 [SECURITY.md](SECURITY.md) 中列出的渠道向维护者举报。
-所有举报都会被严肃、公正地审查,并保密处理。
-
-## 致谢
-
-本行为准则改编自 [Contributor Covenant](https://www.contributor-covenant.org/)
-v2.1, 简体中文版。
+This document is informed by the Contributor Covenant, version 2.1.

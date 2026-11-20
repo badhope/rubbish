@@ -53,10 +53,7 @@ _INDEXES: tuple[tuple[str, str], ...] = (
 
 def upgrade() -> None:
     inspector = sa.inspect(op.get_bind())
-    existing = {
-        table: {c["name"] for c in inspector.get_columns(table)}
-        for table, _ in _COLUMNS
-    }
+    existing = {table: {c["name"] for c in inspector.get_columns(table)} for table, _ in _COLUMNS}
     for table, column in _COLUMNS:
         if column.name not in existing[table]:
             op.add_column(table, column)

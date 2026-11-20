@@ -387,9 +387,7 @@ async def build_index_html(
                 "headline": resource.title,
                 "author": [{"@type": "Person", "name": str(a)} for a in resource.authors or []],
                 "datePublished": published,
-                "dateModified": (
-                    updated_at.date().isoformat() if updated_at else published
-                ),
+                "dateModified": (updated_at.date().isoformat() if updated_at else published),
                 "abstract": (resource.abstract or "")[:2000],
                 "url": f"{root}/catalog/{resource.id}",
                 "mainEntityOfPage": {"@type": "WebPage", "@id": f"{root}/catalog/{resource.id}"},

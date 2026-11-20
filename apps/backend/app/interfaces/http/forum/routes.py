@@ -160,6 +160,7 @@ CATEGORY_BOARD: dict[str, tuple[str, ...]] = {
     "suggestion": ("feedback",),
 }
 
+
 class TopicCreate(BaseModel):
     title: str = Field(min_length=2, max_length=200)
     body: str = Field(min_length=2, max_length=20000)

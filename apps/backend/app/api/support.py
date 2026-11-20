@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any, Literal
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field
@@ -29,6 +30,7 @@ from app.models import FinanceReport, User
 
 router = APIRouter(prefix="/support", tags=["support"])
 admin_router = APIRouter(prefix="/admin", tags=["support-admin"])
+
 
 class MoneyItem(BaseModel):
     label: str = Field(min_length=1, max_length=100)
@@ -78,7 +80,7 @@ def _as_response(report: FinanceReport) -> FinanceReportResponse:
 async def public_reports(
     limit: int = Query(default=8, ge=1, le=24),
     db: AsyncSession = Depends(get_db),
-    tenant_id=Depends(require_tenant_id),
+    tenant_id: UUID = Depends(require_tenant_id),
 ) -> FinanceReportListResponse:
     stmt = (
         select(FinanceReport)
@@ -115,7 +117,7 @@ async def public_reports(
 @router.get("/reports/latest", response_model=FinanceReportResponse | None)
 async def latest_public_report(
     db: AsyncSession = Depends(get_db),
-    tenant_id=Depends(require_tenant_id),
+    tenant_id: UUID = Depends(require_tenant_id),
 ) -> FinanceReportResponse | None:
     report = (
         await db.execute(
@@ -139,7 +141,7 @@ async def latest_public_report(
 async def admin_reports(
     _admin: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
-    tenant_id=Depends(require_tenant_id),
+    tenant_id: UUID = Depends(require_tenant_id),
 ) -> FinanceReportListResponse:
     rows = (
         (
@@ -167,7 +169,7 @@ async def create_report(
     payload: FinanceReportUpsert,
     admin: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
-    tenant_id=Depends(require_tenant_id),
+    tenant_id: UUID = Depends(require_tenant_id),
 ) -> FinanceReportResponse:
     report = FinanceReport(
         tenant_id=tenant_id,
@@ -201,7 +203,7 @@ async def update_report(
     payload: FinanceReportUpsert,
     _admin: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
-    tenant_id=Depends(require_tenant_id),
+    tenant_id: UUID = Depends(require_tenant_id),
 ) -> FinanceReportResponse:
     report = (
         await db.execute(
@@ -242,7 +244,7 @@ async def delete_report(
     report_id: int,
     _admin: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
-    tenant_id=Depends(require_tenant_id),
+    tenant_id: UUID = Depends(require_tenant_id),
 ) -> None:
     report = (
         await db.execute(
