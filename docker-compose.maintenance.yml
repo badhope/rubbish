@@ -1,0 +1,25 @@
+# 维护模式覆盖文件：不启动 app/db/caddy，只启动一个只读静态站。
+# 生产目录需同时存在 maintenance/、Caddyfile.maintenance、logs/caddy。
+# 启动前先 stop 正式 caddy，避免 80/443 冲突。
+#
+# 启动：
+#   docker compose -f docker-compose.yml -f docker-compose.maintenance.yml up -d maintenance
+# 恢复：
+#   docker compose -f docker-compose.yml -f docker-compose.maintenance.yml stop maintenance
+#   docker compose up -d caddy
+
+services:
+  maintenance:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:-localhost}
+    volumes:
+      - ./Caddyfile.maintenance:/etc/caddy/Caddyfile:ro
+      - ./maintenance:/srv/maintenance:ro
+      - ./logs/caddy:/var/log/caddy
+      - caddy_data:/data
+      - caddy_config:/config

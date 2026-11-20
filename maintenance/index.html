@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Rubbish — 论坛维护中</title>
+<meta name="description" content="Rubbish 荒诞科研社区论坛正在维护，登录、注册、发帖和评论暂时关闭。加 QQ 群 1084870548 继续交流。">
+<link rel="canonical" href="https://rubbish.argjiemi.cn/">
+<link rel="alternate" hreflang="zh-CN" href="https://rubbish.argjiemi.cn/">
+<link rel="alternate" hreflang="en" href="https://rubbish.argjiemi.cn/en.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='32' fill='%2316324F'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-family='Georgia,serif' font-size='32' font-weight='600' fill='white'%3ER%3C/text%3E%3Cpath d='M47 43L52 48L47 53L42 48Z' fill='%23C7A24B'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --paper: #f1f2ed;
+    --paper-2: #e8eae3;
+    --ink: #16212a;
+    --muted: #5d6a70;
+    --line: #c9cec6;
+    --blue: #16324f;
+    --blue-strong: #1b3a5c;
+    --gold: #c7a24b;
+    --stamp: #8f2f24;
+    --card: #fffdf7;
+    --notice-bg: #e9ece3;
+    --ticket-shadow: rgba(22, 50, 79, .18);
+    --header-bg: rgba(241, 242, 237, .86);
+    --footer-bg: #16324f;
+    --footer-text: #f4f1e8;
+    --state-pause: #8f2f24;
+    --state-keep: #2f6b4f;
+    --sans: "Avenir Next", "PingFang SC", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
+    --serif: "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", Georgia, serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #0f171c;
+      --paper-2: #131d23;
+      --ink: #e8e9e3;
+      --muted: #9ba7aa;
+      --line: #2d3b40;
+      --blue: #8fb5d6;
+      --blue-strong: #234a6b;
+      --gold: #d8b76a;
+      --stamp: #d07b68;
+      --card: #151f24;
+      --notice-bg: #172228;
+      --ticket-shadow: rgba(0, 0, 0, .35);
+      --header-bg: rgba(15, 23, 28, .86);
+      --footer-bg: #0b222f;
+      --footer-text: #e9e6da;
+      --state-pause: #d07b68;
+      --state-keep: #7fc4a2;
+    }
+    body {
+      background:
+        radial-gradient(ellipse at 15% 0%, rgba(199, 162, 75, .10), transparent 42rem),
+        radial-gradient(ellipse at 100% 30%, rgba(143, 181, 214, .08), transparent 36rem),
+        linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
+    }
+  }
+
+  * { box-sizing: border-box; min-width: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background:
+      radial-gradient(ellipse at 15% 0%, rgba(199, 162, 75, .12), transparent 42rem),
+      radial-gradient(ellipse at 100% 30%, rgba(22, 50, 79, .08), transparent 36rem),
+      linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  .page {
+    width: min(1180px, calc(100% - 48px));
+    margin: 0 auto;
+  }
+
+  .skip {
+    position: absolute;
+    left: 16px;
+    top: -80px;
+    z-index: 20;
+    padding: 10px 14px;
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 14px;
+    text-decoration: none;
+  }
+  .skip:focus { top: 12px; }
+
+  .site-head {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--line);
+    background: var(--header-bg);
+    backdrop-filter: blur(14px);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: inherit;
+    text-decoration: none;
+  }
+  .brand-mark {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+  }
+  .brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.12;
+  }
+  .brand-text strong {
+    font-family: var(--serif);
+    font-size: 23px;
+    font-weight: 600;
+    letter-spacing: .01em;
+  }
+  .brand-text small {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: .06em;
+  }
+
+  .head-actions {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .live {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 11px;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: .02em;
+    white-space: nowrap;
+  }
+  .live .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--stamp);
+    box-shadow: 0 0 0 0 rgba(143, 47, 36, .3);
+    animation: pulse 2.6s ease-out infinite;
+  }
+  .lang {
+    color: var(--muted);
+    font-size: 13px;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    white-space: nowrap;
+    padding-right: 4px;
+  }
+  .lang:hover { color: var(--ink); }
+
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.18fr) minmax(330px, .82fr);
+    align-items: start;
+    gap: clamp(34px, 6vw, 88px);
+    padding: clamp(48px, 8vw, 92px) 0 clamp(42px, 7vw, 76px);
+  }
+
+  .hero-copy {
+    animation: rise .75s cubic-bezier(.2, .8, .2, 1) both;
+  }
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: .12em;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 28px;
+    height: 1px;
+    background: var(--gold);
+  }
+
+  h1 {
+    margin: 22px 0 0;
+    font-family: var(--serif);
+    font-size: clamp(46px, 7.4vw, 92px);
+    font-weight: 600;
+    line-height: 1.04;
+    letter-spacing: -.045em;
+  }
+  h1 .accent {
+    display: block;
+    color: var(--blue);
+  }
+
+  .lede {
+    max-width: 34em;
+    margin: 28px 0 0;
+    font-size: clamp(17px, 1.8vw, 20px);
+    line-height: 1.9;
+  }
+
+  .notice {
+    max-width: 38em;
+    margin: 30px 0 0;
+    padding: 16px 18px;
+    border-left: 3px solid var(--gold);
+    background: var(--notice-bg);
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.9;
+  }
+  .notice-kicker {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .08em;
+  }
+
+  .ticket {
+    position: relative;
+    padding: 24px 24px 22px 34px;
+    border: 1px solid var(--ink);
+    background: var(--card);
+    box-shadow: 10px 12px 0 var(--ticket-shadow);
+    animation: rise .8s .12s cubic-bezier(.2, .8, .2, 1) both;
+  }
+  .ticket::before {
+    content: "";
+    position: absolute;
+    left: 14px;
+    top: 18px;
+    bottom: 18px;
+    border-left: 1px dashed var(--line);
+  }
+
+  .ticket-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .ticket-kicker {
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: .06em;
+  }
+  .stamp {
+    flex: 0 0 auto;
+    padding: 6px 10px 4px;
+    border: 2px solid var(--stamp);
+    color: var(--stamp);
+    font-family: var(--serif);
+    font-size: 13px;
+    letter-spacing: .16em;
+    line-height: 1.1;
+    transform: rotate(-7deg);
+    opacity: .92;
+  }
+
+  .ticket-label {
+    margin: 22px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: .04em;
+  }
+  .qq {
+    margin: 10px 0 0;
+    color: var(--blue);
+    font-family: var(--serif);
+    font-size: clamp(30px, 5.2vw, 54px);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    letter-spacing: .015em;
+    line-height: 1.12;
+    overflow-wrap: anywhere;
+  }
+  .ticket-note {
+    margin: 10px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .copy-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 20px;
+    padding: 12px 14px;
+    border: 1px solid var(--blue-strong);
+    border-radius: 3px;
+    background: var(--blue-strong);
+    color: #f8f5ec;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .18s ease, color .18s ease, transform .18s ease;
+  }
+  .copy-btn:hover { transform: translateY(-1px); }
+  .copy-btn:active { transform: translateY(0); }
+  .copy-btn:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 3px;
+  }
+  .copy-btn.is-copied {
+    border-color: var(--gold);
+    background: var(--gold);
+    color: var(--ink);
+  }
+  .copy-btn svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+  }
+
+  .ticket-foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px 14px;
+    margin: 16px 0 0;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .ticket-foot a {
+    color: var(--blue);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+  .ticket-foot a:hover { text-decoration: underline; }
+
+  .section {
+    padding: clamp(38px, 6vw, 66px) 0;
+    border-top: 1px solid var(--line);
+  }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+  .section-head h2 {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: clamp(26px, 3.2vw, 38px);
+    font-weight: 600;
+    letter-spacing: -.025em;
+    line-height: 1.2;
+  }
+  .section-note {
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: .1em;
+    white-space: nowrap;
+  }
+
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .status-item {
+    padding: 24px 26px 26px 0;
+    border-right: 1px solid var(--line);
+  }
+  .status-item:last-child {
+    padding-right: 0;
+    border-right: 0;
+  }
+  .state {
+    display: inline-block;
+    margin-bottom: 14px;
+    padding: 3px 8px;
+    border: 1px solid currentColor;
+    font-size: 11px;
+    letter-spacing: .08em;
+  }
+  .state-pause { color: var(--state-pause); }
+  .state-keep { color: var(--state-keep); }
+  .status-item h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .status-item p {
+    margin: 8px 0 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  .about-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+    gap: clamp(28px, 5vw, 64px);
+    align-items: start;
+  }
+  .about-lead {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: clamp(24px, 3vw, 34px);
+    line-height: 1.55;
+    letter-spacing: -.02em;
+  }
+  .about-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--line);
+  }
+  .about-list li {
+    display: grid;
+    grid-template-columns: 86px minmax(0, 1fr);
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .about-list b {
+    color: var(--blue);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .about-list span {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .join-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr);
+    gap: clamp(28px, 5vw, 64px);
+    align-items: start;
+  }
+  .join-copy {
+    margin: 0 0 22px;
+    font-size: 16px;
+    line-height: 1.9;
+  }
+  .steps {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--line);
+  }
+  .steps li {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 12px;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  .steps li span {
+    color: var(--gold);
+    font-family: var(--serif);
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  .steps b {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .join-note {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding: 24px;
+    background: var(--blue-strong);
+    color: #f4f1e8;
+  }
+  .note-title {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 600;
+  }
+  .join-note p:last-child {
+    margin: 0;
+    color: rgba(244, 241, 232, .78);
+    font-size: 14px;
+    line-height: 1.9;
+  }
+
+  .contact-row {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 32px;
+    padding-top: 4px;
+  }
+  .contact-copy {
+    max-width: 38em;
+    margin: 0;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.9;
+  }
+  .mail-link {
+    flex: 0 0 auto;
+    color: var(--blue);
+    font-family: var(--serif);
+    font-size: clamp(20px, 2.4vw, 28px);
+    text-decoration: none;
+    border-bottom: 1px solid var(--gold);
+    padding-bottom: 3px;
+    overflow-wrap: anywhere;
+  }
+  .mail-link:hover { color: var(--ink); }
+
+  .site-foot {
+    margin-top: clamp(42px, 6vw, 76px);
+    background: var(--footer-bg);
+    color: var(--footer-text);
+  }
+  .foot-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 26px 0;
+  }
+  .foot-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .foot-mark {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid rgba(244, 241, 232, .55);
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .foot-brand span:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 13px;
+  }
+  .foot-brand b {
+    font-family: var(--serif);
+    font-size: 17px;
+    font-weight: 600;
+  }
+  .foot-brand small {
+    color: rgba(244, 241, 232, .65);
+    font-size: 11px;
+    letter-spacing: .05em;
+  }
+  .foot-meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px 20px;
+    color: rgba(244, 241, 232, .66);
+    font-size: 12px;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(143, 47, 36, .28); }
+    70% { box-shadow: 0 0 0 8px rgba(143, 47, 36, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(143, 47, 36, 0); }
+  }
+
+  @media (max-width: 880px) {
+    .page { width: calc(100% - 32px); }
+    .site-head { padding: 14px 0; gap: 12px; }
+    .brand { gap: 10px; }
+    .brand-mark { width: 38px; height: 38px; flex-basis: 38px; }
+    .brand-text strong { font-size: 19px; }
+    .brand-text small { display: none; }
+    .head-actions { gap: 8px; }
+    .live { padding: 5px 8px; gap: 6px; font-size: 11px; }
+    .lang { font-size: 11px; }
+    .hero { grid-template-columns: 1fr; gap: 38px; padding-top: 42px; }
+    h1 { font-size: clamp(42px, 11vw, 64px); }
+    .ticket { max-width: 540px; }
+    .status-grid { grid-template-columns: 1fr; }
+    .status-item {
+      padding: 20px 0;
+      border-right: 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .status-item:last-child { border-bottom: 0; }
+    .about-grid, .join-grid { grid-template-columns: 1fr; }
+    .about-list li { grid-template-columns: 78px minmax(0, 1fr); }
+    .join-note { min-height: 180px; }
+    .contact-row { display: grid; gap: 18px; align-items: start; }
+    .mail-link { justify-self: start; }
+    .foot-inner { align-items: flex-start; flex-direction: column; gap: 16px; }
+    .foot-meta { justify-content: flex-start; }
+  }
+
+  @media (max-width: 430px) {
+    .head-actions .live { font-size: 10px; }
+    .qq { font-size: clamp(28px, 7.4vw, 40px); }
+    .ticket { padding: 22px 18px 20px 30px; }
+    .stamp { padding: 5px 8px 3px; font-size: 11px; }
+    .section-head { align-items: flex-start; flex-direction: column; gap: 6px; }
+    .section-note { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">跳到主要内容</a>
+
+<div class="page">
+  <header class="site-head">
+    <a class="brand" href="./" aria-label="Rubbish 首页">
+      <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true">
+        <rect width="64" height="64" rx="12" fill="#16324F"/>
+        <rect x="8" y="8" width="48" height="48" rx="5" fill="none" stroke="#FFFFFF" stroke-opacity=".45" stroke-width="1.4"/>
+        <text x="32" y="44" text-anchor="middle" font-family="Georgia,serif" font-size="34" font-weight="600" fill="#FFFFFF">R</text>
+        <path d="M50.5 44.5 L56 50 L50.5 55.5 L45 50 Z" fill="#C7A24B"/>
+      </svg>
+      <span class="brand-text">
+        <strong>Rubbish</strong>
+        <small>荒诞科研社区</small>
+      </span>
+    </a>
+    <div class="head-actions">
+      <span class="live"><span class="dot" aria-hidden="true"></span>论坛维护中</span>
+      <a class="lang" href="en.html" hreflang="en">English</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">社区公告 · 维护开始于 2026-11-20</p>
+        <h1>论坛在整理，<span class="accent">群还开着。</span></h1>
+        <p class="lede">Rubbish 是一个荒诞科研社区：把不正经的问题，认真研究一遍。开放问题、诚实笔记、公开失败。</p>
+        <p class="notice"><span class="notice-kicker">当前状态</span>论坛的登录、注册、发帖和评论暂时关闭。我们在清理旧入口、整理社区结构；恢复时间会先在 QQ 群公告里说。</p>
+      </div>
+
+      <aside class="ticket" aria-label="QQ 群信息">
+        <div class="ticket-head">
+          <span class="ticket-kicker">QQ 群 · 正常开放</span>
+          <span class="stamp">维护中</span>
+        </div>
+        <p class="ticket-label">现在能找到我们的地方</p>
+        <p class="qq" id="qq-number">1084870548</p>
+        <p class="ticket-note">打开 QQ，搜索群号即可加入</p>
+        <button class="copy-btn" type="button" data-copy="1084870548">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="8" y="8" width="11" height="11" rx="2"/>
+            <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>
+          </svg>
+          <span>复制群号</span>
+        </button>
+        <span class="sr-only" id="copy-status" role="status" aria-live="polite"></span>
+        <p class="ticket-foot"><span>进群后找管理员</span><a href="mailto:info@rubbishasci.cn">info@rubbishasci.cn</a></p>
+      </aside>
+    </section>
+
+    <section class="section" aria-labelledby="status-title">
+      <div class="section-head">
+        <h2 id="status-title">现在发生了什么</h2>
+        <span class="section-note">维护范围</span>
+      </div>
+      <div class="status-grid">
+        <div class="status-item">
+          <span class="state state-pause">暂停</span>
+          <h3>登录与注册</h3>
+          <p>不再开放新账号，也不接受登录。</p>
+        </div>
+        <div class="status-item">
+          <span class="state state-pause">暂停</span>
+          <h3>发帖与评论</h3>
+          <p>发布、回复、上传入口暂时关闭。</p>
+        </div>
+        <div class="status-item">
+          <span class="state state-keep">保留</span>
+          <h3>已有内容</h3>
+          <p>档案和数据留在服务器，恢复后继续整理。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="about-title">
+      <div class="section-head">
+        <h2 id="about-title">这里是什么</h2>
+        <span class="section-note">社区简介</span>
+      </div>
+      <div class="about-grid">
+        <p class="about-lead">不追热点，不装权威。一个奇怪的问题，也值得被认真拆开、记录、失败、再来一次。</p>
+        <ul class="about-list">
+          <li><b>开放问题</b><span>先问清楚，再找同伴。</span></li>
+          <li><b>诚实笔记</b><span>过程可以粗糙，材料要对得上。</span></li>
+          <li><b>公开失败</b><span>失败不是结论的反面，是过程的一部分。</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="join-title">
+      <div class="section-head">
+        <h2 id="join-title">先来群里</h2>
+        <span class="section-note">交流入口</span>
+      </div>
+      <div class="join-grid">
+        <div>
+          <p class="join-copy">论坛恢复前，交流放在 QQ 群。想写东西、想一起做题目、想问社区怎么用，都可以先在群里说。</p>
+          <ol class="steps">
+            <li><span>01</span><div>打开 QQ，搜索群号 <b>1084870548</b></div></li>
+            <li><span>02</span>进群后找管理员，说明来意</li>
+            <li><span>03</span>论坛恢复后，群公告会第一时间通知</li>
+          </ol>
+        </div>
+        <div class="join-note">
+          <p class="note-title">群里的约定</p>
+          <p>不点名真人，不盗图，不编造文献；虚构内容标出来。先把话说清楚，再谈好不好玩。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="contact-title">
+      <div class="section-head">
+        <h2 id="contact-title">想写点东西</h2>
+        <span class="section-note">来信</span>
+      </div>
+      <div class="contact-row">
+        <p class="contact-copy">有想写的东西、想一起做的题目，写信给我们。来信默认不公开；如需整理发布，会先征得作者同意。</p>
+        <a class="mail-link" href="mailto:info@rubbishasci.cn">info@rubbishasci.cn</a>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer class="site-foot">
+  <div class="page foot-inner">
+    <div class="foot-brand">
+      <span class="foot-mark" aria-hidden="true">R</span>
+      <span><b>Rubbish</b><small>荒诞科研社区</small></span>
+    </div>
+    <div class="foot-meta">
+      <span>独立 · 免费 · 不收费</span>
+      <span>维护期间不接收任何费用</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var button = document.querySelector('[data-copy]');
+    var status = document.getElementById('copy-status');
+    if (!button) return;
+
+    function fallbackCopy(value) {
+      var field = document.createElement('textarea');
+      field.value = value;
+      field.setAttribute('readonly', '');
+      field.style.position = 'fixed';
+      field.style.top = '-1000px';
+      document.body.appendChild(field);
+      field.select();
+      try { document.execCommand('copy'); } finally { document.body.removeChild(field); }
+    }
+
+    button.addEventListener('click', function () {
+      var value = button.getAttribute('data-copy');
+      var done = function () {
+        button.classList.add('is-copied');
+        button.querySelector('span').textContent = '已复制，去 QQ 粘贴';
+        if (status) status.textContent = 'QQ 群号已复制';
+        setTimeout(function () {
+          button.classList.remove('is-copied');
+          button.querySelector('span').textContent = '复制群号';
+        }, 2400);
+      };
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(value).then(done).catch(function () {
+          fallbackCopy(value);
+          done();
+        });
+      } else {
+        fallbackCopy(value);
+        done();
+      }
+    });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+# 维护模式：只提供静态介绍页，不反代应用。
+# 用法（生产目录 /home/ubuntu/rubbish）：
+#   docker compose -f docker-compose.yml -f docker-compose.maintenance.yml up -d maintenance
+# 恢复：
+#   docker compose -f docker-compose.yml -f docker-compose.maintenance.yml stop maintenance
+#   docker compose up -d caddy
+#
+# 维护服务与正式 caddy 不能同时占用 80/443；启动前先 stop caddy。
+
+www.rubbish.argjiemi.cn, argjiemi.cn, www.argjiemi.cn {
+	redir https://rubbish.argjiemi.cn{uri} 301
+}
+
+{$SITE_DOMAIN} {
+	encode zstd gzip
+
+	log {
+		output file /var/log/caddy/access.log {
+			roll_size 100MiB
+			roll_keep 5
+		}
+		format json
+	}
+
+	# 常见扫描/后门探测路径，直接 404。
+	@probes path /.env* /.git* /.svn* /.aws* /.ssh* /wp-admin* /wp-login* /xmlrpc.php* /phpmyadmin* /pma* /vendor* /server-status* /actuator* /config.json /config.yml /docker-compose.yml
+	respond @probes 404
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "geolocation=(), microphone=(), camera=()"
+		X-Permitted-Cross-Domain-Policies "none"
+		-Server
+		-Via
+	}
+	header Cache-Control "no-cache"
+
+	root * /srv/maintenance
+
+	# 应用接口不对外；即使旧前端缓存还在，也拿不到数据。
+	handle /api/* {
+		respond "Forum under maintenance" 503
+	}
+
+	handle {
+		file_server
+	}
+}

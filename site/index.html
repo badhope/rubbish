@@ -1,138 +1,857 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Rubbish — An Absurd Research Community</title>
-<meta name="description" content="Rubbish is a self-hostable absurd research community for open questions, experiment logs, field notes, and honest failures." />
-<meta name="keywords" content="absurd research, research community, failure notes, field notes, self-hosted, Rubbish" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Rubbish — Forum under maintenance</title>
+<meta name="description" content="The Rubbish community forum is under maintenance. Sign-in, registration, posting and comments are temporarily closed. Join the QQ group 1084870548 to keep talking.">
+<link rel="canonical" href="https://rubbish.argjiemi.cn/en.html">
+<link rel="alternate" hreflang="zh-CN" href="https://rubbish.argjiemi.cn/">
+<link rel="alternate" hreflang="en" href="https://rubbish.argjiemi.cn/en.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='32' fill='%2316324F'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-family='Georgia,serif' font-size='32' font-weight='600' fill='white'%3ER%3C/text%3E%3Cpath d='M47 43L52 48L47 53L42 48Z' fill='%23C7A24B'/%3E%3C/svg%3E">
 <style>
   :root {
-    --ink: #1c1b18;
-    --muted: #6b675f;
-    --paper: #f7f6f2;
-    --line: #ded9cd;
-    --green: #1f5b46;
-    --green-soft: #e7efe9;
+    --paper: #f1f2ed;
+    --paper-2: #e8eae3;
+    --ink: #16212a;
+    --muted: #5d6a70;
+    --line: #c9cec6;
+    --blue: #16324f;
+    --blue-strong: #1b3a5c;
+    --gold: #c7a24b;
+    --stamp: #8f2f24;
+    --card: #fffdf7;
+    --notice-bg: #e9ece3;
+    --ticket-shadow: rgba(22, 50, 79, .18);
+    --header-bg: rgba(241, 242, 237, .86);
+    --footer-bg: #16324f;
+    --footer-text: #f4f1e8;
+    --state-pause: #8f2f24;
+    --state-keep: #2f6b4f;
+    --sans: "Avenir Next", "PingFang SC", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
+    --serif: "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", Georgia, serif;
   }
-  * { box-sizing: border-box; }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #0f171c;
+      --paper-2: #131d23;
+      --ink: #e8e9e3;
+      --muted: #9ba7aa;
+      --line: #2d3b40;
+      --blue: #8fb5d6;
+      --blue-strong: #234a6b;
+      --gold: #d8b76a;
+      --stamp: #d07b68;
+      --card: #151f24;
+      --notice-bg: #172228;
+      --ticket-shadow: rgba(0, 0, 0, .35);
+      --header-bg: rgba(15, 23, 28, .86);
+      --footer-bg: #0b222f;
+      --footer-text: #e9e6da;
+      --state-pause: #d07b68;
+      --state-keep: #7fc4a2;
+    }
+    body {
+      background:
+        radial-gradient(ellipse at 15% 0%, rgba(199, 162, 75, .10), transparent 42rem),
+        radial-gradient(ellipse at 100% 30%, rgba(143, 181, 214, .08), transparent 36rem),
+        linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
+    }
+  }
+
+  * { box-sizing: border-box; min-width: 0; }
+  html { scroll-behavior: smooth; }
   body {
     margin: 0;
-    background: var(--paper);
     color: var(--ink);
-    font-family: "Noto Serif SC", "Songti SC", Georgia, serif;
+    background:
+      radial-gradient(ellipse at 15% 0%, rgba(199, 162, 75, .12), transparent 42rem),
+      radial-gradient(ellipse at 100% 30%, rgba(22, 50, 79, .08), transparent 36rem),
+      linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  .page {
+    width: min(1180px, calc(100% - 48px));
+    margin: 0 auto;
+  }
+
+  .skip {
+    position: absolute;
+    left: 16px;
+    top: -80px;
+    z-index: 20;
+    padding: 10px 14px;
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 14px;
+    text-decoration: none;
+  }
+  .skip:focus { top: 12px; }
+
+  .site-head {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--line);
+    background: var(--header-bg);
+    backdrop-filter: blur(14px);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: inherit;
+    text-decoration: none;
+  }
+  .brand-mark {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+  }
+  .brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.12;
+  }
+  .brand-text strong {
+    font-family: var(--serif);
+    font-size: 23px;
+    font-weight: 600;
+    letter-spacing: .01em;
+  }
+  .brand-text small {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: .06em;
+  }
+
+  .head-actions {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .live {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 11px;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: .02em;
+    white-space: nowrap;
+  }
+  .live .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--stamp);
+    box-shadow: 0 0 0 0 rgba(143, 47, 36, .3);
+    animation: pulse 2.6s ease-out infinite;
+  }
+  .lang {
+    color: var(--muted);
+    font-size: 13px;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    white-space: nowrap;
+    padding-right: 4px;
+  }
+  .lang:hover { color: var(--ink); }
+
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.18fr) minmax(330px, .82fr);
+    align-items: start;
+    gap: clamp(34px, 6vw, 88px);
+    padding: clamp(48px, 8vw, 92px) 0 clamp(42px, 7vw, 76px);
+  }
+
+  .hero-copy {
+    animation: rise .75s cubic-bezier(.2, .8, .2, 1) both;
+  }
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: .12em;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 28px;
+    height: 1px;
+    background: var(--gold);
+  }
+
+  h1 {
+    margin: 22px 0 0;
+    font-family: var(--serif);
+    font-size: clamp(46px, 7.4vw, 92px);
+    font-weight: 600;
+    line-height: 1.04;
+    letter-spacing: -.045em;
+  }
+  h1 .accent {
+    display: block;
+    color: var(--blue);
+  }
+  html[lang="en"] h1 {
+    font-size: clamp(38px, 4.4vw, 58px);
+    line-height: 1.06;
+    letter-spacing: -.035em;
+  }
+  html[lang="en"] h1 .accent {
+    display: inline;
+  }
+
+  .lede {
+    max-width: 34em;
+    margin: 28px 0 0;
+    font-size: clamp(17px, 1.8vw, 20px);
+    line-height: 1.9;
+  }
+
+  .notice {
+    max-width: 38em;
+    margin: 30px 0 0;
+    padding: 16px 18px;
+    border-left: 3px solid var(--gold);
+    background: var(--notice-bg);
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.9;
+  }
+  .notice-kicker {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .08em;
+  }
+
+  .ticket {
+    position: relative;
+    padding: 24px 24px 22px 34px;
+    border: 1px solid var(--ink);
+    background: var(--card);
+    box-shadow: 10px 12px 0 var(--ticket-shadow);
+    animation: rise .8s .12s cubic-bezier(.2, .8, .2, 1) both;
+  }
+  .ticket::before {
+    content: "";
+    position: absolute;
+    left: 14px;
+    top: 18px;
+    bottom: 18px;
+    border-left: 1px dashed var(--line);
+  }
+
+  .ticket-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .ticket-kicker {
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: .06em;
+  }
+  .stamp {
+    flex: 0 0 auto;
+    padding: 6px 10px 4px;
+    border: 2px solid var(--stamp);
+    color: var(--stamp);
+    font-family: var(--serif);
+    font-size: 13px;
+    letter-spacing: .16em;
+    line-height: 1.1;
+    transform: rotate(-7deg);
+    opacity: .92;
+  }
+
+  .ticket-label {
+    margin: 22px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: .04em;
+  }
+  .qq {
+    margin: 10px 0 0;
+    color: var(--blue);
+    font-family: var(--serif);
+    font-size: clamp(30px, 5.2vw, 54px);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    letter-spacing: .015em;
+    line-height: 1.12;
+    overflow-wrap: anywhere;
+  }
+  .ticket-note {
+    margin: 10px 0 0;
+    color: var(--muted);
+    font-size: 13px;
     line-height: 1.7;
   }
-  a { color: inherit; }
-  .wrap { width: min(1040px, calc(100% - 48px)); margin: 0 auto; }
-  header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 22px 0; border-bottom: 1px solid var(--line);
+
+  .copy-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 20px;
+    padding: 12px 14px;
+    border: 1px solid var(--blue-strong);
+    border-radius: 3px;
+    background: var(--blue-strong);
+    color: #f8f5ec;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .18s ease, color .18s ease, transform .18s ease;
   }
-  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-  .brand .mark { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 6px; background: var(--green); color: #fff; font-family: Georgia, serif; font-size: 22px; }
-  .brand b { font-size: 20px; letter-spacing: .02em; }
-  .brand span { display: block; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 9px; letter-spacing: .18em; color: var(--muted); }
-  .actions { display: flex; gap: 10px; }
-  .btn {
-    display: inline-flex; align-items: center; justify-content: center;
-    min-height: 40px; padding: 0 16px; border: 1px solid var(--line);
-    border-radius: 8px; text-decoration: none; font-family: ui-sans-serif, system-ui, sans-serif;
-    font-size: 13px; background: transparent;
+  .copy-btn:hover { transform: translateY(-1px); }
+  .copy-btn:active { transform: translateY(0); }
+  .copy-btn:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 3px;
   }
-  .btn.primary { background: var(--green); border-color: var(--green); color: #fff; }
-  .hero { padding: 84px 0 64px; border-bottom: 1px solid var(--line); }
-  .eyebrow { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 10px; letter-spacing: .24em; color: var(--green); }
-  h1 { margin: 14px 0 10px; font-size: clamp(40px, 7vw, 76px); line-height: 1.05; letter-spacing: -.02em; }
-  .lead { max-width: 620px; margin: 0; color: var(--muted); font-size: 17px; }
-  .hero .actions { margin-top: 26px; }
-  section { padding: 52px 0; border-bottom: 1px solid var(--line); }
-  .kicker { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 10px; letter-spacing: .2em; color: var(--muted); }
-  h2 { margin: 8px 0 20px; font-size: clamp(24px, 3vw, 34px); line-height: 1.2; }
-  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
-  .item { border-top: 1px solid var(--line); padding-top: 14px; }
-  .item h3 { margin: 0 0 6px; font-size: 17px; }
-  .item p { margin: 0; color: var(--muted); font-size: 14px; }
-  .rules { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 40px; padding: 0; margin: 0; list-style: none; }
-  .rules li { border-top: 1px solid var(--line); padding-top: 10px; font-size: 14px; color: var(--muted); }
-  .rules b { display: block; color: var(--ink); font-size: 14px; margin-bottom: 2px; }
-  .shots { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; align-items: start; }
-  .shots img { width: 100%; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
-  .shots .side { display: grid; gap: 16px; }
-  footer { padding: 28px 0 40px; color: var(--muted); font-family: ui-sans-serif, system-ui, sans-serif; font-size: 12px; }
-  footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-  @media (max-width: 760px) {
-    .wrap { width: min(100% - 32px, 680px); }
-    .hero { padding: 54px 0 42px; }
-    .grid, .rules, .shots { grid-template-columns: 1fr; }
-    .shots .side { grid-template-columns: 1fr 1fr; }
-    header .actions .btn:not(.primary) { display: none; }
+  .copy-btn.is-copied {
+    border-color: var(--gold);
+    background: var(--gold);
+    color: var(--ink);
+  }
+  .copy-btn svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+  }
+
+  .ticket-foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px 14px;
+    margin: 16px 0 0;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .ticket-foot a {
+    color: var(--blue);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+  .ticket-foot a:hover { text-decoration: underline; }
+
+  .section {
+    padding: clamp(38px, 6vw, 66px) 0;
+    border-top: 1px solid var(--line);
+  }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+  .section-head h2 {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: clamp(26px, 3.2vw, 38px);
+    font-weight: 600;
+    letter-spacing: -.025em;
+    line-height: 1.2;
+  }
+  .section-note {
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: .1em;
+    white-space: nowrap;
+  }
+
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .status-item {
+    padding: 24px 26px 26px 0;
+    border-right: 1px solid var(--line);
+  }
+  .status-item:last-child {
+    padding-right: 0;
+    border-right: 0;
+  }
+  .state {
+    display: inline-block;
+    margin-bottom: 14px;
+    padding: 3px 8px;
+    border: 1px solid currentColor;
+    font-size: 11px;
+    letter-spacing: .08em;
+  }
+  .state-pause { color: var(--state-pause); }
+  .state-keep { color: var(--state-keep); }
+  .status-item h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .status-item p {
+    margin: 8px 0 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  .about-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+    gap: clamp(28px, 5vw, 64px);
+    align-items: start;
+  }
+  .about-lead {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: clamp(24px, 3vw, 34px);
+    line-height: 1.55;
+    letter-spacing: -.02em;
+  }
+  .about-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--line);
+  }
+  .about-list li {
+    display: grid;
+    grid-template-columns: 86px minmax(0, 1fr);
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .about-list b {
+    color: var(--blue);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .about-list span {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .join-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr);
+    gap: clamp(28px, 5vw, 64px);
+    align-items: start;
+  }
+  .join-copy {
+    margin: 0 0 22px;
+    font-size: 16px;
+    line-height: 1.9;
+  }
+  .steps {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--line);
+  }
+  .steps li {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 12px;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  .steps li span {
+    color: var(--gold);
+    font-family: var(--serif);
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  .steps b {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .join-note {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding: 24px;
+    background: var(--blue-strong);
+    color: #f4f1e8;
+  }
+  .note-title {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 600;
+  }
+  .join-note p:last-child {
+    margin: 0;
+    color: rgba(244, 241, 232, .78);
+    font-size: 14px;
+    line-height: 1.9;
+  }
+
+  .contact-row {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 32px;
+    padding-top: 4px;
+  }
+  .contact-copy {
+    max-width: 38em;
+    margin: 0;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.9;
+  }
+  .mail-link {
+    flex: 0 0 auto;
+    color: var(--blue);
+    font-family: var(--serif);
+    font-size: clamp(20px, 2.4vw, 28px);
+    text-decoration: none;
+    border-bottom: 1px solid var(--gold);
+    padding-bottom: 3px;
+    overflow-wrap: anywhere;
+  }
+  .mail-link:hover { color: var(--ink); }
+
+  .site-foot {
+    margin-top: clamp(42px, 6vw, 76px);
+    background: var(--footer-bg);
+    color: var(--footer-text);
+  }
+  .foot-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 26px 0;
+  }
+  .foot-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .foot-mark {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid rgba(244, 241, 232, .55);
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .foot-brand span:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 13px;
+  }
+  .foot-brand b {
+    font-family: var(--serif);
+    font-size: 17px;
+    font-weight: 600;
+  }
+  .foot-brand small {
+    color: rgba(244, 241, 232, .65);
+    font-size: 11px;
+    letter-spacing: .05em;
+  }
+  .foot-meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px 20px;
+    color: rgba(244, 241, 232, .66);
+    font-size: 12px;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(143, 47, 36, .28); }
+    70% { box-shadow: 0 0 0 8px rgba(143, 47, 36, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(143, 47, 36, 0); }
+  }
+
+  @media (max-width: 880px) {
+    .page { width: calc(100% - 32px); }
+    .site-head { padding: 14px 0; gap: 12px; }
+    .brand { gap: 10px; }
+    .brand-mark { width: 38px; height: 38px; flex-basis: 38px; }
+    .brand-text strong { font-size: 19px; }
+    .brand-text small { display: none; }
+    .head-actions { gap: 8px; }
+    .live { padding: 5px 8px; gap: 6px; font-size: 11px; }
+    .lang { font-size: 11px; }
+    .hero { grid-template-columns: 1fr; gap: 38px; padding-top: 42px; }
+    h1 { font-size: clamp(42px, 11vw, 64px); }
+    html[lang="en"] h1 { font-size: clamp(34px, 9.4vw, 52px); }
+    .ticket { max-width: 540px; }
+    .status-grid { grid-template-columns: 1fr; }
+    .status-item {
+      padding: 20px 0;
+      border-right: 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .status-item:last-child { border-bottom: 0; }
+    .about-grid, .join-grid { grid-template-columns: 1fr; }
+    .about-list li { grid-template-columns: 78px minmax(0, 1fr); }
+    .join-note { min-height: 180px; }
+    .contact-row { display: grid; gap: 18px; align-items: start; }
+    .mail-link { justify-self: start; }
+    .foot-inner { align-items: flex-start; flex-direction: column; gap: 16px; }
+    .foot-meta { justify-content: flex-start; }
+  }
+
+  @media (max-width: 430px) {
+    .head-actions .live { font-size: 10px; }
+    .qq { font-size: clamp(28px, 7.4vw, 40px); }
+    .ticket { padding: 22px 18px 20px 30px; }
+    .stamp { padding: 5px 8px 3px; font-size: 11px; }
+    .section-head { align-items: flex-start; flex-direction: column; gap: 6px; }
+    .section-note { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important;
+    }
   }
 </style>
 </head>
-<body>
-<header>
-  <a class="brand" href="index.html">
-    <span class="mark">R</span>
-    <div><b>Rubbish</b><span>ABSURD RESEARCH COMMUNITY</span></div>
-  </a>
-  <div class="actions">
-    <a class="btn" href="zh.html">简体中文</a>
-    <a class="btn" href="https://rubbish.argjiemi.cn/guide?tab=policies">Community rules</a>
-    <a class="btn primary" href="https://rubbish.argjiemi.cn/forum">Enter community</a>
-  </div>
-</header>
+<body><a class="skip" href="#main">Skip to content</a>
 
-<main class="wrap">
-  <section class="hero" style="border-bottom: 0">
-    <p class="eyebrow">AN ABSURD RESEARCH COMMUNITY</p>
-    <h1>Take an odd question<br />seriously.</h1>
-    <p class="lead">Ask, frame, record, fail, and look again. Post a single question, or write down an experiment or a field note from start to finish. If someone picks it up, keep going.</p>
-    <div class="actions">
-      <a class="btn primary" href="https://rubbish.argjiemi.cn/forum">Browse the community</a>
-      <a class="btn" href="https://rubbish.argjiemi.cn/forum?compose=1">Post a study</a>
+<div class="page">
+  <header class="site-head">
+    <a class="brand" href="./" aria-label="Rubbish home">
+      <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true">
+        <rect width="64" height="64" rx="12" fill="#16324F"/>
+        <rect x="8" y="8" width="48" height="48" rx="5" fill="none" stroke="#FFFFFF" stroke-opacity=".45" stroke-width="1.4"/>
+        <text x="32" y="44" text-anchor="middle" font-family="Georgia,serif" font-size="34" font-weight="600" fill="#FFFFFF">R</text>
+        <path d="M50.5 44.5 L56 50 L50.5 55.5 L45 50 Z" fill="#C7A24B"/>
+      </svg>
+      <span class="brand-text">
+        <strong>Rubbish</strong>
+        <small>Absurd Research Community</small>
+      </span>
+    </a>
+    <div class="head-actions">
+      <span class="live"><span class="dot" aria-hidden="true"></span>Forum under maintenance</span>
+      <a class="lang" href="zh.html" hreflang="zh-CN">中文</a>
     </div>
-  </section>
+  </header>
 
-  <section>
-    <p class="kicker">THREE WAYS IN, ONE COMMUNITY</p>
-    <h2>You do not need to be a researcher first</h2>
-    <div class="grid">
-      <div class="item"><h3>Research plans</h3><p>One question, why it matters, and how you plan to approach it. Frame it first, then find collaborators.</p></div>
-      <div class="item"><h3>Logs and retros</h3><p>Experiment logs, field notes, and failure reviews. The process can be rough; the material still has to add up.</p></div>
-      <div class="item"><h3>Creative work</h3><p>Fiction, essays, criticism, poetry, and guides. No research template required; write it well and make the discussion worth joining.</p></div>
-    </div>
-  </section>
-
-  <section>
-    <p class="kicker">COMMUNITY RULES</p>
-    <h2>Say what you mean</h2>
-    <ul class="rules">
-      <li><b>Label fiction</b>Absurd studies, satire, and thought experiments must say “fiction” in the title area or at the top of the body.</li>
-      <li><b>Real material stays checkable</b>Cite sources for literature, data, and images. Invented references must be marked as invented.</li>
-      <li><b>Protect real people</b>Do not name private individuals, workplaces, medical records, or chat logs. Aim satire at the pattern, not an identifiable person.</li>
-      <li><b>Copyright and takedowns</b>Stolen images, rewritten work, and unauthorized reposts are removed. Copyright and privacy reports are handled first.</li>
-    </ul>
-  </section>
-
-  <section>
-    <p class="kicker">INTERFACE</p>
-    <h2>Community, archive, and your space</h2>
-    <div class="shots">
-      <img src="docs/assets/screenshots/community-home-desktop.png" alt="Rubbish community home on desktop" loading="lazy" />
-      <div class="side">
-        <img src="docs/assets/screenshots/community-catalog-desktop.png" alt="Rubbish archive" loading="lazy" />
-        <img src="docs/assets/screenshots/community-rules-desktop.png" alt="Rubbish community rules" loading="lazy" />
+  <main id="main">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Community notice · Maintenance started 2026-11-20</p>
+        <h1>The forum is being rearranged. <span class="accent">The group is still open.</span></h1>
+        <p class="lede">Rubbish is an absurd research community: odd questions, taken seriously. Open questions, honest notes, public failures.</p>
+        <p class="notice"><span class="notice-kicker">Current status</span>Sign-in, registration, posting and comments are temporarily closed while we clean up old entry points and reorganize the community. We will announce reopening in the QQ group first.</p>
       </div>
-    </div>
-  </section>
-</main>
 
-<footer>
-  <div class="wrap">
-    <span>Rubbish community · independent and free to use</span>
-    <span>Copyright, privacy, and reports: <a href="mailto:info@rubbishasci.cn">info@rubbishasci.cn</a></span>
+      <aside class="ticket" aria-label="QQ group information">
+        <div class="ticket-head">
+          <span class="ticket-kicker">QQ group · open</span>
+          <span class="stamp">PAUSED</span>
+        </div>
+        <p class="ticket-label">Where to find us right now</p>
+        <p class="qq" id="qq-number">1084870548</p>
+        <p class="ticket-note">Open QQ and search the group number to join</p>
+        <button class="copy-btn" type="button" data-copy="1084870548">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="8" y="8" width="11" height="11" rx="2"/>
+            <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>
+          </svg>
+          <span>Copy group number</span>
+        </button>
+        <span class="sr-only" id="copy-status" role="status" aria-live="polite"></span>
+        <p class="ticket-foot"><span>Ask for an admin after joining</span><a href="mailto:info@rubbishasci.cn">info@rubbishasci.cn</a></p>
+      </aside>
+    </section>
+
+    <section class="section" aria-labelledby="status-title">
+      <div class="section-head">
+        <h2 id="status-title">What is happening</h2>
+        <span class="section-note">Scope</span>
+      </div>
+      <div class="status-grid">
+        <div class="status-item">
+          <span class="state state-pause">PAUSED</span>
+          <h3>Login &amp; registration</h3>
+          <p>New accounts and sign-in are closed.</p>
+        </div>
+        <div class="status-item">
+          <span class="state state-pause">PAUSED</span>
+          <h3>Posts &amp; comments</h3>
+          <p>Publishing, replies and uploads are paused.</p>
+        </div>
+        <div class="status-item">
+          <span class="state state-keep">KEPT</span>
+          <h3>Existing content</h3>
+          <p>Archives and data remain on the server; we will continue after reopening.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="about-title">
+      <div class="section-head">
+        <h2 id="about-title">What this is</h2>
+        <span class="section-note">About</span>
+      </div>
+      <div class="about-grid">
+        <p class="about-lead">No hot takes, no borrowed authority. An odd question still deserves to be opened up, recorded, failed at, and tried again.</p>
+        <ul class="about-list">
+          <li><b>Open questions</b><span>Make it clear first, then find company.</span></li>
+          <li><b>Honest notes</b><span>Rough process is fine; the material has to line up.</span></li>
+          <li><b>Public failures</b><span>Failure is not the opposite of a result; it is part of the process.</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="join-title">
+      <div class="section-head">
+        <h2 id="join-title">Join the group first</h2>
+        <span class="section-note">Channel</span>
+      </div>
+      <div class="join-grid">
+        <div>
+          <p class="join-copy">Until the forum is back, conversation lives in the QQ group. If you want to write, collaborate on a question, or ask how the community works, start there.</p>
+          <ol class="steps">
+            <li><span>01</span><div>Open QQ and search group number <b>1084870548</b></div></li>
+            <li><span>02</span>Ask for an admin and say what you are here for</li>
+            <li><span>03</span>When the forum reopens, the group announcement will say so first</li>
+          </ol>
+        </div>
+        <div class="join-note">
+          <p class="note-title">Group ground rules</p>
+          <p>No naming real people, no stolen images, no invented references. Mark fiction as fiction. Say what you mean before deciding whether it is fun.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="contact-title">
+      <div class="section-head">
+        <h2 id="contact-title">If you want to write</h2>
+        <span class="section-note">Letters</span>
+      </div>
+      <div class="contact-row">
+        <p class="contact-copy">If you have something to write or a question to work on, email us. Letters are private by default; if we want to publish, we will ask the author first.</p>
+        <a class="mail-link" href="mailto:info@rubbishasci.cn">info@rubbishasci.cn</a>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer class="site-foot">
+  <div class="page foot-inner">
+    <div class="foot-brand">
+      <span class="foot-mark" aria-hidden="true">R</span>
+      <span><b>Rubbish</b><small>Absurd Research Community</small></span>
+    </div>
+    <div class="foot-meta">
+      <span>Independent · free · no fees</span>
+      <span>No fees are collected during maintenance</span>
+    </div>
   </div>
 </footer>
+
+<script>
+  (function () {
+    var button = document.querySelector('[data-copy]');
+    var status = document.getElementById('copy-status');
+    if (!button) return;
+
+    function fallbackCopy(value) {
+      var field = document.createElement('textarea');
+      field.value = value;
+      field.setAttribute('readonly', '');
+      field.style.position = 'fixed';
+      field.style.top = '-1000px';
+      document.body.appendChild(field);
+      field.select();
+      try { document.execCommand('copy'); } finally { document.body.removeChild(field); }
+    }
+
+    button.addEventListener('click', function () {
+      var value = button.getAttribute('data-copy');
+      var done = function () {
+        button.classList.add('is-copied');
+        button.querySelector('span').textContent = 'Copied — paste in QQ';
+        if (status) status.textContent = 'QQ group number copied';
+        setTimeout(function () {
+          button.classList.remove('is-copied');
+          button.querySelector('span').textContent = 'Copy group number';
+        }, 2400);
+      };
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(value).then(done).catch(function () {
+          fallbackCopy(value);
+          done();
+        });
+      } else {
+        fallbackCopy(value);
+        done();
+      }
+    });
+  })();
+</script>
 </body>
 </html>
