@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-11-20T06:12:59Z",
+  "generated_at_utc": "2026-11-20T06:26:34Z",
   "source": "production PostgreSQL / tenant ba9a864d-d300-48eb-94da-38e82840aa47",
   "public_fields": [
     "title",
@@ -469,8 +469,8 @@
       ],
       "role": "published",
       "path": "published/56.md",
-      "bytes": 8501,
-      "sha256": "fdbb6e55a7ce14433dd49196e5a0669f7cfc30feb06ed57e68b1a4c480e06353"
+      "bytes": 23608,
+      "sha256": "0eff21385553e63c34f23060a1d0b50fdccc0c72f6845cedbf096c545a45e39f"
     },
     {
       "submission_id": 60,
@@ -1562,8 +1562,8 @@
       ],
       "role": "published",
       "path": "published/134.md",
-      "bytes": 8269,
-      "sha256": "d75b5d778b7e0559bfbbed877e689e380943c8bb67cfa6989af4a7c090ae829f"
+      "bytes": 22441,
+      "sha256": "ae66d50d822fffdf244bc986633a970d708af69aaa40d262dd2ac68e716a8488"
     },
     {
       "submission_id": 138,
@@ -2912,8 +2912,8 @@
       ],
       "role": "published",
       "path": "published/234.md",
-      "bytes": 8623,
-      "sha256": "7a33225175d1fae1ce6f7de0fb5e99463600941292abecf1e766fec5eb9061d7"
+      "bytes": 23469,
+      "sha256": "7585517bece87d9e74468ea8df99f7aa0e7a0ad0263d057f595fcac02a46fb7e"
     },
     {
       "submission_id": 238,
