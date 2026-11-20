@@ -126,10 +126,19 @@ export function MobileAppShell() {
 
   // 导入是投稿流程的一部分，不再做右下角悬浮“＋”。创建动作从页面内主按钮进入。
 
-  // 认证页：完全裸奔，不套任何壳
+  // 认证页：不套业务外壳，只保留返回首页的品牌入口
   if (isAuthPage) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="relative min-h-screen bg-background">
+        <Link
+          to="/"
+          aria-label="返回 Rubbish 首页"
+          className="fixed left-5 top-4 z-10 inline-flex items-center gap-2 text-sm font-semibold tracking-tight text-foreground transition-colors hover:text-primary"
+        >
+          <BrandMark className="h-5 w-5 text-primary" />
+          <span>Rubbish</span>
+          <span className="text-[11px] font-normal text-muted-foreground">返回首页</span>
+        </Link>
         <CookieBanner />
         <ModuleErrorBoundary name="页面" resetKeys={[location.pathname]}>
           <PageTransition>

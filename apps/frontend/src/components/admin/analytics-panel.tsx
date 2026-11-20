@@ -66,7 +66,7 @@ export function AdminAnalyticsPanel() {
         </p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {cards.map(({ label, value, sub, icon: Icon }) => (
           <Card key={label}>
             <CardContent className="p-4">

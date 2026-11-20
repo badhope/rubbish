@@ -308,7 +308,18 @@ export function AppShell() {
   const AUTH_FACADE = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email']
   if (location.pathname === '/' || AUTH_FACADE.includes(location.pathname)) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="relative min-h-screen bg-background">
+        {location.pathname !== '/' && (
+          <Link
+            to="/"
+            aria-label="返回 Rubbish 首页"
+            className="fixed left-5 top-5 z-10 inline-flex items-center gap-2 text-sm font-semibold tracking-tight text-foreground transition-colors hover:text-primary sm:left-7"
+          >
+            <BrandMark className="h-6 w-6 text-primary" />
+            <span>Rubbish</span>
+            <span className="hidden text-[11px] font-normal text-muted-foreground sm:inline">返回首页</span>
+          </Link>
+        )}
         <ModuleErrorBoundary name="页面" resetKeys={[location.pathname]}>
           <PageTransition>
             <Outlet />
