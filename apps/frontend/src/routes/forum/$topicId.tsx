@@ -281,6 +281,7 @@ function ForumTopicPage() {
   const { isAuthenticated, user, isAdmin } = useAuth()
   const [reply, setReply] = useState('')
   const [replyTo, setReplyTo] = useState<ForumReply | null>(null)
+  const [composerOpen, setComposerOpen] = useState(false)
 
   const topicQ = useQuery<ForumTopic>({
     queryKey: ['forum', 'topic', id],
@@ -305,6 +306,7 @@ function ForumTopicPage() {
     onSuccess: () => {
       setReply('')
       setReplyTo(null)
+      setComposerOpen(false)
       void qc.invalidateQueries({ queryKey: ['forum'] })
       toast.success(replyTo ? '已回复' : '已发布回复')
     },
@@ -565,31 +567,43 @@ function ForumTopicPage() {
         <Card>
           <CardContent className="space-y-2 py-4">
             {isAuthenticated ? (
-              <>
-                <Suspense fallback={<div className="flex h-[160px] items-center justify-center rounded-md border bg-muted/20 text-xs text-muted-foreground">编辑器加载中…</div>}>
-                  <ForumEditor
-                    value={reply}
-                    onChange={setReply}
-                    onUploadImage={uploadForumImage}
-                    minHeight={160}
-                    autoFocus
-                    onSubmitShortcut={sendReply}
-                    placeholder="写下你的回应…（支持标题、引用、列表、表情和站内表情包）"
-                  />
-                </Suspense>
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-muted-foreground">
-                    Ctrl / ⌘ + Enter 发送；请针对内容，不针对人。
-                  </span>
-                  <Button
-                    onClick={sendReply}
-                    disabled={replyMut.isPending || reply.trim().length < 1}
-                  >
-                    <Send className="h-4 w-4" />
-                    {replyMut.isPending ? '发送中…' : '发布回复'}
-                  </Button>
-                </div>
-              </>
+              composerOpen ? (
+                <>
+                  <Suspense fallback={<div className="flex h-[160px] items-center justify-center rounded-md border bg-muted/20 text-xs text-muted-foreground">编辑器加载中…</div>}>
+                    <ForumEditor
+                      value={reply}
+                      onChange={setReply}
+                      onUploadImage={uploadForumImage}
+                      minHeight={160}
+                      autoFocus
+                      onSubmitShortcut={sendReply}
+                      placeholder="写下你的回应…（支持标题、引用、列表、表情和站内表情包）"
+                    />
+                  </Suspense>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-muted-foreground">
+                      Ctrl / ⌘ + Enter 发送；请针对内容，不针对人。
+                    </span>
+                    <Button
+                      onClick={sendReply}
+                      disabled={replyMut.isPending || reply.trim().length < 1}
+                    >
+                      <Send className="h-4 w-4" />
+                      {replyMut.isPending ? '发送中…' : '发布回复'}
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setComposerOpen(true)}
+                  className="flex w-full items-center gap-2 rounded-md border border-dashed bg-muted/20 px-3 py-4 text-left text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:bg-muted/30 hover:text-foreground"
+                >
+                  <MessageSquare className="h-4 w-4 shrink-0" />
+                  <span>写下你的回应…</span>
+                  <span className="ml-auto text-[11px]">Markdown / 图片 / 表情</span>
+                </button>
+              )
             ) : (
               <p className="text-sm text-muted-foreground">
                 <Link to="/login" className="text-primary hover:underline">
