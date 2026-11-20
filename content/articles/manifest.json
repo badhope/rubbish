@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-11-20T05:31:18.179650+00:00",
+  "generated_at_utc": "2026-11-20T05:32:39.585625+00:00",
   "source": "production PostgreSQL / tenant ba9a864d-d300-48eb-94da-38e82840aa47",
   "public_fields": [
     "title",
@@ -3278,8 +3278,8 @@
       ],
       "role": "published",
       "path": "published/266.md",
-      "bytes": 23813,
-      "sha256": "634d4480abc02136a23308f517b23e2c60ddb75bf8aabe33f35d80e9725fdc4c"
+      "bytes": 23834,
+      "sha256": "0ad98dcc36906e02a359d695cf675899cd16537b62086f9180ae79f7d589c605"
     },
     {
       "submission_id": 270,
