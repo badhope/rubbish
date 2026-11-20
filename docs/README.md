@@ -20,4 +20,3 @@ Start with the document that matches what you are doing.
 - Put commands in copyable blocks and name the directory they run from.
 - Do not restate the same architecture in three files. Link instead.
 
-`docs/archive/legacy-2026-11/` holds historical notes from the earlier product shape. They are kept for traceability and are not maintained. Do not use them as current documentation.
