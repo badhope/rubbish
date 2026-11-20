@@ -19,8 +19,11 @@ stages:
           script: |
             set -e
             cd apps/backend
-            pip install uv --quiet
-            uv sync --group dev
+            export PATH="$HOME/.local/bin:$PATH"
+            python3 -m pip install --user uv -i https://pypi.tuna.tsinghua.edu.cn/simple \
+              || curl -LsSf https://astral.sh/uv/install.sh | sh
+            uv --version
+            uv sync --group dev --frozen
             uv run pytest -q -p no:xdist --ignore=tests/e2e
         - step: shell@agent
           name: frontend_build
@@ -31,4 +34,5 @@ stages:
             npm ci --registry=https://registry.npmjs.org
             npm run lint
             npm run typecheck
+            npm run test -- --maxWorkers=2
             npm run build
