@@ -63,7 +63,12 @@ The frontend runs on `http://localhost:5173`; the API runs on `http://localhost:
 | `apps/frontend` | React + TypeScript SPA, board UI, reader, admin shell |
 | `infra/` | Docker, Caddy, and deployment helpers |
 | `ops/` | Server maintenance and release scripts |
+| `content/articles` | Public article texts and author names, including drafts and duplicate records |
 | `docs/` | Product notes, architecture, deployment, and screenshots |
+
+## Article archive
+
+The current server article texts and author names are in [`content/articles`](content/articles/README.md): 274 published entries, 21 drafts, and 15 duplicate records. This is public article content only. Review scores, reviewer notes, account details, and server secrets are not stored here.
 
 ## Docs
 

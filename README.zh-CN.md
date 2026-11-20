@@ -63,7 +63,12 @@ npm run dev
 | `apps/frontend` | React + TypeScript 前端、版块、阅读器和后台 |
 | `infra/` | Docker、Caddy 和部署辅助文件 |
 | `ops/` | 服务器维护与发布脚本 |
+| `content/articles` | 公开文章正文与作者姓名，含待处理稿和重复记录 |
 | `docs/` | 产品说明、架构、部署和截图 |
+
+## 文章正文
+
+当前服务器上的文章正文与作者姓名在 [`content/articles`](content/articles/README.md)：274 篇已发布、21 篇待处理、15 条重复记录。这里只放公开文章内容，不存放评分、审稿意见、账号信息或服务器密钥。
 
 ## 文档
 
