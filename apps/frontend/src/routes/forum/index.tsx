@@ -376,7 +376,7 @@ function ForumListPage() {
     <div className="mx-auto w-full max-w-4xl space-y-4">
       <PageHeader
         title="社区"
-        description="研究计划、实验记录、失败复盘、组队与站务都在这里；登录即可发，不需要积分。"
+        description="文章、研究记录、失败复盘、组队与站务都在这里；登录即可发布，不需要积分。"
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" asChild>
@@ -387,7 +387,7 @@ function ForumListPage() {
             </Button>
             <Button onClick={openComposer}>
               <Plus className="h-4 w-4" />
-              发帖
+              写文章
             </Button>
           </div>
         }
@@ -483,7 +483,7 @@ function ForumListPage() {
         <ErrorState message="加载社区失败" onRetry={() => listQ.refetch()} />
       ) : topics.length === 0 ? (
         <EmptyState
-          title="还没有人发帖"
+          title="还没有文章或帖子"
           description="第一个帖子可以是你：问一个问题，或提一条建议。"
           action={
             <Button
@@ -602,8 +602,8 @@ function ForumListPage() {
         >
           <div className="flex items-center justify-between border-b px-4 py-3 sm:px-6">
             <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">NEW STUDY</p>
-              <DialogTitle className="mt-1 font-serif text-xl tracking-tight">发布研究</DialogTitle>
+              <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">NEW ARTICLE</p>
+              <DialogTitle className="mt-1 font-serif text-xl tracking-tight">写文章</DialogTitle>
             </div>
             <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="关闭发帖">
               <X className="h-4 w-4" />
@@ -617,8 +617,8 @@ function ForumListPage() {
                 value={form.title}
                 onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
                 maxLength={200}
-                placeholder="标题：一句话说清你要讨论什么"
-                aria-label="帖子标题"
+                placeholder="标题：这篇文章想讲什么"
+                aria-label="文章标题"
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
                     event.preventDefault()
@@ -659,7 +659,7 @@ function ForumListPage() {
                     <span className="text-primary">修改</span>
                   </button>
                 )}
-                <span className="text-[11px] text-muted-foreground">父板块会自动汇总子板块帖子；发帖登录即可，不需要积分。</span>
+                <span className="text-[11px] text-muted-foreground">父板块会自动汇总子板块内容；发布登录即可，不需要积分。</span>
                 <label className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs text-muted-foreground">
                   <input
                     type="checkbox"
@@ -679,7 +679,7 @@ function ForumListPage() {
                   minHeight={360}
                   textareaRef={bodyRef}
                   onSubmitShortcut={publishTopic}
-                  placeholder="说清背景、你的判断、以及希望得到什么回应。支持标题、引用、列表、表情和图片。"
+                  placeholder="写清背景、过程、判断和想讨论的问题。支持标题、引用、列表、表情和图片。"
                 />
               </Suspense>
             </div>

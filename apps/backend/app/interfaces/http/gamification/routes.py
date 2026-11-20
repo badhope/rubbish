@@ -28,7 +28,14 @@ from app.domain.gamification.ladder import (
     identities_payload,
     identity_payload,
 )
-from app.domain.gamification.models import CoinPolicy, CoinRule, CoinShopItem, RoleApplication
+from app.domain.gamification.models import (
+    CoinPolicy,
+    CoinPurchase,
+    CoinRule,
+    CoinShopItem,
+    PointEvent,
+    RoleApplication,
+)
 from app.models import AuditLog, User, UserRole
 
 router = APIRouter(prefix="/gamification", tags=["gamification"])
@@ -92,6 +99,11 @@ class RoleApplicationListResponse(BaseModel):
 class RoleDecisionRequest(BaseModel):
     decision: Literal["approve", "reject"]
     note: str | None = Field(default=None, max_length=500)
+
+
+class ShopPurchaseDecision(BaseModel):
+    status: Literal["fulfilled", "rejected"]
+    note: str = Field(default="", max_length=255)
 
 
 class PublicUserLevel(BaseModel):
@@ -848,3 +860,105 @@ async def admin_update_shop_item(
         sort_order=body.sort_order,
     )
     return _shop_item_out(updated)
+
+
+@router.get("/admin/shop/purchases")
+async def admin_list_shop_purchases(
+    status_filter: Literal["paid", "fulfilled", "rejected"] | None = Query(default="paid"),
+    current_user: User = Depends(require_shop_manager),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, object]:
+    """人工权益履约队列：只读兑换流水，不做发货动作。"""
+    stmt = (
+        select(CoinPurchase, User)
+        .join(User, User.id == CoinPurchase.user_id)
+        .where(CoinPurchase.tenant_id == current_user.tenant_id)
+        .order_by(CoinPurchase.created_at.desc(), CoinPurchase.id.desc())
+        .limit(100)
+    )
+    if status_filter is not None:
+        stmt = stmt.where(CoinPurchase.status == status_filter)
+    rows = (await db.execute(stmt)).all()
+    return {
+        "data": [
+            {
+                "id": purchase.id,
+                "item_id": purchase.item_id,
+                "item_name": purchase.item_name,
+                "price_coin": purchase.price_coin,
+                "status": purchase.status,
+                "note": purchase.note,
+                "created_at": purchase.created_at.isoformat(),
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "display_name": user.display_name,
+                },
+            }
+            for purchase, user in rows
+        ]
+    }
+
+
+@router.patch("/admin/shop/purchases/{purchase_id}")
+async def admin_decide_shop_purchase(
+    purchase_id: int,
+    body: ShopPurchaseDecision,
+    current_user: User = Depends(require_shop_manager),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, object]:
+    """给人工权益补一个明确终态；已处理订单不可重复改。"""
+    purchase = (
+        await db.execute(
+            select(CoinPurchase).where(
+                CoinPurchase.tenant_id == current_user.tenant_id,
+                CoinPurchase.id == purchase_id,
+            )
+        )
+    ).scalar_one_or_none()
+    if purchase is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="兑换流水不存在")
+    if purchase.status != "paid":
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="该兑换已处理")
+    if body.status == "rejected":
+        user = (
+            await db.execute(
+                select(User)
+                .where(User.id == purchase.user_id, User.tenant_id == current_user.tenant_id)
+                .with_for_update()
+            )
+        ).scalar_one()
+        user.coin_balance = int(user.coin_balance or 0) + purchase.price_coin
+        db.add(
+            PointEvent(
+                tenant_id=current_user.tenant_id,
+                user_id=user.id,
+                identity=currency.COIN_IDENTITY,
+                delta=purchase.price_coin,
+                reason="shop.refund",
+                ref_type="shop_item",
+                ref_id=f"purchase:{purchase.id}",
+                note=f"退回：{purchase.item_name}",
+            )
+        )
+        item = (
+            await db.execute(
+                select(CoinShopItem).where(
+                    CoinShopItem.tenant_id == current_user.tenant_id,
+                    CoinShopItem.id == purchase.item_id,
+                )
+            )
+        ).scalar_one_or_none()
+        if item is not None and item.stock is not None:
+            item.stock += 1
+    purchase.status = body.status
+    purchase.note = body.note.strip() or (
+        "管理员已标记处理" if body.status == "fulfilled" else "管理员驳回，积分已退回"
+    )
+    await db.commit()
+    await db.refresh(purchase)
+    return {
+        "id": purchase.id,
+        "status": purchase.status,
+        "note": purchase.note,
+    }

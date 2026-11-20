@@ -28,7 +28,7 @@ export function OnboardingTour() {
 
   const steps = [
     { title: '先看五个入口', body: '顶部固定 首页 / 社区 / 档案 / 指南 / 我的。短帖在社区，长记录在档案。', to: '/forum', label: '去社区' },
-    { title: isAuthenticated ? '发布你的第一个问题' : '注册后就能发', body: '不用申请资格，也不用积分。先写清楚问题，发布后再慢慢补过程。', to: '/forum', search: { compose: '1' }, label: isAuthenticated ? '发布研究' : '去登录' },
+    { title: isAuthenticated ? '写下你的第一篇文章' : '注册后就能写', body: '不用申请资格，也不用积分。先写清楚要讲的事，发布后再慢慢补过程。', to: '/forum', search: { compose: '1' }, label: isAuthenticated ? '写文章' : '去登录' },
     { title: '把边界看清楚', body: '虚构要标注，材料要能对上，真人隐私不碰；其余交给社区讨论。', to: '/guide', search: { tab: 'policies' }, label: '看社区公约' },
   ]
   const current = steps[Math.min(step, steps.length - 1)]

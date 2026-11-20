@@ -57,9 +57,9 @@ export function MeOverview({
           >
             <PenLine className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <span>
-              <span className="block text-sm font-medium">发布研究记录或帖子</span>
+              <span className="block text-sm font-medium">写一篇文章或发一个帖子</span>
               <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
-                标题和正文就够了；一个计划、一段过程都可以先发。
+                标题和正文就够；一段经历、一个判断、一次复盘都可以先写。
               </span>
             </span>
           </Link>

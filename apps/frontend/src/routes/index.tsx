@@ -171,7 +171,7 @@ function HomePage() {
             </Button>
             <Button asChild size="lg" variant="outline" className="h-12 px-6 text-sm sm:h-14 sm:px-7 sm:text-base">
               <Link to="/forum" search={{ compose: 1 }}>
-                <PenLine className="h-4 w-4 sm:h-5 sm:w-5" /> 发布研究
+                <PenLine className="h-4 w-4 sm:h-5 sm:w-5" /> 写文章
               </Link>
             </Button>
           </div>
@@ -358,16 +358,16 @@ function HomePage() {
       <section className="border-t border-border/70 bg-primary text-primary-foreground">
         <div className="mx-auto grid w-full max-w-[1100px] gap-8 px-5 py-14 sm:px-8 sm:py-20 md:grid-cols-[1fr_auto] md:items-center">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.3em] text-primary-foreground/60">Start a study</p>
-            <h2 className="mt-2 font-serif text-3xl sm:text-4xl">把你的荒诞研究放上来</h2>
+            <p className="text-[10px] uppercase tracking-[0.3em] text-primary-foreground/60">Publish an article</p>
+            <h2 className="mt-2 font-serif text-3xl sm:text-4xl">把你的文章放上来</h2>
             <p className="mt-3 max-w-xl text-sm leading-7 text-primary-foreground/75">
-              短帖和长记录共用一套发布入口；先写清楚问题，再把过程贴进来。发布后公开，不收费。
+              文章和短帖共用一套发布入口；先写清楚要讲的事，再把过程或判断写进来。发布后公开，不收费。
             </p>
           </div>
           <div className="flex flex-wrap gap-3 md:justify-end">
             <Button asChild size="lg" variant="secondary" className="h-12 px-6">
               <Link to="/forum" search={{ compose: 1 }}>
-                {isAuthenticated ? '去社区发布' : '免费注册发帖'} <ArrowRight className="h-4 w-4" />
+                {isAuthenticated ? '去发表文章' : '免费注册写文章'} <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="h-12 border-primary-foreground/30 bg-transparent px-6 text-primary-foreground hover:bg-primary-foreground/10">

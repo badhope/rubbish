@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Coins, Save } from 'lucide-react'
+import { Check, Coins, Gift, Save, X } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   useCoinConfig,
   useUpdateCoinPolicy,
   useUpdateCoinRule,
 } from '@/hooks/api/use-coin-config'
+import { useAdminShopPurchases, useDecideShopPurchase } from '@/hooks/api/use-shop'
 import { extractError } from '@/lib/utils'
 import { PageHeader } from '@/components/common/page-header'
 import { Loading } from '@/components/common/state'
@@ -18,6 +19,8 @@ export default function AdminPointsPage() {
   const config = useCoinConfig()
   const updateRule = useUpdateCoinRule()
   const updatePolicy = useUpdateCoinPolicy()
+  const purchases = useAdminShopPurchases('paid')
+  const decidePurchase = useDecideShopPurchase()
   // 旧审稿、投稿、编辑裁决和零额度回复不再占界面；只保留社区当前四类动作。
   const currentReasons = new Set(['checkin.daily', 'checkin.weekly_bonus', 'forum.topic', 'claim.approve'])
   const rules = config.data?.rules.filter((rule) => currentReasons.has(rule.reason)) ?? []
@@ -97,6 +100,80 @@ export default function AdminPointsPage() {
           </CardContent>
         </Card>
       ) : null}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Gift className="h-4 w-4" /> 兑换履约
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            只处理人工权益：确认已远程处理后标记完成；无法履约则驳回并自动退回积分。自动生效的主题色不会出现在这里。
+          </p>
+          {purchases.isLoading ? <p className="text-sm text-muted-foreground">加载中…</p> : null}
+          {!purchases.isLoading && (purchases.data?.length ?? 0) === 0 ? (
+            <p className="border-y py-5 text-sm text-muted-foreground">没有待履约的人工兑换。</p>
+          ) : null}
+          {(purchases.data?.length ?? 0) > 0 ? (
+            <div className="divide-y border-y">
+              {purchases.data?.map((purchase) => (
+                <div key={purchase.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">
+                      {purchase.item_name}
+                      <span className="ml-2 font-mono text-xs font-normal text-muted-foreground">
+                        -{purchase.price_coin} 积分
+                      </span>
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {purchase.user.display_name || purchase.user.username || `用户 #${purchase.user.id}`} ·{' '}
+                      {new Date(purchase.created_at).toLocaleString('zh-CN', { hour12: false })}
+                    </p>
+                    {purchase.note ? <p className="mt-1 text-xs text-muted-foreground">{purchase.note}</p> : null}
+                  </div>
+                  <div className="flex shrink-0 gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={decidePurchase.isPending}
+                      onClick={() => {
+                        if (!window.confirm(`确认已为「${purchase.item_name}」完成履约？`)) return
+                        decidePurchase.mutate(
+                          { id: purchase.id, status: 'fulfilled', note: '管理员已标记处理' },
+                          {
+                            onSuccess: () => toast.success('已标记完成'),
+                            onError: (err) => toast.error(extractError(err, '操作失败')),
+                          },
+                        )
+                      }}
+                    >
+                      <Check className="h-3.5 w-3.5" /> 完成
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={decidePurchase.isPending}
+                      onClick={() => {
+                        if (!window.confirm(`驳回「${purchase.item_name}」并退回 ${purchase.price_coin} 积分？`)) return
+                        decidePurchase.mutate(
+                          { id: purchase.id, status: 'rejected', note: '管理员驳回，积分已退回' },
+                          {
+                            onSuccess: () => toast.success('已驳回并退回积分'),
+                            onError: (err) => toast.error(extractError(err, '操作失败')),
+                          },
+                        )
+                      }}
+                    >
+                      <X className="h-3.5 w-3.5" /> 驳回
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
 
       {config.data ? (
         <Card>

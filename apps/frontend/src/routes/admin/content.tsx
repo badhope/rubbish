@@ -4,16 +4,18 @@ import { requireAdminGuard } from '@/lib/route-guards'
 import { AdminSectionTabs, type AdminSectionItem } from '@/components/admin/admin-section-tabs'
 import AnnouncementsPage from '@/components/admin/pages/content/announcements'
 import ForumBoardsPage from '@/components/admin/pages/content/forum-boards'
+import ForumInspectionPage from '@/components/admin/pages/content/forum-inspection'
 import ReportsPage from '@/components/admin/pages/content/reports'
 import CommentsPage from '@/components/admin/pages/content/comments'
 
-type SectionKey = 'announcements' | 'boards' | 'reports' | 'comments'
+type SectionKey = 'forum' | 'announcements' | 'boards' | 'reports' | 'comments'
 
 interface ContentSearch {
   section?: string
 }
 
 const SECTIONS: readonly AdminSectionItem<SectionKey>[] = [
+  { key: 'forum', label: '论坛巡检' },
   { key: 'announcements', label: '公告' },
   { key: 'boards', label: '版块' },
   { key: 'reports', label: '举报' },
@@ -22,6 +24,7 @@ const SECTIONS: readonly AdminSectionItem<SectionKey>[] = [
 
 function isSectionKey(value: string | undefined): value is SectionKey {
   return (
+    value === 'forum' ||
     value === 'announcements' ||
     value === 'boards' ||
     value === 'reports' ||
@@ -40,7 +43,7 @@ export const Route = createFileRoute('/admin/content')({
 function AdminContentPage() {
   const navigate = useNavigate()
   const { section: sectionParam } = Route.useSearch()
-  const [section, setSection] = useState<SectionKey>('announcements')
+  const [section, setSection] = useState<SectionKey>('forum')
 
   useEffect(() => {
     if (isSectionKey(sectionParam)) setSection(sectionParam)
@@ -54,6 +57,7 @@ function AdminContentPage() {
   return (
     <div>
       <AdminSectionTabs items={SECTIONS} active={section} onChange={changeSection} label="内容域子段" />
+      {section === 'forum' ? <ForumInspectionPage /> : null}
       {section === 'announcements' ? <AnnouncementsPage /> : null}
       {section === 'boards' ? <ForumBoardsPage /> : null}
       {section === 'reports' ? <ReportsPage /> : null}
