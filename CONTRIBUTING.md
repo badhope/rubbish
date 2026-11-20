@@ -55,7 +55,7 @@ A good PR:
 
 ## Content and moderation changes
 
-Changes to public copy, board names, or moderation rules should follow [docs/POSITIONING.md](docs/POSITIONING.md). Do not reintroduce journal, submission, or peer-review language into user-facing pages.
+Changes to public copy, board names, or moderation rules should follow [docs/POSITIONING.md](docs/POSITIONING.md) and describe the community in its own terms.
 
 ## License
 

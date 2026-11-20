@@ -55,7 +55,7 @@ docs(deploy): 写清非超级用户数据库角色
 
 ## 内容与治理
 
-公开文案、版块名称、治理规则的改动，遵循 [docs/POSITIONING.zh-CN.md](docs/POSITIONING.zh-CN.md)。不要把期刊、投稿、审稿那套词重新带回用户页面。
+公开文案、版块名称、治理规则的改动，遵循 [docs/POSITIONING.zh-CN.md](docs/POSITIONING.zh-CN.md)，用社区自己的语言来描述社区。
 
 ## 许可
 
