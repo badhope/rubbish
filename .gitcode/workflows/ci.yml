@@ -15,8 +15,16 @@ jobs:
     steps:
       - name: Checkout
         uses: checkout
+      - name: Setup Python
+        uses: setup-python
+        with:
+          python-version: "3.12"
       - name: Install uv
-        run: python3 -m pip install --user uv
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          python3 -m pip install --user uv -i https://pypi.tuna.tsinghua.edu.cn/simple \
+            || curl -LsSf https://astral.sh/uv/install.sh | sh
+          uv --version
       - name: Sync dependencies
         run: |
           export PATH="$HOME/.local/bin:$PATH"
@@ -52,6 +60,6 @@ jobs:
       - name: Type check
         run: cd apps/frontend && npm run typecheck
       - name: Unit tests
-        run: cd apps/frontend && npm run test
+        run: cd apps/frontend && npm run test -- --maxWorkers=2
       - name: Build
         run: cd apps/frontend && npm run build
