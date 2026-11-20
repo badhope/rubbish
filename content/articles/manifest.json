@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-11-20T03:59:41.975281+00:00",
+  "generated_at_utc": "2026-11-20T04:57:26.422994+00:00",
   "source": "production PostgreSQL / tenant ba9a864d-d300-48eb-94da-38e82840aa47",
   "public_fields": [
     "title",
@@ -1671,8 +1671,8 @@
       ],
       "role": "published",
       "path": "published/142.md",
-      "bytes": 8147,
-      "sha256": "3f7638e67759486d459abc99fad4bec9f8d3f512cb7371a5e36175d175c90f00"
+      "bytes": 22455,
+      "sha256": "f6475c00135f55f56c7086eea8b592d5e265fbabcdd7cea0eb8acb05a76d925d"
     },
     {
       "submission_id": 147,
@@ -2189,8 +2189,8 @@
       ],
       "role": "published",
       "path": "published/181.md",
-      "bytes": 8667,
-      "sha256": "d0d8966ed891f843248205cb90f675f1c70f2cbc8839fcfb08e6f6ecef0d78e5"
+      "bytes": 22745,
+      "sha256": "acbe9a90f68f4a671d2a126cd7ef8d9b37c5cf7adae4bc60b5e126f5160b45f4"
     },
     {
       "submission_id": 185,
@@ -2711,8 +2711,8 @@
       ],
       "role": "published",
       "path": "published/218.md",
-      "bytes": 10186,
-      "sha256": "79cee68561f5e39d0893a25050816c20d02ca8945cc0d3b22984de65e14fb0fe"
+      "bytes": 22801,
+      "sha256": "7b60adb84be79d82220101aa57ab23e221f6be31b7290de54e4bc69bd0b8c82b"
     },
     {
       "submission_id": 222,
@@ -2925,8 +2925,8 @@
       ],
       "role": "published",
       "path": "published/235.md",
-      "bytes": 7955,
-      "sha256": "55f4e2c79467b2d52a6224c0f029881d13a5916a8b0a498dfbb6959ab9c8ff80"
+      "bytes": 22355,
+      "sha256": "be5f0fcee25b7d6c873234bcf5bd07b240191a2cfa6dd53f71a938e7891e047b"
     },
     {
       "submission_id": 240,
@@ -3127,8 +3127,8 @@
       ],
       "role": "published",
       "path": "published/252.md",
-      "bytes": 7237,
-      "sha256": "70bbe65d8e7771351a65c63c0fc5dcb564b0709c07ae4bf5c24295d55a96f47e"
+      "bytes": 22678,
+      "sha256": "5ad9c3e2a5b654d4f25d2f3f0915bd129dbbc622f7fe18758a095fef80c423fe"
     },
     {
       "submission_id": 256,
@@ -3250,8 +3250,8 @@
       ],
       "role": "published",
       "path": "published/263.md",
-      "bytes": 6755,
-      "sha256": "618e71d780a72bff751e8ffab5272a9dfbc21fe489e5635bbfb8a0afe89661f6"
+      "bytes": 23347,
+      "sha256": "1a04c4cff0fb5d2c59ce51e6362168c466dfe00c6f76581597bc1e7fab200720"
     },
     {
       "submission_id": 267,
@@ -3499,8 +3499,8 @@
       ],
       "role": "published",
       "path": "published/286.md",
-      "bytes": 7980,
-      "sha256": "4b88567e161ab0ce179755a42e327640fa9cecca6e96e23c29820ba4c8512d60"
+      "bytes": 23540,
+      "sha256": "b6d989adb217631a1679cef2754e2fe5d471de922b354bbdb875a1a16c87c30a"
     },
     {
       "submission_id": 290,
