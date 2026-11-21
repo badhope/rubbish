@@ -1131,7 +1131,7 @@ async def submission_timeline(
             f"第 {a.round or 1} 轮 · 槽位 {a.slot} · 当前状态 {a.status}",
         )
         if a.responded_at and a.status in ("accepted", "completed"):
-            add(a.responded_at, "assignment_response", f"{who} 接受审稿邀请", None)
+            add(a.responded_at, "assignment_response", f"{who} 接受互评邀请", None)
         if a.status == "declined":
             add(a.responded_at or a.invited_at, "assignment_declined", f"{who} 拒绝审稿", "需改派")
         if a.status == "cancelled":

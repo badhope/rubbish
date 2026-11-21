@@ -408,7 +408,7 @@ async def express_review_interest(
             tenant_id=tenant_id,
             user_id=editor_id,
             type_="review.interest",
-            title=f"评审申请：{sub.title}",
+            title=f"互评申请：{sub.title}",
             body=f"{current_user.username} 申请参与作品 #{submission_id} 的审稿，请到主编工作台指派台处理。",
             related_type="submission",
             related_id=str(submission_id),
@@ -591,8 +591,8 @@ async def accept_assignment(
             tenant_id=current_user.tenant_id,
             user_id=a.assigned_by,
             type_="review.accepted",
-            title=f"审稿邀请已被接受：{a.submission.title if a.submission else '作品 #' + str(a.submission_id)}",
-            body=f"{current_user.username} 已接受《#{a.submission_id}》的审稿邀请。",
+            title=f"互评邀请已被接受：{a.submission.title if a.submission else '作品 #' + str(a.submission_id)}",
+            body=f"{current_user.username} 已接受《#{a.submission_id}》的互评邀请。",
         )
     try:
         await db.commit()
@@ -631,8 +631,8 @@ async def decline_assignment(
             tenant_id=current_user.tenant_id,
             user_id=a.assigned_by,
             type_="review.declined",
-            title=f"审稿邀请被拒：{a.submission.title if a.submission else '作品 #' + str(a.submission_id)}",
-            body=f"{current_user.username} 拒绝了《#{a.submission_id}》的审稿邀请，请考虑改派其他审稿人。",
+            title=f"互评邀请未被接受：{a.submission.title if a.submission else '作品 #' + str(a.submission_id)}",
+            body=f"{current_user.username} 不接受《#{a.submission_id}》的互评邀请，请考虑改派其他互评成员。",
         )
     try:
         await db.commit()

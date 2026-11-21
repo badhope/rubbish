@@ -95,9 +95,9 @@ IDENTITIES: tuple[IdentitySpec, ...] = (
         roles=("reviewer", "senior_reviewer"),
         capabilities=(
             "作者的全部能力",
-            "接收审稿邀请",
+            "接收互评邀请",
             "阅读匿名稿并提交评审意见与评分",
-            "在评审历史中查看自己完成的每一份意见",
+            "在互评历史中查看自己完成的每一份意见",
         ),
         description=(
             "审稿权来自编辑部的信任，不能靠攒积分购买。"
