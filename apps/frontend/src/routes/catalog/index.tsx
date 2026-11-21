@@ -203,7 +203,7 @@ export function CatalogListPage() {
       <div className={cn(isCover && 'flex flex-1 flex-col justify-center')}>
       {!search.q && effectiveTrack === 'paper' && (
         <p className="mb-2 text-center text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
-          {search.issue ? `第 ${Number(search.issue)} 期` : 'ARTICLES'}
+          {search.issue ? `合集 ${String(search.issue).padStart(2, '0')}` : 'CONTENT'}
         </p>
       )}
       <PageHeader
@@ -212,20 +212,20 @@ export function CatalogListPage() {
             ? '搜索结果'
             : search.volume
               ? search.issue
-                ? `第 ${Number(search.volume)} 卷 · 第 ${String(search.issue).padStart(2, '0')} 期`
-                : `第 ${Number(search.volume)} 卷`
+                ? `合集 ${String(search.issue).padStart(2, '0')}`
+                : `合集 ${String(search.volume).padStart(2, '0')}`
               : effectiveTrack === 'paper'
-                ? '研究文章'
+                ? '研究长文'
                 : '自由创作'
         }
         size={!search.q && effectiveTrack === 'paper' ? 'cover' : 'default'}
         description={
           search.q
-            ? `在全站文章中检索“${search.q}”，命中 ${data?.meta.total ?? '…'} 条。`
+            ? `在全站内容中检索“${search.q}”，命中 ${data?.meta.total ?? '…'} 条。`
             : search.volume
-              ? `${search.issue ? `第 ${Number(search.volume)} 卷 · 第 ${String(search.issue).padStart(2, '0')} 期` : `第 ${Number(search.volume)} 卷`}共 ${data?.meta.total ?? '…'} 篇文章，按发布顺序排列。`
+              ? `${search.issue ? `合集 ${String(search.issue).padStart(2, '0')}` : `合集 ${String(search.volume).padStart(2, '0')}`}共 ${data?.meta.total ?? '…'} 篇文章，按发布顺序排列。`
               : effectiveTrack === 'paper'
-                ? '实证研究与荒诞研究各自分区：一种把真实问题做清楚，一种把荒诞设定做完整。'
+                ? '研究长文与荒诞研究各自分区：一种把真实问题做清楚，一种把荒诞设定做完整。'
                 : '自由创作：小说、随笔、评论、指南与吐槽，不套研究格式。'
         }
       />
@@ -427,11 +427,11 @@ function CatalogHub() {
   return (
     <div className="mx-auto w-full max-w-[1320px]">
       <PageHeader
-        title="文章"
-        description="已发表的研究文章、荒诞研究与自由创作。按卷、期浏览已发布文章；想发短帖去社区，想写文章走投稿。"
+        title="内容库"
+        description="已公开的研究长文、荒诞研究与自由创作。按合集浏览；想发短帖去讨论区，想发长文去发布作品。"
         actions={
           <Button asChild variant="outline">
-            <Link to="/issues">按卷期浏览</Link>
+            <Link to="/issues">按合集浏览</Link>
           </Button>
         }
       />
@@ -447,8 +447,8 @@ function CatalogHub() {
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="搜文章、作者、研究方向"
-          aria-label="搜索文章"
+          placeholder="搜内容、作者、研究方向"
+          aria-label="搜索内容"
           className="h-11"
         />
         <Button type="submit" className="h-11 shrink-0 px-5">
@@ -462,7 +462,7 @@ function CatalogHub() {
         <div className="flex items-baseline justify-between gap-4">
           <div>
             <p className="text-[10px] uppercase tracking-[0.32em] text-muted-foreground">I · Research</p>
-            <h2 className="mt-2 font-serif text-3xl font-semibold tracking-tight">研究文章</h2>
+            <h2 className="mt-2 font-serif text-3xl font-semibold tracking-tight">研究长文</h2>
           </div>
           <p className="font-mono text-sm tabular-nums text-muted-foreground">
             {paperTotal ?? '…'} 篇
@@ -499,7 +499,7 @@ function CatalogHub() {
 
         <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
           <Link to="/catalog" search={{ track: 'paper', sort: 'latest' }} className="text-primary hover:underline">
-            最新研究 →
+            最新公开 →
           </Link>
           <Link to="/catalog" search={{ track: 'paper' }} className="text-muted-foreground hover:text-primary">
             全部研究
@@ -803,7 +803,7 @@ function MobileFilters({
       {track && (
         <div className="mb-2 flex items-baseline justify-between gap-3">
           <p className="text-[13px] font-medium text-foreground">
-            {track === 'paper' ? '文章目录' : '自由创作'}
+            {track === 'paper' ? '内容库' : '自由创作'}
             <span className="ml-1.5 font-normal text-muted-foreground">
               · {resultTotal ?? '…'} 篇
             </span>
@@ -970,7 +970,7 @@ function ArchiveDirectory({
   const activeKind = kinds.find((kind) => kind.id === paperKind) ?? kinds[0]
 
   return (
-    <section className="mb-8 border-y" aria-label="文章目录">
+    <section className="mb-8 border-y" aria-label="内容库">
       <div className="flex flex-wrap items-baseline gap-x-10 gap-y-2 py-5" role="tablist" aria-label="文章分区">
         {kinds.map((kind) => {
           const active = paperKind === kind.id

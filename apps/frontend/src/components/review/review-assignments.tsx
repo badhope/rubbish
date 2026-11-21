@@ -53,8 +53,8 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { waitingChip } from '@/components/common/waiting-chip'
 
 /**
- * 审稿详情页的摘要来自结构化元数据，正文又常常自带「摘要 / Keywords」开头。
- * 两处并排展示会像重复投稿；这里只在正文开头是题录前言时剥掉，正文本身的
+ * 互评详情页的摘要来自结构化元数据，正文又常常自带「摘要 / Keywords」开头。
+ * 两处并排展示会像重复作品；这里只在正文开头是题录前言时剥掉，正文本身的
  * 摘要（例如没有结构化摘要的旧稿）保持不动。
  */
 function stripManuscriptFrontMatter(body: string): string {
@@ -84,7 +84,7 @@ function SimilarityNotice({
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="outline">站内相似度 {score.toFixed(1)} / 100</Badge>
         <span className="text-muted-foreground">
-          {score >= 70 ? '高度重复，建议核对' : '建议核对'} · 仅比对本站资源与已接收投稿，不是 CNKI/CrossCheck 结论
+          {score >= 70 ? '高度重复，建议核对' : '建议核对'} · 仅比对本站资源与已接收作品，不是 外部查重系统 结论
         </span>
       </div>
       {(matches?.length ?? 0) > 0 ? (
@@ -92,7 +92,7 @@ function SimilarityNotice({
           {matches!.slice(0, 3).map((m) => (
             <li key={`${m.kind}-${m.id}`} className="flex justify-between gap-3">
               <span className="min-w-0 truncate">
-                {m.kind === 'resource' ? '已刊' : '投稿'}：{m.title}
+                {m.kind === 'resource' ? '已公开' : '作品'}：{m.title}
               </span>
               <span className="shrink-0 tabular-nums">{m.score.toFixed(1)}</span>
             </li>
@@ -158,7 +158,7 @@ export function ReviewAssignments() {
   const [reviewForm, setReviewForm] = useState<ReviewFormValue>(EMPTY_REVIEW_FORM)
   const [reviewAttachments, setReviewAttachments] = useState<File[]>([])
   const [declineTargetId, setDeclineTargetId] = useState<number | null>(null)
-  // 查看稿件详情的 assignmentId（仅 pending/accepted/completed 可查）
+  // 查看作品详情的 assignmentId（仅 pending/accepted/completed 可查）
   const [submissionViewId, setSubmissionViewId] = useState<number | null>(null)
   const draftQ = useReviewDraft(reviewTargetId ?? 0)
   const draftAppliedRef = useRef<number | null>(null)
@@ -174,7 +174,7 @@ export function ReviewAssignments() {
   const onAccept = async (id: number) => {
     try {
       await acceptMut.mutateAsync(id)
-      toast.success('已接受审稿邀请')
+      toast.success('已接受互评邀请')
     } catch (err) {
       toast.error(extractError(err, '操作失败'))
     }
@@ -222,7 +222,7 @@ export function ReviewAssignments() {
         id: reviewTargetId,
         payload: reviewForm as unknown as Record<string, unknown>,
       })
-      toast.success('审稿草稿已保存，下次打开会自动续写')
+      toast.success('互评草稿已保存，下次打开会自动续写')
     } catch (err) {
       toast.error(extractError(err, '草稿保存失败'))
     }
@@ -266,7 +266,7 @@ export function ReviewAssignments() {
       comments_to_author: reviewForm.comments_to_author || undefined,
       special_issue: reviewForm.special_issue || undefined,
       special_issue_reason: reviewForm.special_issue
-        ? reviewForm.special_issue_reason || '审稿人确认篇幅特许'
+        ? reviewForm.special_issue_reason || '评议成员确认篇幅特许'
         : undefined,
     }
     try {
@@ -282,13 +282,13 @@ export function ReviewAssignments() {
       }
       if (attachmentError) {
         toast.warning(
-          `审稿报告已提交，但附件上传失败：${extractError(attachmentError, '请到已完成任务里补传')}`,
+          `互评报告已提交，但附件上传失败：${extractError(attachmentError, '请到已完成任务里补传')}`,
         )
       } else {
         toast.success(
           reviewAttachments.length
-            ? `审稿报告与 ${reviewAttachments.length} 个附件已提交`
-            : '审稿报告已提交',
+            ? `互评报告与 ${reviewAttachments.length} 个附件已提交`
+            : '互评报告已提交',
         )
       }
       setReviewTargetId(null)
@@ -305,8 +305,8 @@ export function ReviewAssignments() {
   return (
     <div>
       <PageHeader
-        title="审稿工作台"
-        description="填写审稿报告：先过四问，再按赛道维度逐项打分（学术五维 / 荒诞六维）；意见支持 Markdown 与预览，提交前可看作者/编辑两个视角。稿件默认下载 Word，也可切换 PDF。"
+        title="互评工作台"
+        description="填写互评报告：先过四问，再按赛道维度逐项打分（学术五维 / 荒诞六维）；意见支持 Markdown 与预览，提交前可看作者/内容整理两个视角。作品默认下载 Word，也可切换 PDF。"
       />
 
       <div className="mb-4">
@@ -324,18 +324,18 @@ export function ReviewAssignments() {
         </a>
         <span className="mx-2">·</span>
         <a className="font-medium text-primary hover:underline" href="/templates/rubbish-editorial-standards.md" download>
-          编辑规范
+          内容整理规范
         </a>
         <span className="mx-2">·</span>
         <a className="font-medium text-primary hover:underline" href="/guide?tab=authors">
-          投稿指南
+          发布指南
         </a>
-        <div className="mt-1">审稿时请按上述版式与编辑规范核对结构、图表题注、参考文献和篇幅分档。</div>
+        <div className="mt-1">互评时请按上述版式与内容整理规范核对结构、图表题注、参考文献和篇幅分档。</div>
       </div>
 
       <div
         role="tablist"
-        aria-label="按审稿状态筛选"
+        aria-label="按互评状态筛选"
         className="mb-5 flex items-center gap-1 overflow-x-auto border-b pb-2"
       >
         {STATUS_TABS.map((t) => {
@@ -366,8 +366,8 @@ export function ReviewAssignments() {
         <ErrorState message="加载失败" onRetry={() => refetch()} />
       ) : !data || data.data.length === 0 ? (
         <EmptyState
-          title="暂无审稿任务"
-          description="编辑分配审稿任务后会显示在这里。"
+          title="暂无互评任务"
+          description="内容整理分配互评任务后会显示在这里。"
         />
       ) : (
         <div className="divide-y border-y">
@@ -401,7 +401,7 @@ export function ReviewAssignments() {
                       size="sm"
                       onClick={() => setSubmissionViewId(a.id)}
                     >
-                      <Eye className="h-4 w-4" /> 查看稿件
+                      <Eye className="h-4 w-4" /> 查看作品
                     </Button>
                   )}
                   {a.status === 'pending' && (
@@ -425,7 +425,7 @@ export function ReviewAssignments() {
                   )}
                   {a.status === 'accepted' && (
                     <Button size="sm" onClick={() => openReviewForm(a.id)}>
-                      <FileText className="h-4 w-4" /> 填写审稿报告
+                      <FileText className="h-4 w-4" /> 填写互评报告
                     </Button>
                   )}
                   {a.status === 'completed' && (
@@ -460,7 +460,7 @@ export function ReviewAssignments() {
         />
       )}
 
-      {/* 审稿报告 Dialog */}
+      {/* 互评报告 Dialog */}
       <Dialog
         open={reviewTargetId !== null}
         onOpenChange={(o) => !o && setReviewTargetId(null)}
@@ -468,9 +468,9 @@ export function ReviewAssignments() {
         <DialogContent className="h-[100dvh] max-h-[100dvh] w-screen max-w-none overflow-hidden rounded-none p-0 sm:h-[96vh] sm:max-h-[96vh] sm:w-[96vw] sm:max-w-[96vw] sm:rounded-lg">
           <div className="flex h-full min-h-0 flex-col">
             <DialogHeader className="shrink-0 border-b px-5 py-4">
-              <DialogTitle>审稿工作台</DialogTitle>
+              <DialogTitle>互评工作台</DialogTitle>
               <DialogDescription>
-                电脑端左侧读稿、右侧打分；手机端在下方切换「读稿件 / 写评审」。草稿保存在服务端，换设备也能续写。
+                电脑端左侧读稿、右侧打分；手机端在下方切换「读作品 / 写评审」。草稿保存在服务端，换设备也能续写。
               </DialogDescription>
             </DialogHeader>
             <Tabs
@@ -479,7 +479,7 @@ export function ReviewAssignments() {
               className="shrink-0 border-b px-4 py-2 lg:hidden"
             >
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="manuscript">读稿件</TabsTrigger>
+                <TabsTrigger value="manuscript">读作品</TabsTrigger>
                 <TabsTrigger value="form">写评审</TabsTrigger>
               </TabsList>
             </Tabs>
@@ -539,7 +539,7 @@ export function ReviewAssignments() {
                       ? '提交中…'
                       : missingReviewDims.length > 0
                         ? `还差 ${missingReviewDims.length} 维`
-                        : '提交审稿报告'}
+                        : '提交互评报告'}
                   </Button>
                 </DialogFooter>
               </form>
@@ -555,10 +555,10 @@ export function ReviewAssignments() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>拒绝审稿邀请</DialogTitle>
+            <DialogTitle>拒绝互评邀请</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            拒绝后将无法再为该稿件提交审稿意见。确认拒绝吗？
+            拒绝后将无法再为该作品提交互评意见。确认拒绝吗？
           </p>
           <DialogFooter>
             <Button
@@ -578,8 +578,8 @@ export function ReviewAssignments() {
         </DialogContent>
       </Dialog>
 
-      {/* 稿件详情 Dialog —— 单盲剥离仅作用于作者侧的 review reports；
-          审稿人需要看完整稿件（abstract / file_path / keywords / jel_codes） */}
+      {/* 作品详情 Dialog —— 单盲剥离仅作用于作者侧的 review reports；
+          评议成员需要看完整作品（abstract / file_path / keywords / jel_codes） */}
       <SubmissionDetailDialog
         assignmentId={submissionViewId}
         onClose={() => setSubmissionViewId(null)}
@@ -698,7 +698,7 @@ function SubmissionDownloadLinks({
 function ReviewManuscriptPane({ assignmentId }: { assignmentId: number }) {
   const { data, isLoading, isError, error } = useReviewSubmissionDetail(assignmentId)
   if (isLoading) return <LoadingSkeleton rows={6} />
-  if (isError) return <ErrorState message={extractError(error, '加载稿件失败')} />
+  if (isError) return <ErrorState message={extractError(error, '加载作品失败')} />
   if (!data) return null
   return (
     <div className="space-y-4 text-sm">
@@ -785,15 +785,15 @@ function SubmissionDetailDialog({
     >
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>稿件详情</DialogTitle>
+          <DialogTitle>作品详情</DialogTitle>
           <DialogDescription>
-            完整稿件元数据；单盲模式下您的身份对作者保密。
+            完整作品元数据；单盲模式下您的身份对作者保密。
           </DialogDescription>
         </DialogHeader>
         {isLoading ? (
           <LoadingSkeleton rows={4} />
         ) : isError ? (
-          <ErrorState message={extractError(error, '加载稿件失败')} />
+          <ErrorState message={extractError(error, '加载作品失败')} />
         ) : !data ? null : (
           <div className="space-y-4 pr-1 text-sm">
             <div>
@@ -870,14 +870,8 @@ function SubmissionDetailDialog({
               )}
               {data.venue && (
                 <div>
-                  <span className="text-muted-foreground">期刊/会议：</span>
+                  <span className="text-muted-foreground">来源说明：</span>
                   {data.venue}
-                </div>
-              )}
-              {data.doi && (
-                <div>
-                  <span className="text-muted-foreground">DOI：</span>
-                  {data.doi}
                 </div>
               )}
               {data.corresponding_author_email && (

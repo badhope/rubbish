@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.19.19] — 2026-11-21
+
+- Repositioned the public site as a writing-and-discussion community instead of a journal: top navigation is now 首页 / 内容 / 合集 / 讨论 / 怎么用 / 我的, and the sidebar separates 我的空间 / 工作台 / 关于 / 站点管理.
+- Rebuilt the homepage so the first screen shows the navigation, a four-step “第一次来” card, staff picks, latest discussions, and browse-by-type entries; the full-screen journal cover is gone.
+- Added a new “3 分钟上手” guide tab with four entry points, a full site map, an old-name-to-new-name table, and a plain-language boundary statement.
+- Renamed public terminology: 内容库, 合集 01, 发布作品, 我的作品, 互评台, 内容台, 参与记录, 站内标注. Removed the GB/T, APA, MLA, BibTeX and RIS citation formats from the reader UI; article pages now say the note is not a formal citation.
+- Removed journal-specific fields from the publish wizard: no CLC/中图分类号, no DOI import, no mandatory references. The form now asks for title, summary, body, authors and three confirmations; keywords, direction, category and collection are optional.
+- Replaced journal workflow wording across the workbenches: 投稿→发布, 审稿→互评, 录用→通过, 拒稿→不通过, 卷期→合集, 编辑部→内容整理; the visible role names are 总协调 / 协作管理 / 内容整理 / 评议成员 / 资深评议 / 站务组 / 作者 / 成员.
+- Added explicit legal boundaries on the homepage, about page, guide, article footer and SEO metadata: the site is not a journal, publisher or academic evaluation body; it does not provide DOI, ISSN, formal-publication proof, credit or degree endorsement.
+- Rewrote crawler-facing titles, descriptions, llms.txt, ai.txt and RSS copy so search engines and AI answer engines see the community positioning rather than a journal archive.
+- Updated onboarding to v2, the onboarding-copy tests and the citation tests to match the new navigation and the site-only citation format.
+
 ## [1.19.18] — 2026-11-21
 
 - Added `review`, `editor` and `privacy` to the SPA deep-link whitelist. Before this, opening the workbench or studio by direct URL or refreshing the page returned a hard 404 even though the routes existed in the frontend.

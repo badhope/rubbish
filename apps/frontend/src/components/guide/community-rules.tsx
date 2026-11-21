@@ -16,13 +16,13 @@ import { RevealSection } from '@/components/common/reveal-section'
 import { Card, CardContent } from '@/components/ui/card'
 
 // 社区公约：研究标注、版权、真人隐私、内容边界、举报处理。
-// 只写一个荒诞科研社区怎么运转。
+// 只写一个公开写作与讨论社区怎么运转。
 const SECTIONS = [
   {
     icon: Sparkles,
     title: '这是一个社区',
     body: [
-      'Rubbish 是一个荒诞科研社区：帖子做讨论，文章走投稿，注册后就能发。',
+      'Rubbish 是一个公开写作与讨论社区：帖子做讨论，长文走发布，注册后就能发。',
       '研究可以荒诞，方法要能对上：问题、设定、过程、材料尽量写清楚。',
       '我们欢迎选题与计划、过程记录、现场观察、失败复盘、讽刺写作和思想实验；也欢迎只发一个问题，让别人接着聊。',
     ],
@@ -100,6 +100,7 @@ const SECTIONS = [
     icon: HeartHandshake,
     title: '不承诺什么',
     body: [
+      '本站不是期刊、出版社或学术评价机构，不提供 DOI、ISSN、正式发表证明或学术评价。',
       '不承诺任何机构认证、职称认定、学分、奖项或官方背书；站内记录不能替代正式学历、执业或出版材料。',
       '不承诺内容永久在线；社区会做备份，但不对第三方存档、搜索引擎快照或转载负责。',
       '不承诺“零风险”：所有内容由作者与社区共同维护，最终以适用法律与社区规则为准。',
@@ -115,12 +116,12 @@ export function CommunityRules() {
         className="mb-4 inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-primary"
       >
         <ArrowLeft className="mr-1 h-4 w-4" />
-        返回社区
+        返回讨论区
       </Link>
 
       <PageHeader
-        title="社区公约"
-        description="研究标注、版权、真人隐私、内容边界与举报处理——这个社区怎么运转，写在这里。"
+        title="规则与边界"
+        description="内容标注、版权、真人隐私、法律边界与举报处理——这个社区怎么运转，写在这里。"
       />
 
       <div className="space-y-6">

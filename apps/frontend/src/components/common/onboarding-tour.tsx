@@ -4,7 +4,7 @@ import { ArrowRight, Compass, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/use-auth'
 
-const KEY = 'rubbish.onboarding.v1'
+const KEY = 'rubbish.onboarding.v2'
 
 /** 首次使用手把手引导：可跳过，只在本机显示一次。 */
 export function OnboardingTour() {
@@ -27,9 +27,30 @@ export function OnboardingTour() {
   if (!open || busy) return null
 
   const steps = [
-    { title: '先看六个入口', body: '顶部固定 首页 / 社区 / 文章 / 等级 / 指南 / 我的。短帖在社区，文章按卷期归档；等级只看活跃，身份看权限。', to: '/forum', label: '去社区' },
-    { title: isAuthenticated ? '写下你的第一篇文章' : '注册后就能写', body: '文章走投稿与审核，可先存草稿；短帖才发在社区。不用申请资格，也不收积分。', to: '/submissions/new', label: isAuthenticated ? '写文章' : '去登录' },
-    { title: '把边界看清楚', body: '虚构要标注，材料要能对上，真人隐私不碰；其余交给社区讨论。', to: '/guide', search: { tab: 'policies' }, label: '看社区公约' },
+    {
+      title: '先认顶部六个入口',
+      body: '首页看全站，内容看长文，合集按主题读，讨论发短帖，怎么用有完整地图，我的放个人内容。找不到时先点「怎么用」。',
+      to: '/guide',
+      label: '打开怎么用',
+    },
+    {
+      title: '三分钟走一遍',
+      body: '「3 分钟上手」里有四步入口、全站地图和旧名字对照，第一次来照着走一遍就不会迷路。',
+      to: '/guide',
+      label: '开始上手',
+    },
+    {
+      title: isAuthenticated ? '想发东西，先分清长短' : '登录后就能发',
+      body: '一两句话去「讨论」；完整长文去「发布作品」。都能先存草稿，不用申请资格，也不收费用。',
+      to: isAuthenticated ? '/forum' : '/login',
+      label: isAuthenticated ? '去讨论区' : '去登录',
+    },
+    {
+      title: '边界先看清',
+      body: '这里不是期刊、出版社或学术评价机构，不提供 DOI、ISSN、职称或学分背书；虚构要标注，真人隐私不碰。',
+      to: '/about',
+      label: '看站点性质',
+    },
   ]
   const current = steps[Math.min(step, steps.length - 1)]
 
@@ -59,7 +80,7 @@ export function OnboardingTour() {
       <div className="mt-4 flex items-center justify-between gap-2">
         <Button variant="ghost" size="sm" onClick={close}>跳过引导</Button>
         <div className="flex gap-2">
-          <Link to={current.to} search={current.search} onClick={close}><Button variant="outline" size="sm">{current.label}</Button></Link>
+          <Link to={current.to} onClick={close}><Button variant="outline" size="sm">{current.label}</Button></Link>
           {step < steps.length - 1 ? <Button size="sm" onClick={() => setStep(step + 1)}>下一步 <ArrowRight className="h-3.5 w-3.5" /></Button> : <Button size="sm" onClick={close}>开始使用</Button>}
         </div>
       </div>

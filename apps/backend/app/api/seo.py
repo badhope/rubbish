@@ -30,44 +30,46 @@ from app.models import Tenant
 router = APIRouter(tags=["seo"])
 
 SITE_NAME = "Rubbish"
-SITE_TITLE = "Rubbish — 荒诞科研社区"
+SITE_TITLE = "Rubbish — 公开写作与讨论社区"
 DEFAULT_DESCRIPTION = (
-    "Rubbish 是一个荒诞科研社区：短帖在社区讨论，文章在文章目录发表，文章按卷、期归档，公开可读。"
+    "Rubbish 是一个公开写作与讨论社区：短帖在讨论区，长文在内容库，合集只做主题聚合，公开可读。"
+    "这里不是期刊、出版社或学术评价机构，不提供 DOI、ISSN、职称认定或学分背书。"
 )
 
 PAGE_META: dict[str, tuple[str, str]] = {
     "": (SITE_TITLE, DEFAULT_DESCRIPTION),
     "catalog": (
-        "文章 · 研究文章与自由创作",
-        "按研究文章、荒诞研究与自由创作浏览已发布文章；每条记录都标明是不是虚构。",
+        "内容库 · 研究长文与自由创作",
+        "按研究长文、荒诞研究与自由创作浏览公开内容；每条记录都标明是不是虚构。",
     ),
     "forum": (
-        "社区 · 文章、记录与组队",
+        "讨论区 · 选题、记录与组队",
         "选题与计划、过程记录、现场观察、失败复盘、创作生存与组队招募都在这。",
     ),
     "issues": (
-        "文章卷期 · 按卷、期浏览",
-        "文章按卷、期归档；卷是大归档，期是卷内发布批次，数字越大越新。",
+        "合集 · 按主题浏览",
+        "合集只是主题聚合，编号用于站内定位，不表示刊期、等级、发表批次或 DOI。",
     ),
     "levels": (
-        "等级 Level · 参与度",
-        "等级只记录活跃与参与程度，不决定身份和权限；所有人从 Level 1 开始。",
+        "参与记录 · 活跃与参与",
+        "只记录活跃与参与程度，不决定身份和权限；所有人从 Lv 1 开始。",
     ),
     "submissions": (
-        "我的作品 · 提交与进度",
-        "查看已提交作品、审稿进度与版本记录；新作品从同一入口提交。",
+        "我的作品 · 发布与进度",
+        "查看已发布作品、互评进度与版本记录；新作品从同一入口发布。",
     ),
     "submissions/new": (
-        "新建作品 · 提交",
-        "填写题录、正文与声明，提交后由编辑部初审与送审。",
+        "发布作品 · 基本信息与正文",
+        "填写标题、摘要与正文，可先存草稿；提交后进入基础检查和互评流程。",
     ),
     "about": (
         "关于 Rubbish",
-        "Rubbish 是一个荒诞科研社区：短帖在社区讨论，文章提交后审核，注册后就能发。",
+        "Rubbish 是一个公开写作与讨论社区：短帖在讨论区，长文在内容库，注册后就能发。"
+        "不是期刊，也不做学术评价。",
     ),
     "guide": (
-        "指南 · 怎么在这里发一条像样的内容",
-        "研究可以荒诞，方法要能对上；虚构要标出来，引用不能伪造。",
+        "怎么用 · 三分钟上手",
+        "四步入口、全站地图、旧名字对照和边界说明；第一次来照着走一遍。",
     ),
     "privacy": (
         "隐私政策",
@@ -159,13 +161,13 @@ async def ai_txt(request: Request) -> Response:
 
 ## 不可以做什么
 - 不要尝试登录、抓取 /admin、/me、/notifications 或他人数据。
-- 本站没有机器投稿 API；发帖与回复需要用户在网页登录后手动操作。
-- 不要批量注册账号、刷积分、伪造引用或绕过限流与审核。
+- 本站没有机器发布 API；发帖与回复需要用户在网页登录后手动操作。
+- 不要批量注册账号、刷积分、伪造出处或绕过限流与审核。
 
 ## 公开入口
 - 首页：{root}/
-- 社区：{root}/forum
-- 档案：{root}/catalog
+- 讨论区：{{root}}/forum
+- 内容库：{{root}}/catalog
 - 指南：{root}/guide
 - 关于：{root}/about
 - 机器可读站点说明：{root}/llms.txt
@@ -231,20 +233,20 @@ async def llms_txt(request: Request, db: AsyncSession = Depends(get_db)) -> Resp
     lines = [
         "# Rubbish",
         "",
-        "> Rubbish 是一个荒诞科研社区。帖子做讨论，档案做长记录。",
-        "> 公开内容可读；管理端与个人数据需要授权。",
+        "> Rubbish 是一个公开写作与讨论社区。帖子做讨论，内容库做长文。",
+        "> 公开内容可读；管理端与个人数据需要授权。这里不是期刊或学术评价机构。",
         "",
         "## 核心入口",
         f"- [首页]({root}/)",
-        f"- [社区]({root}/forum)",
-        f"- [档案]({root}/catalog)",
-        f"- [指南]({root}/guide)",
+        f"- [讨论区]({{root}}/forum)",
+        f"- [内容库]({{root}}/catalog)",
+        f"- [怎么用]({{root}}/guide)",
         f"- [关于]({root}/about)",
         f"- [隐私政策]({root}/privacy)",
         f"- [RSS]({root}/rss.xml)",
         f"- [Sitemap]({root}/sitemap.xml)",
         "",
-        "## 最新档案",
+        "## 最新公开内容",
     ]
     for r in rows[:50]:
         abstract = " ".join((r.abstract or "").split())[:180]
@@ -259,7 +261,7 @@ async def llms_txt(request: Request, db: AsyncSession = Depends(get_db)) -> Resp
             "",
             "## 抓取边界",
             "- 只抓公开页面；/admin、/me、/notifications、/library 禁止。",
-            "- 本站没有机器投稿 API；发帖与回复需要用户手动操作。",
+            "- 本站没有机器发布 API；发帖与回复需要用户手动操作。",
             f"- Sitemap: {root}/sitemap.xml",
             "",
         ]
@@ -302,7 +304,7 @@ async def rss_feed(request: Request, db: AsyncSession = Depends(get_db)) -> Resp
         '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel>'
         f"<title>{site}</title>"
         f"<link>{html.escape(root)}</link>"
-        f"<description>{site} · 荒诞科研社区 · 最新档案</description>"
+        f"<description>{site} · 公开写作与讨论社区 · 最新公开内容</description>"
         "<language>zh-cn</language>"
         f'<atom:link href="{html.escape(root)}/feed.xml" rel="self" type="application/rss+xml"/>'
         + (f"<lastBuildDate>{format_datetime(latest)}</lastBuildDate>" if latest else "")

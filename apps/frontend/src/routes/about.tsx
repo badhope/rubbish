@@ -32,8 +32,8 @@ const ROLES = [
 ]
 
 const TIMELINE = [
-  ['2026 年 10 月', 'Rubbish 社区与文章栏目上线：短帖在社区，文章在文章目录。'],
-  ['2026 年 11 月', '研究板块、社区指南与社区公约开放；发帖不再需要任何资格审核。'],
+  ['2026 年 10 月', 'Rubbish 社区与内容栏目上线：短帖在讨论区，长文在内容库。'],
+  ['2026 年 11 月', '内容板块、社区指南与社区公约开放；发帖不再需要任何资格审核。'],
   ['现在', '提问、记录、失败、复盘、组队和版务都在同一个社区里。'],
 ]
 
@@ -50,7 +50,7 @@ function AboutPage() {
 
       <PageHeader
         title="关于社区"
-        description="Rubbish 是一个荒诞科研社区：把不正经的问题当正经课题做，把过程、失败和结果拿出来讨论。"
+        description="Rubbish 是一个公开写作与讨论社区：把不正经的问题认真做完，把过程、失败和结果拿出来讨论。"
       />
 
       <div className="space-y-10">
@@ -60,7 +60,7 @@ function AboutPage() {
               「正经地荒诞，公开地失败。」
             </p>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              Rubbish 从第一天就是一个社区：短帖讨论走社区，长文发表走文章投稿。你可以只发一个问题，
+              Rubbish 从第一天就是一个社区：短帖走讨论区，长文放进内容库。你可以只发一个问题，
               也可以把一次写作、一次尝试、一段现场观察完整写下来。
             </p>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
@@ -136,10 +136,10 @@ function AboutPage() {
           <h2 className="text-xl font-medium">站点信息</h2>
           <dl className="mt-4 grid gap-4 sm:grid-cols-2">
             {[
-              { icon: ScrollText, label: '站点性质', value: '荒诞科研社区' },
+              { icon: ScrollText, label: '站点性质', value: '公开写作与讨论社区' },
               { icon: Globe, label: '访问与托管', value: '香港服务器与香港域名' },
               { icon: Building2, label: '运营', value: 'Rubbish 团队' },
-              { icon: ShieldCheck, label: '标识', value: '研究文章只有站内编号，不作正式评价' },
+              { icon: ShieldCheck, label: '标识', value: '站内编号只用于定位，不是 DOI' },
             ].map(({ icon: Icon, label, value }) => (
               <div key={label} className="flex items-start gap-3 border-t pt-3">
                 <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -150,6 +150,18 @@ function AboutPage() {
               </div>
             ))}
           </dl>
+        </RevealSection>
+
+        <RevealSection className="border-t pt-6">
+          <h2 className="flex items-center gap-2 text-lg font-medium">
+            <ShieldCheck className="h-5 w-5 text-primary" />
+            不是期刊，也不做学术评价
+          </h2>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            Rubbish 不是期刊、出版社、学术机构或评价平台，不提供 DOI、ISSN、职称认定、学分、学历背书、
+            奖项或任何形式的正式发表证明。站内编号只用于站内定位；站内精选、热度和等级都不构成学术评价。
+            如果外部机构要求正式发表材料，请不要使用本站记录替代。
+          </p>
         </RevealSection>
 
         <RevealSection className="border-t pt-6">

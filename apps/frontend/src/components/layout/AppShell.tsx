@@ -50,18 +50,19 @@ import { groupLabel, navLabel, text, useLang } from '@/lib/i18n'
 import { primaryRoleLabel } from '@/lib/role-labels'
 
 const NAV: NavItem[] = [
-  // 荒诞科研社区：首页 / 社区 / 文章 / 等级 / 指南 / 我的。
+  // 一级入口只留六个：看得懂、找得到、点得进。
   { to: '/', label: '首页', icon: Home, group: '一级入口' },
-  { to: '/forum', label: '社区', icon: MessagesSquare, group: '一级入口' },
-  { to: '/catalog', label: '文章', icon: BookOpen, group: '一级入口' },
-  { to: '/levels', label: '等级', icon: Layers3, group: '一级入口' },
-  { to: '/guide', label: '指南', icon: Compass, group: '一级入口' },
+  { to: '/catalog', label: '内容', icon: BookOpen, group: '一级入口' },
+  { to: '/issues', label: '合集', icon: Layers3, group: '一级入口' },
+  { to: '/forum', label: '讨论', icon: MessagesSquare, group: '一级入口' },
+  { to: '/guide', label: '怎么用', icon: Compass, group: '一级入口' },
   { to: '/me', label: '我的', icon: User, group: '一级入口' },
 
-  { to: '/submissions', label: '我的投稿', icon: FileText, auth: true, group: '投稿' },
+  { to: '/submissions', label: '我的作品', icon: FileText, auth: true, group: '我的空间' },
+  { to: '/levels', label: '参与记录', icon: Award, group: '我的空间' },
   {
     to: '/review',
-    label: '审稿工作台',
+    label: '互评台',
     icon: ClipboardCheck,
     auth: true,
     roles: ['reviewer', 'senior_reviewer', 'editor', 'editor_in_chief'],
@@ -69,19 +70,19 @@ const NAV: NavItem[] = [
   },
   {
     to: '/submissions/pending',
-    label: '编辑工作台',
+    label: '内容台',
     icon: Kanban,
     auth: true,
     roles: ['editor', 'editor_in_chief'],
     group: '工作台',
   },
-  { to: '/about', label: '关于社区', icon: Building2, group: '关于' },
-  { to: '/admin', label: '管理后台', icon: Gavel, auth: true, adminOnly: true, group: '站点管理' },
+  { to: '/about', label: '关于站点', icon: Building2, group: '关于' },
+  { to: '/admin', label: '站务管理', icon: Gavel, auth: true, adminOnly: true, group: '站点管理' },
 ]
 
-const PUBLIC_NAV = NAV.slice(0, 6)
+const PUBLIC_NAV = NAV.filter((item) => item.group === '一级入口')
 
-// 公开页与工作台的分界：后台、审稿指派、主编工作台、待审列表保留业务左栏；
+// 公开页与工作台的分界：站务、互评指派、内容台、待整理列表保留业务左栏；
 // 其余页面用顶部 5 导航，公开页不再出现全局左栏。
 const WORK_ROUTE_PREFIXES = [
   '/admin',
@@ -108,6 +109,9 @@ function matchesNavSearch(
 
 function resolvePublicNavPath(pathname: string): string | undefined {
   if (pathname === '/') return '/'
+  if (pathname === '/issues') return '/issues'
+  if (pathname === '/guide') return '/guide'
+  if (pathname === '/about') return '/about'
   if (
     ['/catalog'].some(
       (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
@@ -145,7 +149,7 @@ export function AppShell() {
   const [cmdOpen, setCmdOpen] = useState(false)
   const [cmdQ, setCmdQ] = useState('')
   const [publicQ, setPublicQ] = useState('')
-  // 侧边栏只默认展开一级入口；工作台/期刊/后台按需展开，点开就收起另一组，
+  // 侧边栏只默认展开一级入口；工作台/站务按需展开，点开就收起另一组，
   // 避免一进后台就被 15 个管理项铺满。
   const [openGroup, setOpenGroup] = useState<string>('一级入口')
   const [openSubgroup, setOpenSubgroup] = useState<string>('')
@@ -264,7 +268,7 @@ export function AppShell() {
         <DropdownMenuItem asChild>
           <Link to="/submissions">
             <FileSignature className="h-4 w-4" />
-            我的投稿
+            我的作品
           </Link>
         </DropdownMenuItem>
         {(isAdmin ||
@@ -274,7 +278,7 @@ export function AppShell() {
           <DropdownMenuItem asChild>
             <Link to="/review" search={{ tab: 'assignments' }}>
               <ClipboardCheck className="h-4 w-4" />
-              审稿工作台
+              互评台
             </Link>
           </DropdownMenuItem>
         )}
@@ -285,7 +289,7 @@ export function AppShell() {
           <DropdownMenuItem asChild>
             <Link to="/submissions/pending">
               <Kanban className="h-4 w-4" />
-              编辑工作台
+              内容台
             </Link>
           </DropdownMenuItem>
         )}
@@ -293,7 +297,7 @@ export function AppShell() {
           <DropdownMenuItem asChild>
             <Link to="/admin">
               <ShieldCheck className="h-4 w-4" />
-              管理后台
+              站务管理
             </Link>
           </DropdownMenuItem>
         )}
@@ -345,8 +349,7 @@ export function AppShell() {
     )
   }
 
-  // 期刊门面模式：首页走独立的全宽 editorial 版式（自带报头/导航/页脚），
-  // 不套工作台侧边栏 —— 否则访客看到的是"作者后台"而不是对外期刊官网。
+  // 首页走独立的全宽社区版式（自带报头/导航/页脚），不套工作台侧边栏。
   // 注意：提前返回必须放在全部 hooks 之后（rules of hooks），
   // 否则会形成条件式 hook 调用（react-hooks/rules-of-hooks 会拦截）。
   // 访客入口页（登录/注册/找回密码/邮箱验证）同样不套工作台侧栏：
@@ -378,7 +381,7 @@ export function AppShell() {
   }
 
   // 公开页壳：桌面顶部 5 导航，不再套工作台全局左栏。
-  // 工作台 / 后台 / 审稿指派仍走下面的业务左栏。
+  // 工作台 / 站务 / 互评指派仍走下面的业务左栏。
   if (!isWorkRoute(location.pathname, currentSearch)) {
     const publicActive = resolvePublicNavPath(location.pathname)
     return (
@@ -438,7 +441,7 @@ export function AppShell() {
               <Button asChild size="sm" className="hidden sm:inline-flex">
                 <Link to="/submissions/new">
                   <PenLine className="h-3.5 w-3.5" />
-                  写
+                  发布
                 </Link>
               </Button>
               {userMenu}
@@ -659,10 +662,10 @@ export function AppShell() {
           <form onSubmit={submitCmd} className="w-full max-w-xl overflow-hidden rounded-xl border bg-background shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 border-b px-4 py-3">
               <Search className="h-4 w-4 text-muted-foreground" />
-              <input autoFocus value={cmdQ} onChange={(e) => setCmdQ(e.target.value)} placeholder="搜索文章标题、作者、关键词…" className="h-9 flex-1 bg-transparent text-sm outline-none" />
+              <input autoFocus value={cmdQ} onChange={(e) => setCmdQ(e.target.value)} placeholder="搜索内容标题、作者、关键词…" className="h-9 flex-1 bg-transparent text-sm outline-none" />
               <kbd className="rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">Enter</kbd>
             </div>
-            <div className="px-4 py-2 text-[11px] text-muted-foreground">回车进入文章目录；帖子可在社区页单独搜索。Esc 关闭。</div>
+            <div className="px-4 py-2 text-[11px] text-muted-foreground">回车进入内容库；帖子可在讨论区单独搜索。Esc 关闭。</div>
           </form>
         </div>
       )}

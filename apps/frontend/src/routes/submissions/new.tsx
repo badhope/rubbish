@@ -35,7 +35,6 @@ import {
   useUpdateSubmission,
   useUploadSubmissionFile,
   useConvertSubmissionPreview,
-  useFetchIngest,
   previewUploadedSourcePages,
 } from '@/hooks/api/use-modules'
 import { MarkdownEditor } from '@/components/common/markdown-editor'
@@ -51,7 +50,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import type {
-  FetchSource,
   IngestResource,
   SubmissionCreate,
   SubmissionResponse,
@@ -62,7 +60,6 @@ import { ARTICLE_SECTION_OPTIONS } from '@/lib/article-sections'
 import { extractError, parseListField } from '@/lib/utils'
 import { checkManuscript, type ManuscriptIssue } from '@/lib/manuscript-checks'
 import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -87,33 +84,7 @@ interface WizardSearch {
 
 // Nature 式栏目 / 分部选项与后台新建资源共用 lib/article-sections.ts。
 
-// 官方字段尽量给可选项，减少作者去站外搜索：
-// - 中图分类号给常用大类/高频细类，仍允许手填完整号码；
-// - 期次分部给最近六期，仍允许编辑补主题名；
-// - 年份给前后两年，避免手打错。
-const CLC_SUGGESTIONS = [
-  { value: 'TP18', label: 'TP18 人工智能理论' },
-  { value: 'TP311', label: 'TP311 程序设计、软件工程' },
-  { value: 'TP391', label: 'TP391 信息处理（含自然语言处理）' },
-  { value: 'G250', label: 'G250 图书馆学、情报学' },
-  { value: 'G350', label: 'G350 情报工作' },
-  { value: 'G40', label: 'G40 教育学' },
-  { value: 'B84', label: 'B84 心理学' },
-  { value: 'C93', label: 'C93 管理学' },
-  { value: 'F27', label: 'F27 企业经济' },
-  { value: 'F83', label: 'F83 金融' },
-  { value: 'D90', label: 'D90 法学理论' },
-  { value: 'I207', label: 'I207 中国文学评论' },
-  { value: 'J60', label: 'J60 音乐理论' },
-  { value: 'K89', label: 'K89 民俗学' },
-  { value: 'N02', label: 'N02 自然科学哲学' },
-  { value: 'O1', label: 'O1 数学' },
-  { value: 'Q1', label: 'Q1 生物学' },
-  { value: 'R1', label: 'R1 预防医学、卫生学' },
-  { value: 'X2', label: 'X2 环境科学' },
-  { value: 'Z1', label: 'Z1 丛书、文集' },
-]
-
+// 年份给前后两年，避免手打错；合集主题仍可手填。
 const YEAR_OPTIONS = Array.from({ length: 5 }, (_, i) =>
   String(new Date().getFullYear() - 2 + i),
 )
@@ -404,8 +375,6 @@ interface GateResult {
 }
 
 function computeGates(f: WizardForm): GateResult[] {
-  const hasRefsHeading = RE_REFS_HEADING.test(f.body)
-  const hasFile = f.file !== null
   return [
     { key: 'title', label: '标题', step: 0, ok: f.title.trim().length > 0 },
     {
@@ -413,36 +382,6 @@ function computeGates(f: WizardForm): GateResult[] {
       label: '摘要',
       step: 0,
       ok: f.abstract.trim().length > 0,
-    },
-    {
-      key: 'keywords',
-      label: '关键词',
-      step: 0,
-      ok: parseListField(f.keywords).length > 0,
-    },
-    {
-      key: 'clc',
-      label: '中图分类号',
-      step: 0,
-      ok: parseListField(f.clc).length > 0,
-    },
-    {
-      key: 'discipline',
-      label: '学科',
-      step: 0,
-      ok: f.discipline.trim().length > 0,
-    },
-    {
-      key: 'references',
-      label: '参考文献',
-      step: 1,
-      // 荒诞研究和自由创作不强制参考文献：用户明确允许“不造假就留空”，
-      // 研究文章仍要求有引用或上传完整作品，避免正式文章降格。
-      ok:
-        hasRefsHeading ||
-        hasFile ||
-        f.paperKind === 'absurd' ||
-        f.type === 'tutorial',
     },
     {
       key: 'authors',
@@ -472,9 +411,9 @@ function computeGates(f: WizardForm): GateResult[] {
 }
 
 const STEPS = [
-  { id: 0, title: '题录', hint: '标题、摘要、关键词、分类号、栏目' },
+  { id: 0, title: '基本信息', hint: '标题、摘要、关键词、方向' },
   { id: 1, title: '正文与上传', hint: '在线正文或上传作品文件' },
-  { id: 2, title: '作者与声明', hint: '作者顺序、通讯作者、三项承诺' },
+  { id: 2, title: '作者与声明', hint: '作者顺序、联系邮箱、三项确认' },
   { id: 3, title: '预览并提交', hint: '通读一遍，确认后提交' },
 ]
 
@@ -689,30 +628,6 @@ function SubmissionWizardPage() {
     setForm((prev) => ({ ...prev, [key]: value }))
   }
 
-  // 导入只覆盖题录字段，保留作者手写的正文、声明与附件；
-  // 导入不是新流程，只是题录步骤里的一个填表捷径。
-  const applyIngest = (resource: IngestResource) => {
-    const imported = presetToForm(resource)
-    setForm((prev) => ({
-      ...prev,
-      title: imported.title || prev.title,
-      type: imported.type || prev.type,
-      authors: imported.authors || prev.authors,
-      year: imported.year || prev.year,
-      discipline:
-        imported.discipline && imported.discipline !== 'unknown'
-          ? imported.discipline
-          : prev.discipline,
-      subdiscipline: imported.subdiscipline || prev.subdiscipline,
-      abstract: imported.abstract || prev.abstract,
-      preview: imported.preview || prev.preview,
-      keywords: imported.keywords || prev.keywords,
-      venue: imported.venue || prev.venue,
-      doi: imported.doi || prev.doi,
-    }))
-    toast.success('已填入题录，请核对作者、年份与摘要')
-  }
-
   const goTo = (next: number) => {
     setVisited((prev) => {
       const copy = [...prev]
@@ -859,7 +774,7 @@ function SubmissionWizardPage() {
           // ignore
         }
         void deleteDraftMut.mutate()
-        toast.success('已提交，等待编辑处理')
+        toast.success('已提交，等待内容整理处理')
       }
       // 回到列表页；列表会自动 invalidate，新提交出现在第一行
       void navigate({ to: '/submissions' })
@@ -869,7 +784,7 @@ function SubmissionWizardPage() {
       const code =
         typeof detail === 'object' && detail !== null ? detail.code : undefined
       if (code === 'rules_ack_required') {
-        toast.error('发布前需要先阅读并确认《作品与编辑规范》', {
+        toast.error('发布前需要先阅读并确认《作品与发布规范》', {
           description: '正在为你打开确认页…',
           duration: 6000,
         })
@@ -936,11 +851,11 @@ function SubmissionWizardPage() {
             {editId !== undefined ? '修改作品' : '新建作品'}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            分四步完成：题录 → 正文 → 作者与声明 →
+            分四步完成：基本信息 → 正文 → 作者与声明 →
             预览提交。草稿会自动保存在本机和登录账号。
             <HelpTip
               className="ml-1"
-              text="研究文章进入评审并按严格细则计分；自由创作不套学术文章格式，不走研究文章评审、不计分，只做编辑格式审读。"
+              text="研究长文可以申请互评；自由创作不套固定格式，也不计分，只做基础校对。"
             />
           </p>
         </div>
@@ -1002,7 +917,7 @@ function SubmissionWizardPage() {
           href="/templates/rubbish-editorial-standards.md"
           download
         >
-          编辑规范
+          发布规范
         </a>
         <span className="mx-2">·</span>
         <a className="font-medium text-primary hover:underline" href="/guide?tab=authors">
@@ -1079,15 +994,12 @@ function SubmissionWizardPage() {
                 form={form}
                 set={set}
                 fieldError={fieldError}
-                doiEntryEnabled={caps.data?.doi_author_entry_enabled ?? true}
-                onImport={applyIngest}
               />
             )}
             {step === 1 && (
               <StepUpload
                 form={form}
                 set={set}
-                fieldError={fieldError}
                 acceptAttr={acceptAttr}
                 uploadMaxMb={uploadMaxMb}
                 fileInputRef={fileInputRef}
@@ -1185,8 +1097,7 @@ function SubmissionWizardPage() {
               body={form.body}
               doi={form.doi}
               funding={form.funding}
-              clc={form.clc}
-              license={form.license}
+                  license={form.license}
               track={form.type === 'paper' ? 'paper' : 'essay'}
               onDownloadPdf={downloadStudioPdf}
               pdfBusy={pdfBusy}
@@ -1210,8 +1121,7 @@ function SubmissionWizardPage() {
             body={form.body}
             doi={form.doi}
             funding={form.funding}
-            clc={form.clc}
-            license={form.license}
+              license={form.license}
             track={form.type === 'paper' ? 'paper' : 'essay'}
             onDownloadPdf={downloadStudioPdf}
             pdfBusy={pdfBusy}
@@ -1226,111 +1136,27 @@ function SubmissionWizardPage() {
 // 子步骤组件
 // ---------------------------------------------------------------------------
 
-const INGEST_SOURCES: { value: FetchSource; label: string; placeholder: string }[] = [
-  { value: 'crossref', label: 'Crossref', placeholder: 'DOI，例如 10.1000/xyz123' },
-  { value: 'arxiv', label: 'arXiv', placeholder: 'arXiv ID，例如 2401.00001' },
-  { value: 'pubmed', label: 'PubMed', placeholder: 'PMID，例如 12345678' },
-  { value: 'openalex', label: 'OpenAlex', placeholder: 'DOI 或 OpenAlex ID' },
-  { value: 'semantic_scholar', label: 'Semantic Scholar', placeholder: 'DOI 或 S2 paper ID' },
-]
-
-function IngestQuickFill({ onImport }: { onImport: (resource: IngestResource) => void }) {
-  const fetchMut = useFetchIngest()
-  const [source, setSource] = useState<FetchSource>('crossref')
-  const [identifier, setIdentifier] = useState('')
-  const placeholder =
-    INGEST_SOURCES.find((item) => item.value === source)?.placeholder ?? 'DOI 或文献 ID'
-
-  const importRecord = async () => {
-    const id = identifier.trim()
-    if (!id) {
-      toast.error('先填 DOI、arXiv ID 或 PMID')
-      return
-    }
-    try {
-      const resource = await fetchMut.mutateAsync({ source, id })
-      onImport(resource)
-      setIdentifier('')
-    } catch (err) {
-      toast.error(extractError(err, '没有查到这条文献，请检查编号或换一个来源'))
-    }
-  }
-
-  return (
-    <div className="rounded-lg border bg-muted/25 p-3">
-      <div className="flex flex-wrap items-baseline justify-between gap-1">
-        <label className="text-sm font-medium">从文献导入题录</label>
-        <span className="text-[11px] text-muted-foreground">
-          只填题录，不覆盖正文；导入后仍可修改
-        </span>
-      </div>
-      <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-        <Select value={source} onValueChange={(value) => setSource(value as FetchSource)}>
-          <SelectTrigger className="h-9 w-full sm:w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {INGEST_SOURCES.map((item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Input
-          value={identifier}
-          placeholder={placeholder}
-          className="h-9 min-w-0 flex-1"
-          onChange={(event) => setIdentifier(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') {
-              event.preventDefault()
-              void importRecord()
-            }
-          }}
-        />
-        <Button
-          type="button"
-          size="sm"
-          className="h-9 shrink-0"
-          onClick={() => void importRecord()}
-          disabled={fetchMut.isPending}
-        >
-          {fetchMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-          导入
-        </Button>
-      </div>
-    </div>
-  )
-}
-
 function StepBibliography({
   form,
   set,
   fieldError,
-  doiEntryEnabled,
-  onImport,
 }: {
   form: WizardForm
   set: <K extends keyof WizardForm>(key: K, value: WizardForm[K]) => void
   fieldError: (key: string) => boolean
-  doiEntryEnabled: boolean
-  onImport: (resource: IngestResource) => void
 }) {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-lg font-semibold">题录信息</h2>
+        <h2 className="text-lg font-semibold">基本信息</h2>
         <p className="text-sm text-muted-foreground">
-          这一步写清「这是什么文章」。摘要、关键词、中图分类号是检索与评审的硬门槛。
+          这一步写清「这是什么」。标题和摘要就够了；关键词、方向、合集分类都可以之后再补。
         </p>
       </div>
 
-      <IngestQuickFill onImport={onImport} />
-
-      {/* 作品类型：研究文章 / 荒诞研究 / 自由创作 */}
+            {/* 作品类型：研究文章 / 荒诞研究 / 自由创作 */}
       <div className="space-y-2">
-        <Label>文章类型</Label>
+        <Label>作品类型</Label>
         <div className="grid max-w-2xl grid-cols-1 gap-2 sm:grid-cols-3">
           <button
             type="button"
@@ -1345,7 +1171,7 @@ function StepBibliography({
                 : 'border-border bg-card hover:bg-muted/40',
             ].join(' ')}
           >
-            研究文章
+            研究长文
             <span className="mt-0.5 block text-xs text-muted-foreground">
               真实问题、可核查材料、完整论证
             </span>
@@ -1385,7 +1211,7 @@ function StepBibliography({
           </button>
         </div>
         <p className="text-[11px] leading-5 text-muted-foreground">
-          研究文章与荒诞研究都走文章评审、百分制计分；区别只在命题是否荒诞。自由创作不走研究文章评审、不计分。
+          研究长文和荒诞研究都可以申请互评，区别只在命题是否荒诞；自由创作不套固定格式，也不计分。
         </p>
       </div>
 
@@ -1397,7 +1223,7 @@ function StepBibliography({
           id="w-title"
           value={form.title}
           onChange={(e) => set('title', e.target.value)}
-          placeholder="一句话写清研究问题"
+          placeholder="一句话说清这篇作品讲什么"
           className={fieldError('title') ? 'border-destructive' : ''}
         />
         {fieldError('title') && <FieldError>标题不能为空</FieldError>}
@@ -1405,15 +1231,13 @@ function StepBibliography({
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="w-discipline">
-            学科 <span className="text-destructive">*</span>
-          </Label>
+          <Label htmlFor="w-discipline">方向（选填）</Label>
           <Input
             id="w-discipline"
             list="w-discipline-options"
             value={form.discipline}
             onChange={(e) => set('discipline', e.target.value)}
-            placeholder="选择或输入学科"
+            placeholder="如：计算机、社会学、文学"
             className={fieldError('discipline') ? 'border-destructive' : ''}
           />
           <datalist id="w-discipline-options">
@@ -1423,18 +1247,16 @@ function StepBibliography({
               </option>
             ))}
           </datalist>
-          {fieldError('discipline') && (
-            <FieldError>请选择或填写学科</FieldError>
-          )}
+
         </div>
         <div className="space-y-2">
-          <Label htmlFor="w-subdiscipline">子学科（选填）</Label>
+          <Label htmlFor="w-subdiscipline">细分方向（选填）</Label>
           <Input
             id="w-subdiscipline"
             list="w-subdiscipline-options"
             value={form.subdiscipline}
             onChange={(e) => set('subdiscipline', e.target.value)}
-            placeholder="更细的研究方向"
+            placeholder="更细的方向，可留空"
           />
           <datalist id="w-subdiscipline-options">
             {DISCIPLINES.flatMap((c) => c.items).map((d) => (
@@ -1450,14 +1272,14 @@ function StepBibliography({
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="w-section">栏目（选填）</Label>
+          <Label htmlFor="w-section">分类（选填）</Label>
           <select
             id="w-section"
             value={form.articleSection}
             onChange={(e) => set('articleSection', e.target.value)}
             className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
-            <option value="">按学科归入默认栏目，由编辑部调整</option>
+            <option value="">自动归入默认分类，之后可调整</option>
             {ARTICLE_SECTION_OPTIONS.map((s) => (
               <option key={s.value} value={s.value}>
                 {s.label}
@@ -1465,11 +1287,11 @@ function StepBibliography({
             ))}
           </select>
           <p className="text-xs text-muted-foreground">
-            栏目只做阅读分组，不改变文章类型；录用后进入文章目录对应栏目。
+            分类只做浏览分组，不改变作品类型；通过后进入内容库对应分类。
           </p>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="w-issue-part">主题（选填）</Label>
+          <Label htmlFor="w-issue-part">合集主题（选填）</Label>
           <Input
             id="w-issue-part"
             list="w-issue-part-options"
@@ -1500,45 +1322,14 @@ function StepBibliography({
         {fieldError('abstract') && <FieldError>摘要不能为空</FieldError>}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="w-keywords">
-            关键词（逗号分隔） <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="w-keywords"
-            value={form.keywords}
-            onChange={(e) => set('keywords', e.target.value)}
-            placeholder="例如：大语言模型, Agent, RAG"
-            className={fieldError('keywords') ? 'border-destructive' : ''}
-          />
-          {fieldError('keywords') && <FieldError>至少填一个关键词</FieldError>}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="w-clc">
-            中图分类号（CLC，逗号分隔）{' '}
-            <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="w-clc"
-            list="w-clc-options"
-            value={form.clc}
-            onChange={(e) => set('clc', e.target.value)}
-            placeholder="选择或输入，例如：TP18, G250"
-            className={fieldError('clc') ? 'border-destructive' : ''}
-          />
-          <datalist id="w-clc-options">
-            {CLC_SUGGESTIONS.map((item) => (
-              <option key={item.value} value={item.value}>
-                {item.label}
-              </option>
-            ))}
-          </datalist>
-          <p className="text-xs text-muted-foreground">
-            可直接选常用号，也可手填完整分类号；找不到时填最接近的大类。
-          </p>
-          {fieldError('clc') && <FieldError>中图分类号不能为空</FieldError>}
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="w-keywords">关键词（选填，逗号分隔）</Label>
+        <Input
+          id="w-keywords"
+          value={form.keywords}
+          onChange={(e) => set('keywords', e.target.value)}
+          placeholder="例如：大语言模型, Agent, RAG；不填也能发布"
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -1566,23 +1357,6 @@ function StepBibliography({
             placeholder="若已有正式出处"
           />
         </div>
-        {doiEntryEnabled ? (
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="w-doi">
-              官方 DOI（选填，作者自行决定是否注册）
-            </Label>
-            <Input
-              id="w-doi"
-              value={form.doi}
-              onChange={(e) => set('doi', e.target.value)}
-              placeholder="例如：10.12345/rubbish.2026.001；没有就留空"
-            />
-            <p className="text-xs text-muted-foreground">
-              本站会为每篇录用作品生成站内编号；官方 DOI
-              由作者决定是否另行注册，不强制。
-            </p>
-          </div>
-        ) : null}
       </div>
     </div>
   )
@@ -1591,7 +1365,6 @@ function StepBibliography({
 function StepUpload({
   form,
   set,
-  fieldError,
   acceptAttr,
   uploadMaxMb,
   fileInputRef,
@@ -1601,7 +1374,6 @@ function StepUpload({
 }: {
   form: WizardForm
   set: <K extends keyof WizardForm>(key: K, value: WizardForm[K]) => void
-  fieldError: (key: string) => boolean
   acceptAttr: string
   uploadMaxMb: number
   fileInputRef: React.RefObject<HTMLInputElement | null>
@@ -1770,28 +1542,17 @@ function StepUpload({
               <h3 className="text-sm font-semibold">在线正文（Markdown）</h3>
             </div>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              这里就是最终发表与 Word/PDF
-              下载使用的正文。上方识别结果会自动填进来。
+              这里就是最终发布与 Word/PDF
+              导出使用的正文。上方识别结果会自动填进来。
             </p>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {hasRefsHeading ? (
               <Badge className="bg-emerald-500/15 text-emerald-700">
-                已检测到参考文献
+                已附出处说明
               </Badge>
-            ) : form.paperKind === 'absurd' || form.type === 'tutorial' ? (
-              <Badge variant="outline">参考文献可选 · 不强制补造</Badge>
             ) : (
-              <Badge
-                variant="outline"
-                className={
-                  fieldError('references')
-                    ? 'border-destructive/50 text-destructive'
-                    : ''
-                }
-              >
-                未检测到参考文献
-              </Badge>
+              <Badge variant="outline">出处说明可选</Badge>
             )}
           </div>
         </div>
@@ -1800,23 +1561,18 @@ function StepUpload({
           onChange={(v) => set('body', v)}
           minHeight={320}
           placeholder={
-            '# 1 引言\n\n# 2 方法\n\n# 3 结果\n\n# 4 结论\n\n# 参考文献\n\n[1] …'
+            '# 1 起因\n\n# 2 经过\n\n# 3 结果\n\n# 4 我想说的\n\n正文可以自由分段。'
           }
           testId="wizard-body-editor"
           snapshotKey={snapshotKey}
           onUploadImage={(file) => uploadMediaImage(file, 'submission')}
         />
-        {fieldError('references') && (
-          <FieldError>
-            请在正文末尾加入「参考文献」章节，或直接上传作品文件
-          </FieldError>
-        )}
       </section>
 
       {/* 3. 规范与模板：不常看，收进折叠；需要时再展开，不再占正文上方一整屏。 */}
       <details className="rounded-lg border border-dashed bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
         <summary className="cursor-pointer select-none font-medium text-foreground">
-          格式要求与模板（点击展开）
+          排版与文件说明（可选）
         </summary>
         <ul className="mt-2 list-inside list-disc space-y-1 leading-relaxed">
           <li>
@@ -1824,8 +1580,7 @@ function StepUpload({
             {uploadMaxMb} MB。
           </li>
           <li>
-            正文内请包含「摘要」「关键词」段落，并在文末给出「参考文献 /
-            References」章节。
+            正文建议写清标题、摘要和分段；出处说明可选，不强制凑条目。
           </li>
           <li>
             版式：先下载
@@ -1850,7 +1605,7 @@ function StepUpload({
               href="/templates/rubbish-editorial-standards.md"
               download
             >
-              编辑规范
+              发布规范
             </a>
             。
           </li>
@@ -1953,12 +1708,12 @@ function StepAuthors({
           placeholder="清华大学计算机系, 北京大学信息学院"
         />
         <p className="text-xs text-muted-foreground">
-          用于机构级利益冲突检查：审稿人与作者单位重合时，分派会被拦截。多位作者可按署名顺序对应填写；留空只按姓名/邮箱匹配。
+          多位作者可按署名顺序对应填写；只用于站内联系与互评回避，不对外展示。
         </p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="w-corresp">通讯作者邮箱（选填）</Label>
+        <Label htmlFor="w-corresp">联系邮箱（选填）</Label>
         <Input
           id="w-corresp"
           type="email"
@@ -1967,7 +1722,7 @@ function StepAuthors({
           placeholder="corresponding@example.com"
         />
         <p className="text-xs text-muted-foreground">
-          审稿意见与录用通知会发到这个邮箱；留空则用账号注册邮箱。
+          互评反馈和通过通知会发到这里；留空则用账号注册邮箱。
         </p>
       </div>
 
@@ -1975,7 +1730,7 @@ function StepAuthors({
         <div>
           <div className="text-sm font-medium">声明与许可</div>
           <p className="text-xs text-muted-foreground">
-            逐篇保存并在文章页公开展示；没有的内容写“无”，不要留空冒充已声明。
+            逐篇保存并在作品页展示；没有的内容写“无”，不要留空冒充已声明。
           </p>
         </div>
         <div className="space-y-2">
@@ -2035,21 +1790,21 @@ function StepAuthors({
           checked={form.declOriginal}
           onChange={(v) => set('declOriginal', v)}
           label="原创性声明"
-          description="本作品为作者原创，未一稿多投，不存在抄袭、代写或署名不当。"
+          description="本作品由我独立完成；引用他人内容已标注来源，不存在抄袭或冒充他人。"
           error={fieldError('declOriginal')}
         />
         <DeclCheckbox
           checked={form.declConfidential}
           onChange={(v) => set('declConfidential', v)}
-          label="保密与合规声明"
-          description="作品不涉及未公开的涉密数据、隐私数据或第三方知识产权侵权。"
+          label="隐私与合规确认"
+          description="作品不涉及未公开的涉密数据、他人隐私数据或侵权内容。"
           error={fieldError('declConfidential')}
         />
         <DeclCheckbox
           checked={form.declCopyright}
           onChange={(v) => set('declCopyright', v)}
-          label="版权与许可确认"
-          description="作者同意本站以现行许可协议（CC BY-NC 等）发布这篇文章，授权编辑部进行编校与导出。"
+          label="发布授权"
+          description="同意本站按所选许可协议公开展示这篇作品，并做基础校对与导出。"
           error={fieldError('declCopyright')}
         />
       </div>
@@ -2066,14 +1821,14 @@ function ManuscriptCheck({ body }: { body: string }) {
     <div className="rounded-lg border p-4 text-sm">
       <div className="flex items-center gap-2 font-medium">
         <ListChecks className="h-4 w-4 text-primary" />
-        提交前编校检查
+        发布前基础检查
       </div>
       <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
         {blockers > 0
           ? `发现 ${blockers} 个阻断项、${warnings} 个提醒项，建议修正后再提交。`
           : warnings > 0
             ? `发现 ${warnings} 个提醒项，请确认是否需要调整。`
-            : '未发现编号、参考文献序号或重复段落等明显问题。'}
+            : '未发现编号、引用序号或重复段落等明显问题。'}
       </p>
       {issues.length > 0 ? (
         <details className="mt-2">
@@ -2119,7 +1874,6 @@ function StepReview({
 }) {
   const authors = parseListField(form.authors)
   const keywords = parseListField(form.keywords)
-  const clc = parseListField(form.clc)
   const firstPara =
     form.abstract
       .split(/\n+/)
@@ -2130,7 +1884,7 @@ function StepReview({
       <div>
         <h2 className="text-lg font-semibold">预览并提交</h2>
         <p className="text-sm text-muted-foreground">
-          请通读一遍。确认无误后点击下方「确认提交」，提交后状态为「待审核」。
+          请通读一遍。确认无误后点击下方「确认提交」，提交后状态为「排队中」。
         </p>
       </div>
 
@@ -2163,11 +1917,11 @@ function StepReview({
                 ? '自由创作'
                 : form.paperKind === 'absurd'
                   ? '荒诞研究'
-                  : '研究文章'}
+                  : '研究长文'}
             </div>
           </div>
           <div>
-            <div className="text-xs text-muted-foreground">学科/栏目</div>
+            <div className="text-xs text-muted-foreground">方向 / 分类</div>
             <div>{form.discipline || '—'}</div>
           </div>
         </div>
@@ -2189,8 +1943,6 @@ function StepReview({
           )}
         </div>
         <div>
-          <div className="text-xs text-muted-foreground">中图分类号（CLC）</div>
-          <div className="mt-0.5">{clc.join(' / ') || '—'}</div>
         </div>
         <div>
           <div className="text-xs text-muted-foreground">作者</div>
@@ -2232,7 +1984,6 @@ function StepReview({
           body={form.body}
           doi={form.doi}
           funding={form.funding}
-          clc={form.clc}
           license={form.license}
           track={form.type === 'paper' ? 'paper' : 'essay'}
         />

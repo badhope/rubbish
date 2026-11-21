@@ -79,13 +79,13 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 
-// 指派审稿人时取多少候选。超出时 UI 会明确提示"只取了前 N 个"，
-// 避免目标审稿人只是没被列出来却被当成"不存在"。
+// 指派评议成员时取多少候选。超出时 UI 会明确提示"只取了前 N 个"，
+// 避免目标评议成员只是没被列出来却被当成"不存在"。
 const REVIEWER_CANDIDATE_LIMIT = 200
 
 export const Route = createFileRoute('/submissions/pending')({
   beforeLoad: () => {
-    // 初筛工作台对 editor / section_editor / admin 开放；具体权限由后端
+    // 内容台对 editor / section_editor / admin 开放；具体权限由后端
     // require_editor 强制，这里只挡掉完全无关的访客与普通作者。
     const { isAuthenticated, isAdmin, user } = getAuthState()
     if (!isAuthenticated) throw redirect({ to: '/login' })
@@ -113,21 +113,21 @@ const DECISION_OPTIONS: { value: EditorDecision; label: string; hint?: string }[
   { value: 'accept', label: '接收', hint: '自动入目录' },
   { value: 'minor_revision', label: '小修' },
   { value: 'major_revision', label: '大修' },
-  { value: 'reject', label: '拒稿' },
+  { value: 'reject', label: '不通过' },
 ]
 
 // 维度中文口径统一在 @/lib/review-dimensions，旧四维作为历史数据兜底。
-// 初筛工作台状态 tab：全部 + 7 种 submission status
+// 内容台状态 tab：全部 + 7 种 submission status
 type StatusTab = SubmissionStatus | 'all'
 const STATUS_TABS: { value: StatusTab; label: string }[] = [
   { value: 'all', label: '全部' },
   { value: 'pending', label: '待分配' },
-  { value: 'under_review', label: '审稿中' },
+  { value: 'under_review', label: '互评中' },
   { value: 'major_revision', label: '大修' },
   { value: 'minor_revision', label: '小修' },
   { value: 'resubmitted', label: '重投' },
   { value: 'accepted', label: '已接收' },
-  { value: 'rejected', label: '已拒稿' },
+  { value: 'rejected', label: '已不通过' },
 ]
 
 interface PendingSearch {
@@ -141,7 +141,7 @@ function statusBadge(status: string) {
     case 'pending':
       return <Badge variant="secondary">待分配</Badge>
     case 'under_review':
-      return <Badge className="bg-primary/15 text-primary">审稿中</Badge>
+      return <Badge className="bg-primary/15 text-primary">互评中</Badge>
     case 'major_revision':
       return <Badge className="bg-amber-500/15 text-amber-700">大修</Badge>
     case 'minor_revision':
@@ -150,7 +150,7 @@ function statusBadge(status: string) {
     case 'approved':
       return <Badge className="bg-emerald-500/15 text-emerald-700">已接收</Badge>
     case 'rejected':
-      return <Badge variant="destructive">已拒稿</Badge>
+      return <Badge variant="destructive">已不通过</Badge>
     default:
       return <Badge variant="outline">{status}</Badge>
   }
@@ -193,7 +193,7 @@ function assignmentStatusBadge(status: string) {
 interface DecisionFormState {
   decision: EditorDecision
   editor_note: string
-  /** 审稿意见冲突时必填的裁决理由 */
+  /** 互评意见冲突时必填的裁决理由 */
   arbitration_note: string
 }
 
@@ -203,9 +203,9 @@ const EMPTY_DECISION: DecisionFormState = {
   arbitration_note: '',
 }
 
-// 决策按钮只按稿件状态开关；真正的“≥2 位审稿人录用”闸门由矩阵弹窗
+// 决策按钮只按作品状态开关；真正的“≥2 位评议成员通过”闸门由矩阵弹窗
 // 展示、由后端裁决端点强制。此前用列表里的 reports_completed 判断，
-// 但该字段后端从未返回，按钮永远是灰的——编辑根本点不开决定。
+// 但该字段后端从未返回，按钮永远是灰的——内容整理根本点不开决定。
 function canOpenDecision(s: SubmissionResponse): boolean {
   return ['pending', 'under_review', 'resubmitted'].includes(s.status)
 }
@@ -229,7 +229,7 @@ function PendingSubmissionsPage() {
   // 'all' tab 不传 status，让后端返回全部状态
   const statusFilter = statusTab === 'all' ? undefined : statusTab
   // 职权分离（与后端 require_chief_editor 同口径）：四元最终决定是
-  // 最终裁决是执行编辑/主编的职权；栏目编辑只有初审、送审与推荐权。
+  // 最终裁决是内容整理/总协调的职权；分类整理只有初审、送审与推荐权。
   const { isAdmin, user } = useAuth()
   const isChief = isAdmin || (user?.roles ?? []).some((r) => ['editor', 'editor_in_chief'].includes(r))
   const isSectionOnly = !isChief && (user?.roles ?? []).includes('section_editor')
@@ -249,15 +249,15 @@ function PendingSubmissionsPage() {
   const [reworkOpen, setReworkOpen] = useState(false)
   const [reworkRequirements, setReworkRequirements] = useState('')
   const reworkMut = useRequestRework()
-  // 拒稿是终态决定，二次确认后才真正执行
+  // 不通过是终态决定，二次确认后才真正执行
   const [rejectConfirm, setRejectConfirm] = useState(false)
   const [reportsTarget, setReportsTarget] = useState<SubmissionResponse | null>(null)
-  // 双盲评审的匿名稿外链：只有编辑能写，审稿人取稿件只认这个链接
+  // 匿名互评的匿名稿外链：只有内容整理能写，评议成员取作品只认这个链接
   const [anonymizedTarget, setAnonymizedTarget] = useState<SubmissionResponse | null>(
     null,
   )
   const [decisionForm, setDecisionForm] = useState<DecisionFormState>(EMPTY_DECISION)
-  // 做决定时内嵌审稿报告摘要：推荐 + 评分 + 编辑保密意见，编辑不必另开弹窗
+  // 做决定时内嵌互评报告摘要：推荐 + 评分 + 内容整理保密意见，内容整理不必另开弹窗
   const decisionReportsQ = useSubmissionReports(decisionTarget?.id ?? 0)
   const decisionMatrixQ = useReviewMatrix(decisionTarget?.id ?? 0)
 
@@ -272,7 +272,7 @@ function PendingSubmissionsPage() {
   const onConfirmDecision = async () => {
     if (!decisionTarget) return
     const target = decisionTarget
-    // 拒稿：先弹二次确认（终态操作，误触会直接断送作者的这次投稿）
+    // 不通过：先弹二次确认（终态操作，误触会直接断送作者的这次发布）
     if (decisionForm.decision === 'reject') {
       setRejectConfirm(true)
       return
@@ -284,23 +284,23 @@ function PendingSubmissionsPage() {
     const matrix = decisionMatrixQ.data
     if (decisionForm.decision === 'accept') {
       if (!matrix) {
-        toast.error('正在读取审稿进度，请稍后再试')
+        toast.error('正在读取互评进度，请稍后再试')
         return
       }
       if (matrix.accept_count < 2) {
         toast.error(
-          `发表需要至少 2 名审稿人给出录用推荐，当前 ${matrix.accept_count}/2。`,
+          `公开需要至少 2 名评议成员给出通过推荐，当前 ${matrix.accept_count}/2。`,
         )
         return
       }
       if (matrix.conflict && !matrix.adjudicator_accepted) {
-        toast.error('审稿意见冲突：请先指定第三方裁决人并等待其录用意见。')
+        toast.error('互评意见冲突：请先指定第三方裁决人并等待其通过意见。')
         return
       }
     }
     // 冲突时必须填裁决理由
     if (matrix?.conflict && !decisionForm.arbitration_note.trim()) {
-      toast.error('审稿意见冲突：请填写裁决理由')
+      toast.error('互评意见冲突：请填写裁决理由')
       return
     }
     try {
@@ -324,20 +324,20 @@ function PendingSubmissionsPage() {
   return (
     <div>
       <PageHeader
-        title="初筛工作台"
-        description="分配审稿人、查看审稿报告、做最终决定。支持按状态筛选全部提交。"
+        title="内容台"
+        description="分配评议成员、查看互评报告、做最终决定。支持按状态筛选全部提交。"
         actions={
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" asChild>
               <Link to="/submissions/pending" search={{ stage: 'pipeline' }}>
                 <Columns3 className="mr-1 h-4 w-4" />
-                流水线
+                进度看板
               </Link>
             </Button>
             <Button variant="outline" size="sm" asChild>
               <Link to="/submissions/pending" search={{ stage: 'triage' }}>
                 <ClipboardList className="mr-1 h-4 w-4" />
-                初筛队列
+                待处理
               </Link>
             </Button>
           </div>
@@ -346,8 +346,8 @@ function PendingSubmissionsPage() {
 
       {isSectionOnly && (
         <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
-          你以栏目编辑（L7）身份查看工作台：可以初审、分配审稿人并给出推荐意见，
-          最终录用 / 修回 / 拒稿决定由执行编辑（L8）作出。
+          你以分类整理（L7）身份查看工作台：可以初审、分配评议成员并给出推荐意见，
+          最终通过 / 修回 / 不通过决定由内容整理（L8）作出。
         </div>
       )}
 
@@ -391,12 +391,12 @@ function PendingSubmissionsPage() {
                           to="/catalog/$resourceId"
                           params={{ resourceId: String(s.resource_id) }}
                           className="inline-flex items-center"
-                          title="录用时选择了暂存：进入资源详情后可在「管理此条」里刊出"
+                          title="通过时选择了暂存：进入资源详情后可在「管理此条」里公开"
                         >
-                          <Badge className="bg-amber-500/15 text-amber-700">刊前整理 · 去刊出</Badge>
+                          <Badge className="bg-amber-500/15 text-amber-700">发布前整理 · 去公开</Badge>
                         </Link>
                       ) : (
-                        <Badge className="bg-amber-500/15 text-amber-700">刊前整理</Badge>
+                        <Badge className="bg-amber-500/15 text-amber-700">发布前整理</Badge>
                       ))}
                   </div>
                   <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -419,7 +419,7 @@ function PendingSubmissionsPage() {
                   </Button>
                   {s.status === 'pending' && (
                     <Button size="sm" onClick={() => setAssignTarget(s)}>
-                      <UserPlus className="h-4 w-4" /> 分配审稿人
+                      <UserPlus className="h-4 w-4" /> 分配评议成员
                     </Button>
                   )}
                   {(s.status === 'under_review' || s.status === 'resubmitted') && (
@@ -451,7 +451,7 @@ function PendingSubmissionsPage() {
                     size="sm"
                     onClick={() => setReportsTarget(s)}
                   >
-                    <FileText className="h-4 w-4" /> 审稿报告
+                    <FileText className="h-4 w-4" /> 互评报告
                   </Button>
                   {[
                     'pending',
@@ -493,7 +493,7 @@ function PendingSubmissionsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* 分配审稿人 Dialog */}
+      {/* 分配评议成员 Dialog */}
       {assignTarget && (
         <AssignReviewerDialog
           submission={assignTarget}
@@ -527,11 +527,11 @@ function PendingSubmissionsPage() {
             <DialogTitle>做决定 — {decisionTarget?.title}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            {/* 审稿报告摘要：有报告时直接展示，帮助编辑在同一个弹窗里完成决定 */}
+            {/* 互评报告摘要：有报告时直接展示，帮助内容整理在同一个弹窗里完成决定 */}
             {decisionReportsQ.data && decisionReportsQ.data.length > 0 && (
               <div className="space-y-2 rounded-md border bg-muted/30 p-3 text-sm">
                 <div className="text-xs font-medium text-muted-foreground">
-                  审稿报告摘要（{decisionReportsQ.data.length} 份）
+                  互评报告摘要（{decisionReportsQ.data.length} 份）
                 </div>
                 {decisionReportsQ.data.map((r) => (
                   <div key={r.id} className="space-y-1.5">
@@ -573,7 +573,7 @@ function PendingSubmissionsPage() {
                     )}
                     {r.comments_to_editor && (
                       <p className="whitespace-pre-wrap rounded bg-amber-500/10 p-2 text-xs text-amber-700">
-                        编辑保密意见：{r.comments_to_editor}
+                        内容整理保密意见：{r.comments_to_editor}
                       </p>
                     )}
                   </div>
@@ -587,7 +587,7 @@ function PendingSubmissionsPage() {
                     已完成 {decisionMatrixQ.data.reports_completed} 份
                   </Badge>
                   <Badge variant="outline">
-                    审稿人 {decisionMatrixQ.data.distinct_reviewers} 人
+                    评议成员 {decisionMatrixQ.data.distinct_reviewers} 人
                   </Badge>
                   <Badge
                     className={
@@ -596,7 +596,7 @@ function PendingSubmissionsPage() {
                         : 'bg-amber-500/15 text-amber-700'
                     }
                   >
-                    录用推荐 {decisionMatrixQ.data.accept_count}/2
+                    通过推荐 {decisionMatrixQ.data.accept_count}/2
                   </Badge>
                   {decisionMatrixQ.data.conflict && (
                     <Badge className="bg-amber-500/15 text-amber-700">
@@ -611,7 +611,7 @@ function PendingSubmissionsPage() {
                 </div>
                 {decisionMatrixQ.data.accept_count < 2 && (
                   <p className="mt-2 text-xs text-amber-700">
-                    发表前需要至少 2 名不同审稿人给出录用推荐。可继续送审，或在意见冲突时指定第三方裁决人。
+                    公开前需要至少 2 名不同评议成员给出通过推荐。可继续送审，或在意见冲突时指定第三方裁决人。
                   </p>
                 )}
               </div>
@@ -645,7 +645,7 @@ function PendingSubmissionsPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="editor_note">编辑备注（作者可见）</Label>
+              <Label htmlFor="editor_note">内容整理备注（作者可见）</Label>
               <Textarea
                 id="editor_note"
                 value={decisionForm.editor_note}
@@ -655,14 +655,14 @@ function PendingSubmissionsPage() {
                     editor_note: e.target.value,
                   }))
                 }
-                placeholder="说明决定原因，作者将在投稿详情中看到"
+                placeholder="说明决定原因，作者将在发布详情中看到"
                 rows={4}
               />
             </div>
             {decisionMatrixQ.data?.conflict && (
               <div className="space-y-2 rounded-md border border-amber-300 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950">
                 <Label htmlFor="arbitration_note" className="text-amber-800 dark:text-amber-200">
-                  审稿意见冲突，需填写裁决理由（必填）
+                  互评意见冲突，需填写裁决理由（必填）
                 </Label>
                 <Textarea
                   id="arbitration_note"
@@ -680,8 +680,8 @@ function PendingSubmissionsPage() {
             )}
           </div>
 
-          {/* D 级打回：评分不达标时不直接拒稿，而是要求审稿人补审/作者修改。
-              与"做决定"并列而不是藏在菜单里——它是与录用/拒稿同级的处置。 */}
+          {/* D 级打回：评分不达标时不直接不通过，而是要求评议成员补审/作者修改。
+              与"做决定"并列而不是藏在菜单里——它是与通过/不通过同级的处置。 */}
           <div className="space-y-2 rounded-lg border border-destructive/25 bg-destructive/5 p-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-destructive">打回补审（D 级处置）</span>
@@ -697,13 +697,13 @@ function PendingSubmissionsPage() {
             {reworkOpen && (
               <div className="space-y-2">
                 <p className="text-[11px] text-muted-foreground">
-                  打回会同时通知审稿人（补审或说明理由）与作者（逐条修改要求）。
+                  打回会同时通知评议成员（补审或说明理由）与作者（逐条修改要求）。
                   至少填 3 条具体问题——只说"不合格"对作者没有帮助。
                 </p>
                 {decisionTarget?.quality_score != null && decisionTarget.quality_score < 40 && (
                   <p className="rounded bg-destructive/10 px-2 py-1 text-[11px] text-destructive">
                     当前评分 {decisionTarget?.quality_score ?? '—'} 分（不合格，低于 40），
-                    按规范不能直接录用。
+                    按规范不能直接通过。
                   </p>
                 )}
                 <Textarea
@@ -729,7 +729,7 @@ function PendingSubmissionsPage() {
                     if (!decisionTarget) return
                     try {
                       await reworkMut.mutateAsync({ id: decisionTarget.id, requirements: reqs })
-                      toast.success('已打回：审稿人与作者都已收到通知')
+                      toast.success('已打回：评议成员与作者都已收到通知')
                       setReworkOpen(false)
                       setReworkRequirements('')
                       setDecisionTarget(null)
@@ -755,7 +755,7 @@ function PendingSubmissionsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* 审稿报告 Dialog */}
+      {/* 互评报告 Dialog */}
       {reportsTarget && (
         <ReportsDialog
           submission={reportsTarget}
@@ -763,12 +763,12 @@ function PendingSubmissionsPage() {
         />
       )}
 
-      {/* 拒稿二次确认：终态操作，先想清楚再执行 */}
+      {/* 不通过二次确认：终态操作，先想清楚再执行 */}
       <ConfirmDialog
         open={rejectConfirm}
-        title="确认拒稿"
-        description="拒稿后该投稿将进入「已拒稿」状态，作者不能继续修改或重投。确定要拒稿吗？"
-        confirmText="确认拒稿"
+        title="确认不通过"
+        description="不通过后该发布将进入「已不通过」状态，作者不能继续修改或重投。确定要不通过吗？"
+        confirmText="确认不通过"
         destructive
         onConfirm={() => {
           setRejectConfirm(false)
@@ -782,10 +782,10 @@ function PendingSubmissionsPage() {
 
 // 详情面板：抽出为组件避免主组件过于臃肿
 function SubmissionDetailBody({ sub }: { sub: SubmissionResponse }) {
-  // 版本历史：编辑需要知道稿件被重投过几次、每次作者说明了什么
+  // 版本历史：内容整理需要知道作品被重投过几次、每次作者说明了什么
   const versionsQ = useSubmissionVersions(sub.id)
   const putAuthors = usePutAuthors()
-  // 作者编辑：从 sub.authors（字符串数组）初始化
+  // 作者内容整理：从 sub.authors（字符串数组）初始化
   const [authors, setAuthors] = useState<AuthorEditInput[]>(() =>
     sub.authors.map((name, i) => ({
       name,
@@ -831,10 +831,10 @@ function SubmissionDetailBody({ sub }: { sub: SubmissionResponse }) {
         )}
       </div>
 
-      {/* 作者编辑面板：增删/排序/第一/通讯 */}
+      {/* 作者内容整理面板：增删/排序/第一/通讯 */}
       <div className="rounded-md border p-3">
         <div className="mb-2 flex items-center justify-between">
-          <span className="font-medium">作者（发布前可编辑）</span>
+          <span className="font-medium">作者（发布前可内容整理）</span>
           <div className="flex items-center gap-2">
             {dirty && <Badge variant="outline" className="text-amber-700">未保存</Badge>}
             <Button size="sm" variant="outline" onClick={onSaveAuthors} disabled={putAuthors.isPending}>
@@ -906,7 +906,7 @@ function SubmissionDetailBody({ sub }: { sub: SubmissionResponse }) {
       )}
       {sub.file_path && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-muted-foreground">稿件文件：</span>
+          <span className="text-muted-foreground">作品文件：</span>
           <span className="break-all text-primary">{sub.file_path}</span>
           <button
             type="button"
@@ -958,7 +958,7 @@ function SubmissionDetailBody({ sub }: { sub: SubmissionResponse }) {
   )
 }
 
-// 分配审稿人对话框：列出本租户所有用户供编辑挑选
+// 分配评议成员对话框：列出本租户所有用户供内容整理挑选
 function AssignReviewerDialog({
   submission,
   onClose,
@@ -966,7 +966,7 @@ function AssignReviewerDialog({
   submission: SubmissionResponse
   onClose: () => void
 }) {
-  // 专供编辑的候选端点：只返回持 reviewer 角色且启用的账号，非 admin 的
+  // 专供内容整理的候选端点：只返回持 reviewer 角色且启用的账号，非 admin 的
   // editor 也能用（此前走 /admin/users 会 403，下拉永远是空的）。
   const { data: candidateData, isLoading } = useReviewerCandidates(REVIEWER_CANDIDATE_LIMIT, submission.id)
   const disciplines = useDisciplines()
@@ -995,7 +995,7 @@ function AssignReviewerDialog({
   const toggle = (id: number) => {
     const candidate = candidates.find((item) => item.id === id)
     if (candidate?.conflict) {
-      toast.error('该审稿人已声明与作者存在利益冲突，不能指派')
+      toast.error('该评议成员已声明与作者存在利益冲突，不能指派')
       return
     }
     setSelected((prev) =>
@@ -1005,7 +1005,7 @@ function AssignReviewerDialog({
 
   const onQuickInvite = async (candidate: ReviewerCandidate) => {
     if (candidate.conflict) {
-      toast.error('该审稿人与作者存在可核验的利益冲突，请更换人选')
+      toast.error('该评议成员与作者存在可核验的利益冲突，请更换人选')
       return
     }
     setInvitingId(candidate.id)
@@ -1029,7 +1029,7 @@ function AssignReviewerDialog({
 
   const onConfirm = async () => {
     if (selected.length === 0) {
-      toast.error('请至少选择一名审稿人（最多 3 名）')
+      toast.error('请至少选择一名评议成员（最多 3 名）')
       return
     }
     try {
@@ -1042,7 +1042,7 @@ function AssignReviewerDialog({
           external_affiliation: isExternal ? externalAffiliation.trim() || undefined : undefined,
         },
       })
-      toast.success(`已指派 ${res.assigned} 名审稿人`)
+      toast.success(`已指派 ${res.assigned} 名评议成员`)
       onClose()
     } catch (err) {
       toast.error(extractError(err, '指派失败'))
@@ -1053,11 +1053,11 @@ function AssignReviewerDialog({
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>指派审稿人 — {submission.title}</DialogTitle>
+          <DialogTitle>指派评议成员 — {submission.title}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <p className="text-xs text-muted-foreground">
-            可一次多选（最多 3 名，占 slot 1/2/3）；重复邀请同一审稿人会自动跳过。
+            可一次多选（最多 3 名，占 slot 1/2/3）；重复邀请同一评议成员会自动跳过。
           </p>
           {submissionDisciplineSlug && (
             <label className="flex items-center gap-2 text-xs">
@@ -1067,7 +1067,7 @@ function AssignReviewerDialog({
                 onChange={(e) => setOnlySameDiscipline(e.target.checked)}
                 className="h-3.5 w-3.5"
               />
-              只看自选「{submission.discipline}」学科的审稿人
+              只看自选「{submission.discipline}」方向的评议成员
             </label>
           )}
           <div className="max-h-[40vh] space-y-1 overflow-y-auto">
@@ -1076,8 +1076,8 @@ function AssignReviewerDialog({
             ) : candidates.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 {onlySameDiscipline && allCandidates.length > 0
-                  ? '没有自选该学科的审稿人；取消筛选可查看全部候选。'
-                  : '没有可指派的审稿人：请先在「用户管理」里给用户授予审稿人角色。'}
+                  ? '没有自选该方向的评议成员；取消筛选可查看全部候选。'
+                  : '没有可指派的评议成员：请先在「用户管理」里给用户授予评议成员角色。'}
               </p>
             ) : (
               candidates.map((u) => {
@@ -1150,7 +1150,7 @@ function AssignReviewerDialog({
           </div>
           {truncated && (
             <p className="text-xs text-muted-foreground">
-              候选列表只取了前 {REVIEWER_CANDIDATE_LIMIT} 个审稿人，目标审稿人不在其中时请用
+              候选列表只取了前 {REVIEWER_CANDIDATE_LIMIT} 个评议成员，目标评议成员不在其中时请用
               「用户管理」确认其角色。
             </p>
           )}
@@ -1163,15 +1163,15 @@ function AssignReviewerDialog({
                 className="mt-0.5 h-4 w-4"
               />
               <span>
-                <span className="font-medium">外审专家（外省/外单位）</span>
+                <span className="font-medium">外部评议成员</span>
                 <span className="mt-0.5 block text-xs text-muted-foreground">
-                  由主编/编辑指定，标记会写入审稿矩阵与审计；审稿人仍需用站内账号登录。
+                  由总协调/内容整理指定，标记会写入互评矩阵与审计；评议成员仍需用站内账号登录。
                 </span>
               </span>
             </label>
             {isExternal && (
               <Input
-                placeholder="外审单位 / 省份，例如：中山大学（广东）"
+                placeholder="外部单位 / 地区，例如：中山大学（广东）"
                 value={externalAffiliation}
                 onChange={(e) => setExternalAffiliation(e.target.value)}
                 maxLength={120}
@@ -1179,7 +1179,7 @@ function AssignReviewerDialog({
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="due_days">审稿截止天数（1–90）</Label>
+            <Label htmlFor="due_days">互评截止天数（1–90）</Label>
             <Input
               id="due_days"
               type="number"
@@ -1235,14 +1235,14 @@ function AssignmentsDialog({
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>审稿分配 — {submission.title}</DialogTitle>
+          <DialogTitle>互评分配 — {submission.title}</DialogTitle>
         </DialogHeader>
         {isLoading ? (
           <Loading />
         ) : isError ? (
           <ErrorState message="加载失败" onRetry={() => refetch()} />
         ) : !data || data.data.length === 0 ? (
-          <EmptyState title="暂无审稿分配" />
+          <EmptyState title="暂无互评分配" />
         ) : (
           <div className="space-y-3">
             {matrixQ.data && (
@@ -1252,7 +1252,7 @@ function AssignmentsDialog({
                     报告 {matrixQ.data.reports_completed} 份
                   </Badge>
                   <Badge variant="outline">
-                    审稿人 {matrixQ.data.distinct_reviewers} 人
+                    评议成员 {matrixQ.data.distinct_reviewers} 人
                   </Badge>
                   <Badge
                     className={
@@ -1261,7 +1261,7 @@ function AssignmentsDialog({
                         : 'bg-amber-500/15 text-amber-700'
                     }
                   >
-                    录用推荐 {matrixQ.data.accept_count}/2
+                    通过推荐 {matrixQ.data.accept_count}/2
                   </Badge>
                   {matrixQ.data.conflict && (
                     <Badge className="bg-amber-500/15 text-amber-700">意见冲突</Badge>
@@ -1276,7 +1276,7 @@ function AssignmentsDialog({
                   <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                     <p className="text-xs text-amber-700">
                       {matrixQ.data.need_adjudication
-                        ? '审稿意见冲突，需要第三方裁决人给出独立意见后才能录用。'
+                        ? '互评意见冲突，需要第三方裁决人给出独立意见后才能通过。'
                         : '已指定第三方裁决人，等待其提交意见。'}
                     </p>
                     {matrixQ.data.need_adjudication && (
@@ -1335,7 +1335,7 @@ function AssignmentsDialog({
         )}
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => setAssignOpen(true)}>
-            <UserPlus className="mr-1 h-4 w-4" /> 追加 / 改派审稿人
+            <UserPlus className="mr-1 h-4 w-4" /> 追加 / 改派评议成员
           </Button>
           <Button variant="outline" onClick={onClose}>
             关闭
@@ -1359,7 +1359,7 @@ function AssignmentsDialog({
   )
 }
 
-// 第三方裁决人：只在意见冲突/需要独立裁决时由主编或编辑指定。
+// 第三方裁决人：只在意见冲突/需要独立裁决时由总协调或内容整理指定。
 function AdjudicateDialog({
   submission,
   matrix,
@@ -1405,15 +1405,15 @@ function AdjudicateDialog({
         </DialogHeader>
         <div className="space-y-3">
           <p className="text-xs text-muted-foreground">
-            当前已有 {matrix.distinct_reviewers} 位审稿人提交意见，录用推荐 {matrix.accept_count}/2。
-            裁决人不能是本稿已参与评审的审稿人，也不能是作者。
+            当前已有 {matrix.distinct_reviewers} 位评议成员提交意见，通过推荐 {matrix.accept_count}/2。
+            裁决人不能是本稿已参与评审的评议成员，也不能是作者。
           </p>
           <div className="max-h-[35vh] space-y-1 overflow-y-auto">
             {isLoading ? (
               <Loading />
             ) : candidates.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                没有可用的第三方裁决人：请确认审稿人账号已授予 reviewer 角色，且未参与本稿。
+                没有可用的第三方裁决人：请确认评议成员账号已授予 reviewer 角色，且未参与本稿。
               </p>
             ) : (
               candidates.map((u) => (
@@ -1470,7 +1470,7 @@ function AdjudicateDialog({
   )
 }
 
-// 审稿报告对话框：编辑可见完整报告（含 comments_to_editor）
+// 互评报告对话框：内容整理可见完整报告（含 comments_to_editor）
 function ReportsDialog({
   submission,
   onClose,
@@ -1486,14 +1486,14 @@ function ReportsDialog({
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>审稿报告 — {submission.title}</DialogTitle>
+          <DialogTitle>互评报告 — {submission.title}</DialogTitle>
         </DialogHeader>
         {isLoading ? (
           <Loading />
         ) : isError ? (
           <ErrorState message="加载失败" onRetry={() => refetch()} />
         ) : !data || data.length === 0 ? (
-          <EmptyState title="暂无已完成的审稿报告" />
+          <EmptyState title="暂无已完成的互评报告" />
         ) : (
           <div className="space-y-4">
             {data.map((r: ReviewReportResponse) => (
@@ -1538,7 +1538,7 @@ function ReportsDialog({
                 {r.comments_to_editor && (
                   <div className="mt-2 rounded bg-amber-500/10 p-2">
                     <div className="text-xs text-amber-700">
-                      给编辑的保密意见
+                      给内容整理的保密意见
                     </div>
                     <p className="mt-1 whitespace-pre-wrap">
                       {r.comments_to_editor}
@@ -1547,7 +1547,7 @@ function ReportsDialog({
                 )}
                 {r.attachments && r.attachments.length > 0 && (
                   <div className="mt-2">
-                    <div className="text-xs text-muted-foreground">审稿附件</div>
+                    <div className="text-xs text-muted-foreground">互评附件</div>
                     <ReviewAttachmentLinks
                       reportId={r.id}
                       attachments={r.attachments}
@@ -1612,8 +1612,8 @@ function AnonymizedFileDialog({
         </DialogHeader>
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            双盲评审下审稿人只能访问这里填写的匿名稿外链；作者可控的
-            download_url / external_url 不会流向审稿人。服务端不具备剥离 PDF
+            匿名互评下评议成员只能访问这里填写的匿名稿外链；作者可控的
+            download_url / external_url 不会流向评议成员。服务端不具备剥离 PDF
             元数据的能力，请确认上传的匿名稿本身不含作者姓名与单位。
           </p>
           <div className="space-y-1">

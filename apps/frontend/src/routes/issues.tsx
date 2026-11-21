@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { issueTitle } from '@/lib/issue-meta'
 
 export const Route = createFileRoute('/issues')({
-  component: IssuesPage,
+  component: CollectionsPage,
 })
 
 interface IssueSummary {
@@ -31,77 +31,62 @@ interface VolumeStats {
   data: VolumeSummary[]
 }
 
-const NEXT_ISSUE = 7
-
-function issueNo(value: string): string {
+function padNo(value: string | number): string {
   return String(Number(value)).padStart(2, '0')
 }
 
-function IssuesPage() {
-  const volumesQ = useQuery({
+function CollectionsPage() {
+  const collectionsQ = useQuery({
     queryKey: ['catalog', 'volumes'],
     queryFn: async () => (await api.get<VolumeStats>('/catalog/volumes/stats')).data,
   })
 
-  if (volumesQ.isLoading) return <Loading />
-  if (volumesQ.isError)
-    return <ErrorState message="卷期加载失败" onRetry={() => volumesQ.refetch()} />
+  if (collectionsQ.isLoading) return <Loading />
+  if (collectionsQ.isError)
+    return <ErrorState message="合集加载失败" onRetry={() => collectionsQ.refetch()} />
 
-  const issues = (volumesQ.data?.data ?? [])
-    .flatMap((volume) =>
-      volume.issues.map((issue) => ({
-        ...issue,
-        volume: volume.volume,
-      })),
-    )
+  const issues = (collectionsQ.data?.data ?? [])
+    .flatMap((volume) => volume.issues.map((issue) => ({ ...issue, volume: volume.volume })))
     .sort((a, b) => Number(a.volume) - Number(b.volume) || Number(a.issue) - Number(b.issue))
 
   const totalArticles = issues.reduce((sum, issue) => sum + issue.article_count, 0)
-  const hasNextIssue = !issues.some((issue) => Number(issue.issue) === NEXT_ISSUE)
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <PageHeader
-        title="文章卷期"
-        description={`文章按卷、期归档：卷是大归档，期是卷内发布批次。当前共 ${issues.length} 期、${totalArticles} 篇文章。`}
+        title="合集"
+        description={`内容按一组一组的合集归档。合集只影响浏览顺序，不代表刊期、等级或发表批次；当前共 ${issues.length} 组、${totalArticles} 条内容。`}
+        actions={
+          <Button asChild variant="outline">
+            <Link to="/catalog">
+              自由浏览
+              <ArrowRight className="ml-1 h-4 w-4" />
+            </Link>
+          </Button>
+        }
       />
 
-      <div className="grid gap-2 border-y bg-muted/20 px-4 py-3 text-xs leading-5 text-muted-foreground sm:grid-cols-3 sm:px-5">
-        <p>
-          <span className="font-medium text-foreground">卷</span>
-          ：文章的大归档；当前是第 1 卷。
-        </p>
-        <p>
-          <span className="font-medium text-foreground">期</span>
-          ：卷内发布批次；第 01 期最早，数字越大越新。
-        </p>
-        <p>
-          <span className="font-medium text-foreground">说明</span>
-          ：卷、期只表示文章归档在哪一档。
-        </p>
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-y bg-muted/20 px-4 py-3 text-xs leading-5 text-muted-foreground sm:px-5">
+        <p><span className="font-medium text-foreground">合集</span>：一组内容的归档名，方便顺着读。</p>
+        <p><span className="font-medium text-foreground">不表示</span>：卷号、刊期、发表批次或内容等级。</p>
+        <p><span className="font-medium text-foreground">编号</span>：只用于站内定位，不是 DOI 或正式引用编号。</p>
       </div>
 
       {issues.length === 0 ? (
-        <EmptyState title="还没有文章卷期" description="文章发布后会进入对应卷、期。" />
+        <EmptyState title="还没有合集" description="内容公开后会进入对应合集。" />
       ) : (
         <div className="space-y-3">
-          {issues.map((issue) => (
+          {issues.map((issue, index) => (
             <Card key={`${issue.volume}-${issue.issue}`}>
               <CardContent className="flex flex-wrap items-center gap-4 p-4 sm:flex-nowrap sm:p-5">
                 <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center border bg-background">
-                  <span className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
-                    第 {issueNo(issue.issue)} 期
-                  </span>
-                  <span className="font-mono text-xl font-semibold leading-none">
-                    {Number(issue.issue)}
-                  </span>
+                  <span className="text-[9px] uppercase tracking-[0.16em] text-muted-foreground">合集</span>
+                  <span className="font-mono text-xl font-semibold leading-none">{padNo(index + 1)}</span>
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="font-serif text-lg font-semibold">
-                      第 {Number(issue.volume)} 卷 · 第 {issueNo(issue.issue)} 期
-                    </h2>
-                    <Badge variant="secondary">{issue.article_count} 篇</Badge>
+                    <h2 className="font-serif text-lg font-semibold">合集 {padNo(index + 1)}</h2>
+                    <Badge variant="secondary">{issue.article_count} 条</Badge>
                     {(issue.first_year || issue.last_year) && (
                       <span className="text-xs text-muted-foreground">
                         {issue.first_year ?? issue.last_year}
@@ -123,49 +108,37 @@ function IssuesPage() {
                       view: 'list',
                     }}
                   >
-                    查看文章 <ArrowRight className="h-3.5 w-3.5" />
+                    看这组内容 <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
                 </Button>
               </CardContent>
             </Card>
           ))}
-
-          {hasNextIssue && (
-            <Card className="border-dashed bg-primary/[0.03]">
-              <CardContent className="flex flex-wrap items-center gap-4 p-4 sm:flex-nowrap sm:p-5">
-                <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center border border-primary/30 bg-primary/5 text-primary">
-                  <span className="text-[9px] uppercase tracking-[0.18em]">NEXT</span>
-                  <span className="font-mono text-xl font-semibold leading-none">{NEXT_ISSUE}</span>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="font-serif text-lg font-semibold">
-                      下一期 · 第 {issueNo(String(NEXT_ISSUE))} 期
-                    </h2>
-                    <Badge variant="outline" className="border-primary/30 text-primary">
-                      收作品中
-                    </Badge>
-                  </div>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {issueTitle(issueNo(String(NEXT_ISSUE)))} · 新录用的文章会自动归入这一期。
-                  </p>
-                </div>
-                <Button asChild size="sm" className="shrink-0">
-                  <Link to="/submissions/new">
-                    <PenLine className="h-3.5 w-3.5" />
-                    提交作品
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          )}
         </div>
       )}
 
-      <p className="flex items-start gap-2 text-xs leading-5 text-muted-foreground">
-        <Layers3 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-        卷、期只表示文章放在哪一档，不代表文章水平高低。研究文章、荒诞研究、自由创作仍按内容类型在文章目录中区分。
-      </p>
+      <Card className="border-dashed bg-primary/[0.03]">
+        <CardContent className="flex flex-wrap items-center gap-4 p-4 sm:flex-nowrap sm:p-5">
+          <Layers3 className="h-5 w-5 shrink-0 text-primary" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium">新内容公开后会自动进入最新合集</p>
+            <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
+              想单独发一条短讨论，不用等合集：直接去讨论区。
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <Button asChild size="sm">
+              <Link to="/submissions/new">
+                <PenLine className="h-3.5 w-3.5" />
+                发布作品
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/forum">去讨论</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

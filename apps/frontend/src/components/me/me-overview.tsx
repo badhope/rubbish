@@ -44,7 +44,7 @@ export function MeOverview({
           >
             <MessagesSquare className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <span>
-              <span className="block text-sm font-medium">去社区看看</span>
+              <span className="block text-sm font-medium">去讨论区看看</span>
               <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
                 读帖、回复、收藏；先聊起来，再补记录。
               </span>
@@ -56,9 +56,9 @@ export function MeOverview({
           >
             <PenLine className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <span>
-              <span className="block text-sm font-medium">写一篇文章</span>
+              <span className="block text-sm font-medium">写一篇作品</span>
               <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
-                走投稿与审核；可保存草稿。短帖请去社区发。
+                可先存草稿再发布；短帖请去讨论区发。
               </span>
             </span>
           </Link>

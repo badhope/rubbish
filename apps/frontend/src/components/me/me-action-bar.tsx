@@ -15,9 +15,9 @@ export function MeActionBar({
       className="flex flex-wrap items-center justify-between gap-3 border-b py-4"
     >
       <div className="min-w-0">
-        <p className="text-sm font-medium">写一篇文章，或去社区聊两句</p>
+        <p className="text-sm font-medium">写一篇作品，或去讨论区聊两句</p>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          长文走投稿，可保存草稿并进入审核；短帖直接发在社区。
+          长文可保存草稿再发布，短帖直接发在讨论区。
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-1.5">
@@ -32,15 +32,18 @@ export function MeActionBar({
         </Button>
         <Button variant="ghost" size="sm" asChild>
           <Link to="/forum" search={{ compose: 1 }}>
-            去发帖
+            去讨论
           </Link>
         </Button>
         <Button variant="ghost" size="sm" asChild>
-          <Link to="/submissions">我的投稿</Link>
+          <Link to="/levels">参与记录</Link>
+        </Button>
+        <Button variant="ghost" size="sm" asChild>
+          <Link to="/submissions">我的作品</Link>
         </Button>
         <Button size="sm" asChild>
           <Link to="/submissions/new">
-            投稿文章
+            发布作品
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </Button>

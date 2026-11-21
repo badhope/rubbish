@@ -40,7 +40,7 @@ import type {
 } from '@/lib/types'
 import { normalizeAbstract } from '@/lib/abstract'
 import { extractError, parseListField, sanitizeAuthors } from '@/lib/utils'
-import { formatCitation, type CitationStyle } from '@/lib/citation'
+import { formatSiteCitation } from '@/lib/citation'
 import { safeHref } from '@/lib/url-safety'
 import {
   contentCategoryLabel,
@@ -82,12 +82,6 @@ import { ConfirmDialog } from '@/components/common/confirm-dialog'
 import { FunArticle } from '@/components/catalog/fun-article'
 import { MetaItem } from '@/components/common/meta-item'
 import { ErrorState, LoadingSkeleton } from '@/components/common/state'
-
-const CITATION_STYLES: { value: CitationStyle; label: string }[] = [
-  { value: 'gb-t-7714', label: 'GB/T 7714' },
-  { value: 'apa', label: 'APA 7' },
-  { value: 'mla', label: 'MLA 9' },
-]
 
 // 详情页向访客开放（后端 GET /catalog/{id} 本就是公开接口）。
 // v5：点开即正文——标题/作者/标签后直接渲染 Markdown 正文，不再跳 /reader。
@@ -250,7 +244,7 @@ function CatalogDetailPage() {
         className="mb-3 inline-flex min-h-[36px] items-center text-sm text-muted-foreground hover:text-primary"
       >
         <ChevronLeft className="mr-1 h-4 w-4" />
-        返回目录
+        返回内容库
       </Link>
 
       <div className="mx-auto flex w-full max-w-[1280px] items-start gap-10">
@@ -315,7 +309,7 @@ function CatalogDetailPage() {
             <AuthorRow detail={data.authors_detail ?? null} fallbackNames={cleanAuthors} />
             {data.editor_note ? (
               <div className="mt-4 border-l-2 border-primary/60 bg-primary/[0.04] py-2 pl-4">
-                <p className="text-[10px] uppercase tracking-[0.24em] text-primary">编辑推荐</p>
+                <p className="text-[10px] uppercase tracking-[0.24em] text-primary">站内精选</p>
                 <p className="mt-1 text-sm leading-6 text-foreground/85">{data.editor_note}</p>
               </div>
             ) : null}
@@ -409,6 +403,12 @@ function CatalogDetailPage() {
             />
           )}
 
+          {/* 社区内容声明：正文由作者发布，站点不做学术背书。 */}
+          <p className="mt-8 border-t pt-4 text-xs leading-6 text-muted-foreground">
+            本文是社区用户发布的内容，不是期刊论文或正式发表；观点、数据与出处由作者负责。
+            Rubbish 不做学术评价，也不提供 DOI、ISSN、职称或学分背书。
+          </p>
+
           {/* 文末折叠区 */}
           <div className="article-tail mt-8 space-y-4">
             {data.tags.length > 0 && (
@@ -437,10 +437,10 @@ function CatalogDetailPage() {
               <FoldCard title="记录信息" defaultOpen={!isMobile}>
                 <CardContent>
                   {issueLabel(data.volume, data.issue) ? (
-                    <MetaItem label="卷期" value={issueLabel(data.volume, data.issue)!} />
+                    <MetaItem label="合集" value={issueLabel(data.volume, data.issue)!} />
                   ) : null}
                   <MetaItem label="年份" value={String(data.year)} />
-                  {data.venue ? <MetaItem label="原始出处" value={data.venue} /> : null}
+                  {data.venue ? <MetaItem label="来源说明" value={data.venue} /> : null}
                   <MetaItem label="研究方向" value={data.discipline} />
                   <MetaItem label="子方向" value={data.subdiscipline} />
                   <MetaItem label="站内编号" value={data.site_id} />
@@ -560,59 +560,41 @@ function CatalogDetailPage() {
           {!isEssayTrack && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">站内引用（非学术发表）</CardTitle>
+                <CardTitle className="text-sm">站内标注</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 <p className="rounded-md bg-muted/50 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-                  {formatCitation(
-                    { ...data, authors: cleanAuthors.length > 0 ? cleanAuthors : data.authors },
-                    'gb-t-7714',
-                  )}
+                  {formatSiteCitation({
+                    ...data,
+                    authors: cleanAuthors.length > 0 ? cleanAuthors : data.authors,
+                  })}
                 </p>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="w-full">
-                      <Quote className="h-3.5 w-3.5" />
-                      复制引用格式
-                      <ChevronDown className="ml-auto h-3.5 w-3.5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-40">
-                    {CITATION_STYLES.map((style) => (
-                      <DropdownMenuItem
-                        key={style.value}
-                        onClick={() => {
-                          const cite = formatCitation(
-                            { ...data, authors: cleanAuthors.length > 0 ? cleanAuthors : data.authors },
-                            style.value,
-                          )
-                          if (!navigator.clipboard?.writeText) {
-                            toast.error('当前浏览器不支持自动复制，请手动选择')
-                            return
-                          }
-                          void navigator.clipboard.writeText(cite).then(
-                            () => toast.success(`${style.label} 引用已复制`),
-                            () => toast.error('复制失败，请手动选择'),
-                          )
-                        }}
-                      >
-                        {style.label}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button asChild variant="ghost" size="sm">
-                    <a href={`/api/export?ids=${id}&format=bibtex`} download>
-                      BibTeX
-                    </a>
-                  </Button>
-                  <Button asChild variant="ghost" size="sm">
-                    <a href={`/api/export?ids=${id}&format=ris`} download>
-                      RIS
-                    </a>
-                  </Button>
-                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => {
+                    const cite = formatSiteCitation({
+                      ...data,
+                      authors: cleanAuthors.length > 0 ? cleanAuthors : data.authors,
+                    })
+                    if (!navigator.clipboard?.writeText) {
+                      toast.error('当前浏览器不支持自动复制，请手动选择')
+                      return
+                    }
+                    void navigator.clipboard.writeText(cite).then(
+                      () => toast.success('站内标注已复制'),
+                      () => toast.error('复制失败，请手动选择'),
+                    )
+                  }}
+                >
+                  <Quote className="h-3.5 w-3.5" />
+                  复制这段标注
+                </Button>
+                <p className="text-[11px] leading-5 text-muted-foreground">
+                  本站不是期刊或出版机构。这段文字只用于站内互相标注，不是正式引用；
+                  不提供卷期、页码或 DOI。
+                </p>
               </CardContent>
             </Card>
           )}
@@ -646,7 +628,7 @@ function CatalogDetailPage() {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem onClick={() => setEditOpen(true)}>
                   <Pencil className="h-4 w-4" />
-                  编辑记录
+                  更新记录
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setEventOpen(true)}>
                   <FileText className="h-4 w-4" />

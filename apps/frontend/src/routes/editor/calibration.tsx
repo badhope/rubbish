@@ -59,8 +59,8 @@ function CalibrationPage() {
   return (
     <div>
       <PageHeader
-        title="审稿人季度校准"
-        description="看每位审稿人相对同稿共识的平均偏移与推荐分布；只用于定向沟通，不自动降级或封禁。"
+        title="评议成员季度校准"
+        description="看每位评议成员相对同稿共识的平均偏移与推荐分布；只用于定向沟通，不自动降级或封禁。"
         actions={
           <Link to="/submissions/pending" search={{ stage: 'pipeline' }}>
             <Button variant="outline" size="sm">
@@ -105,7 +105,7 @@ function CalibrationPage() {
         {data ? (
           <div className="text-xs text-muted-foreground">
             {new Date(data.period_start).toLocaleDateString()} –{' '}
-            {new Date(data.period_end).toLocaleDateString()} · 纳入 {data.submission_count} 篇有评分的稿件
+            {new Date(data.period_end).toLocaleDateString()} · 纳入 {data.submission_count} 篇有评分的作品
           </div>
         ) : null}
       </div>
@@ -116,27 +116,27 @@ function CalibrationPage() {
         <ErrorState message="校准数据加载失败" onRetry={() => refetch()} />
       ) : rows.length === 0 ? (
         <EmptyState
-          title="本季度还没有完成的审稿报告"
-          description="审稿人提交报告后，这里会按同稿共识计算偏移；样本不足时不会给出偏严/偏宽结论。"
+          title="本季度还没有完成的互评报告"
+          description="评议成员提交报告后，这里会按同稿共识计算偏移；样本不足时不会给出偏严/偏宽结论。"
         />
       ) : (
         <>
           <div className="mb-3 rounded-md border border-dashed bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
             <span className="mr-1 font-medium text-foreground">读法：</span>
-            偏移 = 本人总分 − 同稿其他审稿人均分。偏严/偏宽阈值 ±8 分，波动大为平均绝对偏移 ≥15 分；
-            少于 2 份报告只标“样本不足”，不据此评价审稿人。
+            偏移 = 本人总分 − 同稿其他评议成员均分。偏严/偏宽阈值 ±8 分，波动大为平均绝对偏移 ≥15 分；
+            少于 2 份报告只标“样本不足”，不据此评价评议成员。
           </div>
           <Card>
             <CardContent className="overflow-x-auto p-0">
               <table className="w-full min-w-[720px] text-sm">
                 <thead className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
                   <tr>
-                    <th className="px-4 py-3 font-medium">审稿人</th>
+                    <th className="px-4 py-3 font-medium">评议成员</th>
                     <th className="px-4 py-3 font-medium">完成报告</th>
                     <th className="px-4 py-3 font-medium">平均总分</th>
                     <th className="px-4 py-3 font-medium">平均偏移</th>
                     <th className="px-4 py-3 font-medium">平均绝对偏移</th>
-                    <th className="px-4 py-3 font-medium">录用倾向</th>
+                    <th className="px-4 py-3 font-medium">通过倾向</th>
                     <th className="px-4 py-3 font-medium">标记</th>
                   </tr>
                 </thead>
@@ -185,7 +185,7 @@ function CalibrationPage() {
           </Card>
           <p className="mt-3 flex items-center gap-1 text-xs text-muted-foreground">
             <BarChart3 className="h-3.5 w-3.5" aria-hidden />
-            录用倾向 = accept 1.0 / minor 0.75 / major 0.25 / reject 0.0 的加权均值，不等同于编辑部录用率。
+            通过倾向 = accept 1.0 / minor 0.75 / major 0.25 / reject 0.0 的加权均值，不等同于内容整理通过率。
           </p>
         </>
       )}
@@ -197,8 +197,8 @@ function CalibrationPage() {
               <Layers className="h-4 w-4" aria-hidden /> 季度盲评样本
             </h2>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              每季度从至少两位审稿人完成评分的稿件中抽最多 5 篇，保存匿名分数快照；
-              只显示 A/B/C 标签，不含审稿人姓名和 ID，用于校准会对照同稿分歧。
+              每季度从至少两位评议成员完成评分的作品中抽最多 5 篇，保存匿名分数快照；
+              只显示 A/B/C 标签，不含评议成员姓名和 ID，用于校准会对照同稿分歧。
             </p>
           </div>
           <Button

@@ -22,7 +22,7 @@ export function languageLabel(code: string | null | undefined): string {
 }
 
 const TYPE_LABELS: Record<string, string> = {
-  paper: '研究文章',
+  paper: '研究长文',
   book: '图书',
   dataset: '数据集',
   tutorial: '教程',
@@ -56,7 +56,7 @@ export function statusLabel(status: string | null | undefined): string {
 export function recommendationReason(reason: string | null | undefined): string {
   if (!reason) return '为你推荐'
   if (reason.includes('no reading history')) return '最新收录'
-  if (reason.includes('you have read everything')) return '你已读完现有全部文章'
+  if (reason.includes('you have read everything')) return '你已读完现有全部内容'
   const tags = reason.match(/matches (\d+) tags?: \[(.*)\]/)
   if (tags) {
     const names = tags[2]
@@ -157,21 +157,21 @@ function issueNumber(issue?: string | null): string | null {
   return String(n).padStart(2, '0')
 }
 
-/** 完整卷期：第 1 卷 · 第 01 期。卷、期只用于文章归档，不是刊名。 */
+/**
+ * 合集标签：`合集 01`。它只是一组内容的站内归档，不表示刊期、卷号或发表批次。
+ * 保留 volume 参数只为兼容旧数据，展示层不再出现“卷”。
+ */
 export function issueLabel(
-  volume?: string | null,
+  _volume?: string | null,
   issue?: string | null,
 ): string | null {
   const issueText = issueNumber(issue)
   if (!issueText) return null
-  const volumeNumber = Number(volume)
-  return Number.isFinite(volumeNumber) && volumeNumber > 0
-    ? `第 ${volumeNumber} 卷 · 第 ${issueText} 期`
-    : `第 ${issueText} 期`
+  return `合集 ${issueText}`
 }
 
-/** 列表/徽标用的短卷期：第 01 期。 */
+/** 列表/徽标用的短合集标签：合集 01。 */
 export function issueShortLabel(issue?: string | null): string | null {
   const issueText = issueNumber(issue)
-  return issueText ? `第 ${issueText} 期` : null
+  return issueText ? `合集 ${issueText}` : null
 }

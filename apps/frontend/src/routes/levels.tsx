@@ -14,27 +14,27 @@ export const Route = createFileRoute('/levels')({
 
 const IDENTITY_ROWS = [
   {
-    label: '管理组',
-    who: '主编 / 管理员',
-    body: '管全部：站点设置、审计、身份分配、侵权申诉，也保留评审与裁决能力。',
+    label: '站点管理组',
+    who: '总协调 / 站务组',
+    body: '管站点设置、审计、权限分配与侵权申诉，也参与内容复核。',
   },
   {
-    label: '评审组',
-    who: '审稿与编辑成员',
-    body: '能审稿、能初审、能参与内容裁决；组内具体授权由管理组分配，不碰站点设置、审计与身份分配。',
+    label: '内容工作组',
+    who: '内容整理 / 评议成员 / 资深评议',
+    body: '做基础整理、互评和内容复核；不碰站点设置、审计与权限分配。',
   },
   {
     label: '成员组',
-    who: '作者 / 普通成员',
-    body: '能读、能发帖、能评论、能提交作品；所有公开内容都开放阅读。',
+    who: '作者 / 成员',
+    body: '能读、能发帖、能评论、能发布作品；所有公开内容都开放阅读。',
   },
 ]
 
 const XP_SOURCES = [
     '注册、补全资料、确认作品规范',
     '发帖、回复、评论、每日签到',
-    '提交作品、作品录用、完成审稿',
-    '编辑裁决与内容治理',
+    '发布作品、作品通过、参与互评',
+    '内容整理与社区治理',
 ]
 
 function LevelsPage() {
@@ -52,8 +52,8 @@ function LevelsPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-7">
       <PageHeader
-        title="等级 Level"
-        description="等级只记录参与程度：发帖、评论、提交作品、审稿、签到都会涨经验。它不决定身份，也不换权限；主编和管理员同样从 Level 1 开始。"
+        title="参与记录"
+        description="这里只记录参与程度：发帖、评论、发布作品、参与互评、签到都会累积活跃值。它不决定身份，也不换权限；所有人都从 Lv 1 开始。"
       />
 
       {isAuthenticated ? (
@@ -64,9 +64,9 @@ function LevelsPage() {
               <span className="font-mono text-2xl font-semibold leading-none text-primary">{currentLevel}</span>
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-serif text-lg font-semibold">你的活跃等级</p>
+              <p className="font-serif text-lg font-semibold">你的参与活跃度</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                当前 {xp} XP{next ? ` · 距 Level ${next.level} 还差 ${toNext} XP` : ' · 已到最高 Level 10'}
+                当前 {xp} 活跃值{next ? ` · 距 Lv ${next.level} 还差 ${toNext}` : ' · 已到最高 Lv 10'}
               </p>
               <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
                 <div
@@ -88,7 +88,7 @@ function LevelsPage() {
       ) : (
         <Card className="border-dashed">
           <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm text-muted-foreground sm:p-5">
-            <span>登录后可以看到自己的 Level、XP 和下一级进度。</span>
+            <span>登录后可以看到自己的活跃值、Lv 和下一级进度。</span>
             <Button asChild size="sm">
               <Link to="/login">登录查看</Link>
             </Button>
@@ -109,17 +109,17 @@ function LevelsPage() {
         <div className="border-l-2 border-border pl-4">
           <p className="flex items-center gap-2 font-medium">
             <Gauge className="h-4 w-4 text-primary" />
-            等级只决定“参与了多少”
+            活跃值只决定“参与了多少”
           </p>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Level 1–10 由 XP 推进，所有人同一条起跑线。等级高不会自动获得审稿或管理权限，等级低也不会被挡在阅读和发帖之外。
+            Lv 1–10 由活跃值推进，所有人同一条起跑线。活跃值高不会自动获得评议或管理权限，低也不会被挡在阅读和发帖之外。
           </p>
         </div>
       </section>
 
       <section>
-        <h2 className="font-serif text-xl font-semibold">等级阶梯</h2>
-        <p className="mt-1 text-sm text-muted-foreground">每一级只看累计 XP，不看身份。</p>
+        <h2 className="font-serif text-xl font-semibold">活跃等级</h2>
+        <p className="mt-1 text-sm text-muted-foreground">每一级只看累计活跃值，不看身份。</p>
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
           {ACTIVITY_BANDS.map((band) => {
             const active = band.level === currentLevel && isAuthenticated
@@ -133,7 +133,7 @@ function LevelsPage() {
               >
                 <p className="font-mono text-lg font-semibold">{band.level}</p>
                 <p className="mt-0.5 text-[10px] text-muted-foreground">
-                  {band.floor === 0 ? '起步' : `${band.floor}+ XP`}
+                  {band.floor === 0 ? '起步' : `${band.floor}+`}
                 </p>
                 {active ? (
                   <Badge variant="outline" className="mt-1 border-primary/30 text-[9px] text-primary">
@@ -185,13 +185,13 @@ function LevelsPage() {
         <Button asChild>
           <Link to="/submissions/new">
             <PenLine className="h-3.5 w-3.5" />
-            写一篇作品
+            发布作品
           </Link>
         </Button>
         <Button asChild variant="outline">
           <Link to="/forum">
             <MessagesSquare className="h-3.5 w-3.5" />
-            去社区参与
+            去讨论区
           </Link>
         </Button>
       </section>

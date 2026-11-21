@@ -90,7 +90,7 @@ function MePage() {
               className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition-colors hover:border-primary hover:text-primary"
             >
               <ClipboardCheck className="h-4 w-4" />
-              审稿工作台
+              互评台
             </Link>
           ) : null}
           {['editor', 'editor_in_chief'].includes(data.permission_role) ? (
@@ -99,7 +99,7 @@ function MePage() {
               className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition-colors hover:border-primary hover:text-primary"
             >
               <Kanban className="h-4 w-4" />
-              编辑工作台
+              内容台
             </Link>
           ) : null}
           {['editor', 'editor_in_chief'].includes(data.permission_role) ? (
@@ -107,7 +107,7 @@ function MePage() {
               to="/editor/calibration"
               className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition-colors hover:border-primary hover:text-primary"
             >
-              评审校准
+              互评校准
             </Link>
           ) : null}
         </section>

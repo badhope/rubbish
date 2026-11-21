@@ -36,15 +36,15 @@ export interface MobileMoreItem {
 }
 
 // 折叠菜单分组顺序
-export const MOBILE_MORE_GROUP_ORDER = ['工作台', '我的', '管理', '消息', '设置'] as const
+export const MOBILE_MORE_GROUP_ORDER = ['我的空间', '工作台', '社区', '管理'] as const
 
 // 底部固定 5 Tab：首页 / 社区 / 写 / 文章 / 我的。
 // “写”是一级动作；指南不再占底部席位，收进右上角“更多”，避免入口比动作还多。
 export const MOBILE_TABS: MobileTab[] = [
   { to: '/', label: '首页', icon: Home },
-  { to: '/forum', label: '社区', icon: MessagesSquare },
-  { to: '/submissions/new', label: '写', icon: PenLine },
-  { to: '/catalog', label: '文章', icon: BookOpen },
+  { to: '/forum', label: '讨论', icon: MessagesSquare },
+  { to: '/submissions/new', label: '发布', icon: PenLine },
+  { to: '/catalog', label: '内容', icon: BookOpen },
   { to: '/me', label: '我的', icon: User },
 ]
 
@@ -54,7 +54,7 @@ export const MOBILE_MORE: MobileMoreItem[] = [
   {
     to: '/review',
     search: { tab: 'assignments' },
-    label: '审稿工作台',
+    label: '互评台',
     icon: ClipboardCheck,
     auth: true,
     roles: ['reviewer', 'senior_reviewer', 'editor', 'editor_in_chief'],
@@ -62,16 +62,16 @@ export const MOBILE_MORE: MobileMoreItem[] = [
   },
   {
     to: '/submissions/pending',
-    label: '编辑工作台',
+    label: '内容台',
     icon: Kanban,
     auth: true,
     roles: ['editor', 'editor_in_chief'],
     group: '工作台',
   },
-  { to: '/submissions', label: '我的投稿', icon: FileText, auth: true, group: '我的' },
-  { to: '/levels', label: '等级', icon: Layers3, group: '我的' },
-  { to: '/guide', label: '指南与规则', icon: Compass, group: '我的' },
-  { to: '/about', label: '关于社区', icon: Building2, group: '我的' },
-  { to: '/forum', search: { view: 'feedback' }, label: '反馈与建议', icon: MessageSquareText, group: '设置' },
-  { to: '/admin', label: '管理后台', icon: Gavel, auth: true, adminOnly: true, group: '管理' },
+  { to: '/submissions', label: '我的作品', icon: FileText, auth: true, group: '我的空间' },
+  { to: '/levels', label: '参与记录', icon: Layers3, group: '我的空间' },
+  { to: '/guide', label: '怎么用', icon: Compass, group: '社区' },
+  { to: '/about', label: '关于站点', icon: Building2, group: '社区' },
+  { to: '/forum', search: { view: 'feedback' }, label: '反馈与建议', icon: MessageSquareText, group: '社区' },
+  { to: '/admin', label: '站务管理', icon: Gavel, auth: true, adminOnly: true, group: '管理' },
 ]

@@ -10,25 +10,26 @@ describe('homepage issue information', () => {
 })
 
 describe('community onboarding', () => {
-  it('points article writers to the submission wizard', () => {
+  it('points long-form writers to the publish wizard', () => {
     const authors = readFileSync('src/components/guide/research-guide.tsx', 'utf8')
-    expect(authors).toContain('文章指南')
+    expect(authors).toContain('写内容')
     expect(authors).toContain('to="/submissions/new"')
-    expect(authors).not.toContain("to=\"/forum\"\n              写文章")
+    expect(authors).not.toContain('文章指南')
   })
 
-  it('keeps the guide to three community tabs', () => {
+  it('keeps the guide to four plain-language tabs', () => {
     const guide = source('guide')
-    expect(guide).toContain("label: '文章指南'")
-    expect(guide).toContain("label: '社区指南'")
-    expect(guide).toContain("label: '社区公约'")
-    expect(guide).not.toContain("label: '等级与规范'")
+    expect(guide).toContain("label: '3 分钟上手'")
+    expect(guide).toContain("label: '写内容'")
+    expect(guide).toContain("label: '玩讨论'")
+    expect(guide).toContain("label: '规则与边界'")
   })
 
-  it('describes the community as the starting point, not a journal conversion', () => {
+  it('states the site is a community, not a journal or evaluation body', () => {
     const about = source('about')
-    expect(about).toContain('从第一天就是一个社区')
-    expect(about).not.toContain('不是期刊')
-    expect(about).not.toContain('停止期刊化')
+    expect(about).toContain('公开写作与讨论社区')
+    expect(about).toContain('不是期刊')
+    expect(about).toContain('不提供 DOI')
+    expect(about).not.toContain('文章投稿')
   })
 })

@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
+import { GettingStarted } from '@/components/guide/getting-started'
 import { ResearchGuide } from '@/components/guide/research-guide'
 import { CommunityGuide } from '@/components/guide/community-guide'
 import { CommunityRules } from '@/components/guide/community-rules'
@@ -11,17 +12,18 @@ export const Route = createFileRoute('/guide')({
         ? 'help'
         : search.tab === 'policies'
           ? 'policies'
-          : search.tab === 'levels'
-            ? 'help'
-            : 'authors',
+          : search.tab === 'authors'
+            ? 'authors'
+            : 'start',
   }),
   component: GuidePage,
 })
 
 const TABS = [
-  { value: 'authors', label: '文章指南', desc: '定题、结构、记录与发布' },
-  { value: 'help', label: '社区指南', desc: '阅读、发布、回复与举报' },
-  { value: 'policies', label: '社区公约', desc: '边界、版权与处理' },
+  { value: 'start', label: '3 分钟上手', desc: '这里有什么、从哪进' },
+  { value: 'authors', label: '写内容', desc: '定题、结构、记录与发布' },
+  { value: 'help', label: '玩讨论', desc: '阅读、发帖、回复与举报' },
+  { value: 'policies', label: '规则与边界', desc: '版权、隐私、法律与处理' },
 ] as const
 
 function GuidePage() {
@@ -49,7 +51,9 @@ function GuidePage() {
           </Link>
         ))}
       </div>
-      {tab === 'help' ? (
+      {tab === 'start' ? (
+        <GettingStarted />
+      ) : tab === 'help' ? (
         <CommunityGuide />
       ) : tab === 'policies' ? (
         <CommunityRules />

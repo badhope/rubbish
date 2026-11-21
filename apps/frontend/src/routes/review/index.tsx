@@ -37,18 +37,18 @@ function ReviewHubPage() {
     return (
       <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6">
         <PageHeader
-          title="审稿工作台"
-          description="这里只对审稿人、资深审稿人和主编开放。"
+          title="互评台"
+          description="这里只对评议成员、资深评议和内容整理开放。"
         />
         {isAuthenticated ? (
           <EmptyState
-            title="当前账号没有审稿权限"
-            description="可以先到审稿广场浏览在审稿件，或联系编辑部申请审稿人角色。"
+            title="当前账号还没有互评权限"
+            description="可以先到互评广场浏览互评中的作品，或联系站务组开通评议权限。"
           />
         ) : (
           <EmptyState
-            title="登录后进入审稿工作台"
-            description="审稿邀请、待审稿件和已提交意见都跟账号绑定。"
+            title="登录后进入互评台"
+            description="互评邀请、待评作品和已提交意见都跟账号绑定。"
           />
         )}
         <div className="mt-4 flex flex-wrap gap-2">
@@ -61,7 +61,7 @@ function ReviewHubPage() {
           )}
           <Button variant="outline" asChild>
             <Link to="/review" search={{ tab: 'board' }}>
-              去审稿广场
+              去互评广场
             </Link>
           </Button>
         </div>
@@ -85,7 +85,7 @@ function ReviewHubPage() {
               )}
             >
               <ClipboardCheck className="h-4 w-4" />
-              我的审稿
+              我的互评
             </Link>
           )}
           <Link
@@ -99,7 +99,7 @@ function ReviewHubPage() {
             )}
           >
             <Eye className="h-4 w-4" />
-            审稿广场
+            互评广场
           </Link>
         </div>
       </div>
