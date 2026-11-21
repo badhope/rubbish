@@ -1052,7 +1052,7 @@ function EditDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-discipline">学科</Label>
+              <Label htmlFor="edit-discipline">话题</Label>
               <Input
                 id="edit-discipline"
                 value={form.discipline}

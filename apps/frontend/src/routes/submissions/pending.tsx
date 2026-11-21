@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createFileRoute, Link, redirect, useNavigate, useSearch } from '@tanstack/react-router'
 import {
   ClipboardList,
@@ -27,6 +27,7 @@ import {
   useDisciplines,
   useEditorDecision,
   useSetAnonymizedFile,
+  useSubmission,
   useSubmissionAssignments,
   useSubmissionReports,
   useSubmissionVersions,
@@ -134,6 +135,8 @@ interface PendingSearch {
   status?: StatusTab
   page?: number
   stage?: 'triage' | 'pipeline'
+  /** 通知深链：直接打开某份作品，不用在长列表里找。 */
+  submission?: number
 }
 
 function statusBadge(status: string) {
@@ -239,9 +242,18 @@ function PendingSubmissionsPage() {
     page,
     10,
   )
+  const linkedSubmissionId = Number(search.submission ?? 0)
+  const linkedSubmission = useSubmission(linkedSubmissionId)
   const decisionMut = useEditorDecision()
 
   const [detail, setDetail] = useState<SubmissionResponse | null>(null)
+  const linkedDetailApplied = useRef(0)
+  useEffect(() => {
+    if (!linkedSubmissionId || linkedDetailApplied.current === linkedSubmissionId) return
+    if (!linkedSubmission.data) return
+    linkedDetailApplied.current = linkedSubmissionId
+    setDetail(linkedSubmission.data)
+  }, [linkedSubmissionId, linkedSubmission.data])
   const [assignTarget, setAssignTarget] = useState<SubmissionResponse | null>(null)
   const [assignmentsTarget, setAssignmentsTarget] = useState<SubmissionResponse | null>(null)
   const [decisionTarget, setDecisionTarget] = useState<SubmissionResponse | null>(null)
@@ -267,6 +279,12 @@ function PendingSubmissionsPage() {
       search: { ...search, ...patch },
       replace: true,
     })
+  }
+
+  const closeDetail = () => {
+    setDetail(null)
+    linkedDetailApplied.current = 0
+    if (search.submission) updateSearch({ submission: undefined })
   }
 
   const onConfirmDecision = async () => {
@@ -484,7 +502,7 @@ function PendingSubmissionsPage() {
       )}
 
       {/* 详情 Dialog */}
-      <Dialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
+      <Dialog open={!!detail} onOpenChange={(o) => !o && closeDetail()}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{detail?.title}</DialogTitle>
@@ -853,7 +871,7 @@ function SubmissionDetailBody({ sub }: { sub: SubmissionResponse }) {
 
       {sub.venue && (
         <div>
-          <span className="text-muted-foreground">出版物：</span>
+          <span className="text-muted-foreground">来源说明：</span>
           {sub.venue}
         </div>
       )}
@@ -861,12 +879,6 @@ function SubmissionDetailBody({ sub }: { sub: SubmissionResponse }) {
         <div>
           <span className="text-muted-foreground">关键词：</span>
           {sub.keywords.join(', ')}
-        </div>
-      )}
-      {sub.jel_codes && sub.jel_codes.length > 0 && (
-        <div>
-          <span className="text-muted-foreground">JEL Codes：</span>
-          {sub.jel_codes.join(', ')}
         </div>
       )}
       {sub.tags.length > 0 && (

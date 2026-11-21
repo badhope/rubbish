@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { useAdminClaims, useDecideClaim, useAssignOwner } from '@/hooks/api/use-modules'
@@ -37,7 +37,7 @@ const STATUS_VARIANT: Record<string, 'default' | 'destructive' | 'outline' | 'se
 
 const EVIDENCE_LABEL: Record<string, string> = {
   email: '原稿邮箱',
-  orcid: 'ORCID',
+  orcid: 'ORCID（旧资料）',
   manuscript_id: '作品编号',
 }
 
@@ -45,7 +45,7 @@ const EVIDENCE_LABEL: Record<string, string> = {
  * 作者认领审批台（v5）：卡片列表。
  * 通过/驳回/驳回后指定给其他申请人（逐位调用 assign-owner）。
  */
-export default function ClaimsAdminPage() {
+export default function ClaimsAdminPage({ highlightClaimId }: { highlightClaimId?: number }) {
   const [statusFilter, setStatusFilter] = useState<'pending' | 'approved' | 'rejected'>('pending')
   const decideMut = useDecideClaim()
   const assignMut = useAssignOwner()
@@ -57,7 +57,22 @@ export default function ClaimsAdminPage() {
   const [assignPosition, setAssignPosition] = useState<number>(1)
 
   const { data, isLoading, isError, refetch } = useAdminClaims(statusFilter)
-  const rows = data ?? []
+  const rows = useMemo(() => data ?? [], [data])
+  const linkedClaimApplied = useRef(0)
+
+  useEffect(() => {
+    if (!highlightClaimId || linkedClaimApplied.current === highlightClaimId) return
+    const hit = rows.find((row) => row.id === highlightClaimId)
+    if (!hit) {
+      if (statusFilter !== 'pending' && rows.length > 0) setStatusFilter('pending')
+      return
+    }
+    linkedClaimApplied.current = highlightClaimId
+    document.getElementById(`claim-${highlightClaimId}`)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+    })
+  }, [highlightClaimId, rows, statusFilter])
 
   const onReject = async () => {
     if (!rejectTarget) return
@@ -139,7 +154,11 @@ export default function ClaimsAdminPage() {
           />
         ) : (
           rows.map((row) => (
-            <Card key={row.id} className="py-4">
+            <Card
+              key={row.id}
+              id={`claim-${row.id}`}
+              className={row.id === highlightClaimId ? 'border-primary/50 bg-primary/[0.03] py-4' : 'py-4'}
+            >
               <CardContent className="space-y-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex min-w-0 flex-wrap items-center gap-2">

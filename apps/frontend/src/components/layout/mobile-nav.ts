@@ -1,4 +1,5 @@
 import {
+  Bell,
   BookOpen,
   ClipboardCheck,
   Gavel,
@@ -69,6 +70,7 @@ export const MOBILE_MORE: MobileMoreItem[] = [
     group: '工作台',
   },
   { to: '/submissions', label: '我的作品', icon: FileText, auth: true, group: '我的空间' },
+  { to: '/me', search: { notifications: '1' }, label: '通知', icon: Bell, auth: true, group: '我的空间' },
   { to: '/levels', label: '参与记录', icon: Layers3, group: '我的空间' },
   { to: '/guide', label: '怎么用', icon: Compass, group: '社区' },
   { to: '/about', label: '关于站点', icon: Building2, group: '社区' },

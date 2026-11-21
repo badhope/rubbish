@@ -31,7 +31,7 @@ export function MeRecommendations() {
         <div>
           <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">FOR YOU</p>
           <h2 className="mt-1 font-serif text-xl tracking-tight">为你推荐</h2>
-          <p className="mt-1 text-xs text-muted-foreground">基于阅读历史与关注学科；没有历史时先给最新收录。</p>
+          <p className="mt-1 text-xs text-muted-foreground">基于阅读历史与关注话题；没有历史时先给最新收录。</p>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">条数</span>

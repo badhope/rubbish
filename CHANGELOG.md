@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.19.27] — 2026-11-22
+
+- Notifications are now shortcuts instead of read-only receipts: clicking one marks it read, closes the panel, and opens the exact assignment, submission, review card, feedback entry, claim row, or discussion thread it refers to.
+- Added direct deep links (`?assignment=`, `?submission=`, `?feedback=`, `?claim=`) so a notification never dumps the user into a long list to hunt for the item; the destination opens the matching detail and clears the deep-link parameter on close.
+- Added a one-click notification bell with an unread badge to both headers, plus notification entries in the desktop account menu and the mobile “more” menu.
+- Backfilled notification relations for accepted/declined reviews, submitted reviews, feedback, and author claims so new notifications carry a precise target.
+- Removed the remaining journal-era field labels from submission lists, submission detail, the editor desk, and the review workbench: “学科” and “出版物” now read “话题” and “来源说明”, and JEL Codes are no longer shown in the writing UI.
+
 ## [1.19.26] — 2026-11-22
 
 - Replaced the remaining journal-era public copy with the current writing-and-discussion language: page metadata, README, positioning notes, and the landing redirects no longer describe Rubbish as an absurd research community or a journal.

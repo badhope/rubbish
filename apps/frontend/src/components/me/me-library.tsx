@@ -267,7 +267,7 @@ export function MeLibrary({ section }: { section?: string }) {
           </div>
         ) : null}
         {!disciplines.isLoading && (disciplines.data?.data.length ?? 0) === 0 ? (
-          <p className="py-4 text-sm text-muted-foreground">还没有订阅学科。</p>
+          <p className="py-4 text-sm text-muted-foreground">还没有订阅话题。</p>
         ) : null}
       </section>
 

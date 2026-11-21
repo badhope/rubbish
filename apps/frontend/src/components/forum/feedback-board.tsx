@@ -1,12 +1,12 @@
-import { useState } from 'react'
-import { Link } from '@tanstack/react-router'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { CheckCircle2, MessageSquareText, Pin, RefreshCw } from 'lucide-react'
 import { FeedbackComposer } from '@/components/common/feedback-launcher'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import { useAuth } from '@/hooks/use-auth'
-import { extractError } from '@/lib/utils'
+import { cn, extractError } from '@/lib/utils'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState, LoadingSkeleton } from '@/components/common/state'
 import { MarkdownField } from '@/components/common/markdown-field'
@@ -56,11 +56,16 @@ export function FeedbackBoardPage() {
   const [status, setStatus] = useState<StatusTab>('all')
   const [kindFilter, setKindFilter] = useState<string>('all')
   const [target, setTarget] = useState<FeedbackItem | null>(null)
+  const [highlightId, setHighlightId] = useState<number | null>(null)
   const [composeOpen, setComposeOpen] = useState(false)
   const [note, setNote] = useState('')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const { isAdmin } = useAuth()
   const qc = useQueryClient()
+  const navigate = useNavigate()
+  const search = useSearch({ strict: false }) as { feedback?: number | string }
+  const deepFeedbackId = Number(search.feedback ?? 0)
+  const deepApplied = useRef(0)
 
   const query = useQuery<{
     data: FeedbackItem[]
@@ -90,8 +95,34 @@ export function FeedbackBoardPage() {
     onError: (err) => toast.error(extractError(err, '操作失败')),
   })
 
-  const items = query.data?.data ?? []
+  const items = useMemo(() => query.data?.data ?? [], [query.data])
   const visibleItems = items.slice(0, visibleCount)
+
+  useEffect(() => {
+    if (!deepFeedbackId || deepApplied.current === deepFeedbackId) return
+    const hitIndex = items.findIndex((item) => item.id === deepFeedbackId)
+    if (hitIndex < 0) return
+    deepApplied.current = deepFeedbackId
+    setHighlightId(deepFeedbackId)
+    setVisibleCount((count) => Math.max(count, hitIndex + 1))
+    // 等卡片渲染出来再滚过去；通知点进来应该“看见那一条”，而不是弹处理框。
+    window.setTimeout(() => {
+      document.getElementById(`feedback-${deepFeedbackId}`)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      })
+    }, 0)
+  }, [deepFeedbackId, items])
+
+  const closeTarget = () => {
+    setTarget(null)
+    deepApplied.current = 0
+    if (search.feedback) {
+      const next = { ...search }
+      delete next.feedback
+      void navigate({ to: '/forum', search: { ...next, view: 'feedback' }, replace: true })
+    }
+  }
   const openCount = query.data?.open_count ?? 0
   const resolvedCount = query.data?.resolved_count ?? 0
   const kindCounts = query.data?.kind_counts ?? {}
@@ -183,7 +214,14 @@ export function FeedbackBoardPage() {
           <>
             <div className="space-y-3">
             {visibleItems.map((item) => (
-              <Card key={item.id} className={item.status === 'open' ? 'border-l-4 border-l-amber-500' : 'border-l-4 border-l-emerald-500'}>
+              <Card
+                key={item.id}
+                id={`feedback-${item.id}`}
+                className={cn(
+                  item.status === 'open' ? 'border-l-4 border-l-amber-500' : 'border-l-4 border-l-emerald-500',
+                  highlightId === item.id && 'ring-2 ring-primary/60 ring-offset-2',
+                )}
+              >
                 <CardContent className="py-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant={item.status === 'resolved' ? 'default' : 'secondary'} className={item.status === 'resolved' ? 'bg-emerald-600' : ''}>
@@ -257,7 +295,7 @@ export function FeedbackBoardPage() {
         )}
       </div>
 
-      <Dialog open={target !== null} onOpenChange={(open) => !open && setTarget(null)}>
+      <Dialog open={target !== null} onOpenChange={(open) => !open && closeTarget()}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>标记为已解决</DialogTitle>
@@ -283,7 +321,7 @@ export function FeedbackBoardPage() {
             />
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setTarget(null)}>取消</Button>
+            <Button variant="ghost" onClick={closeTarget}>取消</Button>
             <Button
               onClick={() => {
                 if (!target) return

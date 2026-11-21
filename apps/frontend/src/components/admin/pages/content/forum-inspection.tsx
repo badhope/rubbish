@@ -80,7 +80,7 @@ export default function ForumInspectionPage() {
     onError: (err) => toast.error(extractError(err, '操作失败')),
   })
 
-  const rows = topicsQ.data?.data ?? []
+  const rows = useMemo(() => topicsQ.data?.data ?? [], [topicsQ.data])
   const meta = topicsQ.data?.meta
   const openReports = reportsQ.data?.length ?? 0
 

@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState, type FormEvent } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router'
 import {
+  Bell,
   BookOpen,
   Building2,
   ChevronDown,
@@ -26,6 +27,7 @@ import { toast } from 'sonner'
 import { OnboardingTour } from '@/components/common/onboarding-tour'
 import { useAuth } from '@/hooks/use-auth'
 import { useLogout } from '@/hooks/api/use-auth'
+import { useUnreadCount } from '@/hooks/api/use-modules'
 import { cn } from '@/lib/utils'
 import { BrandMark } from '@/components/common/brand-mark'
 import { AmbientBackdrop } from '@/components/common/ambient-backdrop'
@@ -154,6 +156,7 @@ export function AppShell() {
   const [openGroup, setOpenGroup] = useState<string>('一级入口')
   const [openSubgroup, setOpenSubgroup] = useState<string>('')
   const { isAuthenticated, isAdmin, user, logout } = useAuth()
+  const { data: unread } = useUnreadCount({ enabled: isAuthenticated })
   const displayName = user?.display_name || user?.username || ''
   const navigate = useNavigate()
   const location = useLocation()
@@ -245,6 +248,25 @@ export function AppShell() {
     }
   }
 
+  const notificationBell = isAuthenticated ? (
+    <Button
+      asChild
+      variant="ghost"
+      size="icon"
+      className="relative h-9 w-9 shrink-0"
+      aria-label={unread?.unread ? `通知，${unread.unread} 条未读` : '通知'}
+    >
+      <Link to="/me" search={{ notifications: true }}>
+        <Bell className="h-[18px] w-[18px]" />
+        {unread?.unread ? (
+          <span className="pointer-events-none absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 font-mono text-[9px] font-semibold leading-none text-primary-foreground">
+            {unread.unread > 99 ? '99+' : unread.unread}
+          </span>
+        ) : null}
+      </Link>
+    </Button>
+  ) : null
+
   const userMenu = isAuthenticated && user ? (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -263,6 +285,17 @@ export function AppShell() {
           <Link to="/me">
             <Award className="h-4 w-4" />
             {text('个人中心', lang)}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/me" search={{ notifications: true }}>
+            <Bell className="h-4 w-4" />
+            通知
+            {unread?.unread ? (
+              <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 font-mono text-[10px] text-primary-foreground">
+                {unread.unread > 99 ? '99+' : unread.unread}
+              </span>
+            ) : null}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
@@ -444,6 +477,7 @@ export function AppShell() {
                   写点东西
                 </Link>
               </Button>
+              {notificationBell}
               {userMenu}
             </div>
           </div>
@@ -640,6 +674,7 @@ export function AppShell() {
               <kbd className="rounded border bg-muted px-1 font-mono text-[10px] text-muted-foreground">⌘K</kbd>
             </Button>
             <AppearanceMenu />
+            {notificationBell}
             {userMenu}
           </div>
         </header>

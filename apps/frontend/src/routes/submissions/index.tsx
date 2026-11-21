@@ -30,6 +30,7 @@ import {
   useDeleteSubmission,
   useMySubmissions,
   useResubmitSubmission,
+  useSubmission,
   useSubmissionReports,
   useSubmissionVersions,
   useSaveAuthorResponse,
@@ -89,6 +90,8 @@ export const Route = createFileRoute('/submissions/')({
 interface SubmissionSearch {
   status?: SubmissionStatus | 'all'
   page?: number
+  /** 通知深链：直接打开某条作品，不用先翻列表。 */
+  submission?: number
 }
 
 const STATUS_TABS: { value: SubmissionStatus | 'all'; label: string }[] = [
@@ -154,6 +157,8 @@ function SubmissionsPage() {
 
   const isMobile = useIsMobile()
   const { data, isLoading, isError, refetch } = useMySubmissions(status, page, 20)
+  const linkedSubmissionId = Number(search.submission ?? 0)
+  const linkedSubmission = useSubmission(linkedSubmissionId)
   const deleteMut = useDeleteSubmission()
   const uploadMut = useUploadSubmissionFile()
   const resubmitMut = useResubmitSubmission()
@@ -172,6 +177,14 @@ function SubmissionsPage() {
   useEffect(() => {
     setAuthorResponseDraft(detail?.author_response ?? '')
   }, [detail?.id, detail?.author_response])
+
+  const linkedDetailApplied = useRef(0)
+  useEffect(() => {
+    if (!linkedSubmissionId || linkedDetailApplied.current === linkedSubmissionId) return
+    if (!linkedSubmission.data) return
+    linkedDetailApplied.current = linkedSubmissionId
+    setDetail(linkedSubmission.data)
+  }, [linkedSubmissionId, linkedSubmission.data])
 
   const onSaveAuthorResponse = async () => {
     if (!detail) return
@@ -245,6 +258,12 @@ function SubmissionsPage() {
       search: { ...search, ...patch },
       replace: true,
     })
+  }
+
+  const closeDetail = () => {
+    setDetail(null)
+    linkedDetailApplied.current = 0
+    if (search.submission) updateSearch({ submission: undefined })
   }
 
   const onConfirmDelete = async () => {
@@ -373,7 +392,7 @@ function SubmissionsPage() {
                 <TableRow>
                   <TableHead>标题</TableHead>
                   <TableHead className="w-20">类型</TableHead>
-                  <TableHead>学科</TableHead>
+                  <TableHead>话题</TableHead>
                   <TableHead className="w-24">状态</TableHead>
                   <TableHead className="w-32">提交时间</TableHead>
                   <TableHead className="w-24">操作</TableHead>
@@ -441,7 +460,7 @@ function SubmissionsPage() {
       )}
 
       {/* 详情 Dialog */}
-      <Dialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
+      <Dialog open={!!detail} onOpenChange={(o) => !o && closeDetail()}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{detail?.title}</DialogTitle>
@@ -497,13 +516,13 @@ function SubmissionsPage() {
               </div>
               {detail.venue && (
                 <div>
-                  <span className="text-muted-foreground">出版物：</span>
+                  <span className="text-muted-foreground">来源说明：</span>
                   {detail.venue}
                 </div>
               )}
               {detail.subdiscipline && (
                 <div>
-                  <span className="text-muted-foreground">子学科：</span>
+                  <span className="text-muted-foreground">细分话题：</span>
                   {detail.subdiscipline}
                 </div>
               )}
@@ -511,12 +530,6 @@ function SubmissionsPage() {
                 <div>
                   <span className="text-muted-foreground">关键词：</span>
                   {detail.keywords.join(', ')}
-                </div>
-              )}
-              {detail.jel_codes && detail.jel_codes.length > 0 && (
-                <div>
-                  <span className="text-muted-foreground">JEL Codes：</span>
-                  {detail.jel_codes.join(', ')}
                 </div>
               )}
               {detail.tags.length > 0 && (

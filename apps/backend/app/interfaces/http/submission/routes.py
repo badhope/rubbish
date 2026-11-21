@@ -828,7 +828,6 @@ async def author_resubmit(
                     User.is_active.is_(True),
                     (User.id.in_(editor_ids)) | (User.is_admin.is_(True)),
                 )
-                .distinct()
             )
         )
         .scalars()

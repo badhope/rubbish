@@ -24,7 +24,7 @@ export function MeFollows() {
       <div className="border-b pb-4">
         <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">FOLLOWING</p>
         <h2 className="mt-1 font-serif text-xl tracking-tight">关注与订阅</h2>
-        <p className="mt-1 text-xs text-muted-foreground">管理你关注的作者和订阅的学科；有新帖子时会出现在推荐里。</p>
+        <p className="mt-1 text-xs text-muted-foreground">管理你关注的作者和订阅的话题；有新帖子时会出现在推荐里。</p>
       </div>
       <Tabs
         value={tab}
@@ -32,7 +32,7 @@ export function MeFollows() {
       >
         <TabsList>
           <TabsTrigger value="authors">我关注的作者</TabsTrigger>
-          <TabsTrigger value="disciplines">我订阅的学科</TabsTrigger>
+          <TabsTrigger value="disciplines">我订阅的话题</TabsTrigger>
         </TabsList>
       </Tabs>
       {tab === 'authors' ? <AuthorsTab /> : <DisciplinesTab />}
@@ -120,8 +120,8 @@ function DisciplinesTab() {
   if (!data || data.data.length === 0) {
     return (
       <EmptyState
-        title="暂未订阅任何学科"
-        description="在资源详情页可以订阅学科，订阅后会出现在这里。"
+        title="暂未订阅任何话题"
+        description="在作品页可以订阅话题，订阅后会出现在这里。"
       />
     )
   }

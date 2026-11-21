@@ -1,8 +1,9 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
-import { ArrowRight, Bell, MessagesSquare, PenLine } from 'lucide-react'
-import { useNotifications } from '@/hooks/api/use-modules'
+import { ArrowRight, ArrowUpRight, Bell, MessagesSquare, PenLine } from 'lucide-react'
+import { useMarkRead, useNotifications } from '@/hooks/api/use-modules'
 import { Button } from '@/components/ui/button'
+import { notificationDestination } from '@/lib/notification-link'
 import { shortDate } from './format'
 
 function SectionHeading({
@@ -32,6 +33,22 @@ export function MeOverview({
 }) {
   const notifications = useNotifications(1, 6)
   const latestNotifications = notifications.data?.data ?? []
+  const markOne = useMarkRead()
+  const navigate = useNavigate()
+
+  const openNotification = (item: (typeof latestNotifications)[number]) => {
+    const destination = notificationDestination(item)
+    if (!item.is_read) markOne.mutate(item.id)
+    if (!destination) {
+      onOpenNotifications()
+      return
+    }
+    void navigate({
+      to: destination.to,
+      params: destination.params,
+      search: destination.search,
+    } as never)
+  }
 
   return (
     <div className="space-y-8">
@@ -84,7 +101,7 @@ export function MeOverview({
               <button
                 key={item.id}
                 type="button"
-                onClick={onOpenNotifications}
+                onClick={() => openNotification(item)}
                 className="flex w-full items-start gap-3 py-3.5 text-left transition-colors hover:bg-primary/[0.03]"
               >
                 <span
@@ -97,7 +114,11 @@ export function MeOverview({
                     {shortDate(item.created_at)}
                   </span>
                 </span>
-                <ArrowRight className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                {notificationDestination(item) ? (
+                  <ArrowUpRight className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                ) : (
+                  <ArrowRight className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                )}
               </button>
             ))}
           </div>

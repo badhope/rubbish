@@ -7,6 +7,7 @@ import {
   useAcceptAssignment,
   useDeclineAssignment,
   useMyReviewAssignments,
+  useReviewAssignment,
   useReviewSubmissionDetail,
   useSubmissionDownloadTicket,
   useReviewDraft,
@@ -107,6 +108,8 @@ interface ReviewSearch {
   tab?: 'assignments'
   status?: AssignmentStatus | 'all'
   page?: number
+  /** 通知深链：把这一条邀请放到最上面，并给出当下能做的动作。 */
+  assignment?: number
 }
 
 const STATUS_TABS: { value: AssignmentStatus | 'all'; label: string }[] = [
@@ -147,6 +150,8 @@ export function ReviewAssignments() {
     page,
     20,
   )
+  const linkedAssignmentId = Number(search.assignment ?? 0)
+  const linkedAssignment = useReviewAssignment(linkedAssignmentId)
   const acceptMut = useAcceptAssignment()
   const declineMut = useDeclineAssignment()
   const submitMut = useSubmitReview()
@@ -308,6 +313,65 @@ export function ReviewAssignments() {
         title="互评工作台"
         description="写互评意见：先过四问，再按作品类型逐项打分。可以写 Markdown，也可以先看作者/内容整理两个视角；作品默认下载 Word，也能切 PDF。"
       />
+
+      {linkedAssignment.data ? (
+        <div className="mb-4 rounded-lg border border-primary/30 bg-primary/[0.035] p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                通知里提到的作品
+              </p>
+              <h2 className="mt-1 font-serif text-lg">
+                {linkedAssignment.data.submission_title || `作品 #${linkedAssignment.data.submission_id}`}
+              </h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {linkedAssignment.data.status === 'pending'
+                  ? '邀请还等你回应。接受后就可以写意见；不接受也没关系，说清楚就行。'
+                  : linkedAssignment.data.status === 'accepted'
+                    ? '你已经接受了这份邀请，可以接着写。'
+                    : linkedAssignment.data.status === 'completed'
+                      ? '这份互评已经交过了。'
+                      : '这份邀请已经结束。'}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {'pending' === linkedAssignment.data.status ? (
+                <>
+                  <Button
+                    size="sm"
+                    onClick={() => void onAccept(linkedAssignment.data.id)}
+                    disabled={acceptMut.isPending}
+                  >
+                    <Check className="h-4 w-4" /> 接受邀请
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDeclineTargetId(linkedAssignment.data.id)}
+                    disabled={declineMut.isPending}
+                  >
+                    <X className="h-4 w-4" /> 拒绝
+                  </Button>
+                </>
+              ) : null}
+              {['pending', 'accepted', 'completed'].includes(linkedAssignment.data.status) ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSubmissionViewId(linkedAssignment.data.id)}
+                >
+                  <Eye className="h-4 w-4" /> 看作品
+                </Button>
+              ) : null}
+              {linkedAssignment.data.status === 'accepted' ? (
+                <Button size="sm" onClick={() => openReviewForm(linkedAssignment.data.id)}>
+                  <FileText className="h-4 w-4" /> 继续写
+                </Button>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <div className="mb-4">
         <ReviewerConflictCard />
@@ -749,18 +813,6 @@ function ReviewManuscriptPane({ assignmentId }: { assignmentId: number }) {
           </div>
         </div>
       )}
-      {(data.jel_codes?.length ?? 0) > 0 && (
-        <div>
-          <div className="text-xs text-muted-foreground">JEL Codes</div>
-          <div className="mt-1 flex flex-wrap gap-1">
-            {data.jel_codes.map((c) => (
-              <Badge key={c} variant="outline" className="text-xs">
-                {c}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      )}
       <div className="flex flex-wrap gap-2 border-t pt-3">
         <SubmissionDownloadLinks submissionId={data.id} />
       </div>
@@ -844,18 +896,6 @@ function SubmissionDetailDialog({
                   {data.keywords.map((k) => (
                     <Badge key={k} variant="outline" className="text-xs">
                       {k}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-            {(data.jel_codes?.length ?? 0) > 0 && (
-              <div>
-                <div className="text-xs text-muted-foreground">JEL Codes</div>
-                <div className="flex flex-wrap gap-1">
-                  {data.jel_codes.map((c) => (
-                    <Badge key={c} variant="outline" className="text-xs">
-                      {c}
                     </Badge>
                   ))}
                 </div>

@@ -9,6 +9,8 @@ type SectionKey = 'users' | 'claims'
 
 interface PeopleSearch {
   section?: string
+  /** 通知深链：定位到某一条认领申请。 */
+  claim?: number
 }
 
 const SECTIONS: readonly AdminSectionItem<SectionKey>[] = [
@@ -23,6 +25,10 @@ function isSectionKey(value: string | undefined): value is SectionKey {
 export const Route = createFileRoute('/admin/people')({
   validateSearch: (search: Record<string, unknown>): PeopleSearch => ({
     section: typeof search.section === 'string' ? search.section : undefined,
+    claim:
+      Number.isInteger(Number(search.claim)) && Number(search.claim) > 0
+        ? Number(search.claim)
+        : undefined,
   }),
   beforeLoad: () => requireAdminGuard(),
   component: AdminPeoplePage,
@@ -30,7 +36,7 @@ export const Route = createFileRoute('/admin/people')({
 
 function AdminPeoplePage() {
   const navigate = useNavigate()
-  const { section: sectionParam } = Route.useSearch()
+  const { section: sectionParam, claim } = Route.useSearch()
   const [section, setSection] = useState<SectionKey>('users')
 
   useEffect(() => {
@@ -46,7 +52,7 @@ function AdminPeoplePage() {
     <div>
       <AdminSectionTabs items={SECTIONS} active={section} onChange={changeSection} label="用户域子段" />
       {section === 'users' ? <UsersPage /> : null}
-      {section === 'claims' ? <ClaimsPage /> : null}
+      {section === 'claims' ? <ClaimsPage highlightClaimId={claim} /> : null}
     </div>
   )
 }

@@ -2706,7 +2706,14 @@ class ClaimCreate(BaseModel):
 
 
 async def _notify_editors(
-    db: AsyncSession, tenant_id: UUID, *, title: str, body: str, type_: str, related_id: str
+    db: AsyncSession,
+    tenant_id: UUID,
+    *,
+    title: str,
+    body: str,
+    type_: str,
+    related_id: str,
+    related_type: str = "resource",
 ) -> None:
     """给本租户全部活跃编辑（含 admin）发一条通知（随调用方事务提交）。"""
     from app.domain.notifications import services as notifications
@@ -2729,7 +2736,6 @@ async def _notify_editors(
                     User.is_active.is_(True),
                     (User.id.in_(editor_ids)) | (User.is_admin.is_(True)),
                 )
-                .distinct()
             )
         )
         .scalars()
@@ -2743,7 +2749,7 @@ async def _notify_editors(
             type_=type_,
             title=title,
             body=body,
-            related_type="resource",
+            related_type=related_type,
             related_id=related_id,
         )
 
@@ -2887,7 +2893,8 @@ async def claim_resource(
             f"{viewer.username}（#{viewer.id}）申请认领本文。"
             + (f"申请说明：{note}" if note else "")
         ),
-        related_id=str(resource_id),
+        related_id=str(claim.id),
+        related_type="author_claim",
     )
     await db.commit()
     return {"id": claim.id, "status": claim.status}
@@ -3145,6 +3152,7 @@ async def submit_feedback(
         created_at=utcnow(),
     )
     db.add(entry)
+    await db.flush()
     # 收件人 = AI 管理账号，不再使用用户个人主编账号；反馈本身已落审计，
     # 通知失败不影响入库。
     editors = (
@@ -3161,8 +3169,8 @@ async def submit_feedback(
                 type_="site.feedback",
                 title=f"站点反馈：{body.title}",
                 body=f"{body.body}\n\n页面：{body.page_url or '—'}\n提交人：{viewer.username if viewer else '游客'}",
-                related_type="site",
-                related_id=body.page_url or "unknown",
+                related_type="feedback",
+                related_id=str(entry.id),
             )
         except Exception:
             logger.warning("feedback_notify_failed", user_id=uid, exc_info=True)

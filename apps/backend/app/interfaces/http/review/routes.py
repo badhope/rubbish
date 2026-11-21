@@ -593,6 +593,8 @@ async def accept_assignment(
             type_="review.accepted",
             title=f"互评邀请已被接受：{a.submission.title if a.submission else '作品 #' + str(a.submission_id)}",
             body=f"{current_user.username} 已接受《#{a.submission_id}》的互评邀请。",
+            related_type="submission",
+            related_id=str(a.submission_id),
         )
     try:
         await db.commit()
@@ -633,6 +635,8 @@ async def decline_assignment(
             type_="review.declined",
             title=f"互评邀请未被接受：{a.submission.title if a.submission else '作品 #' + str(a.submission_id)}",
             body=f"{current_user.username} 不接受《#{a.submission_id}》的互评邀请，请考虑改派其他互评成员。",
+            related_type="submission",
+            related_id=str(a.submission_id),
         )
     try:
         await db.commit()
@@ -788,8 +792,8 @@ async def submit_review_report(
                 f"有新的互评意见：{a.submission.title if a.submission else f'#{a.submission_id}'}"
             ),
             body=f"推荐：{body.recommendation}",
-            related_type="review_assignment",
-            related_id=str(a.id),
+            related_type="submission",
+            related_id=str(a.submission_id),
         )
         await db.commit()
 

@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Bell, CheckCheck, Trash2 } from 'lucide-react'
+import { useNavigate } from '@tanstack/react-router'
+import { ArrowUpRight, Bell, CheckCheck, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useDeleteNotification, useMarkAllRead, useMarkRead, useNotifications } from '@/hooks/api/use-modules'
 import { Button } from '@/components/ui/button'
@@ -12,6 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { Loading } from '@/components/common/state'
 import { Pagination } from '@/components/common/pagination'
+import { notificationDestination } from '@/lib/notification-link'
 import { cn } from '@/lib/utils'
 import { shortDateTime } from './format'
 
@@ -27,6 +29,7 @@ export function NotificationsDialog({
   const markAll = useMarkAllRead()
   const markOne = useMarkRead()
   const remove = useDeleteNotification()
+  const navigate = useNavigate()
 
   const onMarkAll = async () => {
     try {
@@ -54,6 +57,21 @@ export function NotificationsDialog({
     }
   }
 
+  const openNotification = (
+    id: number,
+    isRead: boolean,
+    destination: ReturnType<typeof notificationDestination>,
+  ) => {
+    if (!isRead) void onMarkOne(id)
+    if (!destination) return
+    onOpenChange(false)
+    void navigate({
+      to: destination.to,
+      params: destination.params,
+      search: destination.search,
+    } as never)
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[86vh] max-w-2xl gap-0 overflow-hidden p-0">
@@ -65,7 +83,7 @@ export function NotificationsDialog({
                 通知
               </DialogTitle>
               <DialogDescription className="mt-1 text-xs">
-                最近 50 条；标为已读后不会再提醒。
+                最近 50 条。点一条，直接去处理；已读会自己记上。
               </DialogDescription>
             </div>
             <Button
@@ -88,51 +106,58 @@ export function NotificationsDialog({
             </div>
           ) : null}
           <ul className="divide-y">
-            {notifications.data?.data.map((item) => (
-              <li key={item.id} className="group flex items-start gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!item.is_read) void onMarkOne(item.id)
-                  }}
-                  className={cn(
-                    'flex min-w-0 flex-1 items-start gap-3 py-4 text-left transition-colors hover:bg-primary/[0.03]',
-                    !item.is_read && 'bg-primary/[0.025]',
-                  )}
-                >
-                  <span
-                    aria-hidden
+            {notifications.data?.data.map((item) => {
+              const destination = notificationDestination(item)
+              return (
+                <li key={item.id} className="group flex items-start gap-2">
+                  <button
+                    type="button"
+                    onClick={() => openNotification(item.id, item.is_read, destination)}
                     className={cn(
-                      'mt-1.5 h-2 w-2 shrink-0 rounded-full',
-                      item.is_read ? 'bg-transparent' : 'bg-primary',
+                      'flex min-w-0 flex-1 items-start gap-3 py-4 text-left transition-colors hover:bg-primary/[0.03]',
+                      !item.is_read && 'bg-primary/[0.025]',
                     )}
-                  />
-                  <span className="min-w-0 flex-1">
-                    <span className={cn('block text-sm', !item.is_read && 'font-medium')}>
-                      {item.title}
-                    </span>
-                    {item.body ? (
-                      <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
-                        {item.body}
+                  >
+                    <span
+                      aria-hidden
+                      className={cn(
+                        'mt-1.5 h-2 w-2 shrink-0 rounded-full',
+                        item.is_read ? 'bg-transparent' : 'bg-primary',
+                      )}
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className={cn('block text-sm', !item.is_read && 'font-medium')}>
+                        {item.title}
                       </span>
-                    ) : null}
-                    <span className="mt-1 block font-mono text-[10px] text-muted-foreground">
-                      {shortDateTime(item.created_at)}
+                      {item.body ? (
+                        <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
+                          {item.body}
+                        </span>
+                      ) : null}
+                      <span className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground">
+                        <span className="font-mono">{shortDateTime(item.created_at)}</span>
+                        {destination ? (
+                          <span className="inline-flex items-center gap-0.5 font-medium text-primary/80">
+                            {destination.label}
+                            <ArrowUpRight className="h-3 w-3" />
+                          </span>
+                        ) : null}
+                      </span>
                     </span>
-                  </span>
-                </button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="mt-3 h-8 w-8 shrink-0 p-0 text-muted-foreground hover:text-destructive"
-                  aria-label={`删除通知：${item.title}`}
-                  onClick={() => void onDelete(item.id)}
-                  disabled={remove.isPending}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </li>
-            ))}
+                  </button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="mt-3 h-8 w-8 shrink-0 p-0 text-muted-foreground opacity-70 hover:text-destructive group-hover:opacity-100"
+                    aria-label={`删除通知：${item.title}`}
+                    onClick={() => void onDelete(item.id)}
+                    disabled={remove.isPending}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </li>
+              )
+            })}
           </ul>
           {notifications.data && notifications.data.meta.total_pages > 1 ? (
             <div className="border-t py-3">
