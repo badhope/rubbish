@@ -2,7 +2,7 @@
 
 ## [1.19.18] — 2026-11-21
 
-- Added `review`, `editor`, `ingest`, `studio` and `privacy` to the SPA deep-link whitelist. Before this, opening the workbench or studio by direct URL or refreshing the page returned a hard 404 even though the routes existed in the frontend.
+- Added `review`, `editor` and `privacy` to the SPA deep-link whitelist. Before this, opening the workbench or studio by direct URL or refreshing the page returned a hard 404 even though the routes existed in the frontend.
 - Removed the production Nginx 301s that still sent `/review` to `/admin/content?section=forum` and every `/editor/*` path to `/admin`, which made the restored workbenches unreachable from the public domain. The source copy is now tracked at `infra/nginx-legacy-redirects.inc`.
 - Added a regression test that the whitelist covers every real top-level frontend route.
 
