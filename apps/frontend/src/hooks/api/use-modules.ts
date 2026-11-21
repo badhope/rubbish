@@ -2186,7 +2186,7 @@ export function useExpressReviewInterest() {
     mutationFn: async (submissionId: number) =>
       (await api.post(`/review/board/${submissionId}/interest`)).data,
     onSuccess: () => {
-      toast.success('已记录审稿意愿，主编会在指派时看到')
+      toast.success('已记录互评意愿，内容整理组会在指派时看到')
       void qc.invalidateQueries({ queryKey: ['review', 'board'] })
     },
   })
