@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.19.18] — 2026-11-21
+
+- Added `review`, `editor`, `ingest`, `studio` and `privacy` to the SPA deep-link whitelist. Before this, opening the workbench or studio by direct URL or refreshing the page returned a hard 404 even though the routes existed in the frontend.
+- Added a regression test that the whitelist covers every real top-level frontend route.
+
 ## [1.19.17] — 2026-11-21
 
 - Restored the four modules that were still deleted with the community refactor: `export`, `ingest`, `doi` and `release`. The frontend was still calling `/api/export` and `/api/ingest`, so batch citation export and submission-by-URL import were returning 404.
