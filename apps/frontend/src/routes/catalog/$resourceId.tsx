@@ -518,7 +518,7 @@ function CatalogDetailPage() {
                     <Button asChild variant="outline" size="sm" className="w-full">
                       <a href={`/api/catalog/${id}/export?format=pdf&v=27`} download>
                         <FileDown className="h-4 w-4" />
-                        规范化 PDF
+                        排版 PDF
                       </a>
                     </Button>
                     <Button

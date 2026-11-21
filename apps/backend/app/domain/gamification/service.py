@@ -364,7 +364,7 @@ def _next_identity(slug: str, author_ok: bool) -> dict[str, str] | None:
         return {
             "slug": "author",
             "name": "作者",
-            "how": "阅读并确认《投稿与编辑规范》，即可投稿",
+            "how": "阅读并确认《作品与发布规范》，即可发布",
         }
     if slug in ("reader", "author"):
         return {

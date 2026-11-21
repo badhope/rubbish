@@ -16,10 +16,10 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 
 /**
- * P1-8：审稿人年度利益冲突声明。
+ * P1-8：互评成员利益冲突声明。
  *
  * 声明是“可解释”的：分派时只用作者姓名/通讯邮箱做匹配。机构、项目等
- * 投稿表里没有的字段只在声明中留档，不假装能自动识别。未声明不会挡住
+ * 发布信息里没有的字段只在声明中留档，不假装能自动识别。未声明不会挡住
  * 分派，但编辑侧会看到“未声明”；有声明且命中则后端直接 409。
  */
 export function ReviewerConflictCard() {
@@ -68,7 +68,7 @@ export function ReviewerConflictCard() {
               </Badge>
             </div>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              只按作者姓名/通讯邮箱自动匹配；机构等字段不在投稿表里，不做猜测式拦截。
+              只按作者姓名/通讯邮箱自动匹配；机构等字段不在发布信息里，不做猜测式拦截。
             </p>
           </div>
         </div>

@@ -40,7 +40,7 @@ function ForgotPasswordPage() {
             输入注册邮箱，我们会发送密码重置链接到你的邮箱。
             {capabilities.isFetched && !emailDelivery && (
               <span className="mt-2 block text-xs text-muted-foreground">
-                当前站点未开通邮件服务，自助重置暂不可用；请直接联系编辑部
+                当前站点未开通邮件服务，自助重置暂不可用；请直接联系站务邮箱 info@rubbishasci.cn
                 info@rubbishasci.cn 重置密码。
               </span>
             )}

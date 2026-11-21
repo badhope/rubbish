@@ -399,8 +399,8 @@ export function AppShell() {
               <BrandMark className="h-7 w-7 shrink-0 text-primary" />
               <span className="flex min-w-0 flex-col leading-none">
                 <span className="font-serif text-lg font-semibold tracking-tight">Rubbish</span>
-                <span className="mt-1 hidden truncate text-[10px] uppercase tracking-[0.28em] text-muted-foreground sm:block">
-                  Absurd Research Community
+                <span className="mt-1 hidden truncate text-[10px] tracking-[0.18em] text-muted-foreground sm:block">
+                  公开写作与讨论
                 </span>
               </span>
             </Link>

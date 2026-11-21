@@ -115,7 +115,7 @@ export function RegisterPage() {
           {capabilities.isFetched && !emailDelivery && (
             <span className="mt-2 block text-xs text-muted-foreground">
               当前站点未开通邮件服务：注册后可直接用邮箱和密码登录，邮箱验证与找回密码暂不可用，
-              忘记密码请联系编辑部。
+              忘记密码请联系站务邮箱 info@rubbishasci.cn。
             </span>
           )}
         </CardDescription>
@@ -186,7 +186,13 @@ export function RegisterPage() {
               {registerMut.isPending ? '注册中…' : '注册'}
             </Button>
           </form>
-          <p className="mt-4 text-center text-sm text-muted-foreground">
+          <p className="mt-3 text-center text-xs leading-5 text-muted-foreground">
+            注册即表示你已阅读并同意
+            <Link to="/guide" search={{ tab: 'policies' }} className="mx-1 text-primary hover:underline">规则与边界</Link>
+            和
+            <Link to="/privacy" className="mx-1 text-primary hover:underline">隐私政策</Link>。
+          </p>
+          <p className="mt-3 text-center text-sm text-muted-foreground">
             已有账号？{' '}
             <Link to="/login" className="text-primary hover:underline">
               登录

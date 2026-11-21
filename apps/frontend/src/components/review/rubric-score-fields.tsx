@@ -32,7 +32,7 @@ export const ACADEMIC_REVIEW_DIMENSIONS: DimensionMeta[] = [
     label: '选题与真问题',
     hint: '问题真实、具体、未被回答；创新增量说得清',
     weight: 20,
-    watch: '它回答的是不是一个能被证伪的问题？增量相对哪一篇、补了哪一块？找不到对标文献，这一维最多 60。',
+    watch: '它回答的是不是一个能被证伪的问题？增量相对哪一篇、补了哪一块？找不到可对照的资料，这一维最多 60。',
   },
   {
     key: 'argument',
@@ -98,7 +98,7 @@ export const ABSURD_REVIEW_DIMENSIONS: DimensionMeta[] = [
     label: '材料与梗的可核查',
     hint: '梗、案例、数据有出处，或自造规则被明确交代',
     weight: 15,
-    watch: '引用的台词、论文、事件能不能核到？自造数据有没有标注“自造”？张冠李戴直接扣到底。',
+    watch: '引用的台词、文章、事件能不能核到？自造数据有没有标注“自造”？张冠李戴直接扣到底。',
   },
   {
     key: 'voice',
@@ -115,28 +115,28 @@ export const TRACK_DIMENSIONS: Record<ReviewTrack, DimensionMeta[]> = {
 }
 
 export const TRACK_LABELS: Record<ReviewTrack, string> = {
-  academic: '学术赛道',
-  absurd: '荒诞赛道',
+  academic: '严肃写作',
+  absurd: '荒诞写作',
 }
 
 const ANCHORS: Record<ReviewTrack, { min: number; text: string }[]> = {
   academic: [
-    { min: 95, text: '顶刊范本：可直接作为同领域写作范例，几乎没有需要实质修改的地方。' },
-    { min: 90, text: '顶刊门槛：完成度与判断力达到顶刊同领域论文水准，只剩编辑性问题。' },
-    { min: 80, text: '一区：五个判断面都站得住，有清晰增量，短板只在局部。' },
-    { min: 70, text: '二区：问题与论证成立，方法或证据有一处实质不足，修回后可成立。' },
-    { min: 60, text: '三区：能自圆其说，但方法透明度或证据链有明显缺口，需大修。' },
-    { min: 50, text: '四区：核心环节勉强成立，结论可靠性存疑，只能作边缘稿。' },
-    { min: 0, text: '退稿：该维度缺失、方法性错误，或存在学术不端。' },
+    { min: 95, text: '范例：可直接作为同题材写作范例，几乎没有需要实质修改的地方。' },
+    { min: 90, text: '高完成：完成度与判断力达到同题材成熟作品水准，只剩细节问题。' },
+    { min: 80, text: '优秀：五个判断面都站得住，有清晰增量，短板只在局部。' },
+    { min: 70, text: '良好：问题与论证成立，方法或材料有一处实质不足，补充后可成立。' },
+    { min: 60, text: '合格：能自圆其说，但方法透明度或证据链有明显缺口，需较大补充。' },
+    { min: 50, text: '待改：核心环节勉强成立，结论可靠性存疑，需要重做关键部分。' },
+    { min: 0, text: '需重写：该维度缺失、方法性错误，或存在造假。' },
   ],
   absurd: [
     { min: 95, text: '荒诞范本：设定、执行、文风合一，读完想转给别人。' },
-    { min: 90, text: '顶刊级荒诞：荒诞信号密集且克制，设定极新，规则严丝合缝，一本正经到忘记它在胡说。' },
-    { min: 80, text: '一区：荒诞点清楚，结构完整，梗有出处或规则自洽。' },
-    { min: 70, text: '二区：设定成立，执行基本完整，但局部靠硬凑梗。' },
-    { min: 60, text: '三区：有荒诞点，但内部规则开始打架，或后半程写不下去。' },
-    { min: 50, text: '四区：只有零散段子，缺少完整设定与推进。' },
-    { min: 0, text: '退稿：设定平庸或前后矛盾，通篇堆梗。' },
+    { min: 90, text: '高完成度荒诞：荒诞信号密集且克制，设定极新，规则严丝合缝，一本正经到忘记它在胡说。' },
+    { min: 80, text: '优秀：荒诞点清楚，结构完整，梗有出处或规则自洽。' },
+    { min: 70, text: '良好：设定成立，执行基本完整，但局部靠硬凑梗。' },
+    { min: 60, text: '合格：有荒诞点，但内部规则开始打架，或后半程写不下去。' },
+    { min: 50, text: '待改：只有零散段子，缺少完整设定与推进。' },
+    { min: 0, text: '需重写：设定平庸或前后矛盾，通篇堆梗。' },
   ],
 }
 
@@ -167,7 +167,7 @@ export function mergeDimensionReviews(
 export function dimensionIssue(_dim: DimensionMeta, value: DimensionReview | undefined): string | null {
   if (!value || value.score === null) return '未给分'
   if (value.score < 0 || value.score > 100) return '分数需在 0–100'
-  // 分数是唯一必填项；理由、正文证据、修改意见都由审稿人自行决定填不填。
+  // 分数是唯一必填项；理由、正文证据、修改意见都由互评成员自行决定填不填。
   return null
 }
 
@@ -198,15 +198,15 @@ export function scoreReviewTotal(track: ReviewTrack, reviews: DimensionReviews):
   const low = entries.filter((e) => e.score < 50)
   if (low.length >= 2) {
     caps.push(49)
-    capNotes.push('两项及以上维度低于 50 分：总分封顶 49（退稿）')
+    capNotes.push('两项及以上维度低于 50 分：总分封顶 49（需重写）')
   } else if (low.length === 1) {
     caps.push(59)
-    capNotes.push('有维度低于 50 分：总分封顶 59（不进三区及以上）')
+    capNotes.push('有维度低于 50 分：总分封顶 59（不能进入良好及以上）')
   }
   const mid = entries.filter((e) => e.score >= 50 && e.score < 60)
   if (mid.length && !low.length) {
     caps.push(79)
-    capNotes.push('有维度低于 60 分：总分封顶 79（不进一区/顶刊）')
+    capNotes.push('有维度低于 60 分：总分封顶 79（不进高分段）')
   }
   if (track === 'academic' && (reviews.argument?.score ?? 0) < 50) {
     caps.push(59)
@@ -227,16 +227,16 @@ export function scoreReviewTotal(track: ReviewTrack, reviews: DimensionReviews):
   // 不完整稿不评级，也不封顶诊断分：封顶只对完整稿的等级有意义。
   if (!complete) {
     capNotes = track === 'academic' && reviews.integrity?.score === 0
-      ? ['诚信维度 0 分：总分归零，不进入编辑部补全']
-      : ['任一维低于 50 分：暂不评级；编辑部按原思路补全后直接评级，不打回作者']
+      ? ['诚信维度 0 分：总分归零，不进入内容整理补充']
+      : ['任一维低于 50 分：暂不评级；内容整理按原思路补充后直接评级，不退回作者']
   }
   const total = complete ? ratedTotal : uncapped
   const grade = complete
     ? total >= 95 ? 'T1+' : total >= 90 ? 'T1' : total >= 80 ? 'Q1' : total >= 70 ? 'Q2' : total >= 60 ? 'Q3' : total >= 50 ? 'Q4' : 'R'
     : 'NA'
   const gradeLabel = complete
-    ? grade === 'T1+' ? '顶刊范本' : grade === 'T1' ? '顶刊级' : grade === 'Q1' ? '一区' : grade === 'Q2' ? '二区' : grade === 'Q3' ? '三区' : grade === 'Q4' ? '四区' : '退稿'
-    : '待编辑部补全，暂不评级'
+    ? grade === 'T1+' ? '范例' : grade === 'T1' ? '高完成' : grade === 'Q1' ? '优秀' : grade === 'Q2' ? '良好' : grade === 'Q3' ? '合格' : grade === 'Q4' ? '待改' : '需重写'
+    : '待内容整理补充，暂不评级'
   return { total, uncapped, cap, capNotes, grade, gradeLabel, complete, incomplete }
 }
 
@@ -334,7 +334,7 @@ export function RubricScoreFields({
                   value={value.evidence}
                   disabled={disabled}
                   onChange={(e) => update(dim.key, { evidence: e.target.value })}
-                  placeholder="例：§1 第 3 段“已有研究仅覆盖……”；参考文献[7] 2019；§4 表 2 仅 3 个样本。"
+                  placeholder="例：§1 第 3 段“已有研究仅覆盖……”；出处[7] 2019；§4 表 2 仅 3 个样本。"
                   rows={3}
                   className="text-xs"
                   aria-label={`${dim.label}正文证据`}
@@ -371,7 +371,7 @@ export function RubricScoreFields({
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <p className="flex items-center gap-1.5 text-sm font-medium">
             {summary.grade === 'R' || summary.grade === 'NA' ? <AlertTriangle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
-            {summary.complete ? `当前合计 ${summary.total} 分 · ${summary.grade} ${summary.gradeLabel}` : `当前诊断 ${summary.uncapped} 分 · ${summary.gradeLabel}；补全后直接评级，不打回作者`}
+            {summary.complete ? `当前合计 ${summary.total} 分 · ${summary.gradeLabel}` : `当前诊断 ${summary.uncapped} 分 · ${summary.gradeLabel}；补全后直接评级，不打回作者`}
           </p>
           <span className="text-[11px] text-muted-foreground tabular-nums">
             未封顶 {summary.uncapped} · {completed}/{dims.length} 维
@@ -386,7 +386,7 @@ export function RubricScoreFields({
         )}
         <p className="mt-1.5 flex items-start gap-1.5 text-[10px] leading-4 text-muted-foreground">
           <Info className="mt-0.5 h-3 w-3 shrink-0" />
-          90+ 顶刊级，80/70/60/50 分别为一/二/三/四区。完整稿才评级；任一维低于 50 进编辑部补全，暂不评级，补全后按实际内容重评。
+          90+ 高完成，80/70/60/50 分别为优秀/良好/合格/待改。完整稿才评级；任一维低于 50 进内容整理补充，暂不评级，补充后按实际内容重评。
         </p>
       </div>
     </div>

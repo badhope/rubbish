@@ -98,7 +98,7 @@ export default function ForumInspectionPage() {
     <div>
       <PageHeader
         title="论坛巡检"
-        description="旧审稿台转成内容巡检：按最近活跃或热度看全站文章与讨论，置顶、锁定、跳转处理举报。巡检只做维护，不替代举报处置。"
+        description="旧的互评台转成内容巡检：按最近活跃或热度看全站文章与讨论，置顶、锁定、跳转处理举报。巡检只做维护，不替代举报处置。"
       />
 
       <div className="mb-4 grid gap-2 sm:grid-cols-3">

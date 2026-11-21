@@ -501,7 +501,7 @@ function ForumTopicPage() {
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        返回社区
+        返回讨论区
       </Link>
 
       <Card>

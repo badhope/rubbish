@@ -32,7 +32,7 @@ def _shell(title: str, body_html: str, footer_note: str = "") -> str:
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#fff;border:1px solid {LINE};border-radius:10px;">
     <tr><td style="padding:22px 26px 6px;">
       <div style="font-size:20px;font-weight:700;color:{INK};letter-spacing:.5px;">{site}</div>
-      <div style="margin-top:4px;font-size:12px;color:{MUTED};">荒诞科研社区 · Absurd Research Community</div>
+      <div style="margin-top:4px;font-size:12px;color:{MUTED};">公开写作与讨论社区 · Public Writing &amp; Discussion</div>
     </td></tr>
     <tr><td style="padding:14px 26px 4px;">
       <h1 style="margin:0 0 12px;font-size:17px;line-height:1.5;color:{INK};">{escape(title)}</h1>
@@ -186,22 +186,22 @@ def review_assigned(
     reviewer: str, paper_title: str, link: str, due_days: int
 ) -> tuple[str, str, str]:
     """Assign notification to a reviewer."""
-    subject = f"{settings.site_name}：有一篇稿件等待你评审"
+    subject = f"{settings.site_name}：有一篇作品等待你互评"
     text = (
         f"你好，{reviewer}：\n\n"
-        f"你被指派评审稿件《{paper_title}》。\n"
-        f"请打开以下链接查看稿件（双盲，作者身份对你匿名）：\n{link}\n\n"
-        f"请在 {due_days} 天内完成评审；如无法评审，请在页面中选择拒绝，"
-        "编辑会改派其他审稿人。\n"
+        f"你被指派互评作品《{paper_title}》。\n"
+        f"请打开以下链接查看作品（匿名互评，作者身份对你隐藏）：\n{link}\n\n"
+        f"请在 {due_days} 天内完成互评；如无法互评，请在页面中选择拒绝，"
+        "内容整理会改派其他互评成员。\n"
     )
     html = _shell(
-        "有一篇稿件等待你评审",
+        "有一篇作品等待你互评",
         f"<p>你好，{escape(reviewer)}：</p>"
-        f"<p>你被指派评审稿件《{escape(paper_title)}》。</p>"
-        "<p>请查看稿件（双盲评审，作者身份对你匿名）：</p>"
-        + _button("进入审稿工作台", link)
+        f"<p>你被指派互评作品《{escape(paper_title)}》。</p>"
+        "<p>请查看作品（匿名互评，作者身份对你隐藏）：</p>"
+        + _button("进入互评台", link)
         + f'<p style="margin-top:16px;font-size:12px;color:{MUTED};">'
-        f"请在 {due_days} 天内完成评审；如无法评审，请在页面中选择拒绝，编辑会改派其他审稿人。</p>",
+        f"请在 {due_days} 天内完成互评；如无法互评，请在页面中选择拒绝，内容整理会改派其他互评成员。</p>",
     )
     return subject, text, html
 
@@ -210,22 +210,22 @@ def review_reminder(
     reviewer: str, paper_title: str, link: str, days_pending: int
 ) -> tuple[str, str, str]:
     """Reminder for an assignment that has been waiting too long."""
-    subject = f"{settings.site_name}：审稿提醒（已等待 {days_pending} 天）"
+    subject = f"{settings.site_name}：互评提醒（已等待 {days_pending} 天）"
     text = (
         f"你好，{reviewer}：\n\n"
-        f"你指派的稿件《{paper_title}》已等待 {days_pending} 天，尚未收到评审结果。\n"
+        f"你被指派互评的作品《{paper_title}》已等待 {days_pending} 天，尚未收到互评意见。\n"
         f"请打开以下链接继续：\n{link}\n\n"
-        "如果时间不便，请在页面中选择拒绝，编辑会改派其他审稿人。\n"
+        "如果时间不便，请在页面中选择拒绝，内容整理会改派其他互评成员。\n"
     )
     html = _shell(
-        f"审稿提醒（已等待 {days_pending} 天）",
+        f"互评提醒（已等待 {days_pending} 天）",
         f"<p>你好，{escape(reviewer)}：</p>"
-        f"<p>稿件《{escape(paper_title)}》已等待 <strong>{days_pending} 天</strong>，"
-        "尚未收到你的评审结果。</p>"
-        + _button("继续评审", link)
+        f"<p>作品《{escape(paper_title)}》已等待 <strong>{days_pending} 天</strong>，"
+        "尚未收到你的互评意见。</p>"
+        + _button("继续互评", link)
         + '<p style="margin-top:16px;font-size:12px;color:'
         + MUTED
-        + ';">如果时间不便，请在页面中选择拒绝，编辑会改派其他审稿人。</p>',
+        + ';">如果时间不便，请在页面中选择拒绝，内容整理会改派其他互评成员。</p>',
     )
     return subject, text, html
 
@@ -235,31 +235,31 @@ def review_reminder_digest(
 ) -> tuple[str, str, str]:
     """One digest email per reviewer, instead of one email per assignment.
 
-    同一审稿人同时被指派多篇稿件时，逐篇发信会在几秒内塞满收件箱；
+    同一互评成员同时被指派多篇作品时，逐篇发信会在几秒内塞满收件箱；
     合并成一封，既保留全部待办，也避免被判成骚扰邮件。
     """
     count = len(items)
     max_days = max((days for _, days in items), default=0)
-    subject = f"{settings.site_name}：审稿提醒（{count} 篇待办，最久 {max_days} 天）"
+    subject = f"{settings.site_name}：互评提醒（{count} 篇待办，最久 {max_days} 天）"
     lines = "\n".join(f"- 《{title}》（已等待 {days} 天）" for title, days in items)
     text = (
         f"你好，{reviewer}：\n\n"
-        f"你有 {count} 篇稿件等待评审：\n{lines}\n\n"
+        f"你有 {count} 篇作品等待互评：\n{lines}\n\n"
         f"请打开以下链接继续：\n{link}\n\n"
-        "如果时间不便，请在页面中选择拒绝，编辑会改派其他审稿人。\n"
+        "如果时间不便，请在页面中选择拒绝，内容整理会改派其他互评成员。\n"
     )
     lis = "".join(
         f"<li>《{escape(title)}》已等待 <strong>{days} 天</strong></li>" for title, days in items
     )
     html = _shell(
-        f"审稿提醒（{count} 篇待办）",
+        f"互评提醒（{count} 篇待办）",
         f"<p>你好，{escape(reviewer)}：</p>"
-        f"<p>你有 <strong>{count} 篇</strong>稿件等待评审：</p>"
+        f"<p>你有 <strong>{count} 篇</strong>作品等待互评：</p>"
         f"<ul>{lis}</ul>"
-        + _button("进入审稿工作台", link)
+        + _button("进入互评台", link)
         + '<p style="margin-top:16px;font-size:12px;color:'
         + MUTED
-        + ';">如果时间不便，请在页面中选择拒绝，编辑会改派其他审稿人。</p>',
+        + ';">如果时间不便，请在页面中选择拒绝，内容整理会改派其他互评成员。</p>',
     )
     return subject, text, html
 
@@ -268,7 +268,7 @@ def decision_notice(
     author: str, paper_title: str, decision_label: str, note: str | None, link: str
 ) -> tuple[str, str, str]:
     """Decision notification to the author."""
-    subject = f"{settings.site_name}：你的稿件有了处理结果（{decision_label}）"
+    subject = f"{settings.site_name}：你的作品有了处理结果（{decision_label}）"
     note_html = (
         f'<div style="margin:14px 0;padding:10px 14px;background:{PAPER};border-left:3px solid {ACCENT};'
         f'font-size:13px;color:{INK};white-space:pre-wrap;">{escape(note)}</div>'
@@ -277,17 +277,17 @@ def decision_notice(
     )
     text = (
         f"你好，{author}：\n\n"
-        f"你的稿件《{paper_title}》已完成评审，结果为：{decision_label}。\n"
+        f"你的作品《{paper_title}》已完成互评，结果为：{decision_label}。\n"
         + (f"\n编辑意见：\n{note}\n" if note else "")
         + f"\n查看详情与后续操作：\n{link}\n"
     )
     html = _shell(
-        f"稿件处理结果：{decision_label}",
+        f"作品处理结果：{decision_label}",
         f"<p>你好，{escape(author)}：</p>"
-        f"<p>你的稿件《{escape(paper_title)}》已完成评审，结果为 "
+        f"<p>你的作品《{escape(paper_title)}》已完成互评，结果为 "
         f"<strong>{escape(decision_label)}</strong>。</p>"
         + (f"<p>编辑意见：</p>{note_html}" if note else "")
-        + _button("查看稿件详情", link),
+        + _button("查看作品详情", link),
     )
     return subject, text, html
 
@@ -301,7 +301,7 @@ def triage_overdue_digest(
     lines = "\n".join(f"- 《{title}》（已等待 {hours} 小时）" for title, hours in items)
     text = (
         f"你好，{editor}：\n\n"
-        f"初筛队列有 {count} 篇稿件超过 48 小时未处理：\n{lines}\n\n"
+        f"初筛队列有 {count} 篇作品超过 48 小时未处理：\n{lines}\n\n"
         f"请打开以下链接处理：\n{link}\n"
     )
     lis = "".join(
@@ -311,7 +311,7 @@ def triage_overdue_digest(
     html = _shell(
         f"初筛队列有 {count} 篇超过 48 小时",
         f"<p>你好，{escape(editor)}：</p>"
-        f"<p>以下稿件进入初筛队列已超过 <strong>48 小时</strong>：</p>"
+        f"<p>以下作品进入初筛队列已超过 <strong>48 小时</strong>：</p>"
         f"<ul>{lis}</ul>" + _button("打开初筛队列", link),
     )
     return subject, text, html

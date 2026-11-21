@@ -15,7 +15,7 @@ describe('resource label helpers', () => {
   })
 
   it('maps resource types and statuses', () => {
-    expect(typeLabel('paper')).toBe('研究文章')
+    expect(typeLabel('paper')).toBe('研究长文')
     expect(typeLabel('dataset')).toBe('数据集')
     expect(statusLabel('in_review')).toBe('整理中')
     expect(statusLabel(undefined)).toBe('—')
@@ -24,7 +24,7 @@ describe('resource label helpers', () => {
   it('rewrites fallback recommendation reasons', () => {
     expect(recommendationReason('no reading history; showing latest')).toBe('最新收录')
     expect(recommendationReason('you have read everything; showing latest')).toBe(
-      '你已读完现有全部文章',
+      '你已读完现有全部内容',
     )
   })
 

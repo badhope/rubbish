@@ -72,7 +72,7 @@ function AdminContentPage() {
           className="inline-flex items-center gap-1 rounded-md border bg-background px-2.5 py-1 text-xs transition-colors hover:border-primary hover:text-primary"
         >
           <ClipboardCheck className="h-3.5 w-3.5" />
-          审稿工作台
+          互评工作台
         </Link>
         <Link
           to="/editor/calibration"

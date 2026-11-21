@@ -30,7 +30,7 @@ export function NotFoundPage() {
           <Button asChild variant="outline">
             <Link to="/catalog">
               <BookOpen className="h-4 w-4" />
-              浏览资源目录
+              浏览内容库
             </Link>
           </Button>
         </div>

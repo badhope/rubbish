@@ -110,9 +110,9 @@ export const Route = createFileRoute('/submissions/pending')({
 })
 
 const DECISION_OPTIONS: { value: EditorDecision; label: string; hint?: string }[] = [
-  { value: 'accept', label: '接收', hint: '自动入目录' },
-  { value: 'minor_revision', label: '小修' },
-  { value: 'major_revision', label: '大修' },
+  { value: 'accept', label: '通过', hint: '自动公开' },
+  { value: 'minor_revision', label: '小改' },
+  { value: 'major_revision', label: '大改' },
   { value: 'reject', label: '不通过' },
 ]
 
@@ -123,10 +123,10 @@ const STATUS_TABS: { value: StatusTab; label: string }[] = [
   { value: 'all', label: '全部' },
   { value: 'pending', label: '待分配' },
   { value: 'under_review', label: '互评中' },
-  { value: 'major_revision', label: '大修' },
-  { value: 'minor_revision', label: '小修' },
-  { value: 'resubmitted', label: '重投' },
-  { value: 'accepted', label: '已接收' },
+  { value: 'major_revision', label: '大改' },
+  { value: 'minor_revision', label: '小改' },
+  { value: 'resubmitted', label: '重新提交' },
+  { value: 'accepted', label: '已通过' },
   { value: 'rejected', label: '已不通过' },
 ]
 
@@ -143,12 +143,12 @@ function statusBadge(status: string) {
     case 'under_review':
       return <Badge className="bg-primary/15 text-primary">互评中</Badge>
     case 'major_revision':
-      return <Badge className="bg-amber-500/15 text-amber-700">大修</Badge>
+      return <Badge className="bg-amber-500/15 text-amber-700">大改</Badge>
     case 'minor_revision':
-      return <Badge className="bg-yellow-500/15 text-yellow-700">小修</Badge>
+      return <Badge className="bg-yellow-500/15 text-yellow-700">小改</Badge>
     case 'accepted':
     case 'approved':
-      return <Badge className="bg-emerald-500/15 text-emerald-700">已接收</Badge>
+      return <Badge className="bg-emerald-500/15 text-emerald-700">已通过</Badge>
     case 'rejected':
       return <Badge variant="destructive">已不通过</Badge>
     default:
@@ -937,7 +937,7 @@ function SubmissionDetailBody({ sub }: { sub: SubmissionResponse }) {
                 </Badge>
                 <div className="min-w-0">
                   <span className="text-xs text-muted-foreground">
-                    {v.version === 1 ? '初次提交' : '重投'} ·{' '}
+                    {v.version === 1 ? '初次提交' : '重新提交'} ·{' '}
                     {new Date(v.created_at).toLocaleString()}
                   </span>
                   {v.note && (

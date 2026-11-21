@@ -31,7 +31,7 @@ _最后更新：2026-11-20_
 
 ## 我们是谁
 
-Rubbish（rubbish.argjiemi.cn）是一个荒诞科研社区，由本站运营。
+Rubbish（rubbish.argjiemi.cn）是一个公开写作与讨论社区，由本站运营。这里不是期刊、出版社或学术评价机构。
 隐私相关事宜请联系 `{CONTACT_EMAIL}`。
 
 ## 我们收集哪些数据
@@ -45,7 +45,7 @@ Rubbish（rubbish.argjiemi.cn）是一个荒诞科研社区，由本站运营。
 
 使用服务时还会收集：
 
-- 你发布的帖子、回复、评论与档案记录。
+- 你发布的帖子、回复、评论与内容记录。
 - 你的公开个人资料、关注关系、收藏与阅读进度。
 - 安全审计所需的 IP 地址与请求时间。
 - 匿名页面访问记录：仅路径与来源页，不含 IP、User-Agent 或账号身份，用于统计内容阅读量，保留 90 天。
@@ -169,7 +169,7 @@ def _render_html(markdown_text: str) -> str:
 <body>
 <main>
 {chr(10).join(body)}
-<footer>© 2026 Rubbish · 荒诞科研社区 · <a href="/">返回首页</a></footer>
+<footer>© 2026 Rubbish · 公开写作与讨论社区 · <a href="/">返回首页</a></footer>
 </main>
 </body>
 </html>"""

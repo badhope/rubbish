@@ -120,7 +120,7 @@ export function ResearchGuide() {
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
             更完整的版权、隐私与处理规则见
             <Link to="/guide" search={{ tab: 'policies' }} className="mx-1 text-primary hover:underline">
-              社区公约
+              规则与边界
             </Link>
             。
           </p>

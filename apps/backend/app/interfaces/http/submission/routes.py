@@ -206,7 +206,7 @@ async def _create_submission_record(
             detail={
                 "code": "rules_ack_required",
                 "version": CURRENT_RULES_VERSION,
-                "message": "投稿前请先阅读并确认《Rubbish 投稿与编辑规范》。",
+                "message": "投稿前请先阅读并确认《Rubbish 作品与发布规范》。",
             },
         )
     blocked = rejection_detail(f"{body.title}\n{body.abstract}")
@@ -285,7 +285,7 @@ async def create_submission(
     """Submit a record for editor review.
 
     投稿零等级门槛：注册登录即可投（只要确认当版规范）。
-    唯一前置是确认当版《投稿规范》（rules_ack_version，见下）——这是
+    唯一前置是确认当版《作品与发布规范》（rules_ack_version，见下）——这是
     合规动作而非等级门槛；确认动作在个人中心 / gamification/onboarding/author，
     同时授予作者引导积分。
     """
@@ -317,7 +317,7 @@ async def create_submissions_batch(
             detail={
                 "code": "rules_ack_required",
                 "version": CURRENT_RULES_VERSION,
-                "message": "投稿前请先阅读并确认《Rubbish 投稿与编辑规范》。",
+                "message": "投稿前请先阅读并确认《Rubbish 作品与发布规范》。",
             },
         )
 

@@ -60,7 +60,7 @@ const PENDING_QUEUE: {
   },
   {
     title: '举报处理',
-    desc: '论坛、评论与投稿举报',
+    desc: '论坛、评论与发布举报',
     to: '/admin/content',
     search: { section: 'reports' },
     icon: ShieldAlert,

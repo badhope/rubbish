@@ -164,7 +164,7 @@ function SubmissionsPage() {
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [resubmitOpen, setResubmitOpen] = useState(false)
   const [resubmitNote, setResubmitNote] = useState('')
-  // 仅在 detail 对话框打开时拉取审稿报告 / 版本历史（hook 通过 enabled 守卫）；
+  // 仅在 detail 对话框打开时拉取互评意见 / 版本历史（hook 通过 enabled 守卫）；
   // 必须放在 detail useState 之后，否则 TS2448/2454 报"使用先于声明"。
   const reportsQ = useSubmissionReports(detail?.id ?? 0)
   const versionsQ = useSubmissionVersions(detail?.id ?? 0, detail !== null)
@@ -202,7 +202,7 @@ function SubmissionsPage() {
           duration: 8000,
         })
       } else if (report?.ok) {
-        toast.success('结构检查通过：摘要、关键词、章节与参考文献齐全')
+        toast.success('结构检查通过：摘要、关键词、章节与出处说明齐全')
       }
     } catch (err) {
       toast.error(extractError(err, '上传失败'))
@@ -664,7 +664,7 @@ function SubmissionsPage() {
                   </label>
                 )}
               </div>
-              {/* 互评意见（单盲：作者只可见 comments_to_author，审稿人身份保密） */}
+              {/* 互评意见（单盲：作者只可见 comments_to_author，互评成员身份保密） */}
               {reportsQ.data && reportsQ.data.length > 0 && (
                 <div className="rounded-md border p-3">
                   <div className="mb-2 flex items-center gap-2">

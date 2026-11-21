@@ -322,7 +322,7 @@ function LoginPage() {
                 {codeSent ? '验证并登录' : '请先获取验证码'}
               </Button>
               <p className="text-xs text-muted-foreground">
-                没收到？检查垃圾邮件箱；60 秒后可重新发送。编辑部不会向你索要验证码。
+                没收到？检查垃圾邮件箱；60 秒后可重新发送。站务不会向你索要验证码。
               </p>
             </form>
           )}

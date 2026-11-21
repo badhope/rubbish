@@ -59,27 +59,27 @@ export const RECOMMENDATION_OPTIONS: {
 }[] = [
   {
     value: 'accept',
-    label: '接收',
-    short: '可直接发表',
-    when: '论证与证据完整，剩余问题只是编辑性修改；你愿意为这篇的结论背书。',
+    label: '通过',
+    short: '可直接公开',
+    when: '论证与证据完整，剩余问题只是细节修改；你愿意为这篇的结论背书。',
   },
   {
     value: 'minor_revision',
-    label: '小修',
-    short: '小改后发表',
-    when: '结论成立，但有个别数据、引用或表述需要澄清；修改可在一次轮回内完成。',
+    label: '小改',
+    short: '小改后可公开',
+    when: '结论成立，但有个别数据、引用或表述需要澄清；修改可在一轮内完成。',
   },
   {
     value: 'major_revision',
-    label: '大修',
-    short: '实质补强后再审',
+    label: '大改',
+    short: '补充后再看',
     when: '问题可以补，但需要新增证据、重做分析或重构论证；改完必须回看。',
   },
   {
     value: 'reject',
-    label: '拒稿',
-    short: '不适合本刊或无法补救',
-    when: '核心问题不成立、存在伦理/诚信硬伤，或与本刊范围不符且修改也无法解决。',
+    label: '不通过',
+    short: '不适合本站或无法补救',
+    when: '核心问题不成立、存在伦理/诚信硬伤，或与站点范围不符且修改也无法解决。',
   },
 ]
 
@@ -94,7 +94,7 @@ export const EMPTY_REVIEW_FORM: ReviewFormValue = {
 }
 
 const AUTHOR_TEMPLATE = `**总体判断**
-这篇稿子试图回答的问题是：……；我认为它目前处于……水平。
+这篇作品试图回答的问题是：……；我认为它目前处于……水平。
 
 **主要问题（按重要性排序）**
 1. ……
@@ -111,11 +111,11 @@ const AUTHOR_TEMPLATE = `**总体判断**
 **修改后需要重点复核的地方**
 ……`
 
-const EDITOR_TEMPLATE = `**给编辑的判断**
+const EDITOR_TEMPLATE = `**给内容整理的建议**
 - 推荐决定及理由：……
-- 这篇稿子最适合/最不适合本刊的地方：……
+- 这篇作品最适合/最不适合本站的地方：……
 - 是否存在伦理、引用或数据可信度疑点：……
-- 修改后需要编辑部重点核对：……`
+- 修改后需要内容整理重点核对：……`
 
 function reviewFieldLabel(key: string, track: ReviewTrack = 'academic'): string {
   return dimensionLabel(track, key)
@@ -289,8 +289,8 @@ export function ReviewReportFields({
         </div>
         <p className="text-[11px] leading-5 text-muted-foreground">
           {value.track === 'academic'
-            ? '学术赛道：选题、论证、方法、证据、诚信。90+ 才是顶刊级；缺方法/证据会封顶，不允许用平均分抬进一区。'
-            : '荒诞赛道：审设定、自洽、执行、材料、文风。允许无中生有，不按样本量与伦理审批扣分；但前后打架、堆梗不成篇会封顶。'}
+            ? '严肃写作：选题、论证、方法、材料、诚信。90+ 才是高完成；缺方法/材料会封顶，不允许用平均分抬进高分段。'
+            : '荒诞写作：看设定、自洽、执行、材料、文风。允许无中生有，不按样本量与伦理审批扣分；但前后打架、堆梗不成篇会封顶。'}
         </p>
         <RubricScoreFields
           track={value.track}
@@ -358,11 +358,11 @@ export function ReviewReportFields({
 
       <ReviewTextField
         id="comments_to_editor"
-        label="给编辑的保密意见（可选，作者不可见）"
-        description="只写不适合让作者看到的内容：推荐决定背后的权衡、伦理/引用疑点、是否需要额外审稿人、与本刊范围的匹配度。"
+        label="给内容整理的保密意见（可选，作者不可见）"
+        description="只写不适合让作者看到的内容：推荐决定背后的权衡、伦理/引用疑点、是否需要额外互评成员、与站点范围的匹配度。"
         value={value.comments_to_editor}
         onChange={(v) => onChange({ ...value, comments_to_editor: v })}
-        placeholder="例如：方法部分有一处样本量未交代，建议作者补数据；另有一位审稿人可能更合适。"
+        placeholder="例如：方法部分有一处样本量未交代，建议作者补数据；另有一位互评成员可能更合适。"
         template={EDITOR_TEMPLATE}
         minRecommended={80}
         disabled={disabled}
@@ -374,16 +374,16 @@ export function ReviewReportFields({
         </p>
         <Button type="button" variant="outline" size="sm" onClick={() => setPreviewOpen(true)}>
           <Eye className="h-4 w-4" />
-          预览完整报告
+          预览完整意见
         </Button>
       </div>
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="h-[100dvh] max-h-[100dvh] w-screen max-w-none overflow-y-auto rounded-none p-4 sm:h-auto sm:max-h-[86vh] sm:w-auto sm:max-w-2xl sm:rounded-lg sm:p-6">
           <DialogHeader>
-            <DialogTitle>审稿报告预览</DialogTitle>
+            <DialogTitle>互评意见预览</DialogTitle>
             <DialogDescription>
-              提交前的本地预览，不会写入数据库。作者实际只看到「给作者的意见」；评分和保密意见只给编辑。
+              提交前的本地预览，不会写入数据库。作者实际只看到「给作者的意见」；评分和保密意见只给内容整理。
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 text-sm">
@@ -392,7 +392,7 @@ export function ReviewReportFields({
               <Badge variant="outline">{TRACK_LABELS[value.track]}</Badge>
               <span className="text-xs text-muted-foreground">
                 {summary.complete
-                  ? `合计 ${summary.total} 分 · ${summary.grade} ${summary.gradeLabel}`
+                  ? `合计 ${summary.total} 分 · ${summary.gradeLabel}`
                   : `诊断 ${summary.total} 分 · ${summary.gradeLabel}（${summary.incomplete
                       .map((k) => dims.find((d) => d.key === k)?.label ?? k)
                       .join('、')} 待编辑部补全，不打回作者）`}

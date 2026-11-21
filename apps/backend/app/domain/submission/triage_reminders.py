@@ -116,8 +116,8 @@ async def run_triage_reminders(db: AsyncSession, *, tenant_id: Any) -> dict[str,
                     type_="submission.triage_overdue",
                     title=f"初筛已等待 {hours} 小时：{submission.title}",
                     body=(
-                        f"稿件 #{submission.id} 进入初筛队列已超过 {TRIAGE_DUE_HOURS} 小时。"
-                        "请安排送外审、退回修改、补材料或直接拒稿。"
+                        f"作品 #{submission.id} 进入初筛队列已超过 {TRIAGE_DUE_HOURS} 小时。"
+                        "请安排互评、退回修改、补材料或直接不通过。"
                     ),
                     related_type="submission",
                     related_id=str(submission.id),

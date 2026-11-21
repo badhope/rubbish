@@ -103,7 +103,7 @@ function LevelsPage() {
             身份决定“能做什么”
           </p>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            由角色授予，下位身份的能力被上位身份完整继承。管理组拥有评审组的全部能力，评审组拥有成员组的全部能力。
+            由角色授予，下位身份的能力被上位身份完整继承。站点管理组拥有内容工作组的全部能力，内容工作组拥有成员组的全部能力。
           </p>
         </div>
         <div className="border-l-2 border-border pl-4">
@@ -149,7 +149,7 @@ function LevelsPage() {
       <section>
         <h2 className="flex items-center gap-2 font-serif text-xl font-semibold">
           <Sparkles className="h-4 w-4 text-primary" />
-          经验从哪里来
+          活跃值从哪里来
         </h2>
         <div className="mt-3 grid gap-2 border-y py-4 sm:grid-cols-2">
           {XP_SOURCES.map((source) => (

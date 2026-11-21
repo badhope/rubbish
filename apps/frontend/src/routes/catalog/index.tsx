@@ -412,6 +412,7 @@ function CatalogHub() {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const { data: stats } = useCatalogStats()
+  const { data: latest } = useResources({ page: 1, page_size: 6, sort: 'created_at', order: 'desc' })
   const seriousTotal = stats ? stats.by_paper_kind?.serious ?? 0 : undefined
   const absurdTotal = stats ? stats.by_paper_kind?.absurd ?? 0 : undefined
   const paperTotal = seriousTotal == null || absurdTotal == null ? undefined : seriousTotal + absurdTotal
@@ -455,6 +456,25 @@ function CatalogHub() {
           搜索
         </Button>
       </form>
+
+      {latest?.data?.length ? (
+        <section className="mt-8 border-y py-6">
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <div>
+              <h2 className="font-serif text-2xl font-semibold tracking-tight">刚刚公开</h2>
+              <p className="mt-1 text-sm text-muted-foreground">最近发布的内容，先看一两篇再决定往哪走。</p>
+            </div>
+            <Link to="/catalog" search={{ sort: 'latest' }} className="text-sm text-primary hover:underline">
+              全部内容 →
+            </Link>
+          </div>
+          <div className="mt-2 divide-y">
+            {latest.data.map((item, index) => (
+              <CatalogIndexRow key={item.id} resource={item} index={index + 1} />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <ContentSpectrum stats={stats} />
 

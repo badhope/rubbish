@@ -512,7 +512,7 @@ function HomePage() {
             <ul className="space-y-1.5">
               <li><Link to="/guide" search={{ tab: 'policies' }} className="hover:text-primary">规则与边界</Link></li>
               <li><Link to="/privacy" className="hover:text-primary">隐私政策</Link></li>
-              <li><Link to="/about" className="hover:text-primary">关于社区</Link></li>
+              <li><Link to="/about" className="hover:text-primary">关于站点</Link></li>
               <li>
                 <a href="mailto:info@rubbishasci.cn" className="break-all hover:text-primary">
                   info@rubbishasci.cn

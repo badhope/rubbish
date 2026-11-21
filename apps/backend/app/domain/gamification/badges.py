@@ -73,10 +73,10 @@ BADGES: tuple[BadgeSpec, ...] = (
     ),
     BadgeSpec(
         "submit.rejected",
-        "未录用不弃",
+        "未通过也不弃",
         "special",
         "作品",
-        "收到第一次未录用通知后仍继续提交作品。",
+        "收到第一次未通过通知后仍继续发布作品。",
         "rejections_then_resubmit",
         1,
         True,
@@ -84,23 +84,23 @@ BADGES: tuple[BadgeSpec, ...] = (
     # --- 审稿 ---
     BadgeSpec(
         "review.first",
-        "第一份审稿意见",
+        "第一份互评",
         "silver",
-        "审稿",
-        "完成第一次评审。",
+        "评议",
+        "完成第一次互评。",
         "reviews_completed",
         1,
     ),
-    BadgeSpec("review.10", "同行之锚", "gold", "审稿", "完成 10 次评审。", "reviews_completed", 10),
+    BadgeSpec("review.10", "互评之锚", "gold", "评议", "完成 10 次互评。", "reviews_completed", 10),
     BadgeSpec(
-        "review.30", "守门人", "special", "审稿", "完成 30 次评审。", "reviews_completed", 30
+        "review.30", "内容守门人", "special", "评议", "完成 30 次互评。", "reviews_completed", 30
     ),
     # --- 编辑 ---
     BadgeSpec(
-        "editor.first", "第一次裁决", "silver", "编辑", "作出第一个编辑决定。", "decisions_made", 1
+        "editor.first", "第一次内容复核", "silver", "内容整理", "作出第一次内容决定。", "decisions_made", 1
     ),
     BadgeSpec(
-        "editor.50", "版面之手", "gold", "编辑", "作出 50 个编辑决定。", "decisions_made", 50
+        "editor.50", "内容复核者", "gold", "内容整理", "作出 50 次内容决定。", "decisions_made", 50
     ),
     # --- 习惯 ---
     BadgeSpec(

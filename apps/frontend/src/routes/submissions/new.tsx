@@ -131,6 +131,7 @@ interface WizardForm {
   declOriginal: boolean
   declConfidential: boolean
   declCopyright: boolean
+  declRules: boolean
   // P3-1：声明与许可逐篇结构化，提交后随作品物化到目录条目。
   license: string
   authorContributions: string
@@ -164,6 +165,7 @@ const EMPTY_FORM: WizardForm = {
   declOriginal: false,
   declConfidential: false,
   declCopyright: false,
+  declRules: false,
   license: 'CC BY-NC 4.0',
   authorContributions: '',
   funding: '',
@@ -200,6 +202,7 @@ const DRAFT_BOOLEAN_FIELDS = [
   'declOriginal',
   'declConfidential',
   'declCopyright',
+  'declRules',
 ] as const
 
 /** 服务端草稿不包含本地 File；正文单独存 body，避免同一份 Markdown 存两遍。 */
@@ -407,13 +410,19 @@ function computeGates(f: WizardForm): GateResult[] {
       step: 2,
       ok: f.declCopyright,
     },
+    {
+      key: 'declRules',
+      label: '发布规范确认',
+      step: 2,
+      ok: f.declRules,
+    },
   ]
 }
 
 const STEPS = [
   { id: 0, title: '基本信息', hint: '标题、摘要、关键词、方向' },
   { id: 1, title: '正文与上传', hint: '在线正文或上传作品文件' },
-  { id: 2, title: '作者与声明', hint: '作者顺序、联系邮箱、三项确认' },
+  { id: 2, title: '署名与确认', hint: '署名顺序、联系邮箱、四项确认' },
   { id: 3, title: '预览并提交', hint: '通读一遍，确认后提交' },
 ]
 
@@ -737,6 +746,11 @@ function SubmissionWizardPage() {
     }
 
     try {
+      // 发布规范确认是账号级门禁：勾选后先把当前版本记到账号，再提交作品。
+      // 端点幂等，老用户重复确认不会加经验，也不会产生额外记录。
+      if (editId === undefined && form.declRules) {
+        await api.post('/gamification/rules/ack')
+      }
       let created: SubmissionResponse
       if (editId !== undefined) {
         created = await updateMut.mutateAsync({ id: editId, body })
@@ -851,7 +865,7 @@ function SubmissionWizardPage() {
             {editId !== undefined ? '修改作品' : '新建作品'}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            分四步完成：基本信息 → 正文 → 作者与声明 →
+            分四步完成：基本信息 → 正文 → 署名与确认 →
             预览提交。草稿会自动保存在本机和登录账号。
             <HelpTip
               className="ml-1"
@@ -1678,15 +1692,15 @@ function StepAuthors({
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-lg font-semibold">作者与声明</h2>
+        <h2 className="text-lg font-semibold">署名与确认</h2>
         <p className="text-sm text-muted-foreground">
-          作者顺序即署名顺序；请确认通讯作者与三项承诺。
+          按实际署名顺序填写；确认联系人和下面的四项承诺。
         </p>
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="w-authors">
-          作者（逗号分隔，顺序即署名顺序）{' '}
+          署名（逗号分隔，按顺序）{' '}
           <span className="text-destructive">*</span>
         </Label>
         <Input
@@ -1696,11 +1710,11 @@ function StepAuthors({
           placeholder="张三, 李四, 王五"
           className={fieldError('authors') ? 'border-destructive' : ''}
         />
-        {fieldError('authors') && <FieldError>至少填写一位作者</FieldError>}
+        {fieldError('authors') && <FieldError>至少填写一位署名者</FieldError>}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="w-affiliations">作者单位（逗号分隔，选填）</Label>
+        <Label htmlFor="w-affiliations">所在单位 / 学校（逗号分隔，选填）</Label>
         <Input
           id="w-affiliations"
           value={form.affiliations}
@@ -1708,7 +1722,7 @@ function StepAuthors({
           placeholder="清华大学计算机系, 北京大学信息学院"
         />
         <p className="text-xs text-muted-foreground">
-          多位作者可按署名顺序对应填写；只用于站内联系与互评回避，不对外展示。
+          多位署名者可按顺序对应填写；只用于站内联系与互评回避，不对外展示。
         </p>
       </div>
 
@@ -1726,13 +1740,14 @@ function StepAuthors({
         </p>
       </div>
 
-      <div className="space-y-3 rounded-lg border p-4">
-        <div>
-          <div className="text-sm font-medium">声明与许可</div>
-          <p className="text-xs text-muted-foreground">
-            逐篇保存并在作品页展示；没有的内容写“无”，不要留空冒充已声明。
-          </p>
-        </div>
+      <details className="rounded-lg border bg-muted/10 p-4">
+        <summary className="cursor-pointer select-none text-sm font-medium">
+          许可与补充声明（选填）
+        </summary>
+        <p className="mt-2 text-xs text-muted-foreground">
+          逐篇保存并在作品页展示；没有的内容写“无”，不要留空冒充已声明。
+        </p>
+        <div className="mt-3 space-y-3">
         <div className="space-y-2">
           <Label htmlFor="w-license">许可</Label>
           <Input
@@ -1743,17 +1758,17 @@ function StepAuthors({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="w-contributions">作者贡献（CRediT，选填）</Label>
+          <Label htmlFor="w-contributions">作者贡献（选填）</Label>
           <Textarea
             id="w-contributions"
             value={form.authorContributions}
             onChange={(e) => set('authorContributions', e.target.value)}
-            placeholder="概念化、方法学、软件、验证、写作……"
+            placeholder="谁做了什么；不填也行。"
             rows={3}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="w-funding">基金与资助（选填）</Label>
+          <Label htmlFor="w-funding">资助与支持（选填）</Label>
           <Textarea
             id="w-funding"
             value={form.funding}
@@ -1763,7 +1778,7 @@ function StepAuthors({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="w-coi">利益冲突声明（选填）</Label>
+          <Label htmlFor="w-coi">利益关系说明（选填）</Label>
           <Textarea
             id="w-coi"
             value={form.coiStatement}
@@ -1773,7 +1788,7 @@ function StepAuthors({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="w-data">数据可用性（选填）</Label>
+          <Label htmlFor="w-data">材料与数据位置（选填）</Label>
           <Textarea
             id="w-data"
             value={form.dataAvailability}
@@ -1782,10 +1797,11 @@ function StepAuthors({
             rows={2}
           />
         </div>
-      </div>
+        </div>
+      </details>
 
       <div className="space-y-3 rounded-lg border p-4">
-        <div className="text-sm font-medium">作品承诺</div>
+        <div className="text-sm font-medium">发布前确认</div>
         <DeclCheckbox
           checked={form.declOriginal}
           onChange={(v) => set('declOriginal', v)}
@@ -1806,6 +1822,13 @@ function StepAuthors({
           label="发布授权"
           description="同意本站按所选许可协议公开展示这篇作品，并做基础校对与导出。"
           error={fieldError('declCopyright')}
+        />
+        <DeclCheckbox
+          checked={form.declRules}
+          onChange={(v) => set('declRules', v)}
+          label="发布规范确认"
+          description="我已阅读并同意《作品与发布规范》：不冒充真实研究、不伪造材料、不侵犯他人隐私与版权。详见站内“写内容”指南。"
+          error={fieldError('declRules')}
         />
       </div>
     </div>
@@ -1971,6 +1994,7 @@ function StepReview({
           <DeclBadge ok={form.declOriginal} label="原创性声明" />
           <DeclBadge ok={form.declConfidential} label="保密声明" />
           <DeclBadge ok={form.declCopyright} label="版权许可" />
+          <DeclBadge ok={form.declRules} label="发布规范" />
         </div>
       </div>
 

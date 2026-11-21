@@ -20,24 +20,24 @@ router = APIRouter(prefix="/me", tags=["me"])
 
 PERMISSION_LABELS = {
     "user": "成员组",
-    "reviewer": "评审组",
-    "editor": "评审组",
-    "editor_in_chief": "管理组",
+    "reviewer": "内容工作组",
+    "editor": "内容工作组",
+    "editor_in_chief": "站点管理组",
 }
 
 PERMISSION_ROLE_LABELS = {
     "user": "成员",
-    "reviewer": "审稿人",
-    "editor": "编辑",
-    "editor_in_chief": "主编 / 管理员",
+    "reviewer": "互评成员",
+    "editor": "内容整理",
+    "editor_in_chief": "站点管理",
 }
 
 # 三个展示层：成员组 < 评审组 < 管理组；技术角色仍保留细分，但对外只讲三层。
 _PERMISSION_GROUPS = {
     "user": {"key": "member", "label": "成员组", "rank": 1},
-    "reviewer": {"key": "review", "label": "评审组", "rank": 2},
-    "editor": {"key": "review", "label": "评审组", "rank": 2},
-    "editor_in_chief": {"key": "admin", "label": "管理组", "rank": 3},
+    "reviewer": {"key": "review", "label": "内容工作组", "rank": 2},
+    "editor": {"key": "review", "label": "内容工作组", "rank": 2},
+    "editor_in_chief": {"key": "admin", "label": "站点管理组", "rank": 3},
 }
 
 # 能力清单逐层累加；高身份自动拥有低身份的全部能力。
@@ -46,17 +46,17 @@ _PERMISSIONS = {
         "阅读与下载全部公开文章",
         "社区发帖、回复与评论",
         "收藏文章、关注作者",
-        "提交作品并查看审核进度",
+        "发布作品并查看进度",
     ],
     "reviewer": [
-        "接收审稿邀请，提交评审意见与评分",
-        "查看自己的评审历史",
+        "接收互评邀请，提交互评意见与评分",
+        "查看自己的互评历史",
         "参与内容举报初核",
     ],
     "editor": [
-        "初审作品、分配与撤销审稿人",
-        "作出录用、修回或拒稿决定",
-        "编排卷期与文章目录",
+        "初审作品、分配与撤销互评成员",
+        "作出通过、修改或不通过决定",
+        "编排合集与内容目录",
         "发布社区公告与内容治理",
     ],
     "editor_in_chief": [

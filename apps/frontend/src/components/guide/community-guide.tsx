@@ -91,7 +91,7 @@ export function CommunityGuide() {
             {[
               ['举报处理', '版主按类型分派：隐私与侵权优先，广告和灌水其次。处理结果会留在审计记录里。'],
               ['内容维护', '合并重复帖、移版、锁定吵架帖；不替作者改正文。'],
-              ['规则变更', '社区公约更新会发公告；重大变更提前 14 天公示。'],
+              ['规则变更', '规则与边界更新会发公告；重大变更提前 14 天公示。'],
             ].map(([title, body]) => (
               <div key={title} className="border-t pt-3">
                 <p className="text-sm font-medium">{title}</p>
@@ -109,7 +109,7 @@ export function CommunityGuide() {
             <PenLine className="h-4 w-4" /> 写内容
           </Link>
           <Link to="/guide" search={{ tab: 'policies' }} className="inline-flex items-center gap-1 text-primary hover:underline">
-            <Flag className="h-4 w-4" /> 社区公约
+            <Flag className="h-4 w-4" /> 规则与边界
           </Link>
           <Link to="/me" className="inline-flex items-center gap-1 text-primary hover:underline">
             <Bookmark className="h-4 w-4" /> 我的收藏

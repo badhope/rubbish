@@ -62,7 +62,7 @@ const MAP = [
       { label: '内容库', body: '读研究长文、荒诞研究与自由创作。', to: '/catalog', icon: BookOpen },
       { label: '合集', body: '按一组一组的内容顺序读，不按刊期。', to: '/issues', icon: Layers3 },
       { label: '讨论区', body: '短帖、提问、复盘、组队和反馈。', to: '/forum', icon: MessagesSquare },
-      { label: '关于社区', body: '站点性质、边界和联系方式。', to: '/about', icon: ShieldCheck },
+      { label: '关于站点', body: '站点性质、边界和联系方式。', to: '/about', icon: ShieldCheck },
     ],
   },
   {

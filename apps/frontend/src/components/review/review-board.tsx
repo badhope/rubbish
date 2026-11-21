@@ -4,6 +4,7 @@ import { Eye, UserCheck } from 'lucide-react'
 import { useAuthStore } from '@/lib/auth'
 import { useExpressReviewInterest, useReviewBoard } from '@/hooks/api/use-modules'
 import { extractError } from '@/lib/utils'
+import { typeLabel } from '@/lib/resource-labels'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState, LoadingSkeleton } from '@/components/common/state'
 import { Badge } from '@/components/ui/badge'
@@ -19,26 +20,26 @@ export function ReviewBoard() {
     <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6">
       <PageHeader
         title="互评广场"
-        description="只展示在互评件的标题、摘要与方向，不公开作者身份和正文。评议成员可以在这里申请互评，由内容整理统一指派。"
+        description="只展示互评中作品的标题、摘要与方向，不公开作者身份和正文。评议成员可以在这里申请互评，由内容整理统一指派。"
       />
       {isLoading ? (
         <LoadingSkeleton rows={4} />
       ) : isError ? (
         <ErrorState message="互评广场加载失败" onRetry={() => void refetch()} />
       ) : !data?.data.length ? (
-        <EmptyState title="暂无在互评件" description="当前没有处于互评中的作品。" />
+        <EmptyState title="暂无互评中的作品" description="当前没有处于互评中的作品。" />
       ) : (
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             <Eye className="h-4 w-4" />
-            共 {data.total} 篇在审；评议成员申请只记录意愿，不会自动获得作品。
+            共 {data.total} 篇互评中；评议成员申请只记录意愿，不会自动获得作品。
           </div>
           {data.data.map((item) => (
             <Card key={item.submission_id}>
               <CardHeader className="pb-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="outline">互评中</Badge>
-                  {item.type === 'paper' ? <Badge variant="secondary">论文</Badge> : null}
+                  <Badge variant="secondary">{typeLabel(item.type)}</Badge>
                   {item.discipline ? <Badge variant="outline">{item.discipline}</Badge> : null}
                   <span className="text-xs text-muted-foreground">#{item.submission_id}</span>
                 </div>

@@ -75,10 +75,10 @@ function CollectionsPage() {
       {issues.length === 0 ? (
         <EmptyState title="还没有合集" description="内容公开后会进入对应合集。" />
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           {issues.map((issue, index) => (
             <Card key={`${issue.volume}-${issue.issue}`}>
-              <CardContent className="flex flex-wrap items-center gap-4 p-4 sm:flex-nowrap sm:p-5">
+              <CardContent className="flex flex-wrap items-center gap-3 p-3.5 sm:p-4">
                 <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center border bg-background">
                   <span className="text-[9px] uppercase tracking-[0.16em] text-muted-foreground">合集</span>
                   <span className="font-mono text-xl font-semibold leading-none">{padNo(index + 1)}</span>
@@ -118,7 +118,7 @@ function CollectionsPage() {
       )}
 
       <Card className="border-dashed bg-primary/[0.03]">
-        <CardContent className="flex flex-wrap items-center gap-4 p-4 sm:flex-nowrap sm:p-5">
+        <CardContent className="flex flex-wrap items-center gap-3 p-3.5 sm:p-4">
           <Layers3 className="h-5 w-5 shrink-0 text-primary" />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium">新内容公开后会自动进入最新合集</p>

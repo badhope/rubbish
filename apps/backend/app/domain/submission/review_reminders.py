@@ -47,13 +47,13 @@ REMIND_EVERY_DAYS = 3
 REVIEW_DUE_DAYS = 14
 
 _DECISION_LABELS = {
-    "accept": "录用",
-    "accepted": "录用",
-    "approved": "录用",
-    "minor_revision": "小修",
-    "major_revision": "大修",
-    "reject": "拒稿",
-    "rejected": "拒稿",
+    "accept": "通过",
+    "accepted": "通过",
+    "approved": "通过",
+    "minor_revision": "小改",
+    "major_revision": "大改",
+    "reject": "不通过",
+    "rejected": "不通过",
 }
 
 

@@ -142,7 +142,7 @@ export default function AdminUsersPage() {
     <div>
       <PageHeader
         title="用户管理"
-        description="管理用户、启用状态与社区角色分配。读者身份=注册即得，作者身份=确认《社区公约》即得，均不在此分配。"
+        description="管理用户、启用状态与社区角色分配。读者身份=注册即得，作者身份=确认《规则与边界》即得，均不在此分配。"
         actions={
           <div className="flex items-center gap-2">
             {data ? <Badge variant="secondary">当前页 {data.length}</Badge> : null}

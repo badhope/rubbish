@@ -94,7 +94,7 @@ export function ReferenceSection({
           onToggle();
         }}
       >
-        参考文献（{refCount} 条）· 点击展开
+        出处与资料（{refCount} 条）· 点击展开
       </summary>
       <div className="border-t px-4 py-3">
         <div className="markdown-body refs-body">

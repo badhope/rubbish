@@ -67,7 +67,7 @@ async def require_reader(current_user: User = Depends(get_current_user)) -> User
 async def require_author(
     current_user: User = Depends(get_current_user),
 ) -> User:
-    """作者身份：必须已确认当版《投稿与编辑规范》。
+    """作者身份：必须已确认当版《Rubbish 作品与发布规范》。
 
     这是合规要求而非等级：投稿前读过规范，是作者对"不编造数据、不编造
     引用、不伤人"这三条承诺的知情确认。规范改版后旧确认自动失效。
@@ -78,7 +78,7 @@ async def require_author(
             detail={
                 "code": "rules_ack_required",
                 "version": CURRENT_RULES_VERSION,
-                "message": "投稿前请先阅读并确认《Rubbish 投稿与编辑规范》。",
+                "message": "投稿前请先阅读并确认《Rubbish 作品与发布规范》。",
             },
         )
     return current_user

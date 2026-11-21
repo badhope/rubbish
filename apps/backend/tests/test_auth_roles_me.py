@@ -76,11 +76,11 @@ async def test_me_profile_separates_identity_from_activity(
     assert admin.status_code == 200
     body = admin.json()
     assert body["permission_group"]["key"] == "admin"
-    assert body["permission_group"]["label"] == "管理组"
+    assert body["permission_group"]["label"] == "站点管理组"
     assert body["activity"]["level"] == 1
     assert body["activity"]["xp"] == 0
     assert any("站点设置" in item for item in body["permissions"])
-    assert any("接收审稿邀请" in item for item in body["permissions"])
+    assert any("接收互评邀请" in item for item in body["permissions"])
 
     member = await client.get("/api/me/profile", headers=auth_headers(test_user))
     assert member.status_code == 200
@@ -103,5 +103,5 @@ async def test_me_profile_separates_identity_from_activity(
     assert editor_body["activity"]["level"] == member_level
     # editor 继承 reviewer，再继承 member。
     assert any("阅读与下载" in item for item in editor_body["permissions"])
-    assert any("接收审稿邀请" in item for item in editor_body["permissions"])
-    assert any("作出录用" in item for item in editor_body["permissions"])
+    assert any("接收互评邀请" in item for item in editor_body["permissions"])
+    assert any("作出通过" in item for item in editor_body["permissions"])

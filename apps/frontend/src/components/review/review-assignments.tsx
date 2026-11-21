@@ -330,7 +330,7 @@ export function ReviewAssignments() {
         <a className="font-medium text-primary hover:underline" href="/guide?tab=authors">
           发布指南
         </a>
-        <div className="mt-1">互评时请按上述版式与内容整理规范核对结构、图表题注、参考文献和篇幅分档。</div>
+        <div className="mt-1">互评时请按上述版式与内容整理规范核对结构、图表题注、出处说明和篇幅要求。</div>
       </div>
 
       <div

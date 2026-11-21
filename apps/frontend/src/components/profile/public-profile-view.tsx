@@ -15,6 +15,7 @@ import type { PublicProfile } from '@/hooks/api/use-profile'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
+import { typeLabel } from '@/lib/resource-labels'
 
 function fmtDate(value: string | null): string {
   if (!value) return ''
@@ -203,7 +204,7 @@ export function PublicProfileView({
                     <div className="min-w-0">
                       <p className="line-clamp-2 text-sm font-medium group-hover:text-primary">{work.title}</p>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        {work.type} · {work.discipline}
+                        {typeLabel(work.type)} · {work.discipline}
                         {work.published_at ? ` · ${fmtDate(work.published_at)}` : ''}
                       </p>
                     </div>
@@ -220,11 +221,11 @@ export function PublicProfileView({
               <h2 className="font-semibold">关于</h2>
               {user.research_interests ? (
                 <div>
-                  <p className="text-xs text-muted-foreground">研究兴趣</p>
+                  <p className="text-xs text-muted-foreground">关注方向</p>
                   <p className="mt-1 leading-relaxed">{user.research_interests}</p>
                 </div>
               ) : (
-                <p className="text-muted-foreground">还没有填写研究兴趣。</p>
+                <p className="text-muted-foreground">还没有填写关注方向。</p>
               )}
               {profile.badges.length > 0 && (
                 <div>

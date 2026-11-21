@@ -1,5 +1,5 @@
-/** 投稿向导里的「审稿团队专长覆盖」：匿名聚合画像（只有人数与标签，
- * 不含任何审稿人身份），帮投稿人判断自己学科方向的审稿覆盖情况。 */
+/** 投稿向导里的「互评成员专长覆盖」：匿名聚合画像（只有人数与标签，
+ * 不含任何互评成员身份），帮作者判断自己方向的互评覆盖情况。 */
 import { useState } from 'react'
 import { ChevronDown, Users } from 'lucide-react'
 import { usePublicExpertise } from '@/hooks/api/use-modules'
@@ -28,9 +28,9 @@ export function ExpertiseCoverage({ currentDiscipline }: { currentDiscipline?: s
         aria-expanded={open}
       >
         <Users className="h-4 w-4 text-muted-foreground" />
-        <span className="font-medium">审稿团队专长覆盖</span>
+        <span className="font-medium">互评成员专长覆盖</span>
         <span className="text-xs text-muted-foreground">
-          {data.total_reviewers} 位审稿人 · 匿名统计
+          {data.total_reviewers} 位互评成员 · 匿名统计
         </span>
         <ChevronDown
           className={cn('ml-auto h-4 w-4 transition-transform', open && 'rotate-180')}
@@ -46,10 +46,10 @@ export function ExpertiseCoverage({ currentDiscipline }: { currentDiscipline?: s
                   <span className="font-medium text-primary">
                     {currentCovered.reviewer_count}
                   </span>{' '}
-                  位审稿人覆盖。
+                  位互评成员覆盖。
                 </>
               ) : (
-                <>「{current}」方向暂无自选该学科的审稿人，编辑部会按关键词与历史审稿匹配。</>
+                <>「{current}」方向暂无自选该方向的互评成员，内容整理会按关键词与历史互评匹配。</>
               )}
             </p>
           )}
@@ -68,7 +68,7 @@ export function ExpertiseCoverage({ currentDiscipline }: { currentDiscipline?: s
           )}
           {data.top_tags.length > 0 && (
             <div>
-              <p className="mb-1 text-xs text-muted-foreground">高频审稿能力标签</p>
+              <p className="mb-1 text-xs text-muted-foreground">高频互评能力标签</p>
               <div className="flex flex-wrap gap-1.5">
                 {data.top_tags.slice(0, 12).map((t) => (
                   <Badge key={t.tag} variant="outline" className="text-[11px]">
@@ -79,7 +79,7 @@ export function ExpertiseCoverage({ currentDiscipline }: { currentDiscipline?: s
             </div>
           )}
           <p className="text-[11px] text-muted-foreground">
-            以上为匿名聚合统计，不展示任何审稿人身份；单盲评审下作者不可见审稿人信息。
+            以上为匿名聚合统计，不展示任何互评成员身份；匿名互评下作者不可见互评成员信息。
           </p>
         </div>
       )}

@@ -7,7 +7,7 @@ export const Route = createFileRoute('/about')({
   component: AboutPage,
 })
 
-// 社区岗位：版主、策展、技术与治理；不虚构头衔。
+// 社区分工：版主、策展、技术与治理；不虚构头衔。
 const ROLES = [
   {
     name: '社区版主',
@@ -33,7 +33,7 @@ const ROLES = [
 
 const TIMELINE = [
   ['2026 年 10 月', 'Rubbish 社区与内容栏目上线：短帖在讨论区，长文在内容库。'],
-  ['2026 年 11 月', '内容板块、社区指南与社区公约开放；发帖不再需要任何资格审核。'],
+  ['2026 年 11 月', '内容板块、使用指南与规则页开放；发帖不再需要任何资格审核。'],
   ['现在', '提问、记录、失败、复盘、组队和版务都在同一个社区里。'],
 ]
 
@@ -49,7 +49,7 @@ function AboutPage() {
       </Link>
 
       <PageHeader
-        title="关于社区"
+        title="关于站点"
         description="Rubbish 是一个公开写作与讨论社区：把不正经的问题认真做完，把过程、失败和结果拿出来讨论。"
       />
 
@@ -76,7 +76,7 @@ function AboutPage() {
         <RevealSection>
           <h2 className="flex items-center gap-2 text-xl font-medium">
             <Users className="h-5 w-5 text-primary" />
-            社区岗位
+            社区分工
           </h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             {ROLES.map((m) => (
@@ -92,7 +92,7 @@ function AboutPage() {
             ))}
           </div>
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-            以上是社区岗位；不虚构姓名、头衔或机构，也不给版主安上旧式头衔。
+            以上是社区分工；不虚构姓名、头衔或机构，也不给版主安上旧式头衔。
           </p>
         </RevealSection>
 
@@ -176,7 +176,7 @@ function AboutPage() {
             </a>
             。社区规则见
             <Link to="/guide" search={{ tab: 'policies' }} className="mx-1 text-primary hover:underline">
-              社区公约
+              规则与边界
             </Link>
             。
           </p>
