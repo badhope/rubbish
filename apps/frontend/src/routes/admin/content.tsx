@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { ClipboardCheck, Kanban } from 'lucide-react'
 import { requireAdminGuard } from '@/lib/route-guards'
 import { AdminSectionTabs, type AdminSectionItem } from '@/components/admin/admin-section-tabs'
 import AnnouncementsPage from '@/components/admin/pages/content/announcements'
@@ -56,6 +57,30 @@ function AdminContentPage() {
 
   return (
     <div>
+      <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border bg-muted/20 p-2.5">
+        <span className="mr-1 text-xs text-muted-foreground">编辑业务入口</span>
+        <Link
+          to="/submissions/pending"
+          className="inline-flex items-center gap-1 rounded-md border bg-background px-2.5 py-1 text-xs transition-colors hover:border-primary hover:text-primary"
+        >
+          <Kanban className="h-3.5 w-3.5" />
+          编辑工作台
+        </Link>
+        <Link
+          to="/review"
+          search={{ tab: 'assignments' }}
+          className="inline-flex items-center gap-1 rounded-md border bg-background px-2.5 py-1 text-xs transition-colors hover:border-primary hover:text-primary"
+        >
+          <ClipboardCheck className="h-3.5 w-3.5" />
+          审稿工作台
+        </Link>
+        <Link
+          to="/editor/calibration"
+          className="inline-flex items-center gap-1 rounded-md border bg-background px-2.5 py-1 text-xs transition-colors hover:border-primary hover:text-primary"
+        >
+          评审校准
+        </Link>
+      </div>
       <AdminSectionTabs items={SECTIONS} active={section} onChange={changeSection} label="内容域子段" />
       {section === 'forum' ? <ForumInspectionPage /> : null}
       {section === 'announcements' ? <AnnouncementsPage /> : null}
