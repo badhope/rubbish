@@ -71,10 +71,10 @@ type ColumnKey = 'to_assign' | 'in_review' | 'rework' | 'to_decide' | 'decided'
 
 const COLUMN_META: { key: ColumnKey; title: string; accent: string }[] = [
   { key: 'to_assign', title: '待指派', accent: 'bg-slate-100 text-slate-700 dark:bg-slate-800' },
-  { key: 'in_review', title: '评审中', accent: 'bg-blue-100 text-blue-700 dark:bg-blue-950/40' },
-  { key: 'rework', title: '返修中', accent: 'bg-violet-100 text-violet-700 dark:bg-violet-950/40' },
-  { key: 'to_decide', title: '待裁决', accent: 'bg-amber-100 text-amber-800 dark:bg-amber-950/40' },
-  { key: 'decided', title: '已决定', accent: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40' },
+  { key: 'in_review', title: '互评中', accent: 'bg-blue-100 text-blue-700 dark:bg-blue-950/40' },
+  { key: 'rework', title: '修改中', accent: 'bg-violet-100 text-violet-700 dark:bg-violet-950/40' },
+  { key: 'to_decide', title: '待复核', accent: 'bg-amber-100 text-amber-800 dark:bg-amber-950/40' },
+  { key: 'decided', title: '已完成', accent: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40' },
 ]
 
 export function EditorPipeline() {
@@ -100,13 +100,13 @@ export function EditorPipeline() {
   const [conflicts, setConflicts] = useState<Record<number, ConflictCandidate>>({})
   const [onlySameDiscipline, setOnlySameDiscipline] = useState(false)
 
-  // 待裁决：当前正在裁决的作品 id
+  // 待复核：当前正在复核的作品 id
   const [decidingId, setDecidingId] = useState<number | null>(null)
-  // 查看作品（裁决前必须能读正文，而不是只看标题）
+  // 查看作品（复核前必须能读正文，而不是只看标题）
   const [viewingId, setViewingId] = useState<number | null>(null)
   const [decision, setDecision] = useState<'accept' | 'minor_revision' | 'major_revision' | 'reject'>('major_revision')
   const [editorNote, setEditorNote] = useState('')
-  // 免评审通过：只在选择「通过」时出现；理由会随 waive-review 写审计。
+  // 免互评通过：只在选择「通过」时出现；理由会随 waive-review 写审计。
   const [waiveReview, setWaiveReview] = useState(false)
   const [waiveReason, setWaiveReason] = useState('')
 
@@ -115,14 +115,14 @@ export function EditorPipeline() {
   // 总协调全文检索互评意见
   const [reportsOpen, setReportsOpen] = useState(false)
   const [reportsQuery, setReportsQuery] = useState('')
-  // 更换评议成员：先撤回在途邀请，再打开指派弹窗选新人。
+  // 更换互评成员：先撤回在途邀请，再打开指派弹窗选新人。
   const [replaceTarget, setReplaceTarget] = useState<{
     submissionId: number
     assignmentIds: number[]
     names: string
   } | null>(null)
 
-  // 后端会省略空栏（例如当前没有返修稿时不返回 rework），而页面把五栏
+  // 后端会省略空栏（例如当前没有修改稿时不返回 rework），而页面把五栏
   // 当成固定结构渲染。这里补齐空栏，避免 columns.rework.has_more 直接抛错。
   const emptyColumn: {
     count: number
@@ -221,10 +221,10 @@ export function EditorPipeline() {
           assignmentId,
         })
       }
-      toast.success('已撤回旧邀请，请选择新的评议成员')
+      toast.success('已撤回旧邀请，请选择新的互评成员')
       await openAssignDialog([target.submissionId])
     } catch (err) {
-      toast.error(extractError(err, '更换评议成员失败'))
+      toast.error(extractError(err, '更换互评成员失败'))
     }
   }
 
@@ -236,7 +236,7 @@ export function EditorPipeline() {
 
   const onBatchAssign = async () => {
     if (selectedReviewers.length === 0) {
-      toast.info('请至少选择一位评议成员')
+      toast.info('请至少选择一位互评成员')
       return
     }
     try {
@@ -262,7 +262,7 @@ export function EditorPipeline() {
     if (assignmentIds.length === 0) return
     try {
       const res = await remindMut.mutateAsync({ assignment_ids: assignmentIds })
-      toast.success(`已催审 ${res.reminded_count} 位评议成员`)
+      toast.success(`已催审 ${res.reminded_count} 位互评成员`)
     } catch (err) {
       toast.error(extractError(err, '催审失败'))
     }
@@ -271,7 +271,7 @@ export function EditorPipeline() {
   const onDecide = async () => {
     if (decidingId === null) return
     if (decision === 'accept' && waiveReview && waiveReason.trim().length < 10) {
-      toast.error('免评审理由至少 10 个字，会写入审计与作者通知')
+      toast.error('免互评理由至少 10 个字，会写入审计与作者通知')
       return
     }
     try {
@@ -291,7 +291,7 @@ export function EditorPipeline() {
       setWaiveReview(false)
       setWaiveReason('')
     } catch (err) {
-      toast.error(extractError(err, '裁决失败'))
+      toast.error(extractError(err, '复核失败'))
     }
   }
 
@@ -306,13 +306,13 @@ export function EditorPipeline() {
   return (
     <div>
       <PageHeader
-        title="内容整理进度看板"
-        description="五栏进度看板：待指派 → 评审中 → 返修中 → 待裁决 → 已决定。"
+        title="内容进度看板"
+        description="五栏进度看板：待指派 → 互评中 → 修改中 → 待复核 → 已完成。"
         actions={
           <>
             <Link to="/submissions/pending">
               <Button variant="outline" size="sm">
-                待审列表
+                待处理列表
               </Button>
             </Link>
             <Link to="/submissions/pending" search={{ stage: 'triage' }}>
@@ -362,13 +362,13 @@ export function EditorPipeline() {
 
       {columns && (columns.to_assign.has_more || columns.in_review.has_more || columns.rework.has_more || columns.to_decide.has_more || columns.decided.has_more) && (
         <p className="mb-3 text-xs text-muted-foreground">
-          每栏最多展示 50 篇；当前共 待指派 {columns.to_assign.count} / 评审中 {columns.in_review.count} / 返修中 {columns.rework.count} / 待裁决 {columns.to_decide.count} / 已决定 {columns.decided.count} 篇。
+          每栏最多展示 50 篇；当前共 待指派 {columns.to_assign.count} / 互评中 {columns.in_review.count} / 修改中 {columns.rework.count} / 待复核 {columns.to_decide.count} / 已完成 {columns.decided.count} 篇。
         </p>
       )}
 
       <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
-        <HelpTip text="指派前先看利益冲突；裁决必须写 20 字以上处置说明；撤回申诉受理后作品会下架，分数/分区重审要记录结论。" />
-        指派、裁决、申诉处置的边界
+        <HelpTip text="指派前先看利益冲突；复核必须写 20 字以上处置说明；撤回申诉受理后作品会下架，分数/分区重审要记录结论。" />
+        指派、复核、申诉处置的边界
       </p>
 
       {/* 邮件摘要状态条：诚实报告"邮件到底有没有发出去"。
@@ -471,14 +471,14 @@ export function EditorPipeline() {
           <CardContent className="py-3">
             <div className="mb-2 flex items-center gap-2 text-sm font-medium">
               <Users className="h-4 w-4" />
-              评议成员负载
+              互评成员负载
               <span className="text-xs font-normal text-muted-foreground">按接受中任务排序</span>
             </div>
             <div className="max-h-56 overflow-y-auto">
               <table className="w-full table-fixed text-[11px]">
                 <thead className="text-muted-foreground">
                   <tr className="border-b text-left">
-                    <th className="py-1 pr-2 font-normal">评议成员</th>
+                    <th className="py-1 pr-2 font-normal">互评成员</th>
                     <th className="py-1 pr-2 font-normal">接受中</th>
                     <th className="py-1 pr-2 font-normal">已完成</th>
                     <th className="py-1 pr-2 font-normal">逾期</th>
@@ -629,7 +629,7 @@ export function EditorPipeline() {
                                       ? '大修'
                                       : item.status === 'minor_revision'
                                         ? '小修'
-                                        : '已返修待审'}
+                                        : '已修改待审'}
                                   </Badge>
                                   {item.editor_note ? (
                                     <span className="line-clamp-2 text-muted-foreground">
@@ -641,11 +641,11 @@ export function EditorPipeline() {
                                 </div>
                                 {item.author_response ? (
                                   <div className="rounded bg-muted/40 p-2 text-muted-foreground">
-                                    <span className="font-medium text-foreground">作者返修说明：</span>
+                                    <span className="font-medium text-foreground">作者修改说明：</span>
                                     <span className="line-clamp-3 whitespace-pre-wrap">{item.author_response}</span>
                                   </div>
                                 ) : (
-                                  <p className="text-muted-foreground">作者尚未提交返修说明。</p>
+                                  <p className="text-muted-foreground">作者尚未提交修改说明。</p>
                                 )}
                               </div>
                             )}
@@ -660,7 +660,7 @@ export function EditorPipeline() {
                                   className="w-full"
                                   onClick={() => void openAssignDialog([item.submission_id])}
                                 >
-                                  <UserPlus className="h-3 w-3" /> 追加评议成员
+                                  <UserPlus className="h-3 w-3" /> 追加互评成员
                                 </Button>
                                 <Button
                                   size="sm"
@@ -679,7 +679,7 @@ export function EditorPipeline() {
                                     })
                                   }}
                                 >
-                                  更换评议成员
+                                  更换互评成员
                                 </Button>
                               </div>
                             )}
@@ -690,13 +690,13 @@ export function EditorPipeline() {
                                 className="w-full"
                                 onClick={() => openDecide(item.submission_id)}
                               >
-                                <Gavel className="h-3 w-3" /> 提前裁决（已有 {item.completed_count} 份意见）
+                                <Gavel className="h-3 w-3" /> 提前复核（已有 {item.completed_count} 份意见）
                               </Button>
                             )}
 
                             {col.key === 'to_assign' && item.needs_reassign && (
                               <p className="rounded bg-amber-50 px-2 py-1 text-xs text-amber-700 dark:bg-amber-950/20">
-                                {item.reassign_reason ?? '需要改派评议成员'}
+                                {item.reassign_reason ?? '需要改派互评成员'}
                                 {item.declined_count ? ` · 已拒审 ${item.declined_count} 人` : ''}
                               </p>
                             )}
@@ -707,7 +707,7 @@ export function EditorPipeline() {
                                 className="w-full"
                                 onClick={() => openAssignDialog([item.submission_id])}
                               >
-                                <UserPlus className="h-3 w-3" /> {item.needs_reassign ? '改派 / 补派评议成员' : '指派评议成员'}
+                                <UserPlus className="h-3 w-3" /> {item.needs_reassign ? '改派 / 补派互评成员' : '指派互评成员'}
                               </Button>
                             )}
 
@@ -716,7 +716,7 @@ export function EditorPipeline() {
                                 {item.recommendations.map((r) => (
                                   <div key={r.reviewer_id} className="flex items-center gap-2">
                                     <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                                    <span>评议成员 {r.reviewer_username ?? `#${r.reviewer_id}`}</span>
+                                    <span>互评成员 {r.reviewer_username ?? `#${r.reviewer_id}`}</span>
                                     <Badge variant="outline">{r.recommendation ?? '—'}</Badge>
                                   </div>
                                 ))}
@@ -733,7 +733,7 @@ export function EditorPipeline() {
                                   className="mt-1 w-full"
                                   onClick={() => openDecide(item.submission_id)}
                                 >
-                                  <Gavel className="h-3 w-3" /> 裁决
+                                  <Gavel className="h-3 w-3" /> 复核
                                 </Button>
                               </div>
                             )}
@@ -754,7 +754,7 @@ export function EditorPipeline() {
       <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{checked.size > 1 ? '批量指派评议成员' : '指派评议成员'}</DialogTitle>
+            <DialogTitle>{checked.size > 1 ? '批量指派互评成员' : '指派互评成员'}</DialogTitle>
             <DialogDescription>
               已选 {checked.size} 篇作品。黄色警告为利益冲突项，默认不选。
             </DialogDescription>
@@ -768,15 +768,15 @@ export function EditorPipeline() {
                   onChange={(e) => setOnlySameDiscipline(e.target.checked)}
                   className="h-3.5 w-3.5"
                 />
-                只看自选「{checkedDiscipline}」方向的评议成员
+                只看自选「{checkedDiscipline}」方向的互评成员
               </label>
             )}
             <div className="max-h-72 space-y-1 overflow-y-auto rounded border p-2">
               {dialogCandidates.length === 0 && (
                 <p className="px-2 py-1.5 text-sm text-muted-foreground">
                   {onlySameDiscipline && allCandidates.length > 0
-                    ? '没有自选该方向的评议成员；取消筛选可查看全部候选。'
-                    : '暂无候选评议成员：请先在「用户管理」里授予评议成员角色。'}
+                    ? '没有自选该方向的互评成员；取消筛选可查看全部候选。'
+                    : '暂无候选互评成员：请先在「用户管理」里授予互评成员角色。'}
                 </p>
               )}
               {dialogCandidates.map((c) => {
@@ -852,7 +852,7 @@ export function EditorPipeline() {
               取消
             </Button>
             <Button onClick={onBatchAssign} disabled={batchMut.isPending || selectedReviewers.length === 0}>
-              {batchMut.isPending ? '指派中…' : `指派给 ${selectedReviewers.length} 位评议成员`}
+              {batchMut.isPending ? '指派中…' : `指派给 ${selectedReviewers.length} 位互评成员`}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -869,20 +869,20 @@ export function EditorPipeline() {
         onClose={() => setReportsOpen(false)}
       />
 
-      {/* 查看作品弹层：总协调裁决前先读完整正文 */}
+      {/* 查看作品弹层：总协调复核前先读完整正文 */}
       <EditorManuscriptDialog
         submissionId={viewingId}
         onClose={() => setViewingId(null)}
       />
 
-      {/* 裁决弹层 */}
+      {/* 复核弹层 */}
       <Dialog
         open={decidingId !== null}
         onOpenChange={(o) => !o && setDecidingId(null)}
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>内容整理裁决</DialogTitle>
+            <DialogTitle>内容整理复核</DialogTitle>
             <DialogDescription>作品 #{decidingId}</DialogDescription>
           </DialogHeader>
           <div className="max-h-[40vh] space-y-3 overflow-y-auto pr-1">
@@ -927,7 +927,7 @@ export function EditorPipeline() {
                 </label>
                 {waiveReview && (
                   <div className="space-y-1">
-                    <Label htmlFor="waive-reason">免评审理由（至少 10 字）</Label>
+                    <Label htmlFor="waive-reason">免互评理由（至少 10 字）</Label>
                     <Input
                       id="waive-reason"
                       value={waiveReason}
@@ -959,7 +959,7 @@ export function EditorPipeline() {
               {decisionMut.isPending || (decision === 'accept' && waiveReview && waiveMut.isPending)
                 ? '提交中…'
                 : decision === 'accept' && waiveReview
-                  ? '记录免评审并通过'
+                  ? '记录免互评并通过'
                   : '提交决定'}
             </Button>
           </DialogFooter>
@@ -968,10 +968,10 @@ export function EditorPipeline() {
 
       <ConfirmDialog
         open={replaceTarget !== null}
-        title="更换评议成员"
+        title="更换互评成员"
         description={
           replaceTarget
-            ? `将撤回 ${replaceTarget.names || '当前评议成员'} 的在途邀请，再重新选择评议成员。已提交的互评报告不会被删除。`
+            ? `将撤回 ${replaceTarget.names || '当前互评成员'} 的在途邀请，再重新选择互评成员。已提交的互评报告不会被删除。`
             : undefined
         }
         confirmText="撤回并重新指派"
@@ -1008,7 +1008,7 @@ function SubmissionReportsPanel({ submissionId }: { submissionId: number }) {
   if (!data || data.length === 0) {
     return (
       <p className="rounded-md border border-dashed bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-        尚无已完成的互评报告；裁决前应先等至少两份意见。
+        尚无已完成的互评报告；复核前应先等至少两份意见。
       </p>
     )
   }
@@ -1022,7 +1022,7 @@ function SubmissionReportsPanel({ submissionId }: { submissionId: number }) {
         <div key={r.id} className="rounded-md border bg-card p-3 text-sm">
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <span className="font-medium">
-              评议成员 {r.reviewer_username ?? `#${r.reviewer_id ?? index + 1}`}
+              互评成员 {r.reviewer_username ?? `#${r.reviewer_id ?? index + 1}`}
             </span>
             <Badge variant="outline">
               {RECOMMENDATION_LABELS[r.recommendation] ?? r.recommendation}
@@ -1071,7 +1071,7 @@ function SubmissionAuthorResponsePanel({ submissionId }: { submissionId: number 
   return (
     <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-sm">
       <div className="mb-2 flex flex-wrap items-center gap-2 font-medium">
-        <FileText className="h-4 w-4" /> 作者逐条回复评议成员
+        <FileText className="h-4 w-4" /> 作者逐条回复互评成员
         {data?.author_response_at && (
           <span className="text-xs font-normal text-muted-foreground">
             {new Date(data.author_response_at).toLocaleString()}
@@ -1091,7 +1091,7 @@ function SubmissionTimelinePanel({ submissionId }: { submissionId: number }) {
     <div className="space-y-2 border-t pt-3">
       <div className="flex items-center gap-2 text-sm font-medium">
         <History className="h-4 w-4" /> 全流程追溯
-        <span className="text-xs text-muted-foreground">发布 → 版本 → 邀请/拒审 → 报告 → 裁决</span>
+        <span className="text-xs text-muted-foreground">发布 → 版本 → 邀请/拒审 → 报告 → 复核</span>
       </div>
       <ol className="space-y-1.5 border-l pl-3 text-xs">
         {data.events.map((e, i) => (
@@ -1129,7 +1129,7 @@ function EditorReportSearchDialog({
         <DialogHeader>
           <DialogTitle>互评意见检索</DialogTitle>
           <DialogDescription>
-            按论文标题、评议成员用户名或意见正文搜索全部已完成报告；只返回内容整理可见内容。
+            按作品标题、互评成员用户名或意见正文搜索全部已完成报告；只返回内容整理可见内容。
           </DialogDescription>
         </DialogHeader>
         <Input
@@ -1141,7 +1141,7 @@ function EditorReportSearchDialog({
         {isLoading ? (
           <LoadingSkeleton rows={3} />
         ) : !data || data.items.length === 0 ? (
-          <EmptyState title="没有匹配的互评意见" description="换一个标题关键词或评议成员用户名。" />
+          <EmptyState title="没有匹配的互评意见" description="换一个标题关键词或互评成员用户名。" />
         ) : (
           <div className="max-h-[60vh] space-y-2 overflow-y-auto pr-1">
             <p className="text-xs text-muted-foreground">命中 {data.count} 条</p>
@@ -1211,7 +1211,7 @@ function EditorManuscriptDialog({
         <DialogHeader>
           <DialogTitle>查看作品</DialogTitle>
           <DialogDescription>
-            裁决前先读正文、摘要与互评意见；Markdown 稿直接读全文，PDF/Word 稿可在线打开原件。
+            复核前先读正文、摘要与互评意见；Markdown 稿直接读全文，PDF/Word 稿可在线打开原件。
           </DialogDescription>
         </DialogHeader>
         {subQ.isLoading ? (
@@ -1281,7 +1281,7 @@ function EditorManuscriptDialog({
             {data.author_response?.trim() ? (
               <div className="rounded-md border border-primary/20 bg-primary/5 p-3">
                 <div className="mb-2 flex items-center gap-2 text-sm font-medium">
-                  <FileText className="h-4 w-4" /> 作者逐条回复评议成员
+                  <FileText className="h-4 w-4" /> 作者逐条回复互评成员
                   {data.author_response_at && (
                     <span className="text-xs font-normal text-muted-foreground">
                       {new Date(data.author_response_at).toLocaleString()}

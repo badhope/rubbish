@@ -17,7 +17,7 @@ import FileContentPreview from "@/components/common/file-content-preview";
 
 const ACCEPT = ".pdf,.docx,.doc,.md,.txt,.zip,.png,.jpg,.jpeg,.xlsx,.csv";
 
-/** 提交审稿报告前：先选好要一起交的批注件/补充材料。 */
+/** 提交互评意见前：先选好要一起交的批注件/补充材料。 */
 export function ReviewAttachmentPicker({
   files,
   onChange,
@@ -51,7 +51,7 @@ export function ReviewAttachmentPicker({
         <div>
           <Label className="flex items-center gap-1.5">
             <Paperclip className="h-4 w-4" />
-            审稿附件（可选）
+            互评附件（可选）
           </Label>
           <p className="mt-0.5 text-xs text-muted-foreground">
             带批注的 PDF / Word、补充数据、截图都可以。单个 ≤ 50 MB，最多 5 个。
@@ -224,7 +224,7 @@ export function ReviewAttachmentUploadButton({
       for (const file of Array.from(list)) {
         await uploadMut.mutateAsync({ reportId, file });
       }
-      toast.success("审稿附件已上传");
+      toast.success("互评附件已上传");
       onUploaded?.();
     } catch (err) {
       toast.error(extractError(err, "附件上传失败"));

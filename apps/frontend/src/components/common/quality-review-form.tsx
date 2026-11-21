@@ -99,7 +99,7 @@ export function QualityReviewForm({ articleType = 'research', onSubmit, readOnly
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-base">
             <ClipboardCheck className="h-4 w-4" />
-            审稿评分表（评审质量分）
+            互评评分表（内容质量分）
             <Badge variant="outline" className="ml-auto text-[10px]">
               已作答 {answeredCount}/{totalItems}
             </Badge>

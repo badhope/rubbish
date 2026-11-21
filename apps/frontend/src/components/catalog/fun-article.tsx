@@ -223,7 +223,7 @@ export function FunArticle({
         ) : null}
 
         <p className="mt-8 border-t pt-4 text-[11px] leading-5 text-muted-foreground">
-          自由创作轨：不计分 · 不进站内热度 · 不走评审 · 不代表社区立场。正文里的“研究”“样本”“显著性”请默认在整活。
+          自由创作轨：不计分 · 不进站内热度 · 不走互评 · 不代表社区立场。正文里的“研究”“样本”“显著性”请默认在整活。
         </p>
 
         <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>

@@ -70,7 +70,7 @@ export function ClaimDialog({
           note: note.trim() || null,
         },
       })
-      toast.success('认领申请已提交，编辑部核对后会通知你')
+      toast.success('认领申请已提交，内容整理组核对后会通知你')
       setEvidenceValue('')
       setNote('')
       onOpenChange(false)
@@ -85,7 +85,7 @@ export function ClaimDialog({
         <DialogHeader>
           <DialogTitle>认领这篇记录</DialogTitle>
           <DialogDescription>
-            认领会交给编辑部核对；通过后文章会挂到你的主页。请只认领自己参与过的文章。
+            认领会交给内容整理组核对；通过后文章会挂到你的主页。请只认领自己参与过的文章。
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">

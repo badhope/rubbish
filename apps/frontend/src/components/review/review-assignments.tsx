@@ -314,7 +314,7 @@ export function ReviewAssignments() {
       </div>
 
       <div className="mb-4 rounded-md border border-dashed bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
-        <span className="mr-2 font-medium text-foreground">评审依据与版式要求：</span>
+        <span className="mr-2 font-medium text-foreground">互评依据与版式要求：</span>
         <a className="font-medium text-primary hover:underline" href="/templates/rubbish-submission-template.docx" download>
           Word 模板
         </a>
@@ -470,7 +470,7 @@ export function ReviewAssignments() {
             <DialogHeader className="shrink-0 border-b px-5 py-4">
               <DialogTitle>互评工作台</DialogTitle>
               <DialogDescription>
-                电脑端左侧读稿、右侧打分；手机端在下方切换「读作品 / 写评审」。草稿保存在服务端，换设备也能续写。
+                电脑端左侧读稿、右侧打分；手机端在下方切换「读作品 / 写互评」。草稿保存在服务端，换设备也能续写。
               </DialogDescription>
             </DialogHeader>
             <Tabs
@@ -480,7 +480,7 @@ export function ReviewAssignments() {
             >
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="manuscript">读作品</TabsTrigger>
-                <TabsTrigger value="form">写评审</TabsTrigger>
+                <TabsTrigger value="form">写互评</TabsTrigger>
               </TabsList>
             </Tabs>
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:grid lg:grid-cols-[minmax(0,1fr)_440px] lg:overflow-hidden">

@@ -312,7 +312,7 @@ export function ReviewReportFields({
           <span>
             <strong>特别篇（篇幅特许）</strong>
             <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">
-              仅当稿件因内容完整性必须超过篇幅上限时勾选。通过后阅读端会显示「特别篇」标签，并记录本次特许理由；
+              仅当作品因内容完整性必须超过篇幅上限时勾选。通过后阅读端会显示「特别篇」标签，并记录本次特许理由；
               不要用它绕过正常删减。
             </span>
           </span>
@@ -345,7 +345,7 @@ export function ReviewReportFields({
       <ReviewTextField
         id="comments_to_author"
         label="给作者的意见（作者可见）"
-        description="按「总体判断 → 主要问题排序 → 可执行修改 → 做得好的地方 → 修改后复核点」写。不要写身份线索、不要只写“建议拒稿”而不给理由。"
+        description="按「总体判断 → 主要问题排序 → 可执行修改 → 做得好的地方 → 修改后复核点」写。不要写身份线索、不要只写“建议不通过”而不给理由。"
         value={value.comments_to_author}
         onChange={(v) => onChange({ ...value, comments_to_author: v })}
         placeholder="作者会原文看到这段。请写具体到段落/图表/论点的意见，并给出可执行的下一步。"
@@ -358,7 +358,7 @@ export function ReviewReportFields({
 
       <ReviewTextField
         id="comments_to_editor"
-        label="给内容整理的保密意见（可选，作者不可见）"
+        label="给内容整理组的内部意见（可选，作者不可见）"
         description="只写不适合让作者看到的内容：推荐决定背后的权衡、伦理/引用疑点、是否需要额外互评成员、与站点范围的匹配度。"
         value={value.comments_to_editor}
         onChange={(v) => onChange({ ...value, comments_to_editor: v })}
@@ -370,7 +370,7 @@ export function ReviewReportFields({
 
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed bg-muted/20 px-3 py-2.5">
         <p className="text-[11px] leading-5 text-muted-foreground">
-          提交前建议先看一遍：作者视角只展示「给作者的意见」，编辑视角还会看到评分与保密意见。
+          提交前建议先看一遍：作者视角只展示「给作者的意见」，内容整理视角还会看到评分与内部意见。
         </p>
         <Button type="button" variant="outline" size="sm" onClick={() => setPreviewOpen(true)}>
           <Eye className="h-4 w-4" />
@@ -395,7 +395,7 @@ export function ReviewReportFields({
                   ? `合计 ${summary.total} 分 · ${summary.gradeLabel}`
                   : `诊断 ${summary.total} 分 · ${summary.gradeLabel}（${summary.incomplete
                       .map((k) => dims.find((d) => d.key === k)?.label ?? k)
-                      .join('、')} 待编辑部补全，不打回作者）`}
+                      .join('、')} 待内容整理组补全，不打回作者）`}
               </span>
             </div>
             <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">

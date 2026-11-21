@@ -79,8 +79,8 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 
-// 指派评议成员时取多少候选。超出时 UI 会明确提示"只取了前 N 个"，
-// 避免目标评议成员只是没被列出来却被当成"不存在"。
+// 指派互评成员时取多少候选。超出时 UI 会明确提示"只取了前 N 个"，
+// 避免目标互评成员只是没被列出来却被当成"不存在"。
 const REVIEWER_CANDIDATE_LIMIT = 200
 
 export const Route = createFileRoute('/submissions/pending')({
@@ -193,7 +193,7 @@ function assignmentStatusBadge(status: string) {
 interface DecisionFormState {
   decision: EditorDecision
   editor_note: string
-  /** 互评意见冲突时必填的裁决理由 */
+  /** 互评意见冲突时必填的复核理由 */
   arbitration_note: string
 }
 
@@ -203,15 +203,15 @@ const EMPTY_DECISION: DecisionFormState = {
   arbitration_note: '',
 }
 
-// 决策按钮只按作品状态开关；真正的“≥2 位评议成员通过”闸门由矩阵弹窗
-// 展示、由后端裁决端点强制。此前用列表里的 reports_completed 判断，
+// 决策按钮只按作品状态开关；真正的“≥2 位互评成员通过”闸门由矩阵弹窗
+// 展示、由后端复核端点强制。此前用列表里的 reports_completed 判断，
 // 但该字段后端从未返回，按钮永远是灰的——内容整理根本点不开决定。
 function canOpenDecision(s: SubmissionResponse): boolean {
   return ['pending', 'under_review', 'resubmitted'].includes(s.status)
 }
 
 function decisionDisabledReason(s: SubmissionResponse): string | undefined {
-  return canOpenDecision(s) ? undefined : '当前状态不可裁决'
+  return canOpenDecision(s) ? undefined : '当前状态不可复核'
 }
 
 function PendingPage() {
@@ -229,7 +229,7 @@ function PendingSubmissionsPage() {
   // 'all' tab 不传 status，让后端返回全部状态
   const statusFilter = statusTab === 'all' ? undefined : statusTab
   // 职权分离（与后端 require_chief_editor 同口径）：四元最终决定是
-  // 最终裁决是内容整理/总协调的职权；分类整理只有初审、送审与推荐权。
+  // 最终复核是内容整理/总协调的职权；分类整理只有初审、互评与推荐权。
   const { isAdmin, user } = useAuth()
   const isChief = isAdmin || (user?.roles ?? []).some((r) => ['editor', 'editor_in_chief'].includes(r))
   const isSectionOnly = !isChief && (user?.roles ?? []).includes('section_editor')
@@ -252,7 +252,7 @@ function PendingSubmissionsPage() {
   // 不通过是终态决定，二次确认后才真正执行
   const [rejectConfirm, setRejectConfirm] = useState(false)
   const [reportsTarget, setReportsTarget] = useState<SubmissionResponse | null>(null)
-  // 匿名互评的匿名稿外链：只有内容整理能写，评议成员取作品只认这个链接
+  // 匿名互评的匿名稿外链：只有内容整理能写，互评成员取作品只认这个链接
   const [anonymizedTarget, setAnonymizedTarget] = useState<SubmissionResponse | null>(
     null,
   )
@@ -289,18 +289,18 @@ function PendingSubmissionsPage() {
       }
       if (matrix.accept_count < 2) {
         toast.error(
-          `公开需要至少 2 名评议成员给出通过推荐，当前 ${matrix.accept_count}/2。`,
+          `公开需要至少 2 名互评成员给出通过推荐，当前 ${matrix.accept_count}/2。`,
         )
         return
       }
       if (matrix.conflict && !matrix.adjudicator_accepted) {
-        toast.error('互评意见冲突：请先指定第三方裁决人并等待其通过意见。')
+        toast.error('互评意见冲突：请先指定第三方复核人并等待其通过意见。')
         return
       }
     }
-    // 冲突时必须填裁决理由
+    // 冲突时必须填复核理由
     if (matrix?.conflict && !decisionForm.arbitration_note.trim()) {
-      toast.error('互评意见冲突：请填写裁决理由')
+      toast.error('互评意见冲突：请填写复核理由')
       return
     }
     try {
@@ -325,7 +325,7 @@ function PendingSubmissionsPage() {
     <div>
       <PageHeader
         title="内容台"
-        description="分配评议成员、查看互评报告、做最终决定。支持按状态筛选全部提交。"
+        description="分配互评成员、查看互评报告、做最终决定。支持按状态筛选全部提交。"
         actions={
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" asChild>
@@ -346,7 +346,7 @@ function PendingSubmissionsPage() {
 
       {isSectionOnly && (
         <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
-          你以分类整理（L7）身份查看工作台：可以初审、分配评议成员并给出推荐意见，
+          你以分类整理（L7）身份查看工作台：可以初审、分配互评成员并给出推荐意见，
           最终通过 / 修回 / 不通过决定由内容整理（L8）作出。
         </div>
       )}
@@ -419,7 +419,7 @@ function PendingSubmissionsPage() {
                   </Button>
                   {s.status === 'pending' && (
                     <Button size="sm" onClick={() => setAssignTarget(s)}>
-                      <UserPlus className="h-4 w-4" /> 分配评议成员
+                      <UserPlus className="h-4 w-4" /> 分配互评成员
                     </Button>
                   )}
                   {(s.status === 'under_review' || s.status === 'resubmitted') && (
@@ -493,7 +493,7 @@ function PendingSubmissionsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* 分配评议成员 Dialog */}
+      {/* 分配互评成员 Dialog */}
       {assignTarget && (
         <AssignReviewerDialog
           submission={assignTarget}
@@ -587,7 +587,7 @@ function PendingSubmissionsPage() {
                     已完成 {decisionMatrixQ.data.reports_completed} 份
                   </Badge>
                   <Badge variant="outline">
-                    评议成员 {decisionMatrixQ.data.distinct_reviewers} 人
+                    互评成员 {decisionMatrixQ.data.distinct_reviewers} 人
                   </Badge>
                   <Badge
                     className={
@@ -605,13 +605,13 @@ function PendingSubmissionsPage() {
                   )}
                   {decisionMatrixQ.data.adjudicator_accepted && (
                     <Badge className="bg-emerald-500/15 text-emerald-700">
-                      第三方已裁决
+                      第三方已复核
                     </Badge>
                   )}
                 </div>
                 {decisionMatrixQ.data.accept_count < 2 && (
                   <p className="mt-2 text-xs text-amber-700">
-                    公开前需要至少 2 名不同评议成员给出通过推荐。可继续送审，或在意见冲突时指定第三方裁决人。
+                    公开前需要至少 2 名不同互评成员给出通过推荐。可继续互评，或在意见冲突时指定第三方复核人。
                   </p>
                 )}
               </div>
@@ -662,7 +662,7 @@ function PendingSubmissionsPage() {
             {decisionMatrixQ.data?.conflict && (
               <div className="space-y-2 rounded-md border border-amber-300 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950">
                 <Label htmlFor="arbitration_note" className="text-amber-800 dark:text-amber-200">
-                  互评意见冲突，需填写裁决理由（必填）
+                  互评意见冲突，需填写复核理由（必填）
                 </Label>
                 <Textarea
                   id="arbitration_note"
@@ -680,7 +680,7 @@ function PendingSubmissionsPage() {
             )}
           </div>
 
-          {/* D 级打回：评分不达标时不直接不通过，而是要求评议成员补审/作者修改。
+          {/* D 级打回：评分不达标时不直接不通过，而是要求互评成员补审/作者修改。
               与"做决定"并列而不是藏在菜单里——它是与通过/不通过同级的处置。 */}
           <div className="space-y-2 rounded-lg border border-destructive/25 bg-destructive/5 p-3">
             <div className="flex items-center justify-between">
@@ -697,7 +697,7 @@ function PendingSubmissionsPage() {
             {reworkOpen && (
               <div className="space-y-2">
                 <p className="text-[11px] text-muted-foreground">
-                  打回会同时通知评议成员（补审或说明理由）与作者（逐条修改要求）。
+                  打回会同时通知互评成员（补审或说明理由）与作者（逐条修改要求）。
                   至少填 3 条具体问题——只说"不合格"对作者没有帮助。
                 </p>
                 {decisionTarget?.quality_score != null && decisionTarget.quality_score < 40 && (
@@ -729,7 +729,7 @@ function PendingSubmissionsPage() {
                     if (!decisionTarget) return
                     try {
                       await reworkMut.mutateAsync({ id: decisionTarget.id, requirements: reqs })
-                      toast.success('已打回：评议成员与作者都已收到通知')
+                      toast.success('已打回：互评成员与作者都已收到通知')
                       setReworkOpen(false)
                       setReworkRequirements('')
                       setDecisionTarget(null)
@@ -958,7 +958,7 @@ function SubmissionDetailBody({ sub }: { sub: SubmissionResponse }) {
   )
 }
 
-// 分配评议成员对话框：列出本租户所有用户供内容整理挑选
+// 分配互评成员对话框：列出本租户所有用户供内容整理挑选
 function AssignReviewerDialog({
   submission,
   onClose,
@@ -995,7 +995,7 @@ function AssignReviewerDialog({
   const toggle = (id: number) => {
     const candidate = candidates.find((item) => item.id === id)
     if (candidate?.conflict) {
-      toast.error('该评议成员已声明与作者存在利益冲突，不能指派')
+      toast.error('该互评成员已声明与作者存在利益冲突，不能指派')
       return
     }
     setSelected((prev) =>
@@ -1005,7 +1005,7 @@ function AssignReviewerDialog({
 
   const onQuickInvite = async (candidate: ReviewerCandidate) => {
     if (candidate.conflict) {
-      toast.error('该评议成员与作者存在可核验的利益冲突，请更换人选')
+      toast.error('该互评成员与作者存在可核验的利益冲突，请更换人选')
       return
     }
     setInvitingId(candidate.id)
@@ -1029,7 +1029,7 @@ function AssignReviewerDialog({
 
   const onConfirm = async () => {
     if (selected.length === 0) {
-      toast.error('请至少选择一名评议成员（最多 3 名）')
+      toast.error('请至少选择一名互评成员（最多 3 名）')
       return
     }
     try {
@@ -1042,7 +1042,7 @@ function AssignReviewerDialog({
           external_affiliation: isExternal ? externalAffiliation.trim() || undefined : undefined,
         },
       })
-      toast.success(`已指派 ${res.assigned} 名评议成员`)
+      toast.success(`已指派 ${res.assigned} 名互评成员`)
       onClose()
     } catch (err) {
       toast.error(extractError(err, '指派失败'))
@@ -1053,11 +1053,11 @@ function AssignReviewerDialog({
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>指派评议成员 — {submission.title}</DialogTitle>
+          <DialogTitle>指派互评成员 — {submission.title}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <p className="text-xs text-muted-foreground">
-            可一次多选（最多 3 名，占 slot 1/2/3）；重复邀请同一评议成员会自动跳过。
+            可一次多选（最多 3 名，占 slot 1/2/3）；重复邀请同一互评成员会自动跳过。
           </p>
           {submissionDisciplineSlug && (
             <label className="flex items-center gap-2 text-xs">
@@ -1067,7 +1067,7 @@ function AssignReviewerDialog({
                 onChange={(e) => setOnlySameDiscipline(e.target.checked)}
                 className="h-3.5 w-3.5"
               />
-              只看自选「{submission.discipline}」方向的评议成员
+              只看自选「{submission.discipline}」方向的互评成员
             </label>
           )}
           <div className="max-h-[40vh] space-y-1 overflow-y-auto">
@@ -1076,8 +1076,8 @@ function AssignReviewerDialog({
             ) : candidates.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 {onlySameDiscipline && allCandidates.length > 0
-                  ? '没有自选该方向的评议成员；取消筛选可查看全部候选。'
-                  : '没有可指派的评议成员：请先在「用户管理」里给用户授予评议成员角色。'}
+                  ? '没有自选该方向的互评成员；取消筛选可查看全部候选。'
+                  : '没有可指派的互评成员：请先在「用户管理」里给用户授予互评成员角色。'}
               </p>
             ) : (
               candidates.map((u) => {
@@ -1150,7 +1150,7 @@ function AssignReviewerDialog({
           </div>
           {truncated && (
             <p className="text-xs text-muted-foreground">
-              候选列表只取了前 {REVIEWER_CANDIDATE_LIMIT} 个评议成员，目标评议成员不在其中时请用
+              候选列表只取了前 {REVIEWER_CANDIDATE_LIMIT} 个互评成员，目标互评成员不在其中时请用
               「用户管理」确认其角色。
             </p>
           )}
@@ -1163,9 +1163,9 @@ function AssignReviewerDialog({
                 className="mt-0.5 h-4 w-4"
               />
               <span>
-                <span className="font-medium">外部评议成员</span>
+                <span className="font-medium">外部互评成员</span>
                 <span className="mt-0.5 block text-xs text-muted-foreground">
-                  由总协调/内容整理指定，标记会写入互评矩阵与审计；评议成员仍需用站内账号登录。
+                  由总协调/内容整理指定，标记会写入互评矩阵与审计；互评成员仍需用站内账号登录。
                 </span>
               </span>
             </label>
@@ -1252,7 +1252,7 @@ function AssignmentsDialog({
                     报告 {matrixQ.data.reports_completed} 份
                   </Badge>
                   <Badge variant="outline">
-                    评议成员 {matrixQ.data.distinct_reviewers} 人
+                    互评成员 {matrixQ.data.distinct_reviewers} 人
                   </Badge>
                   <Badge
                     className={
@@ -1268,7 +1268,7 @@ function AssignmentsDialog({
                   )}
                   {matrixQ.data.adjudicator_assigned && (
                     <Badge variant="outline">
-                      第三方裁决人
+                      第三方复核人
                     </Badge>
                   )}
                 </div>
@@ -1276,8 +1276,8 @@ function AssignmentsDialog({
                   <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                     <p className="text-xs text-amber-700">
                       {matrixQ.data.need_adjudication
-                        ? '互评意见冲突，需要第三方裁决人给出独立意见后才能通过。'
-                        : '已指定第三方裁决人，等待其提交意见。'}
+                        ? '互评意见冲突，需要第三方复核人给出独立意见后才能通过。'
+                        : '已指定第三方复核人，等待其提交意见。'}
                     </p>
                     {matrixQ.data.need_adjudication && (
                       <Button
@@ -1285,7 +1285,7 @@ function AssignmentsDialog({
                         variant="outline"
                         onClick={() => setAdjOpen(true)}
                       >
-                        <Gavel className="mr-1 h-4 w-4" /> 指定第三方裁决人
+                        <Gavel className="mr-1 h-4 w-4" /> 指定第三方复核人
                       </Button>
                     )}
                   </div>
@@ -1335,7 +1335,7 @@ function AssignmentsDialog({
         )}
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => setAssignOpen(true)}>
-            <UserPlus className="mr-1 h-4 w-4" /> 追加 / 改派评议成员
+            <UserPlus className="mr-1 h-4 w-4" /> 追加 / 改派互评成员
           </Button>
           <Button variant="outline" onClick={onClose}>
             关闭
@@ -1359,7 +1359,7 @@ function AssignmentsDialog({
   )
 }
 
-// 第三方裁决人：只在意见冲突/需要独立裁决时由总协调或内容整理指定。
+// 第三方复核人：只在意见冲突/需要独立复核时由总协调或内容整理指定。
 function AdjudicateDialog({
   submission,
   matrix,
@@ -1380,7 +1380,7 @@ function AdjudicateDialog({
 
   const onConfirm = async () => {
     if (!selected) {
-      toast.error('请选择一位第三方裁决人')
+      toast.error('请选择一位第三方复核人')
       return
     }
     try {
@@ -1390,10 +1390,10 @@ function AdjudicateDialog({
         due_days: Math.max(1, Math.min(90, Number(dueDays) || 14)),
         reason: reason.trim() || undefined,
       })
-      toast.success('已指定第三方裁决人，并已发送站内通知')
+      toast.success('已指定第三方复核人，并已发送站内通知')
       onClose()
     } catch (err) {
-      toast.error(extractError(err, '指定裁决人失败'))
+      toast.error(extractError(err, '指定复核人失败'))
     }
   }
 
@@ -1401,19 +1401,19 @@ function AdjudicateDialog({
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>指定第三方裁决人 — {submission.title}</DialogTitle>
+          <DialogTitle>指定第三方复核人 — {submission.title}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <p className="text-xs text-muted-foreground">
-            当前已有 {matrix.distinct_reviewers} 位评议成员提交意见，通过推荐 {matrix.accept_count}/2。
-            裁决人不能是本稿已参与评审的评议成员，也不能是作者。
+            当前已有 {matrix.distinct_reviewers} 位互评成员提交意见，通过推荐 {matrix.accept_count}/2。
+            复核人不能是本稿已参与互评的成员，也不能是作者。
           </p>
           <div className="max-h-[35vh] space-y-1 overflow-y-auto">
             {isLoading ? (
               <Loading />
             ) : candidates.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                没有可用的第三方裁决人：请确认评议成员账号已授予 reviewer 角色，且未参与本稿。
+                没有可用的第三方复核人：请确认互评成员账号已授予 reviewer 角色，且未参与本稿。
               </p>
             ) : (
               candidates.map((u) => (
@@ -1438,7 +1438,7 @@ function AdjudicateDialog({
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="adj_due">裁决截止天数（1–90）</Label>
+            <Label htmlFor="adj_due">复核截止天数（1–90）</Label>
             <Input
               id="adj_due"
               type="number"
@@ -1449,7 +1449,7 @@ function AdjudicateDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="adj_reason">裁决说明（发给裁决人）</Label>
+            <Label htmlFor="adj_reason">复核说明（发给复核人）</Label>
             <Textarea
               id="adj_reason"
               rows={3}
@@ -1612,8 +1612,8 @@ function AnonymizedFileDialog({
         </DialogHeader>
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            匿名互评下评议成员只能访问这里填写的匿名稿外链；作者可控的
-            download_url / external_url 不会流向评议成员。服务端不具备剥离 PDF
+            匿名互评下互评成员只能访问这里填写的匿名稿外链；作者可控的
+            download_url / external_url 不会流向互评成员。服务端不具备剥离 PDF
             元数据的能力，请确认上传的匿名稿本身不含作者姓名与单位。
           </p>
           <div className="space-y-1">

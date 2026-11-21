@@ -58,13 +58,13 @@ function AdminContentPage() {
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border bg-muted/20 p-2.5">
-        <span className="mr-1 text-xs text-muted-foreground">编辑业务入口</span>
+        <span className="mr-1 text-xs text-muted-foreground">内容业务入口</span>
         <Link
           to="/submissions/pending"
           className="inline-flex items-center gap-1 rounded-md border bg-background px-2.5 py-1 text-xs transition-colors hover:border-primary hover:text-primary"
         >
           <Kanban className="h-3.5 w-3.5" />
-          编辑工作台
+          内容工作台
         </Link>
         <Link
           to="/review"
@@ -78,7 +78,7 @@ function AdminContentPage() {
           to="/editor/calibration"
           className="inline-flex items-center gap-1 rounded-md border bg-background px-2.5 py-1 text-xs transition-colors hover:border-primary hover:text-primary"
         >
-          评审校准
+          互评校准
         </Link>
       </div>
       <AdminSectionTabs items={SECTIONS} active={section} onChange={changeSection} label="内容域子段" />

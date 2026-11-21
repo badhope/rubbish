@@ -56,12 +56,12 @@ const ASSIGNABLE_ROLES: AssignableRole[] = [
 ]
 
 const ROLE_LABELS: Record<AssignableRole, string> = {
-  chief_editor: '主编',
-  deputy_editor: '副主编',
+  chief_editor: '内容主管',
+  deputy_editor: '内容副主管',
   board_editor: '栏目编辑',
-  reviewer: '评审',
-  senior_reviewer: '资深评审',
-  editor: '编辑',
+  reviewer: '互评成员',
+  senior_reviewer: '资深互评成员',
+  editor: '内容整理',
   section_editor: '栏目编辑',
   shop_manager: '站务',
   author: '作者',
@@ -313,7 +313,7 @@ export default function AdminUsersPage() {
           <DialogHeader>
             <DialogTitle>新增人员</DialogTitle>
             <DialogDescription>
-              直接创建编辑部账号并指派角色；对方无需注册，用邮箱验证码登录后即可开始工作。
+              直接创建内容整理账号并指派角色；对方无需注册，用邮箱验证码登录后即可开始工作。
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">

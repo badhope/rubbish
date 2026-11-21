@@ -49,10 +49,10 @@ export function TriageQueue() {
 
   function sendToReview(item: SubmissionResponse) {
     triage.mutate(
-      { id: item.id, decision: "send_to_review", note: "初筛通过，送同行评审" },
+      { id: item.id, decision: "send_to_review", note: "初筛通过，进入互评" },
       {
         onSuccess: () => {
-          toast.success("已标记送外审，请到待指派队列分派审稿人");
+          toast.success("已标记发起互评，请到待指派队列分派互评成员");
           navigate({ to: "/submissions/pending" });
         },
       },
@@ -77,7 +77,7 @@ export function TriageQueue() {
           toast.success(
             dialog.action === "return_for_revision"
               ? "已退回修改"
-              : "已直接拒稿",
+              : "已直接不通过",
           );
           setDialog(null);
         },
@@ -89,7 +89,7 @@ export function TriageQueue() {
     <div>
       <PageHeader
         title="初筛队列"
-        description="两段式评审的第一段：先判断选题、格式与范围，再决定送外审、退回修改或直接拒稿。"
+        description="内容初筛：先判断选题、格式与范围，再决定发起互评、退回修改或直接不通过。"
         actions={
           <Link to="/submissions/pending">
             <Button variant="outline" size="sm">
@@ -102,8 +102,8 @@ export function TriageQueue() {
 
       <div className="mb-4 rounded-md border border-dashed bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
         <span className="font-medium text-foreground">初筛口径：</span>
-        只做“是否值得进入同行评审”的判断，不替代审稿意见。退回修改和直接拒稿必须写清理由；
-        送外审后仍要到「待指派」里选择审稿人，系统会自动记录初筛通过。
+        只做“是否值得进入互评”的判断，不替代互评意见。退回修改和直接不通过必须写清理由；
+        发起互评后仍要到「待指派」里选择互评成员，系统会自动记录初筛通过。
       </div>
 
       {isLoading ? (
@@ -113,7 +113,7 @@ export function TriageQueue() {
       ) : items.length === 0 ? (
         <EmptyState
           title="初筛队列已清空"
-          description="新投稿会先到这里；已完成初筛的稿件在「待指派」继续处理。"
+          description="新发布作品会先到这里；已完成初筛的作品在「待指派」继续处理。"
         />
       ) : (
         <>
@@ -122,7 +122,7 @@ export function TriageQueue() {
             <div className="flex items-center gap-2">
               <Badge variant="outline">
                 <Clock className="mr-1 h-3 w-3" aria-hidden />
-                按投稿时间
+                按发布时间
               </Badge>
               <span className="text-xs text-muted-foreground">
                 超过 48 小时标红
@@ -171,7 +171,7 @@ export function TriageQueue() {
                         disabled={triage.isPending}
                       >
                         <Send className="mr-1 h-4 w-4" aria-hidden />
-                        送外审
+                        发起互评
                       </Button>
                       <Button
                         size="sm"
@@ -198,7 +198,7 @@ export function TriageQueue() {
                         disabled={triage.isPending}
                       >
                         <XCircle className="mr-1 h-4 w-4" aria-hidden />
-                        直接拒稿
+                        直接不通过
                       </Button>
                     </div>
                   </CardContent>
@@ -227,25 +227,25 @@ export function TriageQueue() {
                 ? "退回修改"
                 : dialog?.action === "request_materials"
                   ? "要求补材料"
-                  : "直接拒稿"}{" "}
+                  : "直接不通过"}{" "}
               — {dialog?.item.title}
             </DialogTitle>
             <DialogDescription>
               {dialog?.action === "return_for_revision"
-                ? "稿件会进入 major_revision，作者可修改后重投；请写清必须改什么。"
+                ? "作品会进入 major_revision，作者可修改后重新提交；请写清必须改什么。"
                 : dialog?.action === "request_materials"
-                  ? "稿件进入补材料状态；作者补齐后重投，会重新回到初筛队列。请逐项列明缺什么材料。"
-                  : "稿件直接进入 rejected，不进入同行评审；请写清范围/格式/规范上的硬性原因。"}
+                  ? "作品进入补材料状态；作者补齐后重新提交，会重新回到初筛队列。请逐项列明缺什么材料。"
+                  : "作品直接进入 rejected，不进入互评；请写清范围/格式/规范上的硬性原因。"}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            <Label htmlFor="triage-note">编辑部说明（至少 10 字）</Label>
+            <Label htmlFor="triage-note">内容整理说明（至少 10 字）</Label>
             <Textarea
               id="triage-note"
               rows={5}
               value={note}
               onChange={(event) => setNote(event.target.value)}
-              placeholder="例如：图表编号与正文不一致，参考文献缺卷期页码；请按投稿模板重排后再投。"
+              placeholder="例如：图表编号与正文不一致，出处说明缺页码等信息；请按发布模板重排后重新提交。"
             />
           </div>
           <DialogFooter>
