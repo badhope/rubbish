@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.17] — 2026-11-21
+
+- Restored the four modules that were still deleted with the community refactor: `export`, `ingest`, `doi` and `release`. The frontend was still calling `/api/export` and `/api/ingest`, so batch citation export and submission-by-URL import were returning 404.
+- Restored the article citation card: GB/T 7714 preview, APA/MLA copy, and direct BibTeX/RIS download.
+- Added “我的投稿” to the desktop account menu and the personal-center action bar, so authors no longer have to guess where their drafts and review status live.
+- Bumped to 1.19.17; no new database migration.
+
 ## [1.19.16] — 2026-11-21
 
 - Restored the peer-review and editorial workbenches that were removed during the community refactor: `submission` / `review` / `quality` are enabled again, `/api/review/*` and `/api/editor/workbench` are mounted, and `/review`, `/submissions/pending`, `/editor/calibration` are back.

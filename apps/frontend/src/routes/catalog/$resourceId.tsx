@@ -14,6 +14,7 @@ import {
   MessagesSquare,
   MoreVertical,
   Pencil,
+  Quote,
   Send,
   Share2,
   Trash2,
@@ -39,6 +40,7 @@ import type {
 } from '@/lib/types'
 import { normalizeAbstract } from '@/lib/abstract'
 import { extractError, parseListField, sanitizeAuthors } from '@/lib/utils'
+import { formatCitation, type CitationStyle } from '@/lib/citation'
 import { safeHref } from '@/lib/url-safety'
 import {
   contentCategoryLabel,
@@ -80,6 +82,12 @@ import { ConfirmDialog } from '@/components/common/confirm-dialog'
 import { FunArticle } from '@/components/catalog/fun-article'
 import { MetaItem } from '@/components/common/meta-item'
 import { ErrorState, LoadingSkeleton } from '@/components/common/state'
+
+const CITATION_STYLES: { value: CitationStyle; label: string }[] = [
+  { value: 'gb-t-7714', label: 'GB/T 7714' },
+  { value: 'apa', label: 'APA 7' },
+  { value: 'mla', label: 'MLA 9' },
+]
 
 // 详情页向访客开放（后端 GET /catalog/{id} 本就是公开接口）。
 // v5：点开即正文——标题/作者/标签后直接渲染 Markdown 正文，不再跳 /reader。
@@ -547,6 +555,66 @@ function CatalogDetailPage() {
               authors={cleanAuthors.length > 0 ? cleanAuthors : data.authors}
               discipline={data.discipline}
             />
+          )}
+
+          {!isEssayTrack && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">站内引用（非学术发表）</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <p className="rounded-md bg-muted/50 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
+                  {formatCitation(
+                    { ...data, authors: cleanAuthors.length > 0 ? cleanAuthors : data.authors },
+                    'gb-t-7714',
+                  )}
+                </p>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="w-full">
+                      <Quote className="h-3.5 w-3.5" />
+                      复制引用格式
+                      <ChevronDown className="ml-auto h-3.5 w-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-40">
+                    {CITATION_STYLES.map((style) => (
+                      <DropdownMenuItem
+                        key={style.value}
+                        onClick={() => {
+                          const cite = formatCitation(
+                            { ...data, authors: cleanAuthors.length > 0 ? cleanAuthors : data.authors },
+                            style.value,
+                          )
+                          if (!navigator.clipboard?.writeText) {
+                            toast.error('当前浏览器不支持自动复制，请手动选择')
+                            return
+                          }
+                          void navigator.clipboard.writeText(cite).then(
+                            () => toast.success(`${style.label} 引用已复制`),
+                            () => toast.error('复制失败，请手动选择'),
+                          )
+                        }}
+                      >
+                        {style.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button asChild variant="ghost" size="sm">
+                    <a href={`/api/export?ids=${id}&format=bibtex`} download>
+                      BibTeX
+                    </a>
+                  </Button>
+                  <Button asChild variant="ghost" size="sm">
+                    <a href={`/api/export?ids=${id}&format=ris`} download>
+                      RIS
+                    </a>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           <DeclarationsCard data={data} />

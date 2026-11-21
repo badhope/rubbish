@@ -262,9 +262,9 @@ export function AppShell() {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link to="/me">
+          <Link to="/submissions">
             <FileSignature className="h-4 w-4" />
-            我的记录
+            我的投稿
           </Link>
         </DropdownMenuItem>
         {(isAdmin ||

@@ -35,6 +35,9 @@ export function MeActionBar({
             去发帖
           </Link>
         </Button>
+        <Button variant="ghost" size="sm" asChild>
+          <Link to="/submissions">我的投稿</Link>
+        </Button>
         <Button size="sm" asChild>
           <Link to="/submissions/new">
             投稿文章
