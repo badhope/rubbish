@@ -68,7 +68,7 @@ class LevelGrantRequest(BaseModel):
 
 
 class AuthorOnboardingRequest(BaseModel):
-    accept_rules: bool = Field(description="必须为 true：表示已读完并接受投稿规范")
+    accept_rules: bool = Field(description="必须为 true：表示已读完并接受作品与发布规范")
 
 
 class RoleApplicationCreate(BaseModel):
@@ -114,7 +114,7 @@ class PublicUserLevel(BaseModel):
 
 @router.get("/ladder")
 async def get_ladder() -> dict[str, object]:
-    """四种身份与获取方式。公开：任何访客都该知道"怎么成为审稿人"。
+    """四种身份与获取方式。公开：任何访客都该知道"怎么成为互评成员"。
 
     路径保留 ``/ladder``（前端与外部脚本都在读），返回体从"九级阶梯"
     变成"四层身份"，字段 ``levels`` 保留一版以兼容旧调用方。
@@ -316,7 +316,7 @@ async def get_level_detail(level: int) -> dict[str, object]:
 # 职员角色申请（L5 审稿人 / L6 资深审稿人；L7+ 仅编辑部提拔）
 # ---------------------------------------------------------------------------
 
-_ROLE_LABELS = {"reviewer": "审稿人", "senior_reviewer": "资深审稿人"}
+_ROLE_LABELS = {"reviewer": "互评成员", "senior_reviewer": "资深互评成员"}
 
 
 def _application_response(row: RoleApplication, username: str | None) -> RoleApplicationResponse:
@@ -411,7 +411,7 @@ async def create_application(
                     "code": "reviewer_role_required",
                     "target_role": body.target_role,
                     "profile": profile,
-                    "message": "申请资深审稿人需先取得审稿人身份。",
+                    "message": "申请资深互评成员，得先成为互评成员。",
                 },
             )
         eligible = applications.senior_reviewer_eligible(profile)
@@ -425,9 +425,9 @@ async def create_application(
                 "target_role": body.target_role,
                 "profile": profile,
                 "message": (
-                    "申请审稿人需至少 1 篇稿件被录用且最高质量分（RQS）≥ 60。"
+                    "申请互评成员，至少要有一篇作品通过，质量分不低于 60。"
                     if body.target_role == "reviewer"
-                    else f"申请资深审稿人需已完成 {applications.SENIOR_REVIEW_COUNT} 份审稿。"
+                    else f"申请资深互评成员，需要先完成 {applications.SENIOR_REVIEW_COUNT} 份互评。"
                 ),
             },
         )
@@ -565,7 +565,7 @@ async def decide_application(
             user_id=applicant.id,
             type_="gamification.role_application",
             title=f"申请已通过：{role_label}",
-            body="恭喜！编辑部已批准你的申请，对应工作台已解锁。",
+            body="恭喜，站务组通过了你的申请。对应的互评台已经打开。",
             related_type="role_application",
             related_id=str(row.id),
         )
@@ -576,7 +576,7 @@ async def decide_application(
             user_id=applicant.id,
             type_="gamification.role_application",
             title=f"申请未通过：{role_label}",
-            body=(body.note or "本次申请未获通过。欢迎继续投稿与参与社区，未来再次申请。"),
+            body=(body.note or "这次申请没有通过。你仍然可以发布作品、参与讨论，之后再来申请。"),
             related_type="role_application",
             related_id=str(row.id),
         )

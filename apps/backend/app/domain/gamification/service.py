@@ -369,14 +369,14 @@ def _next_identity(slug: str, author_ok: bool) -> dict[str, str] | None:
     if slug in ("reader", "author"):
         return {
             "slug": "reviewer",
-            "name": "审稿人",
-            "how": "至少 1 篇稿件被本站录用且最高 RQS ≥ 60 后，在「身份」页提交申请",
+            "name": "互评成员",
+            "how": "至少 1 篇作品通过，质量分不低于 60，然后在「身份」页申请",
         }
     if slug == "reviewer":
         return {
             "slug": "editor",
-            "name": "编辑",
-            "how": "由编辑部按贡献提拔，不开放申请",
+            "name": "内容整理",
+            "how": "由站务组按贡献邀请，不开放申请",
         }
     return None
 

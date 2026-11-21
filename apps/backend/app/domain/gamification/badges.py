@@ -64,12 +64,12 @@ BADGES: tuple[BadgeSpec, ...] = (
         "已发布",
         "gold",
         "作品",
-        "第一篇作品被录用并发布。",
+        "第一篇作品通过并公开。",
         "accepted_submissions",
         1,
     ),
     BadgeSpec(
-        "submit.5", "多产作者", "gold", "作品", "累计 5 篇作品被录用。", "accepted_submissions", 5
+        "submit.5", "多产作者", "gold", "作品", "累计 5 篇作品通过并公开。", "accepted_submissions", 5
     ),
     BadgeSpec(
         "submit.rejected",
@@ -86,14 +86,14 @@ BADGES: tuple[BadgeSpec, ...] = (
         "review.first",
         "第一份互评",
         "silver",
-        "评议",
+        "互评",
         "完成第一次互评。",
         "reviews_completed",
         1,
     ),
-    BadgeSpec("review.10", "互评之锚", "gold", "评议", "完成 10 次互评。", "reviews_completed", 10),
+    BadgeSpec("review.10", "互评之锚", "gold", "互评", "完成 10 次互评。", "reviews_completed", 10),
     BadgeSpec(
-        "review.30", "内容守门人", "special", "评议", "完成 30 次互评。", "reviews_completed", 30
+        "review.30", "内容守门人", "special", "互评", "完成 30 次互评。", "reviews_completed", 30
     ),
     # --- 编辑 ---
     BadgeSpec(

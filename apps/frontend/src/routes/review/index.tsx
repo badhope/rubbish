@@ -38,12 +38,12 @@ function ReviewHubPage() {
       <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6">
         <PageHeader
           title="互评台"
-          description="这里只对评议成员、资深评议和内容整理开放。"
+          description="这里只对互评成员、资深互评成员和内容整理开放。"
         />
         {isAuthenticated ? (
           <EmptyState
             title="当前账号还没有互评权限"
-            description="可以先到互评广场浏览互评中的作品，或联系站务组开通评议权限。"
+            description="可以先到互评广场浏览互评中的作品，或联系站务组开通互评权限。"
           />
         ) : (
           <EmptyState

@@ -102,7 +102,7 @@ export default function AdminForumBoardsPage() {
       return (await api.post('/forum/admin/boards', payload)).data
     },
     onSuccess: () => {
-      toast.success('版块已保存')
+      toast.success('分区已保存')
       setEditing(null)
       void qc.invalidateQueries({ queryKey: ['forum'] })
     },
@@ -122,7 +122,7 @@ export default function AdminForumBoardsPage() {
   const deleteMut = useMutation({
     mutationFn: async (board: AdminBoard) => api.delete(`/forum/admin/boards/${board.id}`),
     onSuccess: () => {
-      toast.success('空版块已删除')
+      toast.success('空分区已删除')
       setDeleteTarget(null)
       void qc.invalidateQueries({ queryKey: ['forum'] })
     },
@@ -132,12 +132,12 @@ export default function AdminForumBoardsPage() {
   return (
     <div>
       <PageHeader
-        title="社区版块"
-        description="树形结构：父板块汇总，子板块承载内容。排序值越小越靠前；有子板块或帖子的版块不能直接删除。"
+        title="讨论分区"
+        description="树形结构：父分区汇总，子分区承载内容。排序值越小越靠前；有子分区或帖子的分区不能直接删除。"
         actions={
           <Button onClick={() => setEditing({ ...EMPTY_FORM })}>
             <Plus className="h-4 w-4" />
-            新建版块
+            新建分区
           </Button>
         }
       />
@@ -145,14 +145,14 @@ export default function AdminForumBoardsPage() {
       {listQ.isLoading ? (
         <Loading />
       ) : listQ.isError ? (
-        <ErrorState message="加载版块失败" onRetry={() => listQ.refetch()} />
+        <ErrorState message="加载分区失败" onRetry={() => listQ.refetch()} />
       ) : withDepth.length === 0 ? (
-        <EmptyState title="还没有版块" description="先建一个父板块，再往下加子板块。" />
+        <EmptyState title="还没有分区" description="先建一个父分区，再往下加子分区。" />
       ) : (
         <Card>
           <CardContent className="p-0">
             <div className="hidden grid-cols-[1fr_120px_90px_100px] gap-2 border-b px-4 py-2 text-xs font-medium text-muted-foreground sm:grid">
-              <span>版块</span>
+              <span>分区</span>
               <span>slug</span>
               <span>排序</span>
               <span className="text-right">操作</span>
@@ -186,7 +186,7 @@ export default function AdminForumBoardsPage() {
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      aria-label={board.is_active ? '停用版块' : '启用版块'}
+                      aria-label={board.is_active ? '停用分区' : '启用分区'}
                       onClick={() => toggleMut.mutate(board)}
                     >
                       <Power className="h-3.5 w-3.5" />
@@ -194,7 +194,7 @@ export default function AdminForumBoardsPage() {
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      aria-label="编辑版块"
+                      aria-label="编辑分区"
                       onClick={() =>
                         setEditing({
                           id: board.id,
@@ -213,7 +213,7 @@ export default function AdminForumBoardsPage() {
                       variant="ghost"
                       size="icon-sm"
                       className="text-destructive"
-                      aria-label="删除版块"
+                      aria-label="删除分区"
                       onClick={() => setDeleteTarget(board)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -229,9 +229,9 @@ export default function AdminForumBoardsPage() {
       <Dialog open={Boolean(editing)} onOpenChange={(v) => !v && setEditing(null)}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editing?.id ? '编辑版块' : '新建版块'}</DialogTitle>
+            <DialogTitle>{editing?.id ? '编辑分区' : '新建分区'}</DialogTitle>
             <DialogDescription>
-              父板块只做汇总，帖子发到最具体的子板块；slug 用于 URL，创建后尽量别改。
+              父分区只做汇总，帖子发到最具体的子分区；slug 用于 URL，创建后尽量别改。
             </DialogDescription>
           </DialogHeader>
           {editing ? (
@@ -257,7 +257,7 @@ export default function AdminForumBoardsPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="board-parent">父板块</Label>
+                <Label htmlFor="board-parent">父分区</Label>
                 <Select
                   value={editing.parent_id}
                   onValueChange={(v) => setEditing({ ...editing, parent_id: v })}
@@ -266,7 +266,7 @@ export default function AdminForumBoardsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="root">无（一级板块）</SelectItem>
+                    <SelectItem value="root">无（一级分区）</SelectItem>
                     {withDepth
                       .filter((b) => b.id !== editing.id)
                       .map((b) => (
@@ -328,9 +328,9 @@ export default function AdminForumBoardsPage() {
       <Dialog open={Boolean(deleteTarget)} onOpenChange={(v) => !v && setDeleteTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>删除版块</DialogTitle>
+            <DialogTitle>删除分区</DialogTitle>
             <DialogDescription>
-              只能删除没有子板块、没有帖子的空版块。确认删除「{deleteTarget?.name}」？
+              只能删除没有子分区、没有帖子的空分区。确认删除「{deleteTarget?.name}」？
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

@@ -393,7 +393,7 @@ async def editor_workbench(
             if not active and len(distinct_done) < 2:
                 bucket["needs_reassign"] = True
                 bucket["reassign_reason"] = (
-                    "审稿人已拒审，请改派" if declined else "暂无在途审稿人，请补派"
+                    "互评成员拒绝了，换一位" if declined else "还没人接，补一位"
                 )
                 to_assign.append(bucket)
                 continue
@@ -837,8 +837,8 @@ async def batch_assign(
                 tenant_id=tenant_id,
                 user_id=rid,
                 type_="review.invited",
-                title=f"您被邀请审稿：{sub.title}",
-                body=f"作品 #{sub.id} 已分配给您，截止 {due.date().isoformat()}，请前往审稿工作台回应。",
+                title=f"有一篇作品等你互评：{sub.title}",
+                body=f"作品 #{sub.id} 已分到你的互评名单，截止 {due.date().isoformat()}。去互评台看看，接不接都由你。",
                 related_type="review_assignment",
                 related_id=str(a.id),
             )
@@ -944,12 +944,12 @@ async def check_conflicts(
 
         warnings: list[str] = []
         if is_submitter:
-            warnings.append("禁止自审：该审稿人就是作品提交人")
+            warnings.append("不能自己评自己：这位就是作品提交人")
         if name_match:
-            warnings.append("与作品作者同名：疑似共同作者/自审")
+            warnings.append("和作者同名：可能是共同作者，也可能只是巧合，请人工看一眼")
         if own_count > 0:
             warnings.append(
-                f"该用户已有 {own_count} 篇投稿（同单位/利益相关无法自动判定，请人工复核）"
+                f"这位已经有 {own_count} 篇作品。同单位或利益关系系统看不出来，需要你判断。"
             )
 
         # 默认不选：命中作者/共同作者硬警告；仅"已有投稿"黄警仍默选，由编辑人工决定。
@@ -1021,8 +1021,8 @@ async def remind_reviewers(
             tenant_id=tenant_id,
             user_id=a.reviewer_id,
             type_="review.reminder",
-            title=f"审稿催办：{title}",
-            body=f"您有一份审稿任务尚未提交，截止 {a.due_date.date().isoformat() if a.due_date else '未定'}，请尽快处理。",
+            title=f"互评提醒：{title}",
+            body=f"还有一份互评意见没交，截止 {a.due_date.date().isoformat() if a.due_date else '未定'}。不用写漂亮，把判断说清楚就好。",
             related_type="review_assignment",
             related_id=str(a.id),
         )
@@ -1032,7 +1032,7 @@ async def remind_reviewers(
         invited = _as_utc(a.invited_at) or now
         days_pending = max(0, (now - invited).days)
         subject, text, html = review_reminder(
-            reviewer.username if reviewer else "审稿人",
+            reviewer.username if reviewer else "互评成员",
             title,
             f"{settings.frontend_base_url.rstrip('/')}/review/assignments",
             days_pending,

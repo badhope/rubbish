@@ -64,7 +64,7 @@ const BACKEND_ERROR_ZH: Record<string, string> = {
   'Email already registered': '该邮箱已注册',
   'Username already taken': '该用户名已被占用',
   'Slug already taken in this tenant': '该短链接已被占用',
-  'DOI already exists in this catalog': '该标识已存在',
+  'DOI already exists in this catalog': '这个编号已经有人用了',
 }
 
 export function translateBackendError(detail: string): string {

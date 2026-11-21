@@ -60,71 +60,71 @@ IDENTITIES: tuple[IdentitySpec, ...] = (
     IdentitySpec(
         slug="reader",
         name="读者",
-        title="Reader",
+        title="读者",
         granted_by="注册即得",
         roles=(),
         capabilities=(
-            "阅读全部已发表文章（无需登录）",
-            "下载 PDF / Markdown",
-            "收藏到阅读列表、关注作者",
-            "发表评论",
-            "保存跨设备阅读进度",
+            "读所有公开的长文和讨论",
+            "下载公开文件",
+            "收藏，关注作者",
+            "登录后可以评论",
+            "保存跨设备的阅读进度",
         ),
-        description="站点的默认身份。任何人不登录也能读全文——开放获取不是口号。",
+        description="不登录也能读公开内容。想留下什么的时候，再注册。",
     ),
     IdentitySpec(
         slug="author",
         name="作者",
-        title="Author",
-        granted_by="确认当版《作品与编辑规范》",
+        title="作者",
+        granted_by="确认《作品与发布规范》",
         roles=(),
         capabilities=(
             "读者的全部能力",
-            "提交作品（可附 PDF / Word / Markdown）",
-            "查看自己的作品状态、审稿意见与版本历史",
-            "按审稿意见修改并重投",
-            "关联 ORCID 与作品集",
+            "发布作品（Markdown / PDF / Word）",
+            "查看作品进度、互评意见与版本记录",
+            "按意见修改，再交一次",
+            "把作品连到自己的公开主页",
         ),
-        description="确认规范即可提交作品——发布前必须读过规范，这是合规要求，不是门槛。",
+        description="确认规范就能发作品。先读规则，是对读者和作者的共同保护，不是门槛。",
     ),
     IdentitySpec(
         slug="reviewer",
-        name="审稿人",
-        title="Reviewer",
-        granted_by="编辑部授予（申请或提名）",
+        name="互评成员",
+        title="互评成员",
+        granted_by="站务组授予（申请或邀请）",
         roles=("reviewer", "senior_reviewer"),
         capabilities=(
             "作者的全部能力",
-            "接收互评邀请",
-            "阅读匿名稿并提交评审意见与评分",
-            "在互评历史中查看自己完成的每一份意见",
+            "接互评邀请",
+            "读匿名稿，写下判断和评分",
+            "在互评记录里回看自己写过的每一条",
         ),
         description=(
-            "审稿权来自编辑部的信任，不能靠攒积分购买。"
-            "申请条件：至少 1 篇作品被本站录用，且最高 RQS ≥ 60。"
+            "互评资格来自站务组的信任，不靠积分购买。"
+            "申请条件：至少一篇作品通过，质量分不低于 60。"
         ),
     ),
     IdentitySpec(
         slug="editor",
-        name="编辑",
-        title="Editor",
-        granted_by="编辑部提拔",
+        name="内容整理",
+        title="内容整理",
+        granted_by="站务组邀请",
         roles=("section_editor", "editor"),
         capabilities=(
-            "审稿人的全部能力",
-            "初审作品、分配与撤销审稿人",
-            "栏目编辑：推荐录用（无最终裁决权）",
-            "执行编辑：作出录用 / 修回 / 拒稿决定",
-            "编排卷期、管理目录",
+            "互评成员的全部能力",
+            "看新作品，分给合适的互评成员",
+            "主持分区，推荐值得读的内容",
+            "作内容决定：通过、退回，或暂时不上",
+            "整理合集与首页推荐",
         ),
-        description="对作品的去留有实际责任，因此只能由编辑部内部提拔，不开放申请。",
+        description="对内容去留有责任，所以只从站务组内部邀请，不开放申请。",
     ),
 )
 
 IDENTITY_BY_SLUG = {spec.slug: spec for spec in IDENTITIES}
 
 # 角色 slug → 身份 slug。多个角色映射到同一身份（senior_reviewer 与
-# reviewer 都是"审稿人"；section_editor 与 editor 都是"编辑"）。
+# reviewer 都是"互评成员"；section_editor 与 editor 都是"内容整理"）。
 ROLE_TO_IDENTITY: dict[str, str] = {
     "reviewer": "reviewer",
     "senior_reviewer": "reviewer",

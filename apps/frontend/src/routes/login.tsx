@@ -205,7 +205,7 @@ function LoginPage() {
       <Card className="w-full">
         <CardHeader>
           <CardTitle className="text-2xl">登录</CardTitle>
-          <CardDescription>选择一种方式登录 Rubbish。</CardDescription>
+          <CardDescription>邮箱验证码，或者密码，都行。</CardDescription>
         </CardHeader>
         <CardContent>
           {/* 登录方式切换：验证码登录给记不住密码的读者；密码登录保留给

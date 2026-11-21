@@ -323,7 +323,7 @@ function ForumListPage() {
   const reportMut = useMutation({
     mutationFn: async (target: { topic_id: number; reason?: string }) =>
       (await api.post('/forum/reports', target)).data,
-    onSuccess: () => toast.success('已举报，版主会尽快处理'),
+    onSuccess: () => toast.success('已举报，站务会尽快处理'),
     onError: (err) => toast.error(extractError(err, '举报失败')),
   })
 
@@ -401,8 +401,8 @@ function ForumListPage() {
   return (
     <div className="mx-auto w-full max-w-4xl space-y-4">
       <PageHeader
-        title="社区"
-        description="写作讨论、记录复盘、组队与创作生活，都在这里；登录即可发帖，不需要积分。"
+        title="讨论区"
+        description="写法、复盘、组队，还有写作之外的生活。登录就能发帖，不用攒积分。"
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" asChild>
@@ -413,7 +413,7 @@ function ForumListPage() {
             </Button>
             <Button onClick={openComposer}>
               <Plus className="h-4 w-4" />
-              发帖
+              写一帖
             </Button>
           </div>
         }
@@ -422,7 +422,7 @@ function ForumListPage() {
       {!activeBoard && !keyword ? (
         <div className="flex flex-wrap items-center justify-between gap-3 border-l-2 border-primary/50 bg-muted/25 px-4 py-3">
           <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-primary">本周写作题</p>
+            <p className="text-[10px] uppercase tracking-[0.18em] text-primary">这周写什么</p>
             <p className="mt-1 font-serif text-base leading-snug">你最近一次推翻重写，是因为什么？</p>
           </div>
           <Button size="sm" variant="outline" onClick={openComposer}>
@@ -688,7 +688,7 @@ function ForumListPage() {
           <div className="flex items-center justify-between border-b px-4 py-3 sm:px-6">
             <div className="min-w-0">
               <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">新帖</p>
-              <DialogTitle className="mt-1 font-serif text-xl tracking-tight">写帖子</DialogTitle>
+              <DialogTitle className="mt-1 font-serif text-xl tracking-tight">写一帖</DialogTitle>
             </div>
             <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="关闭发帖">
               <X className="h-4 w-4" />
@@ -702,7 +702,7 @@ function ForumListPage() {
                 value={form.title}
                 onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
                 maxLength={200}
-                placeholder="标题：这个帖子想讨论什么"
+                placeholder="标题：你想聊什么"
                 aria-label="帖子标题"
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
@@ -722,8 +722,8 @@ function ForumListPage() {
                       setBoardPickerOpen(false)
                     }}
                   >
-                    <SelectTrigger className="h-8 w-[280px] text-xs" aria-label="选择版块">
-                      <SelectValue placeholder="选择版块" />
+                    <SelectTrigger className="h-8 w-[280px] text-xs" aria-label="选择分区">
+                      <SelectValue placeholder="选择分区" />
                     </SelectTrigger>
                     <SelectContent>
                       {leafBoards.map((b) => (
@@ -740,7 +740,7 @@ function ForumListPage() {
                     className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-colors hover:border-primary/40"
                   >
                     <span className="text-muted-foreground">发到：</span>
-                    <span className="font-medium">{selectedBoard?.name ?? '选择版块'}</span>
+                    <span className="font-medium">{selectedBoard?.name ?? '选择分区'}</span>
                     <span className="text-primary">修改</span>
                   </button>
                 )}
@@ -764,7 +764,7 @@ function ForumListPage() {
                   minHeight={520}
                   textareaRef={bodyRef}
                   onSubmitShortcut={publishTopic}
-                  placeholder="写清背景、过程、判断和想讨论的问题。支持标题、引用、列表、表情和图片。"
+                  placeholder="把背景、过程、你的判断写清楚；想问什么，也一起写。支持标题、引用、列表、表情和图片。"
                 />
               </Suspense>
             </div>

@@ -100,7 +100,7 @@ export function FeedbackBoardPage() {
     <div>
       <PageHeader
         title="反馈墙"
-        description="大家提过的问题都集中在这里；版主处理后会标成「已解决」。"
+        description="大家提过的问题都堆在这里。站务处理完，会标成「已解决」。"
         actions={
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" asChild>
@@ -221,7 +221,7 @@ export function FeedbackBoardPage() {
                   ) : null}
                   {item.status === 'resolved' && item.resolution_note ? (
                     <div className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
-                      <span className="font-medium">版主说明：</span>
+                      <span className="font-medium">站务说明：</span>
                       {item.resolution_note}
                     </div>
                   ) : null}

@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { GettingStarted } from '@/components/guide/getting-started'
@@ -20,14 +21,18 @@ export const Route = createFileRoute('/guide')({
 })
 
 const TABS = [
-  { value: 'start', label: '3 分钟上手', desc: '这里有什么、从哪进' },
-  { value: 'authors', label: '写内容', desc: '定题、结构、记录与发布' },
-  { value: 'help', label: '玩讨论', desc: '阅读、发帖、回复与举报' },
+  { value: 'start', label: '三分钟，先走一遍', desc: '这里有什么、从哪进' },
+  { value: 'authors', label: '写作品', desc: '定题、结构、材料与发布' },
+  { value: 'help', label: '去讨论', desc: '读帖、发帖、回复与举报' },
   { value: 'policies', label: '规则与边界', desc: '版权、隐私、法律与处理' },
 ] as const
 
 function GuidePage() {
   const { tab } = useSearch({ from: '/guide' })
+  const current = TABS.find((t) => t.value === tab) ?? TABS[0]
+  useEffect(() => {
+    document.title = `怎么用 · ${current.label} — Rubbish`
+  }, [current.label])
   return (
     <div className="guide-page">
       <div className="mx-auto mb-8 flex w-full max-w-[1100px] overflow-x-auto border-t">

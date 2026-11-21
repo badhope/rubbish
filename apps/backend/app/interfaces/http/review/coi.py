@@ -214,8 +214,8 @@ async def ensure_no_declared_conflict(
         detail={
             "code": code,
             "message": (
-                f"审稿人与作者存在可核验的利益冲突：{', '.join(matches)}。"
-                "请更换审稿人；如属误判，请先在审稿人资料中修正单位。"
+                f"互评成员和作者存在可核验的利益冲突：{', '.join(matches)}。"
+                "请换一位互评成员；如果判断错了，先在他的资料里修正单位。"
             ),
             "matched_terms": matches,
             "year": declaration.year if declaration else None,

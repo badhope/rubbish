@@ -409,7 +409,7 @@ async def express_review_interest(
             user_id=editor_id,
             type_="review.interest",
             title=f"互评申请：{sub.title}",
-            body=f"{current_user.username} 申请参与作品 #{submission_id} 的审稿，请到内容整理工作台处理。",
+            body=f"{current_user.username} 想参与作品 #{submission_id} 的互评。去内容台看看要不要分给他。",
             related_type="submission",
             related_id=str(submission_id),
         )
@@ -746,7 +746,7 @@ async def submit_review_report(
         ).scalar_one_or_none()
         if resource is not None:
             resource.is_special_issue = True
-            resource.special_issue_reason = body.special_issue_reason or "审稿人确认篇幅特许"
+            resource.special_issue_reason = body.special_issue_reason or "互评成员确认篇幅放宽"
             resource.special_issue_by = current_user.id
             resource.special_issue_at = utcnow()
     a.status = "completed"
@@ -785,7 +785,7 @@ async def submit_review_report(
             user_id=a.assigned_by,
             type_="review.submitted",
             title=(
-                f"审稿人提交了报告：{a.submission.title if a.submission else f'#{a.submission_id}'}"
+                f"有新的互评意见：{a.submission.title if a.submission else f'#{a.submission_id}'}"
             ),
             body=f"推荐：{body.recommendation}",
             related_type="review_assignment",
@@ -1010,7 +1010,7 @@ async def assign_reviewers(
                 detail={
                     "code": "reviewer_name_conflict",
                     "message": (
-                        f"审稿人 {reviewer.username} 与作品作者同名：疑似共同作者/自审，请更换审稿人。"
+                        f"互评成员 {reviewer.username} 与作者同名：可能是共同作者，请换一位。"
                     ),
                 },
             )
@@ -1059,10 +1059,10 @@ async def assign_reviewers(
                     tenant_id=tenant_id,
                     user_id=a.reviewer_id,
                     type_="review.invited",
-                    title=f"您被邀请审稿：{sub.title}",
+                    title=f"有一篇作品等你互评：{sub.title}",
                     body=(
                         f"作品 #{sub.id} 已分配给您，截止 {(a.due_date.date().isoformat() if a.due_date else '—')}，"
-                        "请前往审稿工作台回应。" + ("（外审专家邀请）" if a.is_external else "")
+                        "去互评台看看。" + ("（外部互评成员邀请）" if a.is_external else "")
                     ),
                     related_type="review_assignment",
                     related_id=str(a.id),
@@ -1235,7 +1235,7 @@ async def assign_adjudicator(
             status_code=409,
             detail={
                 "code": "adjudication_requires_two_reviews",
-                "message": f"第三方裁决前至少需要 2 位不同审稿人提交意见（当前 {distinct}/2）。",
+                "message": f"要先有 2 位互评成员提交意见，才能请第三位来定（现在 {distinct}/2）。",
                 "distinct_reviewers": distinct,
             },
         )
@@ -1270,7 +1270,7 @@ async def assign_adjudicator(
         type_="review.adjudicator_invited",
         title=f"第三方裁决邀请：{sub.title}",
         body=(
-            f"作品 #{sub.id} 的审稿意见存在分歧，现邀请您作为第三方裁决人。"
+            f"作品 #{sub.id} 的互评意见不一致。想请你做第三位，看看两边各说了什么，再给一个判断。"
             f"截止 {due.date().isoformat()}。" + (f" 说明：{body.reason}" if body.reason else "")
         ),
         related_type="review_assignment",

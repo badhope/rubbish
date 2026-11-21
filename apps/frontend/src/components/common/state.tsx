@@ -28,7 +28,7 @@ export function Loading({ className }: { className?: string }) {
 }
 
 export function ErrorState({
-  message = '加载失败',
+  message = '这一页没加载出来',
   onRetry,
 }: {
   message?: string
@@ -56,7 +56,7 @@ export function ErrorState({
 }
 
 export function EmptyState({
-  title = '暂无数据',
+  title = '这里还空着',
   description,
   action,
   compact = false,

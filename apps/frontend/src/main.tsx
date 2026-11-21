@@ -6,11 +6,14 @@ import { routeTree } from './routeTree.gen'
 import { ThemeProvider } from './components/theme-provider'
 import { AppErrorBoundary } from './components/common/error-boundary'
 import { initMonitoring, installGlobalErrorHandlers } from './lib/monitoring'
+import { installQaAuth } from './lib/qa'
 // 衬线字体（自托管可变字重，中文按 unicode-range 分片按需加载）
 import './index.css'
 
 // window.onerror + unhandledrejection 兜底（ErrorBoundary 只覆盖渲染期错误）
 installGlobalErrorHandlers()
+// QA-only machine identity; no-op in normal builds.
+installQaAuth()
 // 监控后端初始化。未配置 VITE_SENTRY_DSN 时为 no-op；
 // 不 await —— 上报能力晚几十毫秒就绪不影响首屏，错误在此之前由 console reporter 兜住。
 void initMonitoring()

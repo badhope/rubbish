@@ -30,13 +30,13 @@ CURRENT_RULES_VERSION = "1.1"
 # 计分规则（reason → delta）。娱乐/吐槽轨在调用处传 delta=0。
 POINT_RULES: dict[str, dict[str, object]] = {
     "claim.approve": {"identity": "author", "delta": 20, "label": "认领审核通过"},
-    "submission.accepted": {"identity": "author", "delta": 60, "label": "文章录用"},
+    "submission.accepted": {"identity": "author", "delta": 60, "label": "作品通过"},
     "submission.accepted.essay": {
         "identity": "author",
         "delta": 0,
-        "label": "娱乐/吐槽稿录用（仅记活跃度）",
+        "label": "自由创作通过（只记经验）",
     },
-    "review.completed": {"identity": "reviewer", "delta": 1, "label": "完成审稿报告"},
+    "review.completed": {"identity": "reviewer", "delta": 1, "label": "完成互评"},
     "editor.decision": {"identity": "editor", "delta": 8, "label": "编辑裁决"},
 }
 
@@ -73,7 +73,7 @@ LEVEL_BANDS: dict[str, tuple[LevelBand, ...]] = {
     ),
 }
 
-IDENTITY_NAMES = {"author": "作者", "reviewer": "审稿人", "editor": "编辑"}
+IDENTITY_NAMES = {"author": "作者", "reviewer": "互评成员", "editor": "内容整理"}
 
 
 def level_for_points(identity: str, points: int) -> tuple[int, str]:

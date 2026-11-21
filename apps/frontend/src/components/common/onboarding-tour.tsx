@@ -28,26 +28,26 @@ export function OnboardingTour() {
 
   const steps = [
     {
-      title: '先认顶部六个入口',
-      body: '首页看全站，内容看长文，合集按主题读，讨论发短帖，怎么用有完整地图，我的放个人内容。找不到时先点「怎么用」。',
+      title: '先认一下六个入口',
+      body: '首页看全站，内容放长文，合集顺着读，讨论用来说话，怎么用有地图，我的放自己的东西。找不到就点「怎么用」。',
       to: '/guide',
       label: '打开怎么用',
     },
     {
       title: '三分钟走一遍',
-      body: '「3 分钟上手」里有四步入口、全站地图和旧名字对照，第一次来照着走一遍就不会迷路。',
+      body: '「三分钟，先走一遍」里有四步入口和全站地图，第一次来照着走一遍就不会迷路。',
       to: '/guide',
       label: '开始上手',
     },
     {
       title: isAuthenticated ? '想发东西，先分清长短' : '登录后就能发',
-      body: '一两句话去「讨论」；完整长文去「发布作品」。都能先存草稿，不用申请资格，也不收费用。',
+      body: '一两句话，去「讨论」；完整长文，去「发布作品」。都能先存草稿，不申请资格，也不收钱。',
       to: isAuthenticated ? '/forum' : '/login',
       label: isAuthenticated ? '去讨论区' : '去登录',
     },
     {
       title: '边界先看清',
-      body: '这里不是期刊、出版社或学术评价机构，不提供 DOI、ISSN、职称或学分背书；虚构要标注，真人隐私不碰。',
+      body: '这里不做学术评价，也不出具发表、职称或学分证明；虚构要标注，真人隐私不碰。',
       to: '/about',
       label: '看站点性质',
     },
@@ -78,10 +78,10 @@ export function OnboardingTour() {
       <h3 className="mt-1 text-base font-semibold">{current.title}</h3>
       <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{current.body}</p>
       <div className="mt-4 flex items-center justify-between gap-2">
-        <Button variant="ghost" size="sm" onClick={close}>跳过引导</Button>
+        <Button variant="ghost" size="sm" onClick={close}>下次再说</Button>
         <div className="flex gap-2">
           <Link to={current.to} onClick={close}><Button variant="outline" size="sm">{current.label}</Button></Link>
-          {step < steps.length - 1 ? <Button size="sm" onClick={() => setStep(step + 1)}>下一步 <ArrowRight className="h-3.5 w-3.5" /></Button> : <Button size="sm" onClick={close}>开始使用</Button>}
+          {step < steps.length - 1 ? <Button size="sm" onClick={() => setStep(step + 1)}>下一步 <ArrowRight className="h-3.5 w-3.5" /></Button> : <Button size="sm" onClick={close}>知道了</Button>}
         </div>
       </div>
     </div>

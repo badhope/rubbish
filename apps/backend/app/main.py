@@ -186,6 +186,12 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# QA-only machine identity. No-op unless RUBBISH_QA_AUTOLOGIN_USER is set.
+if settings.qa_autologin_user:
+    from app.core.qa_auth import install_qa_auth
+
+    install_qa_auth(app)
+
 
 # --- Exception handlers ---
 

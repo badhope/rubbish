@@ -421,7 +421,7 @@ function computeGates(f: WizardForm): GateResult[] {
 
 const STEPS = [
   { id: 0, title: '基本信息', hint: '标题、摘要、关键词、方向' },
-  { id: 1, title: '正文与上传', hint: '在线正文或上传作品文件' },
+  { id: 1, title: '正文与文件', hint: '在线写，或上传作品文件' },
   { id: 2, title: '署名与确认', hint: '署名顺序、联系邮箱、四项确认' },
   { id: 3, title: '预览并提交', hint: '通读一遍，确认后提交' },
 ]
@@ -862,11 +862,10 @@ function SubmissionWizardPage() {
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">
-            {editId !== undefined ? '修改作品' : '新建作品'}
+            {editId !== undefined ? '修改作品' : '写新作品'}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            分四步完成：基本信息 → 正文 → 署名与确认 →
-            预览提交。草稿会自动保存在本机和登录账号。
+            分四步：填基本信息、写正文、署名确认、预览提交。草稿会自动存在本机和登录账号里。
             <HelpTip
               className="ml-1"
               text="研究长文可以申请互评；自由创作不套固定格式，也不计分，只做基础校对。"
@@ -923,7 +922,7 @@ function SubmissionWizardPage() {
           href="/templates/rubbish-submission-template-word.md"
           download
         >
-          Word 排版要求
+          排版说明
         </a>
         <span className="mx-2">·</span>
         <a
@@ -1168,7 +1167,7 @@ function StepBibliography({
         </p>
       </div>
 
-            {/* 作品类型：研究文章 / 荒诞研究 / 自由创作 */}
+            {/* 作品类型：研究文章 / 荒诞写作 / 自由创作 */}
       <div className="space-y-2">
         <Label>作品类型</Label>
         <div className="grid max-w-2xl grid-cols-1 gap-2 sm:grid-cols-3">
@@ -1187,7 +1186,7 @@ function StepBibliography({
           >
             研究长文
             <span className="mt-0.5 block text-xs text-muted-foreground">
-              真实问题、可核查材料、完整论证
+              把真问题写实，材料能对上，论证走完
             </span>
           </button>
           <button
@@ -1203,7 +1202,7 @@ function StepBibliography({
                 : 'border-border bg-card hover:bg-muted/40',
             ].join(' ')}
           >
-            荒诞研究
+            荒诞写作
             <span className="mt-0.5 block text-xs text-muted-foreground">
               用正经文章格式，论证一个荒诞命题
             </span>
@@ -1220,12 +1219,12 @@ function StepBibliography({
           >
             自由创作
             <span className="mt-0.5 block text-xs text-muted-foreground">
-              小说、随笔、评论、指南、吐槽；不用学术文章格式
+              小说、随笔、评论、指南、吐槽。不用套论文骨架，想怎么写就怎么写
             </span>
           </button>
         </div>
         <p className="text-[11px] leading-5 text-muted-foreground">
-          研究长文和荒诞研究都可以申请互评，区别只在命题是否荒诞；自由创作不套固定格式，也不计分。
+          研究长文和荒诞写作都可以申请互评，区别只在命题是否荒诞；自由创作不套固定格式，也不计分。
         </p>
       </div>
 
@@ -1240,18 +1239,18 @@ function StepBibliography({
           placeholder="一句话说清这篇作品讲什么"
           className={fieldError('title') ? 'border-destructive' : ''}
         />
-        {fieldError('title') && <FieldError>标题不能为空</FieldError>}
+        {fieldError('title') && <FieldError>还没写标题</FieldError>}
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="w-discipline">方向（选填）</Label>
+          <Label htmlFor="w-discipline">话题（选填）</Label>
           <Input
             id="w-discipline"
             list="w-discipline-options"
             value={form.discipline}
             onChange={(e) => set('discipline', e.target.value)}
-            placeholder="如：计算机、社会学、文学"
+            placeholder="如：计算机、社会学、语言、游戏"
             className={fieldError('discipline') ? 'border-destructive' : ''}
           />
           <datalist id="w-discipline-options">
@@ -1330,10 +1329,10 @@ function StepBibliography({
           rows={6}
           value={form.abstract}
           onChange={(e) => set('abstract', e.target.value)}
-          placeholder="研究问题、方法、主要结论（建议 200–400 字）"
+          placeholder="两三百字，写清你想说什么、怎么写的、最后落在哪。自由创作可以只写故事梗概。"
           className={fieldError('abstract') ? 'border-destructive' : ''}
         />
-        {fieldError('abstract') && <FieldError>摘要不能为空</FieldError>}
+        {fieldError('abstract') && <FieldError>还没写摘要</FieldError>}
       </div>
 
       <div className="space-y-2">
@@ -1594,7 +1593,7 @@ function StepUpload({
             {uploadMaxMb} MB。
           </li>
           <li>
-            正文建议写清标题、摘要和分段；出处说明可选，不强制凑条目。
+            正文写清标题、摘要和分段就好；出处说明可选，不必硬凑条目。
           </li>
           <li>
             版式：先下载
@@ -1611,7 +1610,7 @@ function StepUpload({
               href="/templates/rubbish-submission-template-word.md"
               download
             >
-              Word 排版要求
+              排版说明
             </a>
             ，完整细则见
             <a
@@ -1939,7 +1938,7 @@ function StepReview({
               {form.type === 'tutorial'
                 ? '自由创作'
                 : form.paperKind === 'absurd'
-                  ? '荒诞研究'
+                  ? '荒诞写作'
                   : '研究长文'}
             </div>
           </div>

@@ -63,6 +63,11 @@ class Settings(BaseSettings):
     # --- Application identity ---
     app_name: str = "Rubbish API"
     environment: Literal["development", "staging", "production", "test"] = "development"
+    # QA-only machine identity. Empty in production. When set, the process
+    # must run with environment=staging, bind to loopback, and present the
+    # matching bearer token; otherwise startup fails in app.core.qa_auth.
+    qa_autologin_user: str = ""
+    qa_autologin_token: str = ""
     debug: bool = False
 
     # --- Tenancy ---

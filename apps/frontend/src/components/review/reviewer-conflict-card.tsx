@@ -68,7 +68,7 @@ export function ReviewerConflictCard() {
               </Badge>
             </div>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              只按作者姓名/通讯邮箱自动匹配；机构等字段不在发布信息里，不做猜测式拦截。
+              只按作者姓名/联系邮箱自动匹配；不根据机构等信息做猜测式拦截。
             </p>
           </div>
         </div>

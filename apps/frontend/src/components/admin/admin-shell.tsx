@@ -14,7 +14,7 @@ const DOMAINS = [
   { key: 'overview', label: '总览', to: '/admin', icon: Gauge, paths: ['/admin'] },
   {
     key: 'people',
-    label: '用户',
+    label: '成员',
     to: '/admin/people',
     icon: Users,
     paths: ['/admin/people'],
@@ -58,12 +58,12 @@ export function AdminShell() {
           <div className="flex items-center justify-between gap-4 pt-5">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary/75">
-                编辑台
+                管理台
               </p>
-              <h1 className="mt-1 font-serif text-lg tracking-tight sm:text-xl">后台管理</h1>
+              <h1 className="mt-1 font-serif text-lg tracking-tight sm:text-xl">站务后台</h1>
             </div>
             <p className="hidden max-w-[260px] text-right text-[11px] leading-relaxed text-muted-foreground sm:block">
-              按业务域切换，子段在同一页内切换；权限、审计和分页共用一套规则。
+              成员、内容、积分、系统，各管一摊。能在这里处理，不用来回跳页。
             </p>
           </div>
 

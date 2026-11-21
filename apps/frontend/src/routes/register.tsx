@@ -109,9 +109,9 @@ export function RegisterPage() {
     <div className="mx-auto flex min-h-[80vh] max-w-md items-center">
       <Card className="w-full">
         <CardHeader>
-          <CardTitle className="text-2xl">注册</CardTitle>
+          <CardTitle className="text-2xl">开一个账号</CardTitle>
           <CardDescription>
-          创建 Rubbish 账号，即可发帖、评论与在线阅读。
+          有了账号，就能发帖、评论，把写下的东西放上来。
           {capabilities.isFetched && !emailDelivery && (
             <span className="mt-2 block text-xs text-muted-foreground">
               当前站点未开通邮件服务：注册后可直接用邮箱和密码登录，邮箱验证与找回密码暂不可用，

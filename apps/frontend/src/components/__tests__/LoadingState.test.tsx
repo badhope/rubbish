@@ -18,7 +18,7 @@ describe('Loading', () => {
 describe('ErrorState', () => {
   it('渲染默认错误消息', () => {
     render(<ErrorState />)
-    expect(screen.getByText('加载失败')).toBeInTheDocument()
+    expect(screen.getByText('这一页没加载出来')).toBeInTheDocument()
   })
 
   it('渲染自定义错误消息', () => {
@@ -48,7 +48,7 @@ describe('ErrorState', () => {
 describe('EmptyState', () => {
   it('渲染默认标题', () => {
     render(<EmptyState />)
-    expect(screen.getByText('暂无数据')).toBeInTheDocument()
+    expect(screen.getByText('这里还空着')).toBeInTheDocument()
   })
 
   it('渲染自定义标题', () => {

@@ -60,8 +60,8 @@ export function MeIdentityHeader({
                 className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
               >
                 <Gauge className="h-3.5 w-3.5" />
-                Level {profile.activity.level}
-                <span className="font-mono text-[10px]">{profile.activity.xp} XP</span>
+                等级 {profile.activity.level}
+                <span className="font-mono text-[10px]">{profile.activity.xp} 经验</span>
               </Link>
             </div>
             {account?.affiliation ? (
@@ -76,7 +76,7 @@ export function MeIdentityHeader({
               </div>
               <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
                 {profile.activity.next_threshold
-                  ? `还差 ${profile.activity.to_next} XP 到 Level ${profile.activity.level + 1}`
+                  ? `还差 ${profile.activity.to_next} 经验升到 ${profile.activity.level + 1} 级`
                   : '已满级'}
               </span>
             </div>
@@ -94,7 +94,7 @@ export function MeIdentityHeader({
             </span>
             <span className="min-w-0">
               <span className="block text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                POINTS
+                积分
               </span>
               <span className="block font-mono text-lg font-semibold leading-tight text-primary">
                 {formatCoins(balance)}

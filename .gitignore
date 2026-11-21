@@ -189,3 +189,6 @@ apps/backend/.fuse*
 /pending-orig/
 /review-pack/
 /render.yaml
+
+# QA-only build output stays out of the repository
+apps/frontend/dist-qa/

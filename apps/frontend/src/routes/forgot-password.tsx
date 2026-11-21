@@ -35,9 +35,9 @@ function ForgotPasswordPage() {
     <div className="mx-auto flex min-h-[80vh] max-w-md items-center">
       <Card className="w-full">
         <CardHeader>
-          <CardTitle className="text-2xl">忘记密码</CardTitle>
+          <CardTitle className="text-2xl">找回密码</CardTitle>
           <CardDescription>
-            输入注册邮箱，我们会发送密码重置链接到你的邮箱。
+            输入注册邮箱，我们把重置链接发过去。
             {capabilities.isFetched && !emailDelivery && (
               <span className="mt-2 block text-xs text-muted-foreground">
                 当前站点未开通邮件服务，自助重置暂不可用；请直接联系站务邮箱 info@rubbishasci.cn

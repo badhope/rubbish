@@ -73,7 +73,7 @@ class Meta:
     abstract: str = ""
     keywords: list[str] = field(default_factory=list)
     doi: str = ""
-    # 站内编号（R-六位刊号-日期-流水），与 DOI 并列打印；不是官方 DOI。
+    # 站内编号（R-六位刊号-日期-流水），不再打印 DOI。
     site_id: str = ""
     volume: str = ""
     issue: str = ""
@@ -896,7 +896,7 @@ def build(md: str, meta: Meta, *, base_dir: Path | None = None) -> bytes:
     # 读者在属性面板里看到的 author=python-docx 会被当成“不是正式出版件”。
     try:
         doc.core_properties.title = meta.title or ""
-        doc.core_properties.author = "、".join(meta.authors) or "Rubbish 编辑部"
+        doc.core_properties.author = "、".join(meta.authors) or "Rubbish 站务组"
         doc.core_properties.subject = "Rubbish 文章"
         doc.core_properties.keywords = "; ".join(meta.keywords or [])
     except Exception:
@@ -984,12 +984,8 @@ def build(md: str, meta: Meta, *, base_dir: Path | None = None) -> bytes:
     _cite = []
     if meta.year:
         _cite.append(meta.year)
-    if meta.volume or meta.issue:
-        _cite.append(f"第 {meta.volume or '—'} 卷第 {meta.issue or '—'} 期")
-    if meta.pages:
-        _cite.append(f"页码 {meta.pages}")
-    if meta.doi:
-        _cite.append(f"DOI: {meta.doi}")
+    if meta.issue:
+        _cite.append(f"合集 {meta.issue}")
     if meta.site_id:
         _cite.append(f"站内编号: {meta.site_id}")
     if _cite:

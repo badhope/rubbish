@@ -268,7 +268,7 @@ export function ReviewReportFields({
 
       <div className="space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <Label>评分赛道</Label>
+          <Label>作品类型</Label>
           <span className="text-[11px] text-muted-foreground">两套维度，不共用一把尺子</span>
         </div>
         <div className="grid grid-cols-2 gap-1.5 rounded-lg border bg-muted/30 p-1.5">
@@ -289,8 +289,8 @@ export function ReviewReportFields({
         </div>
         <p className="text-[11px] leading-5 text-muted-foreground">
           {value.track === 'academic'
-            ? '严肃写作：选题、论证、方法、材料、诚信。90+ 才是高完成；缺方法/材料会封顶，不允许用平均分抬进高分段。'
-            : '荒诞写作：看设定、自洽、执行、材料、文风。允许无中生有，不按样本量与伦理审批扣分；但前后打架、堆梗不成篇会封顶。'}
+            ? '研究长文：看主题、结构、材料、表达与诚信。90+ 是完成度很高的作品；材料或结构明显缺失会封顶，不靠平均分抬进高分段。'
+            : '荒诞写作：看设定、自洽、执行、材料、文风。允许虚构和夸张，不按真实样本量扣分；但前后打架、堆梗不成篇会封顶。'}
         </p>
         <RubricScoreFields
           track={value.track}

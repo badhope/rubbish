@@ -12,8 +12,8 @@ interface PeopleSearch {
 }
 
 const SECTIONS: readonly AdminSectionItem<SectionKey>[] = [
-  { key: 'users', label: '用户管理' },
-  { key: 'claims', label: '认领审批' },
+  { key: 'users', label: '成员管理' },
+  { key: 'claims', label: '认领' },
 ]
 
 function isSectionKey(value: string | undefined): value is SectionKey {

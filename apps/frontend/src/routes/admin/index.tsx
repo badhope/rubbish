@@ -52,7 +52,7 @@ const PENDING_QUEUE: {
   },
   {
     title: '评论审核',
-    desc: '待审、通过、拒绝',
+    desc: '待看、通过、不通过',
     to: '/admin/content',
     search: { section: 'comments' },
     icon: MessageSquare,
@@ -60,7 +60,7 @@ const PENDING_QUEUE: {
   },
   {
     title: '举报处理',
-    desc: '论坛、评论与发布举报',
+    desc: '讨论、评论与发布举报',
     to: '/admin/content',
     search: { section: 'reports' },
     icon: ShieldAlert,
@@ -75,14 +75,14 @@ const DOMAINS: {
   icon: typeof Gavel
 }[] = [
   {
-    title: '内容与论坛',
-    desc: '公告、版块、评论审核、举报',
+    title: '内容与讨论',
+    desc: '公告、分区、评论审核、举报',
     to: '/admin/content',
     icon: Layers,
   },
   {
-    title: '用户与权限',
-    desc: '用户、角色、认领与封禁',
+    title: '成员与权限',
+    desc: '成员、角色、认领与封禁',
     to: '/admin/people',
     icon: Users,
   },
@@ -120,7 +120,7 @@ function AdminDashboard() {
     <div className="w-full max-w-6xl space-y-8">
       <PageHeader
         title="站点总览"
-        description={`欢迎，${user?.username ?? '管理员'}。先处理待办，再进入四个管理域。`}
+        description={`${user?.username ?? '站务'}，先看要处理的，再进各域。`}
       />
 
       <Suspense

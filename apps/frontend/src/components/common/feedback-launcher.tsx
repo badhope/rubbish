@@ -101,7 +101,7 @@ export function FeedbackComposer({
             : window.location.pathname + window.location.search,
         images,
       })
-      toast.success('已提交，版主会收到')
+      toast.success('已提交，站务会收到')
       onOpenChange(false)
       setTitle('')
       setBody('')
@@ -119,7 +119,7 @@ export function FeedbackComposer({
         <DialogHeader>
           <DialogTitle>给社区提问题</DialogTitle>
           <DialogDescription>
-            页面报错、内容有误、发布疑问都可以写在这里。提交后会进入反馈墙并通知版主；反馈墙公开标题和正文，不显示提交人身份。
+            页面报错、内容有误、发布疑问都可以写在这里。提交后会进入反馈墙并通知站务；反馈墙公开标题和正文，不显示提交人身份。
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -203,7 +203,7 @@ export function FeedbackComposer({
             当前页面会自动附上：{typeof window !== 'undefined' ? window.location.pathname : '—'}
           </p>
           <Button className="w-full" onClick={submit} disabled={sending}>
-            {sending ? '提交中…' : '提交给版主'}
+            {sending ? '提交中…' : '提交给站务'}
           </Button>
           <Link
             to="/forum"

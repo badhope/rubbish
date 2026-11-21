@@ -15,9 +15,9 @@ export function NotFoundPage() {
         </span>
         <div className="space-y-1.5">
           <h1 className="state-title text-5xl font-semibold tabular-nums sm:text-6xl">404</h1>
-          <p className="text-base font-medium">页面不存在或已被移动</p>
+          <p className="text-base font-medium">这一页不在了</p>
           <p className="text-sm text-muted-foreground">
-            链接可能输错了，或者这条内容已经下架。从下面的入口继续浏览吧。
+            链接可能写错了，或者内容已经下架。你可以回首页，也可以去内容库随便翻一篇。
           </p>
         </div>
         <div className="flex flex-wrap justify-center gap-2">
@@ -30,7 +30,7 @@ export function NotFoundPage() {
           <Button asChild variant="outline">
             <Link to="/catalog">
               <BookOpen className="h-4 w-4" />
-              浏览内容库
+              去内容库
             </Link>
           </Button>
         </div>

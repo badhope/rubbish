@@ -39,8 +39,8 @@ const GROUP_EN: Record<string, string> = {
   我的工作: 'Workspace',
   站点管理: 'Site admin',
   总览: 'Overview',
-  用户与权限: 'Users & access',
-  内容与论坛: 'Content & forum',
+  成员与权限: 'Members & access',
+  内容与讨论: 'Content & discussion',
   系统与安全: 'System & security',
 }
 

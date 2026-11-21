@@ -20,7 +20,7 @@ const IDENTITY_ROWS = [
   },
   {
     label: '内容工作组',
-    who: '内容整理 / 评议成员 / 资深评议',
+    who: '内容整理 / 互评成员 / 资深互评成员',
     body: '做基础整理、互评和内容复核；不碰站点设置、审计与权限分配。',
   },
   {
@@ -53,20 +53,20 @@ function LevelsPage() {
     <div className="mx-auto max-w-4xl space-y-7">
       <PageHeader
         title="参与记录"
-        description="这里只记录参与程度：发帖、评论、发布作品、参与互评、签到都会累积活跃值。它不决定身份，也不换权限；所有人都从 Lv 1 开始。"
+        description="这里记录的是参与，不是头衔。发帖、评论、发布作品、参与互评、签到，都会留下经验。它不换权限；所有人都从等级 1 开始。"
       />
 
       {isAuthenticated ? (
         <Card className="border-primary/20 bg-primary/[0.03]">
           <CardContent className="flex flex-wrap items-center gap-4 p-4 sm:flex-nowrap sm:p-5">
             <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center border border-primary/30 bg-background">
-              <span className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground">LEVEL</span>
+              <span className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground">等级</span>
               <span className="font-mono text-2xl font-semibold leading-none text-primary">{currentLevel}</span>
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-serif text-lg font-semibold">你的参与活跃度</p>
+              <p className="font-serif text-lg font-semibold">你在这里走了多远</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                当前 {xp} 活跃值{next ? ` · 距 Lv ${next.level} 还差 ${toNext}` : ' · 已到最高 Lv 10'}
+                {xp} 经验{next ? ` · 离等级 ${next.level} 还差 ${toNext}` : ' · 已到最高等级'}
               </p>
               <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
                 <div
@@ -88,7 +88,7 @@ function LevelsPage() {
       ) : (
         <Card className="border-dashed">
           <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm text-muted-foreground sm:p-5">
-            <span>登录后可以看到自己的活跃值、Lv 和下一级进度。</span>
+            <span>登录后，能看到自己的经验、等级和下一级进度。</span>
             <Button asChild size="sm">
               <Link to="/login">登录查看</Link>
             </Button>
@@ -103,23 +103,23 @@ function LevelsPage() {
             身份决定“能做什么”
           </p>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            由角色授予，下位身份的能力被上位身份完整继承。站点管理组拥有内容工作组的全部能力，内容工作组拥有成员组的全部能力。
+            角色一层层往下继承：站点管理组有内容工作组的全部能力，内容工作组有成员组的能力。
           </p>
         </div>
         <div className="border-l-2 border-border pl-4">
           <p className="flex items-center gap-2 font-medium">
             <Gauge className="h-4 w-4 text-primary" />
-            活跃值只决定“参与了多少”
+            经验，只说明你走了多远
           </p>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Lv 1–10 由活跃值推进，所有人同一条起跑线。活跃值高不会自动获得评议或管理权限，低也不会被挡在阅读和发帖之外。
+            等级 1 到 10 由经验推进，所有人同一条起跑线。经验高，不会自动拿到互评或管理权限；低，也不会被挡在阅读和发帖之外。
           </p>
         </div>
       </section>
 
       <section>
         <h2 className="font-serif text-xl font-semibold">活跃等级</h2>
-        <p className="mt-1 text-sm text-muted-foreground">每一级只看累计活跃值，不看身份。</p>
+        <p className="mt-1 text-sm text-muted-foreground">每一级只看累计经验，不看身份。</p>
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
           {ACTIVITY_BANDS.map((band) => {
             const active = band.level === currentLevel && isAuthenticated
@@ -149,7 +149,7 @@ function LevelsPage() {
       <section>
         <h2 className="flex items-center gap-2 font-serif text-xl font-semibold">
           <Sparkles className="h-4 w-4 text-primary" />
-          活跃值从哪里来
+          经验从哪里来
         </h2>
         <div className="mt-3 grid gap-2 border-y py-4 sm:grid-cols-2">
           {XP_SOURCES.map((source) => (
@@ -162,8 +162,8 @@ function LevelsPage() {
       </section>
 
       <section>
-        <h2 className="font-serif text-xl font-semibold">身份金字塔</h2>
-        <p className="mt-1 text-sm text-muted-foreground">上层身份自动拥有下层全部权限；等级不参与这张表。</p>
+        <h2 className="font-serif text-xl font-semibold">身份与权限</h2>
+        <p className="mt-1 text-sm text-muted-foreground">上一层有下一层的全部权限；等级不在这张表里。</p>
         <div className="mt-4 space-y-2">
           {IDENTITY_ROWS.map((row, index) => (
             <div

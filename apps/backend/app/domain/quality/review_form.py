@@ -1,18 +1,18 @@
-"""审稿评分表单：学术五维 / 荒诞六维，每个维度落成审稿人逐条可勾的检查项。
+"""互评表单：研究长文五维 / 荒诞写作六维，每个维度落成互评成员逐条可勾的检查项。
 
 设计意图
 --------
-只给审稿人一个孤立的滑杆是不够的——同一篇稿子，手松的审稿人给 85，
+只给互评成员一个孤立的滑杆是不够的——同一篇稿子，手松的互评成员给 85，
 手紧的给 60，编辑部无从判断谁对。所以每个维度下面挂**具体的检查问题**：
 
 - 检查项是**事实性问题**（“是否报告了样本量”），不是感受性问题
   （“你觉得方法好吗”）。事实性问题不同人答得一致。
 - 每个维度至少 3 项，且必须全部作答才能提交——漏答会让“没检查”
   看起来像“检查了但没问题”。
-- 检查项的答案（是/部分/否/不适用）只折算成**建议分**，审稿人可以覆盖，
+- 检查项的答案（是/部分/否/不适用）只折算成**建议分**，互评成员可以覆盖，
   分数必填；理由 + 正文证据选填（见 ``rubric.DimensionScore``）。v5.1 起
   空白理由/证据不再阻断计算，但填了就应落到正文位置。
-- 学术/荒诞两套检查项完全分开：荒诞稿不审“伦理审批”“样本量”，改审
+- 研究长文/荒诞写作两套检查项完全分开：荒诞稿不审“伦理审批”“样本量”，改审
   “荒诞度是否进入正文、设定是否真荒诞、规则是否自洽、梗是否有出处”。
 
 这套表单同时是给 AI 的输入规格：``prompt_payload`` 输出的 JSON 结构
@@ -43,31 +43,31 @@ class CheckItem:
 
 
 ACADEMIC_CHECK_ITEMS: tuple[CheckItem, ...] = (
-    # --- 选题与真问题 ---
-    CheckItem("q_specific", "question", "研究问题是否被写成可回答的问题（而非泛泛的主题）？", 2),
-    CheckItem("q_gap", "question", "是否说明了既有研究为何未能回答该问题？", 2),
-    CheckItem("q_significance", "question", "是否说明回答该问题的理论或实践意义？"),
-    CheckItem("q_novel", "question", "创新增量是否被具体说出（相对哪一篇、补了哪一块）？", 2),
-    # --- 论证与自洽 ---
-    CheckItem("a_premise", "argument", "每个关键结论是否都有明确前提支撑？", 2),
+    # --- 主题与问题 ---
+    CheckItem("q_specific", "question", "主题是否被写成一句能回答的话（而不是泛泛的方向）？", 2),
+    CheckItem("q_gap", "question", "是否说明了这个话题里别人已经写过什么、自己补了什么？", 2),
+    CheckItem("q_significance", "question", "是否说明为什么值得写、对谁有用？"),
+    CheckItem("q_novel", "question", "新角度是否具体（相对哪篇作品、哪种常见说法）？", 2),
+    # --- 结构与逻辑 ---
+    CheckItem("a_premise", "argument", "每个关键判断是否都有材料或例子支撑？", 2),
     CheckItem("a_nojump", "argument", "是否避免了未交代的跳跃（从 A 直接到 C）？", 2),
-    CheckItem("a_counter", "argument", "是否处理了与自身结论相反的解释或证据？", 2),
-    CheckItem("a_circular", "argument", "是否避免了循环论证（用结论证明前提）？"),
-    # --- 方法与可复现 ---
-    CheckItem("m_data", "method", "数据来源与获取方式是否交代清楚？", 2),
-    CheckItem("m_sample", "method", "样本量、抽样方式与筛选标准是否报告？", 2),
-    CheckItem("m_params", "method", "关键参数、超参数或编码规则是否给出？", 2),
-    CheckItem("m_failure", "method", "失败案例或异常结果是否报告？"),
-    # --- 证据与结论 ---
-    CheckItem("e_support", "evidence", "结论强度是否与证据强度匹配（弱证据不下强结论）？", 2),
-    CheckItem("e_causal", "evidence", "是否避免了把相关性写成因果？", 2),
-    CheckItem("e_n", "evidence", "样本量或材料规模是否足以支撑所下结论？", 2),
-    CheckItem("e_stats", "evidence", "统计检验（如适用）是否报告效应量与不确定性？"),
+    CheckItem("a_counter", "argument", "是否处理了可能的反例或不同看法？", 2),
+    CheckItem("a_circular", "argument", "是否避免了用结论证明前提？"),
+    # --- 材料与写法 ---
+    CheckItem("m_data", "method", "素材/资料来源与获取方式是否交代清楚？", 2),
+    CheckItem("m_sample", "method", "选材范围与取舍标准是否说明？", 2),
+    CheckItem("m_params", "method", "关键做法、结构安排或写作规则是否给出？", 2),
+    CheckItem("m_failure", "method", "失败案例、限制或没写到的部分是否说明？"),
+    # --- 表达与完成度 ---
+    CheckItem("e_support", "evidence", "结论强度是否与材料支撑匹配（弱材料不下强结论）？", 2),
+    CheckItem("e_causal", "evidence", "是否避免了把个例或相关写成普遍规律？", 2),
+    CheckItem("e_n", "evidence", "材料规模是否足以支撑所下结论？", 2),
+    CheckItem("e_stats", "evidence", "如使用数据，是否说明口径与不确定性？"),
     # --- 规范与诚信 ---
     CheckItem("i_verifiable", "integrity", "引用是否真实可核（抽查能定位到原文）？", 3),
-    CheckItem("i_data", "integrity", "数据/代码可用性声明是否给出且可执行？", 2),
-    CheckItem("i_contrib", "integrity", "作者贡献、利益冲突与资助声明是否完整？", 2),
-    CheckItem("i_ethics", "integrity", "涉及人类/动物被试时是否给出伦理审批？"),
+    CheckItem("i_data", "integrity", "图片、数据与外部素材来源是否给出？", 2),
+    CheckItem("i_contrib", "integrity", "作者贡献、利益冲突与资助（如有）是否说明？", 2),
+    CheckItem("i_ethics", "integrity", "涉及真人或隐私时是否脱敏或取得同意？"),
 )
 
 ABSURD_CHECK_ITEMS: tuple[CheckItem, ...] = (
@@ -118,7 +118,7 @@ CHECK_ITEMS_BY_TRACK: dict[str, tuple[CheckItem, ...]] = {
     "absurd": ABSURD_CHECK_ITEMS,
 }
 
-# 兼容旧导入：默认学术赛道。
+# 兼容旧导入：默认研究长文。
 CHECK_ITEMS = ACADEMIC_CHECK_ITEMS
 CHECK_ITEMS_BY_DIMENSION: dict[str, tuple[CheckItem, ...]] = {
     key: tuple(item for item in ACADEMIC_CHECK_ITEMS if item.dimension == key)
@@ -141,7 +141,7 @@ def suggest_dimension_score(
 ) -> float:
     """把检查项答案折算成该维度的建议分（0–100 百分制）。
 
-    只作**建议**：审稿人可以覆盖；覆盖时理由与证据可选填。``na`` 从分母里
+    只作**建议**：互评成员可以覆盖；覆盖时理由与证据可选填。``na`` 从分母里
     剔除——一篇纯理论文章没有“样本量”，强制答 no 会把方法分错误地压低。
     """
     items = _items_for(track, dimension)
@@ -167,7 +167,7 @@ def suggest_dimension_score(
 
 
 def score_answers(answers: dict[str, str], track: str = "academic") -> dict[str, dict[str, object]]:
-    """对全部维度（学术五维 / 荒诞六维）给出建议分与检查项明细。"""
+    """对全部维度（研究长文五维 / 荒诞写作六维）给出建议分与检查项明细。"""
     track = track if track in CHECK_ITEMS_BY_TRACK else "academic"
     out: dict[str, dict[str, object]] = {}
     for key, label, hint in dimensions_for(track):
@@ -190,7 +190,7 @@ def score_answers(answers: dict[str, str], track: str = "academic") -> dict[str,
 
 
 def form_payload(track: str = "academic") -> dict[str, object]:
-    """公开表单定义：审稿页据此渲染，外部 AI 据此作答。"""
+    """公开表单定义：互评页据此渲染，外部 AI 据此作答。"""
     track = track if track in CHECK_ITEMS_BY_TRACK else "academic"
     return {
         "track": track,
@@ -278,8 +278,8 @@ def prompt_payload(article_type: str = "research", track: str = "academic") -> d
         "rules": [
             "逐条作答，不得跳过；确实不适用才填 na。",
             "每个维度必须给分；reason 与 evidence 选填，填写了会原样留存供复核。",
-            "学术赛道：integrity 维度若发现编造数据或引用，直接给 0 分并总分归零。",
-            "荒诞赛道：允许无中生有；但设定内规则必须自洽，梗与材料必须可核或明确标注自造。",
+            "研究长文：integrity 维度若发现编造数据或引用，直接给 0 分并总分归零。",
+            "荒诞写作：允许无中生有；但设定内规则必须自洽，梗与材料必须可核或明确标注自造。",
             "总分由权重计算得出，不得自行调高或调低；触发任一硬门槛时按门槛封顶。",
             "总分低于 50（退稿）时，必须列出至少 3 条具体修改要求。",
         ],

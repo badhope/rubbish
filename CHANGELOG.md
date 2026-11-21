@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.19.26] — 2026-11-22
+
+- Replaced the remaining journal-era public copy with the current writing-and-discussion language: page metadata, README, positioning notes, and the landing redirects no longer describe Rubbish as an absurd research community or a journal.
+- Removed the obsolete maintenance landing page and pointed the static site entries at the live community.
+- Added the QA-only identity bootstrap behind `VITE_QA_AUTOLOGIN_TOKEN`; production builds stay inert, and the backend guard only installs under `RUBBISH_ENVIRONMENT=staging` with a 32+ character QA token.
+- Rebuilt and redeployed both the production and isolated QA frontends on 1.19.26, with the production static directory fully replaced instead of merged with old assets.
+- Updated the official notes, announcements, discussions, coin labels, and account bio in the production database; all four official Markdown files now match the local copies byte for byte.
+
 ## [1.19.19] — 2026-11-21
 
 - Repositioned the public site as a writing-and-discussion community instead of a journal: top navigation is now 首页 / 内容 / 合集 / 讨论 / 怎么用 / 我的, and the sidebar separates 我的空间 / 工作台 / 关于 / 站点管理.

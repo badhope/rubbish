@@ -58,11 +58,11 @@ const ASSIGNABLE_ROLES: AssignableRole[] = [
 const ROLE_LABELS: Record<AssignableRole, string> = {
   chief_editor: '内容主管',
   deputy_editor: '内容副主管',
-  board_editor: '栏目编辑',
+  board_editor: '分区主持',
   reviewer: '互评成员',
   senior_reviewer: '资深互评成员',
   editor: '内容整理',
-  section_editor: '栏目编辑',
+  section_editor: '分区主持',
   shop_manager: '站务',
   author: '作者',
   reader: '成员',
@@ -141,14 +141,14 @@ export default function AdminUsersPage() {
   return (
     <div>
       <PageHeader
-        title="用户管理"
+        title="成员管理"
         description="管理用户、启用状态与社区角色分配。读者身份=注册即得，作者身份=确认《规则与边界》即得，均不在此分配。"
         actions={
           <div className="flex items-center gap-2">
             {data ? <Badge variant="secondary">当前页 {data.length}</Badge> : null}
             <Button size="sm" onClick={() => setCreateOpen(true)}>
               <Plus className="mr-1 h-4 w-4" />
-              新增人员
+              新增成员
             </Button>
           </div>
         }
@@ -311,7 +311,7 @@ export default function AdminUsersPage() {
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>新增人员</DialogTitle>
+            <DialogTitle>新增成员</DialogTitle>
             <DialogDescription>
               直接创建内容整理账号并指派角色；对方无需注册，用邮箱验证码登录后即可开始工作。
             </DialogDescription>

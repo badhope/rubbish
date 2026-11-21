@@ -81,10 +81,10 @@ const FIELDS: Array<{
   type?: 'text' | 'url'
 }> = [
   { key: 'display_name', label: '展示名', placeholder: '如：牛马程序员', maxLength: 100 },
-  { key: 'real_name', label: '真实姓名', placeholder: '选填，仅自己可见', maxLength: 100 },
-  { key: 'affiliation', label: '机构 / 组织', placeholder: '如：某大学、某实验室、独立研究', maxLength: 300 },
-  { key: 'department', label: '部门 / 小组', placeholder: '如：计算小组、内容团队', maxLength: 200 },
-  { key: 'academic_title', label: '身份标签', placeholder: '如：学生、工程师、独立研究者', maxLength: 100 },
+  { key: 'real_name', label: '真实姓名（选填）', placeholder: '仅自己可见', maxLength: 100 },
+  { key: 'affiliation', label: '常驻圈子 / 组织', placeholder: '如：独立写作、某高校社群、某内容团队', maxLength: 300 },
+  { key: 'department', label: '小组 / 分工', placeholder: '如：内容组、社区志愿、前端', maxLength: 200 },
+  { key: 'academic_title', label: '身份标签', placeholder: '如：学生、工程师、自由写作者', maxLength: 100 },
   { key: 'location', label: '所在地', placeholder: '如：北京', maxLength: 100 },
   { key: 'website', label: '个人主页', placeholder: 'https://example.com', maxLength: 300, type: 'url' },
 ]
@@ -394,13 +394,13 @@ export function ProfileDetailsCard({ initial }: { initial?: UserResponse | null 
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="profile-research_interests">研究兴趣</Label>
+          <Label htmlFor="profile-research_interests">关注话题</Label>
           <Textarea
             id="profile-research_interests"
             value={form.research_interests}
             maxLength={500}
             rows={2}
-            placeholder="如：多智能体系统、内容治理、前端工程、城市观察"
+            placeholder="如：写作经验、产品观察、城市生活、技术折腾"
             onChange={(e) => set('research_interests', e.target.value)}
           />
           <p className="text-xs text-muted-foreground">用顿号或逗号分隔均可，最多 500 字。</p>
@@ -413,7 +413,7 @@ export function ProfileDetailsCard({ initial }: { initial?: UserResponse | null 
             value={form.bio}
             maxLength={MAX_TEXT}
             rows={3}
-            placeholder="一句话介绍自己，例：严肃格式下的自由选题爱好者，正经研究在读研究生。"
+            placeholder="一句话介绍自己，例：白天写代码，晚上写故事。"
             onChange={(e) => set('bio', e.target.value.slice(0, MAX_TEXT))}
           />
           <div className="flex items-center justify-between gap-3">

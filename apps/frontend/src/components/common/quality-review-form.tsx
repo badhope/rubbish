@@ -128,7 +128,7 @@ export function QualityReviewForm({ articleType = 'research', onSubmit, readOnly
               track === t ? 'bg-primary text-primary-foreground' : 'hover:bg-background',
             )}
           >
-            {t === 'academic' ? '学术赛道' : '荒诞赛道'}
+            {t === 'academic' ? '研究长文' : '荒诞写作'}
           </button>
         ))}
       </div>
@@ -245,8 +245,8 @@ export function QualityReviewForm({ articleType = 'research', onSubmit, readOnly
         <CardContent className="space-y-2 py-4">
           <p className="flex items-start gap-2 text-[11px] text-muted-foreground">
             <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-            学术赛道诚信维度为 0 分时总分归零（一票否决）。总分低于 50 分为退稿、
-            不入区；任一维度低于 60 分会封顶 79，低于 50 分会封顶 59。每维只需给分，
+            研究长文诚信维度为 0 分时总分归零（一票否决）。总分低于 50 分为不通过；
+            任一维度低于 60 分会封顶 79，低于 50 分会封顶 59。每维只需给分，
             理由与正文证据选填。
           </p>
           {scoreMut.data && (
@@ -254,10 +254,10 @@ export function QualityReviewForm({ articleType = 'research', onSubmit, readOnly
               合计 <strong className="tabular-nums">{scoreMut.data.score}</strong> 分 ·{' '}
               {scoreMut.data.grade} {scoreMut.data.grade_label}
               {scoreMut.data.requires_rework && (
-                <span className="ml-2 text-destructive">（不合格，将被打回）</span>
+                <span className="ml-2 text-destructive">（不合格，将被退回修改）</span>
               )}
               {scoreMut.data.borderline && (
-                <span className="ml-2 text-muted-foreground">（边缘稿，编辑将谨慎处理）</span>
+                <span className="ml-2 text-muted-foreground">（边缘稿，内容整理将谨慎处理）</span>
               )}
             </p>
           )}

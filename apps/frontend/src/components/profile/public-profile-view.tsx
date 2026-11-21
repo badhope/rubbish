@@ -24,6 +24,19 @@ function fmtDate(value: string | null): string {
   return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`
 }
 
+const TOPIC_CATEGORY_LABELS: Record<string, string> = {
+  discussion: '写作讨论',
+  records: '记录与复盘',
+  collab: '组队招募',
+  life: '创作生活',
+  site: '站务与反馈',
+  research: '记录与复盘',
+  planning: '记录与复盘',
+  'lab-notes': '记录与复盘',
+  'field-notes': '记录与复盘',
+  failures: '记录与复盘',
+}
+
 const STAT_ITEMS = [
   { key: 'works', label: '作品', icon: BookOpen },
   { key: 'forum_topics', label: '帖子', icon: MessageSquareText },
@@ -47,14 +60,8 @@ export function PublicProfileView({
     user.website
       ? { href: user.website, label: '个人主页', icon: Globe2 }
       : null,
-    user.google_scholar
-      ? { href: user.google_scholar, label: 'Google Scholar', icon: BookOpen }
-      : null,
     user.contact_email
       ? { href: `mailto:${user.contact_email}`, label: user.contact_email, icon: Mail }
-      : null,
-    user.orcid
-      ? { href: `https://orcid.org/${user.orcid}`, label: `ORCID ${user.orcid}`, icon: Award }
       : null,
   ].filter(Boolean) as Array<{ href: string; label: string; icon: typeof Globe2 }>
 
@@ -260,7 +267,7 @@ export function PublicProfileView({
                 <MessageSquareText className="h-4 w-4" /> 最近发帖
               </h2>
               {profile.topics.length === 0 ? (
-                <p className="text-sm text-muted-foreground">还没有在论坛发过帖子。</p>
+                <p className="text-sm text-muted-foreground">还没有在讨论区发过帖子。</p>
               ) : (
                 <ul className="space-y-2">
                   {profile.topics.map((topic) => (
@@ -272,7 +279,7 @@ export function PublicProfileView({
                       >
                         <p className="line-clamp-2 text-sm font-medium group-hover:text-primary">{topic.title}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {topic.category} · {topic.reply_count} 回复 · {fmtDate(topic.created_at)}
+                          {TOPIC_CATEGORY_LABELS[topic.category] ?? topic.category} · {topic.reply_count} 回复 · {fmtDate(topic.created_at)}
                         </p>
                       </Link>
                     </li>

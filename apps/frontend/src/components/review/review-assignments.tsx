@@ -266,7 +266,7 @@ export function ReviewAssignments() {
       comments_to_author: reviewForm.comments_to_author || undefined,
       special_issue: reviewForm.special_issue || undefined,
       special_issue_reason: reviewForm.special_issue
-        ? reviewForm.special_issue_reason || '评议成员确认篇幅特许'
+        ? reviewForm.special_issue_reason || '互评成员确认篇幅例外'
         : undefined,
     }
     try {
@@ -282,13 +282,13 @@ export function ReviewAssignments() {
       }
       if (attachmentError) {
         toast.warning(
-          `互评报告已提交，但附件上传失败：${extractError(attachmentError, '请到已完成任务里补传')}`,
+          `互评意见已提交，但附件上传失败：${extractError(attachmentError, '请到已完成任务里补传')}`,
         )
       } else {
         toast.success(
           reviewAttachments.length
-            ? `互评报告与 ${reviewAttachments.length} 个附件已提交`
-            : '互评报告已提交',
+            ? `互评意见与 ${reviewAttachments.length} 个附件已提交`
+            : '互评意见已提交',
         )
       }
       setReviewTargetId(null)
@@ -306,7 +306,7 @@ export function ReviewAssignments() {
     <div>
       <PageHeader
         title="互评工作台"
-        description="填写互评报告：先过四问，再按赛道维度逐项打分（学术五维 / 荒诞六维）；意见支持 Markdown 与预览，提交前可看作者/内容整理两个视角。作品默认下载 Word，也可切换 PDF。"
+        description="写互评意见：先过四问，再按作品类型逐项打分。可以写 Markdown，也可以先看作者/内容整理两个视角；作品默认下载 Word，也能切 PDF。"
       />
 
       <div className="mb-4">
@@ -314,13 +314,13 @@ export function ReviewAssignments() {
       </div>
 
       <div className="mb-4 rounded-md border border-dashed bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
-        <span className="mr-2 font-medium text-foreground">互评依据与版式要求：</span>
+        <span className="mr-2 font-medium text-foreground">互评参考：</span>
         <a className="font-medium text-primary hover:underline" href="/templates/rubbish-submission-template.docx" download>
           Word 模板
         </a>
         <span className="mx-2">·</span>
         <a className="font-medium text-primary hover:underline" href="/templates/rubbish-submission-template-word.md" download>
-          Word 排版要求
+          排版说明
         </a>
         <span className="mx-2">·</span>
         <a className="font-medium text-primary hover:underline" href="/templates/rubbish-editorial-standards.md" download>
@@ -330,7 +330,7 @@ export function ReviewAssignments() {
         <a className="font-medium text-primary hover:underline" href="/guide?tab=authors">
           发布指南
         </a>
-        <div className="mt-1">互评时请按上述版式与内容整理规范核对结构、图表题注、出处说明和篇幅要求。</div>
+        <div className="mt-1">互评时请对照发布规范看结构、材料、出处和完成度，不必套论文模板。</div>
       </div>
 
       <div
@@ -425,12 +425,12 @@ export function ReviewAssignments() {
                   )}
                   {a.status === 'accepted' && (
                     <Button size="sm" onClick={() => openReviewForm(a.id)}>
-                      <FileText className="h-4 w-4" /> 填写互评报告
+                      <FileText className="h-4 w-4" /> 写互评意见
                     </Button>
                   )}
                   {a.status === 'completed' && (
                     <Badge variant="outline" className="gap-1">
-                      <Eye className="h-3 w-3" /> 报告已提交
+                      <Eye className="h-3 w-3" /> 意见已提交
                     </Badge>
                   )}
                 </div>
@@ -539,7 +539,7 @@ export function ReviewAssignments() {
                       ? '提交中…'
                       : missingReviewDims.length > 0
                         ? `还差 ${missingReviewDims.length} 维`
-                        : '提交互评报告'}
+                        : '提交互评意见'}
                   </Button>
                 </DialogFooter>
               </form>

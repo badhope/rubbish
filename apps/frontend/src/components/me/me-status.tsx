@@ -2,16 +2,16 @@ import { Badge } from '@/components/ui/badge'
 import type { AssignmentStatus, SubmissionStatus } from '@/lib/types'
 
 const SUBMISSION_LABEL: Record<string, string> = {
-  pending: '待审核',
-  under_review: '审核中',
-  major_revision: '大修',
-  minor_revision: '小修',
-  resubmitted: '已重投',
-  accepted: '已接收',
-  approved: '已接收',
-  rejected: '已拒绝',
-  rework_requested: '补材料',
-  materials: '补材料',
+  pending: '等基础检查',
+  under_review: '互评中',
+  major_revision: '需要大改',
+  minor_revision: '小改一下',
+  resubmitted: '已重新提交',
+  accepted: '通过了',
+  approved: '已公开',
+  rejected: '没有通过',
+  rework_requested: '待补充',
+  materials: '待补充',
 }
 
 export function SubmissionStatusBadge({ status }: { status: SubmissionStatus }) {

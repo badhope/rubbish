@@ -1,13 +1,13 @@
 """站内积分 — 只记录贡献与消费，不具备任何现金价值。
 
 积分不可充值、不可兑换现金、不可转账、不可转让；只能用于站内非现金权益。
-发放规则和上限都可被主编在后台调整，默认值刻意压低，避免刷量：
+发放规则和上限都可被站务组在后台调整，默认值刻意压低，避免刷量：
 
 - 每日签到 1 积分
 - 连续 7 天额外 2 积分
-- 论坛发主题 1 积分 / 天，回帖默认 0
-- 认领 10 积分、审稿 5 积分、录用 20 积分、裁决 3 积分
-- 单用户日常收入每日最多 5 积分；审稿、录用、认领、裁决等一次性奖励不受此限，但计入全站月发放上限
+- 讨论区发主题 1 积分 / 天，回帖默认 0
+- 认领 10 积分、完成互评 5 积分、作品通过 20 积分、内容决定 3 积分
+- 单用户日常收入每日最多 5 积分；互评、作品通过、认领、内容决定等一次性奖励不受此限，但计入全站月发放上限
 
 事实源是 ``point_events.identity='coin'`` 的 append-only 流水；余额在
 ``users.coin_balance`` 做快照。所有发放都先过规则、每日上限、月度发放上限
@@ -38,7 +38,7 @@ DAILY_CAP_EXEMPT_REASONS = frozenset(
 )
 ACCENT_PRICE = 100
 
-# 代码内兜底；生产以 coin_rules 表为准（主编可改）。
+# 代码内兜底；生产以 coin_rules 表为准（站务组可改）。
 COIN_RULES: dict[str, int] = {
     "checkin.daily": 1,
     "checkin.weekly_bonus": 2,
@@ -53,12 +53,12 @@ COIN_RULES: dict[str, int] = {
 COIN_LABELS: dict[str, str] = {
     "checkin.daily": "每日签到",
     "checkin.weekly_bonus": "连续签到 7 天奖励",
-    "forum.topic": "发布论坛主题",
-    "forum.reply": "论坛回复",
+    "forum.topic": "发布讨论主题",
+    "forum.reply": "讨论回复",
     "claim.approve": "作者认领通过",
-    "review.completed": "完成审稿",
-    "submission.accepted": "文章录用",
-    "editor.decision": "编辑裁决",
+    "review.completed": "完成互评",
+    "submission.accepted": "作品通过",
+    "editor.decision": "内容决定",
     "shop.accent": "解锁自定义主题色",
     "shop.item": "积分兑换",
 }

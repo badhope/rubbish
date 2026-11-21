@@ -16,9 +16,9 @@ interface ContentSearch {
 }
 
 const SECTIONS: readonly AdminSectionItem<SectionKey>[] = [
-  { key: 'forum', label: '论坛巡检' },
+  { key: 'forum', label: '讨论巡检' },
   { key: 'announcements', label: '公告' },
-  { key: 'boards', label: '版块' },
+  { key: 'boards', label: '分区' },
   { key: 'reports', label: '举报' },
   { key: 'comments', label: '评论' },
 ]
@@ -58,13 +58,13 @@ function AdminContentPage() {
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border bg-muted/20 p-2.5">
-        <span className="mr-1 text-xs text-muted-foreground">内容业务入口</span>
+        <span className="mr-1 text-xs text-muted-foreground">快捷入口</span>
         <Link
           to="/submissions/pending"
           className="inline-flex items-center gap-1 rounded-md border bg-background px-2.5 py-1 text-xs transition-colors hover:border-primary hover:text-primary"
         >
           <Kanban className="h-3.5 w-3.5" />
-          内容工作台
+          内容台
         </Link>
         <Link
           to="/review"
@@ -72,7 +72,7 @@ function AdminContentPage() {
           className="inline-flex items-center gap-1 rounded-md border bg-background px-2.5 py-1 text-xs transition-colors hover:border-primary hover:text-primary"
         >
           <ClipboardCheck className="h-3.5 w-3.5" />
-          互评工作台
+          互评台
         </Link>
         <Link
           to="/editor/calibration"

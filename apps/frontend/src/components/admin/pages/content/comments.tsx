@@ -33,7 +33,7 @@ import { Textarea } from '@/components/ui/textarea'
 type TabValue = CommentModerationStatus
 
 const TAB_META: { value: TabValue; label: string }[] = [
-  { value: 'pending', label: '待审' },
+  { value: 'pending', label: '待看' },
   { value: 'published', label: '已通过' },
   { value: 'rejected', label: '已拒绝' },
 ]
@@ -83,7 +83,7 @@ export default function AdminCommentsPage() {
     <div>
       <PageHeader
         title="评论审核"
-        description="新评论默认 pending（事后审核，前台仍展示）；判 reject 后立即下架。"
+        description="新评论先展示、后台事后审核；确认违规后立即下架。"
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -116,7 +116,7 @@ export default function AdminCommentsPage() {
         <ErrorState message="加载评论失败" onRetry={() => refetch()} />
       ) : !data || data.data.length === 0 ? (
         <EmptyState
-          title={tab === 'pending' ? '没有待审评论' : '该状态下暂无评论'}
+          title={tab === 'pending' ? '没有待处理评论' : '该状态下暂无评论'}
         />
       ) : (
         <div className="space-y-3">
@@ -126,7 +126,7 @@ export default function AdminCommentsPage() {
                 <div className="flex flex-wrap items-center gap-2 text-xs">
                   <Badge variant={STATUS_BADGE[row.status]}>{TAB_META.find((t) => t.value === row.status)?.label}</Badge>
                   <span className="font-medium">{row.author_name}</span>
-                  <span className="text-muted-foreground">评论于文章</span>
+                  <span className="text-muted-foreground">评论于</span>
                   <span className="text-foreground">{row.resource_title ?? `#${row.resource_id}`}</span>
                   <span className="ml-auto text-muted-foreground">
                     {new Date(row.created_at).toLocaleString()}

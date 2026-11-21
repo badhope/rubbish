@@ -7,34 +7,34 @@ export const Route = createFileRoute('/about')({
   component: AboutPage,
 })
 
-// 社区分工：版主、策展、技术与治理；不虚构头衔。
+// 谁在做什么：管理、策展、技术与治理；不虚构头衔。
 const ROLES = [
   {
-    name: '社区版主',
-    role: '版块维护',
-    duty: '处理举报、合并重复帖、维护版块秩序；不替作者改正文。',
+    name: '社区管理',
+    role: '看门与扫尘',
+    duty: '处理举报、合并重复帖、把吵起来的人拉开；不替作者改正文。',
   },
   {
     name: '内容策展',
     role: '精选与专题',
-    duty: '挑出值得读的帖子与长文，做专题、写推荐语；只推荐，不替读者下结论。',
+    duty: '从公开内容里挑值得停下来的作品，做专题、写几句推荐；只指路，不替读者下结论。',
   },
   {
     name: '技术维护',
     role: '平台与存档',
-    duty: '维护发布、阅读、搜索、导出与长期可读性；不介入内容判断。',
+    duty: '让发布、阅读、搜索和旧链接一直能用；不碰内容判断。',
   },
   {
     name: '社区治理',
     role: '规则与申诉',
-    duty: '受理侵权、隐私、人身攻击与版权投诉；利益冲突时回避。',
+    duty: '接侵权、隐私和版权投诉；遇到利益冲突就回避。',
   },
 ]
 
 const TIMELINE = [
-  ['2026 年 10 月', 'Rubbish 社区与内容栏目上线：短帖在讨论区，长文在内容库。'],
-  ['2026 年 11 月', '内容板块、使用指南与规则页开放；发帖不再需要任何资格审核。'],
-  ['现在', '提问、记录、失败、复盘、组队和版务都在同一个社区里。'],
+  ['2026 年 10 月', '社区和内容库开门：短帖留在讨论区，长文放进内容库。'],
+  ['2026 年 11 月', '指南和规则页补齐；发帖不再需要申请资格。'],
+  ['现在', '问题、失败、复盘、组队和站务，都还在同一张桌子上。'],
 ]
 
 function AboutPage() {
@@ -49,8 +49,8 @@ function AboutPage() {
       </Link>
 
       <PageHeader
-        title="关于站点"
-        description="Rubbish 是一个公开写作与讨论社区：把不正经的问题认真做完，把过程、失败和结果拿出来讨论。"
+        title="关于 Rubbish"
+        description="一个公开写作与讨论的地方。问题可以怪，稿子可以没写完，话要说明白。"
       />
 
       <div className="space-y-10">
@@ -60,15 +60,15 @@ function AboutPage() {
               「正经地荒诞，公开地失败。」
             </p>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              Rubbish 从第一天就是一个社区：短帖走讨论区，长文放进内容库。你可以只发一个问题，
-              也可以把一次写作、一次尝试、一段现场观察完整写下来。
+              Rubbish 从第一天起就是一张公开的桌面：短帖放讨论区，长文放内容库。你可以只留一个问题，
+              也可以把一次写作、一次尝试、一段现场观察慢慢写完。
             </p>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              这里欢迎选题与计划、过程记录、现场观察、失败复盘、组队招募和自由创作。
-              荒诞不是免掉方法的理由；设定要清楚，材料要能对上。
+              这里收选题与计划、过程记录、现场观察、失败复盘、组队招募，也收小说和诗。
+              荒诞不是偷懒的理由：设定要站得住，材料要能对上。
             </p>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              社区不收任何费用，不卖置顶、不加精收费，也不把站内热度包装成正式评价。
+              不收费，不卖置顶，也不把热度说成评价。写得好不好，留给读者慢慢讲。
             </p>
           </div>
         </RevealSection>
@@ -76,7 +76,7 @@ function AboutPage() {
         <RevealSection>
           <h2 className="flex items-center gap-2 text-xl font-medium">
             <Users className="h-5 w-5 text-primary" />
-            社区分工
+            谁在做什么
           </h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             {ROLES.map((m) => (
@@ -92,12 +92,12 @@ function AboutPage() {
             ))}
           </div>
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-            以上是社区分工；不虚构姓名、头衔或机构，也不给版主安上旧式头衔。
+            名字不重要；有事，能找到人。
           </p>
         </RevealSection>
 
         <RevealSection>
-          <h2 className="text-xl font-medium">社区简史</h2>
+          <h2 className="text-xl font-medium">一路怎么走过来的</h2>
           <ol className="mt-4 space-y-4 border-l border-border pl-5">
             {TIMELINE.map(([when, what]) => (
               <li key={what} className="relative">
@@ -119,10 +119,10 @@ function AboutPage() {
           </h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             {[
-              ['虚构要标出来', '荒诞研究、讽刺写作、思想实验，在标题区或正文开头写明“虚构创作”。'],
-              ['真实材料可核查', '引用的文献、数据、图片给得出处；自己编的参考文献统一标注“虚构参考文献”。'],
-              ['尊重真人隐私', '不点名真实个人、单位、病历与聊天记录；讽刺指向现象，不指向可识别的人。'],
-              ['版权与处理', '盗图、洗稿、未经授权的搬运会被下架；人身攻击、隐私泄露与违法内容会被移除，作者可申诉。'],
+              ['虚构要标出来', '虚构故事、讽刺写作、思想实验，在标题区或正文开头写一句“虚构创作”。'],
+              ['真实材料可核查', '引用别人的文字、数据、图片，把出处写清；自己编的出处，标一句“虚构出处”。'],
+              ['尊重真人隐私', '不点名真实的人、单位、病历和聊天记录。讽刺可以尖，但别让人对号入座。'],
+              ['版权与处理', '盗图、洗稿、未经授权的搬运会下架；人身攻击、隐私泄露和违法内容会移除，作者可以申诉。'],
             ].map(([title, body]) => (
               <div key={title} className="border-t pt-3">
                 <p className="text-sm font-medium">{title}</p>
@@ -133,13 +133,13 @@ function AboutPage() {
         </RevealSection>
 
         <RevealSection>
-          <h2 className="text-xl font-medium">站点信息</h2>
+          <h2 className="text-xl font-medium">关于这个站</h2>
           <dl className="mt-4 grid gap-4 sm:grid-cols-2">
             {[
               { icon: ScrollText, label: '站点性质', value: '公开写作与讨论社区' },
               { icon: Globe, label: '访问与托管', value: '香港服务器与香港域名' },
               { icon: Building2, label: '运营', value: 'Rubbish 团队' },
-              { icon: ShieldCheck, label: '标识', value: '站内编号只用于定位，不是 DOI' },
+              { icon: ShieldCheck, label: '标识', value: '站内编号只用来定位' },
             ].map(({ icon: Icon, label, value }) => (
               <div key={label} className="flex items-start gap-3 border-t pt-3">
                 <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -155,12 +155,10 @@ function AboutPage() {
         <RevealSection className="border-t pt-6">
           <h2 className="flex items-center gap-2 text-lg font-medium">
             <ShieldCheck className="h-5 w-5 text-primary" />
-            不是期刊，也不做学术评价
+            这里的边界
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            Rubbish 不是期刊、出版社、学术机构或评价平台，不提供 DOI、ISSN、职称认定、学分、学历背书、
-            奖项或任何形式的正式发表证明。站内编号只用于站内定位；站内精选、热度和等级都不构成学术评价。
-            如果外部机构要求正式发表材料，请不要使用本站记录替代。
+            Rubbish 只是一个公开写作与讨论的地方：可以读，可以写，可以聊。站内编号只用来定位；精选、热度和等级都不是学术评价。如果对方要正式发表材料，请另找出版渠道，别拿这里的记录替代。
           </p>
         </RevealSection>
 

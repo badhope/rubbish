@@ -147,7 +147,7 @@ export default function AnnouncementsAdminPage() {
     <div className="space-y-4">
       <PageHeader
         title="公告管理"
-        description="发布首访弹窗公告、活动通知与维护提示。到点自动下线。"
+        description="想让大家第一眼看到的事，写在这里。访客首次进入弹一次，到点自动下线。"
         actions={
           <Button onClick={openCreate}>
             <Plus className="h-4 w-4" />
@@ -163,7 +163,7 @@ export default function AnnouncementsAdminPage() {
       ) : !listQ.data?.length ? (
         <EmptyState
           title="还没有公告"
-          description="新建一条公告，它会在访客首次进入时弹出。"
+          description="写一条放在门楣上。访客第一次进来，会看到它。"
           action={
             <Button onClick={openCreate} size="sm">
               新建公告

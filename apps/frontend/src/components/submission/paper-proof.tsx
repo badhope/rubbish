@@ -227,19 +227,11 @@ export function PaperProof({
     }
   }, [title, authorsKey, affiliations, abstract, keywordsKey, body, doi, funding, clc, licenseText, track, chars])
 
-  const metaLine = [
-    clc ? `中图分类号 ${clc}` : '',
-    doi ? `DOI ${doi}` : '',
-    funding ? `基金：${funding}` : '',
-  ]
-    .filter(Boolean)
-    .join('　·　')
-
   return (
     <div className="paper-proof" ref={outerRef}>
       <div className="paper-proof-toolbar">
         <span>
-          A4 纸面 · {pageCount > 0 ? `${pageCount} 页` : '排版中…'} · {chars} 字
+          纸张预览 · {pageCount > 0 ? `${pageCount} 页` : '排版中…'} · {chars} 字
         </span>
         <div className="flex items-center gap-2">
           {onDownloadPdf ? (
@@ -273,7 +265,6 @@ export function PaperProof({
           {renderAffiliations(affiliations) ? (
             <p className="paper-proof-affs">{renderAffiliations(affiliations)}</p>
           ) : null}
-          {metaLine ? <p className="paper-proof-affs">{metaLine}</p> : null}
 
           {abstract.trim() ? (
             <section className="paper-proof-block">
@@ -327,8 +318,7 @@ export function PaperProof({
             {renderAffiliations(affiliations) ? (
               <p className="paper-proof-affs">{renderAffiliations(affiliations)}</p>
             ) : null}
-            {metaLine ? <p className="paper-proof-affs">{metaLine}</p> : null}
-            {abstract.trim() ? (
+              {abstract.trim() ? (
               <section className="paper-proof-block">
                 <h2 className="paper-proof-abbr">摘要</h2>
                 <MarkdownContent text={abstract} className="paper-proof-text" />

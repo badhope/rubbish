@@ -103,7 +103,7 @@ async def send_decision_email(
     )
     if is_accept:
         # 主编口径：录用即恭喜，主题突出祝贺
-        subject = f"🎉 恭喜！您的稿件《{submission_title[:60]}》已被 Rubbish 录用并发布"
+        subject = f"🎉 你的作品《{submission_title[:60]}》已经公开"
         try:
             from app.core.email import get_congrat_sender
 
@@ -166,8 +166,8 @@ async def run_overdue_reminders(db: AsyncSession, *, tenant_id: Any) -> dict[str
             tenant_id=tenant_id,
             user_id=reviewer.id,
             type_="review.reminder",
-            title=f"审稿提醒：{submission.title}",
-            body=f"该任务已等待 {days_pending} 天，请尽快{stage}。",
+            title=f"互评提醒：{submission.title}",
+            body=f"这份互评已经等了 {days_pending} 天。{stage}，不用写长，把判断说清楚就好。",
             related_type="review_assignment",
             related_id=str(assignment.id),
         )

@@ -148,7 +148,7 @@ export function TriageQueue() {
                             {item.authors.join("、")}
                           </span>
                           <span>·</span>
-                          <span>投稿 {ageLabel(item.triage_started_at ?? item.submitted_at)}前</span>
+                          <span>交来 {ageLabel(item.triage_started_at ?? item.submitted_at)}前</span>
                           {overdue ? (
                             <Badge variant="destructive">超 48 小时</Badge>
                           ) : null}

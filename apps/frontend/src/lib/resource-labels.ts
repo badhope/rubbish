@@ -112,7 +112,7 @@ export function displayTypeLabel(
 ): string {
   if (contentTrack === 'essay') return contentCategory === 'rant' ? '吐槽' : '自由创作'
   if (contentTrack === 'paper') {
-    if (paperKind === 'absurd') return '荒诞研究'
+    if (paperKind === 'absurd') return '荒诞写作'
     if (paperKind === 'serious') return '实证研究'
     return TYPE_LABELS[type ?? ''] ?? '研究记录'
   }

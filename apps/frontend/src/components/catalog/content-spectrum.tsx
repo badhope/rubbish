@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router'
 import type { ResourceStats } from '@/lib/types'
 
 /**
- * 内容光谱：用一条堆叠条和一组可点击的横条，回答“站里到底有什么”。
+ * 这里有什么：用一条堆叠条和一组可点击的横条，回答“站里到底有什么”。
  *
  * 这不是运营仪表盘。它只展示公开目录的构成，并把每个数字变成筛选入口；
  * 读者不需要先理解“轨道 / 类别 / 学科”三套词，再开始找文章。
@@ -18,7 +18,7 @@ export function ContentSpectrum({ stats }: { stats?: ResourceStats }) {
 
   const segments = [
     { key: 'serious', label: '实证研究', count: serious, color: 'bg-primary', to: { kind: 'serious' as const } },
-    { key: 'absurd', label: '荒诞研究', count: absurd, color: 'bg-absurd', to: { kind: 'absurd' as const } },
+    { key: 'absurd', label: '荒诞写作', count: absurd, color: 'bg-absurd', to: { kind: 'absurd' as const } },
     { key: 'essay', label: '自由创作', count: essay, color: 'bg-amber-500', to: { track: 'essay' as const } },
   ].filter((segment) => segment.count > 0)
 
@@ -32,10 +32,10 @@ export function ContentSpectrum({ stats }: { stats?: ResourceStats }) {
     <section className="mt-10 border-y py-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.32em] text-muted-foreground">Content map</p>
-          <h2 className="mt-2 font-serif text-3xl font-semibold tracking-tight">内容光谱</h2>
+          <p className="text-[10px] uppercase tracking-[0.32em] text-muted-foreground">内容地图</p>
+          <h2 className="mt-2 font-serif text-3xl font-semibold tracking-tight">这里有什么</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-            先看站里有什么，再决定从哪进。每一段颜色和每一根横条都可以直接点进去。
+            先看这里有什么，再决定从哪进。每一条横线都能点。
           </p>
         </div>
         <p className="font-mono text-sm tabular-nums text-muted-foreground">{total} 篇</p>

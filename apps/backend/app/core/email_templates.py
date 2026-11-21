@@ -32,7 +32,7 @@ def _shell(title: str, body_html: str, footer_note: str = "") -> str:
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#fff;border:1px solid {LINE};border-radius:10px;">
     <tr><td style="padding:22px 26px 6px;">
       <div style="font-size:20px;font-weight:700;color:{INK};letter-spacing:.5px;">{site}</div>
-      <div style="margin-top:4px;font-size:12px;color:{MUTED};">公开写作与讨论社区 · Public Writing &amp; Discussion</div>
+      <div style="margin-top:4px;font-size:12px;color:{MUTED};">公开写作与讨论社区</div>
     </td></tr>
     <tr><td style="padding:14px 26px 4px;">
       <h1 style="margin:0 0 12px;font-size:17px;line-height:1.5;color:{INK};">{escape(title)}</h1>
@@ -268,7 +268,7 @@ def decision_notice(
     author: str, paper_title: str, decision_label: str, note: str | None, link: str
 ) -> tuple[str, str, str]:
     """Decision notification to the author."""
-    subject = f"{settings.site_name}：你的作品有了处理结果（{decision_label}）"
+    subject = f"{settings.site_name}：你的作品有了新消息（{decision_label}）"
     note_html = (
         f'<div style="margin:14px 0;padding:10px 14px;background:{PAPER};border-left:3px solid {ACCENT};'
         f'font-size:13px;color:{INK};white-space:pre-wrap;">{escape(note)}</div>'
@@ -277,16 +277,16 @@ def decision_notice(
     )
     text = (
         f"你好，{author}：\n\n"
-        f"你的作品《{paper_title}》已完成互评，结果为：{decision_label}。\n"
-        + (f"\n编辑意见：\n{note}\n" if note else "")
+        f"你的作品《{paper_title}》走完了互评，结果是：{decision_label}。\n"
+        + (f"\n处理意见：\n{note}\n" if note else "")
         + f"\n查看详情与后续操作：\n{link}\n"
     )
     html = _shell(
-        f"作品处理结果：{decision_label}",
+        f"作品有了新消息：{decision_label}",
         f"<p>你好，{escape(author)}：</p>"
         f"<p>你的作品《{escape(paper_title)}》已完成互评，结果为 "
         f"<strong>{escape(decision_label)}</strong>。</p>"
-        + (f"<p>编辑意见：</p>{note_html}" if note else "")
+        + (f"<p>处理意见：</p>{note_html}" if note else "")
         + _button("查看作品详情", link),
     )
     return subject, text, html
@@ -297,11 +297,11 @@ def triage_overdue_digest(
 ) -> tuple[str, str, str]:
     """One digest for the editor team when triage items pass 48 hours."""
     count = len(items)
-    subject = f"{settings.site_name}：初筛队列有 {count} 篇超过 48 小时"
+    subject = f"{settings.site_name}：还有 {count} 篇作品等待基础检查"
     lines = "\n".join(f"- 《{title}》（已等待 {hours} 小时）" for title, hours in items)
     text = (
         f"你好，{editor}：\n\n"
-        f"初筛队列有 {count} 篇作品超过 48 小时未处理：\n{lines}\n\n"
+        f"有 {count} 篇作品进入基础检查超过 48 小时还没处理：\n{lines}\n\n"
         f"请打开以下链接处理：\n{link}\n"
     )
     lis = "".join(
@@ -309,7 +309,7 @@ def triage_overdue_digest(
         for title, hours in items
     )
     html = _shell(
-        f"初筛队列有 {count} 篇超过 48 小时",
+        f"还有 {count} 篇作品等待基础检查",
         f"<p>你好，{escape(editor)}：</p>"
         f"<p>以下作品进入初筛队列已超过 <strong>48 小时</strong>：</p>"
         f"<ul>{lis}</ul>" + _button("打开初筛队列", link),
@@ -326,8 +326,8 @@ def release_failure(
     if detail:
         extra = "\n" + "\n".join(f"- {escape(str(k))}: {escape(str(v))}" for k, v in detail.items())
     text = (
-        f"期次 {target} 的定时发布失败。\n\n原因：{reason}{extra}\n\n"
-        f"请打开期次编排重新核对并重新排期：\n{link}\n"
+        f"合集 {target} 的定时发布失败。\n\n原因：{reason}{extra}\n\n"
+        f"请打开合集编排，重新核对并排期：\n{link}\n"
     )
     html = _shell(
         f"定时发布失败：{target}",

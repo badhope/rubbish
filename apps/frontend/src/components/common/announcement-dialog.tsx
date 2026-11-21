@@ -125,13 +125,13 @@ export function AnnouncementDialog({
               search={{ tab: 'help' }}
               className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
             >
-              查看论坛指南 <ArrowRight className="h-3.5 w-3.5" />
+              看看怎么用 <ArrowRight className="h-3.5 w-3.5" />
             </Link>
             <Link
               to="/catalog"
               className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
             >
-              浏览文章 <ArrowRight className="h-3.5 w-3.5" />
+              去内容库 <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
           <Button type="button" onClick={() => onOpenChange(false)}>

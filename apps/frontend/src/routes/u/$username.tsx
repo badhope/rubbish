@@ -37,7 +37,7 @@ function PublicProfilePage() {
             用户可能设置了“仅自己可见”，或者这个用户名还没有注册。
           </p>
           <Button asChild variant="outline" size="sm">
-            <Link to="/forum">去论坛逛逛</Link>
+            <Link to="/forum">去讨论区逛逛</Link>
           </Button>
         </CardContent>
       </Card>

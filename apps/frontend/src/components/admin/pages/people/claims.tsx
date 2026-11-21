@@ -24,7 +24,7 @@ import { Textarea } from '@/components/ui/textarea'
 
 
 const STATUS_LABEL: Record<string, string> = {
-  pending: '待审',
+  pending: '待处理',
   approved: '已批准',
   rejected: '已驳回',
 }
@@ -80,7 +80,7 @@ export default function ClaimsAdminPage() {
         claimId: row.id,
         body: { approve: true, author_position: row.author_position },
       })
-      toast.success('已通过：文章已挂到认领人名下')
+      toast.success('已通过：这篇挂到认领人名下了')
     } catch (err) {
       toast.error(extractError(err, '操作失败'))
     }
@@ -110,8 +110,8 @@ export default function ClaimsAdminPage() {
   return (
     <div>
       <PageHeader
-        title="认领审批"
-        description="作者对无人认领的存量文章的认领申请。通过即挂到认领人名下；驳回后可指定给其他申请人。"
+        title="认领"
+        description="有些早期内容还没有署名。作者找过来认领时，会排在这里。通过就挂到他名下；不通过，可以指给别的申请人。"
         actions={
           <div className="flex flex-wrap gap-1.5">
             {(['pending', 'approved', 'rejected'] as const).map((s) => (

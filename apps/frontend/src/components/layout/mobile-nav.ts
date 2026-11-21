@@ -43,7 +43,7 @@ export const MOBILE_MORE_GROUP_ORDER = ['我的空间', '工作台', '社区', '
 export const MOBILE_TABS: MobileTab[] = [
   { to: '/', label: '首页', icon: Home },
   { to: '/forum', label: '讨论', icon: MessagesSquare },
-  { to: '/submissions/new', label: '发布', icon: PenLine },
+  { to: '/submissions/new', label: '写', icon: PenLine },
   { to: '/catalog', label: '内容', icon: BookOpen },
   { to: '/me', label: '我的', icon: User },
 ]

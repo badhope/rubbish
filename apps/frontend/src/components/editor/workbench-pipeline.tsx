@@ -590,7 +590,7 @@ export function EditorPipeline() {
                                     <span className={`truncate ${a.status === 'declined' ? 'text-red-600' : ''}`}>
                                       {a.reviewer_username ?? `#${a.reviewer_id}`}
                                       {' · '}
-                                      {a.status_label ?? (a.status === 'completed' ? '已交报告' : a.status === 'declined' ? '已拒审' : '未交')}
+                                      {a.status_label ?? (a.status === 'completed' ? '已交意见' : a.status === 'declined' ? '已拒绝' : '未交')}
                                     </span>
                                     <span className="flex shrink-0 items-center gap-1">
                                       {a.due_label && (
@@ -629,7 +629,7 @@ export function EditorPipeline() {
                                       ? '大修'
                                       : item.status === 'minor_revision'
                                         ? '小修'
-                                        : '已修改待审'}
+                                        : '已修改，待复核'}
                                   </Badge>
                                   {item.editor_note ? (
                                     <span className="line-clamp-2 text-muted-foreground">
@@ -903,8 +903,8 @@ export function EditorPipeline() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="accept">通过</SelectItem>
-                  <SelectItem value="minor_revision">小修</SelectItem>
-                  <SelectItem value="major_revision">大修</SelectItem>
+                  <SelectItem value="minor_revision">小改</SelectItem>
+                  <SelectItem value="major_revision">大改</SelectItem>
                   <SelectItem value="reject">不通过</SelectItem>
                 </SelectContent>
               </Select>
@@ -971,7 +971,7 @@ export function EditorPipeline() {
         title="更换互评成员"
         description={
           replaceTarget
-            ? `将撤回 ${replaceTarget.names || '当前互评成员'} 的在途邀请，再重新选择互评成员。已提交的互评报告不会被删除。`
+            ? `将撤回 ${replaceTarget.names || '当前互评成员'} 的在途邀请，再重新选择互评成员。已提交的互评意见不会被删除。`
             : undefined
         }
         confirmText="撤回并重新指派"
@@ -986,8 +986,8 @@ export function EditorPipeline() {
 
 const RECOMMENDATION_LABELS: Record<string, string> = {
   accept: '通过',
-  minor_revision: '小修',
-  major_revision: '大修',
+  minor_revision: '小改',
+  major_revision: '大改',
   reject: '不通过',
 }
 
@@ -1008,7 +1008,7 @@ function SubmissionReportsPanel({ submissionId }: { submissionId: number }) {
   if (!data || data.length === 0) {
     return (
       <p className="rounded-md border border-dashed bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
-        尚无已完成的互评报告；复核前应先等至少两份意见。
+        尚无已完成的互评意见；复核前应先等至少两份意见。
       </p>
     )
   }
@@ -1091,7 +1091,7 @@ function SubmissionTimelinePanel({ submissionId }: { submissionId: number }) {
     <div className="space-y-2 border-t pt-3">
       <div className="flex items-center gap-2 text-sm font-medium">
         <History className="h-4 w-4" /> 全流程追溯
-        <span className="text-xs text-muted-foreground">发布 → 版本 → 邀请/拒审 → 报告 → 复核</span>
+        <span className="text-xs text-muted-foreground">发布 → 版本 → 邀请/拒绝 → 互评 → 复核</span>
       </div>
       <ol className="space-y-1.5 border-l pl-3 text-xs">
         {data.events.map((e, i) => (
@@ -1129,7 +1129,7 @@ function EditorReportSearchDialog({
         <DialogHeader>
           <DialogTitle>互评意见检索</DialogTitle>
           <DialogDescription>
-            按作品标题、互评成员用户名或意见正文搜索全部已完成报告；只返回内容整理可见内容。
+            按作品标题、互评成员用户名或意见正文搜索全部已完成互评；只返回内容整理可见内容。
           </DialogDescription>
         </DialogHeader>
         <Input

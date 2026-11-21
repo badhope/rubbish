@@ -32,7 +32,7 @@ export function MeSettings({ username, initialSection }: { username: string; ini
     <section>
       <div className="flex flex-wrap items-end justify-between gap-3 border-b pb-4">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">SETTINGS</p>
+          <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">设置</p>
           <h2 className="mt-1 font-serif text-xl tracking-tight">账号设置</h2>
           <p className="mt-1 text-xs text-muted-foreground">
             资料、安全与通知设置都在这里；留空不会覆盖已有内容。

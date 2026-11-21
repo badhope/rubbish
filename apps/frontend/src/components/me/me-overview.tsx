@@ -56,9 +56,9 @@ export function MeOverview({
           >
             <PenLine className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <span>
-              <span className="block text-sm font-medium">写一篇作品</span>
+              <span className="block text-sm font-medium">写点东西</span>
               <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
-                可先存草稿再发布；短帖请去讨论区发。
+                可以先存草稿；短帖留给讨论区。
               </span>
             </span>
           </Link>

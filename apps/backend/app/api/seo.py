@@ -32,52 +32,51 @@ router = APIRouter(tags=["seo"])
 SITE_NAME = "Rubbish"
 SITE_TITLE = "Rubbish — 公开写作与讨论社区"
 DEFAULT_DESCRIPTION = (
-    "Rubbish 是一个公开写作与讨论社区：短帖在讨论区，长文在内容库，合集只做主题聚合，公开可读。"
-    "这里不是期刊、出版社或学术评价机构，不提供 DOI、ISSN、职称认定或学分背书。"
+    "Rubbish 是一个公开写作与讨论社区。有人把问题拆开，有人留下失败，也有人一本正经地写不可能的事。"
+    "长文在内容库，短帖在讨论区，公开可读；这里不做学术评价，也不出具发表证明。"
 )
 
 PAGE_META: dict[str, tuple[str, str]] = {
     "": (SITE_TITLE, DEFAULT_DESCRIPTION),
     "catalog": (
-        "内容库 · 研究长文与自由创作",
-        "按研究长文、荒诞研究与自由创作浏览公开内容；每条记录都标明是不是虚构。",
+        "内容库 · 长文、怪问题与随手写",
+        "长文、怪问题、小说和随笔都在这里。可以按合集慢慢读，也可以随手翻一篇。",
     ),
     "forum": (
-        "讨论区 · 选题、记录与组队",
-        "选题与计划、过程记录、现场观察、失败复盘、创作生存与组队招募都在这。",
+        "讨论区 · 写法、复盘与组队",
+        "写法、复盘、组队，还有写作之外的生活。登录就能发帖，不用攒积分。",
     ),
     "issues": (
-        "合集 · 按主题浏览",
-        "合集只是主题聚合，编号用于站内定位，不表示刊期、等级、发表批次或 DOI。",
+        "合集 · 一组一组地读",
+        "合集只把内容放在一起，方便顺着读。编号用于定位，不是等级，也不是发表先后。",
     ),
     "levels": (
-        "参与记录 · 活跃与参与",
-        "只记录活跃与参与程度，不决定身份和权限；所有人从 Lv 1 开始。",
+        "参与记录 · 你在这里走了多远",
+        "记录发帖、讨论、发布作品和互评留下的经验。它不换权限，所有人都从等级 1 开始。",
     ),
     "submissions": (
         "我的作品 · 发布与进度",
-        "查看已发布作品、互评进度与版本记录；新作品从同一入口发布。",
+        "看已发布作品、互评进度和版本记录；新作品也从这里开始。",
     ),
     "submissions/new": (
-        "发布作品 · 基本信息与正文",
-        "填写标题、摘要与正文，可先存草稿；提交后进入基础检查和互评流程。",
+        "写新作品 · 从标题到正文",
+        "填标题、摘要和正文，草稿会自动保存；提交后进入基础检查和互评。",
     ),
     "about": (
         "关于 Rubbish",
-        "Rubbish 是一个公开写作与讨论社区：短帖在讨论区，长文在内容库，注册后就能发。"
-        "不是期刊，也不做学术评价。",
+        "一个公开写作与讨论的地方。问题可以怪，稿子可以没写完，话要说明白。不做学术评价，也不出具发表证明。",
     ),
     "review": (
-        "互评广场 · 公开评议",
-        "浏览互评中的作品标题、摘要与方向；评议成员登录后可申请互评。",
+        "互评广场 · 作品还没揭开时",
+        "作品还在互评里，作者和正文先不公开。你能看到标题、简介和主题；想参与，就向站务组申请。",
     ),
     "guide": (
-        "怎么用 · 三分钟上手",
-        "四步入口、全站地图、旧名字对照和边界说明；第一次来照着走一遍。",
+        "怎么用 · 第一次来，先走一遍",
+        "四步上手、全站地图和边界说明。第一次来，照着走一遍就不会迷路。",
     ),
     "privacy": (
         "隐私政策",
-        "Rubbish 只收集运行社区所必需的数据，不使用广告追踪。",
+        "Rubbish 只收集运行社区必需的数据，不做广告追踪。",
     ),
 }
 
@@ -160,7 +159,7 @@ async def ai_txt(request: Request) -> Response:
     body = f"""# Rubbish AI Agent Policy
 
 ## 可以做什么
-- 读取公开页面、档案、社区帖子与 RSS，遵守 /robots.txt。
+- 读取公开页面、内容库、社区帖子与 RSS，遵守 /robots.txt。
 - 引用时保留标题、作者、出处与原文链接。
 
 ## 不可以做什么
@@ -170,8 +169,8 @@ async def ai_txt(request: Request) -> Response:
 
 ## 公开入口
 - 首页：{root}/
-- 讨论区：{{root}}/forum
-- 内容库：{{root}}/catalog
+- 讨论区：{root}/forum
+- 内容库：{root}/catalog
 - 指南：{root}/guide
 - 关于：{root}/about
 - 机器可读站点说明：{root}/llms.txt
@@ -238,13 +237,13 @@ async def llms_txt(request: Request, db: AsyncSession = Depends(get_db)) -> Resp
         "# Rubbish",
         "",
         "> Rubbish 是一个公开写作与讨论社区。帖子做讨论，内容库做长文。",
-        "> 公开内容可读；管理端与个人数据需要授权。这里不是期刊或学术评价机构。",
+        "> 公开内容可读；管理端与个人数据需要授权。这里不做学术评价。",
         "",
         "## 核心入口",
         f"- [首页]({root}/)",
-        f"- [讨论区]({{root}}/forum)",
-        f"- [内容库]({{root}}/catalog)",
-        f"- [怎么用]({{root}}/guide)",
+        f"- [讨论区]({root}/forum)",
+        f"- [内容库]({root}/catalog)",
+        f"- [怎么用]({root}/guide)",
         f"- [关于]({root}/about)",
         f"- [隐私政策]({root}/privacy)",
         f"- [RSS]({root}/rss.xml)",
@@ -424,7 +423,7 @@ async def build_index_html(
                 payload["keywords"] = ", ".join(str(k) for k in resource.keywords)
             extra = (
                 f'<meta property="article:published_time" content="{html.escape(published, quote=True)}" />'
-                '<meta property="article:section" content="档案" />\n'
+                '<meta property="article:section" content="内容" />\n'
             )
             breadcrumb = {
                 "@context": "https://schema.org",
@@ -434,7 +433,7 @@ async def build_index_html(
                     {
                         "@type": "ListItem",
                         "position": 2,
-                        "name": "档案",
+                        "name": "内容",
                         "item": f"{root}/catalog",
                     },
                     {

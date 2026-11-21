@@ -41,7 +41,7 @@ import type {
   SubmissionResponse,
   SubmissionStatus,
 } from '@/lib/types'
-import { typeLabel } from '@/lib/resource-labels'
+import { displayTypeLabel } from '@/lib/resource-labels'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import { useCapabilities } from '@/hooks/use-capabilities'
 import { cn, extractError } from '@/lib/utils'
@@ -128,7 +128,7 @@ function statusBadge(status: SubmissionStatus) {
 // 一句话讲清现状与下一步，展示在详情面板状态徽章下方。
 const STATUS_HINTS: Record<string, string> = {
   pending: '内容整理会先做基础检查，通常 3–7 天更新；不用重复提交。',
-  under_review: '互评进行中：评议成员正在看你的作品，反馈会出现在详情里。',
+  under_review: '互评进行中：互评成员正在看你的作品，反馈会出现在详情里。',
   major_revision: '需要大幅修改：按意见改完后，在详情逐条回复，再提交新版本。',
   minor_revision: '需要小幅修改：调整后提交新版本，通常不用再走一轮互评。',
   resubmitted: '修改版已提交，等待内容整理复核；有未尽事项可在详情补充。',
@@ -336,7 +336,7 @@ function SubmissionsPage() {
                   {statusBadge(s.status)}
                 </div>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  {typeLabel(s.type)} · {s.discipline}
+                  {displayTypeLabel(s.type, s.content_category, undefined, s.track)} · {s.discipline}
                 </p>
                 <div className="mt-3 flex items-center justify-between gap-2">
                   <time className="text-xs text-muted-foreground">
@@ -390,7 +390,7 @@ function SubmissionsPage() {
                     <TableCell className="max-w-[320px] truncate font-medium">
                       {s.title}
                     </TableCell>
-                    <TableCell>{typeLabel(s.type)}</TableCell>
+                    <TableCell>{displayTypeLabel(s.type, s.content_category, undefined, s.track)}</TableCell>
                     <TableCell className="max-w-[200px] truncate text-muted-foreground">
                       {s.discipline}
                     </TableCell>
@@ -570,7 +570,7 @@ function SubmissionsPage() {
                       <span className="font-medium">已公开</span>
                     </div>
                     <p className="mb-2 text-xs text-muted-foreground">
-                      本文已收录进公开目录，任何人无需登录即可查看。
+                      这篇文章已经公开，谁都能读，不用登录。
                     </p>
                     <Button size="sm" variant="outline" asChild>
                       <Link
@@ -595,7 +595,7 @@ function SubmissionsPage() {
                         to="/catalog/$resourceId"
                         params={{ resourceId: String(detail.resource_id) }}
                       >
-                        预览目录条目
+                        预览公开页面
                       </Link>
                     </Button>
                   </div>
@@ -671,7 +671,7 @@ function SubmissionsPage() {
                     <FileText className="h-4 w-4" />
                     <span className="font-medium">互评意见</span>
                     <span className="text-xs text-muted-foreground">
-                      （评议成员身份不公开）
+                      （互评成员身份不公开）
                     </span>
                   </div>
                   <div className="space-y-2">
@@ -694,7 +694,7 @@ function SubmissionsPage() {
                           </p>
                         ) : (
                           <p className="text-xs italic text-muted-foreground">
-                            评议成员未留下意见
+                            互评成员未留下意见
                           </p>
                         )}
                         {reviewDimensionEntries(r.scores).some(([, v]) =>
@@ -716,7 +716,7 @@ function SubmissionsPage() {
                   </div>
                 </div>
               )}
-              {/* 作者逐条回复评议：仅在有已完成报告且处于修回/再审状态时开放 */}
+              {/* 作者逐条回复互评：仅在有已完成报告且处于修回/再审状态时开放 */}
               {reportsQ.data &&
                 reportsQ.data.length > 0 &&
                 ['under_review', 'major_revision', 'minor_revision', 'resubmitted', 'rework_requested'].includes(
@@ -725,7 +725,7 @@ function SubmissionsPage() {
                   <div className="rounded-md border border-primary/20 bg-primary/5 p-3">
                     <div className="mb-2 flex flex-wrap items-center gap-2">
                       <FileText className="h-4 w-4" />
-                      <span className="font-medium">回复评议</span>
+                      <span className="font-medium">回复互评</span>
                       <span className="text-xs text-muted-foreground">
                         逐条回应互评意见，随作品保存给内容整理查看
                       </span>
@@ -735,9 +735,9 @@ function SubmissionsPage() {
                       value={authorResponseDraft}
                       onChange={(e) => setAuthorResponseDraft(e.target.value.slice(0, 20000))}
                       placeholder="例如：
-评议 1 意见 1：已在 3.2 节补充稳健性检验（表 4）。
-评议 1 意见 2：已补充样本量说明，见第 4 页。
-评议 2 意见 1：该处表述已改写，并补充了两条资料。"
+互评 1 意见 1：已在第 3 节补充两组材料（表 4）。
+互评 1 意见 2：已把结论范围收窄，见第 4 页。
+互评 2 意见 1：该处表述已改写，并补充两条出处。"
                     />
                     <div className="mt-2 flex items-center justify-between gap-2">
                       <span className="text-xs text-muted-foreground">
@@ -863,7 +863,7 @@ function SubmissionsPage() {
                 rows={4}
                 value={resubmitNote}
                 onChange={(e) => setResubmitNote(e.target.value)}
-                placeholder="例如：按评议意见补充了稳健性检验，重写了 3.2 节。"
+                placeholder="例如：按互评意见补充了材料，重写了第 3 节。"
               />
             </div>
             <div className="flex justify-end gap-2 border-t pt-4">

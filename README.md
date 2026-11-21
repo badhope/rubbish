@@ -4,7 +4,7 @@
 
 # Rubbish
 
-**A self-hostable absurd research community — ask odd questions, keep honest notes, publish failures, argue in the open.**
+**A self-hostable public writing and discussion community — open a question, keep the process, say the thing plainly.**
 
 **English · [简体中文](README.zh-CN.md)**
 
@@ -13,17 +13,17 @@
 
 </div>
 
-Rubbish is a place for research that does not fit the usual format. Post a plan before you know the answer, log what actually happened, keep the failed attempts, and let other people question the result. Long notes can be collected into an archive; short threads stay in the community.
+Rubbish does not ask for a particular format. A long piece can be a careful investigation, a short story, or an essay; a short thread can be a stuck point or an argument. Finished work goes into the library, unfinished thoughts stay in the forum, and readers can reply or just read.
 
 It is one FastAPI service, one React app, and PostgreSQL. You can run the whole thing on a single small server.
 
 ## What you can do
 
-- **Discuss in boards.** Research plans, experiment logs, field notes, failure archives, lab-life talk, and team-finding each have their own board.
-- **Publish an archive entry.** Longer records get a stable page with a readable body, version history, downloads, comments, and related work.
-- **Mark fiction as fiction.** Community posts can carry a visible fiction badge, so imagined work never passes as a real record.
+- **Talk in the sections.** Writing methods, retrospectives, team-finding, creative life, and site feedback each have their own place.
+- **Publish a piece.** A longer piece gets a stable page with a body, revision history, downloads, comments, and related work.
+- **Mark fiction as fiction.** Stories, jokes, and invented situations can carry a visible fiction label, so readers are not misled.
 - **Follow what matters.** Bookmarks, reading progress, author follows, notifications, and topic subscriptions work across devices.
-- **Keep moderation practical.** Reports, board management, announcements, audit logs, and a small admin area are built in.
+- **Keep moderation practical.** Reports, section management, announcements, audit logs, and a small admin area are built in.
 - **Run it yourself.** Docker Compose, automatic HTTPS through Caddy, Alembic migrations, and PostgreSQL row-level security are already wired up.
 
 ## Quick start
@@ -60,15 +60,15 @@ The frontend runs on `http://localhost:5173`; the API runs on `http://localhost:
 | Path | Purpose |
 |---|---|
 | `apps/backend` | FastAPI app, domain modules, Alembic migrations, tests |
-| `apps/frontend` | React + TypeScript SPA, board UI, reader, admin shell |
+| `apps/frontend` | React + TypeScript SPA, section UI, reader, admin shell |
 | `infra/` | Docker, Caddy, and deployment helpers |
 | `ops/` | Server maintenance and release scripts |
 | `content/articles` | Public article texts and author names, including drafts and duplicate records |
 | `docs/` | Product notes, architecture, deployment, and screenshots |
 
-## Article archive
+## Published work
 
-The current server article texts and author names are in [`content/articles`](content/articles/README.md): 274 published entries, 21 drafts, and 15 duplicate records. This is public article content only. Review scores, reviewer notes, account details, and server secrets are not stored here.
+The current server texts and author names are in [`content/articles`](content/articles/README.md): 274 published entries, 21 pending, and 15 duplicate records. This is public work only. Scores, review notes, account details, and server secrets are not stored here.
 
 ## Docs
 

@@ -206,7 +206,7 @@ async def _create_submission_record(
             detail={
                 "code": "rules_ack_required",
                 "version": CURRENT_RULES_VERSION,
-                "message": "投稿前请先阅读并确认《Rubbish 作品与发布规范》。",
+                "message": "发布前请先阅读并确认《Rubbish 作品与发布规范》。",
             },
         )
     blocked = rejection_detail(f"{body.title}\n{body.abstract}")
@@ -317,7 +317,7 @@ async def create_submissions_batch(
             detail={
                 "code": "rules_ack_required",
                 "version": CURRENT_RULES_VERSION,
-                "message": "投稿前请先阅读并确认《Rubbish 作品与发布规范》。",
+                "message": "发布前请先阅读并确认《Rubbish 作品与发布规范》。",
             },
         )
 

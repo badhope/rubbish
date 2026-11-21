@@ -18,7 +18,7 @@ const STEPS = [
   {
     icon: PenLine,
     title: '发布',
-    body: '点社区页的「发帖」，选版块、写标题、写正文。标题按回车会跳到正文；长文请走发布入口。',
+    body: '点讨论区的「发帖」，选分区、写标题、写正文。标题按回车会跳到正文；长文请走发布入口。',
   },
   {
     icon: Keyboard,
@@ -28,12 +28,12 @@ const STEPS = [
 ]
 
 const BASICS = [
-  ['版块怎么选', '选最具体的子版块；父版块会自动汇总子版块的帖子。拿不准就选「站务」问一句。'],
+  ['分区怎么选', '选最具体的子分区；父分区会自动汇总子分区的帖子。拿不准就选「站务与反馈」问一句。'],
   ['草稿在哪', '编辑器会自动把标题和正文存在本机浏览器；换设备不会同步，发布前别清站点数据。'],
   ['图片和表情', '正文下方有「表情」和「图片」；图片会传到站内存储，正文里只留一个链接。'],
-  ['编辑和删除', '自己的帖子可以在详情页编辑；被版主锁定后不能再改，但可以继续读。'],
+  ['编辑和删除', '自己的帖子可以在详情页编辑；被站务锁定后不能再改，但可以继续读。'],
   ['收藏和关注', '帖子右上角收藏；作者主页可以关注。关注后新帖会进你的通知与推荐。'],
-  ['举报', '帖子、回复、用户主页都有举报入口。选类型、写理由，版主会在后台处理。'],
+  ['举报', '帖子、回复、成员主页都有举报入口。选类型、写理由，站务会在后台处理。'],
 ]
 
 export function CommunityGuide() {
@@ -48,8 +48,8 @@ export function CommunityGuide() {
       </Link>
 
       <PageHeader
-        title="玩讨论"
-        description="从读到发，只需要四步。注册后就能发布，不需要先申请资格。"
+        title="在讨论区说话"
+        description="从读到发，四步就够。注册后直接发，不用先申请。"
         actions={
           <Button asChild>
             <Link to="/forum" search={{ compose: 1 }}>
@@ -74,7 +74,7 @@ export function CommunityGuide() {
         </RevealSection>
 
         <RevealSection>
-          <h2 className="text-xl font-medium">常用操作</h2>
+          <h2 className="text-xl font-medium">几个常问的事</h2>
           <div className="mt-4 divide-y border-y">
             {BASICS.map(([title, body]) => (
               <div key={title} className="grid gap-1 py-3.5 sm:grid-cols-[8rem_1fr] sm:gap-4">
@@ -86,11 +86,11 @@ export function CommunityGuide() {
         </RevealSection>
 
         <RevealSection>
-          <h2 className="text-xl font-medium">版主与维护</h2>
+          <h2 className="text-xl font-medium">这里谁在管</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-3">
             {[
-              ['举报处理', '版主按类型分派：隐私与侵权优先，广告和灌水其次。处理结果会留在审计记录里。'],
-              ['内容维护', '合并重复帖、移版、锁定吵架帖；不替作者改正文。'],
+              ['举报处理', '站务按类型分派：隐私与侵权优先，广告和灌水其次。处理结果会留在审计记录里。'],
+              ['内容维护', '合并重复帖、移到其他分区、锁定吵架帖；不替作者改正文。'],
               ['规则变更', '规则与边界更新会发公告；重大变更提前 14 天公示。'],
             ].map(([title, body]) => (
               <div key={title} className="border-t pt-3">
@@ -103,10 +103,10 @@ export function CommunityGuide() {
 
         <RevealSection className="flex flex-wrap gap-4 border-t pt-5 text-sm">
           <Link to="/forum" className="inline-flex items-center gap-1 text-primary hover:underline">
-            <MessagesSquare className="h-4 w-4" /> 逛社区
+            <MessagesSquare className="h-4 w-4" /> 回讨论区
           </Link>
           <Link to="/guide" search={{ tab: 'authors' }} className="inline-flex items-center gap-1 text-primary hover:underline">
-            <PenLine className="h-4 w-4" /> 写内容
+            <PenLine className="h-4 w-4" /> 写作品
           </Link>
           <Link to="/guide" search={{ tab: 'policies' }} className="inline-flex items-center gap-1 text-primary hover:underline">
             <Flag className="h-4 w-4" /> 规则与边界

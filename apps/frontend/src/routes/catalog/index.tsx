@@ -47,7 +47,7 @@ interface CatalogSearch {
   /** 轨道切换：paper=文章，essay=自由创作。
    *  不写 = 全部。URL 持久化，刷新不丢。 */
   track?: 'paper' | 'essay'
-  /** 文章子类型：serious=实证研究 / absurd=荒诞研究。 */
+  /** 文章子类型：serious=实证研究 / absurd=荒诞写作。 */
   kind?: 'serious' | 'absurd'
   /** 娱乐轨文体（v1.16）：只在 track=essay 时生效 */
   genre?: 'joke' | 'fiction' | 'review' | 'guide' | 'essay' | 'poetry' | 'rant'
@@ -91,7 +91,7 @@ export function CatalogListPage() {
   // 目录是唯一入口；只有 kind 没有 track 时，按写作处理。
   const effectiveTrack: 'paper' | 'essay' | undefined =
     search.track ?? (search.kind ? 'paper' : undefined)
-  // 档案内默认进入「研究文章」；荒诞研究是同页的并列分区。
+  // 档案内默认进入「研究文章」；荒诞写作是同页的并列分区。
   const paperKind: 'serious' | 'absurd' = search.kind ?? 'serious'
   const statsTrack = effectiveTrack === 'essay' ? 'essay' : effectiveTrack === 'paper' ? 'paper' : undefined
 
@@ -225,8 +225,8 @@ export function CatalogListPage() {
             : search.volume
               ? `${search.issue ? `合集 ${String(search.issue).padStart(2, '0')}` : `合集 ${String(search.volume).padStart(2, '0')}`}共 ${data?.meta.total ?? '…'} 篇文章，按发布顺序排列。`
               : effectiveTrack === 'paper'
-                ? '研究长文与荒诞研究各自分区：一种把真实问题做清楚，一种把荒诞设定做完整。'
-                : '自由创作：小说、随笔、评论、指南与吐槽，不套研究格式。'
+                ? '长文把真问题做清楚，荒诞把离谱的设定做完整。长文有长文的写法，荒诞有荒诞的规矩，各读各的。'
+                : '小说、随笔、评论、指南和吐槽，想怎么写就怎么写。'
         }
       />
 
@@ -241,7 +241,7 @@ export function CatalogListPage() {
       ) : null}
 
       </div>
-      {isCover ? <ScrollCue label="向下浏览目录" className="pb-36 sm:pb-10" /> : null}
+      {isCover ? <ScrollCue label="往下翻" className="pb-36 sm:pb-10" /> : null}
       </section>
 
       {/* 顶部只留视图切换。文章 / 自由创作的主入口在侧栏与移动端「更多」菜单。 */}
@@ -250,9 +250,9 @@ export function CatalogListPage() {
           <p className="text-[13px] text-muted-foreground">
             {effectiveTrack === 'paper'
               ? paperKind === 'absurd'
-                ? '荒诞研究：设定清楚，推理完整，结论可以离谱'
-                : '实证研究：真实问题 · 可核查材料 · 完整过程'
-              : '自由创作：小说、随笔、评论、指南与吐槽。'}
+                ? '荒诞写作：设定清楚，推理完整，结论可以离谱'
+                : '研究长文：真问题，材料能对上，过程走得完'
+              : '小说、随笔、评论、指南和吐槽。'}
           </p>
         )}
         <div className="flex items-center gap-2">
@@ -302,7 +302,7 @@ export function CatalogListPage() {
         <ErrorState message="加载资源失败" onRetry={() => refetch()} />
       ) : !data || data.data.length === 0 ? (
         <EmptyState
-          title={search.q ? '没有找到匹配的内容' : '这一区还空着'}
+          title={search.q ? '没有找到匹配的内容' : '这里还空着'}
           description={
             search.q
               ? '换个更短的关键词，或点上方“清除搜索”回到全部文章。'
@@ -334,7 +334,7 @@ export function CatalogListPage() {
                   {/* 平板（768–1023）放不下 6 列：年份/研究方向先让位，
                       否则整表被裁成「标题 + 作者」两列，读者以为坏了。 */}
                   <TableHead className="hidden w-16 lg:table-cell">年份</TableHead>
-                  <TableHead className="hidden lg:table-cell">研究方向</TableHead>
+                  <TableHead className="hidden lg:table-cell">话题</TableHead>
                   <TableHead className="w-20">类型</TableHead>
                 </TableRow>
               </TableHeader>
@@ -429,7 +429,7 @@ function CatalogHub() {
     <div className="mx-auto w-full max-w-[1320px]">
       <PageHeader
         title="内容库"
-        description="已公开的研究长文、荒诞研究与自由创作。按合集浏览；想发短帖去讨论区，想发长文去发布作品。"
+        description="长文、怪问题、小说和随笔都在这里。可以按合集慢慢读；想发短帖去讨论区，想发长文去发布作品。"
         actions={
           <Button asChild variant="outline">
             <Link to="/issues">按合集浏览</Link>
@@ -448,7 +448,7 @@ function CatalogHub() {
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="搜内容、作者、研究方向"
+          placeholder="搜内容、作者、话题"
           aria-label="搜索内容"
           className="h-11"
         />
@@ -462,7 +462,7 @@ function CatalogHub() {
           <div className="flex flex-wrap items-baseline justify-between gap-3">
             <div>
               <h2 className="font-serif text-2xl font-semibold tracking-tight">刚刚公开</h2>
-              <p className="mt-1 text-sm text-muted-foreground">最近发布的内容，先看一两篇再决定往哪走。</p>
+              <p className="mt-1 text-sm text-muted-foreground">刚放上桌的几篇。先读一两篇，再决定往哪走。</p>
             </div>
             <Link to="/catalog" search={{ sort: 'latest' }} className="text-sm text-primary hover:underline">
               全部内容 →
@@ -481,7 +481,7 @@ function CatalogHub() {
       <section className="mt-10 border-t pt-7">
         <div className="flex items-baseline justify-between gap-4">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.32em] text-muted-foreground">I · Research</p>
+            <p className="text-[10px] uppercase tracking-[0.32em] text-muted-foreground">01 · 先把事说清</p>
             <h2 className="mt-2 font-serif text-3xl font-semibold tracking-tight">研究长文</h2>
           </div>
           <p className="font-mono text-sm tabular-nums text-muted-foreground">
@@ -495,7 +495,7 @@ function CatalogHub() {
             <span className="min-w-0">
               <span className="block font-serif text-xl font-semibold">实证研究</span>
               <span className="mt-1 block text-sm leading-6 text-muted-foreground">
-                真实问题、可核查材料、完整过程；先把事情做清楚。
+                真实问题、能核对的材料、完整的过程。先把事情说清，再谈写得漂不漂亮。
               </span>
             </span>
             <span className="font-mono text-sm tabular-nums text-muted-foreground">
@@ -506,9 +506,9 @@ function CatalogHub() {
           <Link to="/catalog" search={{ kind: 'absurd' }} className={rowClass}>
             <span className="font-mono text-xs text-absurd">02</span>
             <span className="min-w-0">
-              <span className="block font-serif text-xl font-semibold">荒诞研究</span>
+              <span className="block font-serif text-xl font-semibold">荒诞写作</span>
               <span className="mt-1 block text-sm leading-6 text-muted-foreground">
-                一本正经地研究不可能的问题；设定清楚，推理完整。
+                一本正经地写不可能的事。设定要立住，推理要能跟上。
               </span>
             </span>
             <span className="font-mono text-sm tabular-nums text-muted-foreground">
@@ -530,7 +530,7 @@ function CatalogHub() {
       <section className="mt-12 border-t pt-7">
         <div className="flex items-baseline justify-between gap-4">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.32em] text-muted-foreground">II · Free writing</p>
+            <p className="text-[10px] uppercase tracking-[0.32em] text-muted-foreground">02 · 想怎么写就怎么写</p>
             <h2 className="mt-2 font-serif text-3xl font-semibold tracking-tight">自由创作</h2>
           </div>
           <Link to="/catalog" search={{ track: 'essay', sort: 'latest' }} className="text-sm text-primary hover:underline">
@@ -574,7 +574,7 @@ function CatalogHub() {
         )}
 
         <p className="mt-8 border-t pt-4 text-[11px] leading-6 text-muted-foreground">
-          自由创作不计分，也不进站内热度；推荐与最新文章按文体展开。
+          自由创作不计分，也不进热度；推荐按文体来。
         </p>
       </section>
     </div>
@@ -697,7 +697,7 @@ function CatalogFilterFields({
         </Select>
       </div>
       <div className="space-y-1.5">
-        <label className="text-xs text-muted-foreground">栏目</label>
+        <label className="text-xs text-muted-foreground">分区</label>
         <Select
           value={search.section ?? 'all'}
           onValueChange={(v) =>
@@ -708,7 +708,7 @@ function CatalogFilterFields({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">全部栏目</SelectItem>
+            <SelectItem value="all">全部分区</SelectItem>
             {ARTICLE_SECTION_OPTIONS.map((section) => (
               <SelectItem key={section.value} value={section.value}>
                 {section.label}
@@ -718,7 +718,7 @@ function CatalogFilterFields({
         </Select>
       </div>
       <div className="space-y-1.5">
-        <label className="text-xs text-muted-foreground">研究方向</label>
+        <label className="text-xs text-muted-foreground">话题</label>
         <Select
           value={search.discipline ?? 'all'}
           onValueChange={(v) =>
@@ -981,7 +981,7 @@ function ArchiveDirectory({
     },
     {
       id: 'absurd' as const,
-      label: '荒诞研究',
+      label: '荒诞写作',
       note: '设定清楚 · 推理完整 · 结论可以离谱',
       count: absurdCount,
       activeClass: 'border-absurd text-absurd',
@@ -1078,7 +1078,7 @@ function DisciplineChips({
 
   return (
     <>
-    <div className="mb-4 flex flex-wrap items-center gap-1.5" role="group" aria-label="按研究方向快速筛选">
+    <div className="mb-4 flex flex-wrap items-center gap-1.5" role="group" aria-label="按话题快速筛选">
       <button
         type="button"
         className={chipCls(!search.discipline)}
@@ -1105,7 +1105,7 @@ function DisciplineChips({
           className="inline-flex items-center gap-1 rounded-full border border-dashed px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
           aria-expanded={false}
         >
-          更多 {hiddenCount} 个研究方向
+          更多 {hiddenCount} 个话题
           <ChevronDown className="h-3 w-3" />
         </button>
       )}

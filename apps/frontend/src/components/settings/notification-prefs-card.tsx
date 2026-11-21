@@ -19,9 +19,9 @@ type Prefs = {
 
 const ROWS: Array<{ key: keyof Prefs; label: string; hint: string }> = [
   { key: 'in_app_comment', label: '记录评论', hint: '有人评论你发布的记录时，在站内通知你' },
-  { key: 'in_app_forum', label: '论坛回复', hint: '有人回复你的帖子时，在站内通知你' },
+  { key: 'in_app_forum', label: '讨论回复', hint: '有人回复你的帖子时，在站内通知你' },
   { key: 'email_comment', label: '记录评论邮件', hint: '额外发一封邮件；需要站点配置 SMTP 才会真正送达' },
-  { key: 'email_forum', label: '论坛回复邮件', hint: '额外发一封邮件；需要站点配置 SMTP 才会真正送达' },
+  { key: 'email_forum', label: '讨论回复邮件', hint: '额外发一封邮件；需要站点配置 SMTP 才会真正送达' },
 ]
 
 export function NotificationPrefsCard() {

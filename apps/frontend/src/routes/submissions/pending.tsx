@@ -325,7 +325,7 @@ function PendingSubmissionsPage() {
     <div>
       <PageHeader
         title="内容台"
-        description="分配互评成员、查看互评报告、做最终决定。支持按状态筛选全部提交。"
+        description="分配互评成员、查看互评意见、做最终决定。支持按状态筛选全部提交。"
         actions={
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" asChild>
@@ -451,7 +451,7 @@ function PendingSubmissionsPage() {
                     size="sm"
                     onClick={() => setReportsTarget(s)}
                   >
-                    <FileText className="h-4 w-4" /> 互评报告
+                    <FileText className="h-4 w-4" /> 互评意见
                   </Button>
                   {[
                     'pending',
@@ -531,7 +531,7 @@ function PendingSubmissionsPage() {
             {decisionReportsQ.data && decisionReportsQ.data.length > 0 && (
               <div className="space-y-2 rounded-md border bg-muted/30 p-3 text-sm">
                 <div className="text-xs font-medium text-muted-foreground">
-                  互评报告摘要（{decisionReportsQ.data.length} 份）
+                  互评意见摘要（{decisionReportsQ.data.length} 份）
                 </div>
                 {decisionReportsQ.data.map((r) => (
                   <div key={r.id} className="space-y-1.5">
@@ -886,12 +886,6 @@ function SubmissionDetailBody({ sub }: { sub: SubmissionResponse }) {
         <span className="text-muted-foreground">预览</span>
         <p className="mt-1 whitespace-pre-wrap">{sub.preview}</p>
       </div>
-      {sub.doi && (
-        <div>
-          <span className="text-muted-foreground">DOI：</span>
-          {sub.doi}
-        </div>
-      )}
       {sub.download_url && (
         <div>
           <span className="text-muted-foreground">下载：</span>
@@ -1249,7 +1243,7 @@ function AssignmentsDialog({
               <div className="rounded-md border bg-muted/30 p-3 text-sm">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="outline">
-                    报告 {matrixQ.data.reports_completed} 份
+                    完成互评 {matrixQ.data.reports_completed} 份
                   </Badge>
                   <Badge variant="outline">
                     互评成员 {matrixQ.data.distinct_reviewers} 人
@@ -1486,14 +1480,14 @@ function ReportsDialog({
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>互评报告 — {submission.title}</DialogTitle>
+          <DialogTitle>互评意见 — {submission.title}</DialogTitle>
         </DialogHeader>
         {isLoading ? (
           <Loading />
         ) : isError ? (
           <ErrorState message="加载失败" onRetry={() => refetch()} />
         ) : !data || data.length === 0 ? (
-          <EmptyState title="暂无已完成的互评报告" />
+          <EmptyState title="暂无已完成的互评意见" />
         ) : (
           <div className="space-y-4">
             {data.map((r: ReviewReportResponse) => (

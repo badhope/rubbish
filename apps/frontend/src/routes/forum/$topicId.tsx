@@ -415,7 +415,7 @@ function ForumTopicPage() {
   const reportMut = useMutation({
     mutationFn: async (target: { topic_id?: number; reply_id?: number; reason?: string }) =>
       (await api.post('/forum/reports', target)).data,
-    onSuccess: () => toast.success('已举报，版主会尽快处理'),
+    onSuccess: () => toast.success('已举报，站务会尽快处理'),
     onError: (err) => toast.error(extractError(err, '举报失败')),
   })
 
@@ -755,11 +755,11 @@ function ForumTopicPage() {
               <select
                 value={editBoardId ?? ''}
                 onChange={(event) => setEditBoardId(event.target.value ? Number(event.target.value) : null)}
-                aria-label="帖子版块"
+                aria-label="帖子分区"
                 className="rounded-full border bg-card px-3 py-1 text-xs text-foreground outline-none focus:border-primary"
               >
                 <option value="" disabled>
-                  选择版块
+                  选择分区
                 </option>
                 {editBoards.map((board) => (
                   <option key={board.id} value={board.id}>

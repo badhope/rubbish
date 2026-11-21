@@ -84,12 +84,12 @@ export function FunCatalog({
               自由创作
             </h1>
             <span className="pb-0.5 text-xs text-muted-foreground sm:pb-1 sm:text-sm">
-              不正经研究所，认真你就输了
+              小说、随笔和整活，随便看看
             </span>
           </div>
           <p className="mt-1.5 hidden max-w-2xl text-sm leading-6 text-muted-foreground sm:mt-2 sm:block sm:leading-7">
-            小说、随笔、评论、指南，以及大量一本正经的荒诞整活。这里不计分、不进站内热度、
-            不走互评——只负责让你在改稿的间隙笑一下。
+            小说、随笔、评论、指南，以及一本正经的荒诞整活。这里不计分、不进站内热度、
+            不走互评，只负责让你在认真写作的间隙笑一下。
           </p>
         </div>
       </header>
@@ -230,7 +230,7 @@ export function FunCatalog({
                   to="/catalog"
                   className="inline-flex items-center gap-0.5 text-[11px] text-primary hover:underline"
                 >
-                  全部栏目
+                  全部分区
                   <ArrowRight className="h-3 w-3" />
                 </Link>
               </div>
@@ -326,7 +326,7 @@ function GenrePill({
 
 function isEditorialNote(resource: ResourceResponse): boolean {
   const tags = (resource.tags ?? []).map(String)
-  return ['Rubbish 社区', 'Rubbish 编辑部', 'Rubbish 内容整理组'].includes(formatAuthors(resource.authors)) && (tags.includes('栏目说明') || tags.includes('编辑部'))
+  return ['Rubbish 站务组', 'Rubbish 社区'].includes(formatAuthors(resource.authors)) && (tags.includes('站务') || tags.includes('社区说明'))
 }
 
 function FunCard({ resource, featured }: { resource: ResourceResponse; featured: boolean }) {

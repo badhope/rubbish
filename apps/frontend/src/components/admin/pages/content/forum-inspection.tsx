@@ -97,15 +97,15 @@ export default function ForumInspectionPage() {
   return (
     <div>
       <PageHeader
-        title="论坛巡检"
-        description="旧的互评台转成内容巡检：按最近活跃或热度看全站文章与讨论，置顶、锁定、跳转处理举报。巡检只做维护，不替代举报处置。"
+        title="讨论巡检"
+        description="按最近活跃或热度查看全站讨论，置顶、锁定、跳转处理举报。巡检只做日常维护，不替代举报处置。"
       />
 
       <div className="mb-4 grid gap-2 sm:grid-cols-3">
         <Card>
           <CardContent className="flex items-center justify-between p-4">
             <div>
-              <p className="text-xs text-muted-foreground">全站主题</p>
+              <p className="text-xs text-muted-foreground">全站帖子</p>
               <p className="mt-1 font-mono text-2xl font-semibold">{meta?.total ?? '—'}</p>
             </div>
             <ShieldCheck className="h-5 w-5 text-muted-foreground" />
@@ -139,7 +139,7 @@ export default function ForumInspectionPage() {
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="搜标题、正文、作者或版块"
+            placeholder="搜标题、正文、作者或分区"
             className="pl-9"
           />
         </div>
@@ -156,10 +156,10 @@ export default function ForumInspectionPage() {
       {topicsQ.isLoading ? (
         <Loading />
       ) : topicsQ.isError ? (
-        <ErrorState message="加载论坛主题失败" onRetry={() => topicsQ.refetch()} />
+        <ErrorState message="加载讨论主题失败" onRetry={() => topicsQ.refetch()} />
       ) : filtered.length === 0 ? (
         <EmptyState
-          title={query ? '没有匹配的主题' : '论坛还没有主题'}
+          title={query ? '没有匹配的主题' : '讨论区还没有主题'}
           description={query ? '换一个关键词试试。' : '用户发布文章或讨论后会出现在这里。'}
         />
       ) : (
@@ -180,7 +180,7 @@ export default function ForumInspectionPage() {
                       {row.body.replace(/\s+/g, ' ').slice(0, 160)}
                     </p>
                     <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-                      <span>{row.board_path || row.board_name || '未分版块'}</span>
+                      <span>{row.board_path || row.board_name || '未分区'}</span>
                       <span>作者：{row.author?.display_name || row.author?.username || '已注销'}</span>
                       <span>{row.reply_count} 回复</span>
                       <span>发布 {fmtTime(row.created_at)}</span>

@@ -441,7 +441,7 @@ export function AppShell() {
               <Button asChild size="sm" className="hidden sm:inline-flex">
                 <Link to="/submissions/new">
                   <PenLine className="h-3.5 w-3.5" />
-                  发布
+                  写点东西
                 </Link>
               </Button>
               {userMenu}

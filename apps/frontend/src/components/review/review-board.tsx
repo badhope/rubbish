@@ -20,19 +20,19 @@ export function ReviewBoard() {
     <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6">
       <PageHeader
         title="互评广场"
-        description="只展示互评中作品的标题、摘要与方向，不公开作者身份和正文。评议成员可以在这里申请互评，由内容整理统一指派。"
+        description="作品还在互评里，作者和正文先不公开。你能看到标题、简介和主题；想参与，就向站务组申请。"
       />
       {isLoading ? (
         <LoadingSkeleton rows={4} />
       ) : isError ? (
         <ErrorState message="互评广场加载失败" onRetry={() => void refetch()} />
       ) : !data?.data.length ? (
-        <EmptyState title="暂无互评中的作品" description="当前没有处于互评中的作品。" />
+        <EmptyState title="现在没有作品在互评" description="过一阵再来看看，或者先去内容库读几篇。" />
       ) : (
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             <Eye className="h-4 w-4" />
-            共 {data.total} 篇互评中；评议成员申请只记录意愿，不会自动获得作品。
+            共 {data.total} 篇在互评；申请只是告诉站务组你想读，不会自动分到作品。
           </div>
           {data.data.map((item) => (
             <Card key={item.submission_id}>
@@ -51,12 +51,12 @@ export function ReviewBoard() {
                     {item.abstract}
                   </p>
                 ) : (
-                  <p className="text-sm text-muted-foreground">作者未提供摘要。</p>
+                  <p className="text-sm text-muted-foreground">作者未提供简介。</p>
                 )}
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
                   <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                     <UserCheck className="h-3.5 w-3.5" />
-                    已有 {item.reviewer_count} 位评议成员
+                    已有 {item.reviewer_count} 位互评成员
                   </span>
                   {item.already_assigned ? (
                     <Button size="sm" variant="outline" disabled>
@@ -76,7 +76,7 @@ export function ReviewBoard() {
                             // 403 时提示先申请角色，而不是假装成功。
                             const message = extractError(err, '申请互评失败')
                             if (message.includes('Reviewer role required')) {
-                              toast.info('请先在等级页申请评议成员资格')
+                              toast.info('请先申请互评成员资格')
                               window.location.href = '/me?tab=points&section=levels'
                               return
                             }
@@ -89,7 +89,7 @@ export function ReviewBoard() {
                     </Button>
                   ) : (
                     <Button asChild size="sm" variant="outline">
-                      <Link to="/me" search={{ tab: 'points', section: 'levels' }}>先申请评议成员资格</Link>
+                      <Link to="/me" search={{ tab: 'points', section: 'levels' }}>先申请互评成员资格</Link>
                     </Button>
                   )}
                 </div>

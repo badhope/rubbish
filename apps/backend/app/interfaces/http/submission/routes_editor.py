@@ -186,23 +186,23 @@ async def triage_submission(
             type_ = "submission.triage_rework"
             title = f"作品需要修改：{entry.title}"
             body_text = (
-                f"作品 #{entry.id} 已完成编辑部初筛。\n"
-                "修改后可在「我的提交」中重新提交。\n"
-                f"编辑部说明：{note}"
+                f"作品 #{entry.id} 已经看过一遍。\n"
+                "建议先改一改，再放回来。\n"
+                f"站务说明：{note}"
             )
         elif body.decision == "request_materials":
             type_ = "submission.triage_materials"
             title = f"作品需要补充材料：{entry.title}"
             body_text = (
-                f"作品 #{entry.id} 初筛时发现材料不完整。\n"
-                "请按编辑部说明补齐材料后在「我的提交」中重新提交；补齐后作品会重新进入初筛队列。\n"
-                f"编辑部说明：{note}"
+                f"作品 #{entry.id} 还缺一些材料。\n"
+                "按站务说明补齐后，在「我的作品」重新提交；补齐后会重新进入基础检查。\n"
+                f"站务说明：{note}"
             )
         else:
             type_ = "submission.triage_rejected"
-            title = f"作品未通过初筛：{entry.title}"
+            title = f"作品没通过基础检查：{entry.title}"
             body_text = (
-                f"作品 #{entry.id} 已完成编辑部初筛。\n本次不进入同行评审。\n编辑部说明：{note}"
+                f"作品 #{entry.id} 这一次没有通过。\n本次不会进入互评。\n站务说明：{note}"
             )
         await notifications.create(
             db,
@@ -310,12 +310,12 @@ def _candidate_score(
     completed = len(history)
     if completed:
         score += min(10, completed * 2)
-        reasons.append(f"已完成 {completed} 篇审稿")
+        reasons.append(f"已完成 {completed} 篇互评")
     if active_count:
         score -= min(20, active_count * 5)
-        reasons.append(f"当前在审 {active_count} 篇")
+        reasons.append(f"手头还有 {active_count} 篇")
     else:
-        reasons.append("当前无在审任务")
+        reasons.append("手头没有待办")
 
     return max(0, min(100, score)), reasons, matched
 
@@ -726,7 +726,7 @@ async def assign_reviewer(
             detail={
                 "code": "reviewer_name_conflict",
                 "message": (
-                    f"审稿人 {reviewer.username} 与作品作者同名：疑似共同作者/自审，请更换审稿人。"
+                    f"互评成员 {reviewer.username} 与作者同名：可能是共同作者，请换一位。"
                 ),
             },
         )
@@ -1118,7 +1118,7 @@ async def submission_timeline(
     reviewer_labels: dict[int, str] = {}
     for a in assignments:
         if a.reviewer_id not in reviewer_labels:
-            reviewer_labels[a.reviewer_id] = f"审稿人{len(reviewer_labels) + 1}"
+            reviewer_labels[a.reviewer_id] = f"互评成员{len(reviewer_labels) + 1}"
     for a in assignments:
         if hide_reviewers:
             who = reviewer_labels[a.reviewer_id]
@@ -1127,22 +1127,22 @@ async def submission_timeline(
         add(
             a.invited_at,
             "assignment",
-            f"邀请审稿人 {who}",
+            f"邀请互评成员 {who}",
             f"第 {a.round or 1} 轮 · 槽位 {a.slot} · 当前状态 {a.status}",
         )
         if a.responded_at and a.status in ("accepted", "completed"):
             add(a.responded_at, "assignment_response", f"{who} 接受互评邀请", None)
         if a.status == "declined":
-            add(a.responded_at or a.invited_at, "assignment_declined", f"{who} 拒绝审稿", "需改派")
+            add(a.responded_at or a.invited_at, "assignment_declined", f"{who} 拒绝互评", "需改派")
         if a.status == "cancelled":
             add(a.responded_at or a.invited_at, "assignment_cancelled", f"{who} 的邀请已撤销", None)
         if a.completed_at:
-            add(a.completed_at, "review_completed", f"{who} 提交审稿报告", None)
+            add(a.completed_at, "review_completed", f"{who} 提交互评意见", None)
         for report in a.report or []:
             add(
                 report.submitted_at,
                 "review_report",
-                f"{who} 的审稿意见",
+                f"{who} 的互评意见",
                 f"推荐：{report.recommendation}；给作者意见：{(report.comments_to_author or '无')[:80]}",
             )
 
@@ -1150,11 +1150,11 @@ async def submission_timeline(
         add(
             entry.author_response_at,
             "author_response",
-            "作者逐条回复审稿人",
+            "作者逐条回复互评",
             (entry.author_response or "")[:120],
         )
     if entry.reviewed_at:
-        add(entry.reviewed_at, "decision", "编辑作出决定", entry.status)
+        add(entry.reviewed_at, "decision", "站务作出决定", entry.status)
 
     events.sort(key=lambda e: e["at"])
     return {
@@ -1269,8 +1269,8 @@ async def editor_decision(
                     "code": "rejected_requires_rework",
                     "score": float(target_resource.quality_score),
                     "message": (
-                        "该作品质量评分低于 40 分（不合格），按规范不能直接录用。"
-                        "请先调用 rework 端点打回审稿人补审或要求作者修改；"
+                        "这篇的质量分低于 40，按规则不能直接通过。"
+                        "请先请互评成员补一份意见，或请作者修改；"
                         "如确需破例，请传 force_accept_d_grade=true 并在备注中写明理由。"
                     ),
                 },
@@ -1375,10 +1375,10 @@ async def editor_decision(
     # 通知作者。录用时 related 指向物化出的公开目录条目而非 submission，
     # 作者点通知即可直达自己已发表的文章（目录详情页对访客也公开）。
     decision_labels = {
-        "accept": "录用",
-        "reject": "拒稿",
-        "minor_revision": "小修",
-        "major_revision": "大修",
+        "accept": "通过",
+        "reject": "没有通过",
+        "minor_revision": "小改",
+        "major_revision": "大改",
     }
     accepted = decision == "accept" and entry.resource_id is not None
     await notifications.create(
@@ -1497,9 +1497,9 @@ async def request_rework(
         type_="submission.rework_requested",
         title=f"作品需要修改：{entry.title}",
         body=(
-            f"作品 #{entry.id} 已被编辑部退回修改，当前进入复审阶段。\n"
+            f"作品 #{entry.id} 被退回来了，需要再改一版。\n"
             f"修改要求：\n{requirements_text}\n\n"
-            "你可以在「我的提交」中上传修订稿；审稿人复审后编辑部会给出下一步决定。"
+            "可以在「我的作品」上传新版本；互评成员看过之后，站务组会给下一步结果。"
         ),
         related_type="submission",
         related_id=str(entry.id),
@@ -1527,12 +1527,12 @@ async def request_rework(
             tenant_id=entry.tenant_id,
             user_id=reviewer_id,
             type_="review.rework_requested",
-            title=f"审稿被打回，请补审：{entry.title}",
+            title=f"互评被退回，请补充：{entry.title}",
             body=(
-                f"作品 #{entry.id} 的质量评分为 D 级（<60），编辑部要求补审。\n"
-                "请二选一：\n"
-                "（a）补充/修正审稿意见，特别是以下方面；\n"
-                "（b）说明为何该稿确实应当拒稿。\n\n"
+                f"作品 #{entry.id} 的质量分低于 60，站务组请你补一份意见。\n"
+                "可以二选一：\n"
+                "（a）补充或修正互评意见，特别是下面这些方面；\n"
+                "（b）说明为什么这篇确实应当不通过。\n\n"
                 f"需要补充的方面：\n{requirements_text}"
             ),
             related_type="submission",

@@ -747,7 +747,7 @@ async def _generated_download(
     meta = parse_meta(md, fallback_title=canonical_title or f"submission-{entry.id}")
     meta.title = canonical_title or meta.title
     if anonymized:
-        meta.authors = ["[双盲评审：作者信息已隐藏]"]
+        meta.authors = ["[互评期间：作者信息已隐藏]"]
         meta.affiliations = []
     else:
         meta.authors = canonical_authors

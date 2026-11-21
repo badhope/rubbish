@@ -405,8 +405,8 @@ function CatalogDetailPage() {
 
           {/* 社区内容声明：正文由作者发布，站点不做学术背书。 */}
           <p className="mt-8 border-t pt-4 text-xs leading-6 text-muted-foreground">
-            本文是社区用户发布的内容，不是期刊论文或正式发表；观点、数据与出处由作者负责。
-            Rubbish 不做学术评价，也不提供 DOI、ISSN、职称或学分背书。
+            本文由社区成员发布，观点、数据与出处由作者负责。
+            Rubbish 不做学术评价，也不出具发表、职称或学分证明。
           </p>
 
           {/* 文末折叠区 */}
@@ -441,7 +441,7 @@ function CatalogDetailPage() {
                   ) : null}
                   <MetaItem label="年份" value={String(data.year)} />
                   {data.venue ? <MetaItem label="来源说明" value={data.venue} /> : null}
-                  <MetaItem label="研究方向" value={data.discipline} />
+                  <MetaItem label="话题" value={data.discipline} />
                   <MetaItem label="子方向" value={data.subdiscipline} />
                   <MetaItem label="站内编号" value={data.site_id} />
                   <MetaItem label="语言" value={languageLabel(data.language)} />
@@ -560,7 +560,7 @@ function CatalogDetailPage() {
           {!isEssayTrack && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">站内标注</CardTitle>
+                <CardTitle className="text-sm">怎么提到这篇</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 <p className="rounded-md bg-muted/50 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
@@ -583,17 +583,16 @@ function CatalogDetailPage() {
                       return
                     }
                     void navigator.clipboard.writeText(cite).then(
-                      () => toast.success('站内标注已复制'),
+                      () => toast.success('说法已复制'),
                       () => toast.error('复制失败，请手动选择'),
                     )
                   }}
                 >
                   <Quote className="h-3.5 w-3.5" />
-                  复制这段标注
+                  复制这段说法
                 </Button>
                 <p className="text-[11px] leading-5 text-muted-foreground">
-                  本站不是期刊或出版机构。这段文字只用于站内互相标注，不是正式引用；
-                  不提供卷期、页码或 DOI。
+                  只是在站内提一句时用。别把它当成正式引用。
                 </p>
               </CardContent>
             </Card>

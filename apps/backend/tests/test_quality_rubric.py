@@ -122,14 +122,14 @@ def test_score_out_of_range_rejected() -> None:
 
 
 def test_quartile_boundaries() -> None:
-    assert grade_for(95) == ("T1+", "标杆范本")
-    assert grade_for(90) == ("T1", "标杆级")
-    assert grade_for(89.9) == ("Q1", "一区")
-    assert grade_for(80) == ("Q1", "一区")
-    assert grade_for(70) == ("Q2", "二区")
-    assert grade_for(60) == ("Q3", "三区")
-    assert grade_for(50) == ("Q4", "四区")
-    assert grade_for(49.9) == ("R", "退稿")
+    assert grade_for(95) == ("T1+", "范例")
+    assert grade_for(90) == ("T1", "高完成")
+    assert grade_for(89.9) == ("Q1", "优秀")
+    assert grade_for(80) == ("Q1", "优秀")
+    assert grade_for(70) == ("Q2", "良好")
+    assert grade_for(60) == ("Q3", "合格")
+    assert grade_for(50) == ("Q4", "待改")
+    assert grade_for(49.9) == ("R", "不通过")
 
 
 def test_rejected_only_below_50() -> None:

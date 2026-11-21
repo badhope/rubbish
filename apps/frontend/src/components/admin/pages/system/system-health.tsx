@@ -103,7 +103,7 @@ export default function SystemHealthPage() {
     <div>
       <PageHeader
         title="系统健康"
-        description="数据库、迁移、磁盘、内容积压与邮件通道的聚合状态；只读，不暴露连接串与密钥。"
+        description="看看站点还稳不稳：数据库、迁移、磁盘、待处理内容、邮件通道。只读，不露连接串和密钥。"
         actions={
           <Button variant="outline" size="sm" onClick={load} disabled={loading}>
             <RefreshCw className="mr-1.5 h-4 w-4" />
@@ -135,7 +135,7 @@ export default function SystemHealthPage() {
                         : 'outline'
                   }
                 >
-                  {data.status === 'ok' ? '正常' : data.status === 'fail' ? '故障' : '需关注'}
+                  {data.status === 'ok' ? '正常' : data.status === 'fail' ? '出问题了' : '有几件事要留意'}
                 </Badge>
               </CardContent>
             </Card>

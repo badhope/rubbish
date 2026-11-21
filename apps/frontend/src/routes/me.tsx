@@ -82,7 +82,7 @@ function MePage() {
 
       {data.permission_role !== 'user' ? (
         <section className="flex flex-wrap items-center gap-3 border-b py-3" aria-label="工作台入口">
-          <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">Workbench</p>
+          <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">工作台</p>
           {['reviewer', 'editor', 'editor_in_chief'].includes(data.permission_role) ? (
             <Link
               to="/review"

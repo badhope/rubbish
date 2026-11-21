@@ -52,7 +52,7 @@ const FIRST_STEPS = [
     no: '01',
     icon: BookOpen,
     title: '读一篇',
-    body: '不用登录，先看看这里的人在认真研究什么。',
+    body: '不登录也能读。挑一篇长文，看看别人怎么把一件事写完。',
     to: '/catalog',
     label: '打开内容库',
   },
@@ -60,53 +60,53 @@ const FIRST_STEPS = [
     no: '02',
     icon: MessagesSquare,
     title: '说一句',
-    body: '读到想接的话，去讨论区回一句，或者自己开个问题。',
+    body: '有想接的话，就在讨论区留一句。不用等想清楚，半句话也算开始。',
     to: '/forum',
     label: '去讨论区',
   },
   {
     no: '03',
     icon: PenLine,
-    title: '发一篇',
-    body: '长文进内容库，短帖进讨论区。注册后直接发，不收费。',
+    title: '写一点',
+    body: '长文放进内容库，短帖留在讨论区。注册就能发，不收钱。',
     to: '/submissions/new',
     label: '开始写',
   },
   {
     no: '04',
     icon: Compass,
-    title: '不知道怎么用',
-    body: '“怎么用”里有全站地图、四步上手和旧名字对照。',
+    title: '找地图',
+    body: '迷路了就去「怎么用」，那里有一张全站地图。',
     to: '/guide',
-    label: '看 3 分钟上手',
+    label: '看三分钟，先走一遍',
   },
 ] as const
 
 const CONTENT_KINDS = [
   {
     label: '研究长文',
-    body: '真实问题、可核查材料、完整过程。',
+    body: '把真实问题拆开，材料、过程、结论都摆出来。',
     to: '/catalog',
     search: { kind: 'serious' as const },
     icon: FileText,
   },
   {
-    label: '荒诞研究',
-    body: '设定清楚、推理完整，结论可以离谱。',
+    label: '荒诞写作',
+    body: '设定认真，推理认真，结论可以离谱。',
     to: '/catalog',
     search: { kind: 'absurd' as const },
     icon: Sparkles,
   },
   {
     label: '自由创作',
-    body: '小说、随笔、评论、诗歌；不套研究格式。',
+    body: '小说、随笔、评论、诗。不用套研究骨架，想怎么写就怎么写。',
     to: '/catalog',
     search: { track: 'essay' as const },
     icon: PenLine,
   },
   {
     label: '按合集读',
-    body: '一组一组顺着读，不按刊期，也不分高低。',
+    body: '一组一组地读，像顺着一条线往前走。',
     to: '/issues',
     search: {},
     icon: Layers3,
@@ -219,7 +219,7 @@ function HomePage() {
             <Button asChild size="sm" className="hidden sm:inline-flex">
               <Link to="/submissions/new">
                 <PenLine className="h-3.5 w-3.5" />
-                发布
+                写点东西
               </Link>
             </Button>
             {isAuthenticated ? (
@@ -247,25 +247,25 @@ function HomePage() {
                 公开写作与讨论社区
               </p>
               <h1 className="mt-5 text-4xl leading-[1.15] tracking-tight sm:text-5xl" style={{ fontFamily: DISPLAY_FONT }}>
-                把怪问题做完，
+                把一个问题，
                 <br />
-                再讲给人听。
+                写到它亮起来。
               </h1>
               <p className="mt-5 max-w-xl text-[15px] leading-7 text-muted-foreground">
-                读别人的过程记录，写自己的问题。短帖去讨论区，长文进内容库；
-                不收费，注册就能发。
+                有人把问题拆开，有人把失败留下，也有人一本正经地写不可能的事。
+                读别人的过程，写自己的卡点；不收费，注册就能发。
               </p>
               <div className="mt-7 flex flex-wrap items-center gap-3">
                 <Button asChild size="lg" className="h-12 px-5">
                   <Link to="/catalog">
-                    先读点什么
+                    先读一篇
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
                 <Button asChild size="lg" variant="outline" className="h-12 px-5">
                   <Link to="/submissions/new">
                     <PenLine className="h-4 w-4" />
-                    写一篇
+                    我也写一篇
                   </Link>
                 </Button>
                 <Button asChild size="lg" variant="ghost" className="h-12 px-5 text-muted-foreground">
@@ -276,7 +276,7 @@ function HomePage() {
                 </Button>
               </div>
               <p className="mt-7 text-xs text-muted-foreground">
-                已公开 <Count value={total} ready={Boolean(stats.data || funStats.data)} /> 条内容 · 全部公开可读
+                已有 <Count value={total} ready={Boolean(stats.data || funStats.data)} /> 篇公开内容 · 谁都能读
               </p>
             </div>
 
@@ -285,9 +285,9 @@ function HomePage() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-[10px] uppercase tracking-[0.28em] text-primary">第一次来</p>
-                    <h2 className="mt-1 font-serif text-2xl tracking-tight">从这里走一遍</h2>
+                    <h2 className="mt-1 font-serif text-2xl tracking-tight">先随便走走</h2>
                   </div>
-                  <Badge variant="outline" className="border-primary/30 text-primary">约 3 分钟</Badge>
+                  <Badge variant="outline" className="border-primary/30 text-primary">三分钟够用</Badge>
                 </div>
                 <div className="mt-4 divide-y">
                   {FIRST_STEPS.map(({ no, icon: Icon, title, body, to }) => (
@@ -312,11 +312,11 @@ function HomePage() {
         <section className="mx-auto w-full max-w-[1280px] px-5 py-12 sm:px-8 sm:py-16">
           <div className="mb-6 flex flex-wrap items-end justify-between gap-3 border-b pb-3">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.28em] text-primary">Selected</p>
-              <h2 className="mt-1 font-serif text-2xl tracking-tight sm:text-3xl">站内精选</h2>
+              <p className="text-[10px] uppercase tracking-[0.28em] text-primary">停一会儿</p>
+              <h2 className="mt-1 font-serif text-2xl tracking-tight sm:text-3xl">先读这几篇</h2>
             </div>
             <Link to="/catalog" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary">
-              全部内容 <ChevronRight className="h-4 w-4" />
+              去内容库 <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
 
@@ -340,7 +340,7 @@ function HomePage() {
                 />
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                    <span className="text-primary">精选 #{featured.featured_rank ?? 1}</span>
+                    <span className="text-primary">推荐 #{featured.featured_rank ?? 1}</span>
                     <span aria-hidden>·</span>
                     <span>{featured.discipline || '跨领域'}</span>
                     <span aria-hidden>·</span>
@@ -402,8 +402,8 @@ function HomePage() {
             <div>
               <div className="mb-4 flex items-end justify-between gap-3">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.28em] text-primary">Talk</p>
-                  <h2 className="mt-1 font-serif text-2xl tracking-tight">讨论区正在聊</h2>
+                  <p className="text-[10px] uppercase tracking-[0.28em] text-primary">正在发生</p>
+                  <h2 className="mt-1 font-serif text-2xl tracking-tight">讨论区里，话还没说完</h2>
                 </div>
                 <Link to="/forum" className="text-sm text-muted-foreground hover:text-primary">去讨论区 →</Link>
               </div>
@@ -431,15 +431,15 @@ function HomePage() {
               ) : (
                 <p className="border-y py-8 text-sm text-muted-foreground">
                   还没人开帖。你可以发第一个问题。
-                  <Link to="/forum" search={{ compose: 1 }} className="ml-2 text-primary hover:underline">去发帖</Link>
+                  <Link to="/forum" search={{ compose: 1 }} className="ml-2 text-primary hover:underline">去说两句</Link>
                 </p>
               )}
             </div>
 
             <div>
               <div className="mb-4">
-                <p className="text-[10px] uppercase tracking-[0.28em] text-primary">Browse</p>
-                <h2 className="mt-1 font-serif text-2xl tracking-tight">按你想看的方式找</h2>
+                <p className="text-[10px] uppercase tracking-[0.28em] text-primary">随便翻翻</p>
+                <h2 className="mt-1 font-serif text-2xl tracking-tight">找一个入口</h2>
               </div>
               <div className="divide-y border-y bg-background/60">
                 {CONTENT_KINDS.map(({ label, body, to, search, icon: Icon }) => (
@@ -464,13 +464,13 @@ function HomePage() {
 
         <section className="mx-auto w-full max-w-[1280px] px-5 py-12 sm:px-8 sm:py-16">
           <div className="mb-6">
-            <p className="text-[10px] uppercase tracking-[0.28em] text-primary">How it works</p>
-            <h2 className="mt-1 font-serif text-2xl tracking-tight">不知道怎么用，从这里开始</h2>
+            <p className="text-[10px] uppercase tracking-[0.28em] text-primary">不知道从哪开始</p>
+            <h2 className="mt-1 font-serif text-2xl tracking-tight">不急着写，先熟悉这里</h2>
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
             {[
-              ['3 分钟上手', '全站地图、四步走和旧名字对照。', '/guide', 'start'],
-              ['写内容', '定题、结构、材料、发布前检查。', '/guide', 'authors'],
+              ['三分钟，先走一遍', '全站地图和四步，照着走一遍。', '/guide', 'start'],
+              ['写作品', '定题、结构、材料、发布前检查。', '/guide', 'authors'],
               ['规则与边界', '版权、隐私、虚构标注与处理流程。', '/guide', 'policies'],
             ].map(([title, body, to, tab]) => (
               <Link key={title} to={to} search={{ tab }} className="group border-t pt-4">
@@ -494,12 +494,11 @@ function HomePage() {
               <span className="font-serif text-xl font-semibold">Rubbish</span>
             </div>
             <p className="mt-2 max-w-md text-xs leading-6 text-muted-foreground">
-              Rubbish 是公开写作与讨论社区，不是期刊、出版社或学术评价机构；不提供 DOI、ISSN、
-              职称认定、学分或学历背书。站内编号只用于站内定位。
+              Rubbish 是一个公开写作与讨论社区。这里不做学术评价，也不出具发表、职称、学分或学历证明；站内编号只用来定位。
             </p>
           </div>
           <div>
-            <p className="mb-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">去逛</p>
+            <p className="mb-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">走走</p>
             <ul className="space-y-1.5">
               <li><Link to="/catalog" className="hover:text-primary">内容库</Link></li>
               <li><Link to="/issues" className="hover:text-primary">合集</Link></li>
@@ -524,7 +523,7 @@ function HomePage() {
         <div className="border-t border-border/70">
           <div className="mx-auto flex w-full max-w-[1280px] flex-wrap items-center justify-between gap-2 px-5 py-3 text-xs text-muted-foreground sm:px-8">
             <span>© {new Date().getFullYear()} Rubbish · 公开写作与讨论</span>
-            <span>认真做，大胆荒诞，公开聊。</span>
+            <span>认真写，允许荒诞，公开聊。</span>
           </div>
         </div>
       </footer>
