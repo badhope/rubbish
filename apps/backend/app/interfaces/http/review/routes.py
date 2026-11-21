@@ -409,7 +409,7 @@ async def express_review_interest(
             user_id=editor_id,
             type_="review.interest",
             title=f"互评申请：{sub.title}",
-            body=f"{current_user.username} 申请参与作品 #{submission_id} 的审稿，请到主编工作台指派台处理。",
+            body=f"{current_user.username} 申请参与作品 #{submission_id} 的审稿，请到内容整理工作台处理。",
             related_type="submission",
             related_id=str(submission_id),
         )

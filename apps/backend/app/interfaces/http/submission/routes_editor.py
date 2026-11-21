@@ -539,13 +539,13 @@ async def _ensure_accept_gate(db: AsyncSession, entry: Submission) -> None:
     if len(accept_ids) < 2:
         _code = "no_completed_reviews" if completed_reviews == 0 else "insufficient_accept_reviews"
         _message = (
-            "该作品尚无已完成的审稿意见，不能直接录用。"
-            "请先分配审稿人并等待意见返回；如确需免评审录用，请先调用 waive-review 记录理由。"
+            "该作品尚无已完成的互评意见，不能直接通过。"
+            "请先分配互评成员并等待意见返回；如确需免互评通过，请先调用 waive-review 记录理由。"
             if completed_reviews == 0
             else (
-                f"发表需要至少 2 名不同审稿人给出录用推荐，当前只有 "
+                f"公开需要至少 2 名不同互评成员给出通过推荐，当前只有 "
                 f"{len(accept_ids)} 名（已完成报告 {completed_reviews} 份）。"
-                "请继续送审，或在意见冲突时指定第三方裁决人。"
+                "请继续互评，或在意见冲突时指定第三方复核人。"
             )
         )
         raise HTTPException(
@@ -563,8 +563,8 @@ async def _ensure_accept_gate(db: AsyncSession, entry: Submission) -> None:
             detail={
                 "code": "review_conflict_requires_adjudication",
                 "message": (
-                    "审稿意见存在冲突（录用 vs 拒稿/大修），不能直接录用。"
-                    "请先指定第三方裁决人，并等待其给出录用意见。"
+                    "互评意见存在冲突（通过 vs 不通过/大改），不能直接通过。"
+                    "请先指定第三方复核人，并等待其给出通过意见。"
                 ),
                 "accept_recommendations": len(accept_ids),
                 "reject_recommendations": reject_count,
@@ -782,8 +782,8 @@ async def assign_reviewer(
             tenant_id=entry.tenant_id,
             user_id=reviewer.id,
             type_="review.invited",
-            title=f"您被邀请审稿：{entry.title}",
-            body=f"Submission #{entry.id} 已分配给您，请前往审稿工作台回应。",
+            title=f"你收到互评邀请：{entry.title}",
+            body=f"作品 #{entry.id} 已分配给你，请前往互评工作台回应。",
             related_type="review_assignment",
             related_id=str(assignment.id),
         )
@@ -1533,7 +1533,7 @@ async def request_rework(
                 "请二选一：\n"
                 "（a）补充/修正审稿意见，特别是以下方面；\n"
                 "（b）说明为何该稿确实应当拒稿。\n\n"
-                f"需要补审的方面：\n{requirements_text}"
+                f"需要补充的方面：\n{requirements_text}"
             ),
             related_type="submission",
             related_id=str(entry.id),
@@ -1547,12 +1547,12 @@ async def request_rework(
             tenant_id=entry.tenant_id,
             user_id=current_user.id,
             type_="review.rework_needs_assignment",
-            title=f"打回作品尚无审稿人，请先指派复审：{entry.title}",
+            title=f"退回作品尚无互评成员，请先指派复核：{entry.title}",
             body=(
-                f"作品 #{entry.id} 已按主编口径转入复审（under_review），"
-                "但还没有任何审稿指派。\n请先在审稿管理页指派一名或多名审稿人"
-                "（可多人同审，任一复审意见即可支撑最终决定）。\n\n"
-                f"需要补审的方面：\n{requirements_text}"
+                f"作品 #{entry.id} 已按内容整理口径转入互评复核（under_review），"
+                "但还没有任何互评指派。\n请先在互评管理页指派一名或多名互评成员"
+                "（可多人共同互评，任一复核意见即可支撑最终决定）。\n\n"
+                f"需要补充的方面：\n{requirements_text}"
             ),
             related_type="submission",
             related_id=str(entry.id),
