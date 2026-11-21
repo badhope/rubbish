@@ -10,16 +10,16 @@ describe('homepage issue information', () => {
 })
 
 describe('community onboarding', () => {
-  it('points new researchers to the community composer, not submissions', () => {
+  it('points article writers to the submission wizard', () => {
     const authors = readFileSync('src/components/guide/research-guide.tsx', 'utf8')
-    expect(authors).toContain('研究指南')
-    expect(authors).toContain('to="/forum"')
-    expect(authors).not.toContain('to="/submissions"')
+    expect(authors).toContain('文章指南')
+    expect(authors).toContain('to="/submissions/new"')
+    expect(authors).not.toContain("to=\"/forum\"\n              写文章")
   })
 
   it('keeps the guide to three community tabs', () => {
     const guide = source('guide')
-    expect(guide).toContain("label: '研究指南'")
+    expect(guide).toContain("label: '文章指南'")
     expect(guide).toContain("label: '社区指南'")
     expect(guide).toContain("label: '社区公约'")
     expect(guide).not.toContain("label: '等级与规范'")

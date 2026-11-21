@@ -65,6 +65,6 @@ PGOPTIONS="-c app.current_tenant_id=<租户UUID>" psql ...
 
 ## 部署
 
-`docker compose` 启动 PostgreSQL、应用和 Caddy。启动时执行 Alembic 迁移。Caddy 负责 TLS 和反向代理。上传文件放在持久卷里；生产备份在进入仓库前已经加密。
+仓库自带可复现的 Compose 栈：PostgreSQL、应用和 Caddy，启动时执行 Alembic。当前公网服务器是另一种形态：systemd `rubbish-app.service` 监听 `127.0.0.1:8080`，Nginx 负责 TLS、压缩和缓存，PostgreSQL 17 跑在本地容器，构建后的 SPA 放在 `/opt/rubbish-app/static`。两种形态跑同一套应用代码，但发布、备份和回滚命令不同。
 
-完整步骤见 [DEPLOY.zh-CN.md](../DEPLOY.zh-CN.md)。
+完整步骤见 [DEPLOY.zh-CN.md](../DEPLOY.zh-CN.md)；生产路径见 [ENGINEERING.md](ENGINEERING.md)。

@@ -4,6 +4,39 @@
 
 The repository ships a single-server Compose stack: PostgreSQL, the FastAPI app with the built frontend, and Caddy for TLS. A 1 vCPU / 2 GB VPS is enough for a small community.
 
+## Current public server (systemd + Nginx)
+
+The live host is not the Compose stack below. It runs:
+
+| Piece | Path / unit |
+|---|---|
+| Application | `/opt/rubbish-app` |
+| Virtualenv | `/opt/rubbish-app/.venv` |
+| Built SPA | `/opt/rubbish-app/static` |
+| Service | `rubbish-app.service` on `127.0.0.1:8080` |
+| Environment | `/www/wwwroot/rubbish.argjiemi.cn/.env` |
+| Nginx vhost | `/www/server/panel/vhost/nginx/rubbish.argjiemi.cn.conf` |
+| Legacy redirects | `/www/server/panel/vhost/nginx/rubbish-legacy-redirects.inc` |
+| PostgreSQL | container `rubbish-db-1` |
+
+A frontend-only release replaces `/opt/rubbish-app/static` and does not need a restart. A backend release copies the changed `app/` files and restarts the service. Always keep the previous static directory and the previous file next to the new one.
+
+```bash
+# on the build machine
+cd apps/frontend && npm run build
+tar -C dist -czf /tmp/rubbish-static.tgz .
+
+# on the server (deploy user has sudo -n)
+stamp=$(date +%Y%m%d%H%M)
+cp -a /opt/rubbish-app/static "/opt/rubbish-app/static-$stamp"
+tar -xzf /tmp/rubbish-static.tgz -C /opt/rubbish-app/static
+curl -fsS -H 'Host: rubbish.argjiemi.cn' http://127.0.0.1:8080/api/health
+```
+
+If the health check fails, restore `"/opt/rubbish-app/static-$stamp"` and re-check. For backend changes, take a copy of the file before replacing it, run `systemctl restart rubbish-app`, then check the health version. Nginx changes require `nginx -t` before `nginx -s reload`.
+
+Do not use `ops/deploy.sh` on this host: it is the Docker static-hot-swap reference. The systemd procedure is the one that applies here.
+
 ## Requirements
 
 - Linux with Docker Engine and Compose v2

@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { ArrowUpRight, Coins, ExternalLink, Pencil } from 'lucide-react'
+import { ArrowUpRight, Coins, ExternalLink, Gauge, Pencil } from 'lucide-react'
 import type { MeProfile } from '@/hooks/api/use-modules'
 import type { UserResponse } from '@/lib/types'
 import { useWallet } from '@/hooks/api/use-currency'
@@ -7,13 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { roleLabel } from '@/lib/role-labels'
 import { formatCoins } from './format'
-
-const IDENTITY_LABEL: Record<string, string> = {
-  author: '创作者',
-  reviewer: '版主',
-  editor: '内容管理员',
-}
 
 const ROLE_STYLE: Record<string, string> = {
   user: 'border-border bg-muted/40 text-foreground',
@@ -55,17 +50,36 @@ export function MeIdentityHeader({
                 variant="outline"
                 className={cn('rounded-none px-2 py-0.5 text-[11px]', ROLE_STYLE[profile.permission_role])}
               >
-                {profile.permission_label}
+                {profile.permission_label || roleLabel(profile.permission_role)}
               </Badge>
-              {profile.identities.map((identity) => (
-                <span key={identity} className="text-xs">
-                  {IDENTITY_LABEL[identity] ?? identity}
-                </span>
-              ))}
+              {profile.permission_role === 'editor_in_chief' && profile.permission_role_label ? (
+                <span className="text-xs">{profile.permission_role_label}</span>
+              ) : null}
+              <Link
+                to="/levels"
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
+              >
+                <Gauge className="h-3.5 w-3.5" />
+                Level {profile.activity.level}
+                <span className="font-mono text-[10px]">{profile.activity.xp} XP</span>
+              </Link>
             </div>
             {account?.affiliation ? (
               <p className="mt-2 truncate text-xs text-muted-foreground">{account.affiliation}</p>
             ) : null}
+            <div className="mt-3 flex max-w-md items-center gap-2">
+              <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-primary/70"
+                  style={{ width: `${Math.round((profile.activity.progress ?? 0) * 100)}%` }}
+                />
+              </div>
+              <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
+                {profile.activity.next_threshold
+                  ? `还差 ${profile.activity.to_next} XP 到 Level ${profile.activity.level + 1}`
+                  : '已满级'}
+              </span>
+            </div>
           </div>
         </div>
 

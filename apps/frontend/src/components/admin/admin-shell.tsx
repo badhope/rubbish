@@ -58,7 +58,7 @@ export function AdminShell() {
           <div className="flex items-center justify-between gap-4 pt-5">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary/75">
-                Editorial desk
+                编辑台
               </p>
               <h1 className="mt-1 font-serif text-lg tracking-tight sm:text-xl">后台管理</h1>
             </div>

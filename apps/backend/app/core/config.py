@@ -270,10 +270,14 @@ class Settings(BaseSettings):
     backup_dir: str = ""
     backup_max_age_hours: int = 36
 
-    # --- 本站刊号 ---
-    # 六位刊物代码：站内编号 R-<code>-<YYYYMMDD>-<四位流水>。
+    # --- 本站编号 ---
+    # 六位站点代码：站内编号 R-<code>-<YYYYMMDD>-<四位流水>。
     # 这不是 DOI；官方 DOI 仍由作者决定是否另行注册。
     publication_code: str = "000001"
+    # 新录用文章默认进入的卷、期（文章归档，不是身份等级）。
+    # 旧文章已归入第 1 卷第 01–06 期；2026-11-21 起新录用文章进入第 07 期。
+    current_volume: str = "1"
+    current_issue: str = "07"
 
     # --- CORS / Trusted hosts ---
     cors_origins: str = "http://localhost:5173,http://localhost"

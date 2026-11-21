@@ -38,7 +38,7 @@ const STATUS_VARIANT: Record<string, 'default' | 'destructive' | 'outline' | 'se
 const EVIDENCE_LABEL: Record<string, string> = {
   email: '原稿邮箱',
   orcid: 'ORCID',
-  manuscript_id: '稿件编号',
+  manuscript_id: '作品编号',
 }
 
 /**

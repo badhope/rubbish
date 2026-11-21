@@ -1,19 +1,17 @@
 import { type ReactNode } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
 import { ArrowRight, Bell, ChevronRight, LogIn, PenLine } from 'lucide-react'
 import '@fontsource-variable/playfair-display'
-import { api } from '@/lib/api'
 import { useAuth } from '@/hooks/use-auth'
 import { useCatalogStats, useResources } from '@/hooks/api/use-modules'
 import { formatAuthors } from '@/lib/utils'
+import { issueLabel } from '@/lib/resource-labels'
 import { AnnouncementChip, AnnouncementDialog, useAnnouncementPortal } from '@/components/common/announcement-dialog'
 import { AppearanceMenu } from '@/components/appearance-menu'
 import { ArticleCover } from '@/components/common/article-cover'
 import { BrandMark } from '@/components/common/brand-mark'
 import { HeroBackdrop } from '@/components/common/hero-backdrop'
 import { ScrollCue } from '@/components/common/scroll-cue'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -22,7 +20,7 @@ export const Route = createFileRoute('/')({
 })
 
 const DISPLAY_FONT =
-  "'Playfair Display Variable', Georgia, 'Noto Serif SC Site', 'Songti SC', 'DejaVu Serif', serif"
+  "'Playfair Display Variable', Georgia, 'Songti SC', 'DejaVu Serif', serif"
 
 function formatDate(iso: string): string {
   const d = new Date(iso)
@@ -148,7 +146,7 @@ function HomePage() {
         <div className="relative mx-auto flex min-h-[calc(100svh-3.5rem)] w-full max-w-[1200px] flex-col items-center justify-center px-5 pb-16 pt-10 text-center sm:px-8">
           <p className="flex items-center gap-2 text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
             <span aria-hidden className="h-1.5 w-1.5 rotate-45 bg-primary" />
-            Open Research · Absurd Academia
+            开放文章 · 荒诞研究
             <span aria-hidden className="h-1.5 w-1.5 rotate-45 bg-primary" />
           </p>
           <h1 className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-6">
@@ -170,7 +168,7 @@ function HomePage() {
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="h-12 px-6 text-sm sm:h-14 sm:px-7 sm:text-base">
-              <Link to="/forum" search={{ compose: 1 }}>
+              <Link to="/submissions/new">
                 <PenLine className="h-4 w-4 sm:h-5 sm:w-5" /> 写文章
               </Link>
             </Button>
@@ -188,7 +186,7 @@ function HomePage() {
           title="先读这一份"
           action={
             <Link to="/catalog" search={{ track: 'paper' }} className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary">
-              全部档案 <ChevronRight className="h-4 w-4" />
+              全部文章 <ChevronRight className="h-4 w-4" />
             </Link>
           }
         />
@@ -219,6 +217,12 @@ function HomePage() {
             </Link>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                {issueLabel(featured.volume, featured.issue) ? (
+                  <>
+                    <span>{issueLabel(featured.volume, featured.issue)}</span>
+                    <span aria-hidden>·</span>
+                  </>
+                ) : null}
                 <span>{featured.discipline || '跨学科'}</span>
                 <span aria-hidden>·</span>
                 <span className="tabular-nums">{featured.year}</span>
@@ -249,9 +253,9 @@ function HomePage() {
           </div>
         ) : (
           <div className="border-y border-border/70 py-10 text-sm text-muted-foreground">
-            本周研究还在整理，先去社区看看大家在讨论什么。
-            <Link to="/forum" className="ml-2 text-primary hover:underline">
-              打开社区
+            本周研究还在整理，可以先去文章目录读已发布的文章，或去社区参与讨论。
+            <Link to="/catalog" className="ml-2 text-primary hover:underline">
+              打开文章目录
             </Link>
           </div>
         )}
@@ -261,12 +265,17 @@ function HomePage() {
       <section className="border-y border-border/70 bg-muted/20">
         <div className="mx-auto w-full max-w-[1100px] px-5 py-14 sm:px-8 sm:py-20">
           <SectionHeading
-            label="Archive · 档案"
+            label="Articles · 文章"
             title="从哪读起"
             action={
-              <Link to="/catalog" className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary">
-                全部档案 <ChevronRight className="h-4 w-4" />
-              </Link>
+              <div className="flex items-center gap-4">
+                <Link to="/issues" className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary">
+                  按卷期浏览 <ChevronRight className="h-4 w-4" />
+                </Link>
+                <Link to="/catalog" className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary">
+                  全部文章 <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
             }
           />
           <div className="divide-y divide-border/70 border-t border-border/70">
@@ -315,11 +324,24 @@ function HomePage() {
               </span>
               <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
             </Link>
+            <Link to="/issues" className="group flex items-center gap-4 py-5 sm:gap-6">
+              <span className="w-10 shrink-0 font-mono text-sm text-muted-foreground">04</span>
+              <span className="min-w-0 flex-1">
+                <span className="flex flex-wrap items-baseline gap-x-3">
+                  <span className="font-serif text-2xl transition-colors group-hover:text-primary sm:text-3xl">卷期浏览</span>
+                  <span className="text-xs text-muted-foreground">按卷、期归档</span>
+                </span>
+                <span className="mt-1 block text-sm leading-6 text-muted-foreground">
+                  按卷、期顺序读已发表的文章。
+                </span>
+              </span>
+              <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
+            </Link>
           </div>
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-sm">
             <span className="text-xs text-muted-foreground">
-              已收录 <Count value={paperTotal} ready={Boolean(stats.data)} /> 份研究记录 ·{' '}
-              <Count value={funTotal} ready={Boolean(funStats.data)} /> 份创作
+              已收录 <Count value={paperTotal} ready={Boolean(stats.data)} /> 篇研究文章 ·{' '}
+              <Count value={funTotal} ready={Boolean(funStats.data)} /> 篇创作
             </span>
             <Link to="/catalog" search={{ sort: 'random' }} className="inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-primary">
               换一批 <ChevronRight className="h-4 w-4" />
@@ -328,32 +350,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* 社区手记：不占一整墙，只留一段可读的判断。 */}
-      <section className="mx-auto w-full max-w-[1100px] px-5 py-14 sm:px-8 sm:py-20">
-        <SectionHeading label="Field Notes · 社区手记" title="这个社区怎么长出来" />
-        <div className="grid gap-8 md:grid-cols-[minmax(0,7fr)_minmax(0,4fr)] md:gap-12">
-          <blockquote className="border-l-2 border-primary pl-5 sm:pl-7">
-            <p className="font-serif text-2xl leading-relaxed sm:text-3xl">
-              把荒诞当课题，认真做完，再拿出来让人拆。
-            </p>
-            <footer className="mt-4 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-              —— Rubbish 社区
-            </footer>
-          </blockquote>
-          <div className="text-sm leading-7 text-muted-foreground">
-            <p>
-              研究不需要先穿上学家的外套。一个问题、一段过程、一次失败，都可以先放上来；
-              有人接，就继续做。
-            </p>
-            <Link to="/about" search={{ tab: 'about' }} className="mt-4 inline-flex items-center gap-1 text-primary hover:underline">
-              关于社区与版主 <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <ForumPulse />
-
       {/* 发布：最后一个主任务，不把表单铺在首页。 */}
       <section className="border-t border-border/70 bg-primary text-primary-foreground">
         <div className="mx-auto grid w-full max-w-[1100px] gap-8 px-5 py-14 sm:px-8 sm:py-20 md:grid-cols-[1fr_auto] md:items-center">
@@ -361,13 +357,13 @@ function HomePage() {
             <p className="text-[10px] uppercase tracking-[0.3em] text-primary-foreground/60">Publish an article</p>
             <h2 className="mt-2 font-serif text-3xl sm:text-4xl">把你的文章放上来</h2>
             <p className="mt-3 max-w-xl text-sm leading-7 text-primary-foreground/75">
-              文章和短帖共用一套发布入口；先写清楚要讲的事，再把过程或判断写进来。发布后公开，不收费。
+              文章走投稿与审核，短帖发在社区；两条发布入口分开，也不再混排。先写清楚要讲的事，发布后公开，不收费。
             </p>
           </div>
           <div className="flex flex-wrap gap-3 md:justify-end">
             <Button asChild size="lg" variant="secondary" className="h-12 px-6">
-              <Link to="/forum" search={{ compose: 1 }}>
-                {isAuthenticated ? '去发表文章' : '免费注册写文章'} <ArrowRight className="h-4 w-4" />
+              <Link to="/submissions/new">
+                {isAuthenticated ? '去写文章' : '免费注册写文章'} <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="h-12 border-primary-foreground/30 bg-transparent px-6 text-primary-foreground hover:bg-primary-foreground/10">
@@ -393,7 +389,7 @@ function HomePage() {
           <div>
             <p className="mb-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">阅读</p>
             <ul className="space-y-1.5 text-sm">
-              <li><Link to="/catalog" className="hover:text-primary">全部档案</Link></li>
+              <li><Link to="/catalog" className="hover:text-primary">全部文章</Link></li>
               <li><Link to="/guide" search={{ tab: 'authors' }} className="hover:text-primary">社区指南</Link></li>
               <li><Link to="/guide" search={{ tab: 'policies' }} className="hover:text-primary">社区公约</Link></li>
             </ul>
@@ -420,75 +416,5 @@ function HomePage() {
         </div>
       </footer>
     </div>
-  )
-}
-
-function ForumPulse() {
-  const q = useQuery({
-    queryKey: ['home', 'forum-pulse'],
-    queryFn: async () => (await api.get('/forum/topics', { params: { page_size: 5 } })).data,
-  })
-  const topics = (q.data?.data ?? []) as Array<{
-    id: number
-    title: string
-    category: string
-    reply_count: number
-    last_reply_at: string | null
-    author: { username: string; display_name?: string | null; avatar_url?: string | null } | null
-  }>
-  if (topics.length === 0) return null
-
-  const label: Record<string, string> = {
-    paper: '研究记录',
-    method: '方法与复盘',
-    life: '科研生存',
-    collab: '组队招募',
-    meta: '站务',
-    notice: '公告',
-    discussion: '研究讨论',
-    question: '求助',
-    suggestion: '建议',
-  }
-  const rel = (iso: string | null) => {
-    if (!iso) return ''
-    const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000)
-    if (m < 60) return `${Math.max(1, m)} 分钟前`
-    const h = Math.floor(m / 60)
-    if (h < 24) return `${h} 小时前`
-    return `${Math.floor(h / 24)} 天前`
-  }
-
-  return (
-    <section className="mx-auto w-full max-w-[1100px] px-5 py-14 sm:px-8 sm:py-20">
-      <SectionHeading
-        label="Community · 动态"
-        title="正在讨论"
-        action={
-          <Link to="/forum" className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary">
-            进入社区 <ChevronRight className="h-4 w-4" />
-          </Link>
-        }
-      />
-      <div className="divide-y divide-border/70 border-t border-border/70">
-        {topics.map((t) => (
-          <Link
-            key={t.id}
-            to="/forum/$topicId"
-            params={{ topicId: String(t.id) }}
-            className="group flex items-start gap-3 py-4 transition-colors hover:text-primary"
-          >
-            <Badge variant="outline" className="mt-0.5 shrink-0">{label[t.category] ?? t.category}</Badge>
-            <span className="min-w-0 flex-1">
-              <span className="line-clamp-1 text-sm font-medium">{t.title}</span>
-              <span className="mt-1 block text-xs text-muted-foreground">
-                {t.author?.display_name || t.author?.username || '匿名'} · {t.reply_count} 回复
-                {t.last_reply_at ? ` · 最后活跃 ${rel(t.last_reply_at)}` : ''}
-              </span>
-            </span>
-            <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
-          </Link>
-        ))}
-      </div>
-    </section>
   )
 }

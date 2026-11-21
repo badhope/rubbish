@@ -68,7 +68,7 @@ class ReviewSubmit(BaseModel):
     scores: dict[str, Any] = Field(default_factory=dict)
     comments_to_editor: str | None = Field(default=None, max_length=20000)
     comments_to_author: str | None = Field(default=None, max_length=20000)
-    # 审稿端「特别篇」特许标记：普通稿件不得超篇幅上限；勾选即视为
+    # 审稿端「特别篇」特许标记：普通作品不得超篇幅上限；勾选即视为
     # 审稿人建议/确认特许，落库到资源并显示显式标签。理由单独留痕。
     special_issue: bool = False
     special_issue_reason: str | None = Field(default=None, max_length=500)

@@ -50,7 +50,7 @@ interface ManuscriptViewProps {
   onTocReady?: (toc: TocEntry[]) => void;
   /** 隐藏组件内置的左侧 TOC 导航（父级自己渲染侧栏时用） */
   hideTocNav?: boolean;
-  /** 稿件加载失败（含 409 needs_docx）时回调，父级可据此渲染兜底 UI */
+  /** 作品加载失败（含 409 needs_docx）时回调，父级可据此渲染兜底 UI */
   onFatalError?: (err: unknown) => void;
   /** 内容分类（来自资源元数据），组件内部据此计算 effectiveKind */
   contentCategory?: string | null;
@@ -330,7 +330,7 @@ export function ManuscriptView({
     return (
       <div className="flex flex-1 items-center justify-center overflow-y-auto p-6">
         <EmptyState
-          title="在线稿件加载失败"
+          title="在线作品加载失败"
           description="这份记录没有可用的在线正文，请切换到 PDF 视图或直接下载。"
           action={
             <Button variant="outline" size="sm" onClick={() => refetch()}>

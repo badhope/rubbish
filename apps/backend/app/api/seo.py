@@ -32,23 +32,30 @@ router = APIRouter(tags=["seo"])
 SITE_NAME = "Rubbish"
 SITE_TITLE = "Rubbish — 荒诞科研社区"
 DEFAULT_DESCRIPTION = (
-    "Rubbish 是一个荒诞科研社区：用帖子讨论研究计划、实验记录、失败复盘与科研生存，"
-    "用档案保存值得留下的长记录。"
+    "Rubbish 是一个荒诞科研社区：短帖在社区讨论，文章在文章目录发表，文章按卷、期归档，公开可读。"
 )
 
 PAGE_META: dict[str, tuple[str, str]] = {
     "": (SITE_TITLE, DEFAULT_DESCRIPTION),
     "catalog": (
-        "档案 · 研究记录与自由创作",
-        "按实证研究、荒诞研究与自由创作浏览社区档案；每条记录都标明是不是虚构。",
+        "文章 · 研究文章与自由创作",
+        "按研究文章、荒诞研究与自由创作浏览已发布文章；每条记录都标明是不是虚构。",
     ),
     "forum": (
-        "社区 · 讨论、记录与组队",
-        "研究计划、实验记录、田野观察、失败档案、科研生存与组队招募都在这。",
+        "社区 · 文章、记录与组队",
+        "选题与计划、过程记录、现场观察、失败复盘、创作生存与组队招募都在这。",
+    ),
+    "issues": (
+        "文章卷期 · 按卷、期浏览",
+        "文章按卷、期归档；卷是大归档，期是卷内发布批次，数字越大越新。",
+    ),
+    "levels": (
+        "等级 Level · 参与度",
+        "等级只记录活跃与参与程度，不决定身份和权限；所有人从 Level 1 开始。",
     ),
     "about": (
         "关于 Rubbish",
-        "Rubbish 是一个荒诞科研社区：帖子做讨论，档案做长记录，注册后就能发。",
+        "Rubbish 是一个荒诞科研社区：短帖在社区讨论，文章走投稿，注册后就能发。",
     ),
     "guide": (
         "指南 · 怎么在这里发一条像样的内容",
@@ -172,6 +179,8 @@ async def sitemap(request: Request, db: AsyncSession = Depends(get_db)) -> Respo
     urls: list[tuple[str, str, str, str | None]] = [
         (f"{root}/", "weekly", "1.0", None),
         (f"{root}/catalog", "daily", "0.9", None),
+        (f"{root}/issues", "weekly", "0.7", None),
+        (f"{root}/levels", "monthly", "0.5", None),
         (f"{root}/forum", "daily", "0.8", None),
         (f"{root}/guide", "monthly", "0.6", None),
         (f"{root}/about", "monthly", "0.6", None),

@@ -287,7 +287,7 @@ async def editor_workbench(
     now = utcnow()
     tenant_id = require_tenant_id()
 
-    # 审稿广场的申请意愿：只读审计日志，按稿件聚合后带给主编工作台。
+    # 审稿广场的申请意愿：只读审计日志，按作品聚合后带给主编工作台。
     interest_rows = (
         (
             await db.execute(
@@ -338,7 +338,7 @@ async def editor_workbench(
             "declined_count": len(declined),
         }
 
-    # 在途稿件（非已决定）才需要展开 assignment 做归位；状态下推到 SQL，
+    # 在途作品（非已决定）才需要展开 assignment 做归位；状态下推到 SQL，
     # 避免把不断增长的「已决定」历史库整表加载进内存。
     submissions = (
         (
@@ -687,10 +687,10 @@ async def batch_assign(
     current_user: User = Depends(require_editor),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
-    """批量勾选待指派稿件，一次选审稿人并设截止时间。
+    """批量勾选待指派作品，一次选审稿人并设截止时间。
 
     同一事务内创建全部 assignment，逐篇给审稿人发站内通知 + 邮件摘要。
-    禁止指派给稿件作者（自审）；重复指派跳过并记录原因。
+    禁止指派给作品作者（自审）；重复指派跳过并记录原因。
     """
     tenant_id = require_tenant_id()
     now = utcnow()
@@ -838,7 +838,7 @@ async def batch_assign(
                 user_id=rid,
                 type_="review.invited",
                 title=f"您被邀请审稿：{sub.title}",
-                body=f"稿件 #{sub.id} 已分配给您，截止 {due.date().isoformat()}，请前往审稿工作台回应。",
+                body=f"作品 #{sub.id} 已分配给您，截止 {due.date().isoformat()}，请前往审稿工作台回应。",
                 related_type="review_assignment",
                 related_id=str(a.id),
             )
@@ -944,9 +944,9 @@ async def check_conflicts(
 
         warnings: list[str] = []
         if is_submitter:
-            warnings.append("禁止自审：该审稿人就是稿件提交人")
+            warnings.append("禁止自审：该审稿人就是作品提交人")
         if name_match:
-            warnings.append("与稿件作者同名：疑似共同作者/自审")
+            warnings.append("与作品作者同名：疑似共同作者/自审")
         if own_count > 0:
             warnings.append(
                 f"该用户已有 {own_count} 篇投稿（同单位/利益相关无法自动判定，请人工复核）"

@@ -22,7 +22,7 @@ export function languageLabel(code: string | null | undefined): string {
 }
 
 const TYPE_LABELS: Record<string, string> = {
-  paper: '研究记录',
+  paper: '研究文章',
   book: '图书',
   dataset: '数据集',
   tutorial: '教程',
@@ -149,4 +149,29 @@ export function contentTrackKind(
   if (contentTrack === 'essay') return 'plain'
   // 缺省：保守按 paper 处理（研究档案默认版式）
   return 'paper'
+}
+
+function issueNumber(issue?: string | null): string | null {
+  const n = Number(issue)
+  if (!Number.isFinite(n) || n <= 0) return null
+  return String(n).padStart(2, '0')
+}
+
+/** 完整卷期：第 1 卷 · 第 01 期。卷、期只用于文章归档，不是刊名。 */
+export function issueLabel(
+  volume?: string | null,
+  issue?: string | null,
+): string | null {
+  const issueText = issueNumber(issue)
+  if (!issueText) return null
+  const volumeNumber = Number(volume)
+  return Number.isFinite(volumeNumber) && volumeNumber > 0
+    ? `第 ${volumeNumber} 卷 · 第 ${issueText} 期`
+    : `第 ${issueText} 期`
+}
+
+/** 列表/徽标用的短卷期：第 01 期。 */
+export function issueShortLabel(issue?: string | null): string | null {
+  const issueText = issueNumber(issue)
+  return issueText ? `第 ${issueText} 期` : null
 }

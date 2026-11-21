@@ -126,7 +126,7 @@ export default function ForumInspectionPage() {
               <p className="text-xs text-muted-foreground">待处理举报</p>
               <p className="mt-1 font-mono text-2xl font-semibold text-destructive">{openReports}</p>
             </div>
-            <Link to="/admin/content" search={{ section: 'reports' }} className="text-sm text-primary hover:underline">
+            <Link to="/admin" search={{ section: 'reports' }} className="text-sm text-primary hover:underline">
               去处理
             </Link>
           </CardContent>

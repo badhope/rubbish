@@ -10,7 +10,7 @@ import { EmptyState, ErrorState } from '@/components/common/state'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ScrollCue } from '@/components/common/scroll-cue'
 
-// 自由创作：不是“研究档案换个底色”，而是一套自己的阅读入口。
+// 自由创作：不是“研究文章换个底色”，而是一套自己的阅读入口。
 // 档案区回答“这份记录做得怎么样”；自由创作回答“这篇东西好不好玩”。
 // 因此这里不出现研究方向、评分、PDF 徽章，只用文体 + 作者 + 阅读量。
 
@@ -74,7 +74,7 @@ export function FunCatalog({
             </p>
             <div className="inline-flex shrink-0 items-center rounded-full border border-border bg-card p-0.5 text-[11px]">
               <Link to="/catalog" search={{ track: 'paper' }} className="rounded-full px-2.5 py-0.5 text-muted-foreground hover:text-foreground">
-                研究档案
+                研究文章
               </Link>
               <span className="rounded-full bg-primary px-2.5 py-0.5 font-medium text-primary-foreground">自由创作</span>
             </div>
@@ -241,7 +241,7 @@ export function FunCatalog({
             {featuredId != null && (
               <section className="flex min-h-[100svh] flex-col justify-start border-b px-0 pb-24 pt-12 sm:pt-16">
                 <div className="mx-auto w-full max-w-[1320px]">
-                  <SectionHead title="本期推荐" note="每次刷新换一篇" />
+                  <SectionHead title="推荐阅读" note="每次刷新换一篇" />
                   <div className="mt-4">
                     <FunCard resource={stories[0]} featured />
                   </div>
@@ -272,7 +272,7 @@ export function FunCatalog({
               to="/catalog" search={{ track: 'paper' }}
               className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
             >
-              想看研究档案？去档案区
+              想看研究文章？去文章区
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
             <Pagination
@@ -366,7 +366,7 @@ function FunCard({ resource, featured }: { resource: ResourceResponse; featured:
             {resource.reads != null ? <span>· 阅读 {resource.reads}</span> : null}
             <span className="inline-flex items-center gap-1 text-primary">
               <Sparkles className="h-3.5 w-3.5" />
-              本期推荐
+              推荐阅读
             </span>
           </div>
         </div>

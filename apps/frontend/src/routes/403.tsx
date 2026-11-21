@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { ArrowLeft, ShieldOff } from 'lucide-react'
+import { ArrowLeft, MessagesSquare, ShieldOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
@@ -15,19 +15,24 @@ function ForbiddenPage() {
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
             <ShieldOff className="h-7 w-7 text-muted-foreground" />
           </div>
-          <h1 className="text-2xl font-semibold">无权访问</h1>
+          <h1 className="text-2xl font-semibold">这个页面需要后台权限</h1>
           <p className="text-sm text-muted-foreground">
-            你已登录，但当前账号没有访问此页面的权限。
-            如需相应权限，请联系编辑部（站点管理员）为你分配角色。
+            发帖、回复、收藏对所有成员开放，不需要后台角色；
+            这里进不去，是因为当前页面属于管理/编辑后台。
           </p>
-          <div className="flex gap-2">
+          <p className="max-w-sm text-xs text-muted-foreground">
+            公告和后台页面才需要编辑或管理员角色；如果只是想发帖，直接去社区即可。
+          </p>
+          <div className="flex flex-wrap justify-center gap-2">
             <Button asChild variant="outline">
               <Link to="/me">
-                <ArrowLeft className="h-4 w-4" /> 返回概览
+                <ArrowLeft className="h-4 w-4" /> 返回我的
               </Link>
             </Button>
             <Button asChild>
-              <Link to="/">去首页</Link>
+              <Link to="/forum">
+                <MessagesSquare className="h-4 w-4" /> 去社区发帖
+              </Link>
             </Button>
           </div>
         </CardContent>

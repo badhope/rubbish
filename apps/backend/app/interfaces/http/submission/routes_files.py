@@ -75,7 +75,7 @@ def _content_disposition(filename: str, *, inline: bool = False) -> str:
 
 _ALLOWED_UPLOAD_MIMES = frozenset(
     {
-        # 稿件本体：PDF / Word / 纯文本 / Markdown / LaTeX 源文件 / PostScript
+        # 作品本体：PDF / Word / 纯文本 / Markdown / LaTeX 源文件 / PostScript
         "application/pdf",
         "application/msword",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -126,7 +126,7 @@ _ALLOWED_UPLOAD_EXTENSIONS = (
 async def _read_upload_for_conversion(file: UploadFile) -> tuple[bytes, str, str]:
     """校验上传并读取字节，返回 (contents, original_filename, actual_format)。
 
-    只用于“提交前识别 / 原文件预览”两个无数据库端点，不落盘、不建稿件。
+    只用于“提交前识别 / 原文件预览”两个无数据库端点，不落盘、不建作品。
     与正式上传共用同一扩展名白名单和 50MB 上限。
     """
     upload_name = file.filename or "upload"
@@ -373,12 +373,12 @@ async def upload_submission_file(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> SubmissionResponse:
-    """作者上传稿件 PDF（替换式：重复上传会覆盖 file_path）。
+    """作者上传作品 PDF（替换式：重复上传会覆盖 file_path）。
 
     限制：
     - 仅作者本人
     - submission 必须处于 pending / under_review / major_revision / minor_revision
-      （under_review 允许是为了让编辑要求作者替换稿件时仍能上传）
+      （under_review 允许是为了让编辑要求作者替换作品时仍能上传）
     - accepted / rejected 终态下不可上传
     - MIME 必须在白名单内
     - 大小 ≤ 50 MB
@@ -402,7 +402,7 @@ async def upload_submission_file(
         )
     # MIME 白名单 + 扩展名兜底：浏览器对 .md/.tex/.csv/.ipynb 报的
     # content-type 千奇百怪（从 application/octet-stream 到空串都有），
-    # 只认 MIME 会把合法稿件拒之门外。扩展名命中即放行。
+    # 只认 MIME 会把合法作品拒之门外。扩展名命中即放行。
     upload_name = file.filename or "upload"
     upload_ext = os.path.splitext(upload_name)[1].lower()
     mime_ok = file.content_type in _ALLOWED_UPLOAD_MIMES
@@ -534,7 +534,7 @@ async def upload_submission_cover(
 ) -> SubmissionResponse:
     """作者上传封面图（替换式）。
 
-    为什么允许作者自选封面：本刊是双赛道期刊，荒诞稿的封面往往就是
+    为什么允许作者自选封面：本站是双赛道期刊，荒诞稿的封面往往就是
     作品的一部分（一张梗图胜过一千字摘要）。不给作者这个入口，所有
     文章只能长成同一个样子。
 
@@ -811,8 +811,8 @@ def _make_download_ticket(
 ) -> str:
     """短时下载票据：移动端浏览器/下载器带不上 Authorization 头时用。
 
-    票据绑定稿件、用户、格式、**租户**和到期时间，不携带用户密码或长期
-    token；泄露后最多 10 分钟内可下载同一租户的同一份稿件，且不能调用
+    票据绑定作品、用户、格式、**租户**和到期时间，不携带用户密码或长期
+    token；泄露后最多 10 分钟内可下载同一租户的同一份作品，且不能调用
     其他接口。租户段确保 A 租户的票据拿到 B 租户部署上即使 HMAC 正确也无效。
     """
     expires = int(time.time()) + _DOWNLOAD_TICKET_TTL
@@ -941,15 +941,15 @@ async def download_submission_file(
     current_user: User | None = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
-    """下载稿件文件。
+    """下载作品文件。
 
-    这里补上了此前缺失的链路终点：稿件此前只能上传、无法取回，
+    这里补上了此前缺失的链路终点：作品此前只能上传、无法取回，
     编辑与被指派的审稿人拿不到作者的 PDF，评审无从谈起。
 
     可访问方：
     - 作者本人
     - admin / editor
-    - 该稿件的被指派审稿人（assignment 处于 pending/accepted/completed）
+    - 该作品的被指派审稿人（assignment 处于 pending/accepted/completed）
 
     S3 后端会尽量返回 302 预签名直链（省一次服务端带宽）；本地后端
     与预签名失败时改为服务端流式返回，权限校验始终发生在这里。
@@ -1032,7 +1032,7 @@ async def download_submission_file(
     #
     # 旧实现要求编辑先上传一条 ``anonymized_file_url``，否则直接 403；线上
     # ``review_mode=double_blind``，但 328/329 都没有匿名稿，于是审稿人连
-    # 稿件都下载不了，整个评审流程卡死。现在改为**从 Markdown 现场生成**
+    # 作品都下载不了，整个评审流程卡死。现在改为**从 Markdown 现场生成**
     # 匿名 Word/PDF：不依赖外部 URL，也不会把原始 PDF 的元数据带出去。
     is_privileged = actor is not None and (
         entry.submitted_by == actor.id or await user_has_editor_access(db, actor)

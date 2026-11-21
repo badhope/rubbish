@@ -15,33 +15,33 @@ import { Button } from '@/components/ui/button'
 const ENTRY_POINTS = [
   {
     icon: MessageSquare,
-    title: '研究计划',
-    body: '一个问题、为什么值得做、打算怎么做、可能需要谁来帮忙。先立项，再动手。',
-    hint: '适合：找同伴、征求意见、预注册一个脑洞',
+    title: '选题与计划',
+    body: '一个想讲清的问题、为什么值得写、打算怎么写、可能需要谁来补充。先列提纲，再动笔。',
+    hint: '适合：找同伴、征求意见、先占一个题目',
   },
   {
     icon: FileText,
-    title: '实验与田野记录',
-    body: '做了什么、用了什么材料、过程卡在哪里、观察到了什么。阶段记录也算数。',
-    hint: '适合：实验日志、田野笔记、过程汇报',
+    title: '过程与现场记录',
+    body: '做了什么、用了什么材料、过程卡在哪里、观察到了什么。阶段记录也能单独成文。',
+    hint: '适合：写作日志、现场笔记、进度汇报',
   },
   {
     icon: PenLine,
-    title: '失败复盘',
+    title: '失败与复盘',
     body: '原计划是什么、实际发生了什么、偏差在哪、下一步怎么改。失败也是结果。',
-    hint: '适合：踩坑、方法反思、负结果',
+    hint: '适合：踩坑、方法反思、没做成的尝试',
   },
 ]
 
 const METHOD_POINTS = [
-  ['问题压成一句话', '先写清楚“我想弄清楚什么”。问题越具体，别人越能接得住。'],
+  ['问题压成一句话', '先写清楚“我想讲明白什么”。问题越具体，别人越能接得住。'],
   ['设定要能站住', '荒诞研究也要有清楚的设定：在什么条件下，这个结论才成立。'],
   ['过程可以追踪', '材料、步骤、失败点尽量写出来；不需要漂亮，但要对得上。'],
   ['结论可以荒诞，引用不能伪造', '真实文献给得出处；自己编的参考文献，标注“虚构参考文献”。'],
 ]
 
 const CHECKS = [
-  ['标题能被检索', '用一句人话说明研究问题，不用“论”“浅析”开头堆三层。'],
+  ['标题能被检索', '用一句人话说明你要讲的事，不用“论”“浅析”开头堆三层。'],
   ['虚构要标出来', '荒诞研究、讽刺写作、思想实验，在标题区或正文开头写明“虚构创作”。'],
   ['材料能对上', '引用的文献、数据、图片给得出处；无法核查的材料，说明它只是设定。'],
   ['不碰真人隐私', '不点名真实个人、单位、病历、聊天记录；讽刺指向现象，不指向可识别的人。'],
@@ -51,20 +51,20 @@ export function ResearchGuide() {
   return (
     <div className="mx-auto max-w-4xl">
       <Link
-        to="/forum"
+        to="/catalog"
         className="mb-4 inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-primary"
       >
         <ArrowLeft className="mr-1 h-4 w-4" />
-        返回社区
+        返回文章目录
       </Link>
 
       <PageHeader
-        title="研究指南"
-        description="从一个问题开始，不必先有结论。这里只收能读、能聊、能继续做的研究记录。"
+        title="文章指南"
+        description="从一个问题开始，不必先有结论。这里收能读、能聊、能继续写下去的文章。"
         actions={
           <Button asChild>
-            <Link to="/forum" search={{ compose: '1' }}>
-              去发布
+            <Link to="/submissions/new">
+              写文章
               <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
           </Button>
@@ -127,10 +127,10 @@ export function ResearchGuide() {
         </RevealSection>
 
         <RevealSection className="border-t pt-6">
-          <p className="font-serif text-xl">做不动的时候，先发一个计划。</p>
+          <p className="font-serif text-xl">做不动的时候，先写一篇短文。</p>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            社区不要求一次做完。一个问题、一段过程、一次失败，都可以先放上来；
-            有人接，再继续做。
+            社区不要求一次写完。一个问题、一段过程、一次失败，都可以先放上来；
+            有人接，再继续写。
           </p>
         </RevealSection>
       </div>

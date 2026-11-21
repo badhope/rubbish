@@ -30,7 +30,7 @@ CURRENT_RULES_VERSION = "1.1"
 # 计分规则（reason → delta）。娱乐/吐槽轨在调用处传 delta=0。
 POINT_RULES: dict[str, dict[str, object]] = {
     "claim.approve": {"identity": "author", "delta": 20, "label": "认领审核通过"},
-    "submission.accepted": {"identity": "author", "delta": 60, "label": "正式论文录用"},
+    "submission.accepted": {"identity": "author", "delta": 60, "label": "文章录用"},
     "submission.accepted.essay": {
         "identity": "author",
         "delta": 0,

@@ -6,7 +6,7 @@ import { routeTree } from './routeTree.gen'
 import { ThemeProvider } from './components/theme-provider'
 import { AppErrorBoundary } from './components/common/error-boundary'
 import { initMonitoring, installGlobalErrorHandlers } from './lib/monitoring'
-// 期刊衬线字体（自托管可变字重，中文按 unicode-range 分片按需加载）
+// 衬线字体（自托管可变字重，中文按 unicode-range 分片按需加载）
 import './index.css'
 
 // window.onerror + unhandledrejection 兜底（ErrorBoundary 只覆盖渲染期错误）
@@ -20,7 +20,7 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 30_000,
       retry: 1,
-      // 切回标签页/网络恢复时刷新：期刊站内容会更新（新刊出论文、评论），
+      // 切回标签页/网络恢复时刷新：站点内容会更新（新发布文章、评论），
       // 关闭聚焦刷新会让用户看到过期目录（此前 5 分钟内看不到新发表）。
       refetchOnWindowFocus: true,
       refetchOnReconnect: true,

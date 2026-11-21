@@ -24,9 +24,9 @@ export function AdminAnalyticsPanel() {
 
   const cards = [
     {
-      label: '档案条目',
+      label: '文章条目',
       value: fmt(records),
-      sub: '已公开的研究记录与自由创作',
+      sub: '已公开的研究文章与自由创作',
       icon: BookOpen,
     },
     {
@@ -58,7 +58,7 @@ export function AdminAnalyticsPanel() {
             站点数据总览
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            档案、阅读、下载与页面访问都来自运行数据；页面访问只记路径与来源，不采 IP / UA / 用户 ID，因此不称 UV。
+            文章、阅读、下载与页面访问都来自运行数据；页面访问只记路径与来源，不采 IP / UA / 用户 ID，因此不称 UV。
           </p>
         </div>
         <p className="text-[11px] text-muted-foreground">

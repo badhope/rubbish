@@ -14,6 +14,8 @@ import {
   User,
   Award,
   FileSignature,
+  FileText,
+  Layers3,
   MessagesSquare,
   X,
 } from 'lucide-react'
@@ -42,20 +44,23 @@ import { AppearanceMenu } from '@/components/appearance-menu'
 import { CookieBanner } from '@/components/common/cookie-banner'
 import { PageViewTracker } from '@/components/common/page-view-tracker'
 import { groupLabel, navLabel, text, useLang } from '@/lib/i18n'
+import { primaryRoleLabel } from '@/lib/role-labels'
 
 const NAV: NavItem[] = [
-  // 荒诞科研社区：首页 / 社区 / 档案 / 指南 / 我的。
+  // 荒诞科研社区：首页 / 社区 / 文章 / 等级 / 指南 / 我的。
   { to: '/', label: '首页', icon: Home, group: '一级入口' },
   { to: '/forum', label: '社区', icon: MessagesSquare, group: '一级入口' },
-  { to: '/catalog', label: '档案', icon: BookOpen, group: '一级入口' },
+  { to: '/catalog', label: '文章', icon: BookOpen, group: '一级入口' },
+  { to: '/levels', label: '等级', icon: Layers3, group: '一级入口' },
   { to: '/guide', label: '指南', icon: Compass, group: '一级入口' },
   { to: '/me', label: '我的', icon: User, group: '一级入口' },
 
+  { to: '/submissions', label: '我的投稿', icon: FileText, auth: true, group: '投稿' },
   { to: '/about', label: '关于社区', icon: Building2, group: '关于' },
   { to: '/admin', label: '管理后台', icon: Gavel, auth: true, adminOnly: true, group: '站点管理' },
 ]
 
-const PUBLIC_NAV = NAV.slice(0, 5)
+const PUBLIC_NAV = NAV.slice(0, 6)
 
 // 公开页与工作台的分界：后台、审稿指派、主编工作台、待审列表保留业务左栏；
 // 其余页面用顶部 5 导航，公开页不再出现全局左栏。
@@ -528,7 +533,7 @@ export function AppShell() {
                 <div className="min-w-0">
                   <p className="truncate text-xs font-medium">{displayName}</p>
                   <p className="truncate text-[10px] text-sidebar-foreground/55">
-                    {user.roles?.some((r) => ['chief_editor','editor_in_chief','admin'].includes(r)) ? '社区管理员' : '创作者 / 读者'}
+                    {primaryRoleLabel(user.roles ?? [], isAdmin)}
                   </p>
                 </div>
               </div>
@@ -576,6 +581,9 @@ export function AppShell() {
           </div>
           {/* 右侧：主题切换 + 用户菜单/登录注册 */}
           <div className="flex items-center gap-1 sm:gap-2">
+            <Button variant="outline" size="icon" className="h-8 w-8 sm:hidden" onClick={() => setCmdOpen(true)} aria-label={text('搜索', lang)}>
+              <Search className="h-4 w-4" />
+            </Button>
             <Button variant="outline" size="sm" className="hidden h-8 gap-2 px-2.5 text-xs sm:inline-flex" onClick={() => setCmdOpen(true)}>
               <Search className="h-3.5 w-3.5" />
               {text('搜索', lang)}
@@ -604,10 +612,10 @@ export function AppShell() {
           <form onSubmit={submitCmd} className="w-full max-w-xl overflow-hidden rounded-xl border bg-background shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 border-b px-4 py-3">
               <Search className="h-4 w-4 text-muted-foreground" />
-              <input autoFocus value={cmdQ} onChange={(e) => setCmdQ(e.target.value)} placeholder="搜索档案、帖子、作者、关键词…" className="h-9 flex-1 bg-transparent text-sm outline-none" />
+              <input autoFocus value={cmdQ} onChange={(e) => setCmdQ(e.target.value)} placeholder="搜索文章标题、作者、关键词…" className="h-9 flex-1 bg-transparent text-sm outline-none" />
               <kbd className="rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">Enter</kbd>
             </div>
-            <div className="px-4 py-2 text-[11px] text-muted-foreground">回车进入档案；Esc 关闭。档案与帖子分开检索。</div>
+            <div className="px-4 py-2 text-[11px] text-muted-foreground">回车进入文章目录；帖子可在社区页单独搜索。Esc 关闭。</div>
           </form>
         </div>
       )}

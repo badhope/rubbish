@@ -12,7 +12,7 @@ The English category is **Absurd Research Community**.
 
 `Home / Community / Archive / Guide / Me`
 
-- **Community:** short posts, questions, research plans, experiment logs, failure retrospectives, team-finding, and site matters.
+- **Community:** articles, questions, writing plans, process notes, failure retrospectives, team-finding, and site matters.
 - **Archive:** long-form research records and creative work worth keeping, grouped into empirical research, absurd research, and creative work.
 - **Guide:** how to ask, how to record, how to label fiction, and how to handle copyright and privacy.
 - **Me:** bookmarks, points, notifications, and settings.
@@ -20,7 +20,9 @@ The English category is **Absurd Research Community**.
 
 ## Boards
 
-`Research Plans / Experiment Logs / Field Notes / Failure Archive / Research Discussion / Lab Life / Team Finding / Site / Announcements`
+`Writing Discussion / Records & Retrospectives / Team Finding / Creative Life / Site & Feedback`
+
+Public role labels are `Member / Reviewer / Editor / Editor-in-Chief`; internal role codes and permissions are unchanged.
 
 ## Copy rules
 

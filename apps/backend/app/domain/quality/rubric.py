@@ -14,14 +14,14 @@ v5.0 先收成两条赛道，v5.1 再补荒诞度；核心是两件事：
 
 分区口径（用户已定，不再改）
 --------------------------
-90–100 = 顶刊级（T1）；80–89 = 一区（Q1）；70–79 = 二区（Q2）；
+90–100 = 标杆级（T1）；80–89 = 一区（Q1）；70–79 = 二区（Q2）；
 60–69 = 三区（Q3）；50–59 = 四区（Q4）；<50 = 退稿，不入区。
 
 硬门槛（防止“每项都 70，平均分被拉高”）
 ------------------------------------
 - 学术：诚信 0 分 → 总分归零（一票否决）。
 - 任一维度 < 50 → 总分封顶 59；两项及以上 < 50 → 封顶 49（退稿）。
-- 任一维度 < 60 → 总分封顶 79（进不了 Q1/顶刊）。
+- 任一维度 < 60 → 总分封顶 79（进不了 Q1/标杆）。
 - 论证 < 50 → 封顶 59：论证断链不能靠数据好看进区。
 - 荒诞：自洽 < 50 → 封顶 59；执行 < 50 → 封顶 69；荒诞度 < 50 → 封顶 69；
   任一维度 < 60 → 封顶 79。荒诞允许“无中生有”，不允许“前后打架、
@@ -96,7 +96,7 @@ WEIGHTS: dict[str, dict[str, int]] = {
 }
 
 # 学术稿子类型只影响“章节要求/参考文献下限”，不改变五维权重：同一把尺子
-# 才能比较研究论文和综述。旧四套 PROFILES 保留为别名，避免调用方 500。
+# 才能比较研究文章和综述。旧四套 PROFILES 保留为别名，避免调用方 500。
 PROFILES: dict[str, dict[str, int]] = {
     "research": WEIGHTS["academic"],
     "review": WEIGHTS["academic"],
@@ -105,16 +105,16 @@ PROFILES: dict[str, dict[str, int]] = {
 }
 
 PROFILE_LABELS = {
-    "research": "研究论文",
+    "research": "研究文章",
     "review": "综述",
     "essay": "随笔 / 评论",
     "note": "研究简报",
 }
 
-# 分区：下限降序。90+ 才是顶刊级，刻意稀缺。
+# 分区：下限降序。90+ 才是标杆级，刻意稀缺。
 GRADE_BANDS: tuple[tuple[str, str, int, int], ...] = (
-    ("T1+", "顶刊范本", 95, 100),
-    ("T1", "顶刊级", 90, 94),
+    ("T1+", "标杆范本", 95, 100),
+    ("T1", "标杆级", 90, 94),
     ("Q1", "一区", 80, 89),
     ("Q2", "二区", 70, 79),
     ("Q3", "三区", 60, 69),
@@ -127,11 +127,11 @@ SCORE_ANCHORS: dict[str, tuple[tuple[int, str], ...]] = {
     "academic": (
         (
             95,
-            "顶刊范本：该维度可直接作为同领域写作范例，审稿人找不到需要实质修改的地方；极少稿件能达到。",
+            "标杆范本：该维度可直接作为同领域写作范例，审稿人找不到需要实质修改的地方；极少作品能达到。",
         ),
         (
             90,
-            "顶刊门槛：完成度、证据强度与判断力达到顶刊同领域已发表论文水准，仅有个别编辑性问题。",
+            "标杆门槛：完成度、证据强度与判断力达到同领域标杆文章水准，仅有个别编辑性问题。",
         ),
         (80, "一区：五个判断面都站得住，有清晰增量；短板只在局部，不影响结论。"),
         (70, "二区：问题与论证成立，方法或证据有一处可指出的实质不足，修回后可成立。"),
@@ -141,7 +141,7 @@ SCORE_ANCHORS: dict[str, tuple[tuple[int, str], ...]] = {
     ),
     "absurd": (
         (95, "荒诞范本：设定、执行、文风三者合一，读完想转给别人；不是靠堆梗。"),
-        (90, "顶刊级荒诞：设定极新，内部规则严丝合缝，一本正经到让人忘记它在胡说。"),
+        (90, "标杆级荒诞：设定极新，内部规则严丝合缝，一本正经到让人忘记它在胡说。"),
         (80, "一区：荒诞点清楚，结构完整，梗有出处或规则自洽，只有局部节奏可打磨。"),
         (70, "二区：设定成立，执行基本完整，但有段落靠硬凑梗或解释过度。"),
         (60, "三区：有荒诞点，但内部规则开始打架，或后半程写不下去。"),
@@ -234,7 +234,7 @@ def auto_precheck(m: PaperMetrics) -> list[dict[str, str]]:
                 "level": "blocker" if m.references == 0 else "warning",
                 "dimension": "integrity",
                 "message": (
-                    f"参考文献 {m.references} 条，低于该类稿件下限 {floor_refs} 条。"
+                    f"参考文献 {m.references} 条，低于该类作品下限 {floor_refs} 条。"
                     "引用不足会让读者无法定位你的工作相对谁而做。"
                 ),
             }
@@ -358,7 +358,7 @@ def _caps_for(track: str, by_key: dict[str, DimensionScore]) -> tuple[float | No
     mid = [k for k, v in values.items() if 50 <= v < 60]
     if mid and not low:
         caps.append(79.0)
-        notes.append(f"以下维度低于 60 分（{', '.join(mid)}）：总分封顶 79，不进一区/顶刊")
+        notes.append(f"以下维度低于 60 分（{', '.join(mid)}）：总分封顶 79，不进一区/标杆")
 
     if track == "academic" and values.get("argument", 100) < 50:
         caps.append(59.0)
@@ -463,7 +463,7 @@ def evaluate(
         "track": track,
         "track_label": TRACK_LABELS[track],
         "article_type": profile_type,
-        "article_type_label": PROFILE_LABELS.get(profile_type, "研究论文"),
+        "article_type_label": PROFILE_LABELS.get(profile_type, "研究文章"),
         "score": total,
         "uncapped_score": uncapped,
         "cap": cap,
@@ -547,7 +547,7 @@ def rubric_payload() -> dict[str, object]:
             for code, label, low, high in GRADE_BANDS
         ],
         "quartiles": {
-            "T1": "90–100 顶刊级（95+ 为范本）",
+            "T1": "90–100 标杆级（95+ 为范本）",
             "Q1": "80–89 一区",
             "Q2": "70–79 二区",
             "Q3": "60–69 三区",
@@ -564,7 +564,7 @@ def rubric_payload() -> dict[str, object]:
         "evidence_required": "每个维度必须给出 ≥8 字的正文证据（章节/段落/图表/引用编号/链接），只写分数或只写评语不受理",
         "integrity_veto": "学术赛道 integrity 维度 0 分 → 总分归零（学术不端一票否决）",
         "gates": [
-            "任一维度 < 60 → 总分封顶 79（不进一区/顶刊）",
+            "任一维度 < 60 → 总分封顶 79（不进一区/标杆）",
             "任一维度 < 50 → 总分封顶 59（不进三区及以上）",
             "两项及以上维度 < 50 → 总分封顶 49（退稿）",
             "学术赛道论证 < 50 → 总分封顶 59",

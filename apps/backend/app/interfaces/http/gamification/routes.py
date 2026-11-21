@@ -1,5 +1,5 @@
 """Gamification API — level ladder, onboarding, profile, badge wall, admin grants,
-role applications (L5/L6)."""
+role applications (reviewer / senior reviewer)."""
 
 from __future__ import annotations
 
@@ -274,7 +274,7 @@ async def grant_points(
     current_admin: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ) -> LevelGrantRequest:
-    """L9 only: manually credit XP (editorial merit, event rewards)."""
+    """仅管理组：手动发放经验（编辑贡献、活动奖励）。"""
     tenant_id = require_tenant_id()
     target = (
         await db.execute(select(User).where(User.id == user_id, User.tenant_id == tenant_id))
@@ -316,7 +316,7 @@ async def get_level_detail(level: int) -> dict[str, object]:
 # 职员角色申请（L5 审稿人 / L6 资深审稿人；L7+ 仅编辑部提拔）
 # ---------------------------------------------------------------------------
 
-_ROLE_LABELS = {"reviewer": "审稿人（L5）", "senior_reviewer": "资深审稿人（L6）"}
+_ROLE_LABELS = {"reviewer": "审稿人", "senior_reviewer": "资深审稿人"}
 
 
 def _application_response(row: RoleApplication, username: str | None) -> RoleApplicationResponse:
@@ -411,7 +411,7 @@ async def create_application(
                     "code": "reviewer_role_required",
                     "target_role": body.target_role,
                     "profile": profile,
-                    "message": "申请资深审稿人需先取得审稿人（L5）角色。",
+                    "message": "申请资深审稿人需先取得审稿人身份。",
                 },
             )
         eligible = applications.senior_reviewer_eligible(profile)

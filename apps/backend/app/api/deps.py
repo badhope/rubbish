@@ -204,16 +204,20 @@ _LEGACY_ROLE_TO_PERMISSION: dict[str, str] = {
 async def effective_permission_role(db: AsyncSession, user: User) -> str:
     """解析用户当前最高权限档位（五层之一）。
 
-    以 ``users.role`` 为权威；若仍停留在迁移前的默认值 ``user``，则回退到
-    ``is_admin`` 与历史 ``user_roles`` 推导，保证迁移窗口内与单测里不丢权限。
+    取 ``is_admin``、``users.role`` 与历史 ``user_roles`` 三者的最高档位。
+    只认 ``users.role`` 会在两种情况下漏权限：旧账号的 role 仍是 ``user``，
+    或先被授予 reviewer、后来又被授予 editor/board_editor 的账号。管理端
+    分配角色写在 ``user_roles``，所以校验必须把这份授权一并计入。
     """
-    # is_admin 历史上等价主编；优先于普通 user 档位。
-    if user.is_admin:
-        return "editor_in_chief"
-    role = (user.role or "user").strip()
-    if role in PERMISSION_RANK and role != "user":
-        return role
-    # 迁移前兜底：从 user_roles 推导最高档位。
+    best = "editor_in_chief" if user.is_admin else "user"
+    best_rank = PERMISSION_RANK[best]
+
+    canonical = (user.role or "user").strip()
+    mapped = _LEGACY_ROLE_TO_PERMISSION.get(canonical, canonical)
+    if mapped in PERMISSION_RANK and PERMISSION_RANK[mapped] > best_rank:
+        best = mapped
+        best_rank = PERMISSION_RANK[mapped]
+
     tenant_id = user.tenant_id
     result = await db.execute(
         select(Role.name)
@@ -224,8 +228,6 @@ async def effective_permission_role(db: AsyncSession, user: User) -> str:
             Role.tenant_id == tenant_id,
         )
     )
-    best = "user"
-    best_rank = PERMISSION_RANK["user"]
     for name in result.scalars():
         mapped = _LEGACY_ROLE_TO_PERMISSION.get(name)
         if mapped and PERMISSION_RANK[mapped] > best_rank:

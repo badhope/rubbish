@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import type { ResourceResponse } from '@/lib/types'
 import { formatAuthors, cn } from '@/lib/utils'
-import { displayTypeLabel, isScholarlyContent } from '@/lib/resource-labels'
+import { displayTypeLabel, isScholarlyContent, issueShortLabel } from '@/lib/resource-labels'
 import { essayGenreLabel } from '@/lib/essay-genres'
 import { Highlight } from '@/components/common/highlight'
 
@@ -21,7 +21,12 @@ export function CatalogIndexRow({
   const label = essay
     ? essayGenreLabel(resource.content_genre)
     : displayTypeLabel(resource.type, resource.content_category, resource.content_track, resource.track)
-  const meta = [label, resource.discipline, resource.year ? String(resource.year) : null]
+  const meta = [
+    issueShortLabel(resource.issue),
+    label,
+    resource.discipline,
+    resource.year ? String(resource.year) : null,
+  ]
     .filter(Boolean)
     .join(' · ')
   const preview = (resource.preview || resource.abstract || '')

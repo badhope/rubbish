@@ -2,8 +2,8 @@
 
 口径（冻结在代码里，与 /levels 页展示一致）：
 
-- **L5 审稿人**：至少 1 篇稿件被本刊录用，且其中最高 RQS 质量分 ≥ 60
-  （C 级及以上）。未评分的稿件不参与门槛——新作者不被历史数据卡死。
+- **L5 审稿人**：至少 1 篇作品被本站录用，且其中最高 RQS 质量分 ≥ 60
+  （C 级及以上）。未评分的作品不参与门槛——新作者不被历史数据卡死。
 - **L6 资深审稿人**：已是审稿人，且完成审稿 ≥ 5 份。
 - L7–L9（编辑职）不开放申请，仅编辑部直接提拔。
 
@@ -45,7 +45,7 @@ def _profile_payload(
 
 
 async def accepted_paper_count(db: AsyncSession, user: User) -> int:
-    """该作者被本刊录用的稿件数（accepted / approved；供 L4 指标与 L5 画像共用）。"""
+    """该作者被本站录用的作品数（accepted / approved；供 L4 指标与 L5 画像共用）。"""
     return int(
         (
             await db.execute(
@@ -63,7 +63,7 @@ async def accepted_paper_count(db: AsyncSession, user: User) -> int:
 
 
 async def reviewer_profile(db: AsyncSession, user: User) -> dict[str, object]:
-    """L5 资格画像：已录用稿件数 + 最高 RQS。"""
+    """L5 资格画像：已录用作品数 + 最高 RQS。"""
     rows = (
         (
             await db.execute(
@@ -90,7 +90,7 @@ async def reviewer_profile(db: AsyncSession, user: User) -> dict[str, object]:
 
 
 def reviewer_eligible(profile: dict[str, object]) -> bool:
-    """L5 门槛：≥1 篇录用 且 最高 RQS ≥ 60（未评分稿件不参与）。"""
+    """L5 门槛：≥1 篇录用 且 最高 RQS ≥ 60（未评分作品不参与）。"""
     accepted_raw = profile.get("accepted_papers") or 0
     best = profile.get("best_rqs")
     if not isinstance(accepted_raw, int) or not isinstance(best, (int, float)):

@@ -1,5 +1,43 @@
 # Changelog
 
+## [1.19.14] — 2026-11-21
+
+- Split article publishing from the community: `/submissions` and `/submissions/new` now open the restored four-step submission wizard instead of redirecting to `/forum?compose=1`; removed the three legacy Nginx 301 rules that forced the redirect.
+- Added a public `/issues` page backed by `GET /catalog/volumes/stats`; each volume lists its issues, article counts and year span, and opens the corresponding issue-filtered article list.
+- Removed the community topic feed from the journal homepage and separated the navigation labels: 社区 is for short posts, 文章 is the article catalog, 刊期 is the volume/issue index.
+
+- Merged the 12-room forum tree into five rooms: 写作讨论、记录与复盘、组队招募、创作生活、站务与反馈；old category links keep working.
+
+- Added author-side post editing with title/body/board/fictional editing and an audit trail; locked posts stay read-only.
+
+- Added “关注本帖”: followers, the topic author and the replied-to author receive notifications on new replies.
+
+- Added edit/split/preview modes to the forum editor and widened the desktop writing desk; mobile keeps the full-screen composer.
+
+- Replaced the board dropdown with five board pills plus a weekly writing prompt; mobile wraps all five instead of hiding them behind a horizontal scroll.
+
+- Standardized display-only role names to 主编 / 编辑 / 评审 / 作者 / 成员; internal role codes and permissions are unchanged. Reviewer notifications now use 评审申请.
+
+- Permission checks now take the highest of `is_admin`, `users.role` and every granted `user_roles` row, so a later editor promotion is no longer lost; the sidebar now shows the actual highest role instead of always “成员 / 作者”.
+
+## [1.19.13] — 2026-11-21
+
+- Fixed every `写文章` entry that passed `compose` as a string; the forum now opens the editor from profile, guide, onboarding and home links.
+
+- Replaced the research-only guide copy with article writing semantics: 写作指南 covers 选题、过程记录、失败复盘, and community guide points at 写文章.
+
+- Added archive search on the catalog hub, a visible 最新 sort, and 最新/全部 entries for research and free writing.
+
+- Added title/body search to the community list, with clear-search empty state; backend `GET /forum/topics` accepts `q`.
+
+- Added a report count and queue entry to the admin dashboard, and lazy-loaded the analytics charts.
+
+- Added Nginx gzip and one-year cache headers for hashed assets, 30-day cache for covers; hashed JS drops from 268 KB to about 81 KB over the wire.
+
+- Removed the 1.36 MB Chinese font subset and switched to the system serif stack; all 274 long articles now render without missing-glyph fallback, and first paint no longer downloads webfonts.
+
+- Added `docs/PERFORMANCE.md` and `docs/ENGINEERING.md`; corrected deployment docs to describe the live systemd + Nginx server alongside the Compose reference.
+
 ## [1.19.11] — 2026-11-21
 
 - Removed the empty public cost ledger and its admin tab; the site does not charge, so there is no ledger to publish.

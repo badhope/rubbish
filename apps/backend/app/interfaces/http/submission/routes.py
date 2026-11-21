@@ -407,7 +407,7 @@ async def get_submission(
         )
     response = _to_response(entry)
     if entry.resource_id is not None:
-        # 刊出状态随详情下发：前端据此区分「已发表」与「刊前预览」。
+        # 发布状态随详情下发：前端据此区分「已发表」与「发布前预览」。
         from app.domain.catalog.models import Resource
 
         response.resource_publication_status = (
@@ -428,7 +428,7 @@ async def update_submission(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> SubmissionResponse:
-    """作者修改自己的稿件内容（补齐修回链路的缺口）。
+    """作者修改自己的作品内容（补齐修回链路的缺口）。
 
     此前 major/minor revision 后作者只能翻状态「重投」，却改不了
     任何内容 —— 修回等于空转。此端点让作者在以下状态可编辑：
@@ -519,7 +519,7 @@ async def get_submission_markdown(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, str]:
-    """读取在线正文（作者本人 / 编辑部，不限稿件状态）。"""
+    """读取在线正文（作者本人 / 编辑部，不限作品状态）。"""
     entry = await _body_access_or_error(submission_id, current_user, db, require_editable=False)
     if not entry.markdown_path:
         return {"content": ""}
@@ -568,7 +568,7 @@ async def list_submission_versions(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> SubmissionVersionListResponse:
-    """稿件版本历史（v1 = 初次提交；之后每次重投一个版本）。
+    """作品版本历史（v1 = 初次提交；之后每次重投一个版本）。
 
     可见方：作者本人、admin/editor。审稿人故意不给 —— 双盲模式下
     历史版本可能残留身份信息，且审稿人只需要看「当前版本」。
@@ -675,7 +675,7 @@ async def delete_submission(
     file_path = entry.file_path
     await db.delete(entry)
     await db.commit()
-    # 删除稿件时应同步清理其存储文件，否则 PDF 在磁盘 / S3 上成为孤儿对象，
+    # 删除作品时应同步清理其存储文件，否则 PDF 在磁盘 / S3 上成为孤儿对象，
     # 既泄露删除行为的"残留"，也会让存储无限增长。
     await _try_delete_storage(file_path)
     return MessageResponse(message="Submission deleted")
@@ -693,8 +693,8 @@ async def author_response(
 ) -> SubmissionResponse:
     """作者逐条回复审稿人（Response to Reviewers）。
 
-    与重投时的版本修改说明分开保存：编辑在裁决/查看稿件时直接可见。
-    仅作者本人、且稿件至少有一份已完成审稿报告时可写。
+    与重投时的版本修改说明分开保存：编辑在裁决/查看作品时直接可见。
+    仅作者本人、且作品至少有一份已完成审稿报告时可写。
     """
     entry = await _get_or_404(db, submission_id)
     if entry.submitted_by != current_user.id:
@@ -752,7 +752,7 @@ async def author_resubmit(
     """作者收到 major_revision / minor_revision 后重新提交。
 
     将状态置为 under_review（编辑可再次分配/决断），并把当前（作者已
-    通过 PATCH 修改过的）稿件内容快照为新版本。可选 ``note`` 记录
+    通过 PATCH 修改过的）作品内容快照为新版本。可选 ``note`` 记录
     「针对审稿意见做了哪些修改」，随版本一起存档并推送给编辑。
 
     仅作者本人可操作。body 可省略，兼容旧的无 body 调用。

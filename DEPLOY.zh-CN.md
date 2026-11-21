@@ -4,6 +4,39 @@
 
 仓库自带一套单机 Compose 部署：PostgreSQL、带前端静态文件的 FastAPI 服务，以及负责 HTTPS 的 Caddy。小型社区用 1 核 2G 的 VPS 就够。
 
+## 当前公网服务器（systemd + Nginx）
+
+线上不是下面的 Compose 栈，而是：
+
+| 部件 | 路径 / 单元 |
+|---|---|
+| 应用 | `/opt/rubbish-app` |
+| 虚拟环境 | `/opt/rubbish-app/.venv` |
+| 构建后的 SPA | `/opt/rubbish-app/static` |
+| 服务 | `rubbish-app.service`，监听 `127.0.0.1:8080` |
+| 环境变量 | `/www/wwwroot/rubbish.argjiemi.cn/.env` |
+| Nginx 站点 | `/www/server/panel/vhost/nginx/rubbish.argjiemi.cn.conf` |
+| 旧链接跳转 | `/www/server/panel/vhost/nginx/rubbish-legacy-redirects.inc` |
+| PostgreSQL | 容器 `rubbish-db-1` |
+
+只发前端时替换 `/opt/rubbish-app/static`，不必重启服务。发后端时复制改动的 `app/` 文件并重启服务。替换前必须保留上一份静态目录和上一份后端文件。
+
+```bash
+# 构建机
+cd apps/frontend && npm run build
+tar -C dist -czf /tmp/rubbish-static.tgz .
+
+# 服务器（deploy 用户有 sudo -n）
+stamp=$(date +%Y%m%d%H%M)
+cp -a /opt/rubbish-app/static "/opt/rubbish-app/static-$stamp"
+tar -xzf /tmp/rubbish-static.tgz -C /opt/rubbish-app/static
+curl -fsS -H 'Host: rubbish.argjiemi.cn' http://127.0.0.1:8080/api/health
+```
+
+健康检查失败就恢复 `"/opt/rubbish-app/static-$stamp"` 再查。后端改动替换前先备份文件，`systemctl restart rubbish-app` 后检查健康接口的版本号。Nginx 改动必须先 `nginx -t` 再 `nginx -s reload`。
+
+这台机器不要用 `ops/deploy.sh`：它是 Docker 静态热替换的参考脚本，实际生效的是上面的 systemd 流程。
+
 ## 准备
 
 - 已安装 Docker Engine 和 Compose v2 的 Linux 服务器

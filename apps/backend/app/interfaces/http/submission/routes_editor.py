@@ -78,7 +78,7 @@ async def list_triage_queue(
     _: User = Depends(require_editor),
     db: AsyncSession = Depends(get_db),
 ) -> SubmissionListResponse:
-    """P1-9 初筛队列：只返回尚未初筛的 pending 稿件，最老的排前面。"""
+    """P1-9 初筛队列：只返回尚未初筛的 pending 作品，最老的排前面。"""
     tenant_id = require_tenant_id()
     base = select(Submission).where(
         Submission.tenant_id == tenant_id,
@@ -167,7 +167,7 @@ async def triage_submission(
         entry.reviewed_by = current_user.id
         entry.reviewed_at = now
     elif body.decision == "request_materials":
-        # 补材料是独立的初筛状态：作者补齐后重投，稿件重新进入初筛队列，
+        # 补材料是独立的初筛状态：作者补齐后重投，作品重新进入初筛队列，
         # 不与“退回修改”的大修语义混在一起。
         entry.triage_status = "materials"
         entry.status = "major_revision"
@@ -184,25 +184,25 @@ async def triage_submission(
     if body.decision in ("return_for_revision", "desk_reject", "request_materials"):
         if body.decision == "return_for_revision":
             type_ = "submission.triage_rework"
-            title = f"稿件需要修改：{entry.title}"
+            title = f"作品需要修改：{entry.title}"
             body_text = (
-                f"稿件 #{entry.id} 已完成编辑部初筛。\n"
+                f"作品 #{entry.id} 已完成编辑部初筛。\n"
                 "修改后可在「我的提交」中重新提交。\n"
                 f"编辑部说明：{note}"
             )
         elif body.decision == "request_materials":
             type_ = "submission.triage_materials"
-            title = f"稿件需要补充材料：{entry.title}"
+            title = f"作品需要补充材料：{entry.title}"
             body_text = (
-                f"稿件 #{entry.id} 初筛时发现材料不完整。\n"
-                "请按编辑部说明补齐材料后在「我的提交」中重新提交；补齐后稿件会重新进入初筛队列。\n"
+                f"作品 #{entry.id} 初筛时发现材料不完整。\n"
+                "请按编辑部说明补齐材料后在「我的提交」中重新提交；补齐后作品会重新进入初筛队列。\n"
                 f"编辑部说明：{note}"
             )
         else:
             type_ = "submission.triage_rejected"
-            title = f"稿件未通过初筛：{entry.title}"
+            title = f"作品未通过初筛：{entry.title}"
             body_text = (
-                f"稿件 #{entry.id} 已完成编辑部初筛。\n本次不进入同行评审。\n编辑部说明：{note}"
+                f"作品 #{entry.id} 已完成编辑部初筛。\n本次不进入同行评审。\n编辑部说明：{note}"
             )
         await notifications.create(
             db,
@@ -502,7 +502,7 @@ async def _ensure_accept_gate(db: AsyncSession, entry: Submission) -> None:
 
     ``/decision`` 与遗留 ``/review`` 别名共用此闸门，确保任何录用路径
     都不能绕过同行评审。意见冲突（录用 vs 拒稿/大修）须先经第三方裁决。
-    不满足时抛 ``HTTPException(409)``；已 waive-review 的稿件直接放行。
+    不满足时抛 ``HTTPException(409)``；已 waive-review 的作品直接放行。
     """
     if entry.review_waived_at:
         return
@@ -539,7 +539,7 @@ async def _ensure_accept_gate(db: AsyncSession, entry: Submission) -> None:
     if len(accept_ids) < 2:
         _code = "no_completed_reviews" if completed_reviews == 0 else "insufficient_accept_reviews"
         _message = (
-            "该稿件尚无已完成的审稿意见，不能直接录用。"
+            "该作品尚无已完成的审稿意见，不能直接录用。"
             "请先分配审稿人并等待意见返回；如确需免评审录用，请先调用 waive-review 记录理由。"
             if completed_reviews == 0
             else (
@@ -726,7 +726,7 @@ async def assign_reviewer(
             detail={
                 "code": "reviewer_name_conflict",
                 "message": (
-                    f"审稿人 {reviewer.username} 与稿件作者同名：疑似共同作者/自审，请更换审稿人。"
+                    f"审稿人 {reviewer.username} 与作品作者同名：疑似共同作者/自审，请更换审稿人。"
                 ),
             },
         )
@@ -966,7 +966,7 @@ async def list_review_reports(
     """
     entry = await _get_or_404(db, submission_id)
     # 单盲：编辑（admin 或有 editor 角色）看完整报告；
-    # 作者只看 comments_to_author；被指派审稿人可看自己评审的稿件报告
+    # 作者只看 comments_to_author；被指派审稿人可看自己评审的作品报告
     # （含自己写的 editor-only comments）。无上述身份者 403。
     is_editor = current_user.is_admin or await user_has_role(db, current_user, ROLE_EDITOR)
     is_author = entry.submitted_by == current_user.id
@@ -1004,7 +1004,7 @@ async def list_review_reports(
     out: list[ReviewReportResponse] = []
     for r, reviewer_id, reviewer_username in rows:
         # 审稿人（非编辑非作者）：只能看**自己**那一份报告。
-        # 修复前的代码让任何有 assignment 的人落进 else 分支，把该稿件全部
+        # 修复前的代码让任何有 assignment 的人落进 else 分支，把该作品全部
         # 已完成报告的 comments_to_editor（编辑机密）原样返回——甚至包括
         # 只是被邀请、尚未接受邀请的审稿人。编辑机密改为显式白名单。
         if is_reviewer and not is_editor and not is_author:
@@ -1047,9 +1047,9 @@ async def submission_timeline(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
-    """论文全流程时间线：投稿、版本、邀请/拒审、报告、作者回复、裁决。
+    """文章全流程时间线：投稿、版本、邀请/拒审、报告、作者回复、裁决。
 
-    编辑可看全部稿件；作者只能看自己的稿件。审稿人不在本端点暴露
+    编辑可看全部作品；作者只能看自己的作品。审稿人不在本端点暴露
     其他审稿人的意见，避免绕过单盲。时间线用于主编追溯「从投稿到
     录用」的每一步，不替代审计日志。
     """
@@ -1070,7 +1070,7 @@ async def submission_timeline(
         if at is not None:
             events.append({"at": at, "kind": kind, "title": title, "detail": detail})
 
-    add(entry.submitted_at, "submitted", "作者提交稿件", f"状态 {entry.status}")
+    add(entry.submitted_at, "submitted", "作者提交作品", f"状态 {entry.status}")
 
     versions = (
         (
@@ -1179,8 +1179,8 @@ async def editor_decision(
 
     accept: 自动物化 catalog Resource（除非 resource_id 指定现有资源），
             submission.status = 'accepted'。默认录用即刊（published）；
-            body.publication_status='draft' 时暂存为草稿，进入刊前整理
-            阶段（编辑/作者可预览，admin 刊出）。
+            body.publication_status='draft' 时暂存为草稿，进入发布前整理
+            阶段（编辑/作者可预览，admin 发布）。
     minor_revision / major_revision: status = 对应值，等作者 resubmit
     reject: status = 'rejected'（终态）
 
@@ -1269,7 +1269,7 @@ async def editor_decision(
                     "code": "rejected_requires_rework",
                     "score": float(target_resource.quality_score),
                     "message": (
-                        "该稿件质量评分低于 40 分（不合格），按规范不能直接录用。"
+                        "该作品质量评分低于 40 分（不合格），按规范不能直接录用。"
                         "请先调用 rework 端点打回审稿人补审或要求作者修改；"
                         "如确需破例，请传 force_accept_d_grade=true 并在备注中写明理由。"
                     ),
@@ -1287,8 +1287,8 @@ async def editor_decision(
         )
 
     # 终局/修回决定后，当前轮未完成的审稿邀请不应继续挂在审稿人工作台上。
-    # 此前 accept/reject 只改稿件状态，pending/accepted 的 assignment 会一直
-    # 留在「待审稿」，审稿人看到的是一篇已经录用/退稿的稿件。
+    # 此前 accept/reject 只改作品状态，pending/accepted 的 assignment 会一直
+    # 留在「待审稿」，审稿人看到的是一篇已经录用/退稿的作品。
     if decision in ("accept", "reject", "major_revision", "minor_revision"):
         await db.execute(
             update(ReviewAssignment)
@@ -1339,7 +1339,7 @@ async def editor_decision(
     )
 
     # --- 等级轴（v1.14）：身份内积分，与上面的荣誉 XP 正交 ---
-    # 正式论文（paper）录用：作者 +60；娱乐/吐槽稿（essay）录用：delta=0 仅记活跃。
+    # 正式文章（paper）录用：作者 +60；娱乐/吐槽稿（essay）录用：delta=0 仅记活跃。
     # 编辑裁决：editor 身份 +8。全部幂等（同一 submission 只记一次）。
     from app.domain.gamification import levels_axis
 
@@ -1386,9 +1386,9 @@ async def editor_decision(
         tenant_id=entry.tenant_id,
         user_id=entry.submitted_by,
         type_="submission.decision",
-        title=f"稿件决定通知：{entry.title}",
+        title=f"作品决定通知：{entry.title}",
         body=(
-            f"您的稿件 #{entry.id} 收到编辑决定：{decision_labels.get(decision, decision)}。"
+            f"您的作品 #{entry.id} 收到编辑决定：{decision_labels.get(decision, decision)}。"
             + (f" 编辑备注：{entry.editor_note}" if entry.editor_note else "")
             + ("（文章已收录进公开目录，点击查看发表页面）" if accepted else "")
         ),
@@ -1449,7 +1449,7 @@ async def request_rework(
     current_user: User = Depends(require_editor),
     db: AsyncSession = Depends(get_db),
 ) -> SubmissionResponse:
-    """把稿件打回：通知审稿人补审 / 通知作者修改。
+    """把作品打回：通知审稿人补审 / 通知作者修改。
 
     D 级（<60 分）的标准处置。D 不是"拒绝"，是"当前不合格"——最常见的
     成因是审稿人没细看，而不是稿子真的无救。直接拒稿会冤枉作者，直接
@@ -1488,16 +1488,16 @@ async def request_rework(
     entry.editor_note = body.note
     requirements_text = "\n".join(f"{i + 1}. {r}" for i, r in enumerate(body.requirements))
 
-    # 作者也要知道稿件被退回修改：状态回到 under_review，作者仍可继续
+    # 作者也要知道作品被退回修改：状态回到 under_review，作者仍可继续
     # 上传修订稿；如果只通知审稿人，作者会在不知情的情况下等下去。
     await notifications.create(
         db,
         tenant_id=entry.tenant_id,
         user_id=entry.submitted_by,
         type_="submission.rework_requested",
-        title=f"稿件需要修改：{entry.title}",
+        title=f"作品需要修改：{entry.title}",
         body=(
-            f"稿件 #{entry.id} 已被编辑部退回修改，当前进入复审阶段。\n"
+            f"作品 #{entry.id} 已被编辑部退回修改，当前进入复审阶段。\n"
             f"修改要求：\n{requirements_text}\n\n"
             "你可以在「我的提交」中上传修订稿；审稿人复审后编辑部会给出下一步决定。"
         ),
@@ -1529,7 +1529,7 @@ async def request_rework(
             type_="review.rework_requested",
             title=f"审稿被打回，请补审：{entry.title}",
             body=(
-                f"稿件 #{entry.id} 的质量评分为 D 级（<60），编辑部要求补审。\n"
+                f"作品 #{entry.id} 的质量评分为 D 级（<60），编辑部要求补审。\n"
                 "请二选一：\n"
                 "（a）补充/修正审稿意见，特别是以下方面；\n"
                 "（b）说明为何该稿确实应当拒稿。\n\n"
@@ -1540,16 +1540,16 @@ async def request_rework(
         )
 
     # 若该稿还没有任何审稿指派，编辑部需要先指派审稿人复审——写一条
-    # 提醒给当前编辑，避免稿件卡在无人可审的状态。
+    # 提醒给当前编辑，避免作品卡在无人可审的状态。
     if not reviewers:
         await notifications.create(
             db,
             tenant_id=entry.tenant_id,
             user_id=current_user.id,
             type_="review.rework_needs_assignment",
-            title=f"打回稿件尚无审稿人，请先指派复审：{entry.title}",
+            title=f"打回作品尚无审稿人，请先指派复审：{entry.title}",
             body=(
-                f"稿件 #{entry.id} 已按主编口径转入复审（under_review），"
+                f"作品 #{entry.id} 已按主编口径转入复审（under_review），"
                 "但还没有任何审稿指派。\n请先在审稿管理页指派一名或多名审稿人"
                 "（可多人同审，任一复审意见即可支撑最终决定）。\n\n"
                 f"需要补审的方面：\n{requirements_text}"
@@ -1586,9 +1586,9 @@ async def waive_review(
     current_user: User = Depends(require_chief_editor),
     db: AsyncSession = Depends(get_db),
 ) -> SubmissionResponse:
-    """声明该稿件免于同行评审（desk accept 的前置步骤）。
+    """声明该作品免于同行评审（desk accept 的前置步骤）。
 
-    存在的理由：真实期刊确实有不需要外审的稿件（约稿、编委特稿、纪念
+    存在的理由：真实期刊确实有不需要外审的作品（约稿、编委特稿、纪念
     专辑、明确的重复发表撤稿复核）。但"可以不审"必须是一个**被记录、
     有理由、可追责**的例外，而不是沉默的默认路径——否则任何拿到编辑
     权限的账号都能绕过整个评审流程直接发文，而事后无从分辨"快"与"漏"。

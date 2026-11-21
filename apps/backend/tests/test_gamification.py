@@ -86,9 +86,11 @@ async def test_admin_sees_secret_badges(client: AsyncClient, admin_user: dict) -
     profile = await client.get("/api/gamification/me", headers=auth_headers(admin_user))
     assert profile.status_code == 200
     body = profile.json()
-    # admin 视为编辑身份（第 4 层）
-    assert body["level"]["level"] == 4
-    assert body["level"]["slug"] == "editor"
+    # 身份仍是编辑（第 4 层），但活跃等级人人从 1 开始。
+    assert body["level"]["identity_slug"] == "editor"
+    assert body["level"]["identity_level"] == 4
+    assert body["level"]["level"] == 1
+    assert body["level"]["activity"]["level"] == 1
     assert any(b["secret"] for b in body["badges"])
 
 

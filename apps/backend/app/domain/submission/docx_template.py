@@ -1,4 +1,4 @@
-"""按《RUBBISH 论文规范》生成 Word 稿件（官方模板）。
+"""按《RUBBISH 文章规范》生成 Word 作品（官方模板）。
 
 这份模板不是「把 Markdown 倒进 Word」，而是把规范本身写进样式里：
 
@@ -73,7 +73,7 @@ class Meta:
     abstract: str = ""
     keywords: list[str] = field(default_factory=list)
     doi: str = ""
-    # 本站刊号（R-六位刊号-日期-流水），与 DOI 并列打印；不是官方 DOI。
+    # 站内编号（R-六位刊号-日期-流水），与 DOI 并列打印；不是官方 DOI。
     site_id: str = ""
     volume: str = ""
     issue: str = ""
@@ -897,7 +897,7 @@ def build(md: str, meta: Meta, *, base_dir: Path | None = None) -> bytes:
     try:
         doc.core_properties.title = meta.title or ""
         doc.core_properties.author = "、".join(meta.authors) or "Rubbish 编辑部"
-        doc.core_properties.subject = "Rubbish 期刊论文"
+        doc.core_properties.subject = "Rubbish 文章"
         doc.core_properties.keywords = "; ".join(meta.keywords or [])
     except Exception:
         pass
@@ -991,7 +991,7 @@ def build(md: str, meta: Meta, *, base_dir: Path | None = None) -> bytes:
     if meta.doi:
         _cite.append(f"DOI: {meta.doi}")
     if meta.site_id:
-        _cite.append(f"本站刊号: {meta.site_id}")
+        _cite.append(f"站内编号: {meta.site_id}")
     if _cite:
         p = _para(doc, align=WD_ALIGN_PARAGRAPH.CENTER, before=0, after=10, line=1.3)
         _add_inline(p, " · ".join(_cite), size=CAPTION_PT)

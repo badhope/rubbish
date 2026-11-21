@@ -189,6 +189,10 @@ export function PublicProfileView({
                       <img
                         src={work.cover_image}
                         alt=""
+                        width={48}
+                        height={64}
+                        loading="lazy"
+                        decoding="async"
                         className="h-16 w-12 shrink-0 rounded-md object-cover"
                       />
                     ) : (

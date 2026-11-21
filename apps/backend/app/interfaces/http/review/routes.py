@@ -298,7 +298,7 @@ async def review_board(
     """公开的「审稿围观」列表。
 
     只返回标题、摘要、学科和审稿人数；绝不返回作者身份、邮箱、正文或
-    稿件文件。读者/作者可以看到当前有哪些稿件在审，审稿人可以在这里
+    作品文件。读者/作者可以看到当前有哪些作品在审，审稿人可以在这里
     直接表达审稿意愿，由编辑部在指派台处理。
     """
     rows = (
@@ -364,7 +364,7 @@ async def express_review_interest(
         )
     ).scalar_one_or_none()
     if sub is None:
-        raise HTTPException(status_code=404, detail="稿件不在审稿中")
+        raise HTTPException(status_code=404, detail="作品不在审稿中")
     existing = (
         await db.execute(
             select(ReviewAssignment).where(
@@ -375,7 +375,7 @@ async def express_review_interest(
         )
     ).scalar_one_or_none()
     if existing is not None:
-        raise HTTPException(status_code=409, detail="你已在这篇稿件的审稿名单中")
+        raise HTTPException(status_code=409, detail="你已在这篇作品的审稿名单中")
     from app.models import AuditLog
 
     db.add(
@@ -408,8 +408,8 @@ async def express_review_interest(
             tenant_id=tenant_id,
             user_id=editor_id,
             type_="review.interest",
-            title=f"审稿申请：{sub.title}",
-            body=f"{current_user.username} 申请参与稿件 #{submission_id} 的审稿，请到主编工作台指派台处理。",
+            title=f"评审申请：{sub.title}",
+            body=f"{current_user.username} 申请参与作品 #{submission_id} 的审稿，请到主编工作台指派台处理。",
             related_type="submission",
             related_id=str(submission_id),
         )
@@ -476,9 +476,9 @@ async def get_assignment_submission(
     current_user: User = Depends(require_reviewer),
     db: AsyncSession = Depends(get_db),
 ) -> SubmissionResponse:
-    """审稿人查看分配稿件的完整内容（abstract / preview / file_path 等）。
+    """审稿人查看分配作品的完整内容（abstract / preview / file_path 等）。
 
-    单盲（默认）：审稿人看到完整稿件，含作者姓名。
+    单盲（默认）：审稿人看到完整作品，含作者姓名。
     双盲：作者姓名/通讯邮箱/venue/DOI/提交人 id 被抹掉（见 blinding 模块），
     审稿人仍能拿到正文与所有学术内容。
 
@@ -591,7 +591,7 @@ async def accept_assignment(
             tenant_id=current_user.tenant_id,
             user_id=a.assigned_by,
             type_="review.accepted",
-            title=f"审稿邀请已被接受：{a.submission.title if a.submission else '稿件 #' + str(a.submission_id)}",
+            title=f"审稿邀请已被接受：{a.submission.title if a.submission else '作品 #' + str(a.submission_id)}",
             body=f"{current_user.username} 已接受《#{a.submission_id}》的审稿邀请。",
         )
     try:
@@ -624,14 +624,14 @@ async def decline_assignment(
         )
     a.status = "declined"
     a.responded_at = utcnow()
-    # 通知指派编辑：邀请被拒——编辑需要尽快改派他人，静默会让稿件干等
+    # 通知指派编辑：邀请被拒——编辑需要尽快改派他人，静默会让作品干等
     if a.assigned_by is not None and a.assigned_by != current_user.id:
         await notifications.create(
             db,
             tenant_id=current_user.tenant_id,
             user_id=a.assigned_by,
             type_="review.declined",
-            title=f"审稿邀请被拒：{a.submission.title if a.submission else '稿件 #' + str(a.submission_id)}",
+            title=f"审稿邀请被拒：{a.submission.title if a.submission else '作品 #' + str(a.submission_id)}",
             body=f"{current_user.username} 拒绝了《#{a.submission_id}》的审稿邀请，请考虑改派其他审稿人。",
         )
     try:
@@ -941,7 +941,7 @@ async def assign_reviewers(
     current_user: User = Depends(require_editor),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
-    """批量指派审稿人（slot 1/2/3）。禁止指派给稿件作者/共同作者。"""
+    """批量指派审稿人（slot 1/2/3）。禁止指派给作品作者/共同作者。"""
     tenant_id = require_tenant_id()
     sub = (
         await db.execute(
@@ -965,7 +965,7 @@ async def assign_reviewers(
         if rid in author_ids:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="禁止指派给稿件作者（自审）",
+                detail="禁止指派给作品作者（自审）",
             )
 
     existing_all = (
@@ -1010,7 +1010,7 @@ async def assign_reviewers(
                 detail={
                     "code": "reviewer_name_conflict",
                     "message": (
-                        f"审稿人 {reviewer.username} 与稿件作者同名：疑似共同作者/自审，请更换审稿人。"
+                        f"审稿人 {reviewer.username} 与作品作者同名：疑似共同作者/自审，请更换审稿人。"
                     ),
                 },
             )
@@ -1061,7 +1061,7 @@ async def assign_reviewers(
                     type_="review.invited",
                     title=f"您被邀请审稿：{sub.title}",
                     body=(
-                        f"稿件 #{sub.id} 已分配给您，截止 {(a.due_date.date().isoformat() if a.due_date else '—')}，"
+                        f"作品 #{sub.id} 已分配给您，截止 {(a.due_date.date().isoformat() if a.due_date else '—')}，"
                         "请前往审稿工作台回应。" + ("（外审专家邀请）" if a.is_external else "")
                     ),
                     related_type="review_assignment",
@@ -1174,7 +1174,7 @@ async def assign_adjudicator(
     """复议：主编/编辑指定第三方裁决人，对冲突意见做独立裁决。
 
     只在已有至少 2 份 completed 报告时才允许发起；裁决人不能是作者，
-    也不能已经参与过同一稿件的评审。裁决意见同样通过
+    也不能已经参与过同一作品的评审。裁决意见同样通过
     POST /review/assignments/{id}/submit 提交，recommendation 为 accept
     时，最终录用闸门才放行。
     """
@@ -1270,7 +1270,7 @@ async def assign_adjudicator(
         type_="review.adjudicator_invited",
         title=f"第三方裁决邀请：{sub.title}",
         body=(
-            f"稿件 #{sub.id} 的审稿意见存在分歧，现邀请您作为第三方裁决人。"
+            f"作品 #{sub.id} 的审稿意见存在分歧，现邀请您作为第三方裁决人。"
             f"截止 {due.date().isoformat()}。" + (f" 说明：{body.reason}" if body.reason else "")
         ),
         related_type="review_assignment",

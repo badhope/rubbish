@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { createFileRoute, Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Clock3, Flame, Flag, Lock, Megaphone, MessageSquare, Pin, Plus, X } from 'lucide-react'
+import { Clock3, Flame, Flag, Lock, Megaphone, MessageSquare, Pin, Plus, Search, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import { uploadForumImage } from '@/lib/forum'
@@ -13,6 +13,7 @@ import { Pagination } from '@/components/common/pagination'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import {
   Dialog,
   DialogContent,
@@ -77,6 +78,14 @@ interface BoardNode {
 
 /** 旧分类到新版块 slug 的兼容映射：老链接和旧客户端不 404。 */
 const LEGACY_SLUG: Record<string, string> = {
+  research: 'records',
+  planning: 'records',
+  'lab-notes': 'records',
+  'field-notes': 'records',
+  failures: 'records',
+  survival: 'life',
+  announcements: 'site',
+  feedback: 'site',
   paper: 'discussion',
   'paper-reading': 'discussion',
   'paper-repro': 'discussion',
@@ -84,10 +93,9 @@ const LEGACY_SLUG: Record<string, string> = {
   writing: 'discussion',
   stats: 'discussion',
   question: 'discussion',
-  life: 'survival',
-  meta: 'announcements',
-  notice: 'announcements',
-  suggestion: 'feedback',
+  meta: 'site',
+  notice: 'site',
+  suggestion: 'site',
 }
 
 function collectBoards(nodes: BoardNode[], depth = 0): Array<BoardNode & { depth: number; path: string }> {
@@ -98,19 +106,20 @@ function collectBoards(nodes: BoardNode[], depth = 0): Array<BoardNode & { depth
 }
 
 const CATEGORY_STYLE: Record<string, string> = {
+  discussion: 'border-primary/25 bg-primary/10 text-primary',
+  records: 'bg-muted text-foreground border-border',
+  collab: 'border-amber-500/25 bg-amber-500/10 text-amber-800 dark:text-amber-300',
+  life: 'bg-muted text-foreground border-border',
+  site: 'border-primary/25 bg-primary/10 text-primary',
+  // 旧帖子未回填前的兜底
+  research: 'bg-muted text-foreground border-border',
   planning: 'bg-muted text-foreground border-border',
   'lab-notes': 'bg-muted text-foreground border-border',
   'field-notes': 'bg-muted text-foreground border-border',
   failures: 'bg-muted text-foreground border-border',
-  discussion: 'bg-muted text-foreground border-border',
   survival: 'bg-muted text-foreground border-border',
-  collab: 'bg-muted text-foreground border-border',
   announcements: 'border-primary/25 bg-primary/10 text-primary',
   feedback: 'bg-muted text-foreground border-border',
-  research: 'border-primary/25 bg-primary/10 text-primary',
-  life: 'bg-muted text-foreground border-border',
-  site: 'border-primary/25 bg-primary/10 text-primary',
-  // 旧帖子未回填前的兜底
   paper: 'bg-muted text-foreground border-border',
   method: 'bg-muted text-foreground border-border',
   meta: 'border-primary/25 bg-primary/10 text-primary',
@@ -120,25 +129,26 @@ const CATEGORY_STYLE: Record<string, string> = {
 }
 
 const CATEGORY_LABEL: Record<string, string> = {
-  planning: '研究计划',
-  'lab-notes': '实验记录',
-  'field-notes': '田野观察',
-  failures: '失败档案',
-  discussion: '研究讨论',
-  survival: '科研生存',
+  discussion: '写作讨论',
+  records: '记录与复盘',
   collab: '组队招募',
-  announcements: '社区公告',
-  feedback: '意见反馈',
-  research: '研究',
-  life: '科研生活',
-  site: '站务',
+  life: '创作生活',
+  site: '站务与反馈',
   // 旧帖子未回填前的兜底
-  paper: '研究讨论',
-  method: '研究讨论',
-  meta: '社区公告',
-  notice: '社区公告',
-  question: '研究讨论',
-  suggestion: '意见反馈',
+  research: '记录与复盘',
+  planning: '记录与复盘',
+  'lab-notes': '记录与复盘',
+  'field-notes': '记录与复盘',
+  failures: '记录与复盘',
+  survival: '创作生活',
+  announcements: '站务与反馈',
+  feedback: '站务与反馈',
+  paper: '写作讨论',
+  method: '写作讨论',
+  meta: '站务与反馈',
+  notice: '站务与反馈',
+  question: '写作讨论',
+  suggestion: '站务与反馈',
 }
 
 /** 相对时间：讨论列表的活跃信号比绝对时间更直观。 */
@@ -216,6 +226,7 @@ function ForumListPage() {
     paperId?: number | string
     paperTitle?: string
     sort?: string
+    q?: string
     view?: string
     compose?: number
   }
@@ -223,6 +234,12 @@ function ForumListPage() {
   const category = search.category ?? 'all'
   const page = search.page ?? 1
   const sort = search.sort === 'hot' ? 'hot' : 'latest'
+  const keyword = search.q ?? ''
+  const [queryInput, setQueryInput] = useState(keyword)
+
+  useEffect(() => {
+    setQueryInput(keyword)
+  }, [keyword])
 
   const paperId = search.paperId ? Number(search.paperId) : null
   const paperTitle = search.paperTitle ?? ''
@@ -232,8 +249,8 @@ function ForumListPage() {
   const titleRef = useRef<HTMLInputElement>(null)
   const bodyRef = useRef<HTMLTextAreaElement>(null)
   const [form, setForm] = useState({
-    title: paperId ? `讨论：${(paperTitle || `研究记录 #${paperId}`).slice(0, 170)}` : '',
-    body: paperId ? `研究记录链接：/catalog/${paperId}\n\n` : '',
+    title: paperId ? `讨论：${(paperTitle || `研究文章 #${paperId}`).slice(0, 170)}` : '',
+    body: paperId ? `研究文章链接：/catalog/${paperId}\n\n` : '',
     board_id: null as number | null,
     paper_id: paperId,
     is_fictional: false,
@@ -264,15 +281,18 @@ function ForumListPage() {
   const activeBoard = normalizedCategory === 'all' ? null : allBoards.find((b) => b.slug === normalizedCategory)
 
   const listQ = useQuery({
-    queryKey: ['forum', 'topics', category, page, sort],
+    queryKey: ['forum', 'topics', category, page, sort, keyword],
     queryFn: async () =>
       (
         await api.get('/forum/topics', {
           // 新版树形版块用 board（父板块聚合后代），旧分类别名仍可用 category。
-          params:
-            category === 'all'
-              ? { page, page_size: 20, sort }
-              : { board: normalizedCategory, page, page_size: 20, sort },
+          params: {
+            ...(category === 'all' ? {} : { board: normalizedCategory }),
+            page,
+            page_size: 20,
+            sort,
+            ...(keyword ? { q: keyword } : {}),
+          },
         })
       ).data,
   })
@@ -332,10 +352,10 @@ function ForumListPage() {
         : null
     setForm({
       title: paperId
-        ? `讨论：${(paperTitle || `研究记录 #${paperId}`).slice(0, 170)}`
+        ? `讨论：${(paperTitle || `研究文章 #${paperId}`).slice(0, 170)}`
         : usableDraft?.title ?? '',
       body: paperId
-        ? `研究记录链接：/catalog/${paperId}\n\n`
+        ? `研究文章链接：/catalog/${paperId}\n\n`
         : usableDraft?.body ?? '',
       board_id: storedBoardId ?? currentBoardId,
       paper_id: paperId,
@@ -376,7 +396,7 @@ function ForumListPage() {
     <div className="mx-auto w-full max-w-4xl space-y-4">
       <PageHeader
         title="社区"
-        description="文章、研究记录、失败复盘、组队与站务都在这里；登录即可发布，不需要积分。"
+        description="写作讨论、记录复盘、组队与创作生活，都在这里；登录即可发帖，不需要积分。"
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" asChild>
@@ -387,17 +407,29 @@ function ForumListPage() {
             </Button>
             <Button onClick={openComposer}>
               <Plus className="h-4 w-4" />
-              写文章
+              发帖
             </Button>
           </div>
         }
       />
 
+      {!activeBoard && !keyword ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 border-l-2 border-primary/50 bg-muted/25 px-4 py-3">
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-primary">本周写作题</p>
+            <p className="mt-1 font-serif text-base leading-snug">你最近一次推翻重写，是因为什么？</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={openComposer}>
+            写一段
+          </Button>
+        </div>
+      ) : null}
+
       {paperId ? (
         <Card className="border-primary/30 bg-primary/5">
           <CardContent className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm">
             <span className="min-w-0">
-              正在围绕研究记录
+              正在围绕研究文章
               <Link
                 to="/catalog/$resourceId"
                 params={{ resourceId: String(paperId) }}
@@ -419,33 +451,69 @@ function ForumListPage() {
       ) : null}
 
       <div className="flex flex-wrap items-center gap-2 border-y py-2.5">
-        <Select
-          value={activeBoard ? normalizedCategory : 'all'}
-          onValueChange={(v) => updateSearch({ category: v === 'all' ? undefined : v, page: 1 })}
+        <form
+          className="relative w-full sm:w-[230px]"
+          onSubmit={(e) => {
+            e.preventDefault()
+            updateSearch({ q: queryInput.trim() || undefined, page: 1 })
+          }}
         >
-          <SelectTrigger className="h-8 w-[210px] text-xs" aria-label="选择版块">
-            <SelectValue placeholder="全部版块" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">全部版块</SelectItem>
-            {boardTree.map((root) => (
-              <SelectItem key={root.slug} value={root.slug}>
-                {root.name}（{root.total_topics} 帖）
-              </SelectItem>
-            ))}
-            {boardTree.flatMap((root) =>
-              collectBoards(root.children).map((child) => (
-                <SelectItem key={child.slug} value={child.slug}>
-                  {child.path}（{child.total_topics}）
-                </SelectItem>
-              )),
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={queryInput}
+            onChange={(e) => setQueryInput(e.target.value)}
+            placeholder="搜索标题或正文"
+            aria-label="搜索帖子"
+            className="h-8 pl-8 pr-8 text-xs"
+          />
+          {queryInput ? (
+            <button
+              type="button"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                setQueryInput('')
+                updateSearch({ q: undefined, page: 1 })
+              }}
+              aria-label="清除搜索"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          ) : null}
+        </form>
+        <div className="flex w-full flex-wrap items-center gap-1 pb-0.5 sm:w-auto sm:flex-1 sm:flex-nowrap sm:overflow-x-auto">
+          <button
+            type="button"
+            aria-pressed={!activeBoard}
+            onClick={() => updateSearch({ category: undefined, page: 1 })}
+            className={cn(
+              'shrink-0 rounded-full border px-3 py-1 text-[11px] transition-colors',
+              !activeBoard
+                ? 'border-primary/30 bg-primary/10 text-primary'
+                : 'bg-muted/30 text-muted-foreground hover:text-foreground',
             )}
-          </SelectContent>
-        </Select>
-
-        <span className="text-xs text-muted-foreground">
-          {activeBoard ? `${activeBoard.total_topics} 帖` : '研究与站务'}
-        </span>
+          >
+            全部
+          </button>
+          {boardTree.map((root) => (
+            <button
+              key={root.slug}
+              type="button"
+              aria-pressed={normalizedCategory === root.slug}
+              onClick={() => updateSearch({ category: root.slug, page: 1 })}
+              className={cn(
+                'shrink-0 rounded-full border px-3 py-1 text-[11px] transition-colors',
+                normalizedCategory === root.slug
+                  ? 'border-primary/30 bg-primary/10 text-primary'
+                  : 'bg-muted/30 text-muted-foreground hover:text-foreground',
+              )}
+            >
+              {root.name}
+              {root.total_topics > 0 ? (
+                <span className="ml-1 tabular-nums opacity-60">{root.total_topics}</span>
+              ) : null}
+            </button>
+          ))}
+        </div>
 
         <div className="ml-auto flex items-center gap-0.5 rounded-full border bg-muted/40 p-0.5">
           <button
@@ -483,15 +551,26 @@ function ForumListPage() {
         <ErrorState message="加载社区失败" onRetry={() => listQ.refetch()} />
       ) : topics.length === 0 ? (
         <EmptyState
-          title="还没有文章或帖子"
-          description="第一个帖子可以是你：问一个问题，或提一条建议。"
+          title={keyword ? '没有找到匹配的帖子' : '还没有帖子'}
+          description={
+            keyword
+              ? '换个更短的关键词，或清除搜索看全部帖子。'
+              : '第一个帖子可以是你：问一个问题，或提一条建议。'
+          }
           action={
-            <Button
-              size="sm"
-              onClick={openComposer}
-            >
-              发第一个帖
-            </Button>
+            keyword ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => updateSearch({ q: undefined, page: 1 })}
+              >
+                清除搜索
+              </Button>
+            ) : (
+              <Button size="sm" onClick={openComposer}>
+                发第一个帖
+              </Button>
+            )
           }
         />
       ) : (
@@ -594,7 +673,7 @@ function ForumListPage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
           showCloseButton={false}
-          className="top-0 left-0 flex h-[100dvh] max-h-none w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 p-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:h-[min(92vh,880px)] sm:max-h-[min(92vh,880px)] sm:max-w-4xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-lg sm:border"
+          className="forum-writing-desk top-0 left-0 flex h-[100dvh] max-h-none w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 p-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:h-[min(90vh,900px)] sm:max-h-[min(90vh,900px)] sm:max-w-[1100px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:border"
           onOpenAutoFocus={(event) => {
             event.preventDefault()
             titleRef.current?.focus()
@@ -602,8 +681,8 @@ function ForumListPage() {
         >
           <div className="flex items-center justify-between border-b px-4 py-3 sm:px-6">
             <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">NEW ARTICLE</p>
-              <DialogTitle className="mt-1 font-serif text-xl tracking-tight">写文章</DialogTitle>
+              <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">新帖</p>
+              <DialogTitle className="mt-1 font-serif text-xl tracking-tight">写帖子</DialogTitle>
             </div>
             <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="关闭发帖">
               <X className="h-4 w-4" />
@@ -611,14 +690,14 @@ function ForumListPage() {
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6">
-            <div className="mx-auto max-w-3xl space-y-4">
+            <div className="mx-auto max-w-[780px] space-y-5 py-2">
               <input
                 ref={titleRef}
                 value={form.title}
                 onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
                 maxLength={200}
-                placeholder="标题：这篇文章想讲什么"
-                aria-label="文章标题"
+                placeholder="标题：这个帖子想讨论什么"
+                aria-label="帖子标题"
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
                     event.preventDefault()
@@ -638,7 +717,7 @@ function ForumListPage() {
                     }}
                   >
                     <SelectTrigger className="h-8 w-[280px] text-xs" aria-label="选择版块">
-                      <SelectValue placeholder="选择最具体的子板块" />
+                      <SelectValue placeholder="选择版块" />
                     </SelectTrigger>
                     <SelectContent>
                       {leafBoards.map((b) => (
@@ -659,7 +738,7 @@ function ForumListPage() {
                     <span className="text-primary">修改</span>
                   </button>
                 )}
-                <span className="text-[11px] text-muted-foreground">父板块会自动汇总子板块内容；发布登录即可，不需要积分。</span>
+                <span className="text-[11px] text-muted-foreground">发布登录即可，不需要积分。</span>
                 <label className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs text-muted-foreground">
                   <input
                     type="checkbox"
@@ -676,7 +755,7 @@ function ForumListPage() {
                   value={form.body}
                   onChange={(body) => setForm((p) => ({ ...p, body }))}
                   onUploadImage={uploadForumImage}
-                  minHeight={360}
+                  minHeight={520}
                   textareaRef={bodyRef}
                   onSubmitShortcut={publishTopic}
                   placeholder="写清背景、过程、判断和想讨论的问题。支持标题、引用、列表、表情和图片。"

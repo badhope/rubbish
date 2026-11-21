@@ -8,7 +8,7 @@ const STEPS = [
   {
     icon: MessagesSquare,
     title: '先读',
-    body: '不登录也能读帖子和档案。遇到想接的话，再登录回复。',
+    body: '不登录也能读帖子和文章。遇到想接的话，再登录回复。',
   },
   {
     icon: LogIn,
@@ -18,7 +18,7 @@ const STEPS = [
   {
     icon: PenLine,
     title: '发布',
-    body: '右上角「发布」，选版块、写标题、写正文。标题按回车会跳到正文。',
+    body: '点社区页的「发帖」，选版块、写标题、写正文。标题按回车会跳到正文；文章请走投稿入口。',
   },
   {
     icon: Keyboard,
@@ -52,8 +52,8 @@ export function CommunityGuide() {
         description="从读到发，只需要四步。注册后就能发布，不需要先申请资格。"
         actions={
           <Button asChild>
-            <Link to="/forum" search={{ compose: '1' }}>
-              直接发布
+            <Link to="/forum" search={{ compose: 1 }}>
+              发帖
               <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
           </Button>
@@ -106,7 +106,7 @@ export function CommunityGuide() {
             <MessagesSquare className="h-4 w-4" /> 逛社区
           </Link>
           <Link to="/guide" search={{ tab: 'authors' }} className="inline-flex items-center gap-1 text-primary hover:underline">
-            <PenLine className="h-4 w-4" /> 研究指南
+            <PenLine className="h-4 w-4" /> 写作指南
           </Link>
           <Link to="/guide" search={{ tab: 'policies' }} className="inline-flex items-center gap-1 text-primary hover:underline">
             <Flag className="h-4 w-4" /> 社区公约

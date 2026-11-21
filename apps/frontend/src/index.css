@@ -1,31 +1,17 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* 站点字符子集：只包含 274 篇题录/摘要/UI 实际用到的 2417 个汉字与基础拉丁、标点。
-   由 OFL 的 Noto Serif CJK SC 生成，避免首页加载 46 个 unicode-range 分片。 */
-@font-face {
-  font-family: "Noto Serif SC Site";
-  src: url("./assets/fonts/noto-serif-sc-site-400.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Noto Serif SC Site";
-  src: url("./assets/fonts/noto-serif-sc-site-700.woff2") format("woff2");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
+/* 中文衬线走系统字体，不下载 1.3 MB 的 CJK 子集：
+   站点正文覆盖 274 篇长文，任何固定子集都会在生僻字上回退，反而造成混排；
+   系统宋体/思源宋体在 macOS、Windows、Android 都有稳定回退。 */
 @theme {
-  --font-serif: "Noto Serif SC Site", "Songti SC", "Source Han Serif SC",
-    ui-serif, Georgia, "DejaVu Serif", serif;
+  --font-serif: "Noto Serif CJK SC", "Source Han Serif SC", "Songti SC",
+    "STSong", "SimSun", ui-serif, Georgia, "DejaVu Serif", serif;
   /* 标题无衬线：走系统无衬线栈，不额外加载字体（中文字体包体代价高） */
   --font-heading: "Noto Sans SC", "Source Han Sans SC",
     ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Playfair Display Variable", "Noto Serif SC Site",
-    "Songti SC", Georgia, "DejaVu Serif", serif;
+  --font-display: "Playfair Display Variable", "Songti SC", Georgia,
+    "DejaVu Serif", serif;
   --font-mono: ui-monospace, "DejaVu Sans Mono", "Liberation Mono", monospace;
   --default-mono-font-family: ui-monospace, "DejaVu Sans Mono", "Liberation Mono", monospace;
 }
@@ -506,7 +492,7 @@ h4 {
 /* 书名号 / 中文引号：霞鹜文楷优先，未安装则回退思源宋体；不用西文斜体硬套中文。 */
 .markdown-body .md-book-title,
 .markdown-body .md-quote-cn {
-  font-family: "LXGW WenKai", "Noto Serif SC Site", "Source Han Serif SC", var(--font-serif);
+  font-family: "LXGW WenKai", var(--font-serif);
   font-style: normal;
 }
 .markdown-body .md-book-title { color: var(--color-primary); }
@@ -1960,4 +1946,30 @@ html {
 }
 .forum-md-editor .w-md-editor-area {
   background: var(--background);
+}
+
+/* 发帖写作台：弹窗即稿纸，桌面加宽、手机全屏；只保留轻微纸面层次。 */
+.forum-writing-desk {
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--muted) 38%, transparent), transparent 18%),
+    var(--background);
+}
+.forum-writing-desk [data-slot='dialog-title'],
+.forum-writing-desk input {
+  letter-spacing: -0.01em;
+}
+.forum-writing-desk .w-md-editor {
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--background) 94%, var(--foreground));
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--foreground) 7%, transparent);
+}
+.forum-writing-desk .w-md-editor-text-input,
+.forum-writing-desk .w-md-editor-text-pre,
+.forum-writing-desk .w-md-editor-text {
+  line-height: 1.85 !important;
+}
+@media (max-width: 639px) {
+  .forum-writing-desk {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }

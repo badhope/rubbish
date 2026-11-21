@@ -65,6 +65,6 @@ Public routes are `home`, `community`, `archive`, `guide`, `about`, `privacy`, a
 
 ## Deployment
 
-`docker compose` starts PostgreSQL, the app, and Caddy. Alembic runs on startup. Caddy terminates TLS and proxies everything to the app. Uploads live in a persistent volume; production backups are encrypted before they enter the repository.
+The repository ships a reproducible Compose stack: PostgreSQL, the app, and Caddy; Alembic runs on startup. The current public server uses a different shape: systemd `rubbish-app.service` on `127.0.0.1:8080`, Nginx for TLS/gzip/cache, a local PostgreSQL 17 container, and `/opt/rubbish-app/static` for the built SPA. Both shapes run the same application code; deployment commands, backups and rollback differ.
 
-See [DEPLOY.md](../DEPLOY.md) for the full procedure.
+See [DEPLOY.md](../DEPLOY.md) for both procedures and [ENGINEERING.md](ENGINEERING.md) for the live paths.

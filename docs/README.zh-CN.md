@@ -8,6 +8,8 @@
 |---|---|
 | [POSITIONING.zh-CN.md](POSITIONING.zh-CN.md) | Rubbish 是什么、产品用哪些词、公开文案不写什么 |
 | [ARCHITECTURE.zh-CN.md](ARCHITECTURE.zh-CN.md) | 后端分层、租户、社区与档案数据、前端结构 |
+| [ENGINEERING.md](ENGINEERING.md) | 模块归属、版本号、发版门禁、生产结构与项目节奏 |
+| [PERFORMANCE.md](PERFORMANCE.md) | 传输预算、懒加载分包、缓存头、字体策略与接口上限 |
 | [INTEGRATIONS.zh-CN.md](INTEGRATIONS.zh-CN.md) | SMTP 与 OIDC 配置 |
 | [../DEPLOY.zh-CN.md](../DEPLOY.zh-CN.md) | Docker、环境变量、迁移、备份与恢复 |
 | [../CONTRIBUTING.zh-CN.md](../CONTRIBUTING.zh-CN.md) | 开发流程、检查项与 Pull Request |

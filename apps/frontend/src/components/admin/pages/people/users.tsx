@@ -42,7 +42,7 @@ import {
 const PAGE_SIZE = 50
 
 // 与后端 ASSIGNABLE_ROLES 一致；admin 角色由 is_admin 控制，不在此处。
-// 作者/读者是"身份"不是"角色"：读者=注册即得、作者=确认《投稿规范》
+// 作者/读者是"身份"不是"角色"：读者=注册即得、作者=确认《作品规范》
 // 即得，不由管理员手工分配（2026-11 收窄口径，授权只管编辑线）。
 const ASSIGNABLE_ROLES: AssignableRole[] = [
   'chief_editor',
@@ -56,16 +56,16 @@ const ASSIGNABLE_ROLES: AssignableRole[] = [
 ]
 
 const ROLE_LABELS: Record<AssignableRole, string> = {
-  chief_editor: '站长',
-  deputy_editor: '副站长',
-  board_editor: '内容策展',
-  reviewer: '版主',
-  senior_reviewer: '资深版主',
-  editor: '内容管理员',
-  section_editor: '分区管理员',
-  shop_manager: '积分管理员',
+  chief_editor: '主编',
+  deputy_editor: '副主编',
+  board_editor: '栏目编辑',
+  reviewer: '评审',
+  senior_reviewer: '资深评审',
+  editor: '编辑',
+  section_editor: '栏目编辑',
+  shop_manager: '站务',
   author: '作者',
-  reader: '读者',
+  reader: '成员',
 }
 
 
@@ -361,7 +361,7 @@ export default function AdminUsersPage() {
                 maxLength={300}
                 value={createForm.note}
                 onChange={(e) => setCreateForm((v) => ({ ...v, note: e.target.value }))}
-                placeholder="例：请负责本期方法学稿件的外审。"
+                placeholder="例：请负责本期方法学作品的外审。"
               />
             </div>
             {createError && <p className="text-sm text-destructive">{createError}</p>}

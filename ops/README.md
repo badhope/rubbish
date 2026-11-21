@@ -1,12 +1,14 @@
 # 运维自动化
 
+> **当前生产形态**：`/opt/rubbish-app` + systemd `rubbish-app.service` + Nginx + PostgreSQL 容器 `rubbish-db-1`。本目录的 `deploy.sh` 服务的是仓库自带的 Docker Compose 参考栈，不是公网服务器；公网发版步骤见 `DEPLOY.md` 的“当前公网服务器”一节。
+
 | 脚本 | 频率 | 作用 |
 |---|---|---|
 | `site-health.sh` | 每 5 分钟 | HTTP、HTML `no-cache`（3 次重试，避免发版窗口假告警）、API、stats、备份≤36h、磁盘≤85%、三容器 |
 | `site-refresh.sh` | 每日 04:10 | 首页/论文/副刊/sitemap/RSS/API + 最新 5 篇预热 |
 | `db-backup.sh` | 每日 03:20 | PostgreSQL 逻辑 dump + uploads 打包，先写 `.partial` 并 `gzip -t` 校验后落盘；DB 留 30 份 / uploads 留 10 份 |
 | `backup-verify.sh` | 每周日 04:30 | 解压校验、临时库恢复、resources 行数核对 |
-| `deploy.sh` | 手动/CI | 构建、容器内旧静态备份、替换、重启、健康检查、预热、失败回滚 |
+| `deploy.sh` | 手动/CI | **仅 Docker 参考栈**：构建、容器内旧静态备份、替换、重启、健康检查、预热、失败回滚。当前公网是 systemd + Nginx，见 `docs/ENGINEERING.md` |
 | `offsite-backup.sh` | 每日 04:50 | **只备份数据**（DB + uploads），不备份代码/镜像；无远端时明确 SKIP，配置 `RCLONE_REMOTE` 后自动生效 |
 | `content-export.sh` | 手动 | A 方案公开内容快照：只导已发表内容，命中邮箱/内部标识即失败，不产出半成品 |
 | `install-automation.sh` | 一次性 | 幂等写 `/etc/cron.d/rubbish-automation` |

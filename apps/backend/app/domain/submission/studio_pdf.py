@@ -381,7 +381,9 @@ def render_studio_pdf(meta: dict[str, Any], body_md: str) -> bytes:
 
     doc = pymupdf.open(stream=buf.getvalue(), filetype="pdf")
     total = doc.page_count
-    license_text = f"{'副刊 · 非论文格式' if meta.get('track') == 'essay' else '论文轨 · 学术排版'}"
+    license_text = (
+        f"{'自由创作 · 非学术文章格式' if meta.get('track') == 'essay' else '研究文章 · 学术排版'}"
+    )
     if meta.get("license"):
         license_text += f" · {meta['license']}"
     for i, page in enumerate(doc, start=1):

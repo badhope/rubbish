@@ -37,6 +37,7 @@ export function ForumEditor({
   const fileRef = useRef<HTMLInputElement>(null)
   const [colorMode, setColorMode] = useState<'light' | 'dark'>('light')
   const [uploading, setUploading] = useState(false)
+  const [mode, setMode] = useState<'edit' | 'live' | 'preview'>('edit')
 
   const heading2 = {
     ...commands.title2,
@@ -101,10 +102,32 @@ export function ForumEditor({
         }
       }}
     >
+      <div className="mb-3 flex items-center gap-1 rounded-full border bg-muted/35 p-0.5 w-fit">
+        {([
+          ['edit', '编辑'],
+          ['live', '分栏'],
+          ['preview', '预览'],
+        ] as const).map(([next, label]) => (
+          <button
+            key={next}
+            type="button"
+            aria-pressed={mode === next}
+            className={cn(
+              'rounded-full px-2.5 py-1 text-[11px] transition-colors',
+              mode === next
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+            onClick={() => setMode(next)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
       <MDEditor
         value={value}
         onChange={(next) => onChange(next ?? '')}
-        preview="edit"
+        preview={mode}
         height={minHeight}
         visibleDragbar={false}
         textareaProps={{

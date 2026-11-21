@@ -89,7 +89,7 @@ function ManuscriptImage({ src, alt }: { src: string; alt: string }) {
     <>
       <img
         src={src}
-        alt={alt || "稿件插图"}
+        alt={alt || "作品插图"}
         loading="lazy"
         decoding="async"
         className="md-image-zoom"
@@ -116,7 +116,7 @@ function ManuscriptImage({ src, alt }: { src: string; alt: string }) {
             >
               <img
                 src={src}
-                alt={alt || "稿件插图"}
+                alt={alt || "作品插图"}
                 onClick={(e) => e.stopPropagation()}
               />
               <button

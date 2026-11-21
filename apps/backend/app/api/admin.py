@@ -871,8 +871,10 @@ async def decide_claim(
         claim.status = "approved"
         notify_title = f"认领已批准：{resource.title}"
         notify_body = "编辑部已批准你对该文章的认领，文章已挂到你的名下。"
-        # 等级轴：认领审核通过，author 身份 +20（幂等，同一 claim 只记一次）。
+        # 活跃经验：认领审核通过 +20（幂等，同一 claim 只记一次）。
+        # 旧身份内积分账本仍保留，但它不参与全站 Level 展示。
         from app.domain.gamification import levels_axis
+        from app.domain.gamification import service as gamification
 
         claim_user = (
             await db.execute(select(User).where(User.id == claim.user_id))
@@ -884,6 +886,15 @@ async def decide_claim(
                 "claim.approve",
                 ref_type="author_claim",
                 ref_id=str(claim.id),
+                note=resource.title[:120],
+            )
+            await gamification.award(
+                db,
+                claim_user,
+                "claim.approve",
+                ref_type="author_claim",
+                ref_id=str(claim.id),
+                points=20,
                 note=resource.title[:120],
             )
     else:

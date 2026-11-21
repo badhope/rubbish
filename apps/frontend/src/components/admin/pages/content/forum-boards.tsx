@@ -243,7 +243,7 @@ export default function AdminForumBoardsPage() {
                   value={editing.name}
                   onChange={(e) => setEditing({ ...editing, name: e.target.value })}
                   maxLength={60}
-                  placeholder="例如：失败档案"
+                  placeholder="例如：失败复盘"
                 />
               </div>
               <div className="space-y-1.5">

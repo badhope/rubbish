@@ -14,9 +14,11 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core import search as fulltext
+from app.core.config import get_settings
 from app.core.tracks import canonicalize_track_category, normalize_track
 from app.domain.catalog import cover_defaults
 from app.domain.catalog.genre import classify_essay_genre
+from app.domain.catalog.journal import sync_resource_issue
 from app.domain.catalog.models import Resource as ResourceORM
 from app.domain.submission.models import Submission, SubmissionVersion
 
@@ -67,22 +69,26 @@ async def _materialize_resource_from_submission(
     transactional with the review commit.
 
     ``publication_status`` 支持录用即刊（默认 published，兼容旧行为）或
-    暂存草稿（draft）——后者进入刊前整理阶段，由 admin 刊出。
+    暂存草稿（draft）——后者进入发布前整理阶段，由 admin 发布。
     """
-    # 本地稿件文件：不再使用 /uploads 静态路径（该挂载无鉴权，任何人都能
-    # 下载在审稿件，见 app/main.py 的说明）。改为物化后在下方写入指向
+    # 本地作品文件：不再使用 /uploads 静态路径（该挂载无鉴权，任何人都能
+    # 下载在审作品，见 app/main.py 的说明）。改为物化后在下方写入指向
     # 公开端点 /api/catalog/{id}/file 的 download_url——只有进入公开目录的
     # 资源才能读到文件，未公开的投稿仍然只走鉴权端点。
+    settings = get_settings()
     resource = ResourceORM(
         tenant_id=submission.tenant_id,
         publication_status=publication_status,
+        # 新录用文章进入当前卷、期；卷期只做文章归档，不表示身份等级。
+        volume=settings.current_volume,
+        issue=settings.current_issue,
         type=submission.type,
         title=submission.title,
         # 发布即绑定作者（P0）：owner_id = 投稿人。已绑定的文章不再可被他人
         # 认领（POST claim 返回 403）；历史批量导入稿 owner_id 为 NULL 才可走认领。
         owner_id=submission.submitted_by,
         # 赛道随物化带过去。目录的公开面按 track 分组，丢失这一列等于
-        # 让读者无法区分"这是真研究"与"这是荒诞研究"——本刊的立身之本。
+        # 让读者无法区分"这是真研究"与"这是荒诞研究"——本站的立身之本。
         track=normalize_track(getattr(submission, "track", None)),
         authors=submission.authors,
         year=submission.year,
@@ -108,7 +114,7 @@ async def _materialize_resource_from_submission(
         # jel_codes 不在此物化——catalog.Resource 没有该列（功能未落地），
         # 此处不声称不存在的字段对齐。
         keywords=submission.keywords or None,
-        # 中图分类号（P0）：随稿件一并带到目录。
+        # 中图分类号（P0）：随作品一并带到目录。
         clc_code=getattr(submission, "clc_code", None),
         clc_label=getattr(submission, "clc_label", None),
         # 封面随物化带到目录；空则按学科回填默认封面——「已发布必有封面」
@@ -131,8 +137,9 @@ async def _materialize_resource_from_submission(
         )
     db.add(resource)
     await db.flush()
+    await sync_resource_issue(db, resource)
     if not resource.download_url and submission.file_path:
-        # 稿件带着本地上传文件时，暴露一个"只读已发表资源"的公开端点，
+        # 作品带着本地上传文件时，暴露一个"只读已发表资源"的公开端点，
         # 而不是把 storage 目录整个挂出去。阅读器（pdf.js）与详情页都走它。
         resource.download_url = f"/api/catalog/{resource.id}/file"
     # 同步全文索引（best-effort）。即使后续事务回滚产生幽灵文档也无害：
@@ -143,7 +150,7 @@ async def _materialize_resource_from_submission(
 
 # 参与版本快照的书目字段。故意不含 status / editor_note / resource_id ——
 # 那些是工作流状态而非「作者写了什么」，把它们塞进快照会让 diff 充满
-# 与稿件内容无关的噪音。
+# 与作品内容无关的噪音。
 _VERSIONED_FIELDS = (
     "title",
     "type",

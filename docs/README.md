@@ -8,6 +8,8 @@ Start with the document that matches what you are doing.
 |---|---|
 | [POSITIONING.md](POSITIONING.md) | What Rubbish is, which words the product uses, and what the public copy avoids |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Backend layers, tenancy, community and archive data, frontend layout |
+| [ENGINEERING.md](ENGINEERING.md) | Module ownership, versioning, release gate, production layout and project rhythm |
+| [PERFORMANCE.md](PERFORMANCE.md) | Transfer budget, lazy chunks, cache headers, font policy and API limits |
 | [integrations.md](integrations.md) | SMTP and OIDC configuration |
 | [../DEPLOY.md](../DEPLOY.md) | Docker, environment variables, migrations, backup and restore |
 | [../CONTRIBUTING.md](../CONTRIBUTING.md) | Development workflow, checks, and pull requests |

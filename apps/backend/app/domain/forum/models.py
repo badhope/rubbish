@@ -170,6 +170,38 @@ class ForumReaction(Base, TenantScopedMixin):
     )
 
 
+class ForumTopicFollow(Base, TenantScopedMixin):
+    """A user watching one topic for new replies.
+
+    Idempotent at the DB level: (tenant, user, topic) is unique. The topic
+    author is always notified, so authors do not need to follow their own
+    topic; following is for readers who want the rest of the thread.
+    """
+
+    __tablename__ = "forum_topic_follows"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    topic_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("forum_topics.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "tenant_id",
+            "user_id",
+            "topic_id",
+            name="uq_forum_topic_follows_tenant_user_topic",
+        ),
+        Index("ix_forum_topic_follows_tenant_topic", "tenant_id", "topic_id"),
+    )
+
+
 class ForumReport(Base, TenantScopedMixin):
     """一条用户举报。
 

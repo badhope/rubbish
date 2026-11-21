@@ -7,7 +7,7 @@
 - 发帖/回帖：登录即可（不设积分门槛——参考前面身份体系 3.0 的原则）
 - 置顶/锁定/删除他人帖子：编辑或管理员（版主权限）
 
-版块设计：树形社区版块（研究计划/实验记录/田野观察/失败档案/研究讨论/科研生存/组队招募/站务），
+版块设计：树形社区版块（文章 / 选题与计划 / 过程记录 / 现场观察 / 失败复盘 / 写作讨论 / 创作生存 / 组队招募 / 站务），
 不做树状子版。本刊是期刊社区，不是大型论坛；五个版块足够让帖子有归属，
 又不会在冷启动阶段把每个子版都做成空壳。
 """
@@ -44,7 +44,14 @@ from app.core.images import (
 from app.core.moderation import rejection_detail
 from app.core.storage import get_storage
 from app.core.time import utcnow
-from app.domain.forum.models import ForumBoard, ForumReaction, ForumReply, ForumReport, ForumTopic
+from app.domain.forum.models import (
+    ForumBoard,
+    ForumReaction,
+    ForumReply,
+    ForumReport,
+    ForumTopic,
+    ForumTopicFollow,
+)
 from app.models import AuditLog, User
 
 router = APIRouter(prefix="/forum", tags=["forum"])
@@ -97,22 +104,24 @@ async def get_forum_image(filename: str) -> Response:
     return Response(content=contents, media_type=mime, headers=IMAGE_CACHE_HEADERS)
 
 
-# 五个平铺版块：荒诞论文体 / 写作实验 / 学术生存 / 共创组队 / 站务。
-# 旧分类保留为兼容别名（历史帖子和既有测试仍可直接写入），列表查询按版块聚合。
+# 五个平铺版块：写作讨论 / 记录与复盘 / 组队招募 / 创作生活 / 站务与反馈。
+# 旧分类保留为兼容别名（历史帖子和既有客户端仍可直接写入）。
 ForumCategory = Literal[
+    "discussion",
+    "records",
+    "collab",
+    "life",
+    "site",
+    # 兼容旧客户端/旧帖
     "planning",
     "lab-notes",
     "field-notes",
     "failures",
-    "discussion",
     "survival",
-    "collab",
     "announcements",
     "feedback",
-    # 兼容旧客户端/旧帖
     "paper",
     "method",
-    "life",
     "meta",
     "notice",
     "question",
@@ -120,44 +129,48 @@ ForumCategory = Literal[
 ]
 
 CATEGORY_LABELS: dict[str, str] = {
-    "planning": "研究计划",
-    "lab-notes": "实验记录",
-    "field-notes": "田野观察",
-    "failures": "失败档案",
-    "discussion": "研究讨论",
-    "survival": "科研生存",
+    "discussion": "写作讨论",
+    "records": "记录与复盘",
     "collab": "组队招募",
-    "announcements": "社区公告",
-    "feedback": "意见反馈",
+    "life": "创作生活",
+    "site": "站务与反馈",
     # 旧分类仍可读，但不再作为新帖入口
-    "paper": "研究讨论",
-    "method": "研究讨论",
-    "life": "科研生存",
-    "meta": "社区公告",
-    "notice": "社区公告",
-    "question": "研究讨论",
-    "suggestion": "意见反馈",
+    "planning": "记录与复盘",
+    "lab-notes": "记录与复盘",
+    "field-notes": "记录与复盘",
+    "failures": "记录与复盘",
+    "survival": "创作生活",
+    "announcements": "站务与反馈",
+    "feedback": "站务与反馈",
+    "paper": "写作讨论",
+    "method": "写作讨论",
+    "meta": "站务与反馈",
+    "notice": "站务与反馈",
+    "question": "写作讨论",
+    "suggestion": "站务与反馈",
 }
 
 # 版块 -> 实际落库的分类集合。旧帖不用搬家也能出现在新版块下。
 CATEGORY_BOARD: dict[str, tuple[str, ...]] = {
-    "planning": ("planning",),
-    "lab-notes": ("lab-notes",),
-    "field-notes": ("field-notes",),
-    "failures": ("failures",),
     "discussion": ("discussion",),
-    "survival": ("survival",),
+    "records": ("records",),
     "collab": ("collab",),
-    "announcements": ("announcements",),
-    "feedback": ("feedback",),
+    "life": ("life",),
+    "site": ("site",),
     # 旧客户端按旧分类发帖时，回退到新版块
+    "planning": ("records",),
+    "lab-notes": ("records",),
+    "field-notes": ("records",),
+    "failures": ("records",),
+    "survival": ("life",),
+    "announcements": ("site",),
+    "feedback": ("site",),
     "paper": ("discussion",),
     "method": ("discussion",),
     "question": ("discussion",),
-    "life": ("survival",),
-    "meta": ("announcements",),
-    "notice": ("announcements",),
-    "suggestion": ("feedback",),
+    "meta": ("site",),
+    "notice": ("site",),
+    "suggestion": ("site",),
 }
 
 
@@ -427,6 +440,9 @@ async def list_topics(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
     paper_id: int | None = Query(default=None, ge=1),
+    q: str | None = Query(
+        default=None, min_length=1, max_length=80, description="标题或正文关键词"
+    ),
     sort: Literal["latest", "hot"] = Query(default="latest"),
     db: AsyncSession = Depends(get_db),
 ) -> TopicListOut:
@@ -488,6 +504,14 @@ async def list_topics(
         stmt = stmt.where(or_(*clauses))
     if paper_id is not None:
         stmt = stmt.where(ForumTopic.paper_id == paper_id)
+    if q and q.strip():
+        keyword = q.strip()
+        stmt = stmt.where(
+            or_(
+                ForumTopic.title.ilike(f"%{keyword}%"),
+                ForumTopic.body.ilike(f"%{keyword}%"),
+            )
+        )
     rows, meta = await paginate(
         db,
         stmt,
@@ -718,7 +742,21 @@ async def create_topic(
     )
     await db.commit()
     await db.refresh(topic)
-    # 社区活跃奖励：发主题按后台规则（默认 1 积分）；失败不影响发帖本身。
+    # 社区活跃奖励：主题计入全站活跃经验；失败不影响发帖本身。
+    try:
+        from app.domain.gamification import service as gamification
+
+        await gamification.award(
+            db,
+            current_user,
+            "forum.topic",
+            ref_type="forum_topic",
+            ref_id=str(topic.id),
+            commit=True,
+        )
+    except Exception:
+        await db.rollback()
+    # 积分（与活跃经验是两套账）；失败不影响发帖本身。
     try:
         from app.domain.gamification import currency
 
@@ -766,6 +804,7 @@ async def create_reply(
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=blocked)
 
     parent_id = payload.parent_id
+    parent_author_id: int | None = None
     if parent_id is not None:
         parent = (
             await db.execute(
@@ -781,6 +820,7 @@ async def create_reply(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="被回复的楼层不存在")
         # 只保留两级：回复子楼时归到根楼，既保留上下文，又不会出现无限缩进。
         parent_id = parent.parent_id or parent.id
+        parent_author_id = parent.author_id
 
     reply = ForumReply(
         tenant_id=tenant_id,
@@ -800,41 +840,72 @@ async def create_reply(
     topic.reply_count += 1
     topic.last_reply_at = utcnow()
     await db.flush()
-    # 回帖通知主题作者；自己回自己不通知。
-    if topic.author_id != current_user.id:
-        from app.domain.notifications import services as notifications
+    # 回帖通知主题作者、被回复楼层作者和所有关注本帖的人；自己回自己不通知。
+    from app.domain.notifications import services as notifications
 
-        author_user = (
-            await db.execute(select(User).where(User.id == topic.author_id))
-        ).scalar_one_or_none()
-        if author_user is not None:
-            prefs = notifications.merged_prefs(author_user)
+    recipient_ids = {topic.author_id}
+    if parent_author_id is not None:
+        recipient_ids.add(parent_author_id)
+    follower_ids = (
+        (
+            await db.execute(
+                select(ForumTopicFollow.user_id).where(
+                    ForumTopicFollow.tenant_id == tenant_id,
+                    ForumTopicFollow.topic_id == topic_id,
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+    recipient_ids.update(follower_ids)
+    recipient_ids.discard(current_user.id)
+    if recipient_ids:
+        recipients = (
+            (await db.execute(select(User).where(User.id.in_(recipient_ids)))).scalars().all()
+        )
+        for recipient in recipients:
+            prefs = notifications.merged_prefs(recipient)
             if prefs.get("in_app_forum"):
                 await notifications.create(
                     db,
                     tenant_id=tenant_id,
-                    user_id=author_user.id,
+                    user_id=recipient.id,
                     type_="forum.reply",
-                    title=f"你的帖子「{topic.title[:80]}」有新回复",
+                    title=f"帖子「{topic.title[:80]}」有新回复",
                     body=f"{current_user.display_name or current_user.username}：{payload.body.strip()[:120]}",
                     related_type="forum_topic",
                     related_id=str(topic.id),
                 )
-            if prefs.get("email_forum") and author_user.email:
+            if prefs.get("email_forum") and recipient.email:
                 await notifications.record_email_digest(
                     db,
                     tenant_id=tenant_id,
-                    user_id=author_user.id,
+                    user_id=recipient.id,
                     event_type="forum.reply",
-                    recipient_email=author_user.email,
+                    recipient_email=recipient.email,
                     subject=f"Rubbish：{topic.title[:80]} 有新回复",
-                    text=f"{current_user.display_name or current_user.username} 回复了你的帖子：\n\n{payload.body.strip()[:500]}",
+                    text=f"{current_user.display_name or current_user.username} 回复了帖子「{topic.title[:80]}」：\n\n{payload.body.strip()[:500]}",
                     related_type="forum_topic",
                     related_id=str(topic.id),
                 )
     await db.commit()
     await db.refresh(reply)
-    # 回帖按后台规则（默认 0 积分，防止灌水）；失败不影响回帖本身。
+    # 回帖计入全站活跃经验；失败不影响回帖本身。
+    try:
+        from app.domain.gamification import service as gamification
+
+        await gamification.award(
+            db,
+            current_user,
+            "forum.reply",
+            ref_type="forum_reply",
+            ref_id=str(reply.id),
+            commit=True,
+        )
+    except Exception:
+        await db.rollback()
+    # 积分（与活跃经验是两套账）；失败不影响回帖本身。
     try:
         from app.domain.gamification import currency
 
@@ -856,6 +927,15 @@ async def create_reply(
     )
 
 
+class TopicEditRequest(BaseModel):
+    """Author-side edit. Moderator pin/lock has its own endpoint."""
+
+    title: str | None = Field(default=None, min_length=2, max_length=200)
+    body: str | None = Field(default=None, min_length=2, max_length=20000)
+    board_id: int | None = Field(default=None, ge=1)
+    is_fictional: bool | None = None
+
+
 class ModerateRequest(BaseModel):
     is_pinned: bool | None = None
     is_locked: bool | None = None
@@ -865,6 +945,79 @@ async def _require_moderator(db: AsyncSession, user: User) -> None:
     if user.is_admin or await user_has_role(db, user, ROLE_EDITOR):
         return
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="需要编辑或管理员权限")
+
+
+@router.patch("/topics/{topic_id}/edit", response_model=TopicOut)
+async def edit_topic(
+    topic_id: int,
+    payload: TopicEditRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> TopicOut:
+    """作者修改自己的帖子；锁定后只读，不能改。"""
+    tenant_id = require_tenant_id()
+    topic = (
+        await db.execute(
+            select(ForumTopic).where(
+                ForumTopic.id == topic_id,
+                ForumTopic.tenant_id == tenant_id,
+                ForumTopic.deleted_at.is_(None),
+            )
+        )
+    ).scalar_one_or_none()
+    if topic is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="帖子不存在")
+    if topic.author_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="只能编辑自己的帖子")
+    if topic.is_locked:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="帖子已锁定，不能再编辑")
+    if (
+        payload.title is None
+        and payload.body is None
+        and payload.board_id is None
+        and payload.is_fictional is None
+    ):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="没有要修改的内容")
+
+    new_title = payload.title.strip() if payload.title is not None else topic.title
+    new_body = payload.body.strip() if payload.body is not None else topic.body
+    if payload.title is not None or payload.body is not None:
+        blocked = rejection_detail(f"{new_title}\n{new_body}")
+        if blocked is not None:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=blocked)
+
+    new_category = topic.category
+    new_board_id = topic.board_id
+    if payload.board_id is not None:
+        board = await _resolve_board(db, tenant_id, board_id=payload.board_id)
+        if board is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="版块不存在")
+        if not board.is_active:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="版块已关闭")
+        new_board_id = board.id
+        new_category = board.slug
+
+    topic.title = new_title
+    topic.body = new_body
+    topic.board_id = new_board_id
+    topic.category = new_category
+    if payload.is_fictional is not None:
+        topic.is_fictional = payload.is_fictional
+    db.add(
+        AuditLog(
+            tenant_id=tenant_id,
+            actor_user_id=current_user.id,
+            action="forum.edit",
+            target_type="forum_topic",
+            target_id=str(topic.id),
+            payload={"title": topic.title, "board_id": topic.board_id},
+        )
+    )
+    await db.commit()
+    await db.refresh(topic)
+    authors = await _author_map(db, {topic.author_id})
+    boards = await _board_index(db, tenant_id)
+    return _topic_out(topic, authors, boards=boards)
 
 
 @router.patch("/topics/{topic_id}", response_model=TopicOut)
@@ -903,6 +1056,108 @@ async def moderate_topic(
     authors = await _author_map(db, {topic.author_id})
     boards = await _board_index(db, tenant_id)
     return _topic_out(topic, authors, boards=boards)
+
+
+@router.get("/topics/{topic_id}/follow")
+async def topic_follow_status(
+    topic_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, object]:
+    """Whether the current user watches this topic, plus total watchers."""
+    tenant_id = require_tenant_id()
+    topic = (
+        await db.execute(
+            select(ForumTopic.id).where(
+                ForumTopic.id == topic_id,
+                ForumTopic.tenant_id == tenant_id,
+                ForumTopic.deleted_at.is_(None),
+            )
+        )
+    ).scalar_one_or_none()
+    if topic is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="帖子不存在")
+    following = (
+        await db.execute(
+            select(ForumTopicFollow.id).where(
+                ForumTopicFollow.tenant_id == tenant_id,
+                ForumTopicFollow.user_id == current_user.id,
+                ForumTopicFollow.topic_id == topic_id,
+            )
+        )
+    ).scalar_one_or_none() is not None
+    followers = (
+        await db.execute(
+            select(func.count(ForumTopicFollow.id)).where(
+                ForumTopicFollow.tenant_id == tenant_id,
+                ForumTopicFollow.topic_id == topic_id,
+            )
+        )
+    ).scalar_one()
+    return {"following": following, "followers_count": int(followers)}
+
+
+@router.post("/topics/{topic_id}/follow", response_model=None)
+async def follow_topic(
+    topic_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, object]:
+    """Watch a topic. Idempotent: following twice is a no-op."""
+    tenant_id = require_tenant_id()
+    topic = (
+        await db.execute(
+            select(ForumTopic.id).where(
+                ForumTopic.id == topic_id,
+                ForumTopic.tenant_id == tenant_id,
+                ForumTopic.deleted_at.is_(None),
+            )
+        )
+    ).scalar_one_or_none()
+    if topic is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="帖子不存在")
+    existing = (
+        await db.execute(
+            select(ForumTopicFollow.id).where(
+                ForumTopicFollow.tenant_id == tenant_id,
+                ForumTopicFollow.user_id == current_user.id,
+                ForumTopicFollow.topic_id == topic_id,
+            )
+        )
+    ).scalar_one_or_none()
+    if existing is None:
+        db.add(
+            ForumTopicFollow(
+                tenant_id=tenant_id,
+                user_id=current_user.id,
+                topic_id=topic_id,
+            )
+        )
+        await db.commit()
+    return await topic_follow_status(topic_id, current_user, db)
+
+
+@router.delete("/topics/{topic_id}/follow", response_model=None)
+async def unfollow_topic(
+    topic_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, object]:
+    """Stop watching a topic. Idempotent: unfollowing twice is a no-op."""
+    tenant_id = require_tenant_id()
+    follow = (
+        await db.execute(
+            select(ForumTopicFollow).where(
+                ForumTopicFollow.tenant_id == tenant_id,
+                ForumTopicFollow.user_id == current_user.id,
+                ForumTopicFollow.topic_id == topic_id,
+            )
+        )
+    ).scalar_one_or_none()
+    if follow is not None:
+        await db.delete(follow)
+        await db.commit()
+    return await topic_follow_status(topic_id, current_user, db)
 
 
 @router.delete("/topics/{topic_id}", status_code=status.HTTP_204_NO_CONTENT)

@@ -4,7 +4,7 @@
 1. 两条赛道各五维、各套权重合计 100；
 2. 每个维度必须有分数，理由、正文证据选填；
 3. 学术诚信一票否决；
-4. 分区边界：90 顶刊、80/70/60/50 一/二/三/四区、<50 退稿；
+4. 分区边界：90 标杆、80/70/60/50 一/二/三/四区、<50 退稿；
 5. 硬门槛：任一维 <60 封顶 79、<50 封顶 59、两维 <50 封顶 49；
 6. 荒诞赛道不套学术维度，自洽/执行各有独立封顶。
 """
@@ -122,8 +122,8 @@ def test_score_out_of_range_rejected() -> None:
 
 
 def test_quartile_boundaries() -> None:
-    assert grade_for(95) == ("T1+", "顶刊范本")
-    assert grade_for(90) == ("T1", "顶刊级")
+    assert grade_for(95) == ("T1+", "标杆范本")
+    assert grade_for(90) == ("T1", "标杆级")
     assert grade_for(89.9) == ("Q1", "一区")
     assert grade_for(80) == ("Q1", "一区")
     assert grade_for(70) == ("Q2", "二区")

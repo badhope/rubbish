@@ -6,8 +6,11 @@ import {
   Bookmark,
   Flag,
   HeartHandshake,
+  Bell,
+  BellOff,
   Lock,
   MessageSquare,
+  Pencil,
   Pin,
   Reply,
   Send,
@@ -25,6 +28,8 @@ import { MarkdownContent } from '@/components/common/markdown-content'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,6 +68,12 @@ interface ForumTopic {
   viewer_reactions?: string[]
 }
 
+interface BoardNode {
+  id: number
+  name: string
+  children: BoardNode[]
+}
+
 interface ForumReply {
   id: number
   topic_id: number
@@ -75,22 +86,26 @@ interface ForumReply {
 }
 
 const CATEGORY_LABEL: Record<string, string> = {
-  planning: '研究计划',
-  'lab-notes': '实验记录',
-  'field-notes': '田野观察',
-  failures: '失败档案',
-  discussion: '研究讨论',
-  survival: '科研生存',
+  discussion: '写作讨论',
+  records: '记录与复盘',
   collab: '组队招募',
-  announcements: '社区公告',
-  feedback: '意见反馈',
+  life: '创作生活',
+  site: '站务与反馈',
   // 旧帖子兜底
-  paper: '研究讨论',
-  method: '研究讨论',
-  meta: '社区公告',
-  notice: '社区公告',
-  question: '研究讨论',
-  suggestion: '意见反馈',
+  research: '记录与复盘',
+  planning: '记录与复盘',
+  'lab-notes': '记录与复盘',
+  'field-notes': '记录与复盘',
+  failures: '记录与复盘',
+  survival: '创作生活',
+  announcements: '站务与反馈',
+  feedback: '站务与反馈',
+  paper: '写作讨论',
+  method: '写作讨论',
+  meta: '站务与反馈',
+  notice: '站务与反馈',
+  question: '写作讨论',
+  suggestion: '站务与反馈',
 }
 
 const REACTIONS: {
@@ -104,6 +119,13 @@ const REACTIONS: {
 ]
 
 const REPORT_REASONS = ['垃圾广告', '不友善内容', '违法违规', '其他']
+
+function flattenBoards(nodes: BoardNode[], depth = 0): Array<BoardNode & { depth: number }> {
+  return nodes.flatMap((node) => [
+    { ...node, depth },
+    ...flattenBoards(node.children ?? [], depth + 1),
+  ])
+}
 
 function ReactionBar({
   targetType,
@@ -328,6 +350,68 @@ function ForumTopicPage() {
     onError: (err) => toast.error(extractError(err, '删除失败')),
   })
 
+  const followQ = useQuery<{ following: boolean; followers_count: number }>({
+    queryKey: ['forum', 'topic', id, 'follow'],
+    queryFn: async () => (await api.get(`/forum/topics/${id}/follow`)).data,
+    enabled: id > 0 && isAuthenticated,
+  })
+
+  const followMut = useMutation({
+    mutationFn: async (next: boolean) =>
+      (
+        await (next
+          ? api.post(`/forum/topics/${id}/follow`)
+          : api.delete(`/forum/topics/${id}/follow`))
+      ).data,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['forum', 'topic', id, 'follow'] })
+      toast.success(followQ.data?.following ? '已取消关注' : '已关注，有新回复会通知你')
+    },
+    onError: (err) => toast.error(extractError(err, '操作失败')),
+  })
+
+  const [editOpen, setEditOpen] = useState(false)
+  const [editTitle, setEditTitle] = useState('')
+  const [editBody, setEditBody] = useState('')
+  const [editFictional, setEditFictional] = useState(false)
+  const [editBoardId, setEditBoardId] = useState<number | null>(null)
+  const boardsQ = useQuery({
+    queryKey: ['forum', 'boards'],
+    queryFn: async () => (await api.get('/forum/boards')).data,
+    enabled: editOpen,
+  })
+  const editBoards = useMemo(
+    () => flattenBoards((boardsQ.data?.tree ?? []) as BoardNode[]),
+    [boardsQ.data],
+  )
+
+  const openEdit = () => {
+    if (!topicQ.data) return
+    setEditTitle(topicQ.data.title)
+    setEditBody(topicQ.data.body)
+    setEditFictional(topicQ.data.is_fictional)
+    setEditBoardId(topicQ.data.board_id)
+    setEditOpen(true)
+  }
+
+  const editMut = useMutation({
+    mutationFn: async () =>
+      (
+        await api.patch(`/forum/topics/${id}/edit`, {
+          title: editTitle.trim(),
+          body: editBody.trim(),
+          board_id: editBoardId,
+          is_fictional: editFictional,
+        })
+      ).data,
+    onSuccess: () => {
+      setEditOpen(false)
+      void qc.invalidateQueries({ queryKey: ['forum'] })
+      toast.success('帖子已更新')
+    },
+    onError: (err) => toast.error(extractError(err, '保存失败')),
+  })
+
   const reportMut = useMutation({
     mutationFn: async (target: { topic_id?: number; reply_id?: number; reason?: string }) =>
       (await api.post('/forum/reports', target)).data,
@@ -406,6 +490,9 @@ function ForumTopicPage() {
   }
   const topic = topicQ.data
   const canDelete = isAuthenticated && (isAdmin || topic.author?.id === user?.id)
+  const canEdit = isAuthenticated && topic.author?.id === user?.id && !topic.is_locked
+  const following = followQ.data?.following ?? false
+  const followersCount = followQ.data?.followers_count ?? 0
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
@@ -432,7 +519,7 @@ function ForumTopicPage() {
                 虚构
               </Badge>
             ) : null}
-            {topic.board_path ? (
+            {topic.board_path && topic.board_path !== topic.board_name ? (
               <span className="text-[11px] text-muted-foreground">{topic.board_path}</span>
             ) : null}
             {topic.is_locked && (
@@ -472,20 +559,48 @@ function ForumTopicPage() {
               <Share2 className="h-3.5 w-3.5" />
               分享
             </Button>
-            {canDelete && (
+            {isAuthenticated && (
               <Button
+                type="button"
                 size="sm"
                 variant="ghost"
-                className="ml-auto h-7 gap-1 px-2 text-[11px] text-destructive"
-                onClick={() => {
-                  if (window.confirm('确定删除这个帖子？')) deleteMut.mutate()
-                }}
+                onClick={() => followMut.mutate(!following)}
+                disabled={followMut.isPending}
+                className="h-7 gap-1 rounded-full px-2 text-[11px] text-muted-foreground"
               >
-                <Trash2 className="h-3.5 w-3.5" />
-                删除帖子
+                {following ? <BellOff className="h-3.5 w-3.5" /> : <Bell className="h-3.5 w-3.5" />}
+                {following ? '已关注' : '关注'} {followersCount > 0 ? followersCount : ''}
               </Button>
             )}
-            {isAuthenticated && !canDelete && (
+            {canEdit || canDelete ? (
+              <div className="ml-auto flex items-center gap-1">
+                {canEdit && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 gap-1 px-2 text-[11px] text-muted-foreground"
+                    onClick={openEdit}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    编辑
+                  </Button>
+                )}
+                {canDelete && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 gap-1 px-2 text-[11px] text-destructive"
+                    onClick={() => {
+                      if (window.confirm('确定删除这个帖子？')) deleteMut.mutate()
+                    }}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    删除
+                  </Button>
+                )}
+              </div>
+            ) : null}
+            {isAuthenticated && !canDelete && !canEdit && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -615,6 +730,82 @@ function ForumTopicPage() {
           </CardContent>
         </Card>
       )}
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent
+          showCloseButton={false}
+          className="forum-writing-desk top-0 left-0 flex h-[100dvh] max-h-none w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 p-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:h-[min(90vh,900px)] sm:max-h-[min(90vh,900px)] sm:max-w-[1100px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:border"
+        >
+          <div className="flex items-center justify-between border-b px-4 py-3 sm:px-6">
+            <DialogTitle className="font-serif text-xl tracking-tight">编辑帖子</DialogTitle>
+            <Button variant="ghost" size="sm" onClick={() => setEditOpen(false)}>
+              关闭
+            </Button>
+          </div>
+          <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-6">
+            <Input
+              value={editTitle}
+              onChange={(event) => setEditTitle(event.target.value)}
+              maxLength={200}
+              placeholder="标题"
+              aria-label="帖子标题"
+              className="border-0 bg-transparent px-0 font-serif text-2xl shadow-none focus-visible:ring-0"
+            />
+            <div className="flex flex-wrap items-center gap-3">
+              <select
+                value={editBoardId ?? ''}
+                onChange={(event) => setEditBoardId(event.target.value ? Number(event.target.value) : null)}
+                aria-label="帖子版块"
+                className="rounded-full border bg-card px-3 py-1 text-xs text-foreground outline-none focus:border-primary"
+              >
+                <option value="" disabled>
+                  选择版块
+                </option>
+                {editBoards.map((board) => (
+                  <option key={board.id} value={board.id}>
+                    {`${'　'.repeat(board.depth)}${board.name}`}
+                  </option>
+                ))}
+              </select>
+            <label className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={editFictional}
+                onChange={(event) => setEditFictional(event.target.checked)}
+                className="h-3.5 w-3.5 accent-primary"
+              />
+              这是虚构内容
+            </label>
+            </div>
+            <Suspense
+              fallback={
+                <div className="rounded-md border border-dashed px-3 py-6 text-sm text-muted-foreground">
+                  编辑器加载中…
+                </div>
+              }
+            >
+              <ForumEditor
+                value={editBody}
+                onChange={setEditBody}
+                onUploadImage={uploadForumImage}
+                minHeight={520}
+                placeholder="修改正文…"
+              />
+            </Suspense>
+          </div>
+          <div className="flex items-center justify-between border-t px-4 py-3 sm:px-6">
+            <span className="text-[11px] text-muted-foreground">
+              正文 {editBody.length} 字 · 保存后立即对外可见
+            </span>
+            <Button
+              onClick={() => editMut.mutate()}
+              disabled={editMut.isPending || editTitle.trim().length < 2 || editBody.trim().length < 2}
+            >
+              {editMut.isPending ? '保存中…' : '保存修改'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

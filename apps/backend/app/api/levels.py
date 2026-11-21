@@ -45,22 +45,14 @@ async def _role_names(db: AsyncSession, user: User) -> list[str]:
 
 
 async def level_of(db: AsyncSession, user: User) -> int:
-    """当前用户的身份层级（1=读者 2=作者 3=审稿人 4=编辑）。
+    """当前用户的全站活跃等级（1–10，只由 XP 推进）。
 
-    保留这个函数名与返回类型，是为了让外部调用方（admin 用户列表、
-    认证响应）不用改动；语义已从"九级 XP 等级"变成"四层身份序号"。
+    身份与等级是两条轴：这里只返回活跃等级，身份请读 permission_role。
+    保留函数名是为了让 admin 用户列表、认证响应等旧调用方不用改。
     """
-    from app.domain.gamification.ladder import (
-        IDENTITY_RANK,
-        identity_for_roles,
-        is_author_eligible,
-    )
+    from app.domain.gamification.activity import level_for_xp
 
-    roles = await _role_names(db, user)
-    slug = identity_for_roles(roles, is_admin=bool(user.is_admin))
-    if slug == "reader" and is_author_eligible(user.rules_ack_version, CURRENT_RULES_VERSION):
-        return IDENTITY_RANK["author"] + 1
-    return IDENTITY_RANK[slug] + 1
+    return level_for_xp(user.xp or 0)
 
 
 async def require_reader(current_user: User = Depends(get_current_user)) -> User:

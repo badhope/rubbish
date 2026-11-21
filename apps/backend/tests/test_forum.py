@@ -55,6 +55,31 @@ async def test_create_topic_and_list(client: AsyncClient, test_user: dict) -> No
 
 
 @pytest.mark.asyncio
+async def test_search_topics_by_title_or_body(client: AsyncClient, test_user: dict) -> None:
+    """社区搜索只命中标题/正文包含关键词的帖子，版块过滤仍可叠加。"""
+    hit = await client.post(
+        "/api/forum/topics",
+        json={"title": "海鸟观察笔记", "body": "码头边记录了一只白鹭。"},
+        headers=auth_headers(test_user),
+    )
+    await client.post(
+        "/api/forum/topics",
+        json={"title": "完全无关的帖子", "body": "这里没有相关内容。"},
+        headers=auth_headers(test_user),
+    )
+    assert hit.status_code == 201
+
+    by_title = (await client.get("/api/forum/topics", params={"q": "海鸟"})).json()
+    assert [row["id"] for row in by_title["data"]] == [hit.json()["id"]]
+
+    by_body = (await client.get("/api/forum/topics", params={"q": "白鹭"})).json()
+    assert [row["id"] for row in by_body["data"]] == [hit.json()["id"]]
+
+    empty = (await client.get("/api/forum/topics", params={"q": "不存在的关键词"})).json()
+    assert empty["data"] == []
+
+
+@pytest.mark.asyncio
 async def test_reply_increments_count_and_updates_last_active(
     client: AsyncClient, test_user: dict
 ) -> None:

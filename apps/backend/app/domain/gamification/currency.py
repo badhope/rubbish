@@ -57,7 +57,7 @@ COIN_LABELS: dict[str, str] = {
     "forum.reply": "论坛回复",
     "claim.approve": "作者认领通过",
     "review.completed": "完成审稿",
-    "submission.accepted": "论文录用",
+    "submission.accepted": "文章录用",
     "editor.decision": "编辑裁决",
     "shop.accent": "解锁自定义主题色",
     "shop.item": "积分兑换",

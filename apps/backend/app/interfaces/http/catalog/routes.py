@@ -58,6 +58,7 @@ from app.domain.catalog.visibility import as_aware, is_public, public_conditions
 from app.interfaces.http.catalog.ontology_routes import router as ontology_router
 from app.interfaces.http.catalog.schemas import (
     FacetBucket,
+    IssueSummary,
     ResourceCreate,
     ResourceFacets,
     ResourceHistoryResponse,
@@ -69,6 +70,8 @@ from app.interfaces.http.catalog.schemas import (
     ResourceStats,
     ResourceUpdate,
     ResourceVersionItem,
+    VolumeSummary,
+    VolumeSummaryList,
 )
 from app.models import AuditLog, Role, User, UserRole
 
@@ -502,6 +505,58 @@ async def get_stats(
         downloads_total=int(downloads_total or 0),
         reads_total=int(reads_total or 0),
     )
+
+
+@router.get("/volumes/stats", response_model=VolumeSummaryList)
+async def get_volume_stats(
+    track: str | None = Query(default=None, pattern="^(paper|essay)$"),
+    db: AsyncSession = Depends(get_db),
+    viewer: User | None = Depends(get_current_user_optional),
+) -> VolumeSummaryList:
+    """Public volume/issue index: full counts, not a paged slice."""
+    tenant_id = require_tenant_id()
+    base_filter = Resource.tenant_id == tenant_id
+    if track in ("paper", "essay"):
+        base_filter = base_filter & (Resource.content_track == track)
+    if not (viewer and viewer.is_admin):
+        for condition in public_conditions():
+            base_filter = base_filter & condition
+    base_filter = base_filter & Resource.volume.is_not(None) & (Resource.volume != "")
+
+    rows = await db.execute(
+        select(
+            Resource.volume,
+            Resource.issue,
+            func.count(Resource.id).label("article_count"),
+            func.min(Resource.year).label("first_year"),
+            func.max(Resource.year).label("last_year"),
+        )
+        .where(base_filter)
+        .group_by(Resource.volume, Resource.issue)
+    )
+
+    volumes: dict[str, VolumeSummary] = {}
+    for volume, issue, article_count, first_year, last_year in rows.all():
+        key = str(volume)
+        summary = volumes.setdefault(
+            key, VolumeSummary(volume=key, issue_count=0, article_count=0, issues=[])
+        )
+        summary.article_count += int(article_count or 0)
+        if issue:
+            summary.issue_count += 1
+            summary.issues.append(
+                IssueSummary(
+                    issue=str(issue),
+                    article_count=int(article_count or 0),
+                    first_year=int(first_year) if first_year is not None else None,
+                    last_year=int(last_year) if last_year is not None else None,
+                )
+            )
+
+    data = sorted(volumes.values(), key=lambda v: v.volume, reverse=True)
+    for summary in data:
+        summary.issues.sort(key=lambda i: i.issue, reverse=True)
+    return VolumeSummaryList(data=data)
 
 
 @router.get("/facets", response_model=ResourceFacets)

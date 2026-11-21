@@ -107,7 +107,7 @@ async def alert_release_failure(
                 user_id=user.id,
                 type_="release.scheduled_failed",
                 title=f"定时发布失败：{target}",
-                body=f"{label}。请到「期次编排」重新核对并重新排期。",
+                body=f"{label}。请到「卷期编排」重新核对并重新排期。",
                 related_type="issue",
                 related_id=target,
             )

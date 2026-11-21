@@ -15,6 +15,8 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as GuideRouteImport } from './routes/guide'
+import { Route as IssuesRouteImport } from './routes/issues'
+import { Route as LevelsRouteImport } from './routes/levels'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MeRouteImport } from './routes/me'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -31,6 +33,8 @@ import { Route as CatalogResourceIdRouteImport } from './routes/catalog/$resourc
 import { Route as ForumIndexRouteImport } from './routes/forum/index'
 import { Route as ForumTopicIdRouteImport } from './routes/forum/$topicId'
 import { Route as LibraryListIdRouteImport } from './routes/library/$listId'
+import { Route as SubmissionsIndexRouteImport } from './routes/submissions/index'
+import { Route as SubmissionsNewRouteImport } from './routes/submissions/new'
 import { Route as UUsernameRouteImport } from './routes/u/$username'
 import { Route as AuthOidcCallbackRouteImport } from './routes/auth/oidc/callback'
 
@@ -62,6 +66,16 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
 const GuideRoute = GuideRouteImport.update({
   id: '/guide',
   path: '/guide',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IssuesRoute = IssuesRouteImport.update({
+  id: '/issues',
+  path: '/issues',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LevelsRoute = LevelsRouteImport.update({
+  id: '/levels',
+  path: '/levels',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -144,6 +158,16 @@ const LibraryListIdRoute = LibraryListIdRouteImport.update({
   path: '/library/$listId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SubmissionsIndexRoute = SubmissionsIndexRouteImport.update({
+  id: '/submissions/',
+  path: '/submissions/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SubmissionsNewRoute = SubmissionsNewRouteImport.update({
+  id: '/submissions/new',
+  path: '/submissions/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UUsernameRoute = UUsernameRouteImport.update({
   id: '/u/$username',
   path: '/u/$username',
@@ -162,6 +186,8 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/guide': typeof GuideRoute
+  '/issues': typeof IssuesRoute
+  '/levels': typeof LevelsRoute
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
   '/privacy': typeof PrivacyRoute
@@ -175,10 +201,12 @@ export interface FileRoutesByFullPath {
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
   '/forum/$topicId': typeof ForumTopicIdRoute
   '/library/$listId': typeof LibraryListIdRoute
+  '/submissions/new': typeof SubmissionsNewRoute
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/catalog/': typeof CatalogIndexRoute
   '/forum/': typeof ForumIndexRoute
+  '/submissions/': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
 }
 export interface FileRoutesByTo {
@@ -187,6 +215,8 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/guide': typeof GuideRoute
+  '/issues': typeof IssuesRoute
+  '/levels': typeof LevelsRoute
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
   '/privacy': typeof PrivacyRoute
@@ -200,10 +230,12 @@ export interface FileRoutesByTo {
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
   '/forum/$topicId': typeof ForumTopicIdRoute
   '/library/$listId': typeof LibraryListIdRoute
+  '/submissions/new': typeof SubmissionsNewRoute
   '/u/$username': typeof UUsernameRoute
   '/admin': typeof AdminIndexRoute
   '/catalog': typeof CatalogIndexRoute
   '/forum': typeof ForumIndexRoute
+  '/submissions': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
 }
 export interface FileRoutesById {
@@ -214,6 +246,8 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/guide': typeof GuideRoute
+  '/issues': typeof IssuesRoute
+  '/levels': typeof LevelsRoute
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
   '/privacy': typeof PrivacyRoute
@@ -227,10 +261,12 @@ export interface FileRoutesById {
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
   '/forum/$topicId': typeof ForumTopicIdRoute
   '/library/$listId': typeof LibraryListIdRoute
+  '/submissions/new': typeof SubmissionsNewRoute
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/catalog/': typeof CatalogIndexRoute
   '/forum/': typeof ForumIndexRoute
+  '/submissions/': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
 }
 export interface FileRouteTypes {
@@ -242,6 +278,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/forgot-password'
     | '/guide'
+    | '/issues'
+    | '/levels'
     | '/login'
     | '/me'
     | '/privacy'
@@ -255,10 +293,12 @@ export interface FileRouteTypes {
     | '/catalog/$resourceId'
     | '/forum/$topicId'
     | '/library/$listId'
+    | '/submissions/new'
     | '/u/$username'
     | '/admin/'
     | '/catalog/'
     | '/forum/'
+    | '/submissions/'
     | '/auth/oidc/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -267,6 +307,8 @@ export interface FileRouteTypes {
     | '/about'
     | '/forgot-password'
     | '/guide'
+    | '/issues'
+    | '/levels'
     | '/login'
     | '/me'
     | '/privacy'
@@ -280,10 +322,12 @@ export interface FileRouteTypes {
     | '/catalog/$resourceId'
     | '/forum/$topicId'
     | '/library/$listId'
+    | '/submissions/new'
     | '/u/$username'
     | '/admin'
     | '/catalog'
     | '/forum'
+    | '/submissions'
     | '/auth/oidc/callback'
   id:
     | '__root__'
@@ -293,6 +337,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/forgot-password'
     | '/guide'
+    | '/issues'
+    | '/levels'
     | '/login'
     | '/me'
     | '/privacy'
@@ -306,10 +352,12 @@ export interface FileRouteTypes {
     | '/catalog/$resourceId'
     | '/forum/$topicId'
     | '/library/$listId'
+    | '/submissions/new'
     | '/u/$username'
     | '/admin/'
     | '/catalog/'
     | '/forum/'
+    | '/submissions/'
     | '/auth/oidc/callback'
   fileRoutesById: FileRoutesById
 }
@@ -320,6 +368,8 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   GuideRoute: typeof GuideRoute
+  IssuesRoute: typeof IssuesRoute
+  LevelsRoute: typeof LevelsRoute
   LoginRoute: typeof LoginRoute
   MeRoute: typeof MeRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -329,9 +379,11 @@ export interface RootRouteChildren {
   CatalogResourceIdRoute: typeof CatalogResourceIdRoute
   ForumTopicIdRoute: typeof ForumTopicIdRoute
   LibraryListIdRoute: typeof LibraryListIdRoute
+  SubmissionsNewRoute: typeof SubmissionsNewRoute
   UUsernameRoute: typeof UUsernameRoute
   CatalogIndexRoute: typeof CatalogIndexRoute
   ForumIndexRoute: typeof ForumIndexRoute
+  SubmissionsIndexRoute: typeof SubmissionsIndexRoute
   AuthOidcCallbackRoute: typeof AuthOidcCallbackRoute
 }
 
@@ -377,6 +429,20 @@ declare module '@tanstack/react-router' {
       path: '/guide'
       fullPath: '/guide'
       preLoaderRoute: typeof GuideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/issues': {
+      id: '/issues'
+      path: '/issues'
+      fullPath: '/issues'
+      preLoaderRoute: typeof IssuesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/levels': {
+      id: '/levels'
+      path: '/levels'
+      fullPath: '/levels'
+      preLoaderRoute: typeof LevelsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -491,6 +557,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LibraryListIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/submissions/': {
+      id: '/submissions/'
+      path: '/submissions'
+      fullPath: '/submissions/'
+      preLoaderRoute: typeof SubmissionsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/submissions/new': {
+      id: '/submissions/new'
+      path: '/submissions/new'
+      fullPath: '/submissions/new'
+      preLoaderRoute: typeof SubmissionsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/u/$username': {
       id: '/u/$username'
       path: '/u/$username'
@@ -533,6 +613,8 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   GuideRoute: GuideRoute,
+  IssuesRoute: IssuesRoute,
+  LevelsRoute: LevelsRoute,
   LoginRoute: LoginRoute,
   MeRoute: MeRoute,
   PrivacyRoute: PrivacyRoute,
@@ -542,9 +624,11 @@ const rootRouteChildren: RootRouteChildren = {
   CatalogResourceIdRoute: CatalogResourceIdRoute,
   ForumTopicIdRoute: ForumTopicIdRoute,
   LibraryListIdRoute: LibraryListIdRoute,
+  SubmissionsNewRoute: SubmissionsNewRoute,
   UUsernameRoute: UUsernameRoute,
   CatalogIndexRoute: CatalogIndexRoute,
   ForumIndexRoute: ForumIndexRoute,
+  SubmissionsIndexRoute: SubmissionsIndexRoute,
   AuthOidcCallbackRoute: AuthOidcCallbackRoute,
 }
 export const routeTree = rootRouteImport

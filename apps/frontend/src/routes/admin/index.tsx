@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import {
   Activity,
@@ -7,16 +8,22 @@ import {
   Gavel,
   Layers,
   MessageSquare,
+  ShieldAlert,
   Users,
 } from 'lucide-react'
 
 import { requireAdminGuard } from '@/lib/route-guards'
 import { useAuth } from '@/hooks/use-auth'
+import { useQuery } from '@tanstack/react-query'
+import { api } from '@/lib/api'
 import { usePendingClaimsCount } from '@/hooks/api/use-modules'
 import { useAdminCommentCounts } from '@/hooks/api/use-comments'
 import { PageHeader } from '@/components/common/page-header'
-import { AdminAnalyticsPanel } from '@/components/admin/analytics-panel'
 import { Badge } from '@/components/ui/badge'
+
+const AdminAnalyticsPanel = lazy(() =>
+  import('@/components/admin/analytics-panel').then((m) => ({ default: m.AdminAnalyticsPanel })),
+)
 
 export const Route = createFileRoute('/admin/')({
   beforeLoad: () => {
@@ -33,7 +40,7 @@ const PENDING_QUEUE: {
   to: string
   search?: Record<string, string>
   icon: typeof Gavel
-  count?: 'claims' | 'comments'
+  count?: 'claims' | 'comments' | 'reports'
 }[] = [
   {
     title: '认领审批',
@@ -50,6 +57,14 @@ const PENDING_QUEUE: {
     search: { section: 'comments' },
     icon: MessageSquare,
     count: 'comments',
+  },
+  {
+    title: '举报处理',
+    desc: '论坛、评论与投稿举报',
+    to: '/admin/content',
+    search: { section: 'reports' },
+    icon: ShieldAlert,
+    count: 'reports',
   },
 ]
 
@@ -91,6 +106,15 @@ function AdminDashboard() {
   const pendingClaims = claimsCount?.count ?? 0
   const { data: commentCounts } = useAdminCommentCounts(isAuthenticated)
   const pendingComments = commentCounts?.pending ?? 0
+  const { data: openReports } = useQuery({
+    queryKey: ['admin', 'reports', 'open', 'count'],
+    queryFn: async () =>
+      (await api.get('/forum/reports', { params: { status_filter: 'open' } })).data as unknown[],
+    enabled: isAuthenticated,
+    staleTime: 60_000,
+  })
+  const pendingReports = openReports?.length ?? 0
+  const pendingTotal = pendingClaims + pendingComments + pendingReports
 
   return (
     <div className="w-full max-w-6xl space-y-8">
@@ -99,7 +123,16 @@ function AdminDashboard() {
         description={`欢迎，${user?.username ?? '管理员'}。先处理待办，再进入四个管理域。`}
       />
 
-      <AdminAnalyticsPanel />
+      <Suspense
+        fallback={
+          <div
+            className="h-[430px] animate-pulse rounded-lg border bg-muted/20"
+            aria-label="正在加载站点数据"
+          />
+        }
+      >
+        <AdminAnalyticsPanel />
+      </Suspense>
 
       <section>
         <div className="mb-3 flex items-end justify-between gap-3">
@@ -110,7 +143,7 @@ function AdminDashboard() {
             <h2 className="mt-1 font-serif text-xl tracking-tight">待处理</h2>
           </div>
           <span className="font-mono text-xs text-muted-foreground">
-            {pendingClaims + pendingComments} 项有计数
+            {pendingTotal > 0 ? `共 ${pendingTotal} 项待处理` : '暂无待处理'}
           </span>
         </div>
         <div className="divide-y border-y">
@@ -120,7 +153,9 @@ function AdminDashboard() {
                 ? pendingClaims
                 : item.count === 'comments'
                   ? pendingComments
-                  : null
+                  : item.count === 'reports'
+                    ? pendingReports
+                    : null
             return (
               <Link
                 key={item.title}

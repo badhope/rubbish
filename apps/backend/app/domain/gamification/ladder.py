@@ -17,7 +17,7 @@
 四层身份，全部对应**真实的责任边界**，而不是参与度：
 
 - ``reader``   读者：能读、能评论。注册即得，无门槛。
-- ``author``   作者：能投稿。确认投稿规范即得（合规动作，不是升级）。
+- ``author``   作者：能提交作品。确认作品规范即得（合规动作，不是升级）。
 - ``reviewer`` 审稿人：能接审稿邀请。由编辑部授予（申请或提名）。
 - ``editor``   编辑：能送审、能裁决。由编辑部授予。
 
@@ -76,16 +76,16 @@ IDENTITIES: tuple[IdentitySpec, ...] = (
         slug="author",
         name="作者",
         title="Author",
-        granted_by="确认当版《投稿与编辑规范》",
+        granted_by="确认当版《作品与编辑规范》",
         roles=(),
         capabilities=(
             "读者的全部能力",
-            "提交稿件（可附 PDF / Word / Markdown）",
-            "查看自己的稿件状态、审稿意见与版本历史",
+            "提交作品（可附 PDF / Word / Markdown）",
+            "查看自己的作品状态、审稿意见与版本历史",
             "按审稿意见修改并重投",
             "关联 ORCID 与作品集",
         ),
-        description="确认规范即可投稿——投稿前必须读过规范，这是合规要求，不是门槛。",
+        description="确认规范即可提交作品——发布前必须读过规范，这是合规要求，不是门槛。",
     ),
     IdentitySpec(
         slug="reviewer",
@@ -101,7 +101,7 @@ IDENTITIES: tuple[IdentitySpec, ...] = (
         ),
         description=(
             "审稿权来自编辑部的信任，不能靠攒积分购买。"
-            "申请条件：至少 1 篇稿件被本刊录用，且最高 RQS ≥ 60。"
+            "申请条件：至少 1 篇作品被本站录用，且最高 RQS ≥ 60。"
         ),
     ),
     IdentitySpec(
@@ -112,12 +112,12 @@ IDENTITIES: tuple[IdentitySpec, ...] = (
         roles=("section_editor", "editor"),
         capabilities=(
             "审稿人的全部能力",
-            "初审稿件、分配与撤销审稿人",
+            "初审作品、分配与撤销审稿人",
             "栏目编辑：推荐录用（无最终裁决权）",
             "执行编辑：作出录用 / 修回 / 拒稿决定",
             "编排卷期、管理目录",
         ),
-        description="对稿件的去留有实际责任，因此只能由编辑部内部提拔，不开放申请。",
+        description="对作品的去留有实际责任，因此只能由编辑部内部提拔，不开放申请。",
     ),
 )
 
@@ -159,7 +159,7 @@ def identity_for_roles(roles: list[str], *, is_admin: bool = False) -> str:
 
 
 def is_author_eligible(rules_ack_version: str | None, current_version: str) -> bool:
-    """作者身份 = 已确认当前版投稿规范。
+    """作者身份 = 已确认当前版作品规范。
 
     这不是"等级"，是一个合规状态：规范改版后旧确认自动失效，作者必须
     重读一遍才能再投。用状态而不是积分来表达，才是这件事的真实形状。

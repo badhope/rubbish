@@ -32,7 +32,7 @@ const ROLES = [
 ]
 
 const TIMELINE = [
-  ['2026 年 10 月', 'Rubbish 社区与档案上线：短帖做讨论，长记录做档案。'],
+  ['2026 年 10 月', 'Rubbish 社区与文章栏目上线：短帖在社区，文章在文章目录。'],
   ['2026 年 11 月', '研究板块、社区指南与社区公约开放；发帖不再需要任何资格审核。'],
   ['现在', '提问、记录、失败、复盘、组队和版务都在同一个社区里。'],
 ]
@@ -60,11 +60,11 @@ function AboutPage() {
               「正经地荒诞，公开地失败。」
             </p>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              Rubbish 从第一天就是一个社区：帖子是入口，档案是长记录。你可以只发一个问题，
-              也可以把一次实验、一次失败、一段田野观察完整写下来。
+              Rubbish 从第一天就是一个社区：短帖讨论走社区，长文发表走文章投稿。你可以只发一个问题，
+              也可以把一次写作、一次尝试、一段现场观察完整写下来。
             </p>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              这里欢迎研究计划、实验记录、田野笔记、失败复盘、组队招募和自由创作。
+              这里欢迎选题与计划、过程记录、现场观察、失败复盘、组队招募和自由创作。
               荒诞不是免掉方法的理由；设定要清楚，材料要能对上。
             </p>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
@@ -139,7 +139,7 @@ function AboutPage() {
               { icon: ScrollText, label: '站点性质', value: '荒诞科研社区' },
               { icon: Globe, label: '访问与托管', value: '香港服务器与香港域名' },
               { icon: Building2, label: '运营', value: 'Rubbish 团队' },
-              { icon: ShieldCheck, label: '标识', value: '研究记录只有站内编号，不作正式评价' },
+              { icon: ShieldCheck, label: '标识', value: '研究文章只有站内编号，不作正式评价' },
             ].map(({ icon: Icon, label, value }) => (
               <div key={label} className="flex items-start gap-3 border-t pt-3">
                 <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />

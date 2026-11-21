@@ -180,8 +180,8 @@ class SubmissionDecision(BaseModel):
     editor_note: str | None = Field(default=None, max_length=5000)
     resource_id: int | None = Field(default=None, ge=1)
     # accept 且新建物化时生效：published（默认，录用即刊，兼容旧行为）或
-    # draft（暂存草稿——刊前整理阶段，之后由 admin PATCH /catalog/{id} 刊出）。
-    # 指定现有 resource_id 时不改动该条目的刊出状态。
+    # draft（暂存草稿——发布前整理阶段，之后由 admin PATCH /catalog/{id} 发布）。
+    # 指定现有 resource_id 时不改动该条目的发布状态。
     publication_status: Literal["published", "draft"] = "published"
     # D 级（<60 分）默认不能录用：必须先打回审稿人补审或要求作者修改。
     # 确需破例时置 true，且必须在 editor_note 里写明理由——破例本身要
@@ -209,7 +209,7 @@ class TriageRequest(BaseModel):
 
 
 class ReworkRequest(BaseModel):
-    """打回稿件：必须列出具体修改要求。
+    """打回作品：必须列出具体修改要求。
 
     ``requirements`` 下限 3 条是刻意的：一句"不合格"对作者没有行动指引，
     对审稿人也没有可补的方向。打回的成本应该落在"说清楚问题"上，而不是
@@ -241,7 +241,7 @@ class FormatCheckItem(BaseModel):
 
 
 class FormatReport(BaseModel):
-    """稿件结构报告：上传后即时生成，随响应返回。"""
+    """作品结构报告：上传后即时生成，随响应返回。"""
 
     ok: bool
     word_count: int = 0
@@ -286,8 +286,8 @@ class SubmissionResponse(BaseModel):
     # 作者逐条回复审稿人；与版本修改说明分开，编辑可见。
     author_response: str | None = None
     author_response_at: datetime | None = None
-    # 关联目录条目的刊出状态（published/draft/in_review）；无关联时为 None。
-    # 前端据此区分「已发表」与「刊前预览（暂存草稿）」。
+    # 关联目录条目的发布状态（published/draft/in_review）；无关联时为 None。
+    # 前端据此区分「已发表」与「发布前预览（暂存草稿）」。
     resource_publication_status: str | None = None
     resource_id: int | None = None
     # 站内相似度（0–100）与 Top 3 命中；null 表示尚未计算。
@@ -295,7 +295,7 @@ class SubmissionResponse(BaseModel):
     similarity_matches: list[dict[str, Any]] = Field(default_factory=list)
     cover_image: str | None = None
     file_path: str | None = None
-    # 在线阅读用 Markdown 稿件的存储 key（可空 = 回退 PDF 视图）。
+    # 在线阅读用 Markdown 作品的存储 key（可空 = 回退 PDF 视图）。
     markdown_path: str | None = None
     # 完整正文（仅审稿人分配端点按需下发；详情/列表不返回，避免把正文塞进列表响应）
     manuscript_body: str | None = None
@@ -349,7 +349,7 @@ class ReviewerCandidate(BaseModel):
     match_reasons: list[str] = Field(default_factory=list)
     # P1-7：审稿人自填能力标签；候选理由里展示重合项。
     reviewer_tags: list[str] = Field(default_factory=list)
-    # 受控学科标签（Discipline.slug 数组；迁移 057），与稿件学科精确匹配。
+    # 受控学科标签（Discipline.slug 数组；迁移 057），与作品学科精确匹配。
     reviewer_disciplines: list[str] = Field(default_factory=list)
     # P1-8：年度利益冲突声明。未声明不拦分派，但编辑能看见；声明命中
     # 作者姓名/通讯邮箱时 conflict=True，分派接口会 409。

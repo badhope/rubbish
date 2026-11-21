@@ -319,17 +319,12 @@ async def evaluate_badges(db: AsyncSession, user: User) -> list[UserAchievement]
 
 
 async def level_snapshot(db: AsyncSession, user: User, roles: list[str]) -> dict[str, Any]:
-    """当前用户的身份快照。
+    """身份 + 全站活跃等级快照。
 
-    返回结构保留 ``level`` 键名（前端与外部调用方都在读），但语义已从
-    "九级游戏等级"变成"四层身份中的哪一层"。同时给出 ``xp``（纯荣誉
-    统计，不参与任何权限判定）与 ``author_eligible``（合规状态）。
-
-    为什么不再有 ``next_level_xp`` / ``progress``：旧体系把"再攒 86 XP
-    就能关注作者"当成进步感来源，而关注作者本来就不该有门槛。身份要么
-    有（编辑部授予），要么没有（去申请），不存在"攒积分换身份"的路径，
-    所以"进度条"这个概念本身就不成立。
+    ``level`` 现在只表示活跃等级（1–10）；身份用 ``identity`` /
+    ``identity_level`` 单独给出。两者不再混用。
     """
+    from app.domain.gamification.activity import activity_snapshot
     from app.domain.gamification.levels_axis import CURRENT_RULES_VERSION
 
     xp = int(user.xp or 0)
@@ -344,10 +339,15 @@ async def level_snapshot(db: AsyncSession, user: User, roles: list[str]) -> dict
     if slug == "reader" and author_ok:
         slug = "author"
     payload = identity_payload(slug)
+    activity = activity_snapshot(xp)
     payload.update(
         {
-            # 兼容旧字段名：外部读 level.level 的地方不用改。
-            "level": IDENTITY_RANK[slug] + 1,
+            # 活跃等级：全站统一，只由 XP 推进。
+            "level": activity["level"],
+            "activity": activity,
+            # 身份：由角色授予，和等级完全分开。
+            "identity_level": IDENTITY_RANK[slug] + 1,
+            "identity_slug": slug,
             "xp": xp,
             "roles": roles,
             "author_eligible": author_ok,
@@ -370,7 +370,7 @@ def _next_identity(slug: str, author_ok: bool) -> dict[str, str] | None:
         return {
             "slug": "reviewer",
             "name": "审稿人",
-            "how": "至少 1 篇稿件被本刊录用且最高 RQS ≥ 60 后，在「身份」页提交申请",
+            "how": "至少 1 篇稿件被本站录用且最高 RQS ≥ 60 后，在「身份」页提交申请",
         }
     if slug == "reviewer":
         return {
@@ -447,7 +447,7 @@ async def profile(db: AsyncSession, user: User, *, include_secret: bool) -> dict
 async def grant_admin_xp(
     db: AsyncSession, *, actor: User, target: User, points: int, note: str
 ) -> None:
-    """Manual grant by L9 operators; ref id keeps repeated grants distinct."""
+    """Manual grant by the admin group; ref id keeps repeated grants distinct."""
     stamp = utcnow().strftime("%Y%m%d%H%M%S%f")
     await award(
         db,

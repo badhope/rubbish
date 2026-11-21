@@ -1754,13 +1754,11 @@ export function useGamificationProfile(options?: { enabled?: boolean }) {
   })
 }
 
-// --- /me：身份（权限轴）+ 身份内等级（激励轴） ---
-export interface MeIdentityLevel {
-  identity: string
-  identity_name: string
+// --- /me：身份（权限轴）+ 全站活跃等级（经验轴） ---
+export interface MeActivity {
   level: number
-  level_label: string
-  points: number
+  max_level: number
+  xp: number
   current_floor: number
   current_ceiling: number
   next_threshold: number | null
@@ -1768,14 +1766,21 @@ export interface MeIdentityLevel {
   progress: number
 }
 
+export interface MePermissionGroup {
+  key: 'member' | 'review' | 'admin'
+  label: string
+  rank: number
+}
+
 export interface MeProfile {
   user_id: number
   username: string
   permission_role: 'user' | 'reviewer' | 'editor' | 'editor_in_chief'
   permission_label: string
+  permission_group: MePermissionGroup
+  permission_role_label?: string
   permissions: string[]
-  identities: string[]
-  levels: Record<string, MeIdentityLevel>
+  activity: MeActivity
   rules_accepted: boolean
 }
 

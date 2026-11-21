@@ -5,7 +5,7 @@ import { useIsMobile } from '@/hooks/use-is-mobile'
 import { useCatalogStats, useResources } from '@/hooks/api/use-modules'
 import type { ResourceType } from '@/lib/types'
 import { formatAuthors, cn } from '@/lib/utils'
-import { contentCategoryLabel, displayTypeLabel, isScholarlyContent } from '@/lib/resource-labels'
+import { contentCategoryLabel, displayTypeLabel, isScholarlyContent, issueShortLabel } from '@/lib/resource-labels'
 import { ESSAY_GENRES } from '@/lib/essay-genres'
 import { ARTICLE_SECTION_OPTIONS } from '@/lib/article-sections'
 import { PageHeader } from '@/components/common/page-header'
@@ -43,10 +43,10 @@ interface CatalogSearch {
   q?: string
   type?: ResourceType
   category?: 'academic' | 'fun' | 'rant' | 'essay'
-  /** 轨道切换：paper=研究档案，essay=自由创作。
+  /** 轨道切换：paper=文章，essay=自由创作。
    *  不写 = 全部。URL 持久化，刷新不丢。 */
   track?: 'paper' | 'essay'
-  /** 研究档案子类型：serious=实证研究 / absurd=荒诞研究。 */
+  /** 文章子类型：serious=实证研究 / absurd=荒诞研究。 */
   kind?: 'serious' | 'absurd'
   /** 娱乐轨文体（v1.16）：只在 track=essay 时生效 */
   genre?: 'joke' | 'fiction' | 'review' | 'guide' | 'essay' | 'poetry' | 'rant'
@@ -59,14 +59,14 @@ interface CatalogSearch {
   clc?: string
   /** 栏目 slug（article_section）。 */
   section?: string
-  /** 旧目录字段：卷号。 */
+  /** 卷号。 */
   volume?: string
-  /** 旧目录字段：期号。 */
+  /** 期号。 */
   issue?: string
   /** 旧目录字段：期 ID。 */
   issue_id?: number
-  /** 目录排序；random=随机，issue=旧目录顺序。 */
-  sort?: 'issue' | 'random'
+  /** 目录排序；random=随机，issue=旧目录顺序，latest=最近更新。 */
+  sort?: 'issue' | 'random' | 'latest'
   page?: number
   view?: 'list' | 'index'
 }
@@ -90,14 +90,19 @@ export function CatalogListPage() {
   // 目录是唯一入口；只有 kind 没有 track 时，按写作处理。
   const effectiveTrack: 'paper' | 'essay' | undefined =
     search.track ?? (search.kind ? 'paper' : undefined)
-  // 档案内默认进入「研究记录」；荒诞研究是同页的并列分区。
+  // 档案内默认进入「研究文章」；荒诞研究是同页的并列分区。
   const paperKind: 'serious' | 'absurd' = search.kind ?? 'serious'
   const statsTrack = effectiveTrack === 'essay' ? 'essay' : effectiveTrack === 'paper' ? 'paper' : undefined
 
   // 目录首页采用「可复现随机」：每次进入/点“换一批”换 seed，分页仍稳定；
   // 搜索时回到相关度/新近排序，避免随机打乱检索结果。
   const [feedSeed, setFeedSeed] = useState(() => Math.floor(Math.random() * 2147483646) + 1)
-  const randomFeed = Boolean(search.track || search.kind) && !search.q && !search.author && true
+  const randomFeed =
+    Boolean(search.track || search.kind) &&
+    !search.q &&
+    !search.author &&
+    search.sort !== 'latest' &&
+    search.sort !== 'issue'
 
   const params = {
     q: search.q || undefined,
@@ -106,7 +111,7 @@ export function CatalogListPage() {
     // 搜索结果页的文案是“全站写作与自由创作”，所以有关键词时必须解除当前分区
     // 的 track/paper_kind 收窄；否则已改判荒诞、或被分到自由创作的稿在目录检索下会假性 0 命中。
     track: search.q ? undefined : effectiveTrack,
-    paper_kind: search.q ? undefined : effectiveTrack === 'paper' ? paperKind : undefined,
+    paper_kind: search.q || search.volume ? undefined : effectiveTrack === 'paper' ? paperKind : undefined,
     genre: effectiveTrack === 'essay' ? search.genre : undefined,
     discipline: search.discipline || undefined,
     year: search.year,
@@ -122,13 +127,15 @@ export function CatalogListPage() {
     page: search.page || 1,
     page_size: 10,
     sort:
-      search.sort === 'random'
-        ? ('random' as const)
-        : search.sort === 'issue'
-          ? ('issue' as const)
-          : randomFeed
-            ? ('random' as const)
-            : undefined,
+      search.sort === 'latest'
+        ? ('created_at' as const)
+        : search.sort === 'random'
+          ? ('random' as const)
+          : search.sort === 'issue'
+            ? ('issue' as const)
+            : randomFeed
+              ? ('random' as const)
+              : undefined,
     seed: randomFeed ? feedSeed : undefined,
   }
 
@@ -152,7 +159,7 @@ export function CatalogListPage() {
 
   const shuffleFeed = () => {
     setFeedSeed(Math.floor(Math.random() * 2147483646) + 1)
-    updateSearch({ page: 1 })
+    updateSearch({ page: 1, sort: 'random' })
   }
 
   if (effectiveTrack === 'essay') {
@@ -170,10 +177,10 @@ export function CatalogListPage() {
     )
   }
 
-  // 总目录不把内容混成一列：先选「研究档案 / 自由创作」，
+  // 总目录不把内容混成一列：先选「文章 / 自由创作」，
   // 档案里再选「实证 / 荒诞」。
   const hasCatalogFilter = Boolean(
-    search.q || search.type || search.category || search.discipline || search.year || search.kind,
+    search.q || search.type || search.category || search.discipline || search.year || search.kind || search.volume || search.issue,
   )
   if (!effectiveTrack && !hasCatalogFilter) {
     return <CatalogHub />
@@ -184,6 +191,8 @@ export function CatalogListPage() {
     !search.q &&
     !search.discipline &&
     !search.year &&
+    !search.volume &&
+    !search.issue &&
     !search.type &&
     !search.category
 
@@ -193,24 +202,30 @@ export function CatalogListPage() {
       <div className={cn(isCover && 'flex flex-1 flex-col justify-center')}>
       {!search.q && effectiveTrack === 'paper' && (
         <p className="mb-2 text-center text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
-          ARCHIVE
+          {search.issue ? `第 ${Number(search.issue)} 期` : 'ARTICLES'}
         </p>
       )}
       <PageHeader
         title={
           search.q
             ? '搜索结果'
-            : effectiveTrack === 'paper'
-              ? '研究档案'
-              : '自由创作'
+            : search.volume
+              ? search.issue
+                ? `第 ${Number(search.volume)} 卷 · 第 ${String(search.issue).padStart(2, '0')} 期`
+                : `第 ${Number(search.volume)} 卷`
+              : effectiveTrack === 'paper'
+                ? '研究文章'
+                : '自由创作'
         }
         size={!search.q && effectiveTrack === 'paper' ? 'cover' : 'default'}
         description={
           search.q
-            ? `在全站档案中检索“${search.q}”，命中 ${data?.meta.total ?? '…'} 条。`
-            : effectiveTrack === 'paper'
-              ? '实证研究与荒诞研究各自分区：一种把真实问题做清楚，一种把荒诞设定做完整。'
-              : '自由创作：小说、随笔、评论、指南与吐槽，不套研究格式。'
+            ? `在全站文章中检索“${search.q}”，命中 ${data?.meta.total ?? '…'} 条。`
+            : search.volume
+              ? `${search.issue ? `第 ${Number(search.volume)} 卷 · 第 ${String(search.issue).padStart(2, '0')} 期` : `第 ${Number(search.volume)} 卷`}共 ${data?.meta.total ?? '…'} 篇文章，按发布顺序排列。`
+              : effectiveTrack === 'paper'
+                ? '实证研究与荒诞研究各自分区：一种把真实问题做清楚，一种把荒诞设定做完整。'
+                : '自由创作：小说、随笔、评论、指南与吐槽，不套研究格式。'
         }
       />
 
@@ -228,16 +243,27 @@ export function CatalogListPage() {
       {isCover ? <ScrollCue label="向下浏览目录" className="pb-36 sm:pb-10" /> : null}
       </section>
 
-      {/* 顶部只留视图切换。研究档案 / 自由创作的主入口在侧栏与移动端「更多」菜单。 */}
+      {/* 顶部只留视图切换。文章 / 自由创作的主入口在侧栏与移动端「更多」菜单。 */}
       <div className="mb-0 hidden flex-wrap items-center justify-between gap-2 sm:mb-4 sm:flex">
-        <p className="text-[13px] text-muted-foreground">
-          {effectiveTrack === 'paper'
-            ? paperKind === 'absurd'
-              ? '荒诞研究：设定清楚，推理完整，结论可以离谱'
-              : '实证研究：真实问题 · 可核查材料 · 完整过程'
-            : '自由创作：小说、随笔、评论、指南与吐槽。'}
-        </p>
+        {!search.volume && (
+          <p className="text-[13px] text-muted-foreground">
+            {effectiveTrack === 'paper'
+              ? paperKind === 'absurd'
+                ? '荒诞研究：设定清楚，推理完整，结论可以离谱'
+                : '实证研究：真实问题 · 可核查材料 · 完整过程'
+              : '自由创作：小说、随笔、评论、指南与吐槽。'}
+          </p>
+        )}
         <div className="flex items-center gap-2">
+          <Button
+            variant={search.sort === 'latest' ? 'default' : 'outline'}
+            size="sm"
+            className="h-10 px-3"
+            onClick={() => updateSearch({ sort: 'latest', page: 1 })}
+            title="按最近更新排序"
+          >
+            最新
+          </Button>
           <Button variant="outline" size="sm" className="h-10 px-4" onClick={shuffleFeed} title="随机换一批">
             <RefreshCw className="h-4 w-4" />
             换一批
@@ -278,7 +304,7 @@ export function CatalogListPage() {
           title={search.q ? '没有找到匹配的内容' : '这一区还空着'}
           description={
             search.q
-              ? '换个更短的关键词，或点上方“清除搜索”回到全部档案。'
+              ? '换个更短的关键词，或点上方“清除搜索”回到全部文章。'
               : effectiveTrack === 'paper'
                 ? '换个筛选条件，或切到另一个写作分区看看。'
                 : '还没有匹配的自由创作，换个筛选条件。'
@@ -336,6 +362,11 @@ export function CatalogListPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1.5">
+                          {issueShortLabel(r.issue) ? (
+                            <Badge variant="outline" className="text-[10px] border-border/80">
+                              {issueShortLabel(r.issue)}
+                            </Badge>
+                          ) : null}
                           <Badge variant="secondary">{displayTypeLabel(r.type, r.content_category, r.content_track, r.track)}</Badge>
                          {isScholarlyContent(r.content_category, r.content_track) && r.content_category ? (
                             <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/25">
@@ -375,8 +406,10 @@ export function CatalogListPage() {
 }
 
 // 总目录落地页：不把研究/创作做成两张“门户卡”。
-// 用一个编辑目录：先研究档案（实证 / 荒诞两行），再自由创作（文体一行）。
+// 用一个编辑目录：先文章（实证 / 荒诞两行），再自由创作（文体一行）。
 function CatalogHub() {
+  const navigate = useNavigate()
+  const [query, setQuery] = useState('')
   const { data: stats } = useCatalogStats()
   const seriousTotal = stats ? stats.by_paper_kind?.serious ?? 0 : undefined
   const absurdTotal = stats ? stats.by_paper_kind?.absurd ?? 0 : undefined
@@ -397,18 +430,43 @@ function CatalogHub() {
   return (
     <div className="mx-auto w-full max-w-[1320px]">
       <PageHeader
-        title="档案"
-        description="社区里的长记录：研究计划、实验记录、失败复盘、自由创作。想发短帖去社区，想写长记录放这里。"
+        title="文章"
+        description="已发表的研究文章、荒诞研究与自由创作。按卷、期浏览已发布文章；想发短帖去社区，想写文章走投稿。"
+        actions={
+          <Button asChild variant="outline">
+            <Link to="/issues">按卷期浏览</Link>
+          </Button>
+        }
       />
+
+      <form
+        className="mt-8 flex w-full max-w-2xl gap-2"
+        onSubmit={(e) => {
+          e.preventDefault()
+          const q = query.trim()
+          void navigate({ to: '/catalog', search: q ? { q } : {} })
+        }}
+      >
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="搜文章、作者、研究方向"
+          aria-label="搜索文章"
+          className="h-11"
+        />
+        <Button type="submit" className="h-11 shrink-0 px-5">
+          搜索
+        </Button>
+      </form>
 
       <section className="mt-10 border-t pt-7">
         <div className="flex items-baseline justify-between gap-4">
           <div>
             <p className="text-[10px] uppercase tracking-[0.32em] text-muted-foreground">I · Research</p>
-            <h2 className="mt-2 font-serif text-3xl font-semibold tracking-tight">研究档案</h2>
+            <h2 className="mt-2 font-serif text-3xl font-semibold tracking-tight">研究文章</h2>
           </div>
           <p className="font-mono text-sm tabular-nums text-muted-foreground">
-            {paperTotal ?? '…'} 份
+            {paperTotal ?? '…'} 篇
           </p>
         </div>
 
@@ -422,7 +480,7 @@ function CatalogHub() {
               </span>
             </span>
             <span className="font-mono text-sm tabular-nums text-muted-foreground">
-              {seriousTotal ?? '…'} 份 →
+              {seriousTotal ?? '…'} 篇 →
             </span>
           </Link>
 
@@ -435,8 +493,17 @@ function CatalogHub() {
               </span>
             </span>
             <span className="font-mono text-sm tabular-nums text-muted-foreground">
-              {absurdTotal ?? '…'} 份 →
+              {absurdTotal ?? '…'} 篇 →
             </span>
+          </Link>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+          <Link to="/catalog" search={{ track: 'paper', sort: 'latest' }} className="text-primary hover:underline">
+            最新研究 →
+          </Link>
+          <Link to="/catalog" search={{ track: 'paper' }} className="text-muted-foreground hover:text-primary">
+            全部研究
           </Link>
         </div>
 
@@ -470,14 +537,19 @@ function CatalogHub() {
             <p className="text-[10px] uppercase tracking-[0.32em] text-muted-foreground">II · Free writing</p>
             <h2 className="mt-2 font-serif text-3xl font-semibold tracking-tight">自由创作</h2>
           </div>
-          <Link to="/catalog" search={{ track: 'essay' }} className="text-sm text-primary hover:underline">
-            进入自由创作 →
+          <Link to="/catalog" search={{ track: 'essay', sort: 'latest' }} className="text-sm text-primary hover:underline">
+            最新创作 →
           </Link>
         </div>
 
         <p className="mt-4 max-w-2xl text-sm leading-7 text-muted-foreground">
           {essayTotal ?? '…'} 篇 · 小说、随笔、评论、指南、吐槽；不套研究格式，只谈写得好不好。
         </p>
+        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+          <Link to="/catalog" search={{ track: 'essay' }} className="text-muted-foreground hover:text-primary">
+            全部创作
+          </Link>
+        </div>
 
         {genres.length > 0 && (
           <div className="mt-5">
@@ -506,7 +578,7 @@ function CatalogHub() {
         )}
 
         <p className="mt-8 border-t pt-4 text-[11px] leading-6 text-muted-foreground">
-          自由创作不计分，也不进站内热度；推荐与最新档案按文体展开。
+          自由创作不计分，也不进站内热度；推荐与最新文章按文体展开。
         </p>
       </section>
     </div>
@@ -755,7 +827,7 @@ function MobileFilters({
       {track && (
         <div className="mb-2 flex items-baseline justify-between gap-3">
           <p className="text-[13px] font-medium text-foreground">
-            {track === 'paper' ? '档案目录' : '自由创作'}
+            {track === 'paper' ? '文章目录' : '自由创作'}
             <span className="ml-1.5 font-normal text-muted-foreground">
               · {resultTotal ?? '…'} 篇
             </span>
@@ -771,6 +843,15 @@ function MobileFilters({
             onCommit={(q) => updateSearch({ q: q || undefined, page: 1 })}
           />
         </div>
+        <Button
+          type="button"
+          variant={search.sort === 'latest' ? 'default' : 'outline'}
+          className="h-10 shrink-0 px-2.5 text-xs"
+          onClick={() => updateSearch({ sort: 'latest', page: 1 })}
+          aria-label="按最近更新排序"
+        >
+          最新
+        </Button>
         {onShuffle && (
           <Button
             type="button"
@@ -913,8 +994,8 @@ function ArchiveDirectory({
   const activeKind = kinds.find((kind) => kind.id === paperKind) ?? kinds[0]
 
   return (
-    <section className="mb-8 border-y" aria-label="档案目录">
-      <div className="flex flex-wrap items-baseline gap-x-10 gap-y-2 py-5" role="tablist" aria-label="档案分区">
+    <section className="mb-8 border-y" aria-label="文章目录">
+      <div className="flex flex-wrap items-baseline gap-x-10 gap-y-2 py-5" role="tablist" aria-label="文章分区">
         {kinds.map((kind) => {
           const active = paperKind === kind.id
           return (
@@ -934,7 +1015,7 @@ function ArchiveDirectory({
               <span className="font-serif text-2xl font-semibold tracking-tight sm:text-[1.75rem]">
                 {kind.label}
               </span>
-              <span className="font-mono text-sm tabular-nums">{kind.count ?? '…'} 份</span>
+              <span className="font-mono text-sm tabular-nums">{kind.count ?? '…'} 篇</span>
             </button>
           )
         })}

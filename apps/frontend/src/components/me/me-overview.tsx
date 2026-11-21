@@ -51,15 +51,14 @@ export function MeOverview({
             </span>
           </Link>
           <Link
-            to="/forum"
-            search={{ compose: '1' }}
+            to="/submissions/new"
             className="group flex items-start gap-3 rounded-lg border p-4 transition-colors hover:border-primary/40 hover:bg-primary/[0.03]"
           >
             <PenLine className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <span>
-              <span className="block text-sm font-medium">写一篇文章或发一个帖子</span>
+              <span className="block text-sm font-medium">写一篇文章</span>
               <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
-                标题和正文就够；一段经历、一个判断、一次复盘都可以先写。
+                走投稿与审核；可保存草稿。短帖请去社区发。
               </span>
             </span>
           </Link>

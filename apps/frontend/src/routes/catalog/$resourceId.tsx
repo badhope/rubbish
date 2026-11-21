@@ -44,6 +44,7 @@ import {
   contentTrackKind,
   displayTypeLabel,
   isScholarlyContent,
+  issueLabel,
   languageLabel,
   statusLabel,
   type ContentKind,
@@ -75,7 +76,6 @@ import { AddToListDialog } from '@/components/common/add-to-list-dialog'
 import { BottomSheet } from '@/components/common/bottom-sheet'
 import { ClaimDialog } from '@/components/catalog/claim-dialog'
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
-import { Comments } from '@/components/common/comments'
 import { FunArticle } from '@/components/catalog/fun-article'
 import { MetaItem } from '@/components/common/meta-item'
 import { ErrorState, LoadingSkeleton } from '@/components/common/state'
@@ -249,6 +249,11 @@ function CatalogDetailPage() {
               <Badge variant="secondary">
                 {displayTypeLabel(data.type, data.content_category, data.content_track, data.track)}
               </Badge>
+              {issueLabel(data.volume, data.issue) ? (
+                <Badge variant="outline" className="border-border/80">
+                  {issueLabel(data.volume, data.issue)}
+                </Badge>
+              ) : null}
               {isEssayTrack && (
                 <Badge className="border-amber-400/60 bg-amber-100 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
                   自由创作
@@ -383,10 +388,13 @@ function CatalogDetailPage() {
               </Card>
             )}
 
-            {/* 研究档案：只保留记录本身需要的元信息，不展示旧刊期、分类号与评分。 */}
+            {/* 研究档案：只保留记录本身需要的元信息。 */}
             {isPaperTrack && (
               <FoldCard title="记录信息" defaultOpen={!isMobile}>
                 <CardContent>
+                  {issueLabel(data.volume, data.issue) ? (
+                    <MetaItem label="卷期" value={issueLabel(data.volume, data.issue)!} />
+                  ) : null}
                   <MetaItem label="年份" value={String(data.year)} />
                   {data.venue ? <MetaItem label="原始出处" value={data.venue} /> : null}
                   <MetaItem label="研究方向" value={data.discipline} />
@@ -409,7 +417,6 @@ function CatalogDetailPage() {
             </FoldCard>
 
             <RelatedResources resourceId={id} discipline={data.discipline} />
-            <Comments resourceId={id} />
           </div>
         </div>
 
@@ -520,7 +527,7 @@ function CatalogDetailPage() {
               <Link to="/login" search={{ redirect: `/catalog/${id}` }} className="text-primary hover:underline">
                 登录
               </Link>
-              后可收藏并参与评论。
+              后可收藏，并去社区讨论。
             </p>
           )}
 

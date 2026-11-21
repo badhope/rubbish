@@ -230,9 +230,14 @@ async def test_materialize_submission_essay_track(
     db_session.add(submission)
     await db_session.commit()
 
+    from app.core.config import get_settings
+
     resource = await _materialize_resource_from_submission(db_session, submission)
     assert resource.content_track == "essay"
     assert resource.content_category == "fun"
+    assert resource.volume == get_settings().current_volume
+    assert resource.issue == get_settings().current_issue
+    assert resource.issue_id is not None
 
     # 缺省（track=None）按 paper/academic 物化
     submission2 = Submission(

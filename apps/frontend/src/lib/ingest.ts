@@ -12,7 +12,7 @@ export const CSV_FIELD_OPTIONS: { value: string; label: string }[] = [
   { value: "authors", label: "作者" },
   { value: "year", label: "年份" },
   { value: "type", label: "类型" },
-  { value: "venue", label: "期刊 / 来源" },
+  { value: "venue", label: "来源 / 首发平台" },
   { value: "discipline", label: "学科" },
   { value: "subdiscipline", label: "子学科" },
   { value: "tags", label: "关键词 / 标签" },
@@ -23,7 +23,7 @@ export const CSV_FIELD_OPTIONS: { value: string; label: string }[] = [
   { value: "issue", label: "期" },
   { value: "pages", label: "页码" },
   { value: "issn", label: "ISSN" },
-  { value: "short_container_title", label: "期刊简称" },
+  { value: "short_container_title", label: "来源简称" },
 ];
 
 export const CSV_IGNORE_TARGET = "__ignore__";

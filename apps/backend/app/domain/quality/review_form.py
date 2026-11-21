@@ -84,7 +84,7 @@ ABSURD_CHECK_ITEMS: tuple[CheckItem, ...] = (
     CheckItem(
         "x_degree_control",
         "absurdity",
-        "荒诞语气是否有收束与边界，读完后仍能回到论文/叙事框架？",
+        "荒诞语气是否有收束与边界，读完后仍能回到文章/叙事框架？",
         2,
     ),
     # --- 荒诞设定与原创 ---
@@ -106,7 +106,7 @@ ABSURD_CHECK_ITEMS: tuple[CheckItem, ...] = (
         "x_source", "material", "引用的梗、案例、数据是否给出可核出处（链接/作品/时间）？", 2
     ),
     CheckItem("x_rule_clarity", "material", "自造数据/规则是否说明是自造，而不是冒充真实来源？", 2),
-    CheckItem("x_quote", "material", "引用原文/台词/论文是否准确，没有被张冠李戴？", 2),
+    CheckItem("x_quote", "material", "引用原文/台词/文章是否准确，没有被张冠李戴？", 2),
     # --- 文风与节奏 ---
     CheckItem("x_rhythm", "voice", "长短句与段落节奏是否有控制，不是一路平推？", 2),
     CheckItem("x_punch", "voice", "包袱是否有落点，笑点不是靠括号解释？", 2),
@@ -258,7 +258,7 @@ def prompt_payload(article_type: str = "research", track: str = "academic") -> d
         "track": track,
         "track_label": TRACK_LABELS[track],
         "article_type": article_type,
-        "article_type_label": PROFILE_LABELS.get(article_type, "研究论文"),
+        "article_type_label": PROFILE_LABELS.get(article_type, "研究文章"),
         "weights": weights_for(track)
         if track == "absurd"
         else PROFILES.get(article_type, PROFILES["research"]),

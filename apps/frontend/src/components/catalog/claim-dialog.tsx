@@ -20,13 +20,13 @@ import { Textarea } from '@/components/ui/textarea'
 const EVIDENCE_LABEL: Record<ClaimEvidenceType, string> = {
   email: '原稿邮箱',
   orcid: 'ORCID',
-  manuscript_id: '稿件编号',
+  manuscript_id: '作品编号',
 }
 
 const EVIDENCE_HINT: Record<ClaimEvidenceType, string> = {
-  email: '填投稿时留下的邮箱',
+  email: '填提交作品时留下的邮箱',
   orcid: '填你的 ORCID iD',
-  manuscript_id: '填稿件编号，例如 RUB-A-2603-00634',
+  manuscript_id: '填作品编号，例如 RUB-A-2603-00634',
 }
 
 /**

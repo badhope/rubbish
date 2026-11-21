@@ -179,7 +179,7 @@ def _story_html(body_html: str, title: str, byline: str | None = None) -> str:
     """正文包上刊头：标题 + 署名行（作者 · 发表日期）。
 
     署名行来自 Resource 元数据（authors / publish_at），让导出的
-    PDF/Word 不再是"无名氏文档"——作者与刊出日期随文档走。
+    PDF/Word 不再是"无名氏文档"——作者与发布日期随文档走。
     """
     head = f"<h1>{title}</h1>"
     if byline:
@@ -417,24 +417,24 @@ def issue_front_matter_pdf(
 <div class="pagebreak">
   <div class="kicker">Rubbish · Vol. {esc(volume)} · {esc(issue)}</div>
   <div class="masthead"><img src="data:image/png;base64,{logo_b64}" alt="Rubbish" /></div>
-  <div class="kicker">A Journal of Serious Format &amp; Free Subjects</div>
+  <div class="kicker">A Community of Serious Format &amp; Free Subjects</div>
   <div class="rule"></div>
   <div class="issue-no">{int(issue):02d}</div>
   <div class="issue-theme">{esc(theme)}</div>
   <div class="meta">第 {esc(volume)} 卷 第 {int(issue)} 期 · {esc(range_label)}</div>
-  <div class="meta">共 {len(entries)} 篇 · {len(papers)} 篇论文 · {len(essays)} 篇副刊</div>
+  <div class="meta">共 {len(entries)} 篇 · {len(papers)} 篇研究文章 · {len(essays)} 篇自由创作</div>
   <div style="margin-top:120pt" class="meta">{esc(editor)} · rubbish.argjiemi.cn</div>
 </div>
-<h2>本期编后记</h2>
+<h2>本期说明</h2>
 <div class="note"><p>{esc(note)}</p><p style="text-align:right">— {esc(editor)}</p></div>
 <h2>本期目录</h2>
-{toc(papers, "论文")}
-{toc(essays, "副刊与随笔")}
+{toc(papers, "文章")}
+{toc(essays, "自由创作与随笔")}
 <h2>版权页</h2>
-<p>出版：Rubbish 编辑部 · 纯数字出版 · 滚动刊出</p>
+<p>发布：Rubbish 编辑部 · 纯数字发布 · 持续更新</p>
 <p>主编：陆止于海　副主编：沈知非、顾荒唐</p>
 <p>编委：白鹿原上、林一苇、R. 编辑部</p>
-<p>本版：第 {esc(volume)} 卷 第 {int(issue)} 期 · {esc(range_label)}</p>
+<p>本卷：第 {esc(volume)} 卷 第 {int(issue)} 期 · {esc(range_label)}</p>
 <div class="footer">Rubbish · rubbish.argjiemi.cn · 本版面由站内排版器自动生成</div>
 </body></html>"""
 
@@ -471,7 +471,7 @@ def stamp_pdf_metadata(
     """给 LibreOffice 产物盖章：Creator 不该是 “Writer”。
 
     LibreOffice 只填 Title/Author/Subject，Creator 固定写成 Writer，
-    读者在阅读器里看到的是「Writer」而不是这本刊。这里用 PyMuPDF 重写
+    读者在阅读器里看到的是「Writer」而不是这本站。这里用 PyMuPDF 重写
     文档信息字典，顺手把关键字与刊名补上；不改动页面内容流。
     """
     try:

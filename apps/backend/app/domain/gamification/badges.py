@@ -57,26 +57,26 @@ BADGES: tuple[BadgeSpec, ...] = (
     BadgeSpec(
         "subscribe.3", "学科地图", "silver", "关注", "订阅 3 个学科。", "subscribed_disciplines", 3
     ),
-    # --- 投稿 ---
-    BadgeSpec("submit.first", "初次投稿", "bronze", "投稿", "提交第一篇稿件。", "submissions", 1),
+    # --- 作品 ---
+    BadgeSpec("submit.first", "第一篇作品", "bronze", "作品", "提交第一篇作品。", "submissions", 1),
     BadgeSpec(
         "submit.accepted",
-        "见刊",
+        "已发布",
         "gold",
-        "投稿",
-        "第一篇稿件被录用并刊出。",
+        "作品",
+        "第一篇作品被录用并发布。",
         "accepted_submissions",
         1,
     ),
     BadgeSpec(
-        "submit.5", "多产作者", "gold", "投稿", "累计 5 篇稿件被录用。", "accepted_submissions", 5
+        "submit.5", "多产作者", "gold", "作品", "累计 5 篇作品被录用。", "accepted_submissions", 5
     ),
     BadgeSpec(
         "submit.rejected",
-        "退稿不死",
+        "未录用不弃",
         "special",
-        "投稿",
-        "收到第一封拒稿信后仍继续投稿。",
+        "作品",
+        "收到第一次未录用通知后仍继续提交作品。",
         "rejections_then_resubmit",
         1,
         True,

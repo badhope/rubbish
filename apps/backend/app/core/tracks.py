@@ -1,15 +1,15 @@
-"""赛道口径：paper 轨内部再分「学术论文 / 荒诞论文」。
+"""赛道口径：paper 轨内部再分「研究文章 / 荒诞研究」。
 
 历史背景：本刊曾有 serious / absurd 双赛道，后来一度被荒诞指数取代而
-下线；2026-11 起重新启用为 paper 轨的子类型：serious=学术论文（正经
-研究），absurd=荒诞论文（严格论文格式、一本正经地论证一个荒诞命题）。
+下线；2026-11 起重新启用为 paper 轨的子类型：serious=研究文章（正经
+研究），absurd=荒诞研究（严格学术文章格式、一本正经地论证一个荒诞命题）。
 它只描述「论文的写法与命题」，不改变 content_track=paper 的评审/计分
 口径，也不影响副刊（content_track=essay）。
 
 兼容策略：
 - resources.track / submissions.track 原样保留；
 - 新写入允许 serious / absurd；历史脏值仍归一为 serious；
-- 副刊不展示该字段，读者只看学术论文 / 荒诞论文 / 副刊三区。
+- 副刊不展示该字段，读者只看研究文章 / 荒诞研究 / 自由创作三区。
 """
 
 from __future__ import annotations
@@ -92,18 +92,18 @@ ALL_TRACKS: Final[tuple[Track, ...]] = ("serious", "absurd")
 
 # 展示口径：数据库存 slug。只用于 paper 轨的子类型标签。
 TRACK_LABELS: Final[dict[str, str]] = {
-    "serious": "学术论文",
-    "absurd": "荒诞论文",
+    "serious": "研究文章",
+    "absurd": "荒诞研究",
 }
 
 TRACK_SHORT_LABELS: Final[dict[str, str]] = {
-    "serious": "学术",
+    "serious": "研究",
     "absurd": "荒诞",
 }
 
 TRACK_DESCRIPTIONS: Final[dict[str, str]] = {
     "serious": "正经研究：真实问题、可核查材料、按学术规范论证。",
-    "absurd": "荒诞论文：严格论文格式，用可核查的材料一本正经地论证一个荒诞命题。",
+    "absurd": "荒诞研究：严格学术文章格式，用可核查的材料一本正经地论证一个荒诞命题。",
 }
 
 

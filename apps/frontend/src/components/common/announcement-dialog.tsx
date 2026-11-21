@@ -131,7 +131,7 @@ export function AnnouncementDialog({
               to="/catalog"
               className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
             >
-              浏览档案 <ArrowRight className="h-3.5 w-3.5" />
+              浏览文章 <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
           <Button type="button" onClick={() => onOpenChange(false)}>
