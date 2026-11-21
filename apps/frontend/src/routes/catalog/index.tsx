@@ -18,6 +18,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Input } from '@/components/ui/input'
 import { CatalogIndexRow } from './-catalog-index-row'
+import { ContentSpectrum } from '@/components/catalog/content-spectrum'
 import { FunCatalog } from '@/components/catalog/fun-feed'
 import {
   Select,
@@ -350,7 +351,7 @@ export function CatalogListPage() {
                           params={{ resourceId: String(r.id) }}
                           className="font-medium hover:text-primary"
                         >
-                          {r.title}
+                          {r.short_title?.trim() || r.title}
                         </Link>
                       </TableCell>
                       <TableCell className="max-w-[180px] truncate text-muted-foreground">
@@ -418,10 +419,6 @@ function CatalogHub() {
   const essayTotal = stats
     ? stats.by_track?.essay ?? Object.values(genreCounts).reduce((a, b) => a + b, 0)
     : undefined
-  const disciplines = Object.entries(stats?.by_discipline ?? {})
-    .filter(([name]) => name && name !== '未分类')
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 8)
   const genres = ESSAY_GENRES.filter((g) => (genreCounts[g.value] ?? 0) > 0)
 
   const rowClass =
@@ -458,6 +455,8 @@ function CatalogHub() {
           搜索
         </Button>
       </form>
+
+      <ContentSpectrum stats={stats} />
 
       <section className="mt-10 border-t pt-7">
         <div className="flex items-baseline justify-between gap-4">
@@ -506,29 +505,6 @@ function CatalogHub() {
             全部研究
           </Link>
         </div>
-
-        {disciplines.length > 0 && (
-          <div className="mt-6">
-            <div className="flex items-baseline justify-between gap-4">
-              <p className="text-xs font-medium text-muted-foreground">按研究方向进入</p>
-              <Link to="/catalog" search={{ track: 'paper' }} className="text-[11px] text-primary hover:underline">
-                全部方向
-              </Link>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2">
-              {disciplines.map(([name, count]) => (
-                <Link
-                  key={name}
-                  to="/catalog" search={{ track: 'paper', discipline: name }}
-                  className="inline-flex items-baseline gap-1.5 text-sm transition-colors hover:text-primary"
-                >
-                  <span>{name}</span>
-                  <span className="font-mono text-[11px] text-muted-foreground">{count}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
       </section>
 
       <section className="mt-12 border-t pt-7">

@@ -30,11 +30,14 @@ import { Route as AdminPeopleRouteImport } from './routes/admin/people'
 import { Route as AdminSystemRouteImport } from './routes/admin/system'
 import { Route as CatalogIndexRouteImport } from './routes/catalog/index'
 import { Route as CatalogResourceIdRouteImport } from './routes/catalog/$resourceId'
+import { Route as EditorCalibrationRouteImport } from './routes/editor/calibration'
 import { Route as ForumIndexRouteImport } from './routes/forum/index'
 import { Route as ForumTopicIdRouteImport } from './routes/forum/$topicId'
 import { Route as LibraryListIdRouteImport } from './routes/library/$listId'
+import { Route as ReviewIndexRouteImport } from './routes/review/index'
 import { Route as SubmissionsIndexRouteImport } from './routes/submissions/index'
 import { Route as SubmissionsNewRouteImport } from './routes/submissions/new'
+import { Route as SubmissionsPendingRouteImport } from './routes/submissions/pending'
 import { Route as UUsernameRouteImport } from './routes/u/$username'
 import { Route as AuthOidcCallbackRouteImport } from './routes/auth/oidc/callback'
 
@@ -143,6 +146,11 @@ const CatalogResourceIdRoute = CatalogResourceIdRouteImport.update({
   path: '/catalog/$resourceId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EditorCalibrationRoute = EditorCalibrationRouteImport.update({
+  id: '/editor/calibration',
+  path: '/editor/calibration',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ForumIndexRoute = ForumIndexRouteImport.update({
   id: '/forum/',
   path: '/forum/',
@@ -158,6 +166,11 @@ const LibraryListIdRoute = LibraryListIdRouteImport.update({
   path: '/library/$listId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReviewIndexRoute = ReviewIndexRouteImport.update({
+  id: '/review/',
+  path: '/review/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SubmissionsIndexRoute = SubmissionsIndexRouteImport.update({
   id: '/submissions/',
   path: '/submissions/',
@@ -166,6 +179,11 @@ const SubmissionsIndexRoute = SubmissionsIndexRouteImport.update({
 const SubmissionsNewRoute = SubmissionsNewRouteImport.update({
   id: '/submissions/new',
   path: '/submissions/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SubmissionsPendingRoute = SubmissionsPendingRouteImport.update({
+  id: '/submissions/pending',
+  path: '/submissions/pending',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UUsernameRoute = UUsernameRouteImport.update({
@@ -199,13 +217,16 @@ export interface FileRoutesByFullPath {
   '/admin/people': typeof AdminPeopleRoute
   '/admin/system': typeof AdminSystemRoute
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
+  '/editor/calibration': typeof EditorCalibrationRoute
   '/forum/$topicId': typeof ForumTopicIdRoute
   '/library/$listId': typeof LibraryListIdRoute
   '/submissions/new': typeof SubmissionsNewRoute
+  '/submissions/pending': typeof SubmissionsPendingRoute
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/catalog/': typeof CatalogIndexRoute
   '/forum/': typeof ForumIndexRoute
+  '/review/': typeof ReviewIndexRoute
   '/submissions/': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
 }
@@ -228,13 +249,16 @@ export interface FileRoutesByTo {
   '/admin/people': typeof AdminPeopleRoute
   '/admin/system': typeof AdminSystemRoute
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
+  '/editor/calibration': typeof EditorCalibrationRoute
   '/forum/$topicId': typeof ForumTopicIdRoute
   '/library/$listId': typeof LibraryListIdRoute
   '/submissions/new': typeof SubmissionsNewRoute
+  '/submissions/pending': typeof SubmissionsPendingRoute
   '/u/$username': typeof UUsernameRoute
   '/admin': typeof AdminIndexRoute
   '/catalog': typeof CatalogIndexRoute
   '/forum': typeof ForumIndexRoute
+  '/review': typeof ReviewIndexRoute
   '/submissions': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
 }
@@ -259,13 +283,16 @@ export interface FileRoutesById {
   '/admin/people': typeof AdminPeopleRoute
   '/admin/system': typeof AdminSystemRoute
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
+  '/editor/calibration': typeof EditorCalibrationRoute
   '/forum/$topicId': typeof ForumTopicIdRoute
   '/library/$listId': typeof LibraryListIdRoute
   '/submissions/new': typeof SubmissionsNewRoute
+  '/submissions/pending': typeof SubmissionsPendingRoute
   '/u/$username': typeof UUsernameRoute
   '/admin/': typeof AdminIndexRoute
   '/catalog/': typeof CatalogIndexRoute
   '/forum/': typeof ForumIndexRoute
+  '/review/': typeof ReviewIndexRoute
   '/submissions/': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
 }
@@ -291,13 +318,16 @@ export interface FileRouteTypes {
     | '/admin/people'
     | '/admin/system'
     | '/catalog/$resourceId'
+    | '/editor/calibration'
     | '/forum/$topicId'
     | '/library/$listId'
     | '/submissions/new'
+    | '/submissions/pending'
     | '/u/$username'
     | '/admin/'
     | '/catalog/'
     | '/forum/'
+    | '/review/'
     | '/submissions/'
     | '/auth/oidc/callback'
   fileRoutesByTo: FileRoutesByTo
@@ -320,13 +350,16 @@ export interface FileRouteTypes {
     | '/admin/people'
     | '/admin/system'
     | '/catalog/$resourceId'
+    | '/editor/calibration'
     | '/forum/$topicId'
     | '/library/$listId'
     | '/submissions/new'
+    | '/submissions/pending'
     | '/u/$username'
     | '/admin'
     | '/catalog'
     | '/forum'
+    | '/review'
     | '/submissions'
     | '/auth/oidc/callback'
   id:
@@ -350,13 +383,16 @@ export interface FileRouteTypes {
     | '/admin/people'
     | '/admin/system'
     | '/catalog/$resourceId'
+    | '/editor/calibration'
     | '/forum/$topicId'
     | '/library/$listId'
     | '/submissions/new'
+    | '/submissions/pending'
     | '/u/$username'
     | '/admin/'
     | '/catalog/'
     | '/forum/'
+    | '/review/'
     | '/submissions/'
     | '/auth/oidc/callback'
   fileRoutesById: FileRoutesById
@@ -377,12 +413,15 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   CatalogResourceIdRoute: typeof CatalogResourceIdRoute
+  EditorCalibrationRoute: typeof EditorCalibrationRoute
   ForumTopicIdRoute: typeof ForumTopicIdRoute
   LibraryListIdRoute: typeof LibraryListIdRoute
   SubmissionsNewRoute: typeof SubmissionsNewRoute
+  SubmissionsPendingRoute: typeof SubmissionsPendingRoute
   UUsernameRoute: typeof UUsernameRoute
   CatalogIndexRoute: typeof CatalogIndexRoute
   ForumIndexRoute: typeof ForumIndexRoute
+  ReviewIndexRoute: typeof ReviewIndexRoute
   SubmissionsIndexRoute: typeof SubmissionsIndexRoute
   AuthOidcCallbackRoute: typeof AuthOidcCallbackRoute
 }
@@ -536,6 +575,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CatalogResourceIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/editor/calibration': {
+      id: '/editor/calibration'
+      path: '/editor/calibration'
+      fullPath: '/editor/calibration'
+      preLoaderRoute: typeof EditorCalibrationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/forum/': {
       id: '/forum/'
       path: '/forum'
@@ -557,6 +603,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LibraryListIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/review/': {
+      id: '/review/'
+      path: '/review'
+      fullPath: '/review/'
+      preLoaderRoute: typeof ReviewIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/submissions/': {
       id: '/submissions/'
       path: '/submissions'
@@ -569,6 +622,13 @@ declare module '@tanstack/react-router' {
       path: '/submissions/new'
       fullPath: '/submissions/new'
       preLoaderRoute: typeof SubmissionsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/submissions/pending': {
+      id: '/submissions/pending'
+      path: '/submissions/pending'
+      fullPath: '/submissions/pending'
+      preLoaderRoute: typeof SubmissionsPendingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/u/$username': {
@@ -622,12 +682,15 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   CatalogResourceIdRoute: CatalogResourceIdRoute,
+  EditorCalibrationRoute: EditorCalibrationRoute,
   ForumTopicIdRoute: ForumTopicIdRoute,
   LibraryListIdRoute: LibraryListIdRoute,
   SubmissionsNewRoute: SubmissionsNewRoute,
+  SubmissionsPendingRoute: SubmissionsPendingRoute,
   UUsernameRoute: UUsernameRoute,
   CatalogIndexRoute: CatalogIndexRoute,
   ForumIndexRoute: ForumIndexRoute,
+  ReviewIndexRoute: ReviewIndexRoute,
   SubmissionsIndexRoute: SubmissionsIndexRoute,
   AuthOidcCallbackRoute: AuthOidcCallbackRoute,
 }

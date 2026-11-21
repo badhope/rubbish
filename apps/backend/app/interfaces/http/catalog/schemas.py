@@ -136,6 +136,16 @@ class ResourceBase(BaseModel):
     abstract: str = Field(min_length=1, max_length=20000)
     # Optional preview; falls back to the first 500 chars of abstract (matches SubmissionCreate).
     preview: str | None = Field(default=None, max_length=5000)
+    # 编辑推荐层：正式 title 不改，阅读端用 short_title 做钩子。
+    short_title: str | None = Field(default=None, max_length=120)
+    # “为什么现在读这篇”，不是摘要复述。
+    editor_note: str | None = Field(default=None, max_length=800)
+    # 文末讨论引子；为空时前端不强行生成。
+    discussion_prompt: str | None = Field(default=None, max_length=800)
+    # 首页推荐池排序：1 起，越小越靠前；为空表示不进池。
+    featured_rank: int | None = Field(default=None, ge=1, le=100)
+    # 阅读路径分组：start / research / weird。
+    reading_path: Literal["start", "research", "weird"] | None = None
     # download_url / external_url 允许两种形态：
     #   1) http(s) 绝对链接（外部托管）；
     #   2) 以 / 开头的同源相对路径（本地托管的稿件文件，如 /uploads/...）。
@@ -243,6 +253,11 @@ class ResourceUpdate(BaseModel):
     tags: list[str] | None = Field(default=None, max_length=50)
     abstract: str | None = Field(default=None, min_length=1, max_length=20000)
     preview: str | None = Field(default=None, min_length=1, max_length=5000)
+    short_title: str | None = Field(default=None, max_length=120)
+    editor_note: str | None = Field(default=None, max_length=800)
+    discussion_prompt: str | None = Field(default=None, max_length=800)
+    featured_rank: int | None = Field(default=None, ge=1, le=100)
+    reading_path: Literal["start", "research", "weird"] | None = None
     # URL scheme 安全性由 ResourceBase._safe_url 统一校验（http/https 或同源相对路径）。
     download_url: str | None = None
     external_url: str | None = None

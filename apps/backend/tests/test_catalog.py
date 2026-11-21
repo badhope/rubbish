@@ -76,6 +76,40 @@ async def test_create_without_preview_autofills_from_abstract(
     assert body["preview"] == payload["abstract"][:500]
 
 
+async def test_editorial_picks_are_ordered_and_skip_unranked(
+    client: AsyncClient, admin_user: dict
+) -> None:
+    """首页推荐池只返回显式设置了 featured_rank 的文章，并按 rank 升序。"""
+    for rank, title, slug in (
+        (2, "Second Pick", "second-pick"),
+        (1, "First Pick", "first-pick"),
+        (None, "Not Picked", "not-picked"),
+    ):
+        payload = {
+            **_SAMPLE,
+            "title": title,
+            "slug": slug,
+            "featured_rank": rank,
+            "reading_path": "start" if rank else None,
+            "short_title": title,
+            "editor_note": f"note for {title}" if rank else None,
+            "discussion_prompt": f"prompt for {title}" if rank else None,
+        }
+        response = await client.post(
+            "/api/catalog",
+            json=payload,
+            headers={"Authorization": f"Bearer {admin_user['token']}"},
+        )
+        assert response.status_code == 201
+
+    response = await client.get("/api/catalog/editorial")
+    assert response.status_code == 200
+    rows = response.json()["data"]
+    assert [row["short_title"] for row in rows] == ["First Pick", "Second Pick"]
+    assert rows[0]["reading_path"] == "start"
+    assert rows[0]["discussion_prompt"] == "prompt for First Pick"
+
+
 async def test_create_with_slug(client: AsyncClient, admin_user: dict) -> None:
     payload = {**_SAMPLE, "slug": "test-paper-2024"}
     response = await client.post(

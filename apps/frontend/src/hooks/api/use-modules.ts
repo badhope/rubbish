@@ -199,6 +199,15 @@ export function useCatalogStats(track?: 'paper' | 'essay') {
   })
 }
 
+export function useEditorialPicks(limit = 10) {
+  return useQuery<ResourceListResponse>({
+    queryKey: ['catalog', 'editorial', limit] as const,
+    queryFn: async () =>
+      (await api.get<ResourceListResponse>('/catalog/editorial', { params: { limit } })).data,
+    staleTime: 60_000,
+  })
+}
+
 export function useCreateResource() {
   const qc = useQueryClient()
   return useMutation<ResourceResponse, Error, ResourceCreate>({

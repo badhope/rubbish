@@ -5,9 +5,11 @@ import {
   Building2,
   ChevronDown,
   ChevronLeft,
+  ClipboardCheck,
   Compass,
   Gavel,
   Home,
+  Kanban,
   Menu,
   Search,
   ShieldCheck,
@@ -17,6 +19,7 @@ import {
   FileText,
   Layers3,
   MessagesSquare,
+  PenLine,
   X,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -56,6 +59,22 @@ const NAV: NavItem[] = [
   { to: '/me', label: '我的', icon: User, group: '一级入口' },
 
   { to: '/submissions', label: '我的投稿', icon: FileText, auth: true, group: '投稿' },
+  {
+    to: '/review',
+    label: '审稿工作台',
+    icon: ClipboardCheck,
+    auth: true,
+    roles: ['reviewer', 'senior_reviewer', 'editor', 'editor_in_chief'],
+    group: '工作台',
+  },
+  {
+    to: '/submissions/pending',
+    label: '编辑工作台',
+    icon: Kanban,
+    auth: true,
+    roles: ['editor', 'editor_in_chief'],
+    group: '工作台',
+  },
   { to: '/about', label: '关于社区', icon: Building2, group: '关于' },
   { to: '/admin', label: '管理后台', icon: Gavel, auth: true, adminOnly: true, group: '站点管理' },
 ]
@@ -248,6 +267,28 @@ export function AppShell() {
             我的记录
           </Link>
         </DropdownMenuItem>
+        {(isAdmin ||
+          (user.roles ?? []).some((role) =>
+            ['reviewer', 'senior_reviewer', 'editor', 'editor_in_chief'].includes(role),
+          )) && (
+          <DropdownMenuItem asChild>
+            <Link to="/review" search={{ tab: 'assignments' }}>
+              <ClipboardCheck className="h-4 w-4" />
+              审稿工作台
+            </Link>
+          </DropdownMenuItem>
+        )}
+        {(isAdmin ||
+          (user.roles ?? []).some((role) =>
+            ['editor', 'editor_in_chief'].includes(role),
+          )) && (
+          <DropdownMenuItem asChild>
+            <Link to="/submissions/pending">
+              <Kanban className="h-4 w-4" />
+              编辑工作台
+            </Link>
+          </DropdownMenuItem>
+        )}
         {isAdmin && (
           <DropdownMenuItem asChild>
             <Link to="/admin">
@@ -394,6 +435,12 @@ export function AppShell() {
                 </div>
               </form>
               <AppearanceMenu />
+              <Button asChild size="sm" className="hidden sm:inline-flex">
+                <Link to="/submissions/new">
+                  <PenLine className="h-3.5 w-3.5" />
+                  写
+                </Link>
+              </Button>
               {userMenu}
             </div>
           </div>

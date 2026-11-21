@@ -2275,6 +2275,41 @@ async def create_resource_public_event(
     )
 
 
+@router.get("/editorial", response_model=ResourceListResponse)
+async def list_editorial(
+    limit: int = Query(default=20, ge=1, le=50),
+    db: AsyncSession = Depends(get_db),
+    viewer: User | None = Depends(get_current_user_optional),
+) -> ResourceListResponse:
+    """Return the editor-curated reading pool.
+
+    ``featured_rank`` is deliberately separate from ``created_at``: the
+    homepage should surface the pieces an editor thinks are worth reading,
+    not whatever was published last. Only rows explicitly placed in the
+    pool are returned; an empty pool is a valid state (the frontend then
+    falls back to the latest published piece).
+    """
+    tenant_id = require_tenant_id()
+    stmt = select(Resource).where(
+        Resource.tenant_id == tenant_id,
+        Resource.featured_rank.is_not(None),
+    )
+    if not (viewer and viewer.is_admin):
+        for condition in public_conditions():
+            stmt = stmt.where(condition)
+    stmt = stmt.order_by(Resource.featured_rank.asc(), Resource.created_at.desc()).limit(limit)
+    rows = list((await db.execute(stmt)).scalars().all())
+    return ResourceListResponse(
+        data=[ResourceResponse.model_validate(row) for row in rows],
+        meta=PaginationMeta(
+            total=len(rows),
+            page=1,
+            page_size=len(rows) or 1,
+            total_pages=1 if rows else 0,
+        ),
+    )
+
+
 @router.get("/{resource_id}", response_model=ResourceResponse)
 async def get_resource(
     resource_id: int,
@@ -2433,6 +2468,11 @@ async def create_resource(
         tags=payload.tags,
         abstract=payload.abstract,
         preview=payload.preview,
+        short_title=payload.short_title,
+        editor_note=payload.editor_note,
+        discussion_prompt=payload.discussion_prompt,
+        featured_rank=payload.featured_rank,
+        reading_path=payload.reading_path,
         download_url=str(payload.download_url) if payload.download_url else None,
         external_url=str(payload.external_url) if payload.external_url else None,
         doi=payload.doi,

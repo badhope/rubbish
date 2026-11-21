@@ -68,6 +68,17 @@ class Resource(Base, TenantScopedMixin):
     tags: Mapped[list[str]] = mapped_column(JSONBVariant, nullable=False)
     abstract: Mapped[str] = mapped_column(Text, nullable=False)
     preview: Mapped[str] = mapped_column(Text, nullable=False)
+    # 编辑推荐层（1.19.16）：不覆盖正式题录，只给阅读端一个更短、更有钩子的入口。
+    # short_title 用于卡片/详情首行；title 仍是引用、导出和 SEO 的正式标题。
+    short_title: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    # 编辑推荐语：回答“为什么现在读这篇”，不是摘要的复述。
+    editor_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # 文末讨论引子：把“去社区聊”变成一句具体可回答的话。
+    discussion_prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # 首页编辑推荐排序（1 起，越小越靠前）；为空表示不进推荐池。
+    featured_rank: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    # 阅读路径分组：start / research / weird；用于首页“三条阅读路线”。
+    reading_path: Mapped[str | None] = mapped_column(String(20), nullable=True)
     download_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     external_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     # 同一 DOI 不得落到两个资源上（可空；Postgres 唯一索引允许多个 NULL）。

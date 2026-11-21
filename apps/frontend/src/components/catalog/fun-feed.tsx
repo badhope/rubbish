@@ -223,7 +223,7 @@ export function FunCatalog({
                     params={{ resourceId: String(r.id) }}
                     className="truncate text-[11px] text-muted-foreground hover:text-foreground hover:underline"
                   >
-                    {r.title}
+                    {r.short_title?.trim() || r.title}
                   </Link>
                 ))}
                 <Link
@@ -331,7 +331,8 @@ function isEditorialNote(resource: ResourceResponse): boolean {
 
 function FunCard({ resource, featured }: { resource: ResourceResponse; featured: boolean }) {
   const genre = essayGenreMeta(resource.content_genre)
-  const preview = plainPreview(resource.preview || resource.abstract)
+  const preview = plainPreview(resource.editor_note || resource.preview || resource.abstract)
+  const displayTitle = resource.short_title?.trim() || resource.title
 
   if (featured) {
     return (
@@ -358,7 +359,7 @@ function FunCard({ resource, featured }: { resource: ResourceResponse; featured:
             <span className="text-muted-foreground">{resource.year}</span>
           </div>
           <h2 className="font-serif text-lg font-semibold leading-snug tracking-tight sm:text-2xl">
-            {resource.title}
+            {displayTitle}
           </h2>
           <p className="line-clamp-2 text-xs leading-5 text-muted-foreground sm:line-clamp-3 sm:text-sm sm:leading-7">{preview}</p>
           <div className="mt-auto flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground sm:gap-x-3 sm:text-xs">
@@ -414,7 +415,7 @@ function FunCard({ resource, featured }: { resource: ResourceResponse; featured:
           {resource.reads != null ? <span>· 阅读 {resource.reads}</span> : null}
         </div>
         <h3 className="mt-1 line-clamp-2 font-serif text-[13px] font-semibold leading-snug tracking-tight sm:text-lg">
-          {resource.title}
+          {displayTitle}
         </h3>
         <p className="mt-1 line-clamp-1 text-[10px] leading-4 text-muted-foreground sm:mt-1.5 sm:line-clamp-2 sm:text-sm sm:leading-6">
           {preview}

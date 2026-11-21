@@ -3,6 +3,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import {
   Bookmark,
   ArrowUp,
+  ArrowRight,
   ChevronDown,
   ChevronLeft,
   Download,
@@ -173,9 +174,13 @@ function CatalogDetailPage() {
   const isPaperTrack = data.content_track === 'paper'
   const cleanAuthors = sanitizeAuthors(data.authors)
   // 与 PDF 同一套规则：长标题里的“——副标题”单独成行，避免连接号被挤到行尾。
+  // 编辑推荐短标题只改阅读端首行；正式 title 仍作为副标题、引用和导出字段。
   const titleParts = (data.title || '').split(/\s*——\s*/)
-  const titleMain = titleParts[0]
-  const titleSub = titleParts.slice(1).join('——')
+  const shortTitle = (data.short_title || '').trim()
+  const titleMain = shortTitle || titleParts[0]
+  const titleSub = shortTitle
+    ? (shortTitle === data.title ? '' : data.title)
+    : titleParts.slice(1).join('——')
 
   // 自由创作走独立版式，不渲染研究档案的概要、目录与侧栏。
   if (isEssayTrack) {
@@ -300,6 +305,12 @@ function CatalogDetailPage() {
             )}
             {/* 作者行：优先用 authors_detail（v5）；未认领者邮箱/单位为 null，绝不展示 PDF 抓出来的私人邮箱。 */}
             <AuthorRow detail={data.authors_detail ?? null} fallbackNames={cleanAuthors} />
+            {data.editor_note ? (
+              <div className="mt-4 border-l-2 border-primary/60 bg-primary/[0.04] py-2 pl-4">
+                <p className="text-[10px] uppercase tracking-[0.24em] text-primary">编辑推荐</p>
+                <p className="mt-1 text-sm leading-6 text-foreground/85">{data.editor_note}</p>
+              </div>
+            ) : null}
             {/* 移动端：桌面右栏在 xl 以下整块隐藏，这里补回“规范 PDF / 作者原件”入口，
                否则手机上根本进不去两个预览（只剩底栏直接下载 Word）。 */}
             <div className="mt-3 flex flex-wrap gap-2">
@@ -320,7 +331,12 @@ function CatalogDetailPage() {
               <Button asChild variant="outline" size="sm" className="min-w-0">
                 <Link
                   to="/forum"
-                  search={{ category: 'paper', paperId: id, paperTitle: data.title }}
+                  search={{
+                    category: 'paper',
+                    paperId: id,
+                    paperTitle: data.title,
+                    prompt: data.discussion_prompt || undefined,
+                  }}
                 >
                   <MessagesSquare className="h-4 w-4 shrink-0" />
                   <span className="truncate">讨论{discussCount ? ` · ${discussCount}` : ''}</span>
@@ -344,6 +360,26 @@ function CatalogDetailPage() {
               collapsible={isMobile}
               label={kind === 'sci_pop' ? '导语' : '概要'}
             />
+          ) : null}
+
+          {/* 读前问题：把“去社区聊”变成一句具体、可回答的话。 */}
+          {data.discussion_prompt ? (
+            <div className="mb-6 rounded-xl border border-primary/20 bg-primary/[0.04] p-4 sm:p-5">
+              <p className="text-[10px] uppercase tracking-[0.24em] text-primary">带着这个问题读</p>
+              <p className="mt-2 text-[15px] font-medium leading-7">{data.discussion_prompt}</p>
+              <Link
+                to="/forum"
+                search={{
+                  category: 'paper',
+                  paperId: id,
+                  paperTitle: data.title,
+                  prompt: data.discussion_prompt,
+                }}
+                className="mt-3 inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+              >
+                去社区开帖 <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
           ) : null}
 
           {/* 正文：ManuscriptView 内联渲染，window 原生滚动 */}
@@ -1334,7 +1370,7 @@ function RelatedResources({
             className="group block rounded-md border-b pb-2 last:border-0 last:pb-0"
           >
             <p className="line-clamp-2 text-sm font-medium leading-snug transition-colors group-hover:text-primary">
-              {r.title}
+              {r.short_title?.trim() || r.title}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
               {(() => {

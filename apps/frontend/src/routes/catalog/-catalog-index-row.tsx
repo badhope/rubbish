@@ -29,12 +29,13 @@ export function CatalogIndexRow({
   ]
     .filter(Boolean)
     .join(' · ')
-  const preview = (resource.preview || resource.abstract || '')
+  const preview = (resource.editor_note || resource.preview || resource.abstract || '')
     .replace(/[#>*_`~]/g, '')
     .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
     .replace(/\[[^\]]*\]\([^)]*\)/g, '')
     .replace(/\s+/g, ' ')
     .trim()
+  const displayTitle = resource.short_title?.trim() || resource.title
 
   return (
     <Link
@@ -47,7 +48,7 @@ export function CatalogIndexRow({
       </span>
       <span className="min-w-0">
         <span className="line-clamp-2 text-[15px] font-medium leading-snug sm:text-base">
-          <Highlight text={resource.title} query={query} />
+          <Highlight text={displayTitle} query={query} />
         </span>
         <span className="mt-1 block text-[11px] leading-5 text-muted-foreground sm:text-xs">
           {meta}

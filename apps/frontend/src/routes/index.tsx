@@ -3,9 +3,8 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { ArrowRight, Bell, ChevronRight, LogIn, PenLine } from 'lucide-react'
 import '@fontsource-variable/playfair-display'
 import { useAuth } from '@/hooks/use-auth'
-import { useCatalogStats, useResources } from '@/hooks/api/use-modules'
+import { useCatalogStats, useEditorialPicks, useResources } from '@/hooks/api/use-modules'
 import { formatAuthors } from '@/lib/utils'
-import { issueLabel } from '@/lib/resource-labels'
 import { AnnouncementChip, AnnouncementDialog, useAnnouncementPortal } from '@/components/common/announcement-dialog'
 import { AppearanceMenu } from '@/components/appearance-menu'
 import { ArticleCover } from '@/components/common/article-cover'
@@ -21,6 +20,28 @@ export const Route = createFileRoute('/')({
 
 const DISPLAY_FONT =
   "'Playfair Display Variable', Georgia, 'Songti SC', 'DejaVu Serif', serif"
+
+const READING_PATHS = {
+  start: {
+    label: '第一次来',
+    title: '从这三篇开始',
+    note: '不用先懂站规，先感受这里能认真到什么程度。',
+  },
+  research: {
+    label: '科研处境',
+    title: '如果你也在实验室里挣扎',
+    note: '导师、论文、就业、精神状态；不提供鸡汤，只提供拆解。',
+  },
+  weird: {
+    label: '怪问题也认真',
+    title: '把荒诞当成方法',
+    note: '设定可以离谱，材料、推理和边界不能糊弄。',
+  },
+} as const
+
+function displayTitle(resource: { short_title?: string | null; title: string }): string {
+  return resource.short_title?.trim() || resource.title
+}
 
 function formatDate(iso: string): string {
   const d = new Date(iso)
@@ -58,7 +79,8 @@ function Count({ value, ready }: { value: number | undefined; ready: boolean }) 
 function HomePage() {
   const { isAuthenticated } = useAuth()
   const notice = useAnnouncementPortal()
-  const featuredQuery = useResources({
+  const editorialQuery = useEditorialPicks(10)
+  const latestQuery = useResources({
     track: 'paper',
     page: 1,
     page_size: 1,
@@ -68,11 +90,20 @@ function HomePage() {
   const stats = useCatalogStats('paper')
   const funStats = useCatalogStats('essay')
 
-  const featured = featuredQuery.data?.data?.[0]
+  const picks = editorialQuery.data?.data ?? []
+  const featured = picks[0] ?? latestQuery.data?.data?.[0]
+  const routePicks = picks.slice(1)
   const serious = stats.data?.by_paper_kind?.serious
   const absurd = stats.data?.by_paper_kind?.absurd
   const paperTotal = stats.data?.by_type?.paper
   const funTotal = funStats.data?.total
+  const pathGroups = (Object.keys(READING_PATHS) as Array<keyof typeof READING_PATHS>)
+    .map((key) => ({
+      key,
+      ...READING_PATHS[key],
+      items: routePicks.filter((item) => item.reading_path === key),
+    }))
+    .filter((group) => group.items.length > 0)
 
 
   return (
@@ -179,18 +210,18 @@ function HomePage() {
         </div>
       </section>
 
-      {/* 本期主稿：一个区块只给一篇，不做并列卡片。 */}
+      {/* 本周主稿：编辑推荐优先于“最新发布”。 */}
       <section className="mx-auto w-full max-w-[1320px] px-5 py-14 sm:px-8 sm:py-20">
         <SectionHeading
-          label="Featured · 本周研究"
-          title="先读这一份"
+          label="Editor's pick · 编辑推荐"
+          title="先读这一篇"
           action={
             <Link to="/catalog" search={{ track: 'paper' }} className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary">
               全部文章 <ChevronRight className="h-4 w-4" />
             </Link>
           }
         />
-        {featuredQuery.isLoading ? (
+        {editorialQuery.isLoading || latestQuery.isLoading ? (
           <div className="grid gap-8 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
             <Skeleton className="aspect-[4/3] w-full" />
             <div className="space-y-3">
@@ -217,9 +248,9 @@ function HomePage() {
             </Link>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-                {issueLabel(featured.volume, featured.issue) ? (
+                {featured.featured_rank ? (
                   <>
-                    <span>{issueLabel(featured.volume, featured.issue)}</span>
+                    <span className="text-primary">编辑推荐 #{featured.featured_rank}</span>
                     <span aria-hidden>·</span>
                   </>
                 ) : null}
@@ -234,21 +265,45 @@ function HomePage() {
                 params={{ resourceId: String(featured.id) }}
                 className="mt-4 block font-serif text-3xl leading-tight tracking-tight transition-colors hover:text-primary sm:text-4xl"
               >
-                {featured.title}
+                {displayTitle(featured)}
               </Link>
+              {featured.short_title && featured.short_title.trim() !== featured.title ? (
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{featured.title}</p>
+              ) : null}
+              {featured.editor_note ? (
+                <blockquote className="mt-5 border-l-2 border-primary/50 pl-4 text-[15px] leading-7 text-foreground/85">
+                  {featured.editor_note}
+                </blockquote>
+              ) : null}
               {featured.abstract ? (
-                <p className="mt-4 line-clamp-4 text-[15px] leading-7 text-muted-foreground">
+                <p className="mt-4 line-clamp-3 text-[15px] leading-7 text-muted-foreground">
                   {featured.abstract}
                 </p>
               ) : null}
               <p className="mt-5 text-sm text-foreground/80">{formatAuthors(featured.authors, 3)}</p>
-              <Link
-                to="/catalog/$resourceId"
-                params={{ resourceId: String(featured.id) }}
-                className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-              >
-                阅读全文 <ArrowRight className="h-4 w-4" />
-              </Link>
+              <div className="mt-6 flex flex-wrap items-center gap-4">
+                <Link
+                  to="/catalog/$resourceId"
+                  params={{ resourceId: String(featured.id) }}
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                >
+                  阅读全文 <ArrowRight className="h-4 w-4" />
+                </Link>
+                {featured.discussion_prompt ? (
+                  <Link
+                    to="/forum"
+                    search={{
+                      category: 'paper',
+                      paperId: featured.id,
+                      paperTitle: featured.title,
+                      prompt: featured.discussion_prompt,
+                    }}
+                    className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary"
+                  >
+                    带着问题去讨论 <ChevronRight className="h-4 w-4" />
+                  </Link>
+                ) : null}
+              </div>
             </div>
           </div>
         ) : (
@@ -260,6 +315,55 @@ function HomePage() {
           </div>
         )}
       </section>
+
+      {/* 三条阅读路线：不是按分类堆文章，而是按“你现在从哪来”给入口。 */}
+      {pathGroups.length > 0 && (
+        <section className="border-y border-border/70 bg-muted/20">
+          <div className="mx-auto w-full max-w-[1320px] px-5 py-14 sm:px-8 sm:py-20">
+            <SectionHeading
+              label="Reading paths · 阅读路线"
+              title="按你的处境选一条"
+              action={
+                <Link to="/catalog" className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-primary">
+                  自由浏览 <ChevronRight className="h-4 w-4" />
+                </Link>
+              }
+            />
+            <div className="grid gap-5 md:grid-cols-3">
+              {pathGroups.map((group) => (
+                <div key={group.key} className="rounded-xl border bg-background p-5">
+                  <p className="text-[10px] uppercase tracking-[0.28em] text-primary">{group.label}</p>
+                  <h3 className="mt-2 font-serif text-2xl tracking-tight">{group.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{group.note}</p>
+                  <div className="mt-5 divide-y border-t">
+                    {group.items.map((item, index) => (
+                      <Link
+                        key={item.id}
+                        to="/catalog/$resourceId"
+                        params={{ resourceId: String(item.id) }}
+                        className="group flex items-start gap-3 py-3 transition-colors hover:text-primary"
+                      >
+                        <span className="mt-0.5 font-mono text-[11px] tabular-nums text-muted-foreground">
+                          {String(index + 1).padStart(2, '0')}
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block text-sm font-medium leading-6">{displayTitle(item)}</span>
+                          {item.editor_note ? (
+                            <span className="mt-1 line-clamp-2 block text-xs leading-5 text-muted-foreground">
+                              {item.editor_note}
+                            </span>
+                          ) : null}
+                        </span>
+                        <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* 目录入口：只给索引行，不再把学科、文章和统计做成卡片墙。 */}
       <section className="border-y border-border/70 bg-muted/20">

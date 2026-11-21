@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect, useNavigate } from '@tanstack/react-router'
+import { ClipboardCheck, Kanban } from 'lucide-react'
 import { getAuthState } from '@/lib/auth'
 import {
   useMeProfile,
@@ -78,6 +79,39 @@ function MePage() {
         unreadCount={unread.data?.unread}
         onOpenNotifications={() => setNotificationsOpen(true)}
       />
+
+      {data.permission_role !== 'user' ? (
+        <section className="flex flex-wrap items-center gap-3 border-b py-3" aria-label="工作台入口">
+          <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">Workbench</p>
+          {['reviewer', 'editor', 'editor_in_chief'].includes(data.permission_role) ? (
+            <Link
+              to="/review"
+              search={{ tab: 'assignments' }}
+              className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition-colors hover:border-primary hover:text-primary"
+            >
+              <ClipboardCheck className="h-4 w-4" />
+              审稿工作台
+            </Link>
+          ) : null}
+          {['editor', 'editor_in_chief'].includes(data.permission_role) ? (
+            <Link
+              to="/submissions/pending"
+              className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition-colors hover:border-primary hover:text-primary"
+            >
+              <Kanban className="h-4 w-4" />
+              编辑工作台
+            </Link>
+          ) : null}
+          {['editor', 'editor_in_chief'].includes(data.permission_role) ? (
+            <Link
+              to="/editor/calibration"
+              className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition-colors hover:border-primary hover:text-primary"
+            >
+              评审校准
+            </Link>
+          ) : null}
+        </section>
+      ) : null}
 
       <MeTabNav tabs={tabs} active={activeTab} onChange={onTabChange} />
 

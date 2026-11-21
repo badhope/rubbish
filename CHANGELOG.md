@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.19.16] — 2026-11-21
+
+- Restored the peer-review and editorial workbenches that were removed during the community refactor: `submission` / `review` / `quality` are enabled again, `/api/review/*` and `/api/editor/workbench` are mounted, and `/review`, `/submissions/pending`, `/editor/calibration` are back.
+- Workbench entries now appear in the desktop user menu, the sidebar 工作台 group, the mobile “更多” sheet and the profile page, with role checks on every entry.
+- Added department-picks fields to the catalog (`short_title`, `editor_note`, `discussion_prompt`, `featured_rank`, `reading_path`) plus `GET /api/catalog/editorial`; ten staff picks now drive the homepage and article cards.
+- Article pages show a short title, a one-line editor note and a pre-reading discussion prompt that can be carried into a forum post.
+- The catalog gained a content-spectrum visualization, and the homepage gained three reading paths: 第一次来 / 科研处境 / 怪问题也认真.
+- Rewrote the abstracts of ten staff picks, and removed 33 repeated “最后再补一句” closing lines without dropping any article below the 2,500-character floor.
+
 ## [1.19.14] — 2026-11-21
 
 - Split article publishing from the community: `/submissions` and `/submissions/new` now open the restored four-step submission wizard instead of redirecting to `/forum?compose=1`; removed the three legacy Nginx 301 rules that forced the redirect.

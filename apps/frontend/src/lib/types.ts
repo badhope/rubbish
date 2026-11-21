@@ -232,6 +232,16 @@ export interface ResourceBase {
   tags: string[]
   abstract: string
   preview: string
+  /** 编辑推荐短标题：正式 title 仍用于引用/导出；为空时显示 title。 */
+  short_title?: string | null
+  /** 编辑推荐语：回答“为什么现在读这篇”。 */
+  editor_note?: string | null
+  /** 文末讨论引子：一句具体可回答的话。 */
+  discussion_prompt?: string | null
+  /** 首页编辑推荐排序；为空表示不进推荐池。 */
+  featured_rank?: number | null
+  /** 阅读路径分组：start / research / weird。 */
+  reading_path?: 'start' | 'research' | 'weird' | null
   download_url?: string | null
   external_url?: string | null
   doi?: string | null

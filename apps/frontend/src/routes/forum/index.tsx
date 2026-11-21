@@ -225,6 +225,7 @@ function ForumListPage() {
     page?: number
     paperId?: number | string
     paperTitle?: string
+    prompt?: string
     sort?: string
     q?: string
     view?: string
@@ -243,6 +244,11 @@ function ForumListPage() {
 
   const paperId = search.paperId ? Number(search.paperId) : null
   const paperTitle = search.paperTitle ?? ''
+  const discussionPrompt = search.prompt?.trim() ?? ''
+  const paperDraftBody = (pid: number) =>
+    `研究文章链接：/catalog/${pid}\n\n${
+      discussionPrompt ? `先回应这个问题：${discussionPrompt}\n\n` : ''
+    }`
 
   const [open, setOpen] = useState(false)
   const [boardPickerOpen, setBoardPickerOpen] = useState(false)
@@ -250,7 +256,7 @@ function ForumListPage() {
   const bodyRef = useRef<HTMLTextAreaElement>(null)
   const [form, setForm] = useState({
     title: paperId ? `讨论：${(paperTitle || `研究文章 #${paperId}`).slice(0, 170)}` : '',
-    body: paperId ? `研究文章链接：/catalog/${paperId}\n\n` : '',
+    body: paperId ? paperDraftBody(paperId) : '',
     board_id: null as number | null,
     paper_id: paperId,
     is_fictional: false,
@@ -355,7 +361,7 @@ function ForumListPage() {
         ? `讨论：${(paperTitle || `研究文章 #${paperId}`).slice(0, 170)}`
         : usableDraft?.title ?? '',
       body: paperId
-        ? `研究文章链接：/catalog/${paperId}\n\n`
+        ? paperDraftBody(paperId)
         : usableDraft?.body ?? '',
       board_id: storedBoardId ?? currentBoardId,
       paper_id: paperId,
