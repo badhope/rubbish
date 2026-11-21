@@ -1599,10 +1599,10 @@ async def create_content_report(
             )
         ).scalar_one_or_none()
         if target is None:
-            raise HTTPException(status_code=404, detail="投稿不存在")
+            raise HTTPException(status_code=404, detail="作品不存在")
         is_staff = current_user.is_admin or await user_has_role(db, current_user, ROLE_EDITOR)
         if target.submitted_by != current_user.id and not is_staff:
-            raise HTTPException(status_code=403, detail="无权举报该投稿")
+            raise HTTPException(status_code=403, detail="无权举报该作品")
         target_author_id = target.submitted_by
         excerpt = f"{target.title} · {target.abstract[:120]}"
     if target_author_id == current_user.id:
@@ -1719,7 +1719,7 @@ async def handle_content_report(
             )
         ).scalar_one_or_none()
         if target is None:
-            raise HTTPException(status_code=404, detail="被举报投稿已被删除")
+            raise HTTPException(status_code=404, detail="被举报作品已被删除")
         author = (
             await db.execute(select(User).where(User.id == target.submitted_by))
         ).scalar_one_or_none()

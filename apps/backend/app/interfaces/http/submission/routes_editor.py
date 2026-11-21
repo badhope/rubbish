@@ -151,7 +151,7 @@ async def triage_submission(
     ):
         raise HTTPException(
             status_code=422,
-            detail="退回修改、补材料或直接拒稿必须写至少 10 字理由，作者需要知道下一步怎么做。",
+            detail="退回修改、补材料或直接不通过必须写至少 10 字理由，作者需要知道下一步怎么做。",
         )
 
     now = utcnow()
@@ -1601,7 +1601,7 @@ async def waive_review(
     if len(body.reason.strip()) < 10:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="免评审理由至少 10 个字，且会写入审计日志与作者通知。",
+            detail="免互评理由至少 10 个字，且会写入审计日志与作者通知。",
         )
     entry = await _get_or_404(db, submission_id)
     if entry.submitted_by == current_user.id:

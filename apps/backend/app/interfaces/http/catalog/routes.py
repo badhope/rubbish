@@ -891,7 +891,7 @@ async def _require_source_preview_viewer(
     if viewer is None or not (viewer.is_admin or await user_has_role(db, viewer, ROLE_EDITOR)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="原件对照预览仅向编辑部开放",
+            detail="原件对照预览仅向内容整理组开放",
         )
 
 

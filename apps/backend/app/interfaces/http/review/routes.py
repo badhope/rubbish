@@ -364,7 +364,7 @@ async def express_review_interest(
         )
     ).scalar_one_or_none()
     if sub is None:
-        raise HTTPException(status_code=404, detail="作品不在审稿中")
+        raise HTTPException(status_code=404, detail="作品不在互评中")
     existing = (
         await db.execute(
             select(ReviewAssignment).where(
@@ -375,7 +375,7 @@ async def express_review_interest(
         )
     ).scalar_one_or_none()
     if existing is not None:
-        raise HTTPException(status_code=409, detail="你已在这篇作品的审稿名单中")
+        raise HTTPException(status_code=409, detail="你已在这篇作品的互评名单中")
     from app.models import AuditLog
 
     db.add(
@@ -843,7 +843,7 @@ async def upload_review_attachment(
     await get_storage().save(key, contents, content_type=stored_type)
     items = list(report.attachments or [])
     if len(items) >= 5:
-        raise HTTPException(status_code=400, detail="每份审稿报告最多上传 5 个附件")
+        raise HTTPException(status_code=400, detail="每份互评意见最多上传 5 个附件")
     items.append(
         {
             "filename": original_name,
@@ -884,7 +884,7 @@ async def download_review_attachment(
             db, current_user, "editor"
         )
     if not allowed:
-        raise HTTPException(status_code=403, detail="没有权限下载该审稿附件")
+        raise HTTPException(status_code=403, detail="没有权限下载该互评附件")
     items = list(report.attachments or [])
     if attachment_index < 0 or attachment_index >= len(items):
         raise HTTPException(status_code=404, detail="Attachment not found")
@@ -1072,7 +1072,7 @@ async def assign_reviewers(
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="审稿人本轮已被指派（并发或重复提交），请刷新后重试。",
+            detail="互评成员本轮已被指派（并发或重复提交），请刷新后重试。",
         ) from exc
     return {"assigned": len(created), "submission_id": submission_id}
 
@@ -1240,7 +1240,7 @@ async def assign_adjudicator(
             },
         )
     if any(a.reviewer_id == body.reviewer_id for a in assignments):
-        raise HTTPException(status_code=409, detail="该审稿人已参与本稿评审，不能兼任第三方裁决人")
+        raise HTTPException(status_code=409, detail="该互评成员已参与本作品互评，不能兼任第三方复核人")
     await ensure_no_declared_conflict(
         db, tenant_id=tenant_id, reviewer_id=body.reviewer_id, submission=sub
     )
@@ -1326,7 +1326,7 @@ async def editor_decision(
     if distinct < 2:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=f"还差 {2 - distinct} 份审稿报告（已收 {distinct}/2）",
+            detail=f"还差 {2 - distinct} 份互评意见（已收 {distinct}/2）",
         )
     raise HTTPException(
         status_code=status.HTTP_410_GONE,
