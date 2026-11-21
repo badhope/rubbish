@@ -174,8 +174,8 @@ function HomePage() {
             <BrandMark decorative className="h-7 w-7" />
             <span className="flex flex-col leading-none">
               <span className="font-serif text-base font-semibold tracking-tight">Rubbish</span>
-              <span className="mt-1 hidden text-[9px] uppercase tracking-[0.24em] text-muted-foreground sm:block">
-                Public writing & discussion
+              <span className="mt-1 hidden text-[9px] tracking-[0.18em] text-muted-foreground sm:block">
+                公开写作与讨论
               </span>
             </span>
           </Link>
@@ -523,7 +523,7 @@ function HomePage() {
         </div>
         <div className="border-t border-border/70">
           <div className="mx-auto flex w-full max-w-[1280px] flex-wrap items-center justify-between gap-2 px-5 py-3 text-xs text-muted-foreground sm:px-8">
-            <span>© {new Date().getFullYear()} Rubbish · Public writing & discussion</span>
+            <span>© {new Date().getFullYear()} Rubbish · 公开写作与讨论</span>
             <span>认真做，大胆荒诞，公开聊。</span>
           </div>
         </div>
