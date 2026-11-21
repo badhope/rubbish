@@ -64,8 +64,10 @@ The live server is **systemd + Nginx**, not the Compose reference:
 | Service | `rubbish-app.service`, bound to `127.0.0.1:8080` |
 | Environment | `/www/wwwroot/rubbish.argjiemi.cn/.env` |
 | Nginx vhost | `/www/server/panel/vhost/nginx/rubbish.argjiemi.cn.conf` |
-| Legacy redirects | `/www/server/panel/vhost/nginx/rubbish-legacy-redirects.inc` |
+| Legacy redirects | `/www/server/panel/vhost/nginx/rubbish-legacy-redirects.inc`; source copy in `infra/nginx-legacy-redirects.inc` |
 | Database | PostgreSQL 17 container `rubbish-db-1` |
+
+The legacy-redirect include must not contain `/review` or `/editor/*` rules; both prefixes are live SPA workbenches. Keep `infra/nginx-legacy-redirects.inc` in sync with the server copy.
 
 The Compose stack in `docker-compose.yml` remains the reproducible reference for a fresh install. When changing deployment behavior, update the live section in `DEPLOY.md` as well; do not silently document only the reference stack.
 

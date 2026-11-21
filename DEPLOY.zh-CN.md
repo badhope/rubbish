@@ -16,8 +16,10 @@
 | 服务 | `rubbish-app.service`，监听 `127.0.0.1:8080` |
 | 环境变量 | `/www/wwwroot/rubbish.argjiemi.cn/.env` |
 | Nginx 站点 | `/www/server/panel/vhost/nginx/rubbish.argjiemi.cn.conf` |
-| 旧链接跳转 | `/www/server/panel/vhost/nginx/rubbish-legacy-redirects.inc` |
+| 旧链接跳转 | `/www/server/panel/vhost/nginx/rubbish-legacy-redirects.inc`（仓库副本 `infra/nginx-legacy-redirects.inc`） |
 | PostgreSQL | 容器 `rubbish-db-1` |
+
+不要重新加入 `/review` 或 `/editor/*` 的跳转：它们是现役工作台路由，301 会让公网无法打开。线上 include 有改动时，同步更新 `infra/nginx-legacy-redirects.inc`。
 
 只发前端时替换 `/opt/rubbish-app/static`，不必重启服务。发后端时复制改动的 `app/` 文件并重启服务。替换前必须保留上一份静态目录和上一份后端文件。
 

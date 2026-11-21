@@ -16,8 +16,10 @@ The live host is not the Compose stack below. It runs:
 | Service | `rubbish-app.service` on `127.0.0.1:8080` |
 | Environment | `/www/wwwroot/rubbish.argjiemi.cn/.env` |
 | Nginx vhost | `/www/server/panel/vhost/nginx/rubbish.argjiemi.cn.conf` |
-| Legacy redirects | `/www/server/panel/vhost/nginx/rubbish-legacy-redirects.inc` |
+| Legacy redirects | `/www/server/panel/vhost/nginx/rubbish-legacy-redirects.inc`; repo copy in `infra/nginx-legacy-redirects.inc` |
 | PostgreSQL | container `rubbish-db-1` |
+
+Do not re-add redirects for `/review` or `/editor/*`: those are live workbench routes, and a 301 makes them unreachable from the public domain. Update `infra/nginx-legacy-redirects.inc` whenever the live include changes.
 
 A frontend-only release replaces `/opt/rubbish-app/static` and does not need a restart. A backend release copies the changed `app/` files and restarts the service. Always keep the previous static directory and the previous file next to the new one.
 
