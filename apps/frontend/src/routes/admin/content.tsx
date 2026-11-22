@@ -8,11 +8,13 @@ import ForumBoardsPage from '@/components/admin/pages/content/forum-boards'
 import ForumInspectionPage from '@/components/admin/pages/content/forum-inspection'
 import ReportsPage from '@/components/admin/pages/content/reports'
 import CommentsPage from '@/components/admin/pages/content/comments'
+import AppealsPage from '@/components/admin/pages/content/appeals'
 
-type SectionKey = 'forum' | 'announcements' | 'boards' | 'reports' | 'comments'
+type SectionKey = 'forum' | 'announcements' | 'boards' | 'reports' | 'comments' | 'appeals'
 
 interface ContentSearch {
   section?: string
+  appeal?: number
 }
 
 const SECTIONS: readonly AdminSectionItem<SectionKey>[] = [
@@ -21,6 +23,7 @@ const SECTIONS: readonly AdminSectionItem<SectionKey>[] = [
   { key: 'boards', label: '分区' },
   { key: 'reports', label: '举报' },
   { key: 'comments', label: '评论' },
+  { key: 'appeals', label: '申诉' },
 ]
 
 function isSectionKey(value: string | undefined): value is SectionKey {
@@ -29,13 +32,18 @@ function isSectionKey(value: string | undefined): value is SectionKey {
     value === 'announcements' ||
     value === 'boards' ||
     value === 'reports' ||
-    value === 'comments'
+    value === 'comments' ||
+    value === 'appeals'
   )
 }
 
 export const Route = createFileRoute('/admin/content')({
   validateSearch: (search: Record<string, unknown>): ContentSearch => ({
     section: typeof search.section === 'string' ? search.section : undefined,
+    appeal:
+      Number.isInteger(Number(search.appeal)) && Number(search.appeal) > 0
+        ? Number(search.appeal)
+        : undefined,
   }),
   beforeLoad: () => requireAdminGuard(),
   component: AdminContentPage,
@@ -43,7 +51,7 @@ export const Route = createFileRoute('/admin/content')({
 
 function AdminContentPage() {
   const navigate = useNavigate()
-  const { section: sectionParam } = Route.useSearch()
+  const { section: sectionParam, appeal } = Route.useSearch()
   const [section, setSection] = useState<SectionKey>('forum')
 
   useEffect(() => {
@@ -93,6 +101,12 @@ function AdminContentPage() {
       {section === 'boards' ? <ForumBoardsPage /> : null}
       {section === 'reports' ? <ReportsPage /> : null}
       {section === 'comments' ? <CommentsPage /> : null}
+      {section === 'appeals' ? (
+        <AppealsPage
+          highlightAppealId={appeal}
+          onClearHighlight={() => navigate({ to: '/admin/content', search: { section: 'appeals' }, replace: true })}
+        />
+      ) : null}
     </div>
   )
 }

@@ -33,6 +33,7 @@ from app.api.deps import (
     PERMISSION_RANK,
     ROLE_EDITOR,
     effective_permission_role,
+    get_current_user,
     get_current_user_optional,
     require_admin,
     require_editor,
@@ -3204,7 +3205,6 @@ class AppealIn(BaseModel):
 
     kind: str = Field(pattern=r"^(withdraw|rescore|rescore_zone)$")
     reason: str = Field(min_length=100, max_length=3000)
-    contact_email: str | None = Field(default=None, max_length=255)
 
 
 class AppealDecisionIn(BaseModel):
@@ -3226,3 +3226,298 @@ def _appeal_row(a: Appeal, username: str, title: str) -> dict[str, object]:
         "created_at": a.created_at.isoformat() if a.created_at else None,
         "decided_at": a.decided_at.isoformat() if a.decided_at else None,
     }
+
+
+# ---------------------------------------------------------------------------
+# 作者申诉（Appeal）
+# ---------------------------------------------------------------------------
+# 公开面只露出“我的申诉”和后台队列；不把申诉理由或处理说明暴露给其他人。
+APPEAL_KIND_LABEL = {
+    "withdraw": "撤回作品",
+    "rescore": "重审评分",
+    "rescore_zone": "重审分区",
+}
+
+
+def _appeal_meta(page: int, page_size: int, total: int) -> dict[str, int]:
+    total_pages = max(1, (total + page_size - 1) // page_size)
+    return {
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "total_pages": total_pages,
+    }
+
+
+@router.post("/{resource_id}/appeal", status_code=status.HTTP_201_CREATED)
+async def create_appeal(
+    resource_id: int,
+    payload: AppealIn,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, object]:
+    """作者对已发布作品提交一次申诉：撤回、重审评分或重审分区。
+
+    只有作品 owner 可以提交（未认领的存量文章先走认领流程）。同一作品、
+    同一诉求只允许提交一次，避免反复申诉把后台队列刷爆。
+    """
+    tenant_id = require_tenant_id()
+    resource = (
+        await db.execute(
+            select(Resource).where(Resource.id == resource_id, Resource.tenant_id == tenant_id)
+        )
+    ).scalar_one_or_none()
+    if resource is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="作品不存在")
+    if resource.owner_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有作品作者本人可以提交申诉",
+        )
+    if resource.publication_status != "published":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="作品当前不在公开目录，暂不需要申诉",
+        )
+    existing = (
+        await db.execute(
+            select(Appeal).where(
+                Appeal.tenant_id == tenant_id,
+                Appeal.resource_id == resource_id,
+                Appeal.user_id == current_user.id,
+                Appeal.kind == payload.kind,
+            )
+        )
+    ).scalars().first()
+    if existing is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "appeal_exists",
+                "message": "这件作品同一诉求已经申诉过，请在「我的」查看处理进度。",
+                "appeal_id": existing.id,
+            },
+        )
+
+    from app.domain.submission.models import Submission
+
+    submission_id = (
+        await db.execute(
+            select(Submission.id).where(
+                Submission.tenant_id == tenant_id,
+                Submission.resource_id == resource_id,
+                Submission.submitted_by == current_user.id,
+            )
+        )
+    ).scalars().first()
+    row = Appeal(
+        tenant_id=tenant_id,
+        resource_id=resource_id,
+        user_id=current_user.id,
+        submission_id=submission_id,
+        kind=payload.kind,
+        reason=payload.reason.strip(),
+        status="pending",
+    )
+    db.add(row)
+    await db.flush()
+    db.add(
+        AuditLog(
+            tenant_id=tenant_id,
+            actor_user_id=current_user.id,
+            action="catalog.appeal.create",
+            target_type="appeal",
+            target_id=str(row.id),
+            payload={"resource_id": resource_id, "kind": payload.kind},
+        )
+    )
+
+    # 站内通知管理员：申诉不是公告，点开要能直接看到这一条并处理。
+    from app.domain.notifications import services as notifications
+
+    admins = (
+        (
+            await db.execute(
+                select(User).where(
+                    User.tenant_id == tenant_id,
+                    User.is_admin.is_(True),
+                    User.is_active.is_(True),
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+    for admin in admins:
+        await notifications.create(
+            db,
+            tenant_id=tenant_id,
+            user_id=admin.id,
+            type_="appeal.created",
+            title=f"新的作者申诉：{APPEAL_KIND_LABEL.get(payload.kind, payload.kind)}",
+            body=f"{current_user.username} 对《{resource.title}》提交了{APPEAL_KIND_LABEL.get(payload.kind, payload.kind)}申诉。",
+            related_type="appeal",
+            related_id=str(row.id),
+        )
+    await db.commit()
+    await db.refresh(row)
+    return _appeal_row(row, current_user.username, resource.title)
+
+
+@router.get("/appeals/mine")
+async def list_my_appeals(
+    status_filter: str = Query(default="all", alias="status", pattern=r"^(all|pending|accepted|rejected)$"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, object]:
+    """当前账号的申诉记录；带资源标题，方便在「我的」直接看进度。"""
+    tenant_id = require_tenant_id()
+    stmt = (
+        select(Appeal, Resource.title, User.username)
+        .join(Resource, Resource.id == Appeal.resource_id)
+        .join(User, User.id == Appeal.user_id)
+        .where(Appeal.tenant_id == tenant_id, Appeal.user_id == current_user.id)
+        .order_by(Appeal.id.desc())
+        .limit(50)
+    )
+    if status_filter != "all":
+        stmt = stmt.where(Appeal.status == status_filter)
+    rows = (await db.execute(stmt)).all()
+    return {"items": [_appeal_row(row[0], row[2], row[1]) for row in rows]}
+
+
+@router.get("/admin/appeals")
+async def admin_list_appeals(
+    status_filter: str = Query(default="all", alias="status", pattern=r"^(all|pending|accepted|rejected)$"),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    appeal_id: int | None = Query(default=None, ge=1),
+    _: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, object]:
+    """后台申诉队列：按状态分页；`appeal_id` 供通知深链精确取一条。"""
+    tenant_id = require_tenant_id()
+    conditions = [Appeal.tenant_id == tenant_id]
+    if status_filter != "all":
+        conditions.append(Appeal.status == status_filter)
+    if appeal_id is not None:
+        conditions.append(Appeal.id == appeal_id)
+    total = int(
+        (
+            await db.execute(select(func.count()).select_from(Appeal).where(*conditions))
+        ).scalar_one()
+    )
+    rows = (
+        (
+            await db.execute(
+                select(Appeal, Resource.title, User.username)
+                .join(Resource, Resource.id == Appeal.resource_id)
+                .join(User, User.id == Appeal.user_id)
+                .where(*conditions)
+                .order_by(Appeal.id.desc())
+                .limit(page_size)
+                .offset((page - 1) * page_size)
+            )
+        )
+        .all()
+    )
+    return {
+        "items": [_appeal_row(row[0], row[2], row[1]) for row in rows],
+        "meta": _appeal_meta(page, page_size, total),
+    }
+
+
+@router.patch("/admin/appeals/{appeal_id}")
+async def decide_appeal(
+    appeal_id: int,
+    payload: AppealDecisionIn,
+    current_admin: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, object]:
+    """管理员处理申诉：通过撤回时立即从公开目录下架；重评分/分区只记录决定。"""
+    tenant_id = require_tenant_id()
+    row = (
+        await db.execute(
+            select(Appeal).where(Appeal.id == appeal_id, Appeal.tenant_id == tenant_id)
+        )
+    ).scalar_one_or_none()
+    if row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="申诉不存在")
+    if row.status != "pending":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"code": "appeal_already_decided", "message": "这条申诉已经处理过。"},
+        )
+    resource = (
+        await db.execute(
+            select(Resource).where(Resource.id == row.resource_id, Resource.tenant_id == tenant_id)
+        )
+    ).scalar_one()
+    author = (
+        await db.execute(select(User).where(User.id == row.user_id, User.tenant_id == tenant_id))
+    ).scalar_one_or_none()
+
+    withdrawn = bool(payload.status == "accepted" and row.kind == "withdraw")
+    row.status = payload.status
+    row.editor_note = payload.editor_note.strip()
+    row.decided_by = current_admin.id
+    row.decided_at = utcnow()
+    if payload.status == "accepted" and row.kind == "withdraw":
+        # “撤回”申诉通过不是一句口头决定：作品必须立即离开公开目录。
+        resource.publication_status = "draft"
+        resource.publish_at = None
+
+    db.add(
+        AuditLog(
+            tenant_id=tenant_id,
+            actor_user_id=current_admin.id,
+            action="catalog.appeal.decision",
+            target_type="appeal",
+            target_id=str(row.id),
+            payload={
+                "resource_id": row.resource_id,
+                "kind": row.kind,
+                "status": row.status,
+                "withdrawn": withdrawn,
+            },
+        )
+    )
+
+    from app.domain.notifications import services as notifications
+
+    if author is not None:
+        verdict = "通过" if payload.status == "accepted" else "驳回"
+        await notifications.create(
+            db,
+            tenant_id=tenant_id,
+            user_id=author.id,
+            type_="appeal.decision",
+            title=f"申诉{verdict}：{APPEAL_KIND_LABEL.get(row.kind, row.kind)}",
+            body=f"《{resource.title}》的申诉已{verdict}。处理说明：{row.editor_note}",
+            related_type="appeal",
+            related_id=str(row.id),
+        )
+        if author.email:
+            await notifications.record_email_digest(
+                db,
+                tenant_id=tenant_id,
+                user_id=author.id,
+                event_type="appeal.decision",
+                recipient_email=author.email,
+                subject=f"Rubbish 申诉{verdict}：{resource.title}",
+                text=(
+                    f"你的申诉（{APPEAL_KIND_LABEL.get(row.kind, row.kind)}）已{verdict}。\n\n"
+                    f"处理说明：\n{row.editor_note}\n\n"
+                    f"作品：{resource.title}\n"
+                    "可以回到「我的」查看申诉记录。"
+                ),
+                related_type="appeal",
+                related_id=str(row.id),
+            )
+    await db.commit()
+    if withdrawn:
+        # 公开检索不应等下一次全量同步才消失；best-effort，不阻断申诉结果。
+        await fulltext.unindex_resource(resource.id)
+    await db.refresh(row)
+    username = author.username if author else "—"
+    return _appeal_row(row, username, resource.title)

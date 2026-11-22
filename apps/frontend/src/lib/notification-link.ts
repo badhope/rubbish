@@ -63,6 +63,16 @@ export function notificationDestination(
     }
     return { to: '/editor/issue-plan', label: '去重新排期' }
   }
+  if (type === 'appeal.created') {
+    return id
+      ? { to: '/admin/content', search: { section: 'appeals', appeal: id }, label: '去处理申诉' }
+      : { to: '/admin/content', search: { section: 'appeals' }, label: '去申诉队列' }
+  }
+  if (type === 'appeal.decision') {
+    return id
+      ? { to: '/me', search: { tab: 'overview', appeal: id }, label: '看申诉结果' }
+      : { to: '/me', search: { tab: 'overview' }, label: '我的申诉' }
+  }
   if (type === 'site.feedback') {
     return id
       ? { to: '/forum', search: { view: 'feedback', feedback: id }, label: '去反馈墙' }

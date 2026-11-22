@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.19.39] — 2026-11-22
+
+- Authors now have a real appeal workflow instead of an API-only promise. From an owned, published work, “作者申诉” opens a dialog for withdrawing the work, re-reviewing its score, or re-reviewing its zone; the reason must be 100–3000 characters and the same request cannot be submitted twice.
+- Appeals land in a dedicated admin queue (`/admin/content?section=appeals`) with pending/accepted/rejected filters and exact-notification deep links. Accepting a withdrawal immediately unpublishes the work, removes it from search and records the audit; accepting a score/zone appeal records the decision without silently rewriting the score.
+- Authors can see their own appeals and editor notes under “我的”; both `appeal.created` and `appeal.decision` notifications now land directly on the queue item or the author’s record. Added backend end-to-end tests and front-end destination tests.
+
 ## [1.19.38] — 2026-11-22
 
 - Shop covers no longer require an external image host: the admin form can upload PNG/JPEG/GIF/WebP files up to 5MB through a dedicated `shop` media purpose, preview them, or remove them again. Existing URL covers still work.

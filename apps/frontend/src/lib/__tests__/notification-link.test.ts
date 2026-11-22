@@ -215,6 +215,30 @@ describe('notificationDestination', () => {
     })
   })
 
+  it('sends an admin to the exact appeal in the moderation queue', () => {
+    expect(
+      notificationDestination(
+        note({ type: 'appeal.created', related_type: 'appeal', related_id: '88' }),
+      ),
+    ).toMatchObject({
+      to: '/admin/content',
+      search: { section: 'appeals', appeal: 88 },
+      label: '去处理申诉',
+    })
+  })
+
+  it('sends the author to their own appeal record', () => {
+    expect(
+      notificationDestination(
+        note({ type: 'appeal.decision', related_type: 'appeal', related_id: '88' }),
+      ),
+    ).toMatchObject({
+      to: '/me',
+      search: { tab: 'overview', appeal: 88 },
+      label: '看申诉结果',
+    })
+  })
+
   it('does not pretend a site-wide notification has a destination', () => {
     expect(
       notificationDestination(note({ type: 'site.notice', related_type: 'site', related_id: null })),

@@ -9,6 +9,10 @@ import type {
   AssignableRole,
   AssignmentCreate,
   AssignmentListResponse,
+  AppealItem,
+  AppealKind,
+  AppealListResponse,
+  AppealStatus,
   AssignmentResponse,
   AuditLogEntry,
   AuthorFollowListResponse,
@@ -1623,6 +1627,69 @@ export function useRevokeRole() {
       (await api.delete<UserResponse>(`/admin/users/${userId}/roles/${role}`)).data,
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['admin', 'users'] })
+    },
+  })
+}
+
+// --- 作者申诉（Appeal） -----------------------------------------------------
+
+export function useMyAppeals() {
+  return useQuery<AppealListResponse>({
+    queryKey: ['catalog', 'appeals', 'mine'],
+    queryFn: async () => (await api.get<AppealListResponse>('/catalog/appeals/mine')).data,
+  })
+}
+
+export function useCreateAppeal(resourceId: number) {
+  const qc = useQueryClient()
+  return useMutation<AppealItem, Error, { kind: AppealKind; reason: string }>({
+    mutationFn: async (body) =>
+      (await api.post<AppealItem>(`/catalog/${resourceId}/appeal`, body)).data,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['catalog', 'appeals'] })
+    },
+  })
+}
+
+export function useAdminAppeals(
+  status: AppealStatus | 'all',
+  page = 1,
+  pageSize = 20,
+  appealId?: number,
+) {
+  return useQuery<AppealListResponse>({
+    queryKey: ['catalog', 'appeals', 'admin', status, page, pageSize, appealId ?? 0],
+    queryFn: async () =>
+      (
+        await api.get<AppealListResponse>('/catalog/admin/appeals', {
+          params: {
+            status,
+            page,
+            page_size: pageSize,
+            ...(appealId ? { appeal_id: appealId } : {}),
+          },
+        })
+      ).data,
+  })
+}
+
+export function useDecideAppeal() {
+  const qc = useQueryClient()
+  return useMutation<
+    AppealItem,
+    Error,
+    { appealId: number; status: 'accepted' | 'rejected'; editorNote: string }
+  >({
+    mutationFn: async ({ appealId, status, editorNote }) =>
+      (
+        await api.patch<AppealItem>(`/catalog/admin/appeals/${appealId}`, {
+          status,
+          editor_note: editorNote,
+        })
+      ).data,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['catalog', 'appeals'] })
+      void qc.invalidateQueries({ queryKey: ['notifications'] })
     },
   })
 }

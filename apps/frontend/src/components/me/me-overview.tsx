@@ -5,6 +5,7 @@ import { useMarkRead, useNotifications } from '@/hooks/api/use-modules'
 import { Button } from '@/components/ui/button'
 import { notificationDestination } from '@/lib/notification-link'
 import { shortDate } from './format'
+import { MeAppeals } from './me-appeals'
 
 function SectionHeading({
   kicker,
@@ -28,8 +29,10 @@ function SectionHeading({
 
 export function MeOverview({
   onOpenNotifications,
+  highlightAppealId,
 }: {
   onOpenNotifications: () => void
+  highlightAppealId?: number
 }) {
   const notifications = useNotifications(1, 6)
   const latestNotifications = notifications.data?.data ?? []
@@ -124,6 +127,8 @@ export function MeOverview({
           </div>
         )}
       </section>
+
+      <MeAppeals highlightAppealId={highlightAppealId} />
     </div>
   )
 }

@@ -21,15 +21,20 @@ import { isMeTab, type MeTabKey } from '@/components/me/types'
 export const Route = createFileRoute('/me')({
   validateSearch: (
     search: Record<string, unknown>,
-  ): { tab?: MeTabKey; section?: string; notifications?: boolean } => {
+  ): { tab?: MeTabKey; section?: string; notifications?: boolean; appeal?: number } => {
     const tab = isMeTab(search.tab) ? search.tab : undefined
     const section = typeof search.section === 'string' ? search.section : undefined
     const notifications =
       search.notifications === true || search.notifications === '1' || search.notifications === 'true'
+    const appeal =
+      Number.isInteger(Number(search.appeal)) && Number(search.appeal) > 0
+        ? Number(search.appeal)
+        : undefined
     return {
       ...(tab ? { tab } : {}),
       ...(section ? { section } : {}),
       ...(notifications ? { notifications: true } : {}),
+      ...(appeal ? { appeal } : {}),
     }
   },
   beforeLoad: () => {
@@ -129,7 +134,10 @@ function MePage() {
 
       <div className="pt-6 sm:pt-7">
         {activeTab === 'overview' ? (
-          <MeOverview onOpenNotifications={() => setNotificationsOpen(true)} />
+          <MeOverview
+            onOpenNotifications={() => setNotificationsOpen(true)}
+            highlightAppealId={search.appeal}
+          />
         ) : null}
         {activeTab === 'library' ? <MeLibrary section={search.section} /> : null}
         {activeTab === 'points' ? <MePoints /> : null}

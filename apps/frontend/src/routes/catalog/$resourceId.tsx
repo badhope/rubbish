@@ -10,6 +10,7 @@ import {
   ExternalLink,
   FileDown,
   FileText,
+  Gavel,
   ListTree,
   MessagesSquare,
   MoreVertical,
@@ -77,6 +78,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { AddToListDialog } from '@/components/common/add-to-list-dialog'
 import { BottomSheet } from '@/components/common/bottom-sheet'
+import { AppealDialog } from '@/components/catalog/appeal-dialog'
 import { ClaimDialog } from '@/components/catalog/claim-dialog'
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
 import { FunArticle } from '@/components/catalog/fun-article'
@@ -98,7 +100,7 @@ function CatalogDetailPage() {
     enabled: Number.isFinite(id) && id > 0,
   })
   const discussCount: number = forumQ.data?.meta?.total ?? 0
-  const { isAdmin, isAuthenticated } = useAuth()
+  const { isAdmin, isAuthenticated, user } = useAuth()
   const historyQ = useQuery<ResourceHistory>({
     queryKey: ['catalog', 'history', id],
     queryFn: async () => (await api.get(`/catalog/${id}/history`)).data,
@@ -126,6 +128,7 @@ function CatalogDetailPage() {
   const [eventOpen, setEventOpen] = useState(false)
   const [listOpen, setListOpen] = useState(false)
   const [claimOpen, setClaimOpen] = useState(false)
+  const [appealOpen, setAppealOpen] = useState(false)
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false)
 
   // ManuscriptView 把 TOC 上提到这里，供右侧 sticky 侧栏渲染。
@@ -347,6 +350,12 @@ function CatalogDetailPage() {
               {isAuthenticated && claimStatus.data?.claimable ? (
                 <Button variant="outline" size="sm" className="min-w-0" onClick={() => setClaimOpen(true)}>
                   <span className="truncate">认领这篇记录</span>
+                </Button>
+              ) : null}
+              {isAuthenticated && claimStatus.data?.owner?.user_id === user?.id ? (
+                <Button variant="outline" size="sm" className="min-w-0" onClick={() => setAppealOpen(true)}>
+                  <Gavel className="h-4 w-4 shrink-0" />
+                  <span className="truncate">作者申诉</span>
                 </Button>
               ) : null}
               {isAuthenticated && claimStatus.data?.state === 'pending_review' && claimStatus.data.mine ? (
@@ -725,6 +734,14 @@ function CatalogDetailPage() {
           authors={data.authors_detail ?? null}
         />
       )}
+
+      {isAuthenticated && appealOpen ? (
+        <AppealDialog
+          resourceId={id}
+          open={appealOpen}
+          onOpenChange={setAppealOpen}
+        />
+      ) : null}
 
       <ConfirmDialog
         open={deleteOpen}

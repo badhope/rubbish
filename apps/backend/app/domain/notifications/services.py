@@ -67,6 +67,7 @@ _EMAIL_PREF_BY_EVENT = {
     "reminder": "email_review",
     "decision": "email_submission",
     "submission.triage_overdue": "email_submission",
+    "appeal.decision": "email_submission",
     "release.scheduled_failed": "email_release",
 }
 

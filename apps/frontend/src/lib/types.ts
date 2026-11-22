@@ -364,6 +364,29 @@ export interface ClaimStatusResponse {
 
 export type ClaimEvidenceType = 'email' | 'orcid' | 'manuscript_id'
 
+// --- Appeals ---
+export type AppealKind = 'withdraw' | 'rescore' | 'rescore_zone'
+export type AppealStatus = 'pending' | 'accepted' | 'rejected'
+
+export interface AppealItem {
+  id: number
+  resource_id: number
+  user_id: number
+  username: string
+  resource_title: string
+  kind: AppealKind
+  reason: string
+  status: AppealStatus
+  editor_note?: string | null
+  created_at?: string | null
+  decided_at?: string | null
+}
+
+export interface AppealListResponse {
+  items: AppealItem[]
+  meta?: PaginationMeta
+}
+
 export interface ClaimSubmitRequest {
   author_position: number
   evidence_type: ClaimEvidenceType
