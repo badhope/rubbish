@@ -153,6 +153,10 @@ async def _user_with_roles(db: AsyncSession, user: User) -> UserResponse:
     resp.roles = role_names
     from app.api.levels import level_of
 
+    # UserResponse 的 ORM 直出分支会丢掉 xp（它是列，但 model_validator
+    # 只挑选显式白名单字段）。后台成员列表要显示活跃等级，不能把所有人的
+    # 累计经验都报成 0，否则管理员看到的等级与实际 XP 脱节。
+    resp.xp = user.xp or 0
     resp.level = await level_of(db, user)
     return resp
 

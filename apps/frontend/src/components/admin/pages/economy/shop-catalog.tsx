@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -23,7 +23,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { useAdminShopItems, useCreateShopItem, useUpdateShopItem } from '@/hooks/api/use-shop'
 import type { AdminShopItem } from '@/hooks/api/use-shop'
 import { extractError } from '@/lib/utils'
-import { Gift, Pencil, Plus, Power } from 'lucide-react'
+import { uploadMediaImage } from '@/lib/media'
+import { Gift, Pencil, Plus, Power, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 
 type ItemForm = {
@@ -96,6 +97,8 @@ export function ShopCatalogCard() {
   const updateItem = useUpdateShopItem()
   const [editor, setEditor] = useState<{ item: AdminShopItem | null } | null>(null)
   const [form, setForm] = useState<ItemForm>(EMPTY_FORM)
+  const [coverUploading, setCoverUploading] = useState(false)
+  const coverInputRef = useRef<HTMLInputElement>(null)
 
   const editing = editor?.item ?? null
   const saving = createItem.isPending || updateItem.isPending
@@ -145,6 +148,28 @@ export function ShopCatalogCard() {
       setEditor(null)
     } catch (err) {
       toast.error(extractError(err, '保存失败'))
+    }
+  }
+
+  const uploadCover = async (file: File | undefined) => {
+    if (!file) return
+    if (!['image/png', 'image/jpeg', 'image/gif', 'image/webp'].includes(file.type)) {
+      toast.error('只支持 PNG / JPEG / GIF / WebP 图片')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('封面不能超过 5MB')
+      return
+    }
+    setCoverUploading(true)
+    try {
+      const url = await uploadMediaImage(file, 'shop')
+      set('cover_url', url)
+      toast.success('封面已上传')
+    } catch (err) {
+      toast.error(extractError(err, '封面上传失败'))
+    } finally {
+      setCoverUploading(false)
     }
   }
 
@@ -343,14 +368,50 @@ export function ShopCatalogCard() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="shop-item-cover">封面图地址（选填）</Label>
-              <Input
-                id="shop-item-cover"
-                value={form.cover_url}
-                maxLength={500}
-                placeholder="https://…；留空则显示默认礼物图标"
-                onChange={(e) => set('cover_url', e.target.value)}
+              <Label htmlFor="shop-item-cover">封面图（选填）</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="shop-item-cover"
+                  value={form.cover_url}
+                  maxLength={500}
+                  placeholder="上传图片，或直接贴外部地址"
+                  onChange={(e) => set('cover_url', e.target.value)}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={coverUploading}
+                  onClick={() => coverInputRef.current?.click()}
+                >
+                  <Upload className="h-4 w-4" />
+                  {coverUploading ? '上传中…' : '上传'}
+                </Button>
+              </div>
+              <input
+                ref={coverInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/gif,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  void uploadCover(e.target.files?.[0])
+                  e.target.value = ''
+                }}
               />
+              <p className="text-[11px] text-muted-foreground">
+                支持 PNG / JPEG / GIF / WebP，单张不超过 5MB；留空则显示默认礼物图标。
+              </p>
+              {form.cover_url ? (
+                <div className="space-y-2">
+                  <img
+                    src={form.cover_url}
+                    alt="货品封面预览"
+                    className="h-32 w-full border object-cover"
+                  />
+                  <Button type="button" size="sm" variant="ghost" onClick={() => set('cover_url', '')}>
+                    移除封面
+                  </Button>
+                </div>
+              ) : null}
             </div>
             <label className="flex cursor-pointer items-center gap-2 text-sm">
               <input

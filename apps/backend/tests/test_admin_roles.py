@@ -27,6 +27,12 @@ async def test_list_users_includes_roles_field(
         assert "roles" in u
         assert isinstance(u["roles"], list)
 
+    # 成员列表要能支撑后台“活跃等级”展示：xp 不能因为 ORM 直出而被吞成 0。
+    me = (await client.get("/api/users/me", headers=auth_headers(test_user))).json()
+    row = next(u for u in users if u["id"] == test_user["user_id"])
+    assert row["xp"] == me["xp"]
+    assert row["level"] == me["level"]
+
 
 async def test_assign_reviewer_role(client: AsyncClient, admin_user: dict, test_user: dict) -> None:
     """admin 给普通用户分配 reviewer 角色；返回的 roles 列表应包含 'reviewer'。"""

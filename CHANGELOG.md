@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.19.38] — 2026-11-22
+
+- Shop covers no longer require an external image host: the admin form can upload PNG/JPEG/GIF/WebP files up to 5MB through a dedicated `shop` media purpose, preview them, or remove them again. Existing URL covers still work.
+- Fixed the admin member list reporting `xp: 0` for everyone: the serializer now carries the real accumulated XP alongside the computed activity level, so the level shown in member management matches the ledger. Added regression coverage for both.
+
 ## [1.19.37] — 2026-11-22
 
 - The admin-only XP grant API finally has a place to use it. Member management now shows each account's activity level and offers “发放活跃值” with an amount and a required note; the grant lands in the XP ledger and the audit log. Added a backend test covering the permission boundary, validation and ledger effect.

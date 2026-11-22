@@ -41,7 +41,7 @@ router = APIRouter(prefix="/media", tags=["media"])
 @router.post("/images", status_code=status.HTTP_201_CREATED)
 async def upload_media_image(
     file: UploadFile = File(...),
-    purpose: str = Query(default="submission", pattern=r"^(submission|forum|note|feedback)$"),
+    purpose: str = Query(default="submission", pattern=r"^(submission|forum|note|feedback|shop)$"),
     _user: User = Depends(get_current_user),
 ) -> dict[str, str]:
     """Upload a PNG/JPEG/GIF/WebP and return a directly embeddable URL."""
@@ -76,7 +76,7 @@ async def get_media_image(filename: str) -> Response:
     if not IMAGE_NAME_RE.match(filename):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="图片不存在")
     # Search the purpose prefixes; the URL carries only the filename.
-    for purpose in ("submission", "forum", "note", "feedback"):
+    for purpose in ("submission", "forum", "note", "feedback", "shop"):
         try:
             contents = await get_storage().load(f"media/{purpose}/{filename}")
         except FileNotFoundError:

@@ -49,3 +49,18 @@ async def test_upload_media_image_rejects_unknown_purpose(
         headers={"Authorization": f"Bearer {admin_user['token']}"},
     )
     assert response.status_code == 422
+
+
+async def test_shop_cover_has_its_own_media_purpose(
+    client: AsyncClient, admin_user: dict
+) -> None:
+    response = await client.post(
+        "/api/media/images?purpose=shop",
+        files={"file": ("cover.png", _PNG, "image/png")},
+        headers={"Authorization": f"Bearer {admin_user['token']}"},
+    )
+    assert response.status_code == 201
+    url = response.json()["url"]
+    read = await client.get(url)
+    assert read.status_code == 200
+    assert read.content == _PNG
