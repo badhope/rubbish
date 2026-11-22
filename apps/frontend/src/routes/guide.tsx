@@ -35,7 +35,7 @@ function GuidePage() {
   }, [current.label])
   return (
     <div className="guide-page">
-      <div className="mx-auto mb-8 flex w-full max-w-[1100px] overflow-x-auto border-t">
+      <div className="mx-auto mb-8 flex w-full max-w-[1100px] flex-wrap border-t">
         {TABS.map((t) => (
           <Link
             key={t.value}

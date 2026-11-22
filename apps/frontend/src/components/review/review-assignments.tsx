@@ -400,7 +400,7 @@ export function ReviewAssignments() {
       <div
         role="tablist"
         aria-label="按互评状态筛选"
-        className="mb-5 flex items-center gap-1 overflow-x-auto border-b pb-2"
+        className="mb-5 flex flex-wrap items-center gap-1 border-b pb-2"
       >
         {STATUS_TABS.map((t) => {
           const active = statusTab === t.value
