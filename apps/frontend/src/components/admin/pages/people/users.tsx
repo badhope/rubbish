@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react'
 import { MoreHorizontal, Plus, Search } from 'lucide-react'
 import { toast } from 'sonner'
-import { useAdminUsers, useAssignRole, useCreateAdminUser, useRevokeRole, useSetUserActive, useSetUserAdmin } from '@/hooks/api/use-modules'
+import {
+  useAdminUsers,
+  useAssignRole,
+  useCreateAdminUser,
+  useGrantUserXp,
+  useRevokeRole,
+  useSetUserActive,
+  useSetUserAdmin,
+} from '@/hooks/api/use-modules'
 import { useAuth } from '@/hooks/use-auth'
 import type { AssignableRole, UserResponse } from '@/lib/types'
 import { extractError, inferTotalPagesFromFullPage } from '@/lib/utils'
@@ -104,6 +112,11 @@ export default function AdminUsersPage() {
   const assignRoleMut = useAssignRole()
   const revokeRoleMut = useRevokeRole()
   const createUserMut = useCreateAdminUser()
+  const grantXpMut = useGrantUserXp()
+  const [grantTarget, setGrantTarget] = useState<UserResponse | null>(null)
+  const [grantPoints, setGrantPoints] = useState('100')
+  const [grantNote, setGrantNote] = useState('')
+  const [grantError, setGrantError] = useState('')
   const { user } = useAuth()
 
   // 后端返回裸数组无 meta，totalPages 用「当前页是否满页」推断（与审计日志页共用）。
@@ -194,7 +207,12 @@ export default function AdminUsersPage() {
                 const roles = u.roles ?? []
                 return (
                   <TableRow key={u.id}>
-                    <TableCell className="font-medium">{u.username}</TableCell>
+                    <TableCell className="font-medium">
+                      <span>{u.username}</span>
+                      <span className="ml-2 text-[11px] font-normal text-muted-foreground">
+                        活跃 Lv {u.level ?? 1}
+                      </span>
+                    </TableCell>
                     <TableCell className="text-muted-foreground">
                       {u.email}
                     </TableCell>
@@ -267,6 +285,20 @@ export default function AdminUsersPage() {
                             className={u.is_admin ? 'text-destructive' : ''}
                           >
                             {u.is_admin ? '取消平台管理员' : '设为平台管理员'}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuLabel>活跃值</DropdownMenuLabel>
+                          <DropdownMenuItem
+                            onSelect={(e) => {
+                              e.preventDefault()
+                              setGrantTarget(u)
+                              setGrantPoints('100')
+                              setGrantNote('')
+                              setGrantError('')
+                              setOpenUserId(null)
+                            }}
+                          >
+                            发放活跃值
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuLabel>编辑线角色分配</DropdownMenuLabel>
@@ -400,6 +432,75 @@ export default function AdminUsersPage() {
               }}
             >
               {createUserMut.isPending ? '创建中…' : '创建并邀请'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={grantTarget !== null} onOpenChange={(open) => { if (!open) setGrantTarget(null) }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>发放活跃值</DialogTitle>
+            <DialogDescription>
+              给 {grantTarget?.username ?? '该成员'}（活跃 Lv {grantTarget?.level ?? 1}）手动发放经验。
+              用于编辑贡献、活动奖励；备注会写进经验记录与审计日志。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="grant-points">活跃值</Label>
+              <Input
+                id="grant-points"
+                type="number"
+                min={1}
+                max={10000}
+                step={1}
+                value={grantPoints}
+                onChange={(e) => setGrantPoints(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">1–10000，按整数发放。</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="grant-note">备注</Label>
+              <Textarea
+                id="grant-note"
+                rows={3}
+                maxLength={200}
+                value={grantNote}
+                onChange={(e) => setGrantNote(e.target.value)}
+                placeholder="例：本期方法学专题编辑贡献。"
+              />
+              <p className="text-right text-xs text-muted-foreground">{grantNote.length}/200</p>
+            </div>
+            {grantError && <p className="text-sm text-destructive">{grantError}</p>}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setGrantTarget(null)}>取消</Button>
+            <Button
+              disabled={grantXpMut.isPending}
+              onClick={async () => {
+                setGrantError('')
+                if (!grantTarget) return
+                const points = Number(grantPoints)
+                if (!Number.isInteger(points) || points < 1 || points > 10000) {
+                  setGrantError('活跃值必须是 1–10000 的整数')
+                  return
+                }
+                const note = grantNote.trim()
+                if (!note) {
+                  setGrantError('请填写备注，方便之后核对')
+                  return
+                }
+                try {
+                  await grantXpMut.mutateAsync({ userId: grantTarget.id, points, note })
+                  toast.success(`已给 ${grantTarget.username} 发放 ${points} 活跃值`)
+                  setGrantTarget(null)
+                } catch (err) {
+                  setGrantError(extractError(err, '发放失败'))
+                }
+              }}
+            >
+              {grantXpMut.isPending ? '发放中…' : '确认发放'}
             </Button>
           </DialogFooter>
         </DialogContent>

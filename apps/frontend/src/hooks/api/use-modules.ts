@@ -1578,6 +1578,18 @@ export function useCreateAdminUser() {
   })
 }
 
+/** 管理员手动发放活跃值（XP）；用于编辑贡献、活动奖励，不是积分余额。 */
+export function useGrantUserXp() {
+  const qc = useQueryClient()
+  return useMutation<{ points: number; note: string }, Error, { userId: number; points: number; note: string }>({
+    mutationFn: async ({ userId, points, note }) =>
+      (await api.post(`/gamification/admin/users/${userId}/grant`, { points, note })).data,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['admin', 'users'] })
+    },
+  })
+}
+
 export function useSetUserActive() {
   const qc = useQueryClient()
   return useMutation<UserResponse, Error, { userId: number; isActive: boolean }>({

@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from conftest import auth_headers, register_user
 from httpx import AsyncClient
+from sqlalchemy import select
+
+from app.models import AuditLog
 
 
 def _level(body: dict) -> int:
@@ -181,3 +184,46 @@ async def test_wallet_checkin_idempotent_and_streak(client: AsyncClient, test_us
 async def test_checkin_requires_auth(client: AsyncClient) -> None:
     r = await client.post("/api/gamification/wallet/checkin")
     assert r.status_code in (401, 403)
+
+
+async def test_admin_can_grant_activity_xp(
+    client: AsyncClient, admin_user: dict, db_session
+) -> None:
+    """管理员手动发放活跃值是可达能力：非管理员不能调用，发放会写经验与审计。"""
+    target = await register_user(client, email="granted@example.com", username="granted")
+    target_headers = {"Authorization": f"Bearer {target['token']}"}
+    before = (await client.get("/api/users/me", headers=target_headers)).json()["xp"]
+
+    denied = await client.post(
+        f"/api/gamification/admin/users/{target['user_id']}/grant",
+        json={"points": 250, "note": "普通成员不能自助发放"},
+        headers=target_headers,
+    )
+    assert denied.status_code == 403
+
+    missing_note = await client.post(
+        f"/api/gamification/admin/users/{target['user_id']}/grant",
+        json={"points": 250, "note": ""},
+        headers=auth_headers(admin_user),
+    )
+    assert missing_note.status_code == 422
+
+    granted = await client.post(
+        f"/api/gamification/admin/users/{target['user_id']}/grant",
+        json={"points": 250, "note": "测试活动奖励"},
+        headers=auth_headers(admin_user),
+    )
+    assert granted.status_code == 200, granted.text
+    assert granted.json() == {"points": 250, "note": "测试活动奖励"}
+    after = (await client.get("/api/users/me", headers=target_headers)).json()["xp"]
+    assert after == before + 250
+
+    audit = (
+        await db_session.execute(
+            select(AuditLog).where(
+                AuditLog.action == "gamification.grant",
+                AuditLog.target_id == str(target["user_id"]),
+            )
+        )
+    ).scalar_one()
+    assert audit.payload == {"points": 250, "note": "测试活动奖励"}

@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.19.37] — 2026-11-22
+
+- The admin-only XP grant API finally has a place to use it. Member management now shows each account's activity level and offers “发放活跃值” with an amount and a required note; the grant lands in the XP ledger and the audit log. Added a backend test covering the permission boundary, validation and ledger effect.
+
 ## [1.19.36] — 2026-11-22
 
 - The redemption queue now has three real tabs — pending, fulfilled and rejected — instead of only showing pending orders. Completed and rejected orders keep their processing note and timestamp for later audit, and no longer offer duplicate decisions.
