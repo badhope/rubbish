@@ -367,8 +367,8 @@ export function EditorPipeline() {
       )}
 
       <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
-        <HelpTip text="指派前先看利益冲突；复核必须写 20 字以上处置说明；撤回申诉受理后作品会下架，分数/分区重审要记录结论。" />
-        指派、复核、申诉处置的边界
+        <HelpTip text="指派前先看利益冲突；复核必须写 20 字以上处置说明；分数/分区重审要记录结论。" />
+        指派与复核的边界
       </p>
 
       {/* 邮件摘要状态条：诚实报告"邮件到底有没有发出去"。

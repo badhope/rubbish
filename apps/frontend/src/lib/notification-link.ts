@@ -25,10 +25,25 @@ export function notificationDestination(
   const id = positiveId(item.related_id)
   const type = item.type || ''
 
-  if (type === 'claim.created') {
+  // 同一事件发给两种人：管理员收到“去审批”，申请人收到“看结果”。
+  if (item.related_type === 'role_application_admin') {
     return id
-      ? { to: '/admin/people', search: { section: 'claims', claim: id }, label: '去审批' }
-      : { to: '/admin/people', search: { section: 'claims' }, label: '去审批' }
+      ? { to: '/admin/people', search: { section: 'roles', application: id }, label: '去审批' }
+      : { to: '/admin/people', search: { section: 'roles' }, label: '去审批' }
+  }
+  if (type === 'gamification.role_application' || item.related_type === 'role_application') {
+    return id
+      ? { to: '/levels', search: { application: id }, label: '看申请' }
+      : { to: '/levels', label: '看身份' }
+  }
+
+  if (type === 'claim.created') {
+    // 新通知 related_type=author_claim，带的是认领 id；旧通知只带 resource id，
+    // 不能拿作品 id 当认领 id，否则会定位到一条无关甚至不存在的申请。
+    if (item.related_type === 'author_claim' && id) {
+      return { to: '/admin/people', search: { section: 'claims', claim: id }, label: '去审批' }
+    }
+    return { to: '/admin/people', search: { section: 'claims' }, label: '去审批' }
   }
   if (type === 'site.feedback') {
     return id
@@ -57,6 +72,11 @@ export function notificationDestination(
       ? { to: '/review', search: { tab: 'assignments', assignment: id }, label: '去互评' }
       : { to: '/review', search: { tab: 'assignments' }, label: '去互评台' }
   }
+  if (type === 'review.adjudicator_invited') {
+    return id
+      ? { to: '/review', search: { tab: 'assignments', assignment: id }, label: '去裁决' }
+      : { to: '/review', search: { tab: 'assignments' }, label: '去互评台' }
+  }
   if (type === 'submission.triage_overdue') {
     return id
       ? { to: '/submissions/pending', search: { submission: id }, label: '去处理' }
@@ -67,10 +87,31 @@ export function notificationDestination(
       ? { to: '/submissions/pending', search: { submission: id }, label: '看修改版' }
       : { to: '/submissions/pending', label: '去内容台' }
   }
-  if (type === 'submission.decision' || type === 'submission.rework_requested') {
+  if (type === 'submission.decision') {
+    // 通过时后端指向公开目录条目，不指向 submission；点开应该直接读成稿。
+    if (item.related_type === 'resource' && id) {
+      return {
+        to: '/catalog/$resourceId',
+        params: { resourceId: String(id) },
+        label: '读成稿',
+      }
+    }
     return id
       ? { to: '/submissions', search: { submission: id }, label: '看结果' }
       : { to: '/submissions', label: '我的作品' }
+  }
+  if (type === 'submission.rework_requested') {
+    return id
+      ? { to: '/submissions', search: { submission: id }, label: '去修改' }
+      : { to: '/submissions', label: '我的作品' }
+  }
+  if (type === 'review.rework_needs_assignment') {
+    return id
+      ? { to: '/submissions/pending', search: { submission: id }, label: '去指派' }
+      : { to: '/submissions/pending', label: '去内容台' }
+  }
+  if (type === 'review.rework_requested') {
+    return { to: '/review', search: { tab: 'assignments' }, label: '去补意见' }
   }
 
   switch (item.related_type) {
@@ -102,7 +143,6 @@ export function notificationDestination(
       return { to: '/issues', label: '看合集' }
     case 'triage_queue':
       return { to: '/submissions/pending', label: '去内容台' }
-    case 'role_application':
     case 'site':
       return { to: '/me', label: '查看' }
     default:

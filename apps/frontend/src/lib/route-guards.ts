@@ -15,7 +15,7 @@ function redirectToLogin(): never {
   const path =
     typeof window !== 'undefined'
       ? `${window.location.pathname}${window.location.search}`
-      : '/dashboard'
+      : '/'
   throw redirect({ to: '/login', search: { redirect: path } })
 }
 

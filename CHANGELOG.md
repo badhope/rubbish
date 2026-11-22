@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.19.28] — 2026-11-22
+
+- Closed the missing role-application loop: `/levels#role-applications` now shows reviewer and senior-reviewer thresholds, the live numbers behind them, a 20–2000 character application form, status history and staff notes; `/admin/people?section=roles` gives admins a review queue with approve/reject, required rejection reasons and `?application=` deep links.
+- Role applications now notify every active admin; approval or rejection notifies the applicant and deep-links back to the exact application card. The admin overview counts pending role applications alongside claims, comments and reports.
+- Resolving a feedback entry now notifies the logged-in submitter and points them at the exact feedback-wall item; notification failure no longer rolls back the resolution.
+- Notification deep links now close the loop for accepted submissions (published work instead of a submission desk), reviewer rework requests (review desk), third-party adjudication invitations (labelled “去裁决”), and legacy claims that only carry a resource id (queue instead of a wrong claim id).
+- Login links from the review board, levels page and discussion threads now return to the page the reader came from instead of dropping them at the home page.
+- The notification panel clears `?notifications=true` when closed, resets to page 1 on reopen, and does not get stuck when a notification has no more specific destination.
+- Added “最近阅读” under `/me?tab=library&section=history`, with continue-reading links, progress, and per-item removal; privacy and community-rule copy now points to that real control.
+- Replaced the last visible “送审” wording and the appeal copy that implied an in-site appeal form with the actual email channel; removed the stale `/dashboard` guard fallback.
+
 ## [1.19.27] — 2026-11-22
 
 - Notifications are now shortcuts instead of read-only receipts: clicking one marks it read, closes the panel, and opens the exact assignment, submission, review card, feedback entry, claim row, or discussion thread it refers to.

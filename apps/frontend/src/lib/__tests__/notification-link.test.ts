@@ -53,6 +53,46 @@ describe('notificationDestination', () => {
     })
   })
 
+  it('sends an accepted decision to the published work, not the submission desk', () => {
+    expect(
+      notificationDestination(
+        note({ type: 'submission.decision', related_type: 'resource', related_id: '306' }),
+      ),
+    ).toMatchObject({
+      to: '/catalog/$resourceId',
+      params: { resourceId: '306' },
+      label: '读成稿',
+    })
+  })
+
+  it('labels a third-party adjudication invitation as adjudication, not ordinary review', () => {
+    expect(
+      notificationDestination(
+        note({
+          type: 'review.adjudicator_invited',
+          related_type: 'review_assignment',
+          related_id: '42',
+        }),
+      ),
+    ).toMatchObject({
+      to: '/review',
+      search: { tab: 'assignments', assignment: 42 },
+      label: '去裁决',
+    })
+  })
+
+  it('sends a reviewer rework request to the review desk', () => {
+    expect(
+      notificationDestination(
+        note({ type: 'review.rework_requested', related_type: 'submission', related_id: '351' }),
+      ),
+    ).toMatchObject({
+      to: '/review',
+      search: { tab: 'assignments' },
+      label: '去补意见',
+    })
+  })
+
   it('sends a comment to the public work', () => {
     expect(
       notificationDestination(
@@ -97,6 +137,46 @@ describe('notificationDestination', () => {
     ).toMatchObject({
       to: '/admin/people',
       search: { section: 'claims', claim: 77 },
+      label: '去审批',
+    })
+  })
+
+  it('sends an applicant to their application record', () => {
+    expect(
+      notificationDestination(
+        note({ type: 'gamification.role_application', related_type: 'role_application', related_id: '12' }),
+      ),
+    ).toMatchObject({
+      to: '/levels',
+      search: { application: 12 },
+      label: '看申请',
+    })
+  })
+
+  it('sends an admin to the exact role application card', () => {
+    expect(
+      notificationDestination(
+        note({
+          type: 'gamification.role_application',
+          related_type: 'role_application_admin',
+          related_id: '12',
+        }),
+      ),
+    ).toMatchObject({
+      to: '/admin/people',
+      search: { section: 'roles', application: 12 },
+      label: '去审批',
+    })
+  })
+
+  it('does not treat a legacy claim notification resource id as a claim id', () => {
+    expect(
+      notificationDestination(
+        note({ type: 'claim.created', related_type: 'resource', related_id: '289' }),
+      ),
+    ).toMatchObject({
+      to: '/admin/people',
+      search: { section: 'claims' },
       label: '去审批',
     })
   })

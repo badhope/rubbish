@@ -21,6 +21,13 @@ export function ReviewBoard() {
       <PageHeader
         title="互评广场"
         description="作品还在互评里，作者和正文先不公开。你能看到标题、简介和主题；想参与，就向站务组申请。"
+        actions={
+          <Button asChild size="sm" variant="outline">
+            <Link to="/levels" hash="role-applications">
+              申请互评成员
+            </Link>
+          </Button>
+        }
       />
       {isLoading ? (
         <LoadingSkeleton rows={4} />
@@ -64,7 +71,7 @@ export function ReviewBoard() {
                     </Button>
                   ) : !token ? (
                     <Button asChild size="sm" variant="outline">
-                      <Link to="/login">登录后申请</Link>
+                      <Link to="/login" search={{ redirect: '/review?tab=board' }}>登录后申请</Link>
                     </Button>
                   ) : data.can_apply ? (
                     <Button
@@ -77,7 +84,7 @@ export function ReviewBoard() {
                             const message = extractError(err, '申请互评失败')
                             if (message.includes('Reviewer role required')) {
                               toast.info('请先申请互评成员资格')
-                              window.location.href = '/me?tab=points&section=levels'
+                              window.location.href = '/levels#role-applications'
                               return
                             }
                             toast.error(message)
@@ -89,7 +96,7 @@ export function ReviewBoard() {
                     </Button>
                   ) : (
                     <Button asChild size="sm" variant="outline">
-                      <Link to="/me" search={{ tab: 'points', section: 'levels' }}>先申请互评成员资格</Link>
+                      <Link to="/levels" hash="role-applications">先申请互评成员资格</Link>
                     </Button>
                   )}
                 </div>

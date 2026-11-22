@@ -20,10 +20,17 @@ export function OnboardingTour() {
 
   const close = () => { try { localStorage.setItem(KEY, 'done') } catch { /* ignore */ } setOpen(false) }
 
-  // 不在设置、后台这些“正在办事”的页面弹浮层：
-  // 用户此刻要看表单和按钮，引导卡不能压住正文。
-  const busy = ['/settings', '/admin', '/account']
-    .some((prefix) => location.pathname === prefix || location.pathname.startsWith(prefix + '/'))
+  // 不在表单和后台这些“正在办事”的页面弹浮层：
+  // 用户此刻要看输入框和按钮，引导卡不能压住正文。
+  const meSettings =
+    location.pathname === '/me' &&
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('tab') === 'settings'
+  const busy =
+    meSettings ||
+    ['/admin', '/editor', '/submissions/new', '/review', '/login', '/register'].some(
+      (prefix) => location.pathname === prefix || location.pathname.startsWith(prefix + '/'),
+    )
   if (!open || busy) return null
 
   const steps = [

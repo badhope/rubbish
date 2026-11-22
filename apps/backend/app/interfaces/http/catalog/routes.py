@@ -3121,6 +3121,23 @@ async def resolve_feedback(
             created_at=utcnow(),
         )
     )
+    if entry.actor_user_id:
+        from app.domain.notifications import services as notifications
+
+        try:
+            await notifications.create(
+                db,
+                tenant_id=tenant_id,
+                user_id=entry.actor_user_id,
+                type_="site.feedback",
+                title=f"反馈已处理：{payload.get('title') or '站点反馈'}",
+                body=(body.note.strip() or "站务组已把这条反馈标记为已解决。"),
+                related_type="feedback",
+                related_id=str(entry.id),
+            )
+        except Exception:
+            # 通知是附送动作；发不出去不能把已经处理好的反馈回滚成未解决。
+            logger.warning("feedback_resolve_notify_failed", feedback_id=entry.id, exc_info=True)
     await db.commit()
     await db.refresh(entry)
     return _feedback_row(entry)

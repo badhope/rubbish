@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { ArrowUpRight, Bell, CheckCheck, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -30,6 +30,10 @@ export function NotificationsDialog({
   const markOne = useMarkRead()
   const remove = useDeleteNotification()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (open) setPage(1)
+  }, [open])
 
   const onMarkAll = async () => {
     try {
@@ -64,7 +68,12 @@ export function NotificationsDialog({
   ) => {
     if (!isRead) void onMarkOne(id)
     if (!destination) return
-    onOpenChange(false)
+    if (destination.to === '/me') {
+      // 这类通知没有更具体的目标；关掉弹窗留在个人中心，不要假装跳转。
+      onOpenChange(false)
+      return
+    }
+    // 直接去目标页，不先关弹窗：关闭会清理 URL 参数，和这次跳转抢同一次导航。
     void navigate({
       to: destination.to,
       params: destination.params,

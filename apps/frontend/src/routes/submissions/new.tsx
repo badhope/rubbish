@@ -937,7 +937,7 @@ function SubmissionWizardPage() {
           作品指南
         </a>
         <div className="mt-1">
-          推荐提交 Word（.docx）：系统识别、排版和送审最稳；PDF
+          推荐提交 Word（.docx）：系统识别和排版最稳，互评成员也更好读；PDF
           也可上传，下载时会自动转成 Word。
         </div>
       </div>

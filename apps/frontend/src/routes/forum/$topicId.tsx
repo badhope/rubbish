@@ -721,7 +721,7 @@ function ForumTopicPage() {
               )
             ) : (
               <p className="text-sm text-muted-foreground">
-                <Link to="/login" className="text-primary hover:underline">
+                <Link to="/login" search={{ redirect: `/forum/${topicId}` }} className="text-primary hover:underline">
                   登录
                 </Link>{' '}
                 后可以回复。

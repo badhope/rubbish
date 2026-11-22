@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/common/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { RoleApplicationPanel } from '@/components/levels/role-application-panel'
 import { ACTIVITY_BANDS, levelForXp, nextBand } from '@/lib/activity-levels'
 
 export const Route = createFileRoute('/levels')({
@@ -90,11 +91,13 @@ function LevelsPage() {
           <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm text-muted-foreground sm:p-5">
             <span>登录后，能看到自己的经验、等级和下一级进度。</span>
             <Button asChild size="sm">
-              <Link to="/login">登录查看</Link>
+              <Link to="/login" search={{ redirect: '/levels' }}>登录查看</Link>
             </Button>
           </CardContent>
         </Card>
       )}
+
+      {isAuthenticated ? <RoleApplicationPanel /> : null}
 
       <section className="grid gap-4 border-y py-6 sm:grid-cols-2">
         <div className="border-l-2 border-primary pl-4">

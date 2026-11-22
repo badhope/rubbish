@@ -9,6 +9,7 @@ import {
   Layers,
   MessageSquare,
   ShieldAlert,
+  UserRoundCheck,
   Users,
 } from 'lucide-react'
 
@@ -17,6 +18,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { usePendingClaimsCount } from '@/hooks/api/use-modules'
+import type { AdminRoleApplications } from '@/lib/types'
 import { useAdminCommentCounts } from '@/hooks/api/use-comments'
 import { PageHeader } from '@/components/common/page-header'
 import { Badge } from '@/components/ui/badge'
@@ -40,7 +42,7 @@ const PENDING_QUEUE: {
   to: string
   search?: Record<string, string>
   icon: typeof Gavel
-  count?: 'claims' | 'comments' | 'reports'
+  count?: 'claims' | 'comments' | 'reports' | 'roles'
 }[] = [
   {
     title: '认领审批',
@@ -49,6 +51,14 @@ const PENDING_QUEUE: {
     search: { section: 'claims' },
     icon: FileSignature,
     count: 'claims',
+  },
+  {
+    title: '角色申请',
+    desc: '互评成员、资深互评成员',
+    to: '/admin/people',
+    search: { section: 'roles' },
+    icon: UserRoundCheck,
+    count: 'roles',
   },
   {
     title: '评论审核',
@@ -106,6 +116,16 @@ function AdminDashboard() {
   const pendingClaims = claimsCount?.count ?? 0
   const { data: commentCounts } = useAdminCommentCounts(isAuthenticated)
   const pendingComments = commentCounts?.pending ?? 0
+  const { data: roleApplications } = useQuery<AdminRoleApplications>({
+    queryKey: ['admin', 'role-applications', 'pending-count'],
+    queryFn: async () =>
+      (await api.get('/gamification/admin/applications', {
+        params: { status: 'pending', page_size: 1 },
+      })).data,
+    enabled: isAuthenticated,
+    staleTime: 60_000,
+  })
+  const pendingRoles = roleApplications?.meta.total ?? 0
   const { data: openReports } = useQuery({
     queryKey: ['admin', 'reports', 'open', 'count'],
     queryFn: async () =>
@@ -114,7 +134,7 @@ function AdminDashboard() {
     staleTime: 60_000,
   })
   const pendingReports = openReports?.length ?? 0
-  const pendingTotal = pendingClaims + pendingComments + pendingReports
+  const pendingTotal = pendingClaims + pendingComments + pendingReports + pendingRoles
 
   return (
     <div className="w-full max-w-6xl space-y-8">
@@ -155,7 +175,9 @@ function AdminDashboard() {
                   ? pendingComments
                   : item.count === 'reports'
                     ? pendingReports
-                    : null
+                    : item.count === 'roles'
+                      ? pendingRoles
+                      : null
             return (
               <Link
                 key={item.title}

@@ -50,6 +50,18 @@ function MePage() {
     if (search.notifications) setNotificationsOpen(true)
   }, [search.notifications])
 
+  const setNotificationsVisible = (open: boolean) => {
+    setNotificationsOpen(open)
+    if (!open && search.notifications) {
+      // 关掉弹窗后把深链参数也清掉；否则再点一次铃铛，地址没变化就不会重新打开。
+      void navigate({
+        to: '/me',
+        search: { ...search, notifications: undefined },
+        replace: true,
+      })
+    }
+  }
+
   if (profile.isLoading) return <Loading />
   if (profile.isError || !profile.data) {
     return <ErrorState message="加载个人中心失败" onRetry={() => profile.refetch()} />
@@ -125,7 +137,7 @@ function MePage() {
       </div>
 
       {notificationsOpen ? (
-        <NotificationsDialog open={notificationsOpen} onOpenChange={setNotificationsOpen} />
+        <NotificationsDialog open={notificationsOpen} onOpenChange={setNotificationsVisible} />
       ) : null}
     </div>
   )

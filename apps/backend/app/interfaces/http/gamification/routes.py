@@ -3,6 +3,7 @@ role applications (reviewer / senior reviewer)."""
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from typing import Literal
 
@@ -39,6 +40,7 @@ from app.domain.gamification.models import (
 from app.models import AuditLog, User, UserRole
 
 router = APIRouter(prefix="/gamification", tags=["gamification"])
+logger = logging.getLogger(__name__)
 
 
 async def require_shop_manager(
@@ -334,6 +336,49 @@ def _application_response(row: RoleApplication, username: str | None) -> RoleApp
     )
 
 
+async def _notify_admins_new_application(
+    db: AsyncSession,
+    tenant_id: object,
+    row: RoleApplication,
+    username: str,
+) -> None:
+    """新申请推给全部管理员；失败只记日志，不回滚已提交的申请。"""
+    from app.domain.notifications import services as notifications
+
+    admin_ids = (
+        (
+            await db.execute(
+                select(User.id).where(
+                    User.tenant_id == tenant_id,
+                    User.is_active.is_(True),
+                    User.is_admin.is_(True),
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+    role_label = _ROLE_LABELS.get(row.target_role, row.target_role)
+    try:
+        for uid in set(admin_ids):
+            if uid == row.user_id:
+                continue
+            await notifications.create(
+                db,
+                tenant_id=tenant_id,
+                user_id=uid,
+                type_="gamification.role_application",
+                title=f"新的角色申请：{role_label}",
+                body=f"{username} 申请成为{role_label}。点开可直接审批。",
+                related_type="role_application_admin",
+                related_id=str(row.id),
+            )
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        logger.exception("role_application_notify_admins_failed", extra={"application_id": row.id})
+
+
 @router.get("/applications/me")
 async def my_applications(
     current_user: User = Depends(get_current_user),
@@ -466,6 +511,7 @@ async def create_application(
             status_code=status.HTTP_409_CONFLICT, detail="该角色的申请正在审核中，请耐心等待"
         ) from exc
     await db.refresh(row)
+    await _notify_admins_new_application(db, tenant_id, row, current_user.username)
     return _application_response(row, current_user.username)
 
 
@@ -565,7 +611,7 @@ async def decide_application(
             user_id=applicant.id,
             type_="gamification.role_application",
             title=f"申请已通过：{role_label}",
-            body="恭喜，站务组通过了你的申请。对应的互评台已经打开。",
+            body="恭喜，站务组通过了你的申请。现在可以去互评广场参与互评了。",
             related_type="role_application",
             related_id=str(row.id),
         )

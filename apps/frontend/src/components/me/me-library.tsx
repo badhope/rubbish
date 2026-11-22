@@ -33,6 +33,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { MeFollows } from './me-follows'
+import { MeReadingHistory } from './me-reading-history'
 import { MeRecommendations } from './me-recommendations'
 import { shortDate } from './format'
 
@@ -41,12 +42,17 @@ interface ListFormState {
   description: string
 }
 
-function LibrarySectionNav({ active }: { active: 'library' | 'following' | 'recommendations' }) {
+function LibrarySectionNav({ active }: { active: 'library' | 'history' | 'following' | 'recommendations' }) {
   return (
     <div className="flex flex-wrap gap-2 border-b pb-3">
       <Button variant={active === 'library' ? 'default' : 'outline'} size="sm" asChild>
         <Link to="/me" search={{ tab: 'library' }}>
           阅读列表
+        </Link>
+      </Button>
+      <Button variant={active === 'history' ? 'default' : 'outline'} size="sm" asChild>
+        <Link to="/me" search={{ tab: 'library', section: 'history' }}>
+          最近阅读
         </Link>
       </Button>
       <Button variant={active === 'following' ? 'default' : 'outline'} size="sm" asChild>
@@ -64,6 +70,7 @@ function LibrarySectionNav({ active }: { active: 'library' | 'following' | 'reco
 }
 
 export function MeLibrary({ section }: { section?: string }) {
+  const isHistory = section === 'history'
   const isFollowing = section === 'following'
   const isRecommendations = section === 'recommendations'
   const [page, setPage] = useState(1)
@@ -78,6 +85,15 @@ export function MeLibrary({ section }: { section?: string }) {
   const [editTarget, setEditTarget] = useState<ReadingListResponse | null>(null)
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [form, setForm] = useState<ListFormState>({ name: '', description: '' })
+
+  if (isHistory) {
+    return (
+      <div className="space-y-5">
+        <LibrarySectionNav active="history" />
+        <MeReadingHistory />
+      </div>
+    )
+  }
 
   if (isFollowing) {
     return (

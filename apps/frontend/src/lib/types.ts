@@ -1389,3 +1389,46 @@ export interface ResourceHistory {
   versions: { version: number; note: string | null; created_at: string }[]
   retracted: boolean
 }
+
+// --- Role applications (reviewer / senior reviewer) ---
+export interface RoleApplicationItem {
+  id: number
+  user_id: number
+  username?: string | null
+  target_role: 'reviewer' | 'senior_reviewer'
+  status: 'pending' | 'approved' | 'rejected'
+  statement: string
+  decision_note?: string | null
+  decided_by?: number | null
+  decided_at?: string | null
+  created_at: string
+}
+
+export interface RoleEligibilityProfile {
+  accepted_papers: number
+  best_rqs: number | null
+  reviews_completed: number
+  already_reviewer: boolean
+}
+
+export interface MyRoleApplications {
+  applications: RoleApplicationItem[]
+  eligibility: {
+    reviewer: RoleEligibilityProfile & {
+      already_role: boolean
+      eligible: boolean
+      thresholds: { accepted_papers: number; best_rqs: number }
+    }
+    senior_reviewer: RoleEligibilityProfile & {
+      already_role: boolean
+      has_reviewer_role: boolean
+      eligible: boolean
+      thresholds: { reviews_completed: number }
+    }
+  }
+}
+
+export interface AdminRoleApplications {
+  data: RoleApplicationItem[]
+  meta: PaginationMeta
+}
