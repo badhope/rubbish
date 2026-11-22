@@ -125,6 +125,7 @@ export function ShopCatalogCard() {
       description: form.description.trim(),
       price_coin: Number(form.price_coin),
       stock: form.stock.trim() === '' ? null : Number(form.stock),
+      is_active: form.is_active,
       effect: form.effect,
       cover_url: form.cover_url.trim() || null,
       sort_order: Number(form.sort_order.trim() || 0),

@@ -55,6 +55,7 @@ export interface ShopItemInput {
   description: string
   price_coin: number
   stock: number | null
+  is_active: boolean
   effect: 'none' | 'accent_unlock'
   cover_url: string | null
   sort_order: number

@@ -665,6 +665,7 @@ class ShopItemIn(BaseModel):
     description: str = Field(default="", max_length=1000)
     price_coin: int = Field(ge=1, le=100000)
     stock: int | None = Field(default=None, ge=0, le=100000)
+    is_active: bool = True
     effect: Literal["none", "accent_unlock"] = "none"
     cover_url: str | None = Field(default=None, max_length=500)
     sort_order: int = Field(default=0, ge=0, le=1000)
@@ -880,6 +881,7 @@ async def admin_create_shop_item(
         description=body.description,
         price_coin=body.price_coin,
         stock=body.stock,
+        is_active=body.is_active,
         effect=body.effect,
         cover_url=body.cover_url,
         sort_order=body.sort_order,

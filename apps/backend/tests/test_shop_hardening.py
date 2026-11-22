@@ -288,3 +288,39 @@ async def test_admin_shop_item_can_clear_stock_and_cover_and_unlist(
     )
     assert admin_items.status_code == 200
     assert any(row["id"] == item_id for row in admin_items.json()["data"])
+
+
+@pytest.mark.asyncio
+async def test_admin_shop_item_can_be_created_unlisted(
+    client: AsyncClient, admin_user: dict
+) -> None:
+    """新增货品时“立即上架”必须真实可选；草稿不能偷偷出现在会员商店。"""
+    created = await client.post(
+        "/api/gamification/admin/shop/items",
+        json={
+            "name": "尚未公开的草稿货品",
+            "description": "等确认后再上架",
+            "price_coin": 66,
+            "stock": 2,
+            "effect": "none",
+            "is_active": False,
+            "sort_order": 9,
+        },
+        headers=auth_headers(admin_user),
+    )
+    assert created.status_code == 200, created.text
+    item_id = int(created.json()["id"])
+    assert created.json()["is_active"] is False
+
+    public_items = await client.get("/api/gamification/shop/items")
+    assert public_items.status_code == 200
+    assert all(row["id"] != item_id for row in public_items.json()["data"])
+
+    listed = await client.patch(
+        f"/api/gamification/admin/shop/items/{item_id}",
+        json={"is_active": True},
+        headers=auth_headers(admin_user),
+    )
+    assert listed.status_code == 200, listed.text
+    public_items = await client.get("/api/gamification/shop/items")
+    assert any(row["id"] == item_id for row in public_items.json()["data"])

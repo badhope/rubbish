@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.19.35] — 2026-11-22
+
+- Creating a shop item now honours the “unlist until ready” checkbox: the API accepts `is_active`, so a draft created in the admin catalog does not leak into the member shop before an editor publishes it.
+
 ## [1.19.34] — 2026-11-22
 
 - The admin points page now includes a real shop catalog: create, edit, unlist/relist and see cover, stock, price, effect and sort order. Previously the create/update endpoints existed but no screen could reach them.
