@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.19.32] — 2026-11-22
+
+- Reviewer assignment emails now open the exact assignment at `/review?tab=assignments&assignment=…`, including batch assignments and manual reminders, instead of the non-existent `/review/assignments` route.
+- Decision emails to authors now open the exact submission card at `/submissions?submission=…`; the previous generic submissions list remains only as a fallback when no id is available.
+- Triage-overdue digest emails now point at the real content desk `/submissions/pending` instead of the missing `/editor/triage` route.
+
 ## [1.19.31] — 2026-11-22
 
 - Restored a real issue-plan workspace at `/editor/issue-plan`: editors can inspect every issue, run the release gate, read check results and manifest history; approval, publish and rollback remain administrator-only.

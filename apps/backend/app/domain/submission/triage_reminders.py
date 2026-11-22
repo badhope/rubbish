@@ -143,7 +143,7 @@ async def run_triage_reminders(db: AsyncSession, *, tenant_id: Any) -> dict[str,
         subject, text, html = triage_overdue_digest(
             editor.username,
             items[:10],
-            f"{base}/editor/triage",
+            f"{base}/submissions/pending",
         )
         await notifications.record_email_digest(
             db,

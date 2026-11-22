@@ -848,7 +848,7 @@ async def batch_assign(
             subject, text, html = review_assigned(
                 reviewer.username,
                 sub.title,
-                f"{settings.frontend_base_url.rstrip('/')}/review/assignments",
+                f"{settings.frontend_base_url.rstrip('/')}/review?tab=assignments&assignment={a.id}",
                 body.due_days,
             )
             await notifications.record_email_digest(
@@ -1034,7 +1034,7 @@ async def remind_reviewers(
         subject, text, html = review_reminder(
             reviewer.username if reviewer else "互评成员",
             title,
-            f"{settings.frontend_base_url.rstrip('/')}/review/assignments",
+            f"{settings.frontend_base_url.rstrip('/')}/review?tab=assignments&assignment={a.id}",
             days_pending,
         )
         await notifications.record_email_digest(

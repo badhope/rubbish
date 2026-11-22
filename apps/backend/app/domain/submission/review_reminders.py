@@ -68,7 +68,7 @@ async def send_assignment_email(
     if not smtp_configured():
         return
     base = settings.frontend_base_url.rstrip("/")
-    link = f"{base}/review/assignments"
+    link = f"{base}/review?tab=assignments&assignment={assignment_id}"
     subject, text, html = review_assigned(
         reviewer.username, submission_title, link, REVIEW_DUE_DAYS
     )
@@ -79,7 +79,12 @@ async def send_assignment_email(
 
 
 async def send_decision_email(
-    author: User, *, submission_title: str, decision: str, note: str | None
+    author: User,
+    *,
+    submission_title: str,
+    decision: str,
+    note: str | None,
+    submission_id: int | None = None,
 ) -> None:
     """Best-effort decision email to the author.
 
@@ -94,12 +99,13 @@ async def send_decision_email(
             return
     base = settings.frontend_base_url.rstrip("/")
     is_accept = decision in ("accept", "approved")
+    link = f"{base}/submissions?submission={submission_id}" if submission_id else f"{base}/submissions"
     subject, text, html = decision_notice(
         author.username,
         submission_title,
         decision_label(decision),
         note,
-        f"{base}/submissions",
+        link,
     )
     if is_accept:
         # 主编口径：录用即恭喜，主题突出祝贺
@@ -201,7 +207,7 @@ async def run_overdue_reminders(db: AsyncSession, *, tenant_id: Any) -> dict[str
             subject, text, html = review_reminder_digest(
                 reviewer.username,
                 digest["items"][:10],
-                f"{base}/review/assignments",
+                f"{base}/review?tab=assignments",
             )
             try:
                 await get_email_sender().send(

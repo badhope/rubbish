@@ -1433,6 +1433,7 @@ async def editor_decision(
                 submission_title=entry.title,
                 decision=decision,
                 note=body.editor_note,
+                submission_id=entry.id,
             )
     except Exception:
         logger.warning("decision_email_dispatch_failed", submission_id=entry.id, exc_info=True)
