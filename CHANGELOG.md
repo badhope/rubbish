@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.19.42] — 2026-11-22
+
+- Account deletion now has a real front-end path instead of a privacy-page promise. Settings → Security opens a dialog that requires the current password and the literal `DELETE MY ACCOUNT`, explains that articles/history survive under an anonymised identity, and offers the data export first.
+- The deletion response lands on `/restore-account`, where the pre-deletion browser token can undo the deletion inside the 30-day window by choosing a new email, username and password. The token is kept in a separate 30-day credential instead of the auth store, so a background 401 cannot erase the only recovery key. Login links to the same page for users who deleted earlier in this browser.
+- Delete now uses the normal active-account dependency; only restore accepts soft-deleted accounts. `/restore-account` is also in the SPA deep-link whitelist, so opening it directly no longer returns 404, and a test now checks every top-level frontend route against that whitelist.
+
 ## [1.19.41] — 2026-11-22
 
 - “导出我的数据” is no longer a four-empty-list placeholder. The export now reads the caller's real submissions, review assignments and reports, reading history, lists, comments, discussions, appeals, claims, follows, XP events, badges, role applications and notifications, capped per section with explicit truncation metadata.

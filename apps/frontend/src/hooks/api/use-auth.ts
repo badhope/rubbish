@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { api } from '@/lib/api'
+import axios from 'axios'
+import { api, API_BASE_URL } from '@/lib/api'
 import { useAuthStore } from '@/lib/auth'
 import { isTwoFactorRequired } from '@/lib/types'
 import type {
@@ -9,6 +10,9 @@ import type {
   ResetPasswordRequest,
   ResendVerificationRequest,
   TokenResponse,
+  AccountDeletionResponse,
+  DeleteAccountRequest,
+  RestoreAccountRequest,
   TwoFactorLoginRequest,
   UserCreate,
   UserLogin,
@@ -120,6 +124,41 @@ export function useResetPassword() {
   return useMutation<MessageResponse, Error, ResetPasswordRequest>({
     mutationFn: async (body) =>
       (await api.post<MessageResponse>('/auth/reset-password', body)).data,
+  })
+}
+
+// 注销账号：只允许当前活跃账号。成功后调用方必须先把 token 交给
+// restore-token 单独保存，再退出登录；本 hook 不保管恢复凭证。
+export function useDeleteMyAccount() {
+  const qc = useQueryClient()
+  return useMutation<AccountDeletionResponse, Error, DeleteAccountRequest>({
+    mutationFn: async (body) =>
+      (
+        await api.request<AccountDeletionResponse>({
+          method: 'DELETE',
+          url: '/users/me',
+          data: body,
+        })
+      ).data,
+    onSuccess: () => {
+      void qc.clear()
+    },
+  })
+}
+
+// 注销冷静期内恢复账号：使用单独保存的注销前 access token。
+// 走裸 axios，避免 auth store 已清空时被全局 401 → refresh → logout 拦截，
+// 那会把恢复失败误判成“会话过期”并跳回登录页。
+export function useRestoreMyAccount() {
+  return useMutation<UserResponse, Error, RestoreAccountRequest & { token: string }>({
+    mutationFn: async ({ token, ...body }) =>
+      (
+        await axios.post<UserResponse>(`${API_BASE_URL}/users/me/restore`, body, {
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          withCredentials: true,
+          timeout: 10_000,
+        })
+      ).data,
   })
 }
 

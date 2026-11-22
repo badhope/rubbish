@@ -22,6 +22,7 @@ import { Route as MeRouteImport } from './routes/me'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RestoreAccountRouteImport } from './routes/restore-account'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminContentRouteImport } from './routes/admin/content'
@@ -105,6 +106,11 @@ const RegisterRoute = RegisterRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RestoreAccountRoute = RestoreAccountRouteImport.update({
+  id: '/restore-account',
+  path: '/restore-account',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
@@ -217,6 +223,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/restore-account': typeof RestoreAccountRoute
   '/verify-email': typeof VerifyEmailRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/economy': typeof AdminEconomyRoute
@@ -250,6 +257,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/restore-account': typeof RestoreAccountRoute
   '/verify-email': typeof VerifyEmailRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/economy': typeof AdminEconomyRoute
@@ -285,6 +293,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/restore-account': typeof RestoreAccountRoute
   '/verify-email': typeof VerifyEmailRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/economy': typeof AdminEconomyRoute
@@ -321,6 +330,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/register'
     | '/reset-password'
+    | '/restore-account'
     | '/verify-email'
     | '/admin/content'
     | '/admin/economy'
@@ -354,6 +364,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/register'
     | '/reset-password'
+    | '/restore-account'
     | '/verify-email'
     | '/admin/content'
     | '/admin/economy'
@@ -388,6 +399,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/register'
     | '/reset-password'
+    | '/restore-account'
     | '/verify-email'
     | '/admin/content'
     | '/admin/economy'
@@ -423,6 +435,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  RestoreAccountRoute: typeof RestoreAccountRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   CatalogResourceIdRoute: typeof CatalogResourceIdRoute
   EditorCalibrationRoute: typeof EditorCalibrationRoute
@@ -530,6 +543,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/restore-account': {
+      id: '/restore-account'
+      path: '/restore-account'
+      fullPath: '/restore-account'
+      preLoaderRoute: typeof RestoreAccountRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/verify-email': {
@@ -700,6 +720,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  RestoreAccountRoute: RestoreAccountRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   CatalogResourceIdRoute: CatalogResourceIdRoute,
   EditorCalibrationRoute: EditorCalibrationRoute,

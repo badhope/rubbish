@@ -168,6 +168,7 @@ _SPA_ROUTE_PREFIXES = frozenset(
         "reader",
         "register",
         "reset-password",
+        "restore-account",
         "review",
         "settings",
         "submissions",

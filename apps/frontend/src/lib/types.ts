@@ -107,6 +107,23 @@ export type AssignableRole =
   | 'author'
   | 'reader'
 
+export interface DeleteAccountRequest {
+  password: string
+  confirmation: string
+}
+
+export interface AccountDeletionResponse {
+  status: 'scheduled_for_deletion'
+  grace_days: number
+  hard_delete_after: string
+}
+
+export interface RestoreAccountRequest {
+  email: string
+  username: string
+  new_password: string
+}
+
 export interface AdminUserCreateResponse {
   user: UserResponse
   invite_sent: boolean

@@ -4,7 +4,8 @@ import { useAuthStore } from './auth'
 // In production, fall back to same-origin /api when VITE_API_URL is not
 // injected (avoids shipping a hard-coded localhost URL in the bundle).
 // A global timeout keeps a stalled refresh / /auth/me from piling up requests.
-const baseURL = import.meta.env.VITE_API_URL ?? '/api'
+export const API_BASE_URL = import.meta.env.VITE_API_URL ?? '/api'
+const baseURL = API_BASE_URL
 
 export const api = axios.create({
   baseURL,

@@ -70,7 +70,7 @@ Rubbish（rubbish.argjiemi.cn）是一个公开写作与讨论社区。你在这
 ## 你的权利
 
 - 导出全部个人数据（不含密码哈希、两步验证密钥等登录凭据）：`GET /api/users/me/export`。
-- 注销账号：`DELETE /api/users/me`，{USER_DELETION_GRACE_DAYS} 天内可恢复。
+- 注销账号：`DELETE /api/users/me`，{USER_DELETION_GRACE_DAYS} 天内可在注销前的同一浏览器通过 `/restore-account` 恢复。
 - 关闭双因素认证：`POST /api/auth/2fa/disable`。
 - 其他数据主体请求：发送邮件至 `{CONTACT_EMAIL}`，我们将在 30 天内答复。
 

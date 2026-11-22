@@ -346,6 +346,12 @@ function LoginPage() {
               注册
             </Link>
           </p>
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            误注销了账号？{' '}
+            <Link to="/restore-account" className="text-primary hover:underline">
+              在注销前的浏览器恢复
+            </Link>
+          </p>
         </CardContent>
       </Card>
     </div>

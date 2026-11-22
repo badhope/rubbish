@@ -680,7 +680,10 @@ class DeleteMyAccountRequest(BaseModel):
 @router.delete("/me", status_code=status.HTTP_202_ACCEPTED)
 async def delete_my_account(
     payload: DeleteMyAccountRequest,
-    current_user: User = Depends(get_soft_delete_aware_user),
+    # Deletion is a live-account action. The soft-delete-aware dependency is
+    # reserved for restore; using it here also made the action unreachable from
+    # the staging QA identity, which only overrides the standard dependency.
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
     """Soft-delete the caller's account.
