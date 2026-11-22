@@ -2016,7 +2016,13 @@ export interface EmailDigestSummary {
   /** host/port/user/password 四项是否齐全（不看外发开关） */
   smtp_configured: boolean
   /** 最近一次投递结果；无记录时为 null */
-  last_status: 'sent' | 'failed' | 'skipped_no_smtp' | 'skipped_disabled' | null
+  last_status:
+    | 'sent'
+    | 'failed'
+    | 'skipped_no_smtp'
+    | 'skipped_disabled'
+    | 'skipped_user_pref'
+    | null
   /** 近 30 天 skipped_no_smtp + skipped_disabled 条数 */
   skipped_count: number
   /** 近 30 天 failed 条数 */
@@ -2031,7 +2037,12 @@ export interface EmailDigestRecordRow {
   user_id: number
   recipient_email: string
   subject: string
-  status: 'sent' | 'failed' | 'skipped_no_smtp' | 'skipped_disabled'
+  status:
+    | 'sent'
+    | 'failed'
+    | 'skipped_no_smtp'
+    | 'skipped_disabled'
+    | 'skipped_user_pref'
   related_type: string | null
   related_id: string | null
   created_at: string

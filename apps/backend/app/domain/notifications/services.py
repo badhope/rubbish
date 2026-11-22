@@ -19,11 +19,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.domain.notifications.models import EmailDigestRecord, Notification
+from app.models import User
 
 if TYPE_CHECKING:
     from uuid import UUID
@@ -37,13 +39,56 @@ DEFAULT_PREFS: dict[str, bool] = {
     "in_app_review": True,
     "in_app_submission": True,
     "in_app_release": True,
-    # 邮件：默认关——SMTP 未配置时也不假装已发；用户主动开才尝试。
+    # 邮件：社交通知默认关；工作流邮件（互评、作品处理、发布失败）默认开，
+    # 因为收件人需要据此完成一件具体的事。SMTP 未配置时只记录跳过原因。
     "email_comment": False,
     "email_forum": False,
-    "email_review": False,
-    "email_submission": False,
-    "email_release": False,
+    "email_review": True,
+    "email_submission": True,
+    "email_release": True,
 }
+
+# 通知类型到站内偏好键。没有列出的类型（认领、角色、反馈等）始终站内送达。
+_IN_APP_PREF_BY_TYPE = {
+    "comment.new": "in_app_comment",
+    "forum.reply": "in_app_forum",
+}
+_IN_APP_PREF_BY_PREFIX = {
+    "review.": "in_app_review",
+    "submission.": "in_app_submission",
+    "release.": "in_app_release",
+}
+
+# 邮件摘要事件到邮件偏好键。评论/论坛的调用方已先检查一遍，这里再兜底。
+_EMAIL_PREF_BY_EVENT = {
+    "comment.new": "email_comment",
+    "forum.reply": "email_forum",
+    "assigned": "email_review",
+    "reminder": "email_review",
+    "decision": "email_submission",
+    "submission.triage_overdue": "email_submission",
+    "release.scheduled_failed": "email_release",
+}
+
+
+def in_app_pref_key(type_: str) -> str | None:
+    exact = _IN_APP_PREF_BY_TYPE.get(type_)
+    if exact is not None:
+        return exact
+    for prefix, key in _IN_APP_PREF_BY_PREFIX.items():
+        if type_.startswith(prefix):
+            return key
+    return None
+
+
+def email_pref_key(event_type: str) -> str | None:
+    return _EMAIL_PREF_BY_EVENT.get(event_type)
+
+
+async def _pref_owner(db: AsyncSession, user_id: int) -> User | None:
+    return (
+        await db.execute(select(User).where(User.id == user_id))
+    ).scalar_one_or_none()
 
 
 def merged_prefs(user: object) -> dict[str, bool]:
@@ -69,7 +114,7 @@ async def create(
     body: str | None = None,
     related_type: str | None = None,
     related_id: str | None = None,
-) -> Notification:
+) -> Notification | None:
     """Insert a notification row and flush so the caller's transaction owns it.
 
     The caller is responsible for ``commit()`` — this helper only adds
@@ -84,6 +129,12 @@ async def create(
         title = title[:199] + "…"
     if not title:
         title = "通知"
+
+    pref_key = in_app_pref_key(type_)
+    if pref_key:
+        owner = await _pref_owner(db, user_id)
+        if owner is not None and not wants(owner, pref_key):
+            return None
 
     notification = Notification(
         tenant_id=tenant_id,
@@ -131,6 +182,15 @@ async def record_email_digest(
     )
     db.add(record)
     await db.flush()
+
+    # 用户关掉这类邮件：记录为 skipped_user_pref，不尝试发送。
+    pref_key = email_pref_key(event_type)
+    if pref_key:
+        owner = await _pref_owner(db, user_id)
+        if owner is not None and not wants(owner, pref_key):
+            record.status = "skipped_user_pref"
+            await db.flush()
+            return record.status
 
     # 开关关闭：记录为 skipped_disabled，不尝试发送。
     if not settings.email_review_digest_enabled:

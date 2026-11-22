@@ -158,7 +158,8 @@ async def _email_digest_summary(db: AsyncSession, tenant_id: Any, now: datetime)
     - ``enabled``         — operator switch ``email_review_digest_enabled``.
     - ``smtp_configured`` — host/port/user/password all filled (see above).
     - ``last_status``     — outcome of the most recent attempt, or null.
-    - ``skipped_count``   — last-30d rows with status skipped_no_smtp / skipped_disabled.
+    - ``skipped_count``   — last-30d rows with status skipped_no_smtp / skipped_disabled
+      (user-disabled copies are not counted as a system delivery problem).
     - ``failed_count``    — last-30d rows with status failed.
     - ``last_attempt_at`` — created_at of the most recent attempt, or null.
 
@@ -568,11 +569,12 @@ async def editor_email_digest_records(
     """最近邮件摘要投递记录，便于排查"为什么没发到"。
 
     每条带事件类型、收件人、主题、状态与时间。可按 ``status`` 过滤
-    （``sent`` / ``failed`` / ``skipped_no_smtp`` / ``skipped_disabled``）。
+    （``sent`` / ``failed`` / ``skipped_no_smtp`` / ``skipped_disabled`` /
+    ``skipped_user_pref``）。
     仅 editor 及以上；审稿人不需要看运维侧审计。
     """
     tenant_id = require_tenant_id()
-    allowed = {"sent", "failed", "skipped_no_smtp", "skipped_disabled"}
+    allowed = {"sent", "failed", "skipped_no_smtp", "skipped_disabled", "skipped_user_pref"}
     where = [EmailDigestRecord.tenant_id == tenant_id]
     if status:
         if status not in allowed:

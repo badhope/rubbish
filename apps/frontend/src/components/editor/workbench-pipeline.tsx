@@ -77,6 +77,14 @@ const COLUMN_META: { key: ColumnKey; title: string; accent: string }[] = [
   { key: 'decided', title: '已完成', accent: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40' },
 ]
 
+const DIGEST_STATUS_LABEL: Record<string, string> = {
+  sent: '已发送',
+  failed: '发送失败',
+  skipped_no_smtp: '未配置 SMTP',
+  skipped_disabled: '总开关关闭',
+  skipped_user_pref: '用户已关闭',
+}
+
 export function EditorPipeline() {
   const { data, isLoading, isError, refetch } = useEditorWorkbench()
   const candidates = useReviewerCandidates(200)
@@ -448,7 +456,7 @@ export function EditorPipeline() {
                                 : 'border-amber-400 text-amber-700 dark:text-amber-300'
                           }
                         >
-                          {r.status}
+                          {DIGEST_STATUS_LABEL[r.status] ?? r.status}
                         </Badge>
                         <span className="truncate" title={r.subject}>
                           {r.subject}

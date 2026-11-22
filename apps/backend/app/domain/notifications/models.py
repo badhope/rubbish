@@ -100,6 +100,7 @@ class EmailDigestRecord(Base, TenantScopedMixin):
     - ``sent``                  — handed to the SMTP relay without error;
     - ``skipped_disabled``      — operator switch ``email_review_digest_enabled`` off;
     - ``skipped_no_smtp``       — no SMTP configured (console/dev/test);
+    - ``skipped_user_pref``     — recipient turned this email category off;
     - ``failed``                — SMTP threw; message body kept for ops.
 
     No FK to the source object (``related_type`` / ``related_id`` are

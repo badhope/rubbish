@@ -17,12 +17,92 @@ type Prefs = {
   email_release: boolean
 }
 
-const ROWS: Array<{ key: keyof Prefs; label: string; hint: string }> = [
+type PrefKey = keyof Prefs
+type PrefRow = { key: PrefKey; label: string; hint: string }
+
+const IN_APP_ROWS: PrefRow[] = [
   { key: 'in_app_comment', label: '记录评论', hint: '有人评论你发布的记录时，在站内通知你' },
   { key: 'in_app_forum', label: '讨论回复', hint: '有人回复你的帖子时，在站内通知你' },
-  { key: 'email_comment', label: '记录评论邮件', hint: '额外发一封邮件；需要站点配置 SMTP 才会真正送达' },
-  { key: 'email_forum', label: '讨论回复邮件', hint: '额外发一封邮件；需要站点配置 SMTP 才会真正送达' },
+  {
+    key: 'in_app_review',
+    label: '互评与裁决',
+    hint: '收到互评邀请、催办提醒或裁决邀请时，在站内通知你',
+  },
+  {
+    key: 'in_app_submission',
+    label: '作品处理',
+    hint: '作品进入初筛、被退回修改或收到处理结果时，在站内通知你',
+  },
+  {
+    key: 'in_app_release',
+    label: '发布失败告警',
+    hint: '定时发布失败时，在站内通知负责这一期的编辑',
+  },
 ]
+
+const EMAIL_ROWS: PrefRow[] = [
+  { key: 'email_comment', label: '记录评论邮件', hint: '额外发一封邮件；默认关闭' },
+  { key: 'email_forum', label: '讨论回复邮件', hint: '额外发一封邮件；默认关闭' },
+  {
+    key: 'email_review',
+    label: '互评与裁决邮件',
+    hint: '互评邀请、催办和裁决邀请的邮件副本；默认开启',
+  },
+  {
+    key: 'email_submission',
+    label: '作品处理邮件',
+    hint: '作品处理结果与初筛超时摘要；默认开启',
+  },
+  {
+    key: 'email_release',
+    label: '发布失败邮件',
+    hint: '定时发布失败的告警邮件；默认开启',
+  },
+]
+
+function PrefSection({
+  title,
+  note,
+  rows,
+  prefs,
+  onChange,
+}: {
+  title: string
+  note: string
+  rows: PrefRow[]
+  prefs: Prefs
+  onChange: (key: PrefKey, checked: boolean) => void
+}) {
+  return (
+    <section className="space-y-2">
+      <div>
+        <h4 className="text-sm font-semibold">{title}</h4>
+        <p className="mt-0.5 text-xs text-muted-foreground">{note}</p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {rows.map((row) => (
+          <label
+            key={row.key}
+            className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/40"
+          >
+            <input
+              type="checkbox"
+              className="mt-0.5 h-4 w-4 accent-[#2f5d46]"
+              checked={prefs[row.key]}
+              onChange={(e) => onChange(row.key, e.target.checked)}
+            />
+            <span className="min-w-0">
+              <span className="block text-sm font-medium">{row.label}</span>
+              <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
+                {row.hint}
+              </span>
+            </span>
+          </label>
+        ))}
+      </div>
+    </section>
+  )
+}
 
 export function NotificationPrefsCard() {
   const [prefs, setPrefs] = useState<Prefs | null>(null)
@@ -57,42 +137,38 @@ export function NotificationPrefsCard() {
     }
   }
 
+  function toggle(key: PrefKey, checked: boolean) {
+    setPrefs((prev) => (prev ? { ...prev, [key]: checked } : prev))
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>通知偏好</CardTitle>
         <CardDescription>
-          站内通知即时到达；邮件是额外通道，未配置 SMTP 时只会记录为“未发送”，不会假装送达。
+          站内通知即时到达；邮件是额外副本。评论与讨论回复邮件默认关闭，互评、作品处理、发布失败邮件默认开启。未配置
+          SMTP 时只记录为“未发送”，不会假装送达。
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-5">
         {!prefs ? (
           <p className="text-sm text-muted-foreground">加载中…</p>
         ) : (
           <>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {ROWS.map((row) => (
-                <label
-                  key={row.key}
-                  className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/40"
-                >
-                  <input
-                    type="checkbox"
-                    className="mt-0.5 h-4 w-4 accent-[#2f5d46]"
-                    checked={prefs[row.key]}
-                    onChange={(e) =>
-                      setPrefs((prev) => (prev ? { ...prev, [row.key]: e.target.checked } : prev))
-                    }
-                  />
-                  <span className="min-w-0">
-                    <span className="block text-sm font-medium">{row.label}</span>
-                    <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
-                      {row.hint}
-                    </span>
-                  </span>
-                </label>
-              ))}
-            </div>
+            <PrefSection
+              title="站内通知"
+              note="只收和你有关的提醒；关掉后不会在铃铛里出现，但对应页面仍可处理。"
+              rows={IN_APP_ROWS}
+              prefs={prefs}
+              onChange={toggle}
+            />
+            <PrefSection
+              title="邮件副本"
+              note="需要站点配置 SMTP 才会真正送达；发给你的每一类邮件都可以单独关闭。"
+              rows={EMAIL_ROWS}
+              prefs={prefs}
+              onChange={toggle}
+            />
             <div className="flex items-center justify-between gap-3">
               <p className="text-xs text-muted-foreground">
                 自己评论/回复自己的内容不会触发通知。

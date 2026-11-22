@@ -65,7 +65,7 @@ async def send_assignment_email(
     reviewer: User, *, submission_title: str, assignment_id: int
 ) -> None:
     """Best-effort 'you have a paper to review' email."""
-    if not smtp_configured():
+    if not smtp_configured() or not notifications.wants(reviewer, "email_review"):
         return
     base = settings.frontend_base_url.rstrip("/")
     link = f"{base}/review?tab=assignments&assignment={assignment_id}"
@@ -91,6 +91,8 @@ async def send_decision_email(
     录用/接收（accept / approved）走**恭喜邮件专用通道**（主编单独授权，
     不受外发总闸约束）；其余决定仍受总闸管控（总闸关闭时只写日志）。
     """
+    if not notifications.wants(author, "email_submission"):
+        return
     if not smtp_configured():
         # smtp_configured 受总闸约束；恭喜通道绕过它，单独判断 SMTP 配置
         from app.core.email import configured_accounts
@@ -204,6 +206,8 @@ async def run_overdue_reminders(db: AsyncSession, *, tenant_id: Any) -> dict[str
         base = settings.frontend_base_url.rstrip("/")
         for digest in digests.values():
             reviewer = digest["reviewer"]
+            if not notifications.wants(reviewer, "email_review"):
+                continue
             subject, text, html = review_reminder_digest(
                 reviewer.username,
                 digest["items"][:10],

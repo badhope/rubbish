@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.19.33] — 2026-11-22
+
+- Notification preferences are now real switches, not decorative checkboxes. All ten keys are exposed in settings, grouped into in-app notices and email copies; a suppressed review, submission or release event writes no in-app row, while a disabled email category is recorded as `skipped_user_pref` instead of pretending to send.
+- Review invitations, decision notices and overdue reminders now read the same `email_review` / `email_submission` preferences as the rest of the workflow; setting a category off actually stops that mail.
+- Workflow emails (review, submission, release) default on to preserve existing delivery; comment and forum copies stay opt-in. The editor digest panel labels every status in Chinese, including the new “用户已关闭”.
+
 ## [1.19.32] — 2026-11-22
 
 - Reviewer assignment emails now open the exact assignment at `/review?tab=assignments&assignment=…`, including batch assignments and manual reminders, instead of the non-existent `/review/assignments` route.
