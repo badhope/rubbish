@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2, Clock3, UserRoundCheck, XCircle } from 'lucide-react'
+import { CheckCircle2, ChevronLeft, ChevronRight, Clock3, UserRoundCheck, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import { extractError } from '@/lib/utils'
@@ -22,6 +22,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 
 type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected'
+
+const PAGE_SIZE = 20
 
 const ROLE_LABELS: Record<string, string> = {
   reviewer: '互评成员',
@@ -46,18 +48,47 @@ function statusBadge(status: RoleApplicationItem['status']) {
   return <Badge variant="secondary">待处理</Badge>
 }
 
-export default function RolesPage({ highlightApplicationId }: { highlightApplicationId?: number }) {
+export default function RolesPage({
+  highlightApplicationId,
+  onClearHighlight,
+}: {
+  highlightApplicationId?: number
+  onClearHighlight?: () => void
+}) {
   const [filter, setFilter] = useState<StatusFilter>('all')
-  const [target, setTarget] = useState<{ item: RoleApplicationItem; decision: 'approve' | 'reject' } | null>(null)
+  const [page, setPage] = useState(1)
+  const [target, setTarget] = useState<{
+    item: RoleApplicationItem
+    decision: 'approve' | 'reject'
+  } | null>(null)
   const [note, setNote] = useState('')
-  const [highlightId, setHighlightId] = useState<number | null>(null)
-  const applied = useRef(0)
   const qc = useQueryClient()
+  const focused = Boolean(highlightApplicationId)
 
+  // 通知深链按 id 定向取一条，避免目标排在 100 条之后时整页找不到。
   const query = useQuery<AdminRoleApplications>({
-    queryKey: ['admin', 'role-applications'],
+    queryKey: ['admin', 'role-applications', 'list', filter, page, highlightApplicationId ?? 0],
     queryFn: async () =>
-      (await api.get('/gamification/admin/applications', { params: { page_size: 100 } })).data,
+      (
+        await api.get('/gamification/admin/applications', {
+          params: {
+            ...(focused
+              ? { application_id: highlightApplicationId, page: 1, page_size: 1 }
+              : { page, page_size: PAGE_SIZE }),
+            ...(filter === 'all' || focused ? {} : { status: filter }),
+          },
+        })
+      ).data,
+  })
+
+  const pendingQuery = useQuery<AdminRoleApplications>({
+    queryKey: ['admin', 'role-applications', 'pending-count'],
+    queryFn: async () =>
+      (
+        await api.get('/gamification/admin/applications', {
+          params: { status: 'pending', page: 1, page_size: 1 },
+        })
+      ).data,
   })
 
   const decide = useMutation({
@@ -73,29 +104,31 @@ export default function RolesPage({ highlightApplicationId }: { highlightApplica
       setTarget(null)
       setNote('')
       void qc.invalidateQueries({ queryKey: ['admin', 'role-applications'] })
-      void qc.invalidateQueries({ queryKey: ['admin', 'role-applications', 'pending-count'] })
     },
     onError: (err) => toast.error(extractError(err, '操作失败')),
   })
 
-  const items = useMemo(() => query.data?.data ?? [], [query.data])
-  const visible = filter === 'all' ? items : items.filter((item) => item.status === filter)
-  const pendingCount = items.filter((item) => item.status === 'pending').length
+  const items = query.data?.data ?? []
+  const meta = query.data?.meta
+  const pendingCount = pendingQuery.data?.meta.total ?? 0
+  const totalPages = meta?.total_pages ?? 1
+  const missingFocused = focused && !query.isLoading && !query.isError && items.length === 0
 
   useEffect(() => {
-    if (!highlightApplicationId || applied.current === highlightApplicationId) return
-    const hit = items.find((item) => item.id === highlightApplicationId)
-    if (!hit) return
-    applied.current = highlightApplicationId
-    setFilter('all')
-    setHighlightId(highlightApplicationId)
-    window.setTimeout(() => {
+    if (focused || query.isLoading || !meta) return
+    if (meta.total_pages > 0 && page > meta.total_pages) setPage(meta.total_pages)
+  }, [focused, meta, page, query.isLoading])
+
+  useEffect(() => {
+    if (!focused || !highlightApplicationId || items.length === 0) return
+    const timer = window.setTimeout(() => {
       document.getElementById(`role-application-admin-${highlightApplicationId}`)?.scrollIntoView({
         behavior: 'smooth',
         block: 'center',
       })
-    }, 0)
-  }, [highlightApplicationId, items])
+    }, 100)
+    return () => window.clearTimeout(timer)
+  }, [focused, highlightApplicationId, items.length])
 
   return (
     <div>
@@ -104,41 +137,74 @@ export default function RolesPage({ highlightApplicationId }: { highlightApplica
         description="互评成员和资深互评成员由这里审批；通过后身份立即生效，对方会收到通知。"
       />
 
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        {(Object.keys(STATUS_LABELS) as StatusFilter[]).map((key) => (
+      {focused ? (
+        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-md border bg-muted/30 px-4 py-3 text-sm">
+          <span>正在查看通知指到的那份申请（#{highlightApplicationId}）。</span>
           <Button
-            key={key}
             size="sm"
-            variant={filter === key ? 'default' : 'outline'}
-            onClick={() => setFilter(key)}
+            variant="link"
+            className="h-auto px-0"
+            onClick={() => onClearHighlight?.()}
           >
-            {STATUS_LABELS[key]}
-            {key === 'pending' && pendingCount > 0 ? (
-              <span className="ml-1 rounded-full bg-background/20 px-1.5 font-mono text-[10px]">{pendingCount}</span>
-            ) : null}
+            查看全部申请
           </Button>
-        ))}
-      </div>
+        </div>
+      ) : (
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          {(Object.keys(STATUS_LABELS) as StatusFilter[]).map((key) => (
+            <Button
+              key={key}
+              size="sm"
+              variant={filter === key ? 'default' : 'outline'}
+              onClick={() => {
+                setFilter(key)
+                setPage(1)
+              }}
+            >
+              {STATUS_LABELS[key]}
+              {key === 'pending' && pendingCount > 0 ? (
+                <span className="ml-1 rounded-full bg-background/20 px-1.5 font-mono text-[10px]">
+                  {pendingCount}
+                </span>
+              ) : null}
+            </Button>
+          ))}
+        </div>
+      )}
 
       {query.isLoading ? (
         <LoadingSkeleton rows={3} />
       ) : query.isError ? (
         <ErrorState message="加载角色申请失败" onRetry={() => void query.refetch()} />
-      ) : visible.length === 0 ? (
+      ) : missingFocused ? (
+        <EmptyState
+          title="没有找到这份角色申请"
+          description="它可能已被删除，或者通知里的编号已经失效。"
+          action={
+            <Button size="sm" variant="outline" onClick={() => onClearHighlight?.()}>
+              查看全部申请
+            </Button>
+          }
+        />
+      ) : items.length === 0 ? (
         <EmptyState
           title={filter === 'pending' ? '没有待处理的角色申请' : '暂无记录'}
           description="作者达到门槛后可自行提交申请；通过后身份立即生效。"
         />
       ) : (
         <div className="space-y-3">
-          {visible.map((item) => (
+          {items.map((item) => (
             <Card
               id={`role-application-admin-${item.id}`}
               key={item.id}
               className={cn(
                 'transition-shadow',
-                item.status === 'pending' ? 'border-l-4 border-l-amber-500' : 'border-l-4 border-l-emerald-500',
-                highlightId === item.id && 'ring-2 ring-primary/60 ring-offset-2',
+                item.status === 'pending'
+                  ? 'border-l-4 border-l-amber-500'
+                  : item.status === 'approved'
+                    ? 'border-l-4 border-l-emerald-500'
+                    : 'border-l-4 border-l-destructive',
+                focused && highlightApplicationId === item.id && 'ring-2 ring-primary/60 ring-offset-2',
               )}
             >
               <CardContent className="py-4">
@@ -188,6 +254,34 @@ export default function RolesPage({ highlightApplicationId }: { highlightApplica
           ))}
         </div>
       )}
+
+      {!focused && meta && totalPages > 1 ? (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+          <span>
+            共 {meta.total} 条，第 {meta.page} / {totalPages} 页
+          </span>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page <= 1}
+              onClick={() => setPage((value) => Math.max(1, value - 1))}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              上一页
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page >= totalPages}
+              onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+            >
+              下一页
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       <Dialog open={target !== null} onOpenChange={(open) => !open && setTarget(null)}>
         <DialogContent className="sm:max-w-md">

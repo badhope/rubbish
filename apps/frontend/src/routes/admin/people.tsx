@@ -61,7 +61,14 @@ function AdminPeoplePage() {
       <AdminSectionTabs items={SECTIONS} active={section} onChange={changeSection} label="用户域子段" />
       {section === 'users' ? <UsersPage /> : null}
       {section === 'claims' ? <ClaimsPage highlightClaimId={claim} /> : null}
-      {section === 'roles' ? <RolesPage highlightApplicationId={application} /> : null}
+      {section === 'roles' ? (
+        <RolesPage
+          highlightApplicationId={application}
+          onClearHighlight={() =>
+            navigate({ to: '/admin/people', search: { section: 'roles' }, replace: true })
+          }
+        />
+      ) : null}
     </div>
   )
 }

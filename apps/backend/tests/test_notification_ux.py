@@ -123,6 +123,14 @@ async def test_role_application_notifies_admin_and_result_reaches_applicant(
     assert applied.status_code == 201, applied.text
     application_id = applied.json()["id"]
 
+    scoped = await client.get(
+        "/api/gamification/admin/applications",
+        params={"application_id": application_id, "page_size": 1},
+        headers=auth_headers(admin_user),
+    )
+    assert scoped.status_code == 200, scoped.text
+    assert [row["id"] for row in scoped.json()["data"]] == [application_id]
+
     admin_rows = await _notifications(client, admin_user)
     admin_hit = next(
         row

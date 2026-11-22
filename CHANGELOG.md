@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.19.30] — 2026-11-22
+
+- The admin role-application queue now paginates 20 at a time with a real pending total, so applications beyond the first hundred are no longer invisible.
+- Notification links to a role application now load that exact application by id, even when it would fall outside the current page; the page offers a clear “查看全部申请” way back to the queue.
+
 ## [1.19.29] — 2026-11-22
 
 - Resolving an already resolved feedback item is now idempotent: repeat requests return the existing item without a second “已处理” notification or a second resolution audit row.

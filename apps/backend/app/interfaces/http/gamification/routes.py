@@ -522,16 +522,19 @@ async def list_applications(
     status_filter: str = Query(
         default=None, alias="status", pattern=r"^(pending|approved|rejected)$"
     ),
+    application_id: int | None = Query(default=None, ge=1),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
     _: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ) -> RoleApplicationListResponse:
-    """管理员审批队列（默认待审在前）。"""
+    """管理员审批队列（默认待审在前）。可按 id 定向取一条，供通知深链使用。"""
     tenant_id = require_tenant_id()
     base = select(RoleApplication).where(RoleApplication.tenant_id == tenant_id)
     if status_filter is not None:
         base = base.where(RoleApplication.status == status_filter)
+    if application_id is not None:
+        base = base.where(RoleApplication.id == application_id)
     rows, meta = await paginate(
         db,
         base,
