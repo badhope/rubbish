@@ -139,7 +139,11 @@ export function notificationDestination(
       : { to: '/submissions/pending', label: '去内容台' }
   }
   if (type === 'review.rework_requested') {
-    return { to: '/review', search: { tab: 'assignments' }, label: '去补意见' }
+    // 新通知带的是具体互评指派，点开直接落在该稿的补审表单；
+    // 旧数据只有作品 id，退回互评台，不把作品 id 当作指派 id。
+    return id && item.related_type === 'review_assignment'
+      ? { to: '/review', search: { tab: 'assignments', assignment: id }, label: '去补意见' }
+      : { to: '/review', search: { tab: 'assignments' }, label: '去互评台' }
   }
 
   switch (item.related_type) {

@@ -81,7 +81,23 @@ describe('notificationDestination', () => {
     })
   })
 
-  it('sends a reviewer rework request to the review desk', () => {
+  it('sends a reviewer rework request straight to the exact assignment', () => {
+    expect(
+      notificationDestination(
+        note({
+          type: 'review.rework_requested',
+          related_type: 'review_assignment',
+          related_id: '42',
+        }),
+      ),
+    ).toMatchObject({
+      to: '/review',
+      search: { tab: 'assignments', assignment: 42 },
+      label: '去补意见',
+    })
+  })
+
+  it('falls back to the review desk for legacy rework notices', () => {
     expect(
       notificationDestination(
         note({ type: 'review.rework_requested', related_type: 'submission', related_id: '351' }),
@@ -89,7 +105,7 @@ describe('notificationDestination', () => {
     ).toMatchObject({
       to: '/review',
       search: { tab: 'assignments' },
-      label: '去补意见',
+      label: '去互评台',
     })
   })
 

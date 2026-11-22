@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.19.40] — 2026-11-22
+
+- A reviewer rework notice now carries the exact review assignment, not just the submission. Clicking it opens that manuscript’s supplementation form instead of dropping the reviewer on the general review desk; legacy notices with only a submission id still fall back safely rather than treating the submission id as an assignment id.
+- Added front-end destination coverage for both the new and legacy shapes.
+
 ## [1.19.39] — 2026-11-22
 
 - Authors now have a real appeal workflow instead of an API-only promise. From an owned, published work, “作者申诉” opens a dialog for withdrawing the work, re-reviewing its score, or re-reviewing its zone; the reason must be 100–3000 characters and the same request cannot be submitted twice.

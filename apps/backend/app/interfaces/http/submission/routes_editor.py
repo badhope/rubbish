@@ -1509,20 +1509,23 @@ async def request_rework(
     # 通知审稿人：该稿被打回，需要补审或说明（这是打回此刻的唯一外发通知）
     from app.domain.review.models import ReviewAssignment
 
-    reviewers = (
-        (
-            await db.execute(
-                select(ReviewAssignment.reviewer_id).where(
-                    ReviewAssignment.submission_id == entry.id,
-                    ReviewAssignment.tenant_id == entry.tenant_id,
-                    ReviewAssignment.status.in_(("pending", "accepted", "completed")),
-                )
+    reviewer_rows = (
+        await db.execute(
+            select(ReviewAssignment.reviewer_id, ReviewAssignment.id)
+            .where(
+                ReviewAssignment.submission_id == entry.id,
+                ReviewAssignment.tenant_id == entry.tenant_id,
+                ReviewAssignment.status.in_(("pending", "accepted", "completed")),
             )
+            .order_by(ReviewAssignment.id)
         )
-        .scalars()
-        .all()
-    )
-    for reviewer_id in set(reviewers):
+    ).all()
+    # 同一审稿人只提醒一次；带上第一条有效指派，通知点击后能直接打开对应稿件，
+    # 不必在互评台里再按作品标题找一遍。
+    first_assignment_by_reviewer: dict[int, int] = {}
+    for reviewer_id, assignment_id in reviewer_rows:
+        first_assignment_by_reviewer.setdefault(reviewer_id, assignment_id)
+    for reviewer_id, assignment_id in first_assignment_by_reviewer.items():
         await notifications.create(
             db,
             tenant_id=entry.tenant_id,
@@ -1536,13 +1539,13 @@ async def request_rework(
                 "（b）说明为什么这篇确实应当不通过。\n\n"
                 f"需要补充的方面：\n{requirements_text}"
             ),
-            related_type="submission",
-            related_id=str(entry.id),
+            related_type="review_assignment",
+            related_id=str(assignment_id),
         )
 
     # 若该稿还没有任何审稿指派，编辑部需要先指派审稿人复审——写一条
     # 提醒给当前编辑，避免作品卡在无人可审的状态。
-    if not reviewers:
+    if not reviewer_rows:
         await notifications.create(
             db,
             tenant_id=entry.tenant_id,
@@ -1568,7 +1571,7 @@ async def request_rework(
             target_id=str(entry.id),
             payload={
                 "requirements": body.requirements,
-                "reviewers_notified": len(set(reviewers)),
+                "reviewers_notified": len(first_assignment_by_reviewer),
             },
         )
     )

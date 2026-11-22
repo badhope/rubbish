@@ -1699,7 +1699,7 @@ wheels = [
 
 [[package]]
 name = "rubbish-backend"
-version = "1.19.39"
+version = "1.19.40"
 source = { editable = "." }
 dependencies = [
     { name = "alembic" },
