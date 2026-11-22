@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.19.29] — 2026-11-22
+
+- Resolving an already resolved feedback item is now idempotent: repeat requests return the existing item without a second “已处理” notification or a second resolution audit row.
+- A failure while notifying admins about a new role application can no longer leave the response relying on expired ORM state; the application row is refreshed before serialization.
+- Approving or rejecting a role application now writes the applicant notification behind a savepoint. The role grant or terminal status remains committed even if notification creation fails.
+
 ## [1.19.28] — 2026-11-22
 
 - Closed the missing role-application loop: `/levels#role-applications` now shows reviewer and senior-reviewer thresholds, the live numbers behind them, a 20–2000 character application form, status history and staff notes; `/admin/people?section=roles` gives admins a review queue with approve/reject, required rejection reasons and `?application=` deep links.

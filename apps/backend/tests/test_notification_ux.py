@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+from conftest import auth_headers, register_user
 from sqlalchemy import select
 
-from conftest import auth_headers, register_user
 from app.domain.catalog.models import Resource
 from app.domain.submission.models import Submission
-from app.models import Tenant
+from app.models import AuditLog, Tenant
 
 
 async def _notifications(client, user) -> list[dict]:
@@ -16,7 +16,7 @@ async def _notifications(client, user) -> list[dict]:
     return response.json()["data"]
 
 
-async def test_feedback_resolution_notifies_the_submitter(client, admin_user) -> None:
+async def test_feedback_resolution_notifies_the_submitter(client, db_session, admin_user) -> None:
     user = await register_user(client, email="feedbacker@example.com", username="feedbacker")
     created = await client.post(
         "/api/catalog/feedback",
@@ -47,6 +47,32 @@ async def test_feedback_resolution_notifies_the_submitter(client, admin_user) ->
         and int(row["related_id"]) == feedback_id
     )
     assert "反馈已处理" in hit["title"]
+
+    # 重复提交同一反馈的处理请求：不重复通知，也不追加第二条处理审计。
+    again = await client.post(
+        f"/api/catalog/feedback/{feedback_id}/resolve",
+        json={"note": "重复点击不应再发一次。"},
+        headers=auth_headers(admin_user),
+    )
+    assert again.status_code == 200, again.text
+    repeated_hits = [
+        row
+        for row in await _notifications(client, user)
+        if row["type"] == "site.feedback"
+        and row["related_type"] == "feedback"
+        and int(row["related_id"]) == feedback_id
+    ]
+    assert len(repeated_hits) == 1
+    resolve_rows = (
+        await db_session.execute(
+            select(AuditLog).where(
+                AuditLog.action == "feedback.resolve",
+                AuditLog.target_id == str(feedback_id),
+            )
+        )
+    ).scalars().all()
+    assert len(resolve_rows) == 1
+    assert repeated_hits[0]["body"] == "已经修好了。"
 
 
 async def test_role_application_notifies_admin_and_result_reaches_applicant(

@@ -345,21 +345,21 @@ async def _notify_admins_new_application(
     """新申请推给全部管理员；失败只记日志，不回滚已提交的申请。"""
     from app.domain.notifications import services as notifications
 
-    admin_ids = (
-        (
-            await db.execute(
-                select(User.id).where(
-                    User.tenant_id == tenant_id,
-                    User.is_active.is_(True),
-                    User.is_admin.is_(True),
-                )
-            )
-        )
-        .scalars()
-        .all()
-    )
     role_label = _ROLE_LABELS.get(row.target_role, row.target_role)
     try:
+        admin_ids = (
+            (
+                await db.execute(
+                    select(User.id).where(
+                        User.tenant_id == tenant_id,
+                        User.is_active.is_(True),
+                        User.is_admin.is_(True),
+                    )
+                )
+            )
+            .scalars()
+            .all()
+        )
         for uid in set(admin_ids):
             if uid == row.user_id:
                 continue
@@ -512,6 +512,8 @@ async def create_application(
         ) from exc
     await db.refresh(row)
     await _notify_admins_new_application(db, tenant_id, row, current_user.username)
+    # 通知失败时 helper 会 rollback；重新读一次，确保响应不依赖已过期的对象。
+    await db.refresh(row)
     return _application_response(row, current_user.username)
 
 
@@ -555,7 +557,7 @@ async def decide_application(
     current_admin: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, object]:
-    """批准 / 拒绝。批准 = 授角色 + 通知 + 审计，同一事务。"""
+    """批准 / 拒绝。授角色与终态、审计在同一事务；通知失败不回滚审批。"""
     tenant_id = require_tenant_id()
     row = (
         await db.execute(
@@ -605,26 +607,32 @@ async def decide_application(
         ).scalar_one_or_none()
         if exists is None:
             db.add(UserRole(tenant_id=tenant_id, user_id=applicant.id, role_id=role.id))
-        await notifications.create(
-            db,
-            tenant_id=tenant_id,
-            user_id=applicant.id,
-            type_="gamification.role_application",
-            title=f"申请已通过：{role_label}",
-            body="恭喜，站务组通过了你的申请。现在可以去互评广场参与互评了。",
-            related_type="role_application",
-            related_id=str(row.id),
-        )
+        notification_title = f"申请已通过：{role_label}"
+        notification_body = "恭喜，站务组通过了你的申请。现在可以去互评广场参与互评了。"
     else:
-        await notifications.create(
-            db,
-            tenant_id=tenant_id,
-            user_id=applicant.id,
-            type_="gamification.role_application",
-            title=f"申请未通过：{role_label}",
-            body=(body.note or "这次申请没有通过。你仍然可以发布作品、参与讨论，之后再来申请。"),
-            related_type="role_application",
-            related_id=str(row.id),
+        notification_title = f"申请未通过：{role_label}"
+        notification_body = body.note or "这次申请没有通过。你仍然可以发布作品、参与讨论，之后再来申请。"
+
+    # 通知是结果告知，不是审批本身。写通知失败不能让角色已经授予/申请已终结
+    # 的审批被回滚；用保存点把通知写入与主事务隔开。
+    try:
+        async with db.begin_nested():
+            await notifications.create(
+                db,
+                tenant_id=tenant_id,
+                user_id=applicant.id,
+                type_="gamification.role_application",
+                title=notification_title,
+                body=notification_body,
+                related_type="role_application",
+                related_id=str(row.id),
+            )
+    except Exception:
+        logger.warning(
+            "role_application_decision_notify_failed",
+            application_id=row.id,
+            applicant_id=applicant.id,
+            exc_info=True,
         )
 
     db.add(

@@ -3105,6 +3105,9 @@ async def resolve_feedback(
     if entry is None:
         raise HTTPException(status_code=404, detail="反馈不存在")
     payload = dict(entry.payload or {})
+    # 重复点击/重放不应再发一遍“已处理”通知，也不应追加处理审计。
+    if payload.get("status") == "resolved":
+        return _feedback_row(entry)
     payload["status"] = "resolved"
     payload["resolution_note"] = body.note.strip()
     payload["resolved_at"] = utcnow().isoformat()
