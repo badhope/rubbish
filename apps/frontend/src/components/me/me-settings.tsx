@@ -6,6 +6,7 @@ import { ProfileDetailsCard } from '@/components/settings/profile-details-card'
 import { NotificationPrefsCard } from '@/components/settings/notification-prefs-card'
 import { TwoFactorSection } from '@/components/settings/two-factor-section'
 import { ChangePasswordCard } from '@/components/settings/change-password-card'
+import { AccountDataCard } from '@/components/settings/account-data-card'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -99,9 +100,12 @@ export function MeSettings({ username, initialSection }: { username: string; ini
           </>
         ) : null}
         {tab === 'security' ? (
-          <div className="grid gap-5 lg:grid-cols-2">
-            <TwoFactorSection />
-            <ChangePasswordCard />
+          <div className="space-y-5">
+            <div className="grid gap-5 lg:grid-cols-2">
+              <TwoFactorSection />
+              <ChangePasswordCard />
+            </div>
+            <AccountDataCard username={username} />
           </div>
         ) : null}
         {tab === 'notifications' ? <NotificationPrefsCard /> : null}

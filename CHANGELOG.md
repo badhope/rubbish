@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.19.41] — 2026-11-22
+
+- “导出我的数据” is no longer a four-empty-list placeholder. The export now reads the caller's real submissions, review assignments and reports, reading history, lists, comments, discussions, appeals, claims, follows, XP events, badges, role applications and notifications, capped per section with explicit truncation metadata.
+- Settings → Security now offers a real JSON download for that document. Password hashes, TOTP secrets, backup-code hashes and passkey key material stay out of the file; the privacy page says so instead of promising literal “everything”.
+- Added a regression test that creates a submission, assignment, reading record, list and comment, then asserts the exported rows carry those values.
+
 ## [1.19.40] — 2026-11-22
 
 - A reviewer rework notice now carries the exact review assignment, not just the submission. Clicking it opens that manuscript’s supplementation form instead of dropping the reviewer on the general review desk; legacy notices with only a submission id still fall back safely rather than treating the submission id as an assignment id.

@@ -123,6 +123,13 @@ export function useResetPassword() {
   })
 }
 
+// 完整个人数据导出：返回 JSON 文档，由设置页直接下载。
+export function useExportMyData() {
+  return useMutation<Record<string, unknown>, Error, void>({
+    mutationFn: async () => (await api.get<Record<string, unknown>>('/users/me/export')).data,
+  })
+}
+
 export function useChangePassword() {
   return useMutation<void, Error, { oldPassword: string; newPassword: string }>({
     mutationFn: async ({ oldPassword, newPassword }) => {

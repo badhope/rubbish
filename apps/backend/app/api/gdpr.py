@@ -54,6 +54,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import get_current_user
 from app.core.db import get_db
 from app.core.logging import get_logger
 from app.core.retention import USER_DELETION_GRACE_DAYS
@@ -191,58 +192,480 @@ def _within_grace_window(user: User) -> bool:
 
 @router.get("/me/export")
 async def export_my_data(
-    current_user: User = Depends(get_soft_delete_aware_user),
+    # Export is for a live account; the soft-delete-aware dependency is only
+    # needed by restore below. Using the standard dependency also keeps the
+    # staging QA identity override working, instead of making export the one
+    # page the QA machine account cannot open.
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
-    """Return a JSON document of everything the system holds about the caller.
+    """Return a JSON document of the caller's real account data.
 
-    The shape is intentionally flat: a top-level ``exported_at``
-    timestamp, a ``user`` object with the caller's profile fields,
-    and an empty list for each domain table the caller has rows in
-    (modules will register additional export sections in their own
-    routers). The audit log entry is recorded with a separate action
-    name so a regulator can correlate export requests with the
-    account holder.
+    This endpoint previously returned four empty placeholder lists while the
+    privacy page promised "export all personal data". That is exactly the kind
+    of half-feature this project refuses to ship. The export now reads the
+    actual domain tables, caps each section to keep the response bounded, and
+    reports any truncation instead of silently pretending the list was complete.
+
+    Secrets are deliberately excluded: password hashes, TOTP secret material,
+    backup-code hashes and passkey public keys are credentials, not personal
+    data a data-subject needs copied into an email attachment.
     """
+    from app.domain.catalog.models import Appeal, AuthorClaim, Resource
+    from app.domain.comments.models import Comment
+    from app.domain.follows.models import AuthorFollow, DisciplineSubscription
+    from app.domain.forum.models import ForumReply, ForumTopic
+    from app.domain.gamification.models import (
+        RoleApplication,
+        UserAchievement,
+        UserXpEvent,
+    )
+    from app.domain.library.models import ReadingList, ReadingListItem
+    from app.domain.notifications.models import Notification
+    from app.domain.reader.models import ReadingHistory
+    from app.domain.review.models import ReviewAssignment, ReviewReport
+    from app.domain.submission.models import Submission
+
+    section_limit = 2000
+    truncated: dict[str, int] = {}
+    tenant_id = current_user.tenant_id
+    user_id = current_user.id
+
+    def iso(value: datetime | None) -> str | None:
+        return value.isoformat() if value else None
+
+    async def scalar_rows(stmt) -> list[Any]:
+        rows = (await db.execute(stmt.limit(section_limit + 1))).scalars().all()
+        if len(rows) > section_limit:
+            truncated[stmt_key] = len(rows) - 1
+        return rows[:section_limit]
+
+    async def tuple_rows(stmt) -> list[Any]:
+        rows = (await db.execute(stmt.limit(section_limit + 1))).all()
+        if len(rows) > section_limit:
+            truncated[stmt_key] = len(rows) - 1
+        return rows[:section_limit]
+
+    # The helper reads this mutable local only for its truncation label; each
+    # caller sets it immediately before invoking, which keeps the boilerplate
+    # out of every section without relying on inspect() or query introspection.
+    stmt_key = ""
+
+    stmt_key = "submissions"
+    submissions = await scalar_rows(
+        select(Submission)
+        .where(Submission.tenant_id == tenant_id, Submission.submitted_by == user_id)
+        .order_by(Submission.submitted_at.desc(), Submission.id.desc())
+    )
+    submissions_payload = [
+        {
+            "id": row.id,
+            "title": row.title,
+            "type": row.type,
+            "content_track": row.content_track,
+            "status": row.status,
+            "triage_status": row.triage_status,
+            "abstract": row.abstract,
+            "preview": row.preview,
+            "tags": row.tags,
+            "editor_note": row.editor_note,
+            "author_response": row.author_response,
+            "resource_id": row.resource_id,
+            "submitted_at": iso(row.submitted_at),
+            "updated_at": iso(row.updated_at),
+        }
+        for row in submissions
+    ]
+
+    stmt_key = "reviews"
+    review_rows = await tuple_rows(
+        select(ReviewAssignment, Submission.title)
+        .join(Submission, Submission.id == ReviewAssignment.submission_id)
+        .where(
+            ReviewAssignment.tenant_id == tenant_id,
+            ReviewAssignment.reviewer_id == user_id,
+        )
+        .order_by(ReviewAssignment.invited_at.desc(), ReviewAssignment.id.desc())
+    )
+    reviews_payload = [
+        {
+            "assignment_id": assignment.id,
+            "submission_id": assignment.submission_id,
+            "submission_title": title,
+            "status": assignment.status,
+            "round": assignment.round,
+            "due_date": iso(assignment.due_date),
+            "invited_at": iso(assignment.invited_at),
+            "responded_at": iso(assignment.responded_at),
+            "completed_at": iso(assignment.completed_at),
+        }
+        for assignment, title in review_rows
+    ]
+
+    stmt_key = "review_reports"
+    report_rows = await tuple_rows(
+        select(ReviewReport, ReviewAssignment.submission_id)
+        .join(ReviewAssignment, ReviewAssignment.id == ReviewReport.assignment_id)
+        .where(
+            ReviewReport.tenant_id == tenant_id,
+            ReviewAssignment.reviewer_id == user_id,
+        )
+        .order_by(ReviewReport.submitted_at.desc(), ReviewReport.id.desc())
+    )
+    review_reports_payload = [
+        {
+            "report_id": report.id,
+            "assignment_id": report.assignment_id,
+            "submission_id": submission_id,
+            "recommendation": report.recommendation,
+            "scores": report.scores,
+            "comments_to_editor": report.comments_to_editor,
+            "comments_to_author": report.comments_to_author,
+            "attachments": report.attachments,
+            "submitted_at": iso(report.submitted_at),
+        }
+        for report, submission_id in report_rows
+    ]
+
+    stmt_key = "reading_history"
+    history_rows = await tuple_rows(
+        select(ReadingHistory, Resource.title)
+        .join(Resource, Resource.id == ReadingHistory.resource_id)
+        .where(ReadingHistory.tenant_id == tenant_id, ReadingHistory.user_id == user_id)
+        .order_by(ReadingHistory.viewed_at.desc(), ReadingHistory.id.desc())
+    )
+    reading_history_payload = [
+        {
+            "resource_id": history.resource_id,
+            "resource_title": title,
+            "viewed_at": iso(history.viewed_at),
+            "visit_count": history.visit_count,
+            "page": history.page,
+            "progress_percent": history.progress_percent,
+            "duration_sec": history.duration_sec,
+            "last_read_at": iso(history.last_read_at),
+            "completed": history.completed,
+        }
+        for history, title in history_rows
+    ]
+
+    stmt_key = "library_lists"
+    list_rows = await scalar_rows(
+        select(ReadingList)
+        .where(ReadingList.tenant_id == tenant_id, ReadingList.user_id == user_id)
+        .order_by(ReadingList.updated_at.desc(), ReadingList.id.desc())
+    )
+    list_ids = [row.id for row in list_rows]
+    stmt_key = "library_list_items"
+    item_rows = (
+        await tuple_rows(
+            select(ReadingListItem, Resource.title)
+            .join(Resource, Resource.id == ReadingListItem.resource_id)
+            .where(
+                ReadingListItem.tenant_id == tenant_id,
+                ReadingListItem.reading_list_id.in_(list_ids),
+            )
+            .order_by(ReadingListItem.id)
+        )
+        if list_ids
+        else []
+    )
+    items_by_list: dict[int, list[dict[str, Any]]] = {}
+    for item, title in item_rows:
+        items_by_list.setdefault(item.reading_list_id, []).append(
+            {"resource_id": item.resource_id, "resource_title": title, "added_at": iso(item.added_at)}
+        )
+    library_lists_payload = [
+        {
+            "id": row.id,
+            "name": row.name,
+            "description": row.description,
+            "created_at": iso(row.created_at),
+            "updated_at": iso(row.updated_at),
+            "items": items_by_list.get(row.id, []),
+        }
+        for row in list_rows
+    ]
+
+    stmt_key = "comments"
+    comment_rows = await tuple_rows(
+        select(Comment, Resource.title)
+        .join(Resource, Resource.id == Comment.resource_id)
+        .where(Comment.tenant_id == tenant_id, Comment.user_id == user_id)
+        .order_by(Comment.created_at.desc(), Comment.id.desc())
+    )
+    comments_payload = [
+        {
+            "id": comment.id,
+            "resource_id": comment.resource_id,
+            "resource_title": title,
+            "body": comment.body,
+            "status": comment.status,
+            "moderation_note": comment.moderation_note,
+            "created_at": iso(comment.created_at),
+        }
+        for comment, title in comment_rows
+    ]
+
+    stmt_key = "forum_topics"
+    topic_rows = await scalar_rows(
+        select(ForumTopic)
+        .where(ForumTopic.tenant_id == tenant_id, ForumTopic.author_id == user_id)
+        .order_by(ForumTopic.created_at.desc(), ForumTopic.id.desc())
+    )
+    forum_topics_payload = [
+        {
+            "id": row.id,
+            "title": row.title,
+            "body": row.body,
+            "category": row.category,
+            "is_fictional": row.is_fictional,
+            "reply_count": row.reply_count,
+            "created_at": iso(row.created_at),
+            "deleted_at": iso(row.deleted_at),
+        }
+        for row in topic_rows
+    ]
+
+    stmt_key = "forum_replies"
+    reply_rows = await scalar_rows(
+        select(ForumReply)
+        .where(ForumReply.tenant_id == tenant_id, ForumReply.author_id == user_id)
+        .order_by(ForumReply.created_at.desc(), ForumReply.id.desc())
+    )
+    forum_replies_payload = [
+        {
+            "id": row.id,
+            "topic_id": row.topic_id,
+            "parent_id": row.parent_id,
+            "body": row.body,
+            "created_at": iso(row.created_at),
+            "deleted_at": iso(row.deleted_at),
+        }
+        for row in reply_rows
+    ]
+
+    stmt_key = "appeals"
+    appeal_rows = await tuple_rows(
+        select(Appeal, Resource.title)
+        .join(Resource, Resource.id == Appeal.resource_id)
+        .where(Appeal.tenant_id == tenant_id, Appeal.user_id == user_id)
+        .order_by(Appeal.created_at.desc(), Appeal.id.desc())
+    )
+    appeals_payload = [
+        {
+            "id": appeal.id,
+            "resource_id": appeal.resource_id,
+            "resource_title": title,
+            "kind": appeal.kind,
+            "reason": appeal.reason,
+            "status": appeal.status,
+            "editor_note": appeal.editor_note,
+            "created_at": iso(appeal.created_at),
+            "decided_at": iso(appeal.decided_at),
+        }
+        for appeal, title in appeal_rows
+    ]
+
+    stmt_key = "author_claims"
+    claim_rows = await tuple_rows(
+        select(AuthorClaim, Resource.title)
+        .join(Resource, Resource.id == AuthorClaim.resource_id)
+        .where(AuthorClaim.tenant_id == tenant_id, AuthorClaim.user_id == user_id)
+        .order_by(AuthorClaim.created_at.desc(), AuthorClaim.id.desc())
+    )
+    author_claims_payload = [
+        {
+            "id": claim.id,
+            "resource_id": claim.resource_id,
+            "resource_title": title,
+            "note": claim.note,
+            "status": claim.status,
+            "author_position": claim.author_position,
+            "evidence_type": claim.evidence_type,
+            "evidence_value": claim.evidence_value,
+            "decision_note": claim.decision_note,
+            "created_at": iso(claim.created_at),
+            "decided_at": iso(claim.decided_at),
+        }
+        for claim, title in claim_rows
+    ]
+
+    stmt_key = "author_follows"
+    follow_rows = await scalar_rows(
+        select(AuthorFollow)
+        .where(AuthorFollow.tenant_id == tenant_id, AuthorFollow.user_id == user_id)
+        .order_by(AuthorFollow.created_at.desc(), AuthorFollow.id.desc())
+    )
+    author_follows_payload = [
+        {"author_name": row.author_name, "created_at": iso(row.created_at)} for row in follow_rows
+    ]
+
+    stmt_key = "discipline_subscriptions"
+    subscription_rows = await scalar_rows(
+        select(DisciplineSubscription)
+        .where(
+            DisciplineSubscription.tenant_id == tenant_id,
+            DisciplineSubscription.user_id == user_id,
+        )
+        .order_by(DisciplineSubscription.created_at.desc(), DisciplineSubscription.id.desc())
+    )
+    discipline_subscriptions_payload = [
+        {"discipline": row.discipline, "created_at": iso(row.created_at)}
+        for row in subscription_rows
+    ]
+
+    stmt_key = "xp_events"
+    xp_rows = await scalar_rows(
+        select(UserXpEvent)
+        .where(UserXpEvent.tenant_id == tenant_id, UserXpEvent.user_id == user_id)
+        .order_by(UserXpEvent.created_at.desc(), UserXpEvent.id.desc())
+    )
+    xp_events_payload = [
+        {
+            "action": row.action,
+            "points": row.points,
+            "ref_type": row.ref_type,
+            "ref_id": row.ref_id,
+            "note": row.note,
+            "created_at": iso(row.created_at),
+        }
+        for row in xp_rows
+    ]
+
+    stmt_key = "achievements"
+    achievement_rows = await scalar_rows(
+        select(UserAchievement)
+        .where(UserAchievement.tenant_id == tenant_id, UserAchievement.user_id == user_id)
+        .order_by(UserAchievement.unlocked_at.desc(), UserAchievement.id.desc())
+    )
+    achievements_payload = [
+        {"badge_key": row.badge_key, "unlocked_at": iso(row.unlocked_at)}
+        for row in achievement_rows
+    ]
+
+    stmt_key = "role_applications"
+    application_rows = await scalar_rows(
+        select(RoleApplication)
+        .where(RoleApplication.tenant_id == tenant_id, RoleApplication.user_id == user_id)
+        .order_by(RoleApplication.created_at.desc(), RoleApplication.id.desc())
+    )
+    role_applications_payload = [
+        {
+            "id": row.id,
+            "target_role": row.target_role,
+            "statement": row.statement,
+            "status": row.status,
+            "decision_note": row.decision_note,
+            "created_at": iso(row.created_at),
+            "decided_at": iso(row.decided_at),
+        }
+        for row in application_rows
+    ]
+
+    stmt_key = "notifications"
+    notification_rows = await scalar_rows(
+        select(Notification)
+        .where(Notification.tenant_id == tenant_id, Notification.user_id == user_id)
+        .order_by(Notification.created_at.desc(), Notification.id.desc())
+    )
+    notifications_payload = [
+        {
+            "id": row.id,
+            "type": row.type,
+            "title": row.title,
+            "body": row.body,
+            "related_type": row.related_type,
+            "related_id": row.related_id,
+            "is_read": row.is_read,
+            "created_at": iso(row.created_at),
+        }
+        for row in notification_rows
+    ]
+
     sections: dict[str, list[dict[str, Any]]] = {
-        "submissions": [],
-        "reviews": [],
-        "reading_history": [],
-        "library_lists": [],
+        "submissions": submissions_payload,
+        "reviews": reviews_payload,
+        "review_reports": review_reports_payload,
+        "reading_history": reading_history_payload,
+        "library_lists": library_lists_payload,
+        "comments": comments_payload,
+        "forum_topics": forum_topics_payload,
+        "forum_replies": forum_replies_payload,
+        "appeals": appeals_payload,
+        "author_claims": author_claims_payload,
+        "author_follows": author_follows_payload,
+        "discipline_subscriptions": discipline_subscriptions_payload,
+        "xp_events": xp_events_payload,
+        "achievements": achievements_payload,
+        "role_applications": role_applications_payload,
+        "notifications": notifications_payload,
     }
 
     # Audit the export request (success-side audit only — we do NOT
     # record a row when the export is denied).
     db.add(
         AuditLog(
-            tenant_id=current_user.tenant_id,
-            actor_user_id=current_user.id,
+            tenant_id=tenant_id,
+            actor_user_id=user_id,
             action="user.export_data",
             target_type="user",
-            target_id=str(current_user.id),
-            payload={"sections": list(sections.keys())},
+            target_id=str(user_id),
+            payload={
+                "sections": {name: len(items) for name, items in sections.items()},
+                "truncated": truncated,
+            },
         )
     )
     await db.commit()
+
+    from app.domain.notifications import services as notifications
 
     user_payload: dict[str, Any] = {
         "id": current_user.id,
         "tenant_id": str(current_user.tenant_id),
         "email": current_user.email,
         "username": current_user.username,
+        "display_name": current_user.display_name,
+        "real_name": current_user.real_name,
+        "bio": current_user.bio,
+        "affiliation": current_user.affiliation,
+        "department": current_user.department,
+        "academic_title": current_user.academic_title,
+        "research_interests": current_user.research_interests,
+        "reviewer_tags": current_user.reviewer_tags,
+        "reviewer_disciplines": current_user.reviewer_disciplines,
+        "website": current_user.website,
+        "google_scholar": current_user.google_scholar,
+        "location": current_user.location,
+        "avatar_url": current_user.avatar_url,
+        "banner_url": current_user.banner_url,
+        "accent_color": current_user.accent_color,
+        "contact_email": current_user.contact_email,
+        "profile_visibility": current_user.profile_visibility,
+        "orcid": current_user.orcid,
+        "role": current_user.role,
         "is_active": current_user.is_active,
         "is_admin": current_user.is_admin,
         "is_email_verified": current_user.is_email_verified,
+        "xp": current_user.xp,
+        "coin_balance": current_user.coin_balance,
         "totp_enabled": current_user.totp_enabled_at is not None,
-        "created_at": current_user.created_at.isoformat() if current_user.created_at else None,
-        "updated_at": current_user.updated_at.isoformat() if current_user.updated_at else None,
-        "deleted_at": current_user.deleted_at.isoformat() if current_user.deleted_at else None,
+        "passkey_count": len(current_user.webauthn_credentials or []),
+        "created_at": iso(current_user.created_at),
+        "updated_at": iso(current_user.updated_at),
+        "deleted_at": iso(current_user.deleted_at),
     }
     return {
         "exported_at": datetime.now(UTC).isoformat(),
-        "schema_version": 1,
+        "schema_version": 2,
         "user": user_payload,
+        "notification_preferences": {
+            "explicit": current_user.notification_prefs or {},
+            "effective": notifications.merged_prefs(current_user),
+        },
         "sections": sections,
+        "truncated": truncated,
     }
 
 

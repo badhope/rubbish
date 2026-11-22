@@ -80,12 +80,124 @@ async def test_export_returns_user_payload(auth_client):
     resp = await client.get("/api/users/me/export", headers=headers)
     assert resp.status_code == 200
     body = resp.json()
-    assert body["schema_version"] == 1
+    assert body["schema_version"] == 2
     assert "exported_at" in body
     assert body["user"]["email"] == auth_client["user"].email
     assert body["user"]["username"] == auth_client["user"].username
-    for section in ("submissions", "reviews", "reading_history", "library_lists"):
+    for section in (
+        "submissions",
+        "reviews",
+        "review_reports",
+        "reading_history",
+        "library_lists",
+        "comments",
+        "forum_topics",
+        "forum_replies",
+        "appeals",
+        "author_claims",
+        "author_follows",
+        "discipline_subscriptions",
+        "xp_events",
+        "achievements",
+        "role_applications",
+        "notifications",
+    ):
         assert section in body["sections"]
+
+
+async def test_export_contains_real_rows(auth_client, db_session):
+    # The export must read domain tables, not return four empty promises.
+    from app.domain.catalog.models import Resource
+    from app.domain.comments.models import Comment
+    from app.domain.library.models import ReadingList, ReadingListItem
+    from app.domain.reader.models import ReadingHistory
+    from app.domain.review.models import ReviewAssignment
+    from app.domain.submission.models import Submission
+
+    user = auth_client["user"]
+    tid = user.tenant_id
+    resource = Resource(
+        tenant_id=tid,
+        type="paper",
+        title="导出验收样稿",
+        authors=["导出验收作者"],
+        year=2026,
+        discipline="计算机科学",
+        tags=[],
+        abstract="这是一篇用于验证个人数据导出的样稿。",
+        preview="只存在于隔离测试库。",
+        owner_id=user.id,
+    )
+    db_session.add(resource)
+    await db_session.flush()
+
+    submission = Submission(
+        tenant_id=tid,
+        submitted_by=user.id,
+        title="导出验收投稿",
+        type="paper",
+        authors=["导出验收作者"],
+        year=2026,
+        discipline="计算机科学",
+        tags=[],
+        abstract="导出验收投稿摘要。",
+        preview="导出验收投稿预览。",
+        resource_id=resource.id,
+        status="pending",
+        triage_status="pending",
+    )
+    db_session.add(submission)
+    await db_session.flush()
+
+    assignment = ReviewAssignment(
+        tenant_id=tid,
+        submission_id=submission.id,
+        reviewer_id=user.id,
+        assigned_by=user.id,
+        status="pending",
+    )
+    db_session.add(assignment)
+    db_session.add(
+        ReadingHistory(
+            tenant_id=tid,
+            user_id=user.id,
+            resource_id=resource.id,
+            visit_count=3,
+            duration_sec=120,
+        )
+    )
+    reading_list = ReadingList(tenant_id=tid, user_id=user.id, name="导出书单")
+    db_session.add(reading_list)
+    await db_session.flush()
+    db_session.add(
+        ReadingListItem(
+            tenant_id=tid,
+            reading_list_id=reading_list.id,
+            resource_id=resource.id,
+        )
+    )
+    db_session.add(
+        Comment(
+            tenant_id=tid,
+            resource_id=resource.id,
+            user_id=user.id,
+            body="导出验收评论。",
+            status="published",
+        )
+    )
+    await db_session.commit()
+
+    resp = await auth_client["client"].get("/api/users/me/export", headers=auth_client["headers"])
+    assert resp.status_code == 200, resp.text
+    sections = resp.json()["sections"]
+    assert sections["submissions"][0]["title"] == "导出验收投稿"
+    assert sections["submissions"][0]["resource_id"] == resource.id
+    assert sections["reviews"][0]["assignment_id"] == assignment.id
+    assert sections["reading_history"][0]["resource_id"] == resource.id
+    assert sections["reading_history"][0]["visit_count"] == 3
+    assert sections["library_lists"][0]["name"] == "导出书单"
+    assert sections["library_lists"][0]["items"][0]["resource_title"] == "导出验收样稿"
+    assert sections["comments"][0]["body"] == "导出验收评论。"
 
 
 async def test_export_requires_auth(client):
