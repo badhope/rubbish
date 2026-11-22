@@ -45,7 +45,7 @@ export function MeIdentityHeader({
               {displayName}
             </h1>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-              <span className="font-mono text-xs">@{profile.username}</span>
+              <span className="max-w-full break-all font-mono text-xs">@{profile.username}</span>
               <Badge
                 variant="outline"
                 className={cn('rounded-none px-2 py-0.5 text-[11px]', ROLE_STYLE[profile.permission_role])}

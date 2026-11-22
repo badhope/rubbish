@@ -20,7 +20,7 @@ export function MeActionBar({
           长文可以先存草稿，短帖直接留在讨论区。
         </p>
       </div>
-      <div className="flex shrink-0 items-center gap-1.5">
+      <div className="flex w-full flex-wrap items-center gap-1.5 lg:w-auto lg:flex-nowrap">
         <Button variant="ghost" size="sm" onClick={onOpenNotifications} className="relative">
           <Bell className="h-3.5 w-3.5" />
           通知

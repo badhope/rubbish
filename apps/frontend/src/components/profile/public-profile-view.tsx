@@ -142,10 +142,10 @@ export function PublicProfileView({
                     href={link.href}
                     target={link.href.startsWith('mailto:') ? undefined : '_blank'}
                     rel="noreferrer"
-                    className="inline-flex h-8 items-center gap-1.5 rounded-full border bg-background px-3 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                    className="inline-flex max-w-full items-center gap-1.5 rounded-full border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
                   >
-                    <Icon className="h-3.5 w-3.5" />
-                    {link.label}
+                    <Icon className="h-3.5 w-3.5 shrink-0" />
+                    <span className="min-w-0 whitespace-normal break-all text-left">{link.label}</span>
                   </a>
                 )
               })}

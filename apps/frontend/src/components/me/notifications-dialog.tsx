@@ -88,7 +88,7 @@ export function NotificationsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[86vh] max-w-2xl gap-0 overflow-hidden p-0">
         <DialogHeader className="border-b px-5 py-4">
-          <div className="flex items-center justify-between gap-3 pr-6">
+          <div className="flex flex-wrap items-start justify-between gap-3 pr-6">
             <div>
               <DialogTitle className="flex items-center gap-2 text-lg">
                 <Bell className="h-4 w-4 text-primary" />
@@ -138,11 +138,11 @@ export function NotificationsDialog({
                       )}
                     />
                     <span className="min-w-0 flex-1">
-                      <span className={cn('block text-sm', !item.is_read && 'font-medium')}>
+                      <span className={cn('block break-words text-sm', !item.is_read && 'font-medium')}>
                         {item.title}
                       </span>
                       {item.body ? (
-                        <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
+                        <span className="mt-1 block break-words text-xs leading-relaxed text-muted-foreground">
                           {item.body}
                         </span>
                       ) : null}

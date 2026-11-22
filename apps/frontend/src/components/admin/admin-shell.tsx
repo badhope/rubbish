@@ -67,7 +67,7 @@ export function AdminShell() {
             </p>
           </div>
 
-          <nav aria-label="后台业务域" className="scrollbar-none -mx-1 mt-3 flex gap-1 overflow-x-auto">
+          <nav aria-label="后台业务域" className="-mx-1 mt-3 flex flex-wrap gap-1">
             {visibleDomains.map((domain) => {
               const Icon = domain.icon
               const active = domain.key === activeDomain?.key

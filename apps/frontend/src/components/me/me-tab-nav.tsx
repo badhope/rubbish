@@ -19,7 +19,7 @@ export function MeTabNav({
   return (
     <nav
       aria-label="我的功能"
-      className="scrollbar-none -mx-1 flex gap-1 overflow-x-auto border-b px-1"
+      className="-mx-1 flex flex-wrap gap-1 border-b px-1"
     >
       {tabs.map((tab) => {
         const selected = tab.key === active

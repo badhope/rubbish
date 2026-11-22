@@ -20,7 +20,7 @@ export function AdminSectionTabs<K extends string>({
   label = '当前业务域子段',
 }: AdminSectionTabsProps<K>) {
   return (
-    <nav aria-label={label} className="scrollbar-none -mx-1 flex gap-1 overflow-x-auto border-b">
+    <nav aria-label={label} className="-mx-1 flex flex-wrap gap-1 border-b">
       {items.map((item) => {
         const selected = item.key === active
         return (

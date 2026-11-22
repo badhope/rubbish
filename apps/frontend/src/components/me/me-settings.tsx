@@ -47,7 +47,7 @@ export function MeSettings({ username, initialSection }: { username: string; ini
         </Button>
       </div>
 
-      <nav aria-label="设置分类" className="scrollbar-none mt-3 flex gap-1 overflow-x-auto border-b">
+      <nav aria-label="设置分类" className="mt-3 flex flex-wrap gap-1 border-b">
         {SUB_TABS.map((item) => (
           <button
             key={item.key}
@@ -69,9 +69,9 @@ export function MeSettings({ username, initialSection }: { username: string; ini
         {tab === 'profile' ? (
           <>
             <div className="flex flex-wrap items-start justify-between gap-3 border-y py-4 text-sm">
-              <div className="flex items-start gap-3">
-                <Settings2 className="mt-0.5 h-4 w-4 text-muted-foreground" />
-                <div className="text-xs leading-relaxed text-muted-foreground">
+              <div className="flex min-w-0 items-start gap-3">
+                <Settings2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                <div className="min-w-0 break-words text-xs leading-relaxed text-muted-foreground">
                   当前账号 <span className="font-medium text-foreground">@{username}</span>
                   {me?.email ? ` · ${me.email}` : ''}
                   {me?.is_email_verified ? ' · 邮箱已验证' : ' · 邮箱未验证'}

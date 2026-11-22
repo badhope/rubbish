@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.43] — 2026-11-22
+
+### 修复
+- 移动端「我的」页操作条改为整行换行布局，五个入口在窄屏不再被 `overflow-x: clip` 裁掉。
+- 个人中心账号行、用户名、公开主页长链接与通知弹窗补充 `min-w-0` / 长词折行，避免长文本撑破内容宽度。
+- 「我的」页签、设置分类、后台业务域与模块页签从隐藏滚动条的横向滚动改为自动换行，窄屏不再出现“滑不动”也看不到的入口。
+
 ## [1.19.42] — 2026-11-22
 
 - Account deletion now has a real front-end path instead of a privacy-page promise. Settings → Security opens a dialog that requires the current password and the literal `DELETE MY ACCOUNT`, explains that articles/history survive under an anonymised identity, and offers the data export first.
