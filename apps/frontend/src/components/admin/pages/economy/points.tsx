@@ -8,6 +8,7 @@ import {
 } from '@/hooks/api/use-coin-config'
 import { useAdminShopPurchases, useDecideShopPurchase } from '@/hooks/api/use-shop'
 import { extractError } from '@/lib/utils'
+import { ShopCatalogCard } from '@/components/admin/pages/economy/shop-catalog'
 import { PageHeader } from '@/components/common/page-header'
 import { Loading } from '@/components/common/state'
 import { Button } from '@/components/ui/button'
@@ -61,9 +62,11 @@ export default function AdminPointsPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="积分规则"
-        description="积分是社区贡献值：无现金价值、不可充值、不可转让。只保留签到、发帖、认领通过这几类社区动作。"
+        title="积分与货品"
+        description="积分是社区贡献值：无现金价值、不可充值、不可转让。这里管理发放口径、兑换货品和人工履约。"
       />
+
+      <ShopCatalogCard />
 
       {config.isLoading ? <Loading /> : null}
 

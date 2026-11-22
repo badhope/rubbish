@@ -72,9 +72,11 @@ async def update_item(
     description: str | None = None,
     price_coin: int | None = None,
     stock: int | None = None,
+    stock_defined: bool = False,
     is_active: bool | None = None,
     effect: str | None = None,
     cover_url: str | None = None,
+    cover_url_defined: bool = False,
     sort_order: int | None = None,
 ) -> CoinShopItem:
     if name is not None:
@@ -83,13 +85,15 @@ async def update_item(
         item.description = description.strip()
     if price_coin is not None:
         item.price_coin = price_coin
-    if stock is not None:
+    if stock_defined:
+        # 显式 null 表示恢复不限量；None 作为“未提交”不能表达这个动作。
         item.stock = stock
     if is_active is not None:
         item.is_active = is_active
     if effect is not None:
         item.effect = effect
-    if cover_url is not None:
+    if cover_url_defined:
+        # 显式 null 表示清空封面；未提交时保留原值。
         item.cover_url = cover_url
     if sort_order is not None:
         item.sort_order = sort_order

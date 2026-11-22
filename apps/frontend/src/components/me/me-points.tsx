@@ -126,9 +126,17 @@ export function MePoints() {
               return (
                 <div key={item.id} className="grid gap-2 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4">
                   <div className="flex min-w-0 items-start gap-3">
-                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center border bg-muted/25 text-muted-foreground">
-                      <Gift className="h-4 w-4" />
-                    </span>
+                    {item.cover_url ? (
+                      <img
+                        src={item.cover_url}
+                        alt=""
+                        className="h-8 w-8 shrink-0 border object-cover"
+                      />
+                    ) : (
+                      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center border bg-muted/25 text-muted-foreground">
+                        <Gift className="h-4 w-4" />
+                      </span>
+                    )}
                     <div className="min-w-0">
                       <p className="text-sm font-medium">
                         {item.name}

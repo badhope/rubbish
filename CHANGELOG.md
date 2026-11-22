@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.19.34] — 2026-11-22
+
+- The admin points page now includes a real shop catalog: create, edit, unlist/relist and see cover, stock, price, effect and sort order. Previously the create/update endpoints existed but no screen could reach them.
+- Shop PATCH can now distinguish “field omitted” from “explicit null”: clearing stock restores unlimited quantity, and clearing the cover removes it, instead of silently keeping the old value.
+- The member-facing shop renders the optional cover image, so the catalog field is not another API-only promise.
+
 ## [1.19.33] — 2026-11-22
 
 - Notification preferences are now real switches, not decorative checkboxes. All ten keys are exposed in settings, grouped into in-app notices and email copies; a suppressed review, submission or release event writes no in-app row, while a disabled email category is recorded as `skipped_user_pref` instead of pretending to send.

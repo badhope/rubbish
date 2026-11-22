@@ -911,9 +911,11 @@ async def admin_update_shop_item(
         description=body.description,
         price_coin=body.price_coin,
         stock=body.stock,
+        stock_defined="stock" in body.model_fields_set,
         is_active=body.is_active,
         effect=body.effect,
         cover_url=body.cover_url,
+        cover_url_defined="cover_url" in body.model_fields_set,
         sort_order=body.sort_order,
     )
     return _shop_item_out(updated)

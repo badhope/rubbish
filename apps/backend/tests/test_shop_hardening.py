@@ -228,3 +228,63 @@ async def test_award_monthly_cap_holds_after_refactor(
     )
     assert blocked is False
     assert int(user.coin_balance or 0) == 3
+
+
+@pytest.mark.asyncio
+async def test_admin_shop_item_can_clear_stock_and_cover_and_unlist(
+    client: AsyncClient, admin_user: dict
+) -> None:
+    """PATCH 必须区分“没传”和“显式传 null”：库存归零 ≠ 不限量，封面也要能清空。"""
+    created = await client.post(
+        "/api/gamification/admin/shop/items",
+        json={
+            "name": "限量签名卡",
+            "description": "人工发货",
+            "price_coin": 88,
+            "stock": 3,
+            "effect": "none",
+            "cover_url": "https://example.com/cover.png",
+            "sort_order": 7,
+        },
+        headers=auth_headers(admin_user),
+    )
+    assert created.status_code == 200, created.text
+    item = created.json()
+    item_id = int(item["id"])
+    assert item["stock"] == 3
+    assert item["cover_url"] == "https://example.com/cover.png"
+
+    cleared = await client.patch(
+        f"/api/gamification/admin/shop/items/{item_id}",
+        json={"stock": None, "cover_url": None},
+        headers=auth_headers(admin_user),
+    )
+    assert cleared.status_code == 200, cleared.text
+    assert cleared.json()["stock"] is None
+    assert cleared.json()["cover_url"] is None
+
+    renamed = await client.patch(
+        f"/api/gamification/admin/shop/items/{item_id}",
+        json={"name": "改名后仍不限量"},
+        headers=auth_headers(admin_user),
+    )
+    assert renamed.status_code == 200, renamed.text
+    assert renamed.json()["stock"] is None
+
+    unlisted = await client.patch(
+        f"/api/gamification/admin/shop/items/{item_id}",
+        json={"is_active": False},
+        headers=auth_headers(admin_user),
+    )
+    assert unlisted.status_code == 200, unlisted.text
+    assert unlisted.json()["is_active"] is False
+
+    public_items = await client.get("/api/gamification/shop/items")
+    assert public_items.status_code == 200
+    assert all(row["id"] != item_id for row in public_items.json()["data"])
+
+    admin_items = await client.get(
+        "/api/gamification/admin/shop/items", headers=auth_headers(admin_user)
+    )
+    assert admin_items.status_code == 200
+    assert any(row["id"] == item_id for row in admin_items.json()["data"])

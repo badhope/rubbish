@@ -9,6 +9,8 @@ export interface ShopItem {
   stock: number | null
   is_active: boolean
   effect: 'none' | 'accent_unlock'
+  cover_url: string | null
+  sort_order: number
 }
 
 export interface ShopPurchase {
@@ -43,6 +45,53 @@ export function usePurchaseItem() {
       void qc.invalidateQueries({ queryKey: ['gamification', 'wallet'] })
       void qc.invalidateQueries({ queryKey: ['gamification', 'shop'] })
     },
+  })
+}
+
+export type AdminShopItem = ShopItem
+
+export interface ShopItemInput {
+  name: string
+  description: string
+  price_coin: number
+  stock: number | null
+  effect: 'none' | 'accent_unlock'
+  cover_url: string | null
+  sort_order: number
+}
+
+export interface ShopItemPatch extends Partial<ShopItemInput> {
+  is_active?: boolean
+}
+
+function invalidateShopItems(qc: ReturnType<typeof useQueryClient>) {
+  void qc.invalidateQueries({ queryKey: ['gamification', 'admin', 'shop', 'items'] })
+  void qc.invalidateQueries({ queryKey: ['gamification', 'shop', 'items'] })
+}
+
+export function useAdminShopItems() {
+  return useQuery({
+    queryKey: ['gamification', 'admin', 'shop', 'items'],
+    queryFn: async () =>
+      (await api.get<{ data: AdminShopItem[] }>('/gamification/admin/shop/items')).data.data,
+  })
+}
+
+export function useCreateShopItem() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (payload: ShopItemInput) =>
+      (await api.post<AdminShopItem>('/gamification/admin/shop/items', payload)).data,
+    onSuccess: () => invalidateShopItems(qc),
+  })
+}
+
+export function useUpdateShopItem() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, ...payload }: ShopItemPatch & { id: number }) =>
+      (await api.patch<AdminShopItem>(`/gamification/admin/shop/items/${id}`, payload)).data,
+    onSuccess: () => invalidateShopItems(qc),
   })
 }
 
