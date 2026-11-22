@@ -327,7 +327,7 @@ def release_failure(
         extra = "\n" + "\n".join(f"- {escape(str(k))}: {escape(str(v))}" for k, v in detail.items())
     text = (
         f"合集 {target} 的定时发布失败。\n\n原因：{reason}{extra}\n\n"
-        f"请打开合集编排，重新核对并排期：\n{link}\n"
+        f"请打开卷期编排，核对内容后联系管理员发布或重新排期：\n{link}\n"
     )
     html = _shell(
         f"定时发布失败：{target}",
@@ -342,6 +342,6 @@ def release_failure(
             if detail
             else ""
         )
-        + _button("打开期次编排", link),
+        + _button("打开卷期编排", link),
     )
     return subject, text, html

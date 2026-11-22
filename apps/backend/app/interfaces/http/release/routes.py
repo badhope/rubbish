@@ -24,7 +24,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import require_admin, require_tenant_id
+from app.api.deps import require_admin, require_editor, require_tenant_id
 from app.core.config import settings
 from app.core.db import get_db
 from app.core.time import utcnow
@@ -166,7 +166,7 @@ async def _issue_rows(db: AsyncSession, tenant_id: UUID, volume: str, issue: str
 @router.get("/issues")
 async def list_release_issues(
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_editor),
 ) -> dict[str, Any]:
     """Every issue, including drafts, for the release dashboard."""
     tenant_id = require_tenant_id()
@@ -234,7 +234,7 @@ async def list_manifests(
     issue: str = Query(min_length=1, max_length=50),
     limit: int = Query(default=20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_editor),
 ) -> dict[str, Any]:
     tenant_id = require_tenant_id()
     rows = (
@@ -261,7 +261,7 @@ async def latest_manifest(
     volume: str = Query(min_length=1, max_length=50),
     issue: str = Query(min_length=1, max_length=50),
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_editor),
 ) -> dict[str, Any]:
     tenant_id = require_tenant_id()
     manifest = (
@@ -285,7 +285,7 @@ async def latest_manifest(
 async def create_release_check(
     payload: ReleaseCheckRequest,
     db: AsyncSession = Depends(get_db),
-    current_admin: User = Depends(require_admin),
+    current_editor: User = Depends(require_editor),
 ) -> dict[str, Any]:
     """Run the gate and persist the result as a manifest."""
     tenant_id = require_tenant_id()
@@ -315,13 +315,13 @@ async def create_release_check(
         error_count=result["error_count"],
         warning_count=result["warning_count"],
         payload=result,
-        created_by=current_admin.id,
+        created_by=current_editor.id,
     )
     db.add(manifest)
     db.add(
         AuditLog(
             tenant_id=tenant_id,
-            actor_user_id=current_admin.id,
+            actor_user_id=current_editor.id,
             action="release.check",
             target_type="issue",
             target_id=f"{payload.volume}/{payload.issue}",

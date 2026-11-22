@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.19.31] — 2026-11-22
+
+- Restored a real issue-plan workspace at `/editor/issue-plan`: editors can inspect every issue, run the release gate, read check results and manifest history; approval, publish and rollback remain administrator-only.
+- Scheduled-release failure notifications and emails now land on that page instead of a missing route; notifications carry the failed volume/issue so the exact issue is already selected. The copy says plainly that an administrator must confirm the new schedule.
+- Claim decisions now deep-link to the claimed work with the label “看认领结果”, and site-wide notices no longer pretend to have a destination.
+
 ## [1.19.30] — 2026-11-22
 
 - The admin role-application queue now paginates 20 at a time with a real pending total, so applications beyond the first hundred are no longer invisible.

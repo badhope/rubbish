@@ -67,7 +67,10 @@ export function NotificationsDialog({
     destination: ReturnType<typeof notificationDestination>,
   ) => {
     if (!isRead) void onMarkOne(id)
-    if (!destination) return
+    if (!destination) {
+      onOpenChange(false)
+      return
+    }
     if (destination.to === '/me') {
       // 这类通知没有更具体的目标；关掉弹窗留在个人中心，不要假装跳转。
       onOpenChange(false)

@@ -186,4 +186,38 @@ describe('notificationDestination', () => {
       notificationDestination(note({ type: 'system', related_type: 'unknown_thing', related_id: '9' })),
     ).toBeNull()
   })
+
+  it('sends a release scheduling failure to the issue plan page', () => {
+    expect(
+      notificationDestination(
+        note({
+          type: 'release.scheduled_failed',
+          related_type: 'issue',
+          related_id: '1/06',
+        }),
+      ),
+    ).toMatchObject({
+      to: '/editor/issue-plan',
+      search: { volume: '1', issue: '06' },
+      label: '去重新排期',
+    })
+  })
+
+  it('labels a claim decision as a claim result instead of a generic read', () => {
+    expect(
+      notificationDestination(
+        note({ type: 'claim.decision', related_type: 'resource', related_id: '306' }),
+      ),
+    ).toMatchObject({
+      to: '/catalog/$resourceId',
+      params: { resourceId: '306' },
+      label: '看认领结果',
+    })
+  })
+
+  it('does not pretend a site-wide notification has a destination', () => {
+    expect(
+      notificationDestination(note({ type: 'site.notice', related_type: 'site', related_id: null })),
+    ).toBeNull()
+  })
 })

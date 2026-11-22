@@ -31,6 +31,7 @@ import { Route as AdminSystemRouteImport } from './routes/admin/system'
 import { Route as CatalogIndexRouteImport } from './routes/catalog/index'
 import { Route as CatalogResourceIdRouteImport } from './routes/catalog/$resourceId'
 import { Route as EditorCalibrationRouteImport } from './routes/editor/calibration'
+import { Route as EditorIssuePlanRouteImport } from './routes/editor/issue-plan'
 import { Route as ForumIndexRouteImport } from './routes/forum/index'
 import { Route as ForumTopicIdRouteImport } from './routes/forum/$topicId'
 import { Route as LibraryListIdRouteImport } from './routes/library/$listId'
@@ -151,6 +152,11 @@ const EditorCalibrationRoute = EditorCalibrationRouteImport.update({
   path: '/editor/calibration',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EditorIssuePlanRoute = EditorIssuePlanRouteImport.update({
+  id: '/editor/issue-plan',
+  path: '/editor/issue-plan',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ForumIndexRoute = ForumIndexRouteImport.update({
   id: '/forum/',
   path: '/forum/',
@@ -218,6 +224,7 @@ export interface FileRoutesByFullPath {
   '/admin/system': typeof AdminSystemRoute
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
   '/editor/calibration': typeof EditorCalibrationRoute
+  '/editor/issue-plan': typeof EditorIssuePlanRoute
   '/forum/$topicId': typeof ForumTopicIdRoute
   '/library/$listId': typeof LibraryListIdRoute
   '/submissions/new': typeof SubmissionsNewRoute
@@ -250,6 +257,7 @@ export interface FileRoutesByTo {
   '/admin/system': typeof AdminSystemRoute
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
   '/editor/calibration': typeof EditorCalibrationRoute
+  '/editor/issue-plan': typeof EditorIssuePlanRoute
   '/forum/$topicId': typeof ForumTopicIdRoute
   '/library/$listId': typeof LibraryListIdRoute
   '/submissions/new': typeof SubmissionsNewRoute
@@ -284,6 +292,7 @@ export interface FileRoutesById {
   '/admin/system': typeof AdminSystemRoute
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
   '/editor/calibration': typeof EditorCalibrationRoute
+  '/editor/issue-plan': typeof EditorIssuePlanRoute
   '/forum/$topicId': typeof ForumTopicIdRoute
   '/library/$listId': typeof LibraryListIdRoute
   '/submissions/new': typeof SubmissionsNewRoute
@@ -319,6 +328,7 @@ export interface FileRouteTypes {
     | '/admin/system'
     | '/catalog/$resourceId'
     | '/editor/calibration'
+    | '/editor/issue-plan'
     | '/forum/$topicId'
     | '/library/$listId'
     | '/submissions/new'
@@ -351,6 +361,7 @@ export interface FileRouteTypes {
     | '/admin/system'
     | '/catalog/$resourceId'
     | '/editor/calibration'
+    | '/editor/issue-plan'
     | '/forum/$topicId'
     | '/library/$listId'
     | '/submissions/new'
@@ -384,6 +395,7 @@ export interface FileRouteTypes {
     | '/admin/system'
     | '/catalog/$resourceId'
     | '/editor/calibration'
+    | '/editor/issue-plan'
     | '/forum/$topicId'
     | '/library/$listId'
     | '/submissions/new'
@@ -414,6 +426,7 @@ export interface RootRouteChildren {
   VerifyEmailRoute: typeof VerifyEmailRoute
   CatalogResourceIdRoute: typeof CatalogResourceIdRoute
   EditorCalibrationRoute: typeof EditorCalibrationRoute
+  EditorIssuePlanRoute: typeof EditorIssuePlanRoute
   ForumTopicIdRoute: typeof ForumTopicIdRoute
   LibraryListIdRoute: typeof LibraryListIdRoute
   SubmissionsNewRoute: typeof SubmissionsNewRoute
@@ -582,6 +595,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EditorCalibrationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/editor/issue-plan': {
+      id: '/editor/issue-plan'
+      path: '/editor/issue-plan'
+      fullPath: '/editor/issue-plan'
+      preLoaderRoute: typeof EditorIssuePlanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/forum/': {
       id: '/forum/'
       path: '/forum'
@@ -683,6 +703,7 @@ const rootRouteChildren: RootRouteChildren = {
   VerifyEmailRoute: VerifyEmailRoute,
   CatalogResourceIdRoute: CatalogResourceIdRoute,
   EditorCalibrationRoute: EditorCalibrationRoute,
+  EditorIssuePlanRoute: EditorIssuePlanRoute,
   ForumTopicIdRoute: ForumTopicIdRoute,
   LibraryListIdRoute: LibraryListIdRoute,
   SubmissionsNewRoute: SubmissionsNewRoute,

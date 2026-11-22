@@ -25,6 +25,19 @@ export function requireAdminGuard(): void {
   if (!state.isAdmin) throw redirect({ to: '/403' })
 }
 
+/** 编辑工作台：管理员，或任意编辑档位（含主编/副主编/栏目编辑）。 */
+export function requireEditorGuard(): void {
+  const state = getAuthState()
+  if (!state.isAuthenticated) redirectToLogin()
+  const roles = state.user?.roles ?? []
+  const isEditor = roles.some((role) =>
+    ['editor', 'chief_editor', 'editor_in_chief', 'section_editor', 'deputy_editor', 'board_editor'].includes(
+      role,
+    ),
+  )
+  if (!state.isAdmin && !isEditor) throw redirect({ to: '/403' })
+}
+
 
 /** 主编/副主编可访问的站点管理页（比 admin 宽一档，覆盖非 is_admin 的主编）。 */
 export function requireChiefGuard(): void {

@@ -45,6 +45,24 @@ export function notificationDestination(
     }
     return { to: '/admin/people', search: { section: 'claims' }, label: '去审批' }
   }
+  if (type === 'claim.decision') {
+    // 认领结果指向被认领的那篇作品；没有资源 id 时退到认领列表。
+    return id
+      ? { to: '/catalog/$resourceId', params: { resourceId: String(id) }, label: '看认领结果' }
+      : { to: '/me', label: '看认领记录' }
+  }
+  if (type === 'release.scheduled_failed') {
+    // related_id 是后端 manifest 的 "卷/期" 文本，直接带到对应期，不再让用户自己找。
+    const parts = item.related_id?.split('/') ?? []
+    if (parts.length === 2 && parts[0] && parts[1]) {
+      return {
+        to: '/editor/issue-plan',
+        search: { volume: parts[0], issue: parts[1] },
+        label: '去重新排期',
+      }
+    }
+    return { to: '/editor/issue-plan', label: '去重新排期' }
+  }
   if (type === 'site.feedback') {
     return id
       ? { to: '/forum', search: { view: 'feedback', feedback: id }, label: '去反馈墙' }
@@ -144,7 +162,8 @@ export function notificationDestination(
     case 'triage_queue':
       return { to: '/submissions/pending', label: '去内容台' }
     case 'site':
-      return { to: '/me', label: '查看' }
+      // 站点级通知没有更具体的目的地，点击只关闭弹窗，不假装跳转。
+      return null
     default:
       return null
   }

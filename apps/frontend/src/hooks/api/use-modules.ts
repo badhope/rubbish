@@ -26,6 +26,8 @@ import type {
   ParseRequest,
   ParseResponse,
   PublicExpertiseResponse,
+  ReleaseIssueSummary,
+  ReleaseManifest,
   QualityRubric,
   ReadingListCreate,
   ReadingListDetailResponse,
@@ -127,6 +129,9 @@ export const keys = {
     audit: (limit = 50, offset = 0) => ['admin', 'audit', limit, offset] as const,
     siteSettings: () => ['admin', 'site-settings'] as const,
     claims: (status: string) => ['admin', 'claims', status] as const,
+    releaseIssues: () => ['admin', 'release-issues'] as const,
+    releaseManifests: (volume: string, issue: string) =>
+      ['admin', 'release-manifests', volume, issue] as const,
   },
   claims: {
     status: (resourceId: number) => ['claims', 'status', resourceId] as const,
@@ -2188,6 +2193,124 @@ export function useExpressReviewInterest() {
     onSuccess: () => {
       toast.success('已记录互评意愿，内容整理组会在指派时看到')
       void qc.invalidateQueries({ queryKey: ['review', 'board'] })
+    },
+  })
+}
+
+
+// --- Release Gate / Manifest ---
+
+export function useReleaseIssues(enabled = true) {
+  return useQuery<{ items: ReleaseIssueSummary[] }>({
+    queryKey: keys.admin.releaseIssues(),
+    queryFn: async () =>
+      (await api.get<{ items: ReleaseIssueSummary[] }>('/admin/releases/issues')).data,
+    enabled,
+    staleTime: 30_000,
+  })
+}
+
+export function useReleaseManifests(volume: string, issue: string, enabled = true) {
+  return useQuery<{ items: ReleaseManifest[] }>({
+    queryKey: keys.admin.releaseManifests(volume, issue),
+    queryFn: async () =>
+      (
+        await api.get<{ items: ReleaseManifest[] }>('/admin/releases/manifests', {
+          params: { volume, issue },
+        })
+      ).data,
+    enabled: enabled && Boolean(volume) && Boolean(issue),
+    staleTime: 15_000,
+  })
+}
+
+export function useCheckRelease() {
+  const qc = useQueryClient()
+  return useMutation<ReleaseManifest, unknown, { volume: string; issue: string }>({
+    mutationFn: async ({ volume, issue }) =>
+      (await api.post('/admin/releases/check', { volume, issue })).data,
+    onSuccess: (_data, vars) => {
+      void qc.invalidateQueries({ queryKey: keys.admin.releaseIssues() })
+      void qc.invalidateQueries({
+        queryKey: keys.admin.releaseManifests(vars.volume, vars.issue),
+      })
+    },
+  })
+}
+
+export function usePublishRelease() {
+  const qc = useQueryClient()
+  return useMutation<
+    ReleaseManifest,
+    unknown,
+    { volume: string; issue: string; manifestId: number; publishAt: string | null }
+  >({
+    mutationFn: async ({ volume, issue, manifestId, publishAt }) =>
+      (
+        await api.post('/admin/releases/publish', {
+          volume,
+          issue,
+          manifest_id: manifestId,
+          publish_at: publishAt,
+        })
+      ).data,
+    onSuccess: (_data, vars) => {
+      void qc.invalidateQueries({ queryKey: ['catalog'] })
+      void qc.invalidateQueries({ queryKey: keys.issuePlan() })
+      void qc.invalidateQueries({ queryKey: keys.admin.releaseIssues() })
+      void qc.invalidateQueries({
+        queryKey: keys.admin.releaseManifests(vars.volume, vars.issue),
+      })
+    },
+  })
+}
+
+export function useApproveRelease() {
+  const qc = useQueryClient()
+  return useMutation<
+    ReleaseManifest,
+    unknown,
+    { volume: string; issue: string; manifestId: number; note?: string | null }
+  >({
+    mutationFn: async ({ manifestId, note }) =>
+      (
+        await api.post('/admin/releases/approve', {
+          manifest_id: manifestId,
+          note: note || null,
+        })
+      ).data,
+    onSuccess: (_data, vars) => {
+      void qc.invalidateQueries({ queryKey: keys.admin.releaseIssues() })
+      void qc.invalidateQueries({
+        queryKey: keys.admin.releaseManifests(vars.volume, vars.issue),
+      })
+    },
+  })
+}
+
+export function useRollbackRelease() {
+  const qc = useQueryClient()
+  return useMutation<
+    ReleaseManifest,
+    unknown,
+    { volume: string; issue: string; manifestId: number; reason: string }
+  >({
+    mutationFn: async ({ volume, issue, manifestId, reason }) =>
+      (
+        await api.post('/admin/releases/rollback', {
+          volume,
+          issue,
+          manifest_id: manifestId,
+          reason,
+        })
+      ).data,
+    onSuccess: (_data, vars) => {
+      void qc.invalidateQueries({ queryKey: ['catalog'] })
+      void qc.invalidateQueries({ queryKey: keys.issuePlan() })
+      void qc.invalidateQueries({ queryKey: keys.admin.releaseIssues() })
+      void qc.invalidateQueries({
+        queryKey: keys.admin.releaseManifests(vars.volume, vars.issue),
+      })
     },
   })
 }
