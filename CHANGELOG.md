@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.19.36] — 2026-11-22
+
+- The redemption queue now has three real tabs — pending, fulfilled and rejected — instead of only showing pending orders. Completed and rejected orders keep their processing note and timestamp for later audit, and no longer offer duplicate decisions.
+
 ## [1.19.35] — 2026-11-22
 
 - Creating a shop item now honours the “unlist until ready” checkbox: the API accepts `is_active`, so a draft created in the admin catalog does not leak into the member shop before an editor publishes it.

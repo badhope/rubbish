@@ -6,21 +6,39 @@ import {
   useUpdateCoinPolicy,
   useUpdateCoinRule,
 } from '@/hooks/api/use-coin-config'
-import { useAdminShopPurchases, useDecideShopPurchase } from '@/hooks/api/use-shop'
+import {
+  useAdminShopPurchases,
+  useDecideShopPurchase,
+} from '@/hooks/api/use-shop'
+import type { ShopPurchaseStatus } from '@/hooks/api/use-shop'
 import { extractError } from '@/lib/utils'
 import { ShopCatalogCard } from '@/components/admin/pages/economy/shop-catalog'
 import { PageHeader } from '@/components/common/page-header'
 import { Loading } from '@/components/common/state'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
+const PURCHASE_TABS: Array<{ key: ShopPurchaseStatus; label: string }> = [
+  { key: 'paid', label: '待履约' },
+  { key: 'fulfilled', label: '已完成' },
+  { key: 'rejected', label: '已驳回' },
+]
+
+const PURCHASE_STATUS_LABEL: Record<ShopPurchaseStatus, string> = {
+  paid: '待履约',
+  fulfilled: '已完成',
+  rejected: '已驳回',
+}
+
 export default function AdminPointsPage() {
   const config = useCoinConfig()
   const updateRule = useUpdateCoinRule()
   const updatePolicy = useUpdateCoinPolicy()
-  const purchases = useAdminShopPurchases('paid')
+  const [purchaseStatus, setPurchaseStatus] = useState<ShopPurchaseStatus>('paid')
+  const purchases = useAdminShopPurchases(purchaseStatus)
   const decidePurchase = useDecideShopPurchase()
   // 旧审稿、投稿、编辑裁决和零额度回复不再占界面；只保留社区当前四类动作。
   const currentReasons = new Set(['checkin.daily', 'checkin.weekly_bonus', 'forum.topic', 'claim.approve'])
@@ -111,12 +129,35 @@ export default function AdminPointsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
+          <div className="flex flex-wrap gap-1 border-b pb-2">
+            {PURCHASE_TABS.map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setPurchaseStatus(tab.key)}
+                data-active={purchaseStatus === tab.key ? 'true' : 'false'}
+                className={`min-h-8 border px-2.5 text-xs transition-colors ${
+                  purchaseStatus === tab.key
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'bg-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
           <p className="text-xs leading-relaxed text-muted-foreground">
-            只处理人工权益：确认已远程处理后标记完成；无法履约则驳回并自动退回积分。自动生效的主题色不会出现在这里。
+            {purchaseStatus === 'paid'
+              ? '只处理人工权益：确认已远程处理后标记完成；无法履约则驳回并自动退回积分。自动生效的主题色不会出现在这里。'
+              : purchaseStatus === 'fulfilled'
+                ? '已完成的兑换记录：用于回看发货时间和处理备注；不会重复出现待履约操作。'
+                : '已驳回的兑换记录：积分已退回，保留原因备查。'}
           </p>
           {purchases.isLoading ? <p className="text-sm text-muted-foreground">加载中…</p> : null}
           {!purchases.isLoading && (purchases.data?.length ?? 0) === 0 ? (
-            <p className="border-y py-5 text-sm text-muted-foreground">没有待履约的人工兑换。</p>
+            <p className="border-y py-5 text-sm text-muted-foreground">
+              没有{PURCHASE_STATUS_LABEL[purchaseStatus]}的人工兑换。
+            </p>
           ) : null}
           {(purchases.data?.length ?? 0) > 0 ? (
             <div className="divide-y border-y">
@@ -128,6 +169,9 @@ export default function AdminPointsPage() {
                       <span className="ml-2 font-mono text-xs font-normal text-muted-foreground">
                         -{purchase.price_coin} 积分
                       </span>
+                      <Badge variant="outline" className="ml-2 align-middle">
+                        {PURCHASE_STATUS_LABEL[purchase.status]}
+                      </Badge>
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {purchase.user.display_name || purchase.user.username || `用户 #${purchase.user.id}`} ·{' '}
@@ -135,42 +179,49 @@ export default function AdminPointsPage() {
                     </p>
                     {purchase.note ? <p className="mt-1 text-xs text-muted-foreground">{purchase.note}</p> : null}
                   </div>
-                  <div className="flex shrink-0 gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={decidePurchase.isPending}
-                      onClick={() => {
-                        if (!window.confirm(`确认已为「${purchase.item_name}」完成履约？`)) return
-                        decidePurchase.mutate(
-                          { id: purchase.id, status: 'fulfilled', note: '管理员已标记处理' },
-                          {
-                            onSuccess: () => toast.success('已标记完成'),
-                            onError: (err) => toast.error(extractError(err, '操作失败')),
-                          },
-                        )
-                      }}
-                    >
-                      <Check className="h-3.5 w-3.5" /> 完成
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={decidePurchase.isPending}
-                      onClick={() => {
-                        if (!window.confirm(`驳回「${purchase.item_name}」并退回 ${purchase.price_coin} 积分？`)) return
-                        decidePurchase.mutate(
-                          { id: purchase.id, status: 'rejected', note: '管理员驳回，积分已退回' },
-                          {
-                            onSuccess: () => toast.success('已驳回并退回积分'),
-                            onError: (err) => toast.error(extractError(err, '操作失败')),
-                          },
-                        )
-                      }}
-                    >
-                      <X className="h-3.5 w-3.5" /> 驳回
-                    </Button>
-                  </div>
+                  {purchase.status === 'paid' ? (
+                    <div className="flex shrink-0 gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={decidePurchase.isPending}
+                        onClick={() => {
+                          if (!window.confirm(`确认已为「${purchase.item_name}」完成履约？`)) return
+                          decidePurchase.mutate(
+                            { id: purchase.id, status: 'fulfilled', note: '管理员已标记处理' },
+                            {
+                              onSuccess: () => toast.success('已标记完成'),
+                              onError: (err) => toast.error(extractError(err, '操作失败')),
+                            },
+                          )
+                        }}
+                      >
+                        <Check className="h-3.5 w-3.5" /> 完成
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={decidePurchase.isPending}
+                        onClick={() => {
+                          if (
+                            !window.confirm(
+                              `驳回「${purchase.item_name}」并退回 ${purchase.price_coin} 积分？`,
+                            )
+                          )
+                            return
+                          decidePurchase.mutate(
+                            { id: purchase.id, status: 'rejected', note: '管理员驳回，积分已退回' },
+                            {
+                              onSuccess: () => toast.success('已驳回并退回积分'),
+                              onError: (err) => toast.error(extractError(err, '操作失败')),
+                            },
+                          )
+                        }}
+                      >
+                        <X className="h-3.5 w-3.5" /> 驳回
+                      </Button>
+                    </div>
+                  ) : null}
                 </div>
               ))}
             </div>

@@ -96,18 +96,20 @@ export function useUpdateShopItem() {
   })
 }
 
+export type ShopPurchaseStatus = 'paid' | 'fulfilled' | 'rejected'
+
 export interface AdminShopPurchase {
   id: number
   item_id: number
   item_name: string
   price_coin: number
-  status: 'paid' | 'fulfilled' | 'rejected'
+  status: ShopPurchaseStatus
   note: string | null
   created_at: string
   user: { id: number; username: string; display_name: string | null }
 }
 
-export function useAdminShopPurchases(status: 'paid' | 'fulfilled' | 'rejected' = 'paid') {
+export function useAdminShopPurchases(status: ShopPurchaseStatus = 'paid') {
   return useQuery({
     queryKey: ['gamification', 'admin', 'shop', 'purchases', status],
     queryFn: async () =>
