@@ -316,6 +316,18 @@ class Settings(BaseSettings):
     # 全站登录墙：开启后除认证/健康/能力探测外，所有 /api 业务接口都要 Bearer token。
     auth_wall_enabled: bool = False
 
+    # --- Regional access ---
+    # 开启后按受限服务地区（中国大陆、香港、澳门、台湾）区分访客：
+    # 受限地区匿名只看封面；海外匿名只读文章与论坛；登录用户不受影响。
+    # IP 归属只是访问控制，不是法律免责依据，且会因代理/VPN 误判。
+    region_access_enabled: bool = False
+    region_access_restricted_ip_list_path: str = ""
+
+    # 邀请制注册：为空时邀请码校验关闭（仅供本地/测试）；
+    # 生产必须设置一个可读的邀请码，注册接口同时要求邮箱验证码。
+    registration_invite_code: str = ""
+    registration_email_code_required: bool = False
+
     # --- Logging ---
     log_level: str = Field(default="INFO", pattern=r"^(DEBUG|INFO|WARNING|ERROR|CRITICAL)$")
     json_logs: bool = False
@@ -477,6 +489,18 @@ class Settings(BaseSettings):
                 raise ValueError(
                     "Mainland gate IP list is missing: "
                     f"{list_path}. Set RUBBISH_MAINLAND_GATE_IP_LIST_PATH."
+                )
+
+        if self.region_access_enabled:
+            region_path = (
+                Path(self.region_access_restricted_ip_list_path).expanduser()
+                if self.region_access_restricted_ip_list_path.strip()
+                else Path(__file__).resolve().parents[1] / "data" / "restricted_service_ip_ranges.txt"
+            )
+            if not region_path.is_file():
+                raise ValueError(
+                    "Regional access IP list is missing: "
+                    f"{region_path}. Set RUBBISH_REGION_ACCESS_RESTRICTED_IP_LIST_PATH."
                 )
 
         # Production-specific checks.

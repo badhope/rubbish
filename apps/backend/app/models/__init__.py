@@ -387,6 +387,9 @@ class EmailLoginCode(Base, TenantScopedMixin):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    # login = 邮箱验证码登录；register = 注册前的邮箱所有权证明。
+    # 同一张表复用节流/哈希/尝试次数，但两类码互不消费。
+    purpose: Mapped[str] = mapped_column(String(16), nullable=False, default="login")
     # SHA-256(email:code:server_secret) 的 hex——库里泄露也不可回用
     code_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     # 每码最多 5 次尝试；超过即作废（校验时删除）

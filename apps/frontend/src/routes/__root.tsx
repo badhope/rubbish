@@ -6,6 +6,7 @@ import { MobileAppShell } from '@/components/layout/MobileAppShell'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import { useAuth } from '@/hooks/use-auth'
 import { useAuthStore, type AuthUser } from '@/lib/auth'
+import { isOverseasReadPath, readAccessRegion } from '@/lib/access'
 import { api } from '@/lib/api'
 import { Toaster } from '@/components/ui/sonner'
 import { NotFoundPage } from '@/components/common/not-found-page'
@@ -63,8 +64,12 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       }
     }
     const after = useAuthStore.getState()
-    if (!after.token && !PUBLIC_PATHS.has(location.pathname)) {
-      throw redirect({ to: '/' })
+    if (!after.token) {
+      const region = readAccessRegion()
+      const overseasRead = region === 'overseas' && isOverseasReadPath(location.pathname)
+      if (!PUBLIC_PATHS.has(location.pathname) && !overseasRead) {
+        throw redirect({ to: '/' })
+      }
     }
   },
   component: RootLayout,

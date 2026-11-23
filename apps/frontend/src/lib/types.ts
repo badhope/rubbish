@@ -136,6 +136,9 @@ export interface UserCreate {
   password: string
   captcha_token?: string
   captcha_answer?: string
+  /** 邀请制注册：邮箱验证码 + 邀请码。 */
+  email_code?: string
+  invite_code?: string
 }
 
 export interface UserLogin {
@@ -216,6 +219,9 @@ export interface CapabilitiesResponse {
   email_verification_required: boolean
   oidc_enabled: boolean
   registration_open: boolean
+  /** 注册是否需要邀请码 / 邮箱验证码（生产邀请制）。 */
+  registration_invite_required: boolean
+  registration_email_code_required: boolean
   /** 注册是否必须答自建验证码（管理员可在后台切换）。 */
   captcha_required_for_registration: boolean
   /** 投稿表单是否允许作者填写官方 DOI。 */

@@ -25,6 +25,7 @@ PUBLIC_API_PATHS = frozenset(
     {
         "/api/auth/captcha",
         "/api/auth/register",
+        "/api/auth/register/email-code/request",
         "/api/auth/login",
         "/api/auth/login/2fa",
         "/api/auth/refresh",
@@ -62,7 +63,7 @@ def _bearer_token(request: Request) -> str | None:
     return token or None
 
 
-def _is_public(path: str) -> bool:
+def is_public_api_path(path: str) -> bool:
     return path in PUBLIC_API_PATHS or any(path.startswith(p) for p in PUBLIC_API_PREFIXES)
 
 
@@ -75,9 +76,13 @@ class AuthWallMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         path = request.url.path
+        # Overseas guests get a narrow read-only window for published
+        # articles/forum threads; everything else still needs a token.
+        if getattr(request.state, "overseas_read_guest", False):
+            return await call_next(request)
         # CORS preflight must pass; non-API paths (SPA shell, static files) are
         # handled by the frontend route guard.
-        if request.method == "OPTIONS" or not path.startswith("/api/") or _is_public(path):
+        if request.method == "OPTIONS" or not path.startswith("/api/") or is_public_api_path(path):
             return await call_next(request)
 
         token = _bearer_token(request)

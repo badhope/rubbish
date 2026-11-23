@@ -30,6 +30,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { useLogout } from '@/hooks/api/use-auth'
 import { useUnreadCount } from '@/hooks/api/use-modules'
 import { cn } from '@/lib/utils'
+import { readAccessRegion } from '@/lib/access'
 import { BrandMark } from '@/components/common/brand-mark'
 import { AmbientBackdrop } from '@/components/common/ambient-backdrop'
 import { filterNav, resolveActiveNavPath, type NavItem } from '@/lib/nav'
@@ -87,6 +88,9 @@ const NAV: NavItem[] = [
 ]
 
 const PUBLIC_NAV = NAV.filter((item) => item.group === '一级入口')
+const GUEST_READ_NAV = PUBLIC_NAV.filter((item) =>
+  ['/catalog', '/forum', '/tags'].includes(item.to),
+)
 
 // 公开页与工作台的分界：站务、互评指派、内容台、待整理列表保留业务左栏；
 // 其余页面用顶部 5 导航，公开页不再出现全局左栏。
@@ -160,6 +164,7 @@ export function AppShell() {
   const [openGroup, setOpenGroup] = useState<string>('一级入口')
   const [openSubgroup, setOpenSubgroup] = useState<string>('')
   const { isAuthenticated, isAdmin, user, logout } = useAuth()
+  const overseasGuest = !isAuthenticated && readAccessRegion() === 'overseas'
   const { data: unread } = useUnreadCount({ enabled: isAuthenticated })
   const displayName = user?.display_name || user?.username || ''
   const navigate = useNavigate()
@@ -406,9 +411,9 @@ export function AppShell() {
               </span>
             </Link>
 
-            {isAuthenticated && (
+            {(isAuthenticated || overseasGuest) && (
               <nav className="hidden items-center gap-3 text-sm md:flex" aria-label="主导航">
-                {PUBLIC_NAV.map((item) => {
+                {(isAuthenticated ? PUBLIC_NAV : GUEST_READ_NAV).map((item) => {
                 const active = publicActive === item.to
                 return (
                   <Link

@@ -22,6 +22,9 @@ type SecurityStatus = {
   rotation_window_open: boolean
   auth_wall_enabled?: boolean
   mainland_gate_enabled?: boolean
+  region_access_enabled?: boolean
+  registration_invite_required?: boolean
+  registration_email_code_required?: boolean
 }
 
 type EmailStatus = {
@@ -243,6 +246,11 @@ export default function SystemHealthPage() {
                     <p className="text-muted-foreground">
                       访问控制：{security.auth_wall_enabled ? '全站登录墙已开启' : '站点公开访问'}；
                       {security.mainland_gate_enabled ? '大陆密码闸门开启' : '大陆密码闸门已关闭'}。
+                    </p>
+                    <p className="text-muted-foreground">
+                      地区策略：{security.region_access_enabled ? '大陆/港澳台匿名只看封面，海外匿名只读文章与论坛' : '未启用'}；
+                      注册：{security.registration_invite_required ? '仅邀请码' : '未设邀请码'}，
+                      {security.registration_email_code_required ? '需邮箱验证码' : '不需邮箱验证码'}。
                     </p>
                   </>
                 ) : (

@@ -14,6 +14,7 @@ bulk revocation (revoke-all, password change).
 
 from __future__ import annotations
 
+import hmac
 import json
 from datetime import UTC, datetime, timedelta
 
@@ -45,6 +46,7 @@ from app.core.email_templates import (
     duplicate_registration,
 )
 from app.core.email_templates import email_login_code as _email_login_code_template
+from app.core.email_templates import registration_email_code as _registration_email_code_template
 from app.core.email_templates import (
     reset_password as reset_password_tpl,
 )
@@ -142,6 +144,57 @@ async def captcha_challenge() -> dict[str, str]:
     return issue_captcha()
 
 
+async def _consume_registration_email_code(
+    db: AsyncSession,
+    email: str,
+    code: str | None,
+) -> None:
+    """Consume the latest unconsumed registration code for ``email``.
+
+    Registration codes and login codes share one table but are separated by
+    ``purpose`` so one flow can never consume the other's code.
+    """
+    if not code or not code.strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="请填写邮箱验证码",
+        )
+    tenant_id = require_tenant_id()
+    now = utcnow()
+    row = (
+        await db.execute(
+            select(EmailLoginCode)
+            .where(
+                EmailLoginCode.tenant_id == tenant_id,
+                EmailLoginCode.email == email.strip().lower(),
+                EmailLoginCode.purpose == "register",
+                EmailLoginCode.consumed_at.is_(None),
+            )
+            .order_by(EmailLoginCode.created_at.desc(), EmailLoginCode.id.desc())
+            .limit(1)
+        )
+    ).scalar_one_or_none()
+    expires = row.expires_at if row is not None else None
+    if expires is not None and expires.tzinfo is None:
+        expires = expires.replace(tzinfo=UTC)
+    if row is None or expires is None or expires < now:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="邮箱验证码无效或已过期，请重新获取",
+        )
+    if not codes_match(row.email, code.strip(), row.code_hash):
+        row.attempts += 1
+        if row.attempts >= MAX_VERIFY_ATTEMPTS:
+            await db.delete(row)
+        await db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="邮箱验证码无效或已过期，请重新获取",
+        )
+    row.consumed_at = now
+    await db.commit()
+
+
 @router.post(
     "/register",
     response_model=MessageResponse,
@@ -171,12 +224,27 @@ async def register(
     # default as the fallback. Read it before validating the token.
     from app.core.site_settings import get_site_flag
 
+    if settings.registration_invite_code.strip():
+        supplied = (payload.invite_code or "").strip().upper()
+        expected = settings.registration_invite_code.strip().upper()
+        if not hmac.compare_digest(supplied, expected):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="邀请码无效，请向读者群管理员确认",
+            )
+
+    email_verified_by_code = False
+    if settings.registration_email_code_required:
+        await _consume_registration_email_code(db, payload.email, payload.email_code)
+        email_verified_by_code = True
+
+    # 邮箱验证码本身就是比算术题更强的所有权证明；两条都弹只会劝退。
     captcha_required = await get_site_flag(db, tenant_id, "captcha_required_for_registration")
     await verify_captcha_token(
         request,
         payload.captcha_token,
         payload.captcha_answer,
-        required=captcha_required,
+        required=captcha_required and not email_verified_by_code,
     )
     user = User(
         tenant_id=tenant_id,
@@ -184,6 +252,7 @@ async def register(
         username=payload.username,
         hashed_password=hash_password(payload.password),
         is_admin=False,
+        is_email_verified=email_verified_by_code,
     )
     db.add(user)
     try:
@@ -203,12 +272,14 @@ async def register(
     await gamification.award(db, user, "register", ref_type="user", ref_id=str(user.id))
     await db.commit()
 
-    # Fire-and-forget verification email. Failure is logged but does not
-    # fail registration — the user can request a resend via /resend-verification.
-    try:
-        await _send_verification_email(user)
-    except Exception:
-        logger.warning("verification_email_send_failed", user_id=user.id, exc_info=True)
+    # 注册验证码已经证明邮箱所有权时，不再重复发验证链接。
+    if not email_verified_by_code:
+        # Fire-and-forget verification email. Failure is logged but does not
+        # fail registration — the user can request a resend via /resend-verification.
+        try:
+            await _send_verification_email(user)
+        except Exception:
+            logger.warning("verification_email_send_failed", user_id=user.id, exc_info=True)
 
     # Same body as the duplicate branch; the client signs in via /auth/login.
     return MessageResponse(message=_REGISTER_MESSAGE)
@@ -793,6 +864,111 @@ async def forgot_password(
 
 
 @router.post(
+    "/register/email-code/request",
+    response_model=MessageResponse,
+)
+async def request_registration_email_code(
+    payload: EmailCodeRequest,
+    db: AsyncSession = Depends(get_db),
+) -> MessageResponse:
+    """Send a registration ownership code to an unregistered email.
+
+    Always returns the same 200 body so an attacker cannot use this endpoint
+    to enumerate existing accounts. Unlike the login-code endpoint, this one
+    must send to addresses that are not in ``users`` yet.
+    """
+    if not settings.registration_email_code_required:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="当前注册流程不需要邮箱验证码",
+        )
+    if settings.email_backend != "smtp":
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="邮箱验证码未启用：站点尚未配置 SMTP 发信。",
+        )
+
+    tenant_id = require_tenant_id()
+    email = payload.email.strip().lower()
+    now = utcnow()
+    generic = MessageResponse(message="如果该邮箱可以注册，验证码已发送，请查收（含垃圾邮件箱）")
+
+    result = await db.execute(
+        select(User).where(
+            User.tenant_id == tenant_id,
+            func.lower(User.email) == email,
+        )
+    )
+    if result.scalar_one_or_none() is not None:
+        return generic
+
+    recent = (
+        await db.execute(
+            select(func.count(EmailLoginCode.id)).where(
+                EmailLoginCode.tenant_id == tenant_id,
+                EmailLoginCode.email == email,
+                EmailLoginCode.purpose == "register",
+                EmailLoginCode.created_at >= now - timedelta(seconds=SEND_INTERVAL_SECONDS),
+            )
+        )
+    ).scalar_one()
+    if recent >= 1:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="验证码发送过于频繁，请 1 分钟后再试。",
+        )
+    today = (
+        await db.execute(
+            select(func.count(EmailLoginCode.id)).where(
+                EmailLoginCode.tenant_id == tenant_id,
+                EmailLoginCode.email == email,
+                EmailLoginCode.purpose == "register",
+                EmailLoginCode.created_at >= now - timedelta(hours=24),
+            )
+        )
+    ).scalar_one()
+    if today >= DAILY_SEND_LIMIT:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="今日验证码请求次数已达上限，请明天再试。",
+        )
+
+    await db.execute(
+        delete(EmailLoginCode).where(
+            EmailLoginCode.tenant_id == tenant_id,
+            EmailLoginCode.email == email,
+            EmailLoginCode.purpose == "register",
+            EmailLoginCode.consumed_at.is_(None),
+        )
+    )
+    code = generate_code()
+    db.add(
+        EmailLoginCode(
+            tenant_id=tenant_id,
+            email=email,
+            purpose="register",
+            code_hash=hash_code(email, code),
+            expires_at=now + timedelta(minutes=CODE_TTL_MINUTES),
+        )
+    )
+    await db.commit()
+
+    subject, body, html = _registration_email_code_template(code, CODE_TTL_MINUTES)
+    try:
+        await get_email_sender().send(to=email, subject=subject, body=body, html=html)
+        allow_email_to(email)
+    except Exception as exc:
+        logger.warning(
+            "registration_email_code_send_failed", email_domain=email.split("@")[-1], exc_info=True
+        )
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="验证码邮件发送失败，请稍后再试。",
+        ) from exc
+    return MessageResponse(message="注册验证码已发送，请查收（10 分钟内有效，含垃圾邮件箱）")
+
+
+@router.post(
     "/email-code/request",
     response_model=MessageResponse,
 )
@@ -823,6 +999,7 @@ async def request_email_login_code(
             select(func.count(EmailLoginCode.id)).where(
                 EmailLoginCode.tenant_id == tenant_id,
                 EmailLoginCode.email == email,
+                EmailLoginCode.purpose == "login",
                 EmailLoginCode.created_at >= now - timedelta(seconds=SEND_INTERVAL_SECONDS),
             )
         )
@@ -838,6 +1015,7 @@ async def request_email_login_code(
             select(func.count(EmailLoginCode.id)).where(
                 EmailLoginCode.tenant_id == tenant_id,
                 EmailLoginCode.email == email,
+                EmailLoginCode.purpose == "login",
                 EmailLoginCode.created_at >= now - timedelta(hours=24),
             )
         )
@@ -853,6 +1031,7 @@ async def request_email_login_code(
         delete(EmailLoginCode).where(
             EmailLoginCode.tenant_id == tenant_id,
             EmailLoginCode.email == email,
+            EmailLoginCode.purpose == "login",
             EmailLoginCode.consumed_at.is_(None),
         )
     )
@@ -860,6 +1039,7 @@ async def request_email_login_code(
     row = EmailLoginCode(
         tenant_id=tenant_id,
         email=email,
+        purpose="login",
         code_hash=hash_code(email, code),
         expires_at=now + timedelta(minutes=CODE_TTL_MINUTES),
     )
@@ -919,6 +1099,7 @@ async def verify_email_login_code(
             .where(
                 EmailLoginCode.tenant_id == tenant_id,
                 EmailLoginCode.email == email,
+                EmailLoginCode.purpose == "login",
                 EmailLoginCode.consumed_at.is_(None),
             )
             # 取最新一条：request 端点已保证生产路径同邮箱只有一条未消费码，

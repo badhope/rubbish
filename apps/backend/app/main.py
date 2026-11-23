@@ -54,6 +54,7 @@ from app.core.modules import load_all, registry
 from app.core.monitoring import init_monitoring
 from app.core.auth_wall import AuthWallMiddleware
 from app.core.mainland_gate import MainlandGateMiddleware
+from app.core.region_access import RegionAccessMiddleware
 from app.core.rate_limit_store import close_rate_limiter_store
 from app.core.tenant import TenantContextMiddleware
 from app.middleware.csrf import CSRFMiddleware
@@ -316,9 +317,14 @@ app.add_middleware(HTTPMetricsMiddleware)
 # except the explicit sign-in/recovery/health allowlist.
 app.add_middleware(AuthWallMiddleware)
 
+# Regional access sits outside the auth wall: it sets the region cookie for
+# the SPA, blocks anonymous restricted-region API calls, and lets overseas
+# guests through to the read-only article/forum allowlist below.
+app.add_middleware(RegionAccessMiddleware)
+
 # Mainland gate is retained for emergency use but is off now that the site has
-# a global login wall. Register it last so, if re-enabled, it can still show its
-# password page before the auth wall runs.
+# a regional access policy. Register it last so, if re-enabled, it can still
+# show its password page before the regional/auth layers run.
 app.add_middleware(MainlandGateMiddleware)
 
 

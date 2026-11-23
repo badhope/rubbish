@@ -30,6 +30,9 @@ class CapabilitiesResponse(BaseModel):
     email_verification_required: bool
     oidc_enabled: bool
     registration_open: bool
+    # 注册页是否要求邀请码 / 邮箱验证码（生产邀请制）。
+    registration_invite_required: bool
+    registration_email_code_required: bool
     # 运营开关：注册是否必须答验证码、发布是否允许作者填写官方 DOI。
     captcha_required_for_registration: bool
     doi_author_entry_enabled: bool
@@ -76,6 +79,8 @@ async def get_capabilities(
         email_verification_required=False,
         oidc_enabled=settings.oidc_enabled,
         registration_open=True,
+        registration_invite_required=bool(settings.registration_invite_code.strip()),
+        registration_email_code_required=settings.registration_email_code_required,
         captcha_required_for_registration=flags["captcha_required_for_registration"],
         doi_author_entry_enabled=flags["doi_author_entry_enabled"],
         upload_max_bytes=_MAX_UPLOAD_BYTES,

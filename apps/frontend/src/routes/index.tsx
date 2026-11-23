@@ -11,6 +11,7 @@ import { api } from '@/lib/api'
 import { useAuth } from '@/hooks/use-auth'
 import { useEditorialPicks, useResources } from '@/hooks/api/use-modules'
 import { formatAuthors } from '@/lib/utils'
+import { readAccessRegion } from '@/lib/access'
 import { AnnouncementChip, AnnouncementDialog, useAnnouncementPortal } from '@/components/common/announcement-dialog'
 import { AppearanceMenu } from '@/components/appearance-menu'
 import { ArticleCover } from '@/components/common/article-cover'
@@ -55,6 +56,7 @@ function displayDate(iso: string | null | undefined): string {
 const SITE_QQ_GROUP = '1084870548'
 
 function GuestCover() {
+  const overseas = readAccessRegion() === 'overseas'
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-5 py-16">
       <div className="pointer-events-none absolute inset-0 opacity-70" aria-hidden>
@@ -70,20 +72,46 @@ function GuestCover() {
           Rubbish
         </p>
         <h1 className="mt-3 font-serif text-4xl leading-none tracking-tight sm:text-5xl">
-          仅对注册用户开放
+          {overseas ? (
+            <>
+              <span className="block">文章与讨论区</span>
+              <span className="block">对境外读者开放</span>
+            </>
+          ) : (
+            '仅对注册用户开放'
+          )}
         </h1>
         <p className="mt-4 text-sm leading-7 text-muted-foreground">
-          登录后可以阅读、写作，并参与站内讨论。
+          {overseas
+            ? '无需注册即可阅读文章和讨论区；写作、回复与账号功能需要邀请注册。'
+            : '登录后可以阅读、写作，并参与站内讨论。'}
         </p>
 
+        {overseas ? (
+          <div className="mt-7 grid w-full gap-3 sm:grid-cols-2">
+            <Button asChild size="lg" className="h-11 w-full px-6">
+              <Link to="/catalog">
+                读文章
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="h-11 w-full px-6">
+              <Link to="/forum">
+                逛讨论区
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        ) : null}
+
         <div className="mt-7 flex w-full flex-wrap items-center justify-center gap-3">
-          <Button asChild size="lg" className="h-11 min-w-32 px-6">
+          <Button asChild size={overseas ? 'default' : 'lg'} variant={overseas ? 'ghost' : 'default'} className={overseas ? 'h-9 px-4' : 'h-11 min-w-32 px-6'}>
             <Link to="/login">
               <LogIn className="h-4 w-4" />
               登录
             </Link>
           </Button>
-          <Button asChild size="lg" variant="outline" className="h-11 min-w-32 px-6">
+          <Button asChild size={overseas ? 'default' : 'lg'} variant="outline" className={overseas ? 'h-9 px-4' : 'h-11 min-w-32 px-6'}>
             <Link to="/register">
               注册
               <ArrowRight className="h-4 w-4" />

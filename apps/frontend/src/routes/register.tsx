@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { AxiosError } from 'axios'
+import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRegister } from '@/hooks/api/use-auth'
 import { useCapabilities } from '@/hooks/use-capabilities'
@@ -21,7 +22,11 @@ export function RegisterPage() {
   const registerMut = useRegister()
   const capabilities = useCapabilities()
   const emailDelivery = capabilities.data?.email_delivery ?? false
-  const captchaRequired = capabilities.data?.captcha_required_for_registration ?? true
+  const emailCodeRequired = capabilities.data?.registration_email_code_required ?? false
+  const inviteRequired = capabilities.data?.registration_invite_required ?? false
+  // 邮箱验证码本身就是所有权证明；同时弹算术题只会增加无意义的门槛。
+  const captchaRequired =
+    (capabilities.data?.captcha_required_for_registration ?? true) && !emailCodeRequired
   const [email, setEmail] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -30,6 +35,11 @@ export function RegisterPage() {
   const [captchaAnswer, setCaptchaAnswer] = useState('')
   const [captchaError, setCaptchaError] = useState(false)
   const [captchaAttempt, setCaptchaAttempt] = useState(0)
+  const [emailCode, setEmailCode] = useState('')
+  const [inviteCode, setInviteCode] = useState('')
+  const [codeSent, setCodeSent] = useState(false)
+  const [codeSending, setCodeSending] = useState(false)
+  const [codeCooldown, setCodeCooldown] = useState(0)
   const [attempted, setAttempted] = useState(false)
 
   const emailValid = EMAIL_RE.test(email.trim())
@@ -38,8 +48,17 @@ export function RegisterPage() {
   const confirmValid = confirm.length >= 8
   const passwordsMatch = password === confirm
   const captchaValid = !captchaRequired || (captcha !== null && captchaAnswer.trim() !== '')
+  const emailCodeValid = !emailCodeRequired || /^\d{6}$/.test(emailCode.trim())
+  const inviteValid = !inviteRequired || inviteCode.trim().length >= 4
   const formValid =
-    emailValid && usernameValid && passwordValid && confirmValid && passwordsMatch && captchaValid
+    emailValid &&
+    usernameValid &&
+    passwordValid &&
+    confirmValid &&
+    passwordsMatch &&
+    captchaValid &&
+    emailCodeValid &&
+    inviteValid
 
   const emailHint = emailValid ? '' : '邮箱格式不正确，请检查后再填'
   const usernameHint = usernameValid ? '' : '用户名至少 3 个字符'
@@ -49,6 +68,20 @@ export function RegisterPage() {
     : passwordsMatch
       ? ''
       : '两次输入的密码不一致'
+  const emailCodeHint = !emailCodeRequired
+    ? ''
+    : emailCode.trim() === ''
+      ? '请先获取并填写邮箱验证码'
+      : !/^\d{6}$/.test(emailCode.trim())
+        ? '邮箱验证码应为 6 位数字'
+        : ''
+  const inviteHint = !inviteRequired
+    ? ''
+    : inviteCode.trim() === ''
+      ? '请填写读者群里的邀请码'
+      : inviteCode.trim().length < 4
+        ? '邀请码格式不正确'
+        : ''
   const captchaHint = captchaRequired
     ? captchaError
       ? ''
@@ -87,6 +120,31 @@ export function RegisterPage() {
     }
   }, [capabilities.isLoading, captchaRequired, captchaAttempt])
 
+  useEffect(() => {
+    if (codeCooldown <= 0) return
+    const timer = window.setInterval(() => setCodeCooldown((v) => (v <= 1 ? 0 : v - 1)), 1000)
+    return () => window.clearInterval(timer)
+  }, [codeCooldown])
+
+  const sendEmailCode = async () => {
+    if (!emailValid || codeSending || codeCooldown > 0) return
+    setCodeSending(true)
+    try {
+      await api.post('/auth/register/email-code/request', { email: email.trim() })
+      setCodeSent(true)
+      setCodeCooldown(60)
+      toast.success('邮箱验证码已发送，请查收（含垃圾邮件箱）')
+    } catch (err) {
+      const msg =
+        err instanceof AxiosError
+          ? (err.response?.data as { detail?: string })?.detail ?? '验证码发送失败'
+          : '验证码发送失败'
+      toast.error(msg)
+    } finally {
+      setCodeSending(false)
+    }
+  }
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setAttempted(true)
@@ -102,11 +160,16 @@ export function RegisterPage() {
         password,
         captcha_token: captchaRequired ? captcha?.token : undefined,
         captcha_answer: captchaRequired ? captchaAnswer.trim() : undefined,
+        email_code: emailCodeRequired ? emailCode.trim() : undefined,
+        invite_code: inviteRequired ? inviteCode.trim() : undefined,
       })
       if (!('access_token' in result) || !result.access_token) {
         // 注册端点对成功与冲突返回同一响应（防枚举），且注册响应不再建立会话：
         // 有邮件投递 → 去验证页；否则 → 去登录页用刚设置的密码登录。
-        if (emailDelivery) {
+        if (emailCodeRequired) {
+          toast.success('注册成功，邮箱已验证，请使用刚设置的密码登录')
+          void navigate({ to: '/login' })
+        } else if (emailDelivery) {
           toast.success('注册成功，请查收邮件完成验证')
           void navigate({ to: '/verify-email', search: { email } })
         } else {
@@ -141,7 +204,9 @@ export function RegisterPage() {
         <CardHeader>
           <CardTitle className="text-2xl">开一个账号</CardTitle>
           <CardDescription>
-          有了账号，就可以留下句子、发布作品，也能在别处读到更多。
+          {inviteRequired
+            ? '注册仅限邀请：先填写邮箱验证码，再填写读者群里的邀请码。'
+            : '有了账号，就可以留下句子、发布作品，也能在别处读到更多。'}
           {capabilities.isFetched && !emailDelivery && (
             <span className="mt-2 block text-xs text-muted-foreground">
               当前站点未开通邮件服务：注册后可直接用邮箱和密码登录，邮箱验证与找回密码暂不可用，
@@ -167,6 +232,70 @@ export function RegisterPage() {
                 <p className="text-xs text-destructive">{emailHint}</p>
               ) : null}
             </div>
+            {emailCodeRequired && (
+              <div className="space-y-2">
+                <Label htmlFor="email-code">邮箱验证码</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="email-code"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    value={emailCode}
+                    onChange={(e) => setEmailCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="6 位数字"
+                    aria-invalid={attempted && !emailCodeValid}
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="shrink-0"
+                    onClick={() => void sendEmailCode()}
+                    disabled={!emailValid || codeSending || codeCooldown > 0}
+                  >
+                    {codeSending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : codeCooldown > 0 ? (
+                      `${codeCooldown}s`
+                    ) : codeSent ? (
+                      '重发'
+                    ) : (
+                      '发送验证码'
+                    )}
+                  </Button>
+                </div>
+                {attempted && emailCodeHint ? (
+                  <p className="text-xs text-destructive">{emailCodeHint}</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    验证码发到上面的邮箱；注册还需要读者群邀请码。
+                  </p>
+                )}
+              </div>
+            )}
+            {inviteRequired && (
+              <div className="space-y-2">
+                <Label htmlFor="invite-code">邀请码</Label>
+                <Input
+                  id="invite-code"
+                  value={inviteCode}
+                  onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                  placeholder="例如 RUBBISH-READER-XXXX-XXXX"
+                  autoCapitalize="characters"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  aria-invalid={attempted && !inviteValid}
+                  required
+                />
+                {attempted && inviteHint ? (
+                  <p className="text-xs text-destructive">{inviteHint}</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    邀请码在读者群公告里；进群才能看到。
+                  </p>
+                )}
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="username">用户名</Label>
               <Input

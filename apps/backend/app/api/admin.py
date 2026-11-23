@@ -108,6 +108,9 @@ async def security_status(
         # actually enforcing the wall rather than guessing from env files.
         "auth_wall_enabled": settings.auth_wall_enabled,
         "mainland_gate_enabled": settings.mainland_gate_enabled,
+        "region_access_enabled": settings.region_access_enabled,
+        "registration_invite_required": bool(settings.registration_invite_code.strip()),
+        "registration_email_code_required": settings.registration_email_code_required,
     }
 
 

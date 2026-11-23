@@ -24,6 +24,9 @@ class UserCreate(BaseModel):
     # captcha_required_for_registration=True; ignored otherwise.
     captcha_token: str | None = None
     captcha_answer: str | None = None
+    # 邀请制注册：邮箱验证码证明邮箱所有权，邀请码由站务在读者群发放。
+    email_code: str | None = None
+    invite_code: str | None = None
 
     @field_validator("email")
     @classmethod

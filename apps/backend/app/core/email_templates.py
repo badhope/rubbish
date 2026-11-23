@@ -127,6 +127,34 @@ def email_login_code(code: str, expire_minutes: int) -> tuple[str, str, str]:
     return subject, text, _shell(title="登录验证码", body_html=body_html)
 
 
+def registration_email_code(code: str, expire_minutes: int) -> tuple[str, str, str]:
+    """注册前的邮箱所有权验证码。
+
+    与登录码分开：注册码只在注册接口消费，登录码只在登录接口消费，避免
+    同一邮箱两条流程互相把对方的码吃掉。
+    """
+    subject = f"【{settings.site_name}】注册验证码 {code}（{expire_minutes} 分钟内有效）"
+    text = (
+        f"你的注册验证码是：{code}\n"
+        "\n"
+        f"{expire_minutes} 分钟内有效，仅可使用一次。\n"
+        "注册还需要站点邀请码；没有邀请码时，请先加入读者群获取。\n"
+        "如果不是你本人在注册，请忽略本邮件——验证码作废不会创建账号。\n"
+        "本邮件由 Rubbish 社区系统发送（rubbish.argjiemi.cn）。"
+    )
+    body_html = (
+        f'<p style="margin:0 0 14px;">你正在注册 <strong>{escape(settings.site_name)}</strong>。'
+        f"本次注册验证码为：</p>"
+        f'<div style="margin:0 0 16px;padding:14px 20px;background:{PAPER};border:1px dashed {ACCENT};'
+        f"border-radius:8px;font-size:28px;font-weight:700;letter-spacing:8px;color:{INK};"
+        f'text-align:center;">{escape(code)}</div>'
+        f'<p style="margin:0 0 8px;font-size:13px;color:{MUTED};">'
+        f"{expire_minutes} 分钟内有效，仅可使用一次。注册还需要邀请码；"
+        f"没有邀请码请先加入读者群。请勿把验证码告诉任何人。</p>"
+    )
+    return subject, text, _shell(title="注册验证码", body_html=body_html)
+
+
 def duplicate_registration(username: str) -> tuple[str, str, str]:
     subject = f"{settings.site_name}：有人尝试用你的邮箱注册"
     text = (

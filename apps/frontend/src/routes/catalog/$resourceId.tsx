@@ -343,12 +343,14 @@ function CatalogDetailPage() {
                     <FileText className="h-4 w-4 shrink-0" />
                     <span className="truncate">PDF 版式预览</span>
                   </Button>
-                  <Button asChild variant="outline" size="sm" className="min-w-0">
-                    <a href={`/api/catalog/${id}/export?format=pdf&v=27`} download>
-                      <FileDown className="h-4 w-4 shrink-0" />
-                      <span className="truncate">下载 PDF</span>
-                    </a>
-                  </Button>
+                  {isAuthenticated && (
+                    <Button asChild variant="outline" size="sm" className="min-w-0">
+                      <a href={`/api/catalog/${id}/export?format=pdf&v=27`} download>
+                        <FileDown className="h-4 w-4 shrink-0" />
+                        <span className="truncate">下载 PDF</span>
+                      </a>
+                    </Button>
+                  )}
                 </div>
               )}
               <Button asChild variant="outline" size="sm" className="min-w-0">
@@ -549,7 +551,7 @@ function CatalogDetailPage() {
             </Card>
           )}
 
-          {data.has_file && (
+          {data.has_file && isAuthenticated && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-sm">下载</CardTitle>

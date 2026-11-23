@@ -148,7 +148,7 @@ export function Comments({ resourceId, title }: { resourceId: number; title?: st
         ) : (
           <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed bg-muted/30 px-4 py-3">
             <p className="text-sm text-muted-foreground">
-              登录后可阅读全部评论，并参与讨论。
+              未登录可阅读评论；登录后可参与讨论。
             </p>
             <Button asChild size="sm" variant="outline">
               <Link to="/login" search={{ redirect: `/catalog/${resourceId}` }}>
