@@ -104,6 +104,10 @@ async def security_status(
         # consult a fallback key? Useful when verifying a rotation
         # worked in production.
         "rotation_window_open": len(keys) > 1,
+        # Access model, surfaced so the admin security panel shows what is
+        # actually enforcing the wall rather than guessing from env files.
+        "auth_wall_enabled": settings.auth_wall_enabled,
+        "mainland_gate_enabled": settings.mainland_gate_enabled,
     }
 
 

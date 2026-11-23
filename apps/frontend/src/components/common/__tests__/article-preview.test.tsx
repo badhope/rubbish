@@ -43,7 +43,7 @@ describe('ArticlePreview', () => {
         body={'# 标题\n\n## 摘要\n\n摘要正文\n\n## 关键词\n\n关键词\n\n## 1 引言\n\n正文'}
       />,
     )
-    expect(container.querySelectorAll('h1')).toHaveLength(1)
+    expect(container.querySelector('h2')?.textContent).toBe('标题')
     expect(container.textContent).not.toContain('## 摘要')
     expect(container.textContent).toContain('正文')
   })
@@ -52,7 +52,8 @@ describe('ArticlePreview', () => {
     const { container } = render(
       <ArticlePreview title="标题" authors={[]} abstract="" keywords={[]} body={'## 标题\n\n正文'} />,
     )
-    expect(container.querySelectorAll('h2')).toHaveLength(0)
+    expect(container.querySelectorAll('h2')).toHaveLength(1)
+    expect(container.querySelector('h2')?.textContent).toBe('标题')
     expect(container.textContent).toContain('正文')
   })
 })

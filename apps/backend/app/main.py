@@ -52,6 +52,7 @@ from app.core.db import check_db_connection, dispose_engine, get_db
 from app.core.logging import configure_logging, get_logger
 from app.core.modules import load_all, registry
 from app.core.monitoring import init_monitoring
+from app.core.auth_wall import AuthWallMiddleware
 from app.core.mainland_gate import MainlandGateMiddleware
 from app.core.rate_limit_store import close_rate_limiter_store
 from app.core.tenant import TenantContextMiddleware
@@ -311,9 +312,13 @@ app.add_middleware(TenantContextMiddleware)
 # populated by FastAPI's router, but before the app processes the request.
 app.add_middleware(HTTPMetricsMiddleware)
 
-# Mainland gate is intentionally outermost: a blocked visitor must not reach
-# tenant resolution, static files, or any business route before the password
-# gate. Add it last so Starlette runs it first.
+# Global login wall: every business /api request needs a valid Bearer token,
+# except the explicit sign-in/recovery/health allowlist.
+app.add_middleware(AuthWallMiddleware)
+
+# Mainland gate is retained for emergency use but is off now that the site has
+# a global login wall. Register it last so, if re-enabled, it can still show its
+# password page before the auth wall runs.
 app.add_middleware(MainlandGateMiddleware)
 
 

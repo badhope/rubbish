@@ -52,8 +52,65 @@ function displayDate(iso: string | null | undefined): string {
   return new Intl.DateTimeFormat('zh-CN', { month: 'short', day: 'numeric' }).format(d)
 }
 
+const SITE_QQ_GROUP = '1084870548'
+
+function GuestCover() {
+  return (
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-5 py-16">
+      <div className="pointer-events-none absolute inset-0 opacity-70" aria-hidden>
+        <div className="absolute -left-24 top-16 h-56 w-56 rounded-full border border-border/60" />
+        <div className="absolute -right-20 bottom-10 h-64 w-64 rounded-full border border-dashed border-border/70" />
+      </div>
+
+      <main className="relative z-10 flex w-full max-w-md flex-col items-center text-center">
+        <Link to="/" aria-label="Rubbish 首页" className="transition-opacity hover:opacity-80">
+          <BrandMark decorative className="h-24 w-24 sm:h-28 sm:w-28" />
+        </Link>
+        <p className="mt-7 text-[10px] uppercase tracking-[0.34em] text-primary">
+          Rubbish
+        </p>
+        <h1 className="mt-3 font-serif text-4xl leading-none tracking-tight sm:text-5xl">
+          仅对注册用户开放
+        </h1>
+        <p className="mt-4 text-sm leading-7 text-muted-foreground">
+          登录后可以阅读、写作，并参与站内讨论。
+        </p>
+
+        <div className="mt-7 flex w-full flex-wrap items-center justify-center gap-3">
+          <Button asChild size="lg" className="h-11 min-w-32 px-6">
+            <Link to="/login">
+              <LogIn className="h-4 w-4" />
+              登录
+            </Link>
+          </Button>
+          <Button asChild size="lg" variant="outline" className="h-11 min-w-32 px-6">
+            <Link to="/register">
+              注册
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+
+        <div className="mt-10 w-full border-t border-border/70 pt-6">
+          <p className="text-xs leading-6 text-muted-foreground">
+            没有账号，或访问不了？加入读者群完成认证。
+          </p>
+          <p className="mt-2 font-mono text-lg font-semibold tracking-[0.08em] text-foreground">
+            QQ 群 {SITE_QQ_GROUP}
+          </p>
+        </div>
+      </main>
+    </div>
+  )
+}
+
 function HomePage() {
   const { isAuthenticated } = useAuth()
+  if (!isAuthenticated) return <GuestCover />
+  return <MemberHome />
+}
+
+function MemberHome() {
   const notice = useAnnouncementPortal()
   const editorialQuery = useEditorialPicks(4)
   const latestQ = useResources({ page: 1, page_size: 6, sort: 'created_at', order: 'desc' })
@@ -120,18 +177,9 @@ function HomePage() {
                 写一篇
               </Link>
             </Button>
-            {isAuthenticated ? (
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/me">我的</Link>
-              </Button>
-            ) : (
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/login">
-                  <LogIn className="h-3.5 w-3.5" />
-                  登录
-                </Link>
-              </Button>
-            )}
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/me">我的</Link>
+            </Button>
           </div>
         </div>
       </header>
@@ -155,7 +203,7 @@ function HomePage() {
               长文在内容库，半句话在讨论区。
             </p>
             <p className="mx-auto mt-4 max-w-xl text-[15px] leading-7 text-muted-foreground">
-              读别人的路，也写自己的停顿。不必登录，谁都能读；注册后就能写一篇、说一句。
+              读别人的路，也写自己的停顿。登录后可以阅读、写作，也能在讨论区说一句。
             </p>
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
               <Button asChild size="lg" className="h-11 px-5">

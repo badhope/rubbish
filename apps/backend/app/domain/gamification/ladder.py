@@ -70,7 +70,7 @@ IDENTITIES: tuple[IdentitySpec, ...] = (
             "登录后可以评论",
             "保存跨设备的阅读进度",
         ),
-        description="不登录也能读公开内容。想留下什么的时候，再注册。",
+        description="登录后可读站内内容。想留下什么的时候，再注册。",
     ),
     IdentitySpec(
         slug="author",

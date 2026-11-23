@@ -8,7 +8,7 @@ const STEPS = [
   {
     icon: MessagesSquare,
     title: '先读',
-    body: '不必登录也能读话题和公开作品。遇到想接的话，再登录回应。',
+    body: '登录后先读话题和公开作品。遇到想接的话，可以直接回应。',
   },
   {
     icon: LogIn,

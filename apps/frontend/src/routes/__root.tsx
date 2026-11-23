@@ -1,9 +1,10 @@
-import { createRootRouteWithContext } from '@tanstack/react-router'
+import { createRootRouteWithContext, redirect } from '@tanstack/react-router'
 import { QueryClient } from '@tanstack/react-query'
 import { TanStackRouterDevtools } from '@tanstack/router-devtools'
 import { AppShell } from '@/components/layout/AppShell'
 import { MobileAppShell } from '@/components/layout/MobileAppShell'
 import { useIsMobile } from '@/hooks/use-is-mobile'
+import { useAuth } from '@/hooks/use-auth'
 import { useAuthStore, type AuthUser } from '@/lib/auth'
 import { api } from '@/lib/api'
 import { Toaster } from '@/components/ui/sonner'
@@ -15,8 +16,24 @@ interface RouterContext {
   queryClient: QueryClient
 }
 
+// 访客只能停在封面和认证流程里。其余页面在路由层直接回封面；
+// 真正的数据隔离由后端 AuthWallMiddleware 兜底。
+const PUBLIC_PATHS = new Set([
+  '/',
+  '/login',
+  '/register',
+  '/forgot-password',
+  '/reset-password',
+  '/verify-email',
+  '/restore-account',
+  '/auth/oidc/callback',
+  '/privacy',
+  '/accessibility',
+  '/403',
+])
+
 export const Route = createRootRouteWithContext<RouterContext>()({
-  beforeLoad: async ({ context }) => {
+  beforeLoad: async ({ context, location }) => {
     // 刷新页面后 token 还在但 user 为 null：拉一次 /auth/me 回填 store，
     // 否则 admin 路由守卫会误判跳 /login，AppShell 用户菜单也会消失
     const { token, user } = useAuthStore.getState()
@@ -45,6 +62,10 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         }
       }
     }
+    const after = useAuthStore.getState()
+    if (!after.token && !PUBLIC_PATHS.has(location.pathname)) {
+      throw redirect({ to: '/' })
+    }
   },
   component: RootLayout,
   notFoundComponent: NotFoundPage,
@@ -57,10 +78,11 @@ function RootLayout() {
   // 移动端用独立的 MobileAppShell（底部 Tab 栏 + FAB + 底部抽屉），
   // 与桌面侧边栏是完全不同的设计，运行时按视口切换，共享同一套路由。
   const isMobile = useIsMobile()
+  const { isAuthenticated } = useAuth()
   return (
     <>
       {isMobile ? <MobileAppShell /> : <AppShell />}
-      <FeedbackLauncher />
+      {isAuthenticated && <FeedbackLauncher />}
       <Toaster position="top-right" richColors closeButton />
       {showDevtools && <TanStackRouterDevtools />}
     </>

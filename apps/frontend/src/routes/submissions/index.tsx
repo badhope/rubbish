@@ -132,7 +132,7 @@ const STATUS_HINTS: Record<string, string> = {
   major_revision: '需要大幅修改：按意见改完后，在详情逐条回应，再更新一版。',
   minor_revision: '需要小幅修改：调整后更新一版，通常不用再走一轮互评。',
   resubmitted: '修改版已发布，等待内容整理复核；有未尽事项可在详情补充。',
-  accepted: '已公开。作品进入内容库，谁都能读到。',
+  accepted: '已公开。作品进入内容库，登录后可读。',
   rejected: '本次已不通过。可以按反馈修改后重新发布。',
 }
 
@@ -579,7 +579,7 @@ function SubmissionsPage() {
                       <span className="font-medium">已公开</span>
                     </div>
                     <p className="mb-2 text-xs text-muted-foreground">
-                      这篇作品已经公开，谁都能读，不用登录。
+                      这篇作品已经公开，登录后可读。
                     </p>
                     <Button size="sm" variant="outline" asChild>
                       <Link

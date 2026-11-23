@@ -103,8 +103,9 @@ services:
       # Caddy 在同一个容器网络里，X-Forwarded-For 只有一跳；
       # 打开后限流按真实客户端 IP 计数，而不是按代理 IP（否则全站共用一个桶）。
       RUBBISH_TRUSTED_PROXIES_COUNT: ${RUBBISH_TRUSTED_PROXIES_COUNT:-1}
-      # 大陆 IP 访问闸门：命中 CN 网段先显示密码页，验证后即可访问。
-      # 密码至少 7 位；未设置密码时 enabled=true 会让应用启动失败。
+      # 全站登录墙：访客只能看到封面和登录/注册。
+      RUBBISH_AUTH_WALL_ENABLED: ${RUBBISH_AUTH_WALL_ENABLED:-false}
+      # 大陆密码闸门由登录墙替代；保留开关供紧急回退。
       RUBBISH_MAINLAND_GATE_ENABLED: ${RUBBISH_MAINLAND_GATE_ENABLED:-false}
       RUBBISH_MAINLAND_GATE_PASSWORD: ${RUBBISH_MAINLAND_GATE_PASSWORD:-}
       RUBBISH_MAINLAND_GATE_GROUP: ${RUBBISH_MAINLAND_GATE_GROUP:-1084870548}

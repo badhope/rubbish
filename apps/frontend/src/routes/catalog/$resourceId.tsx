@@ -674,7 +674,7 @@ function CatalogDetailPage() {
             </Button>
           ) : (
             <p className="rounded-lg border border-dashed bg-muted/30 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-              游客模式：可阅读与下载全部公开内容。
+              本站仅对登录用户开放；登录后可阅读、下载并收藏内容。
               <Link to="/login" search={{ redirect: `/catalog/${id}` }} className="text-primary hover:underline">
                 登录
               </Link>

@@ -375,7 +375,7 @@ export function AppShell() {
             <Outlet />
           </PageTransition>
         </ModuleErrorBoundary>
-        <CookieBanner />
+        {isAuthenticated && <CookieBanner />}
         <PageViewTracker />
       </div>
     )
@@ -406,8 +406,9 @@ export function AppShell() {
               </span>
             </Link>
 
-            <nav className="hidden items-center gap-3 text-sm md:flex" aria-label="主导航">
-              {PUBLIC_NAV.map((item) => {
+            {isAuthenticated && (
+              <nav className="hidden items-center gap-3 text-sm md:flex" aria-label="主导航">
+                {PUBLIC_NAV.map((item) => {
                 const active = publicActive === item.to
                 return (
                   <Link
@@ -421,11 +422,13 @@ export function AppShell() {
                   >
                     {navLabel(item.to, item.label, lang)}
                   </Link>
-                )
-              })}
-            </nav>
+                  )
+                })}
+              </nav>
+            )}
 
             <div className="flex items-center gap-1.5 sm:gap-2">
+              {isAuthenticated && (
               <form onSubmit={submitPublicSearch} className="hidden lg:block" aria-label="站内检索">
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -438,13 +441,16 @@ export function AppShell() {
                   />
                 </div>
               </form>
+              )}
               <AppearanceMenu />
-              <Button asChild size="sm" className="hidden sm:inline-flex">
-                <Link to="/submissions/new">
-                  <PenLine className="h-3.5 w-3.5" />
-                  写一篇
-                </Link>
-              </Button>
+              {isAuthenticated && (
+                <Button asChild size="sm" className="hidden sm:inline-flex">
+                  <Link to="/submissions/new">
+                    <PenLine className="h-3.5 w-3.5" />
+                    写一篇
+                  </Link>
+                </Button>
+              )}
               {notificationBell}
               {userMenu}
             </div>
@@ -460,8 +466,8 @@ export function AppShell() {
             </ModuleErrorBoundary>
           </div>
         </main>
-        <OnboardingTour />
-        <CookieBanner />
+        {isAuthenticated && <OnboardingTour />}
+        {isAuthenticated && <CookieBanner />}
         <PageViewTracker />
       </div>
     )

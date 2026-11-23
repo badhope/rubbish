@@ -87,8 +87,10 @@ export function MobileAppShell() {
     '/forgot-password',
     '/reset-password',
     '/verify-email',
+    '/restore-account',
+    '/auth/oidc/callback',
   ].some((p) => location.pathname.startsWith(p))
-  const showChrome = !isAuthPage
+  const showChrome = !isAuthPage && isAuthenticated
 
   // 首页自带报头/导航/页脚：不套 MobileAppShell 的 h-14 头部，
   // 但必须渲染底部 Tab（首页也能切 Tab）。
@@ -195,7 +197,7 @@ export function MobileAppShell() {
       <div className="flex min-h-screen flex-col bg-background">
         <AmbientBackdrop />
         <main className="relative z-10 min-w-0 flex-1 overflow-x-hidden pb-[calc(8rem+env(safe-area-inset-bottom))]">
-          <CookieBanner />
+          {isAuthenticated && <CookieBanner />}
           <div className="mx-auto w-full max-w-screen-sm overflow-x-clip px-5 sm:px-6">
             <ModuleErrorBoundary name="页面" resetKeys={[location.pathname]}>
               <PageTransition>

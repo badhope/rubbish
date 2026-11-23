@@ -56,11 +56,14 @@ verified.
 Enable it in the live service environment:
 
 ```dotenv
-RUBBISH_MAINLAND_GATE_ENABLED=true
-RUBBISH_MAINLAND_GATE_PASSWORD=<at least 7 characters>
-RUBBISH_MAINLAND_GATE_COOKIE_DAYS=7
-# QQ group shown on the password page for mainland visitors without a password.
-RUBBISH_MAINLAND_GATE_GROUP=1084870548
+# 全站登录墙：访客只能看到封面和登录/注册；业务 API 一律要求登录。
+RUBBISH_AUTH_WALL_ENABLED=true
+# 大陆密码闸门已由全站登录墙替代，保持关闭。
+RUBBISH_MAINLAND_GATE_ENABLED=false
+# 如临时重新启用大陆闸门，再补以下三项：
+# RUBBISH_MAINLAND_GATE_PASSWORD=<at least 7 characters>
+# RUBBISH_MAINLAND_GATE_COOKIE_DAYS=7
+# RUBBISH_MAINLAND_GATE_GROUP=1084870548
 # Nginx / Caddy is one hop in front of the app.
 RUBBISH_TRUSTED_PROXIES_COUNT=1
 ```

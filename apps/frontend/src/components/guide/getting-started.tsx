@@ -56,7 +56,7 @@ const QUICK_START = [
 
 const MAP = [
   {
-    title: '不用登录，也能看',
+    title: '进门先看',
     items: [
       { label: '首页', body: '先知道这里是什么，再决定下一步。', to: '/', icon: Compass },
       { label: '内容库', body: '长文、荒诞写作和自由创作。', to: '/catalog', icon: BookOpen },
@@ -126,7 +126,7 @@ export function GettingStarted() {
           全站地图
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          找不到入口，就来这里。公开、登录后、带角色，三层分开写；访客不必看见后台的按钮。
+          找不到入口，就来这里。阅读、写作、带角色，三层分开写；访客只看见封面和登录入口。
         </p>
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           {MAP.map((group) => (

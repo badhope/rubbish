@@ -313,6 +313,9 @@ class Settings(BaseSettings):
     mainland_gate_group: str = "1084870548"
     mainland_gate_ip_list_path: str = ""
 
+    # 全站登录墙：开启后除认证/健康/能力探测外，所有 /api 业务接口都要 Bearer token。
+    auth_wall_enabled: bool = False
+
     # --- Logging ---
     log_level: str = Field(default="INFO", pattern=r"^(DEBUG|INFO|WARNING|ERROR|CRITICAL)$")
     json_logs: bool = False

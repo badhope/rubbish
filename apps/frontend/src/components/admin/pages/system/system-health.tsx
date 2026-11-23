@@ -20,6 +20,8 @@ type SecurityStatus = {
   previous_key_count: number
   signing_key_kid: string | null
   rotation_window_open: boolean
+  auth_wall_enabled?: boolean
+  mainland_gate_enabled?: boolean
 }
 
 type EmailStatus = {
@@ -237,6 +239,10 @@ export default function SystemHealthPage() {
                     </p>
                     <p className="break-all font-mono text-xs text-muted-foreground">
                       kid={security.signing_key_kid ?? '—'}
+                    </p>
+                    <p className="text-muted-foreground">
+                      访问控制：{security.auth_wall_enabled ? '全站登录墙已开启' : '站点公开访问'}；
+                      {security.mainland_gate_enabled ? '大陆密码闸门开启' : '大陆密码闸门已关闭'}。
                     </p>
                   </>
                 ) : (

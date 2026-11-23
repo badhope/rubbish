@@ -33,7 +33,7 @@ SITE_NAME = "Rubbish"
 SITE_TITLE = "Rubbish — 公开写作与讨论社区"
 DEFAULT_DESCRIPTION = (
     "Rubbish 是一张公开的桌面。有人拆开一个问题，有人留下一次失败，也有人把不可能写得一本正经。"
-    "长文在内容库，短帖在讨论区，公开可读；这里不做学术评价，也不出具任何证明。"
+    "长文在内容库，短帖在讨论区，登录后可读；这里不做学术评价，也不出具任何证明。"
 )
 
 PAGE_META: dict[str, tuple[str, str]] = {
@@ -139,6 +139,11 @@ AI_CRAWLERS = [
 
 @router.get("/robots.txt", response_class=Response, include_in_schema=False)
 async def robots(request: Request) -> Response:
+    if settings.auth_wall_enabled:
+        return Response(
+            content=b"User-agent: *\nDisallow: /\n",
+            media_type="text/plain; charset=utf-8",
+        )
     lines = ["User-agent: *", *CRAWLER_RULES, ""]
     for bot in AI_CRAWLERS:
         lines.extend([f"User-agent: {bot}", *CRAWLER_RULES, ""])
@@ -155,6 +160,8 @@ async def robots(request: Request) -> Response:
 @router.get("/ai.txt", response_class=Response, include_in_schema=False)
 async def ai_txt(request: Request) -> Response:
     """给 AI Agent 的机器可读边界说明。"""
+    if settings.auth_wall_enabled:
+        return Response(status_code=404, content="Not Found", media_type="text/plain; charset=utf-8")
     root = _root(request)
     body = f"""# Rubbish AI Agent Policy
 
@@ -188,6 +195,8 @@ async def ai_txt(request: Request) -> Response:
 
 @router.get("/sitemap.xml", response_class=Response, include_in_schema=False)
 async def sitemap(request: Request, db: AsyncSession = Depends(get_db)) -> Response:
+    if settings.auth_wall_enabled:
+        return Response(status_code=404, content="Not Found", media_type="text/plain; charset=utf-8")
     root = _root(request)
     urls: list[tuple[str, str, str, str | None]] = [
         (f"{root}/", "weekly", "1.0", None),
@@ -231,6 +240,8 @@ async def sitemap(request: Request, db: AsyncSession = Depends(get_db)) -> Respo
 @router.get("/llms.txt", response_class=Response, include_in_schema=False)
 async def llms_txt(request: Request, db: AsyncSession = Depends(get_db)) -> Response:
     """Machine-readable guide for LLM crawlers and answer engines."""
+    if settings.auth_wall_enabled:
+        return Response(status_code=404, content="Not Found", media_type="text/plain; charset=utf-8")
     root = _root(request)
     rows = await _published_resources(db, limit=200)
     lines = [
@@ -280,6 +291,8 @@ async def llms_txt(request: Request, db: AsyncSession = Depends(get_db)) -> Resp
 @router.get("/rss.xml", response_class=Response, include_in_schema=False)
 async def rss_feed(request: Request, db: AsyncSession = Depends(get_db)) -> Response:
     """RSS 2.0 feed of the latest published archive records."""
+    if settings.auth_wall_enabled:
+        return Response(status_code=404, content="Not Found", media_type="text/plain; charset=utf-8")
     from email.utils import format_datetime
 
     root = _root(request)
@@ -325,6 +338,8 @@ async def rss_feed(request: Request, db: AsyncSession = Depends(get_db)) -> Resp
 @router.get("/atom.xml", response_class=Response, include_in_schema=False)
 async def atom_feed(request: Request, db: AsyncSession = Depends(get_db)) -> Response:
     """Atom 1.0 feed of the latest published records; mirrors the RSS source."""
+    if settings.auth_wall_enabled:
+        return Response(status_code=404, content="Not Found", media_type="text/plain; charset=utf-8")
     root = _root(request)
     site = html.escape(settings.site_name)
     rows = await _published_resources(db, limit=50)
@@ -409,6 +424,11 @@ async def build_index_html(
     db: AsyncSession,
 ) -> tuple[str, str]:
     """Return ``(html, status)`` for a SPA route."""
+    if settings.auth_wall_enabled:
+        # The SPA shell itself is public, but per-route title/description/JSON-LD
+        # would leak article metadata to anonymous crawlers. Let the frontend
+        # redirect visitors to the cover; serve only the generic shell here.
+        return index_html, "200"
     root = _root(request)
     path = full_path.strip("/")
     title, description = PAGE_META.get(path, (SITE_TITLE, DEFAULT_DESCRIPTION))
