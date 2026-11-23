@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { useAuth } from '@/hooks/use-auth'
-import { useEditorialPicks } from '@/hooks/api/use-modules'
+import { useEditorialPicks, useResources } from '@/hooks/api/use-modules'
 import { formatAuthors } from '@/lib/utils'
 import { AnnouncementChip, AnnouncementDialog, useAnnouncementPortal } from '@/components/common/announcement-dialog'
 import { AppearanceMenu } from '@/components/appearance-menu'
@@ -56,6 +56,7 @@ function HomePage() {
   const { isAuthenticated } = useAuth()
   const notice = useAnnouncementPortal()
   const editorialQuery = useEditorialPicks(4)
+  const latestQ = useResources({ page: 1, page_size: 6, sort: 'created_at', order: 'desc' })
   const forumQ = useQuery({
     queryKey: ['home', 'forum-latest'],
     queryFn: async () =>
@@ -69,6 +70,9 @@ function HomePage() {
   const picks = editorialQuery.data?.data ?? []
   const featured = picks[0]
   const sidePicks = picks.slice(1, 4)
+  const latest = (latestQ.data?.data ?? [])
+    .filter((item) => !picks.some((pick) => pick.id === item.id))
+    .slice(0, 3)
   const topics: HomeTopic[] = forumQ.data?.data ?? []
 
   return (
@@ -258,6 +262,45 @@ function HomePage() {
               <Link to="/catalog" className="ml-2 text-primary hover:underline">直接去内容库</Link>
             </div>
           )}
+
+          {latest.length > 0 ? (
+            <div className="mt-9 border-t pt-5">
+              <div className="flex flex-wrap items-end justify-between gap-2">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.28em] text-primary">最近</p>
+                  <h3 className="mt-1 font-serif text-lg tracking-tight">刚摆上桌</h3>
+                </div>
+                <Link to="/catalog" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary">
+                  全部文字 <ChevronRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+              <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                {latest.map((item) => (
+                  <Link
+                    key={item.id}
+                    to="/catalog/$resourceId"
+                    params={{ resourceId: String(item.id) }}
+                    className="group flex items-center gap-3 rounded-lg border bg-background/70 p-3 transition-colors hover:border-primary/40"
+                  >
+                    <ArticleCover
+                      resource={item}
+                      aspect="aspect-[4/3]"
+                      showDiscipline={false}
+                      className="w-24 shrink-0"
+                    />
+                    <span className="min-w-0">
+                      <span className="line-clamp-2 block text-sm font-medium leading-5 group-hover:text-primary">
+                        {displayTitle(item)}
+                      </span>
+                      <span className="mt-1 block text-[11px] text-muted-foreground">
+                        {item.discipline || '跨领域'} · {displayDate(item.created_at)}
+                      </span>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </section>
 
         <section className="border-t border-border/70 bg-muted/20 sm:flex sm:min-h-[calc(100svh-3.75rem)] sm:items-center">
@@ -298,6 +341,30 @@ function HomePage() {
                 <Link to="/forum" search={{ compose: 1 }} className="ml-2 text-primary hover:underline">去说一句</Link>
               </p>
             )}
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-lg border bg-background/70 p-4">
+                <p className="text-[10px] uppercase tracking-[0.28em] text-primary">本周写什么</p>
+                <p className="mt-2 font-serif text-lg leading-snug">你最近一次推翻重写，是因为什么？</p>
+                <Link
+                  to="/forum"
+                  search={{ compose: 1 }}
+                  className="mt-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
+                >
+                  去回应 <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+              <div className="rounded-lg border border-dashed bg-background/40 p-4">
+                <p className="text-[10px] uppercase tracking-[0.28em] text-primary">只想说一句</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  短帖留在讨论区，长文去发布作品。登录就能说话，不必先攒经验。
+                </p>
+                <div className="mt-3 flex flex-wrap gap-4 text-sm">
+                  <Link to="/forum" search={{ compose: 1 }} className="text-primary hover:underline">去说话</Link>
+                  <Link to="/submissions/new" className="text-muted-foreground hover:text-primary">写长文</Link>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       </main>
