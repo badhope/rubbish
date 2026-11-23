@@ -7,6 +7,7 @@ environment; the ``validate_secrets`` model validator enforces this.
 """
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 
 from pydantic import Field, field_validator, model_validator
@@ -302,6 +303,15 @@ class Settings(BaseSettings):
     # traffic shapes. Off by default; flip on only on a private network.
     metrics_public: bool = False
 
+    # --- Mainland access gate ---
+    # 开启后，命中 CN IP 段的访问者在任何页面/API 前都会先看到密码页。
+    # 密码只放在服务端环境变量里，绝不下发到前端。列表文件是 ipdeny.com
+    # 的 CN zone 快照，可由运维用脚本刷新；文件缺失时 fail open 并打 error。
+    mainland_gate_enabled: bool = False
+    mainland_gate_password: str = ""
+    mainland_gate_cookie_days: int = Field(default=7, ge=1, le=30)
+    mainland_gate_ip_list_path: str = ""
+
     # --- Logging ---
     log_level: str = Field(default="INFO", pattern=r"^(DEBUG|INFO|WARNING|ERROR|CRITICAL)$")
     json_logs: bool = False
@@ -440,6 +450,30 @@ class Settings(BaseSettings):
             raise ValueError(
                 "RUBBISH_FERNET_KEY is not a valid Fernet key (must be 32 url-safe base64 bytes)."
             ) from exc
+
+        # Mainland gate: enabling it without a real password would either
+        # lock the site with an empty secret or silently allow everyone.
+        # Refuse startup instead of guessing.
+        if self.mainland_gate_enabled:
+            if not self.mainland_gate_password:
+                raise ValueError(
+                    "RUBBISH_MAINLAND_GATE_PASSWORD is required when "
+                    "RUBBISH_MAINLAND_GATE_ENABLED=true"
+                )
+            if len(self.mainland_gate_password) < 12:
+                raise ValueError(
+                    "RUBBISH_MAINLAND_GATE_PASSWORD must be at least 12 characters long"
+                )
+            list_path = (
+                Path(self.mainland_gate_ip_list_path).expanduser()
+                if self.mainland_gate_ip_list_path.strip()
+                else Path(__file__).resolve().parents[1] / "data" / "mainland_cn_ip_ranges.txt"
+            )
+            if not list_path.is_file():
+                raise ValueError(
+                    "Mainland gate IP list is missing: "
+                    f"{list_path}. Set RUBBISH_MAINLAND_GATE_IP_LIST_PATH."
+                )
 
         # Production-specific checks.
         if self.is_production:

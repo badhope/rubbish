@@ -29,6 +29,7 @@ from tenacity import (
 
 from app import __version__
 from app.api import (
+    access,
     admin,
     auth,
     capabilities,
@@ -51,6 +52,7 @@ from app.core.db import check_db_connection, dispose_engine, get_db
 from app.core.logging import configure_logging, get_logger
 from app.core.modules import load_all, registry
 from app.core.monitoring import init_monitoring
+from app.core.mainland_gate import MainlandGateMiddleware
 from app.core.rate_limit_store import close_rate_limiter_store
 from app.core.tenant import TenantContextMiddleware
 from app.middleware.csrf import CSRFMiddleware
@@ -309,10 +311,16 @@ app.add_middleware(TenantContextMiddleware)
 # populated by FastAPI's router, but before the app processes the request.
 app.add_middleware(HTTPMetricsMiddleware)
 
+# Mainland gate is intentionally outermost: a blocked visitor must not reach
+# tenant resolution, static files, or any business route before the password
+# gate. Add it last so Starlette runs it first.
+app.add_middleware(MainlandGateMiddleware)
+
 
 # --- Core routers (always present) ---
 # Health probes at root (Kubernetes convention) + legacy at /api prefix.
 app.include_router(health.router)
+app.include_router(access.router, include_in_schema=False)
 app.include_router(health.legacy_router, prefix="/api")
 # Metrics at root for Prometheus scrapers.
 app.include_router(metrics.router)

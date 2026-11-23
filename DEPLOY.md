@@ -45,6 +45,39 @@ Do not use `ops/deploy.sh` on this host: it is the Docker static-hot-swap refere
 - A domain whose DNS `A` record points at the server
 - Ports 80 and 443 reachable
 
+## Mainland access gate
+
+The backend can put a password gate in front of visitors whose public IP is
+inside the bundled mainland-China CIDR snapshot
+(`apps/backend/app/data/mainland_cn_ip_ranges.txt`). It wraps every page, API
+and static asset, so the site shell is never sent before the password is
+verified.
+
+Enable it in the live service environment:
+
+```dotenv
+RUBBISH_MAINLAND_GATE_ENABLED=true
+RUBBISH_MAINLAND_GATE_PASSWORD=<at least 12 characters>
+RUBBISH_MAINLAND_GATE_COOKIE_DAYS=7
+# Nginx / Caddy is one hop in front of the app.
+RUBBISH_TRUSTED_PROXIES_COUNT=1
+```
+
+The live Nginx vhost must pass the client address:
+
+```nginx
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Real-IP $remote_addr;
+proxy_set_header X-Forwarded-Proto $scheme;
+```
+
+After a restart, check `/api/health` and `/gate`. A correct password sets the
+`rubbish_mainland_gate` HttpOnly cookie; a wrong password is rate-limited.
+The CIDR list is a snapshot, not a legal boundary. Refresh it periodically
+from the public CN zone at `https://www.ipdeny.com/ipblocks/data/countries/cn.zone`
+and `https://www.ipdeny.com/ipv6/ipaddresses/blocks/cn.zone`. Do not treat IP
+geolocation as a substitute for local compliance advice.
+
 ## First deployment
 
 ```bash
