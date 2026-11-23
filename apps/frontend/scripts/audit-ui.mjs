@@ -51,6 +51,7 @@ const ROUTES = [
   { path: '/me?tab=library', token: 'offline-admin' },
   { path: '/me?tab=points', token: 'offline-admin' },
   { path: '/me?tab=settings', token: 'offline-admin' },
+  { path: '/submissions', token: 'offline-author' },
   { path: '/submissions/pending', token: 'offline-editor' },
   { path: '/editor/calibration', token: 'offline-editor' },
   { path: '/editor/issue-plan', token: 'offline-editor' },
@@ -62,6 +63,7 @@ const ROUTES = [
   { path: '/admin/economy', token: 'offline-admin' },
   { path: '/admin/system', token: 'offline-admin' },
   { path: '/u/offline_admin', token: 'offline-admin' },
+  { path: '/library/1', token: 'offline-admin' },
 ]
 
 const VIEWPORTS = [
