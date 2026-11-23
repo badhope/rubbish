@@ -51,9 +51,9 @@ export function ArticlePreview({
         </span>
       </div>
       <div className="min-w-0 max-w-full">
-        <h1 className="mb-2 break-words font-serif text-xl font-semibold leading-snug sm:text-2xl">
+        <h2 className="mb-2 break-words font-serif text-xl font-semibold leading-snug sm:text-2xl">
           {title || '未填写标题'}
-        </h1>
+        </h2>
         {authors.length > 0 && (
           <p className="mb-4 break-words text-sm text-muted-foreground">
             {authors.join('、')}

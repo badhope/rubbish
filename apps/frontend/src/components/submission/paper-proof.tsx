@@ -264,7 +264,7 @@ export function PaperProof({
       {/* 隐藏的排版源：pagedjs 从这里取内容，作者看到的纸页由它生成。 */}
       <div className="paper-proof-source" aria-hidden>
         <div ref={sourceRef}>
-          <h1 className="paper-proof-title">{main}</h1>
+          <h2 className="paper-proof-title">{main}</h2>
           {sub ? <p className="paper-proof-subtitle">——{sub}</p> : null}
           <p className="paper-proof-authors">
             {renderAuthorLine(authors)}
@@ -319,7 +319,7 @@ export function PaperProof({
               <span>RUBBISH JOURNAL</span>
               <span>rubbish.argjiemi.cn</span>
             </div>
-            <h1 className="paper-proof-title">{main}</h1>
+            <h2 className="paper-proof-title">{main}</h2>
             {sub ? <p className="paper-proof-subtitle">——{sub}</p> : null}
             <p className="paper-proof-authors">{renderAuthorLine(authors)}</p>
             {renderAffiliations(affiliations) ? (

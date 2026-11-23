@@ -13,6 +13,7 @@ import {
 import { useAuth } from '@/hooks/use-auth'
 import type { AssignableRole, UserResponse } from '@/lib/types'
 import { extractError, inferTotalPagesFromFullPage } from '@/lib/utils'
+import { roleLabel } from '@/lib/role-labels'
 import { PageHeader } from '@/components/common/page-header'
 import { Pagination } from '@/components/common/pagination'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
@@ -223,7 +224,7 @@ export default function AdminUsersPage() {
                         ) : (
                           roles.map((r) => (
                             <Badge key={r} variant="outline" className="text-xs">
-                              {ROLE_LABELS[r as AssignableRole] ?? r}
+                              {roleLabel(r)}
                             </Badge>
                           ))
                         )}
