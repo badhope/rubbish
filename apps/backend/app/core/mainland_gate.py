@@ -197,7 +197,8 @@ def gate_page(*, next_path: str = "/", error: str = "", show_form: bool = True) 
       <input type="hidden" name="next" value="{html.escape(next_path, quote=True)}">
       <label for="gate-password">访问密码</label>
       <input id="gate-password" name="password" type="password"
-             autocomplete="current-password" autofocus required>
+             autocomplete="current-password" autocapitalize="none"
+             autocorrect="off" spellcheck="false" enterkeyhint="go" required>
       {error_html}
       <button type="submit">进入站点</button>
     </form>"""
