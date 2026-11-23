@@ -172,7 +172,7 @@ export function notificationDestination(
         ? { to: '/forum', search: { view: 'feedback', feedback: id }, label: '去反馈墙' }
         : { to: '/forum', search: { view: 'feedback' }, label: '去反馈墙' }
     case 'issue':
-      return { to: '/issues', label: '看合集' }
+      return { to: '/issues', label: '看卷' }
     case 'triage_queue':
       return { to: '/submissions/pending', label: '去内容台' }
     case 'site':

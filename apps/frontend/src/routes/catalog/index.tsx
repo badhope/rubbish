@@ -273,15 +273,15 @@ export function CatalogListPage() {
           title={search.q ? '没有找到匹配的内容' : '这里还空着'}
           description={
             search.q
-              ? '换个更短的关键词，或清除搜索回到全部作品；也可以按合集顺着读。'
+              ? '换个更短的关键词，或清除搜索回到全部作品；也可以按卷顺着读。'
               : effectiveTrack === 'paper'
-                ? '换个话题或分区看看，也可以去合集顺着读。'
+                ? '换个话题或分区看看，也可以按卷顺着读。'
                 : '还没有匹配的自由创作，换个文体或关键词试试。'
           }
           action={
             <Button asChild variant="outline" size="sm">
               <Link to="/issues">
-                按合集浏览
+                按卷浏览
                 <ArrowRight className="ml-1 h-3.5 w-3.5" />
               </Link>
             </Button>
@@ -410,10 +410,10 @@ function CatalogHub() {
     <div className="mx-auto w-full max-w-[1320px]">
       <PageHeader
         title="内容库"
-        description="长文、怪问题、小说与随笔都在这里。按合集慢慢读；想发短帖去讨论区，想写长文去发布作品。"
+        description="长文、怪问题、小说与随笔都在这里。按卷慢慢读；想发短帖去讨论区，想写长文去发布作品。"
         actions={
           <Button asChild variant="outline">
-            <Link to="/issues">按合集浏览</Link>
+            <Link to="/issues">按卷浏览</Link>
           </Button>
         }
       />

@@ -199,13 +199,13 @@ export function FunCatalog({
             title="这一栏还空着"
             description={
               search.genre
-                ? '换个文体看看，或换个关键词；也可以去合集顺着读。'
-                : '换个关键词或文体看看，也可以去合集顺着读。'
+                ? '换个文体看看，或换个关键词；也可以按卷顺着读。'
+                : '换个关键词或文体看看，也可以按卷顺着读。'
             }
             action={
               <Button asChild variant="outline" size="sm">
                 <Link to="/issues">
-                  按合集浏览
+                  按卷浏览
                   <ArrowRight className="ml-1 h-3.5 w-3.5" />
                 </Link>
               </Button>
