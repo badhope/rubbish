@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from app.api import access
 from app.core import mainland_gate as mg
 from app.core.config import settings
 
@@ -64,3 +65,24 @@ def test_middleware_blocks_mainland_and_accepts_cookie(monkeypatch):
     # 非大陆出口不触发闸门。
     outside = client.get("/", headers={"X-Forwarded-For": "8.8.8.8"})
     assert outside.status_code == 200
+
+
+def test_gate_accepts_non_ascii_password(monkeypatch):
+    monkeypatch.setattr(settings, "mainland_gate_enabled", True, raising=False)
+    monkeypatch.setattr(settings, "mainland_gate_password", "测试口令甲乙丙", raising=False)
+
+    app = FastAPI()
+    app.include_router(access.router)
+    client = TestClient(app)
+
+    bad = client.post("/api/access/gate", data={"password": "错误的密码", "next": "/catalog"})
+    assert bad.status_code == 401
+
+    ok = client.post(
+        "/api/access/gate",
+        data={"password": "测试口令甲乙丙", "next": "/catalog"},
+        follow_redirects=False,
+    )
+    assert ok.status_code == 303
+    assert ok.headers["location"] == "/catalog"
+    assert "rubbish_mainland_gate" in ok.cookies

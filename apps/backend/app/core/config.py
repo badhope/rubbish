@@ -460,9 +460,9 @@ class Settings(BaseSettings):
                     "RUBBISH_MAINLAND_GATE_PASSWORD is required when "
                     "RUBBISH_MAINLAND_GATE_ENABLED=true"
                 )
-            if len(self.mainland_gate_password) < 12:
+            if len(self.mainland_gate_password) < 7:
                 raise ValueError(
-                    "RUBBISH_MAINLAND_GATE_PASSWORD must be at least 12 characters long"
+                    "RUBBISH_MAINLAND_GATE_PASSWORD must be at least 7 characters long"
                 )
             list_path = (
                 Path(self.mainland_gate_ip_list_path).expanduser()

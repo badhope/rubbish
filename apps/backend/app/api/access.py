@@ -81,7 +81,10 @@ async def submit_gate(
             error="尝试过于频繁，请十分钟后再试。",
         )
 
-    if not hmac.compare_digest(password, settings.mainland_gate_password):
+    if not hmac.compare_digest(
+        password.encode("utf-8"),
+        settings.mainland_gate_password.encode("utf-8"),
+    ):
         logger.warning("mainland_gate_bad_password", ip=ip)
         return gate_html_response(
             next_path=safe_next(next),
