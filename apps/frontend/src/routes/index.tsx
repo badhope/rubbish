@@ -34,7 +34,7 @@ interface HomeTopic {
 const PRIMARY_NAV = [
   ['/', '首页'],
   ['/catalog', '内容库'],
-  ['/issues', '合集'],
+  ['/issues', '卷'],
   ['/forum', '讨论区'],
   ['/guide', '怎么用'],
   ['/me', '我的'],
@@ -302,7 +302,7 @@ function HomePage() {
             <p className="mb-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">走走</p>
             <ul className="space-y-1.5">
               <li><Link to="/catalog" className="hover:text-primary">内容库</Link></li>
-              <li><Link to="/issues" className="hover:text-primary">合集</Link></li>
+              <li><Link to="/issues" className="hover:text-primary">卷</Link></li>
               <li><Link to="/forum" className="hover:text-primary">讨论区</Link></li>
               <li><Link to="/search" className="hover:text-primary">站内搜索</Link></li>
               <li><Link to="/tags" className="hover:text-primary">标签与归档</Link></li>

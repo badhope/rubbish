@@ -24,7 +24,7 @@ const QUICK_START = [
     no: '01',
     icon: BookOpen,
     title: '先读一篇',
-    body: '不必注册也能读。挑一篇被标出的，或按合集、分区慢慢翻。',
+    body: '不必注册也能读。挑一篇被标出的，或按卷、分区慢慢翻。',
     to: '/catalog',
     label: '去内容库',
   },
@@ -60,7 +60,7 @@ const MAP = [
     items: [
       { label: '首页', body: '先知道这里是什么，再决定下一步。', to: '/', icon: Compass },
       { label: '内容库', body: '长文、荒诞写作和自由创作。', to: '/catalog', icon: BookOpen },
-      { label: '合集', body: '一组一组往下读。', to: '/issues', icon: Layers3 },
+      { label: '卷', body: '一卷一条阅读线，卷里再按合集分行。', to: '/issues', icon: Layers3 },
       { label: '讨论区', body: '短话、提问、复盘、组队和反馈。', to: '/forum', icon: MessagesSquare },
       { label: '关于此处', body: '这里做什么、不做什么，以及怎么联系。', to: '/about', icon: ShieldCheck },
     ],

@@ -76,7 +76,7 @@ export const MOBILE_MORE: MobileMoreItem[] = [
   { to: '/submissions', label: '我的作品', icon: FileText, auth: true, group: '我的空间' },
   { to: '/me', search: { notifications: '1' }, label: '通知', icon: Bell, auth: true, group: '我的空间' },
   { to: '/levels', label: '参与记录', icon: Award, group: '我的空间' },
-  { to: '/issues', label: '合集', icon: Layers3, group: '社区' },
+  { to: '/issues', label: '卷', icon: Layers3, group: '社区' },
   { to: '/guide', label: '怎么用', icon: Compass, group: '社区' },
   { to: '/about', label: '关于此处', icon: Building2, group: '社区' },
   { to: '/tags', label: '标签与归档', icon: Tags, group: '社区' },

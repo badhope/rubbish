@@ -56,7 +56,7 @@ const NAV: NavItem[] = [
   // 一级入口只留六个：看得懂、找得到、点得进。
   { to: '/', label: '首页', icon: Home, group: '一级入口' },
   { to: '/catalog', label: '内容库', icon: BookOpen, group: '一级入口' },
-  { to: '/issues', label: '合集', icon: Layers3, group: '一级入口' },
+  { to: '/issues', label: '卷', icon: Layers3, group: '一级入口' },
   { to: '/forum', label: '讨论区', icon: MessagesSquare, group: '一级入口' },
   { to: '/guide', label: '怎么用', icon: Compass, group: '一级入口' },
   { to: '/me', label: '我的', icon: User, group: '一级入口' },

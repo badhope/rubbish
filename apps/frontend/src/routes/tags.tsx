@@ -70,7 +70,7 @@ function TagsPage() {
     <div className="mx-auto w-full max-w-[880px] space-y-8">
       <PageHeader
         title="标签与归档"
-        description="按标签、话题分区和年份找作品；合集在另一条阅读顺序里。"
+        description="按标签、话题分区和年份找作品；卷是一条完整的阅读线。"
       />
 
       <section className="space-y-3">
@@ -139,9 +139,9 @@ function TagsPage() {
       </section>
 
       <p className="text-xs leading-relaxed text-muted-foreground">
-        合集按题目串起一组阅读顺序，见
+        卷按题目串起一组阅读顺序，见
         <Link to="/issues" className="mx-1 text-primary hover:underline">
-          合集索引
+          卷索引
         </Link>
         。
       </p>
