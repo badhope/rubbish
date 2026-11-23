@@ -36,7 +36,7 @@ export function AccountDataCard({ username }: { username: string }) {
           <div>
             <h3 className="text-sm font-medium">导出我的数据</h3>
             <p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted-foreground">
-              下载一份 JSON：账号资料、投稿与审稿、阅读记录、书单、评论、讨论、申诉、认领、关注、活跃值与通知。
+              下载一份 JSON：账号资料、作品与互评、阅读记录、书单、评论、讨论、申诉、认领、关注、活跃值与通知。
               密码哈希、两步验证密钥和通行密钥材料属于凭据，不会写进导出文件。
             </p>
           </div>
@@ -53,7 +53,7 @@ export function AccountDataCard({ username }: { username: string }) {
                 downloadJson(`rubbish-${username}-${stamp}.json`, payload)
                 toast.success('数据文件已生成，请检查浏览器下载')
               },
-              onError: () => toast.error('导出失败，请稍后再试'),
+              onError: () => toast.error('数据导出失败，可再试一次。'),
             })
           }
         >
@@ -140,7 +140,7 @@ function DeleteAccountDialog({
         <DialogHeader>
           <DialogTitle>确定注销账号？</DialogTitle>
           <DialogDescription>
-            这一步会立即退出所有设备，并把邮箱、用户名与个人资料匿名化。文章、审稿和讨论仍然保留，但作者会显示为已注销账号；30 天内可以在本页恢复。
+            这一步会立即退出所有设备，并把邮箱、用户名与个人资料匿名化。作品、互评和讨论仍然保留，但作者会显示为已注销账号；30 天内可以在本页恢复。
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">

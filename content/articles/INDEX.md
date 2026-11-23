@@ -265,17 +265,6 @@
 | published | 302 | 322 | accepted | 蜜雪冰城与星巴克的“本手、妙手、俗手”——桂林市 POI 空间覆盖的比较 | Zabwerk | `published/302.md` |
 | published | 303 | 300 | accepted | PADA-V2 补遗：光周期、腺苷、受体脱敏与衰老的机制补完 | Billy Ma | `published/303.md` |
 | published | 304 | 311 | accepted | 光周期、腺苷脱敏与衰老——PADA 假说的逻辑主线 | Billy Ma | `published/304.md` |
-| published | 305 | 331 | accepted | 专题合集启动：游戏、语言与身体 | Rubbish 编辑部 | `published/305.md` |
-| published | 306 | 332 | accepted | 本周观察：把论文和副刊放在同一张桌上 | Rubbish 编辑部 | `published/306.md` |
-| published | 307 | 333 | accepted | 本站公告：PDF 预览已经改为逐页图 | Rubbish 编辑部 | `published/307.md` |
-| published | 308 | 334 | accepted | 更正、撤稿与署名变更：本站怎么处理 | Rubbish 编辑部 | `published/308.md` |
-| published | 309 | 336 | accepted | 世界观：允许副刊用小说写真实问题 | Rubbish 编辑部 | `published/309.md` |
-| published | 310 | 337 | accepted | 研究亮点：PADA 假说为什么值得单独读 | Rubbish 编辑部 | `published/310.md` |
-| published | 311 | 338 | accepted | 特写：一本学生刊物的 PDF 预览是怎么修好的 | Rubbish 编辑部 | `published/311.md` |
-| published | 312 | 339 | accepted | 书评栏目：我们想看到什么样的书评 | Rubbish 编辑部 | `published/312.md` |
-| published | 313 | 340 | accepted | 读者来信：把问题写在页面上，而不是只发在群里 | Rubbish 编辑部 | `published/313.md` |
-| published | 314 | 341 | accepted | 技术现场：为什么网页、Word 和 PDF 用同一份 Markdown | Rubbish 编辑部 | `published/314.md` |
-| published | 315 | 342 | accepted | 新闻评述：当论文和副刊共用一套编辑台 | Rubbish 编辑部 | `published/315.md` |
 | draft | - | 328 | minor_revision | 网络创作者公共形象与公益参与的形成机制——以兔娘相关公开叙事为例 | Mcx | `drafts/328.md` |
 | draft | - | 329 | minor_revision | 《影之刃零》陆家村“蒙花圣母”信仰的救济替代与神迹生产 | 王山东 | `drafts/329.md` |
 | draft | - | 347 | minor_revision | 越穷越嗨？——基于BillboardHot100歌词的“经济情绪声呐”探测 | alltoowell | `drafts/347.md` |

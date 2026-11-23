@@ -24,7 +24,7 @@ export function MeFollows() {
       <div className="border-b pb-4">
         <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">FOLLOWING</p>
         <h2 className="mt-1 font-serif text-xl tracking-tight">关注与订阅</h2>
-        <p className="mt-1 text-xs text-muted-foreground">管理你关注的作者和订阅的话题；有新帖子时会出现在推荐里。</p>
+        <p className="mt-1 text-xs text-muted-foreground">管理你关注的作者和订阅的话题；有新话题时会出现在推荐里。</p>
       </div>
       <Tabs
         value={tab}
@@ -52,13 +52,13 @@ function AuthorsTab() {
       await unfollowMut.mutateAsync(authorName)
       toast.success(`已取消关注 ${authorName}`)
     } catch (err) {
-      toast.error(extractError(err, '操作失败'))
+      toast.error(extractError(err, '没能取消关注，可再试一次'))
     }
   }
 
   if (isLoading) return <Loading />
   if (isError) {
-    return <ErrorState message="加载失败" onRetry={() => refetch()} />
+    return <ErrorState message="关注作者列表加载失败，可重试。" onRetry={() => refetch()} />
   }
   if (!data || data.data.length === 0) {
     return (
@@ -109,13 +109,13 @@ function DisciplinesTab() {
       await unsubscribeMut.mutateAsync(discipline)
       toast.success(`已取消订阅 ${discipline}`)
     } catch (err) {
-      toast.error(extractError(err, '操作失败'))
+      toast.error(extractError(err, '没能取消订阅，可再试一次'))
     }
   }
 
   if (isLoading) return <Loading />
   if (isError) {
-    return <ErrorState message="加载失败" onRetry={() => refetch()} />
+    return <ErrorState message="订阅话题加载失败，可重试。" onRetry={() => refetch()} />
   }
   if (!data || data.data.length === 0) {
     return (

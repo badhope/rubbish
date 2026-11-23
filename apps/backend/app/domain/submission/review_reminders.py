@@ -88,7 +88,7 @@ async def send_decision_email(
 ) -> None:
     """Best-effort decision email to the author.
 
-    录用/接收（accept / approved）走**恭喜邮件专用通道**（主编单独授权，
+    通过/接收（accept / approved）走**恭喜邮件专用通道**（主编单独授权，
     不受外发总闸约束）；其余决定仍受总闸管控（总闸关闭时只写日志）。
     """
     if not notifications.wants(author, "email_submission"):
@@ -101,7 +101,9 @@ async def send_decision_email(
             return
     base = settings.frontend_base_url.rstrip("/")
     is_accept = decision in ("accept", "approved")
-    link = f"{base}/submissions?submission={submission_id}" if submission_id else f"{base}/submissions"
+    link = (
+        f"{base}/submissions?submission={submission_id}" if submission_id else f"{base}/submissions"
+    )
     subject, text, html = decision_notice(
         author.username,
         submission_title,
@@ -110,7 +112,7 @@ async def send_decision_email(
         link,
     )
     if is_accept:
-        # 主编口径：录用即恭喜，主题突出祝贺
+        # 主编口径：通过即恭喜，主题突出祝贺
         subject = f"🎉 你的作品《{submission_title[:60]}》已经公开"
         try:
             from app.core.email import get_congrat_sender
@@ -135,7 +137,7 @@ async def run_overdue_reminders(db: AsyncSession, *, tenant_id: Any) -> dict[str
     """
     now = datetime.now(UTC)
     stats = {"checked": 0, "reminded": 0, "emailed": 0}
-    # 同一审稿人可能同时持有多个 assignment；逐篇发信会在几秒内连发多封。
+    # 同一互评成员可能同时持有多个 assignment；逐篇发信会在几秒内连发多封。
     # 这里按人聚合，循环结束后每人只发一封摘要邮件。
     digests: dict[int, dict[str, Any]] = {}
 
@@ -168,7 +170,7 @@ async def run_overdue_reminders(db: AsyncSession, *, tenant_id: Any) -> dict[str
                 continue
 
         days_pending = age_days
-        stage = "接受邀请" if assignment.status == "pending" else "提交评审意见"
+        stage = "接受邀请" if assignment.status == "pending" else "提交互评意见"
         await notifications.create(
             db,
             tenant_id=tenant_id,

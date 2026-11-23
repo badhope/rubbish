@@ -31,6 +31,9 @@ _REASON_LABELS = {
 
 
 async def _recipients(db: AsyncSession, tenant_id: Any, creator_id: int | None) -> list[User]:
+    # 不在 SQL 层 DISTINCT：User 行含纯 json 列（历史库 notification_prefs），
+    # PostgreSQL 对 json 类型无等值运算符，SELECT DISTINCT 整行会直接报错；
+    # 多角色重复行由下方 by_id 字典在 Python 层去重。
     rows = list(
         (
             await db.execute(
@@ -44,7 +47,6 @@ async def _recipients(db: AsyncSession, tenant_id: Any, creator_id: int | None) 
                     Role.tenant_id == tenant_id,
                     Role.name.in_(_EDITOR_ROLES),
                 )
-                .distinct()
             )
         )
         .scalars()
@@ -107,7 +109,7 @@ async def alert_release_failure(
                 user_id=user.id,
                 type_="release.scheduled_failed",
                 title=f"定时发布失败：{target}",
-                body=f"{label}。请到「卷期编排」核对内容；发布或重新排期需管理员确认。",
+                body=f"{label}。请到「合集编排」核对内容；发布或重新排期需管理员确认。",
                 related_type="issue",
                 related_id=target,
             )

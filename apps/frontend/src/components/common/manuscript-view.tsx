@@ -4,7 +4,7 @@ import { ALargeSmall, Baseline } from "lucide-react";
 import "katex/dist/katex.min.css";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { EmptyState, Loading } from "@/components/common/state";
+import { EmptyState } from "@/components/common/state";
 import { useReadingPrefs } from "@/components/common/manuscript-reading-prefs";
 import { ManuscriptMarkdown } from "@/components/common/manuscript-render";
 import {
@@ -319,9 +319,23 @@ export function ManuscriptView({
   };
 
   if (isLoading) {
+    // 占位骨架对齐正文首屏高度与外壳结构：外层行容器与已加载分支同构，
+    // 只铺底色扫光；行宽、位置、内边距在加载前后不变，避免正文落地时整行重排（CLS）。
     return (
-      <div className="flex flex-1 items-center justify-center overflow-y-auto">
-        <Loading />
+      <div className="flex-1 bg-background">
+        <div className="mx-auto flex max-w-6xl items-start px-3.5 py-6 sm:px-5 sm:py-8">
+          <div className="flex min-w-0 flex-1 flex-col" aria-busy="true" aria-label="正文加载中">
+            <div className="min-h-[60vh] space-y-3 pt-2">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="skeleton-shimmer h-3.5 rounded"
+                  style={{ width: `${92 - (i % 4) * 12}%` }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

@@ -5,9 +5,9 @@
 * **只在同一身份内比较**：author L1–L5、reviewer R1–R3、editor E1–E3。
   不同身份之间不比较、不并列展示、不进同一榜单。
 * **积分不换权限**：积分只服务同身份升级；权限走 users.role（五层轴）。
-* **幂等**：同一业务 ref（同一认领/同一稿件/同一审稿 assignment）只加一次分，
+* **幂等**：同一业务 ref（同一认领/同一作品/同一互评 assignment）只加一次分，
   靠 point_events 的唯一约束兜底。
-* **娱乐/吐槽轨不计分**：essay 轨录用写 delta=0 的流水（记活跃度），不推进等级。
+* **娱乐/吐槽轨不计分**：essay 轨通过写 delta=0 的流水（记活跃度），不推进等级。
 """
 
 from __future__ import annotations
@@ -24,8 +24,8 @@ from app.models import User
 
 Identity = Literal["author", "reviewer", "editor"]
 
-# 投稿规范版本：改版时 +1，作者需重新确认。
-CURRENT_RULES_VERSION = "1.1"
+# 写作规范版本：改版时 +1，作者需重新确认。
+CURRENT_RULES_VERSION = "2.0"
 
 # 计分规则（reason → delta）。娱乐/吐槽轨在调用处传 delta=0。
 POINT_RULES: dict[str, dict[str, object]] = {
@@ -37,7 +37,7 @@ POINT_RULES: dict[str, dict[str, object]] = {
         "label": "自由创作通过（只记经验）",
     },
     "review.completed": {"identity": "reviewer", "delta": 1, "label": "完成互评"},
-    "editor.decision": {"identity": "editor", "delta": 8, "label": "编辑裁决"},
+    "editor.decision": {"identity": "editor", "delta": 8, "label": "编辑复核"},
 }
 
 

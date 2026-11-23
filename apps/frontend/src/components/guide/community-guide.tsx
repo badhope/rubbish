@@ -8,32 +8,32 @@ const STEPS = [
   {
     icon: MessagesSquare,
     title: '先读',
-    body: '不登录也能读帖子和公开作品。遇到想接的话，再登录回复。',
+    body: '不必登录也能读话题和公开作品。遇到想接的话，再登录回应。',
   },
   {
     icon: LogIn,
     title: '登录',
-    body: '邮箱验证码或密码都行。登录后才有发布、回复、收藏和举报入口。',
+    body: '邮箱验证码或密码都行。登录后才有说话、回应、收藏和举报入口。',
   },
   {
     icon: PenLine,
-    title: '发布',
-    body: '点讨论区的「发帖」，选分区、写标题、写正文。标题按回车会跳到正文；长文请走发布入口。',
+    title: '说话',
+    body: '点讨论区的「说一句」，选分区、写标题、写正文。标题按回车会跳到正文；长文请走写一篇入口。',
   },
   {
     icon: Keyboard,
     title: '继续接',
-    body: '正文写完后按 Ctrl / ⌘ + Enter 发布；也可以点底部「发布」。发完还能回来补记录。',
+    body: '正文写完后按 Ctrl / ⌘ + Enter 发出；也可以点底部「说一句」。发完还能回来补记录。',
   },
 ]
 
 const BASICS = [
-  ['分区怎么选', '选最具体的子分区；父分区会自动汇总子分区的帖子。拿不准就选「站务与反馈」问一句。'],
+  ['分区怎么选', '选最具体的子分区；父分区会自动汇总子分区的话题。拿不准就选「站务与反馈」问一句。'],
   ['草稿在哪', '编辑器会自动把标题和正文存在本机浏览器；换设备不会同步，发布前别清站点数据。'],
   ['图片和表情', '正文下方有「表情」和「图片」；图片会传到站内存储，正文里只留一个链接。'],
-  ['编辑和删除', '自己的帖子可以在详情页编辑；被站务锁定后不能再改，但可以继续读。'],
-  ['收藏和关注', '帖子右上角收藏；作者主页可以关注。关注后新帖会进你的通知与推荐。'],
-  ['举报', '帖子、回复、成员主页都有举报入口。选类型、写理由，站务会在后台处理。'],
+  ['编辑和删除', '自己的话题可以在详情页编辑；被站务锁定后不能再改，但可以继续读。'],
+  ['收藏和关注', '话题右上角收藏；作者主页可以关注。关注后新回应会进你的通知与推荐。'],
+  ['举报', '话题、回应、成员主页都有举报入口。选类型、写理由，站务会在后台处理。'],
 ]
 
 export function CommunityGuide() {
@@ -49,11 +49,11 @@ export function CommunityGuide() {
 
       <PageHeader
         title="在讨论区说话"
-        description="从读到发，四步就够。注册后直接发，不用先申请。"
+        description="从读到说，四步就够。登录即可说话，不必先申请。"
         actions={
           <Button asChild>
             <Link to="/forum" search={{ compose: 1 }}>
-              发帖
+              说一句
               <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
           </Button>
@@ -90,8 +90,8 @@ export function CommunityGuide() {
           <div className="mt-4 grid gap-4 sm:grid-cols-3">
             {[
               ['举报处理', '站务按类型分派：隐私与侵权优先，广告和灌水其次。处理结果会留在审计记录里。'],
-              ['内容维护', '合并重复帖、移到其他分区、锁定吵架帖；不替作者改正文。'],
-              ['规则变更', '规则与边界更新会发公告；重大变更提前 14 天公示。'],
+              ['内容维护', '合并重复话题、移到其他分区、锁定争执话题；不替作者改正文。'],
+              ['规则变更', '边界与处理更新会发公告；规则变更提前 14 天公示。'],
             ].map(([title, body]) => (
               <div key={title} className="border-t pt-3">
                 <p className="text-sm font-medium">{title}</p>
@@ -106,10 +106,10 @@ export function CommunityGuide() {
             <MessagesSquare className="h-4 w-4" /> 回讨论区
           </Link>
           <Link to="/guide" search={{ tab: 'authors' }} className="inline-flex items-center gap-1 text-primary hover:underline">
-            <PenLine className="h-4 w-4" /> 写作品
+            <PenLine className="h-4 w-4" /> 写一篇
           </Link>
           <Link to="/guide" search={{ tab: 'policies' }} className="inline-flex items-center gap-1 text-primary hover:underline">
-            <Flag className="h-4 w-4" /> 规则与边界
+            <Flag className="h-4 w-4" /> 边界与处理
           </Link>
           <Link to="/me" className="inline-flex items-center gap-1 text-primary hover:underline">
             <Bookmark className="h-4 w-4" /> 我的收藏

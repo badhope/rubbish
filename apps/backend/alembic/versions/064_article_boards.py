@@ -49,8 +49,7 @@ def _apply(rows: tuple[tuple[str, str, str], ...]) -> None:
     # forum_boards is tenant-scoped with FORCE ROW LEVEL SECURITY. Set the
     # tenant context for each tenant before touching its board rows.
     tenant_ids = [
-        str(row[0])
-        for row in bind.execute(sa.text("SELECT id FROM tenants ORDER BY id")).all()
+        str(row[0]) for row in bind.execute(sa.text("SELECT id FROM tenants ORDER BY id")).all()
     ]
     for tenant_id in tenant_ids:
         bind.execute(

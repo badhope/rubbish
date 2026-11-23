@@ -56,6 +56,19 @@ async def test_sitemap_lists_only_published(client: AsyncClient, admin_user: dic
     assert not any(str(draft) in loc for loc in locs)
 
 
+async def test_atom_feed_lists_only_published(client: AsyncClient, admin_user: dict) -> None:
+    published = await _create(client, admin_user)
+    draft = await _create(client, admin_user, title="草稿不可见", publication_status="draft")
+
+    r = await client.get("/feed.atom")
+    assert r.status_code == 200
+    assert r.headers["content-type"].startswith("application/atom+xml")
+    root = ET.fromstring(r.text)
+    ids = [e.text for e in root.iter() if e.tag.endswith("id")]
+    assert any(str(published) in item_id for item_id in ids)
+    assert not any(str(draft) in item_id for item_id in ids)
+
+
 async def test_head_metadata_carries_community_metadata(
     client: AsyncClient, admin_user: dict, db_session
 ) -> None:

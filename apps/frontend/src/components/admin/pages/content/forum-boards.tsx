@@ -116,7 +116,7 @@ export default function AdminForumBoardsPage() {
       toast.success('状态已切换')
       void qc.invalidateQueries({ queryKey: ['forum'] })
     },
-    onError: (err) => toast.error(extractError(err, '操作失败')),
+    onError: (err) => toast.error(extractError(err, '没能切换分区状态，可再试一次')),
   })
 
   const deleteMut = useMutation({
@@ -133,7 +133,7 @@ export default function AdminForumBoardsPage() {
     <div>
       <PageHeader
         title="讨论分区"
-        description="树形结构：父分区汇总，子分区承载内容。排序值越小越靠前；有子分区或帖子的分区不能直接删除。"
+        description="树形结构：父分区汇总，子分区承载内容。排序值越小越靠前；有子分区或话题的分区不能直接删除。"
         actions={
           <Button onClick={() => setEditing({ ...EMPTY_FORM })}>
             <Plus className="h-4 w-4" />
@@ -145,7 +145,7 @@ export default function AdminForumBoardsPage() {
       {listQ.isLoading ? (
         <Loading />
       ) : listQ.isError ? (
-        <ErrorState message="加载分区失败" onRetry={() => listQ.refetch()} />
+        <ErrorState message="分区加载失败，可重试。" onRetry={() => listQ.refetch()} />
       ) : withDepth.length === 0 ? (
         <EmptyState title="还没有分区" description="先建一个父分区，再往下加子分区。" />
       ) : (
@@ -231,7 +231,7 @@ export default function AdminForumBoardsPage() {
           <DialogHeader>
             <DialogTitle>{editing?.id ? '编辑分区' : '新建分区'}</DialogTitle>
             <DialogDescription>
-              父分区只做汇总，帖子发到最具体的子分区；slug 用于 URL，创建后尽量别改。
+              父分区只做汇总，话题发到最具体的子分区；slug 用于 URL，创建后尽量别改。
             </DialogDescription>
           </DialogHeader>
           {editing ? (
@@ -330,7 +330,7 @@ export default function AdminForumBoardsPage() {
           <DialogHeader>
             <DialogTitle>删除分区</DialogTitle>
             <DialogDescription>
-              只能删除没有子分区、没有帖子的空分区。确认删除「{deleteTarget?.name}」？
+              只能删除没有子分区、没有话题的空分区。确认删除「{deleteTarget?.name}」？
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

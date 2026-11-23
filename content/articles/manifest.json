@@ -8,12 +8,12 @@
     "article text"
   ],
   "counts": {
-    "resources": 274,
-    "submissions": 310,
-    "published": 274,
+    "resources": 263,
+    "submissions": 299,
+    "published": 263,
     "drafts": 21,
     "duplicate_records": 15,
-    "records": 310
+    "records": 299
   },
   "records": [
     {
@@ -3704,149 +3704,6 @@
       "sha256": "8ec3b10b638d4681d6206507cf8707c7eaae557084b3593022dcbace4927e0da"
     },
     {
-      "submission_id": 331,
-      "resource_id": 305,
-      "status": "accepted",
-      "title": "专题合集启动：游戏、语言与身体",
-      "authors": [
-        "Rubbish 编辑部"
-      ],
-      "role": "published",
-      "path": "published/305.md",
-      "bytes": 1109,
-      "sha256": "62f3ce2e6cf0c62a8f53e9112d78bcd75d78fcdf05171686eeb9d8d280150984"
-    },
-    {
-      "submission_id": 332,
-      "resource_id": 306,
-      "status": "accepted",
-      "title": "本周观察：把论文和副刊放在同一张桌上",
-      "authors": [
-        "Rubbish 编辑部"
-      ],
-      "role": "published",
-      "path": "published/306.md",
-      "bytes": 1323,
-      "sha256": "c6fab18567f122a7424bb48c2da92ce55d289b7080b637e7598ad52f25878ca2"
-    },
-    {
-      "submission_id": 333,
-      "resource_id": 307,
-      "status": "accepted",
-      "title": "本站公告：PDF 预览已经改为逐页图",
-      "authors": [
-        "Rubbish 编辑部"
-      ],
-      "role": "published",
-      "path": "published/307.md",
-      "bytes": 1201,
-      "sha256": "a5804a8e6069ae6d673628bf2a398ee3cff4714970b8f5a6416f93653323a89d"
-    },
-    {
-      "submission_id": 334,
-      "resource_id": 308,
-      "status": "accepted",
-      "title": "更正、撤稿与署名变更：本站怎么处理",
-      "authors": [
-        "Rubbish 编辑部"
-      ],
-      "role": "published",
-      "path": "published/308.md",
-      "bytes": 1185,
-      "sha256": "d270a4670c996b96ff732107b97a1a013214e826b5ed86e0b1ff63d57f6cafaf"
-    },
-    {
-      "submission_id": 336,
-      "resource_id": 309,
-      "status": "accepted",
-      "title": "世界观：允许副刊用小说写真实问题",
-      "authors": [
-        "Rubbish 编辑部"
-      ],
-      "role": "published",
-      "path": "published/309.md",
-      "bytes": 581,
-      "sha256": "687113d6e3d698624c51a8236b57f28630f99b77482c919245af1c06057e6b45"
-    },
-    {
-      "submission_id": 337,
-      "resource_id": 310,
-      "status": "accepted",
-      "title": "研究亮点：PADA 假说为什么值得单独读",
-      "authors": [
-        "Rubbish 编辑部"
-      ],
-      "role": "published",
-      "path": "published/310.md",
-      "bytes": 555,
-      "sha256": "4a9439e64f1dd0a91d4120e1fca87c953167ba3cf71e87508dfd358eed6e5567"
-    },
-    {
-      "submission_id": 338,
-      "resource_id": 311,
-      "status": "accepted",
-      "title": "特写：一本学生刊物的 PDF 预览是怎么修好的",
-      "authors": [
-        "Rubbish 编辑部"
-      ],
-      "role": "published",
-      "path": "published/311.md",
-      "bytes": 571,
-      "sha256": "44eaaa931a060a9d0fe99dbda0e11454dd460486626b5c0f1e2c9bfbe6101f0f"
-    },
-    {
-      "submission_id": 339,
-      "resource_id": 312,
-      "status": "accepted",
-      "title": "书评栏目：我们想看到什么样的书评",
-      "authors": [
-        "Rubbish 编辑部"
-      ],
-      "role": "published",
-      "path": "published/312.md",
-      "bytes": 566,
-      "sha256": "6bba86d5157db82169598dfe5f2166cedf7ab39d4e280f4aedecdad15dacfd11"
-    },
-    {
-      "submission_id": 340,
-      "resource_id": 313,
-      "status": "accepted",
-      "title": "读者来信：把问题写在页面上，而不是只发在群里",
-      "authors": [
-        "Rubbish 编辑部"
-      ],
-      "role": "published",
-      "path": "published/313.md",
-      "bytes": 550,
-      "sha256": "c5323c5c6cdeab3efb4cabac7dfd90a4e8088fbad2cbe0f30a1eb102ceb4fd07"
-    },
-    {
-      "submission_id": 341,
-      "resource_id": 314,
-      "status": "accepted",
-      "title": "技术现场：为什么网页、Word 和 PDF 用同一份 Markdown",
-      "authors": [
-        "Rubbish 编辑部"
-      ],
-      "role": "published",
-      "path": "published/314.md",
-      "bytes": 586,
-      "sha256": "7bdea9753b5c317748c1c18d690c38aa4582aaad0563a4ee169ed5ae219a467f"
-    },
-    {
-      "submission_id": 342,
-      "resource_id": 315,
-      "status": "accepted",
-      "title": "新闻评述：当论文和副刊共用一套编辑台",
-      "authors": [
-        "Rubbish 编辑部"
-      ],
-      "role": "published",
-      "path": "published/315.md",
-      "bytes": 542,
-      "sha256": "081be3c71bd146f656cc8f2e42dc7f4f0addd9a2bab857fd6c426a6cc0bf7af8"
-    },
-    {
       "submission_id": 328,
       "resource_id": null,
       "status": "minor_revision",
@@ -4339,5 +4196,56 @@
       "bytes": 519,
       "sha256": "64f29158edf57ad215c33c3d3858fd13b9d787895d1924edc2204364a4180ae1"
     }
-  ]
+  ],
+  "audit": {
+    "action": "archive_notices",
+    "archived_at_utc": "2026-11-22T18:24:09Z",
+    "archived_at_local": "2026-11-23T02:24:09+08:00",
+    "operator": "内容线",
+    "reason": "11 篇站务/编辑部口径文本（作者为 Rubbish 编辑部）非研究作品，自文章库下架并归档到 content/editorial/notices/；对外口径由后台 announcements 公告机制承载，正文原样留档未改写。",
+    "archived_resource_ids": [
+      305,
+      306,
+      307,
+      308,
+      309,
+      310,
+      311,
+      312,
+      313,
+      314,
+      315
+    ],
+    "archived_submission_ids": [
+      331,
+      332,
+      333,
+      334,
+      336,
+      337,
+      338,
+      339,
+      340,
+      341,
+      342
+    ],
+    "archive_dir": "content/editorial/notices/",
+    "mapping_file": "content/editorial/notices/mapping.json",
+    "counts_before": {
+      "resources": 274,
+      "published": 274,
+      "submissions": 310,
+      "records": 310,
+      "drafts": 21,
+      "duplicate_records": 15
+    },
+    "counts_after": {
+      "resources": 263,
+      "published": 263,
+      "submissions": 299,
+      "records": 299,
+      "drafts": 21,
+      "duplicate_records": 15
+    }
+  }
 }

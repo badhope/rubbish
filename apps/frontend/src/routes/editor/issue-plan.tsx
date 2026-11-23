@@ -61,7 +61,7 @@ const STATE_LABEL: Record<string, string> = {
   draft: '有草稿',
   live: '已上线',
   scheduled: '已排期',
-  empty: '空期',
+  empty: '空合集',
 }
 
 const LEVEL_STYLE: Record<ReleaseCheck['level'], string> = {
@@ -178,7 +178,7 @@ function IssuePlanPage() {
 
   const doRollback = async (target: ReleaseManifest) => {
     const reason = window.prompt(
-      `回滚到 Manifest #${target.id} 会恢复这一期当时的发布时间线。请输入原因（至少 3 个字）：`,
+      `回滚到 Manifest #${target.id} 会恢复这一组当时的发布时间线。请输入原因（至少 3 个字）：`,
       '恢复上一版发布时间线',
     )
     if (reason === null) return
@@ -219,7 +219,7 @@ function IssuePlanPage() {
   }
 
   if (isLoading) return <Loading />
-  if (isError) return <ErrorState message="发布门禁加载失败" onRetry={() => void refetch()} />
+  if (isError) return <ErrorState message="发布门禁加载失败，可重试。" onRetry={() => void refetch()} />
 
   const checks = latest?.payload?.checks ?? []
   const resources = latest?.payload?.resources ?? []
@@ -227,12 +227,12 @@ function IssuePlanPage() {
   return (
     <div className="w-full max-w-6xl space-y-6">
       <PageHeader
-        title="卷期编排"
-        description="检查本期内容、文件哈希与草稿混入；管理员批准后，才能发布或排期。"
+        title="合集编排"
+        description="检查本组合内容、文件哈希与草稿混入；内容整理批准后，才能发布或排期。"
         actions={
           <Button variant="outline" size="sm" onClick={() => void refetch()}>
             <RefreshCw className="mr-1 h-4 w-4" />
-            刷新期列表
+            刷新合集列表
           </Button>
         }
       />
@@ -240,11 +240,11 @@ function IssuePlanPage() {
       {!volume ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">选择要发布的期</CardTitle>
+            <CardTitle className="text-base">选择要发布的合集</CardTitle>
           </CardHeader>
           <CardContent>
             {issues.length === 0 ? (
-              <EmptyState title="还没有可发布的期" description="先到卷管理/期管理建立卷期并导入文章。" />
+              <EmptyState title="还没有可发布的合集" description="先到合集管理建立合集并导入作品。" />
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {volumes.map((item) => (
@@ -256,7 +256,7 @@ function IssuePlanPage() {
                   >
                     <p className="text-sm font-medium">Vol. {item}</p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {issues.filter((i) => i.volume === item).length} 期 ·{' '}
+                      {issues.filter((i) => i.volume === item).length} 组 ·{' '}
                       {issues.filter((i) => i.volume === item).reduce((sum, i) => sum + i.total, 0)} 篇
                     </p>
                   </button>
@@ -270,7 +270,7 @@ function IssuePlanPage() {
           <Card>
             <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-end">
               <div className="w-full sm:w-40">
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">卷</label>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">合集分组</label>
                 <select
                   value={volume}
                   onChange={(event) => chooseVolume(event.target.value)}
@@ -284,13 +284,13 @@ function IssuePlanPage() {
                 </select>
               </div>
               <div className="w-full sm:w-40">
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">期</label>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">合集</label>
                 <select
                   value={issue}
                   onChange={(event) => chooseIssue(event.target.value)}
                   className="h-9 w-full rounded-md border bg-background px-3 text-sm"
                 >
-                  <option value="">选择期号</option>
+                  <option value="">选择合集</option>
                   {selectedIssues.map((item) => (
                     <option key={item.issue} value={item.issue}>
                       Issue {item.issue} · {STATE_LABEL[item.state]} · {item.total} 篇
@@ -320,10 +320,10 @@ function IssuePlanPage() {
           ) : null}
 
           {!issue ? (
-            <EmptyState title="选择一个期号" description="先运行门禁，再发布或排期。" />
+            <EmptyState title="选择一个合集" description="先运行门禁，再发布或排期。" />
           ) : !latest ? (
             <EmptyState
-              title="这一期还没有 Manifest"
+              title="这一组还没有 Manifest"
               description="点击「运行发布门禁」生成第一份不可变发布快照。"
               action={
                 <Button variant="outline" size="sm" onClick={() => void runCheck()}>
@@ -378,10 +378,10 @@ function IssuePlanPage() {
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <p className="flex items-center gap-2 text-sm font-medium">
-                          <PenLine className="h-4 w-4" /> 编辑批准
+                          <PenLine className="h-4 w-4" /> 内容整理批准
                         </p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          门禁通过只是“可交付”，批准才是“我确认这一期可以发”。批准签名绑定 Manifest #{latest.id} 与内容哈希。
+                          门禁通过只是“可交付”，批准才是“我确认这一组可以发”。批准签名绑定 Manifest #{latest.id} 与内容哈希。
                         </p>
                       </div>
                       {latest.approved_at ? (
@@ -399,7 +399,7 @@ function IssuePlanPage() {
                         {latest.approval_note ? <p>备注：{latest.approval_note}</p> : null}
                       </div>
                     ) : !isAdmin ? (
-                      <p className="mt-3 text-xs text-muted-foreground">这份 Manifest 尚未批准；批准由管理员执行。</p>
+                      <p className="mt-3 text-xs text-muted-foreground">这份 Manifest 尚未批准；批准由内容整理执行。</p>
                     ) : (
                       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
                         <div className="w-full sm:max-w-md">
@@ -407,7 +407,7 @@ function IssuePlanPage() {
                           <Input
                             value={approvalNote}
                             onChange={(event) => setApprovalNote(event.target.value)}
-                            placeholder="例如：已核对目录、版权页与本期编后记"
+                            placeholder="例如：已核对目录与本组合内容"
                             maxLength={500}
                           />
                         </div>
@@ -437,14 +437,14 @@ function IssuePlanPage() {
                       disabled={latest.status !== 'ready' || !latest.approved_at || publish.isPending}
                     >
                       {scheduleAt ? <Clock3 className="mr-1.5 h-4 w-4" /> : <Rocket className="mr-1.5 h-4 w-4" />}
-                      {publish.isPending ? '提交中…' : scheduleAt ? '排期发布' : '立即发布'}
+                      {publish.isPending ? '发布中…' : scheduleAt ? '排期发布' : '立即发布'}
                     </Button>
                     <p className="text-xs text-muted-foreground sm:pb-2">
                       只对 <code>published</code> 资源写入 publish_at，不动草稿。未批准的 Manifest 不能发布。
                     </p>
                   </div>
                   ) : (
-                    <p className="text-xs text-muted-foreground">发布与排期由管理员执行；编辑可在此核对门禁与 Manifest 历史。</p>
+                    <p className="text-xs text-muted-foreground">发布与排期由内容整理执行；其他成员可在此核对门禁与 Manifest 历史。</p>
                   )}
                 </CardContent>
               </Card>

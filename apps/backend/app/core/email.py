@@ -42,6 +42,16 @@ logger = get_logger("rubbish.email")
 CONTACT_ONLY_ADDRESSES: frozenset[str] = frozenset({"rubbish_eb@qun.mail.163.com"})
 
 
+def _mask_recipient(to: str) -> str:
+    """日志不记完整邮箱：本地名只留首字符，域名保留。"""
+    addr = (to or "").strip().lower()
+    if "@" not in addr:
+        return "***"
+    local, _, domain = addr.partition("@")
+    head = local[:1] if local else "*"
+    return f"{head}***@{domain}"
+
+
 @runtime_checkable
 class EmailSender(Protocol):
     """Send a transactional email to one recipient."""
@@ -69,9 +79,8 @@ class ConsoleEmailSender:
     ) -> None:
         logger.info(
             "email_sent_console",
-            to=to,
+            to=_mask_recipient(to),
             subject=subject,
-            body_preview=body[:200],
         )
 
 
@@ -155,7 +164,7 @@ class SMTPEmailSender:
         ):
             logger.warning(
                 "email_outbound_blocked",
-                to=to,
+                to=_mask_recipient(to),
                 subject=subject,
                 reason="RUBBISH_EMAIL_OUTBOUND_ENABLED=false",
             )
@@ -165,20 +174,27 @@ class SMTPEmailSender:
         for attempt in range(self._retries + 1):
             try:
                 await asyncio.to_thread(self._send_sync, msg)
-                logger.info("email_sent_smtp", to=to, subject=subject, attempt=attempt + 1)
+                logger.info(
+                    "email_sent_smtp", to=_mask_recipient(to), subject=subject, attempt=attempt + 1
+                )
                 return
             except (OSError, smtplib.SMTPException) as exc:
                 last_error = exc
                 logger.warning(
                     "email_smtp_attempt_failed",
-                    to=to,
+                    to=_mask_recipient(to),
                     attempt=attempt + 1,
                     retries=self._retries,
                     error=str(exc)[:200],
                 )
                 if attempt < self._retries:
                     await asyncio.sleep(2**attempt)
-        logger.error("email_smtp_gave_up", to=to, subject=subject, error=str(last_error)[:200])
+        logger.error(
+            "email_smtp_gave_up",
+            to=_mask_recipient(to),
+            subject=subject,
+            error=str(last_error)[:200],
+        )
         raise last_error if last_error else RuntimeError("smtp send failed")
 
 
@@ -365,7 +381,7 @@ class SmtpPoolEmailSender:
         ):
             logger.warning(
                 "email_outbound_blocked",
-                to=to,
+                to=_mask_recipient(to),
                 subject=subject,
                 reason="RUBBISH_EMAIL_OUTBOUND_ENABLED=false",
             )
@@ -390,9 +406,9 @@ class SmtpPoolEmailSender:
             if getattr(self, "_bypass_outbound_guard", False):
                 sender._bypass_outbound_guard = True
             try:
-                await sender.send(to=to, subject=subject, body=body, html=html)
+                await sender.send(to=_mask_recipient(to), subject=subject, body=body, html=html)
                 self._record_success(account)
-                logger.info("email_sent_pool", to=to, account=account.key)
+                logger.info("email_sent_pool", to=_mask_recipient(to), account=account.key)
                 return
             except Exception as exc:
                 last_error = exc
@@ -404,7 +420,7 @@ class SmtpPoolEmailSender:
                 )
         logger.error(
             "email_pool_gave_up",
-            to=to,
+            to=_mask_recipient(to),
             subject=subject,
             accounts=len(order),
             error=str(last_error)[:200],
@@ -492,7 +508,7 @@ def reset_email_sender() -> None:
 
 
 def get_congrat_sender() -> EmailSender:
-    """录用祝贺专用通道（主编单独授权，不受外发总闸约束）。
+    """通过祝贺专用通道（主编单独授权，不受外发总闸约束）。
 
     ``RUBBISH_EMAIL_CONGRAT_ENABLED=true`` 且 SMTP 配置完整时走真实投递；
     否则降级 console——与 get_email_sender 的护栏语义一致，只是开关独立。
@@ -535,7 +551,7 @@ def get_congrat_sender() -> EmailSender:
             timeout=settings.email_smtp_timeout,
             retries=settings.email_smtp_retries,
         )
-    # 主编已通过 CONGRAT 开显式授权录用祝贺邮件：该实例旁路外发总闸。
+    # 主编已通过 CONGRAT 开显式授权通过祝贺邮件：该实例旁路外发总闸。
     _congrat_sender._bypass_outbound_guard = True
     logger.info("congrat_sender_ready", accounts=len(accounts))
     return _congrat_sender

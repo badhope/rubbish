@@ -7,8 +7,8 @@ import { Badge } from '@/components/ui/badge'
 
 const KIND_LABEL: Record<AppealKind, string> = {
   withdraw: '撤回作品',
-  rescore: '重审评分',
-  rescore_zone: '重审分区',
+  rescore: '复核作品判断',
+  rescore_zone: '复核分区',
 }
 
 const STATUS_LABEL: Record<AppealStatus, string> = {

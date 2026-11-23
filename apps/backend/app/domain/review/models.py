@@ -46,8 +46,8 @@ class ReviewAssignment(Base, TenantScopedMixin):
 
     __tablename__ = "review_assignments"
     __table_args__ = (
-        # 同一稿件、同一审稿人、同一轮只能有一条邀请；重投后可邀请同一
-        # 审稿人进入新一轮，不能被旧的 (submission, reviewer) 约束拦住。
+        # 同一作品、同一互评成员、同一轮只能有一条邀请；重投后可邀请同一
+        # 互评成员进入新一轮，不能被旧的 (submission, reviewer) 约束拦住。
         UniqueConstraint(
             "submission_id",
             "reviewer_id",
@@ -76,8 +76,8 @@ class ReviewAssignment(Base, TenantScopedMixin):
         index=True,
     )
 
-    # pending=已邀请待回应, accepted=审稿人接受, declined=审稿人拒绝,
-    # completed=审稿人已提交报告, cancelled=编辑撤销邀请
+    # pending=已邀请待回应, accepted=互评成员接受, declined=互评成员拒绝,
+    # completed=互评成员已提交报告, cancelled=编辑撤销邀请
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending", index=True)
     due_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     invited_at: Mapped[datetime] = mapped_column(
@@ -94,13 +94,13 @@ class ReviewAssignment(Base, TenantScopedMixin):
         Integer, nullable=False, default=0, server_default="0"
     )
 
-    # P1：轮次（默认 1）、slot（1/2/3，审稿人槽位）、是否裁决人。
+    # P1：轮次（默认 1）、slot（1/2/3，互评成员槽位）、是否裁决人。
     round: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
     slot: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
     is_adjudicator: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
     )
-    # 外审专家（主编指定，可标注外省/外单位）；不改变账号体系，
+    # 互评专家（主编指定，可标注外省/外单位）；不改变账号体系，
     # 只记录这次邀请的性质，供矩阵与审计识别。
     is_external: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false"
@@ -116,10 +116,10 @@ class ReviewAssignment(Base, TenantScopedMixin):
 
 
 class ReviewerConflictDeclaration(Base, TenantScopedMixin):
-    """审稿人年度利益冲突声明。
+    """互评成员年度利益冲突声明。
 
-    只记录审稿人主动申报的冲突对象（作者姓名、邮箱、机构、项目等）。
-    分派时用作者姓名/通讯邮箱做可解释匹配；机构字段目前不在投稿表里，
+    只记录互评成员主动申报的冲突对象（作者姓名、邮箱、机构、项目等）。
+    分派时用作者姓名/通讯邮箱做可解释匹配；机构字段目前不在发布表里，
     不做“凭猜测拦截”。没有声明不阻止分派，但编辑侧会显示“未声明”；
     有声明且命中则硬拦截，并写入审计。
     """
@@ -180,8 +180,8 @@ class ReviewReport(Base, TenantScopedMixin):
     scores: Mapped[dict[str, Any]] = mapped_column(JSONBVariant, nullable=False, default=dict)
     comments_to_editor: Mapped[str | None] = mapped_column(Text, nullable=True)
     comments_to_author: Mapped[str | None] = mapped_column(Text, nullable=True)
-    # 审稿报告附件（主要是带批注的 PDF/Word/图片）。存元数据数组而不是
-    # 单列：一个审稿人可能同时交“批注版 PDF + 补充数据表”。
+    # 互评报告附件（主要是带批注的 PDF/Word/图片）。存元数据数组而不是
+    # 单列：一个互评成员可能同时交“批注版 PDF + 补充数据表”。
     attachments: Mapped[list[dict[str, Any]]] = mapped_column(
         JSONBVariant, nullable=False, default=list
     )
@@ -195,9 +195,9 @@ class ReviewReport(Base, TenantScopedMixin):
 class ReviewCalibrationSample(Base, TenantScopedMixin):
     """季度盲评校准样本（P1-10）。
 
-    编辑每季度从“至少两位审稿人完成报告”的稿件中抽取最多 5 篇，
-    保存当时的匿名分数快照：只留 A/B/C 标签，不留审稿人姓名/ID，
-    用于季度校准会上对照同稿分歧。样本是快照，不随审稿人后续改稿
+    编辑每季度从“至少两位互评成员完成报告”的作品中抽取最多 5 篇，
+    保存当时的匿名分数快照：只留 A/B/C 标签，不留互评成员姓名/ID，
+    用于季度校准会上对照同稿分歧。样本是快照，不随互评成员后续改稿
     或报告更新而变化；重新抽取会命中 (year, quarter, submission_id)
     唯一约束，保持同一季度样本集稳定。
     """
@@ -243,11 +243,11 @@ class ReviewCalibrationSample(Base, TenantScopedMixin):
 
 
 class ReviewDraft(Base, TenantScopedMixin):
-    """审稿报告的未提交草稿（每个 assignment 至多一份）。
+    """互评报告的未提交草稿（每个 assignment 至多一份）。
 
     ``payload`` 原样保存前端 ``ReviewFormValue``：推荐结论、赛道、七维
-    打分与作者/编辑意见。草稿不是正式报告，不参与审稿矩阵/录用闸门；
-    审稿人提交报告时删除本行，避免旧草稿继续被加载。
+    打分与作者/编辑意见。草稿不是正式报告，不参与互评矩阵/通过闸门；
+    互评成员提交报告时删除本行，避免旧草稿继续被加载。
     """
 
     __tablename__ = "review_drafts"

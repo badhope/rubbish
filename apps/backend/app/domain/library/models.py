@@ -58,6 +58,15 @@ class ReadingList(Base, TenantScopedMixin):
     )
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # 可见性：private=仅本人可读（默认）；public=本人与其他登录/游客可读。
+    # 历史数据由迁移回填为 private。
+    visibility: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default="private",
+        server_default="private",
+        index=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False
     )

@@ -51,7 +51,7 @@ const PAGE_SIZE = 50
 
 // 与后端 ASSIGNABLE_ROLES 一致；admin 角色由 is_admin 控制，不在此处。
 // 作者/读者是"身份"不是"角色"：读者=注册即得、作者=确认《作品规范》
-// 即得，不由管理员手工分配（2026-11 收窄口径，授权只管编辑线）。
+// 即得，不由管理员手工分配（2026-11 收窄口径，授权只管内容整理线）。
 const ASSIGNABLE_ROLES: AssignableRole[] = [
   'chief_editor',
   'deputy_editor',
@@ -131,7 +131,7 @@ export default function AdminUsersPage() {
       await setActiveMut.mutateAsync({ userId: u.id, isActive: !u.is_active })
       toast.success(u.is_active ? '已禁用' : '已启用')
     } catch (err) {
-      toast.error(extractError(err, '操作失败'))
+      toast.error(extractError(err, '没能更改账号状态，可再试一次'))
     }
   }
 
@@ -147,7 +147,7 @@ export default function AdminUsersPage() {
         toast.success(`已分配 ${ROLE_LABELS[role]} 角色`)
       }
     } catch (err) {
-      toast.error(extractError(err, '操作失败'))
+      toast.error(extractError(err, '没能更改角色分配，可再试一次'))
     }
   }
 
@@ -155,7 +155,7 @@ export default function AdminUsersPage() {
     <div>
       <PageHeader
         title="成员管理"
-        description="管理用户、启用状态与社区角色分配。读者身份=注册即得，作者身份=确认《规则与边界》即得，均不在此分配。"
+        description="管理用户、启用状态与社区角色分配。读者身份=注册即得，作者身份=确认《边界与处理》即得，均不在此分配。"
         actions={
           <div className="flex items-center gap-2">
             {data ? <Badge variant="secondary">当前页 {data.length}</Badge> : null}
@@ -182,7 +182,7 @@ export default function AdminUsersPage() {
       {isLoading ? (
         <Loading />
       ) : isError ? (
-        <ErrorState message="加载用户失败" onRetry={() => refetch()} />
+        <ErrorState message="用户列表加载失败，可重试。" onRetry={() => refetch()} />
       ) : filtered.length === 0 ? (
         <EmptyState title="暂无用户" />
       ) : (
@@ -193,7 +193,7 @@ export default function AdminUsersPage() {
                 <TableHead>用户名</TableHead>
                 <TableHead>邮箱</TableHead>
                 <TableHead>角色</TableHead>
-                <TableHead>管理员</TableHead>
+                <TableHead>平台管理</TableHead>
                 <TableHead>状态</TableHead>
                 <TableHead>邮箱验证</TableHead>
                 <TableHead>注册时间</TableHead>
@@ -276,7 +276,7 @@ export default function AdminUsersPage() {
                                 await setAdminMut.mutateAsync({ userId: u.id, isAdmin: !u.is_admin })
                                 toast.success(u.is_admin ? '已取消管理员' : '已设为平台管理员')
                               } catch (err) {
-                                toast.error(extractError(err, '操作失败'))
+                                toast.error(extractError(err, '没能更改管理员状态，可再试一次'))
                               } finally {
                                 setOpenUserId(null)
                               }
@@ -287,7 +287,7 @@ export default function AdminUsersPage() {
                             {u.is_admin ? '取消平台管理员' : '设为平台管理员'}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuLabel>活跃值</DropdownMenuLabel>
+                          <DropdownMenuLabel>经验</DropdownMenuLabel>
                           <DropdownMenuItem
                             onSelect={(e) => {
                               e.preventDefault()
@@ -298,10 +298,10 @@ export default function AdminUsersPage() {
                               setOpenUserId(null)
                             }}
                           >
-                            发放活跃值
+                            发放经验
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuLabel>编辑线角色分配</DropdownMenuLabel>
+                          <DropdownMenuLabel>内容整理线角色分配</DropdownMenuLabel>
                           {ASSIGNABLE_ROLES.map((role) => {
                             const checked = roles.includes(role)
                             const pending =
@@ -393,7 +393,7 @@ export default function AdminUsersPage() {
                 maxLength={300}
                 value={createForm.note}
                 onChange={(e) => setCreateForm((v) => ({ ...v, note: e.target.value }))}
-                placeholder="例：请负责本期方法学作品的外审。"
+                placeholder="例：请负责本组合方法学作品的互评。"
               />
             </div>
             {createError && <p className="text-sm text-destructive">{createError}</p>}
@@ -440,15 +440,15 @@ export default function AdminUsersPage() {
       <Dialog open={grantTarget !== null} onOpenChange={(open) => { if (!open) setGrantTarget(null) }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>发放活跃值</DialogTitle>
+            <DialogTitle>发放经验</DialogTitle>
             <DialogDescription>
               给 {grantTarget?.username ?? '该成员'}（活跃 Lv {grantTarget?.level ?? 1}）手动发放经验。
-              用于编辑贡献、活动奖励；备注会写进经验记录与审计日志。
+              用于内容整理贡献、活动奖励；备注会写进经验记录与审计日志。
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label htmlFor="grant-points">活跃值</Label>
+              <Label htmlFor="grant-points">经验</Label>
               <Input
                 id="grant-points"
                 type="number"
@@ -468,7 +468,7 @@ export default function AdminUsersPage() {
                 maxLength={200}
                 value={grantNote}
                 onChange={(e) => setGrantNote(e.target.value)}
-                placeholder="例：本期方法学专题编辑贡献。"
+                placeholder="例：本组合方法学合集内容整理贡献。"
               />
               <p className="text-right text-xs text-muted-foreground">{grantNote.length}/200</p>
             </div>
@@ -483,7 +483,7 @@ export default function AdminUsersPage() {
                 if (!grantTarget) return
                 const points = Number(grantPoints)
                 if (!Number.isInteger(points) || points < 1 || points > 10000) {
-                  setGrantError('活跃值必须是 1–10000 的整数')
+                  setGrantError('经验必须是 1–10000 的整数')
                   return
                 }
                 const note = grantNote.trim()
@@ -493,7 +493,7 @@ export default function AdminUsersPage() {
                 }
                 try {
                   await grantXpMut.mutateAsync({ userId: grantTarget.id, points, note })
-                  toast.success(`已给 ${grantTarget.username} 发放 ${points} 活跃值`)
+                  toast.success(`已给 ${grantTarget.username} 发放 ${points} 经验`)
                   setGrantTarget(null)
                 } catch (err) {
                   setGrantError(extractError(err, '发放失败'))

@@ -51,7 +51,7 @@ function LongText({ text }: { text: string }) {
 
 // 读者评论区：游客可见可读，登录后可发言；不可编辑（时间线保持诚实），
 // 可删自己的评论，管理员可删任何评论（审计留痕）。
-export function Comments({ resourceId }: { resourceId: number }) {
+export function Comments({ resourceId, title }: { resourceId: number; title?: string }) {
   const { isAuthenticated } = useAuth()
   const [page, setPage] = useState(1)
   const [draft, setDraft] = useState('')
@@ -99,7 +99,7 @@ export function Comments({ resourceId }: { resourceId: number }) {
         target_id: reporting.id,
         reason: reporting.body.trim(),
       })
-      toast.success('举报已提交，管理员会处理')
+      toast.success('已举报，站务会尽快处理')
       setReporting(null)
     } catch (err) {
       toast.error(
@@ -130,6 +130,7 @@ export function Comments({ resourceId }: { resourceId: number }) {
             <Textarea
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
+              aria-label={title ? `评论作品《${title}》` : '写下读者评论'}
               placeholder="以读者的身份发言：问题、质疑、补充都欢迎（≤1000 字，发布后不可编辑）"
               rows={3}
               maxLength={1000}
@@ -256,7 +257,7 @@ export function Comments({ resourceId }: { resourceId: number }) {
           <DialogHeader>
             <DialogTitle>举报这条评论</DialogTitle>
             <DialogDescription>
-              写清问题（广告、辱骂、侵权等）。恶意举报会被记录；管理员可驳回、下架评论或停用作者。
+              写清问题（广告、辱骂、侵权等）。恶意举报会被记录；站务可驳回、下架评论或停用作者。
             </DialogDescription>
           </DialogHeader>
           <Textarea
@@ -264,6 +265,7 @@ export function Comments({ resourceId }: { resourceId: number }) {
             onChange={(e) =>
               setReporting((prev) => (prev ? { ...prev, body: e.target.value } : prev))
             }
+            aria-label="填写举报原因"
             maxLength={200}
             rows={3}
             placeholder="举报原因（≤200 字）"

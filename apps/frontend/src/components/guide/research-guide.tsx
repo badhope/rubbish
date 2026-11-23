@@ -59,12 +59,12 @@ export function ResearchGuide() {
       </Link>
 
       <PageHeader
-        title="写作品"
+        title="写一篇"
         description="从一个问题开始，不必先有答案。写清楚你想讲什么；写不完，也可以先放一段上来。"
         actions={
           <Button asChild>
             <Link to="/submissions/new">
-              发布作品
+              开始写
               <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
           </Button>
@@ -104,7 +104,7 @@ export function ResearchGuide() {
         <RevealSection>
           <h2 className="flex items-center gap-2 text-xl font-medium">
             <ShieldCheck className="h-5 w-5 text-primary" />
-            发布前，检查这四件事
+            放上来前，检查这四件事
           </h2>
           <div className="mt-4 divide-y border-y">
             {CHECKS.map(([title, body], index) => (
@@ -120,7 +120,7 @@ export function ResearchGuide() {
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
             更完整的版权、隐私与处理规则见
             <Link to="/guide" search={{ tab: 'policies' }} className="mx-1 text-primary hover:underline">
-              规则与边界
+              边界与处理
             </Link>
             。
           </p>

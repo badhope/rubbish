@@ -373,7 +373,11 @@ async def export_my_data(
     items_by_list: dict[int, list[dict[str, Any]]] = {}
     for item, title in item_rows:
         items_by_list.setdefault(item.reading_list_id, []).append(
-            {"resource_id": item.resource_id, "resource_title": title, "added_at": iso(item.added_at)}
+            {
+                "resource_id": item.resource_id,
+                "resource_title": title,
+                "added_at": iso(item.added_at),
+            }
         )
     library_lists_payload = [
         {

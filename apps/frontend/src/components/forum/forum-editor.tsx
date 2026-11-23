@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
-import MDEditor, { commands } from '@uiw/react-md-editor'
+// 走 nohighlight 入口：预览不挂代码高亮（refractor 全量语言表约 2.7MB），
+// 与只读侧 MarkdownContent 行为一致；需要高亮时再切回默认入口。
+import MDEditor, { commands } from '@uiw/react-md-editor/nohighlight'
 import { ImagePlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EmojiStickerPicker } from '@/components/common/emoji-sticker-picker'
@@ -9,7 +11,7 @@ import '@uiw/react-markdown-preview/markdown.css'
 
 /**
  * 论坛编辑器：基于开源 @uiw/react-md-editor，不再维护自绘 toolbar。
- * 只保留发帖所需的高频命令，表情与图片上传放在底部一行，移动端优先聚焦正文。
+ * 只保留说话所需的高频命令，表情与图片上传放在底部一行，移动端优先聚焦正文。
  */
 export function ForumEditor({
   value,
@@ -21,6 +23,7 @@ export function ForumEditor({
   onSubmitShortcut,
   autoFocus,
   textareaRef,
+  ariaLabel,
 }: {
   value: string
   onChange: (next: string) => void
@@ -31,6 +34,7 @@ export function ForumEditor({
   onSubmitShortcut?: () => void
   autoFocus?: boolean
   textareaRef?: RefObject<HTMLTextAreaElement | null>
+  ariaLabel?: string
 }) {
   const innerRef = useRef<HTMLTextAreaElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -132,7 +136,7 @@ export function ForumEditor({
         visibleDragbar={false}
         textareaProps={{
           placeholder,
-          'aria-label': '帖子正文',
+          'aria-label': ariaLabel ?? '话题正文',
           autoFocus,
         }}
         commands={[

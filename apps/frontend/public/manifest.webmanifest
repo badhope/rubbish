@@ -1,14 +1,14 @@
 {
-  "name": "Rubbish 开放获取期刊",
+  "name": "Rubbish — 公开写作与讨论",
   "short_name": "Rubbish",
-  "description": "正经与荒诞兼容的开放获取学术期刊，免费投稿、开放阅读。",
+  "description": "公开写作与讨论社区。长文、短帖、合集与讨论都在这里；不做学术评价，也不出具发表证明。",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#f8f5ee",
-  "theme_color": "#24344d",
+  "background_color": "#F4EFE4",
+  "theme_color": "#2F5D46",
   "icons": [
-    { "src": "/brand-rubbish.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "maskable" }
+    { "src": "/brand/rubbish-r-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/brand/rubbish-r-square-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }

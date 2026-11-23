@@ -405,7 +405,7 @@ async def test_file_endpoint_serves_published_resource(
 async def test_file_endpoint_blocks_draft_resource(
     client: AsyncClient, db_session, admin_user
 ) -> None:
-    """P1 回归：draft/in_review 资源的稿件不得经公开端点流出。"""
+    """P1 回归：draft/in_review 资源的作品不得经公开端点流出。"""
     resource_id = await _create_draft_resource_with_submission(
         client, db_session, admin_user, status="draft"
     )
@@ -439,7 +439,7 @@ async def _grant_editor_role(client: AsyncClient, admin_user: dict, user_id: int
 async def test_draft_preview_editor_can_read_detail_and_file(
     client: AsyncClient, db_session, admin_user, test_user
 ) -> None:
-    """刊前预览：editor 角色可读 draft 详情与稿件文件；匿名仍 404。"""
+    """刊前预览：editor 角色可读 draft 详情与作品文件；匿名仍 404。"""
     await _grant_editor_role(client, admin_user, test_user["user_id"])
     resource_id = await _create_draft_resource_with_submission(
         client, db_session, admin_user, status="draft"
@@ -458,7 +458,7 @@ async def test_draft_preview_editor_can_read_detail_and_file(
 async def test_draft_hidden_from_unrelated_regular_user(
     client: AsyncClient, db_session, admin_user, test_user
 ) -> None:
-    """无角色、非关联作者的普通用户：draft 详情与稿件均 404（不确认存在）。"""
+    """无角色、非关联作者的普通用户：draft 详情与作品均 404（不确认存在）。"""
     resource_id = await _create_draft_resource_with_submission(
         client, db_session, admin_user, status="draft"
     )

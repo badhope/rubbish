@@ -134,14 +134,14 @@ async def test_export_contains_real_rows(auth_client, db_session):
     submission = Submission(
         tenant_id=tid,
         submitted_by=user.id,
-        title="导出验收投稿",
+        title="导出验收发布",
         type="paper",
         authors=["导出验收作者"],
         year=2026,
         discipline="计算机科学",
         tags=[],
-        abstract="导出验收投稿摘要。",
-        preview="导出验收投稿预览。",
+        abstract="导出验收发布摘要。",
+        preview="导出验收发布预览。",
         resource_id=resource.id,
         status="pending",
         triage_status="pending",
@@ -190,7 +190,7 @@ async def test_export_contains_real_rows(auth_client, db_session):
     resp = await auth_client["client"].get("/api/users/me/export", headers=auth_client["headers"])
     assert resp.status_code == 200, resp.text
     sections = resp.json()["sections"]
-    assert sections["submissions"][0]["title"] == "导出验收投稿"
+    assert sections["submissions"][0]["title"] == "导出验收发布"
     assert sections["submissions"][0]["resource_id"] == resource.id
     assert sections["reviews"][0]["assignment_id"] == assignment.id
     assert sections["reading_history"][0]["resource_id"] == resource.id

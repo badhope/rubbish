@@ -325,8 +325,8 @@ def test_parse_csv_accepts_every_allowed_type(resource_type: str) -> None:
 
 def test_parse_csv_accepts_chinese_and_common_header_aliases() -> None:
     content = (
-        "标题,作者,年份,期刊,类型,关键词,摘要,DOI,卷,期,页码\n"
-        "中文表头论文,张三 and 李四,2025,测试期刊,paper,机器学习; 传播,摘要正文,10.1000/zh,12,3,45-58\n"
+        "标题,作者,年份,内容库,类型,关键词,摘要,DOI,卷,期,页码\n"
+        "中文表头论文,张三 and 李四,2025,测试内容库,paper,机器学习; 传播,摘要正文,10.1000/zh,12,3,45-58\n"
     )
 
     resources, errors = parse_csv(content)
@@ -336,7 +336,7 @@ def test_parse_csv_accepts_chinese_and_common_header_aliases() -> None:
     assert resource.title == "中文表头论文"
     assert resource.authors == ["张三", "李四"]
     assert resource.year == 2025
-    assert resource.venue == "测试期刊"
+    assert resource.venue == "测试内容库"
     assert resource.tags == ["机器学习", "传播"]
     assert resource.doi == "10.1000/zh"
     assert resource.volume == "12"
@@ -345,7 +345,7 @@ def test_parse_csv_accepts_chinese_and_common_header_aliases() -> None:
 
 
 def test_parse_csv_explicit_column_map_overrides_aliases() -> None:
-    content = "题目,写手,发表年,刊物\n映射论文,Alice A,2024,映射期刊\n"
+    content = "题目,写手,发表年,刊物\n映射论文,Alice A,2024,映射内容库\n"
 
     resources, errors = parse_csv(
         content,
@@ -356,7 +356,7 @@ def test_parse_csv_explicit_column_map_overrides_aliases() -> None:
     assert resources[0].title == "映射论文"
     assert resources[0].authors == ["Alice A"]
     assert resources[0].year == 2024
-    assert resources[0].venue == "映射期刊"
+    assert resources[0].venue == "映射内容库"
 
 
 def test_parse_csv_rejects_duplicate_or_unknown_column_map() -> None:

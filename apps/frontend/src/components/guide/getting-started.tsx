@@ -24,7 +24,7 @@ const QUICK_START = [
     no: '01',
     icon: BookOpen,
     title: '先读一篇',
-    body: '不注册也能读。挑一篇精选，或按合集、分区慢慢翻。',
+    body: '不必注册也能读。挑一篇被标出的，或按合集、分区慢慢翻。',
     to: '/catalog',
     label: '去内容库',
   },
@@ -39,8 +39,8 @@ const QUICK_START = [
   {
     no: '03',
     icon: PenLine,
-    title: '发一篇',
-    body: '长文放进内容库，短帖留在讨论区。注册就能发，不收钱。',
+    title: '写一篇',
+    body: '长文放进内容库，短话留在讨论区。登录即可发布，不收费用。',
     to: '/submissions/new',
     label: '开始写',
   },
@@ -48,7 +48,7 @@ const QUICK_START = [
     no: '04',
     icon: User,
     title: '看自己的进度',
-    body: '作品进度、收藏、通知、积分和参与记录，都在「我的」。',
+    body: '作品进度、收藏、通知、经验与参与记录，都在「我的」。',
     to: '/me',
     label: '打开我的',
   },
@@ -61,16 +61,16 @@ const MAP = [
       { label: '首页', body: '先知道这里是什么，再决定下一步。', to: '/', icon: Compass },
       { label: '内容库', body: '长文、荒诞写作和自由创作。', to: '/catalog', icon: BookOpen },
       { label: '合集', body: '一组一组往下读。', to: '/issues', icon: Layers3 },
-      { label: '讨论区', body: '短帖、提问、复盘、组队和反馈。', to: '/forum', icon: MessagesSquare },
-      { label: '关于站点', body: '这里做什么、不做什么，以及怎么联系。', to: '/about', icon: ShieldCheck },
+      { label: '讨论区', body: '短话、提问、复盘、组队和反馈。', to: '/forum', icon: MessagesSquare },
+      { label: '关于此处', body: '这里做什么、不做什么，以及怎么联系。', to: '/about', icon: ShieldCheck },
     ],
   },
   {
     title: '登录后，你有一块自己的地方',
     items: [
-      { label: '我的', body: '概览、收藏、积分、设置和通知。', to: '/me', icon: User },
+      { label: '我的', body: '概览、收藏、经验、设置和通知。', to: '/me', icon: User },
       { label: '我的作品', body: '发布进度、修改要求和历史版本。', to: '/submissions', icon: FileText },
-      { label: '参与记录', body: '活跃等级和积分来源；不换权限。', to: '/levels', icon: Users },
+      { label: '参与记录', body: '档位与经验来源；不换权限。', to: '/levels', icon: Users },
     ],
   },
   {
@@ -125,7 +125,7 @@ export function GettingStarted() {
           全站地图
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          找不到入口，就来这里。公开、登录后、带角色，三层分开写，不把后台按钮塞给访客。
+          找不到入口，就来这里。公开、登录后、带角色，三层分开写；访客不必看见后台的按钮。
         </p>
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           {MAP.map((group) => (
@@ -160,11 +160,11 @@ export function GettingStarted() {
           先把边界说清楚
         </h2>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Rubbish 是公开写作与讨论社区，不做学术评价，也不出具发表、职称或学分证明。站内编号只用来定位，
+          Rubbish 是公开写作与讨论社区，不做学术评价，也不出具职称、学分、学历或公开证明。站内编号只用来定位，
           虚构内容要标注；不碰真人隐私、违法内容和他人版权。
           完整规则见
           <Link to="/guide" search={{ tab: 'policies' }} className="mx-1 text-primary hover:underline">
-            规则与边界
+            边界与处理
           </Link>
           。
         </p>

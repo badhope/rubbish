@@ -27,7 +27,7 @@ const STORAGE_KEY = 'theme'
 const PALETTE_KEY = 'palette'
 
 export const PALETTES: { key: Palette; label: string; hint: string; swatch: string }[] = [
-  { key: 'jade', label: '苔绿', hint: '刊物的身份色', swatch: '#2f5d46' },
+  { key: 'jade', label: '苔绿', hint: '站点的身份色', swatch: '#2f5d46' },
   { key: 'ink', label: '墨蓝', hint: '学术、克制', swatch: '#2b3f63' },
   { key: 'clay', label: '赭石', hint: '纸感、人文', swatch: '#8a4b32' },
   { key: 'celadon', label: '青瓷', hint: '冷灰、安静', swatch: '#33585a' },

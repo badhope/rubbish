@@ -10,6 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 export function RestoreAccountPage() {
   const navigate = useNavigate()
   const token = loadRestoreToken()
@@ -19,10 +21,21 @@ export function RestoreAccountPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [attempted, setAttempted] = useState(false)
+
+  const emailValid = EMAIL_RE.test(email.trim())
+  const usernameValid = username.trim().length >= 3
+  const passwordValid = password.length >= 8
+  const formValid = emailValid && usernameValid && passwordValid
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!token) return
+    setAttempted(true)
+    if (!formValid) {
+      setError('请先填全新的邮箱、用户名和密码；用户名至少 3 个字符，密码至少 8 位。')
+      return
+    }
     setError('')
     restore.mutate(
       { token, email: email.trim(), username: username.trim(), new_password: password },
@@ -67,6 +80,7 @@ export function RestoreAccountPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
+                  aria-invalid={attempted && !emailValid}
                   required
                 />
               </div>
@@ -77,6 +91,7 @@ export function RestoreAccountPage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="恢复后对外显示的名字"
+                  aria-invalid={attempted && !usernameValid}
                   required
                 />
               </div>
@@ -90,11 +105,16 @@ export function RestoreAccountPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="至少 8 位"
                   minLength={8}
+                  aria-invalid={attempted && !passwordValid}
                   required
                 />
               </div>
               {error ? <p className="text-xs text-destructive">{error}</p> : null}
-              <Button type="submit" className="w-full" disabled={restore.isPending}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={restore.isPending || !formValid}
+              >
                 {restore.isPending ? '恢复中…' : '恢复账号'}
               </Button>
               <p className="text-center text-xs text-muted-foreground">

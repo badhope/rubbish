@@ -7,17 +7,17 @@ export const Route = createFileRoute('/about')({
   component: AboutPage,
 })
 
-// 谁在做什么：管理、策展、技术与治理；不虚构头衔。
+// 谁在守着这张桌子：管理、策展、技术与治理；不虚构头衔。
 const ROLES = [
   {
     name: '社区管理',
     role: '看门与扫尘',
-    duty: '处理举报、合并重复帖、把吵起来的人拉开；不替作者改正文。',
+    duty: '处理举报、合并重复话题、把吵起来的人拉开；不替作者改正文。',
   },
   {
     name: '内容策展',
-    role: '精选与专题',
-    duty: '从公开内容里挑值得停下来的作品，做专题、写几句推荐；只指路，不替读者下结论。',
+    role: '精选与合集',
+    duty: '从公开内容里挑值得停下来的作品，做合集、写几句推荐；只指路，不替读者下结论。',
   },
   {
     name: '技术维护',
@@ -32,8 +32,8 @@ const ROLES = [
 ]
 
 const TIMELINE = [
-  ['2026 年 10 月', '社区和内容库开门：短帖留在讨论区，长文放进内容库。'],
-  ['2026 年 11 月', '指南和规则页补齐；发帖不再需要申请资格。'],
+  ['2026 年 10 月', '社区和内容库开门：说话留在讨论区，长文放进内容库。'],
+  ['2026 年 11 月', '指南和规则页补齐；说话不再需要申请资格。'],
   ['现在', '问题、失败、复盘、组队和站务，都还在同一张桌子上。'],
 ]
 
@@ -50,25 +50,25 @@ function AboutPage() {
 
       <PageHeader
         title="关于 Rubbish"
-        description="一个公开写作与讨论的地方。问题可以怪，稿子可以没写完，话要说明白。"
+        description="一张摊开的桌面：问题可以怪，文字可以未竟，话要说明白。"
       />
 
       <div className="space-y-10">
         <RevealSection className="max-w-3xl">
           <div>
             <p className="font-serif text-lg leading-relaxed">
-              「正经地荒诞，公开地失败。」
+              「认真到荒诞，公开到失败。」
             </p>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              Rubbish 从第一天起就是一张公开的桌面：短帖放讨论区，长文放内容库。你可以只留一个问题，
-              也可以把一次写作、一次尝试、一段现场观察慢慢写完。
+              Rubbish 从第一天起就是一张公开的桌面：说话留讨论区，长文进内容库。你可以只留一个问题，
+              也可以把一次写作、一次尝试、一段现场观察，慢慢写完。
             </p>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
               这里收选题与计划、过程记录、现场观察、失败复盘、组队招募，也收小说和诗。
-              荒诞不是偷懒的理由：设定要站得住，材料要能对上。
+              荒诞不是偷懒的借口：设定要站得住，材料要能对上。
             </p>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              不收费，不卖置顶，也不把热度说成评价。写得好不好，留给读者慢慢讲。
+              不收费，不卖置顶，也不把热度说成评价。文字好不好，留给读者慢慢讲。
             </p>
           </div>
         </RevealSection>
@@ -76,7 +76,7 @@ function AboutPage() {
         <RevealSection>
           <h2 className="flex items-center gap-2 text-xl font-medium">
             <Users className="h-5 w-5 text-primary" />
-            谁在做什么
+            谁在守着这张桌子
           </h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             {ROLES.map((m) => (
@@ -92,12 +92,12 @@ function AboutPage() {
             ))}
           </div>
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-            名字不重要；有事，能找到人。
+            名字不重要；有事，总能找到人。
           </p>
         </RevealSection>
 
         <RevealSection>
-          <h2 className="text-xl font-medium">一路怎么走过来的</h2>
+          <h2 className="text-xl font-medium">这张桌子怎样长成</h2>
           <ol className="mt-4 space-y-4 border-l border-border pl-5">
             {TIMELINE.map(([when, what]) => (
               <li key={what} className="relative">
@@ -115,7 +115,7 @@ function AboutPage() {
         <RevealSection>
           <h2 className="flex items-center gap-2 text-xl font-medium">
             <ShieldCheck className="h-5 w-5 text-primary" />
-            内容边界
+            文字的边界
           </h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             {[
@@ -133,7 +133,7 @@ function AboutPage() {
         </RevealSection>
 
         <RevealSection>
-          <h2 className="text-xl font-medium">关于这个站</h2>
+          <h2 className="text-xl font-medium">关于此处</h2>
           <dl className="mt-4 grid gap-4 sm:grid-cols-2">
             {[
               { icon: ScrollText, label: '站点性质', value: '公开写作与讨论社区' },
@@ -155,17 +155,17 @@ function AboutPage() {
         <RevealSection className="border-t pt-6">
           <h2 className="flex items-center gap-2 text-lg font-medium">
             <ShieldCheck className="h-5 w-5 text-primary" />
-            这里的边界
+            这里不做什么
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            Rubbish 只是一个公开写作与讨论的地方：可以读，可以写，可以聊。站内编号只用来定位；精选、热度和等级都不是学术评价。如果对方要正式发表材料，请另找出版渠道，别拿这里的记录替代。
+            这里只是一张公开的桌面：可读，可写，可聊。站内编号只用于定位；精选、热度与档位都不是学术评价。若你需要正式发表材料，请另寻出版渠道，不要让这里的记录代替。
           </p>
         </RevealSection>
 
         <RevealSection className="border-t pt-6">
           <h2 className="flex items-center gap-2 text-lg font-medium">
             <Mail className="h-5 w-5 text-primary" />
-            联系社区
+            写信给我们
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             版权、隐私、举报与申诉请发邮件到
@@ -174,7 +174,7 @@ function AboutPage() {
             </a>
             。社区规则见
             <Link to="/guide" search={{ tab: 'policies' }} className="mx-1 text-primary hover:underline">
-              规则与边界
+              边界与处理
             </Link>
             。
           </p>

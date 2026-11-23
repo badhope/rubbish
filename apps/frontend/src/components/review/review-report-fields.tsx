@@ -112,7 +112,7 @@ const AUTHOR_TEMPLATE = `**总体判断**
 ……`
 
 const EDITOR_TEMPLATE = `**给内容整理的建议**
-- 推荐决定及理由：……
+- 核对结论及理由：……
 - 这篇作品最适合/最不适合本站的地方：……
 - 是否存在伦理、引用或数据可信度疑点：……
 - 修改后需要内容整理重点核对：……`
@@ -232,7 +232,7 @@ export function ReviewReportFields({
           <Info className="h-3.5 w-3.5" /> 填写前先过一遍这四问
         </p>
         <ul className="mt-1.5 list-disc space-y-0.5 pl-4">
-          <li>这篇稿子到底回答了什么可回答的问题？</li>
+          <li>这篇作品到底回答了什么可回答的问题？</li>
           <li>结论的前提和证据在哪？有没有跳跃或把相关当因果？</li>
           <li>别人能不能照着方法复现？不能的话，缺哪一项？</li>
           <li>有没有伦理、引用真实性或数据可信度的硬伤？</li>
@@ -243,7 +243,7 @@ export function ReviewReportFields({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="recommendation">推荐决定</Label>
+        <Label htmlFor="recommendation">核对结论</Label>
         <Select
           value={value.recommendation}
           onValueChange={(v) => onChange({ ...value, recommendation: v as Recommendation })}
@@ -269,7 +269,7 @@ export function ReviewReportFields({
       <div className="space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <Label>作品类型</Label>
-          <span className="text-[11px] text-muted-foreground">两套维度，不共用一把尺子</span>
+          <span className="text-[11px] text-muted-foreground">两套条目，不共用一把尺子</span>
         </div>
         <div className="grid grid-cols-2 gap-1.5 rounded-lg border bg-muted/30 p-1.5">
           {(['academic', 'absurd'] as ReviewTrack[]).map((t) => (
@@ -359,7 +359,7 @@ export function ReviewReportFields({
       <ReviewTextField
         id="comments_to_editor"
         label="给内容整理组的内部意见（可选，作者不可见）"
-        description="只写不适合让作者看到的内容：推荐决定背后的权衡、伦理/引用疑点、是否需要额外互评成员、与站点范围的匹配度。"
+        description="只写不适合让作者看到的内容：核对结论背后的权衡、伦理/引用疑点、是否需要额外互评成员、与站点范围的匹配度。"
         value={value.comments_to_editor}
         onChange={(v) => onChange({ ...value, comments_to_editor: v })}
         placeholder="例如：方法部分有一处样本量未交代，建议作者补数据；另有一位互评成员可能更合适。"
@@ -433,7 +433,7 @@ export function ReviewReportFields({
             {value.comments_to_editor.trim() ? (
               <div>
                 <p className="mb-1 flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-300">
-                  <AlertTriangle className="h-3.5 w-3.5" /> 仅编辑可见
+                  <AlertTriangle className="h-3.5 w-3.5" /> 仅内容整理可见
                 </p>
                 <div className="rounded-md border border-amber-200 bg-amber-50/50 px-3 py-2 dark:border-amber-500/20 dark:bg-amber-950/20">
                   <MarkdownPreview value={value.comments_to_editor} empty="" />

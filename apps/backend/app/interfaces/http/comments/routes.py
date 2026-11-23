@@ -1,7 +1,7 @@
 """Comments API — public read, authenticated write, owner/admin delete.
 
 - GET  /api/comments?resource_id={id}  公开（游客可读）
-- POST /api/comments                   登录用户；仅限已刊出资源
+- POST /api/comments                   登通过户；仅限已刊出资源
 - DELETE /api/comments/{id}            本人或管理员；审计 comment.delete
 """
 
@@ -90,7 +90,7 @@ async def list_comments(
 
     公开面口径与目录一致：资源被撤回或转入排期后，其评论线程同样不再
     对匿名/普通用户可见（否则评论端点会变成「这篇排期稿存在」的探针，
-    且已撤回稿件的历史讨论继续外泄）。
+    且已撤回作品的历史讨论继续外泄）。
     """
     tenant_id = require_tenant_id()
     await _require_published_resource(db, resource_id, tenant_id)

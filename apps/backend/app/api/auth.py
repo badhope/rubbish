@@ -240,7 +240,7 @@ async def login(
     """
     # User.username uniqueness is (tenant_id, username) — a query without
     # the tenant filter could match a user from another tenant.
-    # 登录标识同时接受用户名或邮箱（大小写不敏感）：期刊读者记住的往往
+    # 登录标识同时接受用户名或邮箱（大小写不敏感）：内容库读者记住的往往
     # 是注册邮箱；用户名精确匹配优先级不变，邮箱走 lower 等值比较。
     tenant_id = require_tenant_id()
     identifier = payload.username.strip()
@@ -577,7 +577,7 @@ async def _issue_tokens(user: User, response: Response, db: AsyncSession) -> Tok
     unique ``jti`` (JWT ID) for per-token revocation via the denylist.
 
     Also returns the caller's role names: the SPA renders role-gated
-    navigation (审稿工作台 / 编辑工作台) from them, and /admin/users —
+    navigation (互评工作台 / 编辑工作台) from them, and /admin/users —
     the only other source of roles — is admin-only.
     """
     base_claims = {"sub": str(user.id), "token_version": user.token_version}

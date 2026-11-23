@@ -343,6 +343,8 @@ export interface AuthorDetail {
   roles: AuthorRole[]
   claimed: boolean
   user_id: number | null
+  // 已认领作者的公开主页标识；后端透出后作者名才可点进 /u/$username。
+  username?: string | null
   affiliation: string | null
   email: string | null
 }
@@ -908,6 +910,11 @@ export interface ReadingListDetailResponse {
   items: ReadingListItemResponse[]
   created_at: string
   updated_at: string
+  // 可见性与归属：后端透出后用于区分公开合集（游客可读）与私有列表（仅本人）。
+  // 缺省时按本人列表处理，保持旧行为。
+  visibility?: 'public' | 'private'
+  is_owner?: boolean
+  owner_username?: string | null
 }
 
 export interface ReadingListListResponse {

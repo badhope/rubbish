@@ -15,23 +15,22 @@ function ForbiddenPage() {
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
             <ShieldOff className="h-7 w-7 text-muted-foreground" />
           </div>
-          <h1 className="text-2xl font-semibold">这个页面需要后台权限</h1>
+          <h1 className="text-2xl font-semibold">这一页需要相应权限</h1>
           <p className="text-sm text-muted-foreground">
-            发帖、回复、收藏对所有成员开放，不需要后台角色；
-            这里进不去，是因为当前页面属于管理/编辑后台。
+            说话、回复、收藏对所有人开放。这一页属于站务或内容整理后台，需要相应角色才能进入。
           </p>
           <p className="max-w-sm text-xs text-muted-foreground">
-            公告和后台页面才需要编辑或管理员角色；如果只是想发帖，直接去社区即可。
+            如果你只是想说话，回讨论区即可；权限问题可以联系站务邮箱。
           </p>
           <div className="flex flex-wrap justify-center gap-2">
             <Button asChild variant="outline">
               <Link to="/me">
-                <ArrowLeft className="h-4 w-4" /> 返回我的
+                <ArrowLeft className="h-4 w-4" /> 回到我的
               </Link>
             </Button>
             <Button asChild>
               <Link to="/forum">
-                <MessagesSquare className="h-4 w-4" /> 去社区发帖
+                <MessagesSquare className="h-4 w-4" /> 去讨论区
               </Link>
             </Button>
           </div>

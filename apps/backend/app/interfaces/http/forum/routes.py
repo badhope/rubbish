@@ -8,7 +8,7 @@
 - 置顶/锁定/删除他人帖子：编辑或管理员（版主权限）
 
 版块设计：树形社区版块（文章 / 选题与计划 / 过程记录 / 现场观察 / 失败复盘 / 写作讨论 / 创作生存 / 组队招募 / 站务），
-不做树状子版。本刊是期刊社区，不是大型论坛；五个版块足够让帖子有归属，
+不做树状子版。本刊是内容库社区，不是大型论坛；五个版块足够让帖子有归属，
 又不会在冷启动阶段把每个子版都做成空壳。
 """
 
@@ -1482,7 +1482,7 @@ async def list_reports(
                 reporter=authors.get(r.reporter_id),
             )
         )
-    # 合并评论/投稿举报：与论坛举报同一队列、同一套处置动作。
+    # 合并评论/发布举报：与论坛举报同一队列、同一套处置动作。
     from app.domain.comments.models import Comment
     from app.domain.submission.models import Submission
     from app.models import ContentReport
@@ -1569,7 +1569,7 @@ async def create_content_report(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ReportOut:
-    """举报评论或投稿。登录即可；同一用户同一对象只保留一条 open。"""
+    """举报评论或发布。登录即可；同一用户同一对象只保留一条 open。"""
     from app.domain.comments.models import Comment
     from app.domain.submission.models import Submission
     from app.models import ContentReport
@@ -1677,7 +1677,7 @@ async def handle_content_report(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_admin),
 ) -> ReportOut:
-    """评论/投稿举报处置：驳回 / 下架 / 停用作者。"""
+    """评论/发布举报处置：驳回 / 下架 / 停用作者。"""
     from app.domain.comments.models import Comment
     from app.domain.submission.models import Submission
     from app.models import ContentReport

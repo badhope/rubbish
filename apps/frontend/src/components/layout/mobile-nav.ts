@@ -1,4 +1,7 @@
 import {
+  Accessibility,
+  Activity,
+  Award,
   Bell,
   BookOpen,
   ClipboardCheck,
@@ -10,6 +13,7 @@ import {
   MessagesSquare,
   MessageSquareText,
   PenLine,
+  Tags,
   type LucideIcon,
   User,
   FileText,
@@ -39,13 +43,13 @@ export interface MobileMoreItem {
 // 折叠菜单分组顺序
 export const MOBILE_MORE_GROUP_ORDER = ['我的空间', '工作台', '社区', '管理'] as const
 
-// 底部固定 5 Tab：首页 / 社区 / 写 / 文章 / 我的。
-// “写”是一级动作；指南不再占底部席位，收进右上角“更多”，避免入口比动作还多。
+// 底部固定 5 Tab：首页 / 讨论区 / 写 / 内容库 / 我的。
+// “写”是一级动作；合集与指南不再占底部席位，收进右上角“更多”，避免入口比动作还多。
 export const MOBILE_TABS: MobileTab[] = [
   { to: '/', label: '首页', icon: Home },
-  { to: '/forum', label: '讨论', icon: MessagesSquare },
+  { to: '/forum', label: '讨论区', icon: MessagesSquare },
   { to: '/submissions/new', label: '写', icon: PenLine },
-  { to: '/catalog', label: '内容', icon: BookOpen },
+  { to: '/catalog', label: '内容库', icon: BookOpen },
   { to: '/me', label: '我的', icon: User },
 ]
 
@@ -71,9 +75,13 @@ export const MOBILE_MORE: MobileMoreItem[] = [
   },
   { to: '/submissions', label: '我的作品', icon: FileText, auth: true, group: '我的空间' },
   { to: '/me', search: { notifications: '1' }, label: '通知', icon: Bell, auth: true, group: '我的空间' },
-  { to: '/levels', label: '参与记录', icon: Layers3, group: '我的空间' },
+  { to: '/levels', label: '参与记录', icon: Award, group: '我的空间' },
+  { to: '/issues', label: '合集', icon: Layers3, group: '社区' },
   { to: '/guide', label: '怎么用', icon: Compass, group: '社区' },
-  { to: '/about', label: '关于站点', icon: Building2, group: '社区' },
+  { to: '/about', label: '关于此处', icon: Building2, group: '社区' },
+  { to: '/tags', label: '标签与归档', icon: Tags, group: '社区' },
+  { to: '/status', label: '站点状态', icon: Activity, group: '社区' },
+  { to: '/accessibility', label: '可访问性', icon: Accessibility, group: '社区' },
   { to: '/forum', search: { view: 'feedback' }, label: '反馈与建议', icon: MessageSquareText, group: '社区' },
   { to: '/admin', label: '站务管理', icon: Gavel, auth: true, adminOnly: true, group: '管理' },
 ]

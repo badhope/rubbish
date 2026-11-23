@@ -43,10 +43,14 @@ async def _create_list(
     user: dict,
     name: str = "My Reading List",
     description: str | None = "A test list",
+    visibility: str | None = None,
 ) -> dict:
+    payload: dict = {"name": name, "description": description}
+    if visibility is not None:
+        payload["visibility"] = visibility
     response = await client.post(
         "/api/reading-lists",
-        json={"name": name, "description": description},
+        json=payload,
         headers=auth_headers(user),
     )
     response.raise_for_status()
@@ -145,8 +149,8 @@ async def test_get_list_owner(client: AsyncClient, test_user: dict) -> None:
     assert response.json()["id"] == created["id"]
 
 
-async def test_get_list_other_user_404(client: AsyncClient, test_user: dict) -> None:
-    """Another registered user cannot see someone else's list."""
+async def test_get_private_list_other_user_403(client: AsyncClient, test_user: dict) -> None:
+    """Another registered user cannot see someone else's private list (403, not 404)."""
     created = await _create_list(client, test_user)
     # Register a second user
     second = await register_user(client, email="other@example.com", username="otheruser")
@@ -154,12 +158,57 @@ async def test_get_list_other_user_404(client: AsyncClient, test_user: dict) -> 
         f"/api/reading-lists/{created['id']}",
         headers={"Authorization": f"Bearer {second['token']}"},
     )
-    assert response.status_code == 404
+    assert response.status_code == 403
+
+
+async def test_get_private_list_anonymous_403(client: AsyncClient, test_user: dict) -> None:
+    """Anonymous visitor cannot read a private list; 403 drives the login jump."""
+    created = await _create_list(client, test_user)
+    response = await client.get(f"/api/reading-lists/{created['id']}")
+    assert response.status_code == 403
 
 
 async def test_get_list_404(client: AsyncClient, test_user: dict) -> None:
     response = await client.get("/api/reading-lists/99999", headers=auth_headers(test_user))
     assert response.status_code == 404
+
+
+async def test_public_list_readable_by_other_user(client: AsyncClient, test_user: dict) -> None:
+    created = await _create_list(client, test_user, name="Shared", visibility="public")
+    second = await register_user(client, email="pub@example.com", username="pubuser")
+    response = await client.get(
+        f"/api/reading-lists/{created['id']}",
+        headers={"Authorization": f"Bearer {second['token']}"},
+    )
+    assert response.status_code == 200
+    assert response.json()["visibility"] == "public"
+
+
+async def test_public_list_readable_by_anonymous(client: AsyncClient, test_user: dict) -> None:
+    created = await _create_list(client, test_user, name="Anon Shared", visibility="public")
+    response = await client.get(f"/api/reading-lists/{created['id']}")
+    assert response.status_code == 200
+
+
+async def test_public_listing_exposes_only_public(client: AsyncClient, test_user: dict) -> None:
+    public = await _create_list(client, test_user, name="Open Shelf", visibility="public")
+    private = await _create_list(client, test_user, name="Private Shelf")
+    response = await client.get("/api/reading-lists/public")
+    assert response.status_code == 200
+    ids = [row["id"] for row in response.json()["data"]]
+    assert public["id"] in ids
+    assert private["id"] not in ids
+
+
+async def test_patch_visibility(client: AsyncClient, test_user: dict) -> None:
+    created = await _create_list(client, test_user, name="Going Public")
+    response = await client.patch(
+        f"/api/reading-lists/{created['id']}",
+        json={"visibility": "public"},
+        headers=auth_headers(test_user),
+    )
+    assert response.status_code == 200
+    assert response.json()["visibility"] == "public"
 
 
 async def test_update_list(client: AsyncClient, test_user: dict) -> None:

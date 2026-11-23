@@ -30,7 +30,7 @@ class CapabilitiesResponse(BaseModel):
     email_verification_required: bool
     oidc_enabled: bool
     registration_open: bool
-    # 运营开关：注册是否必须答验证码、投稿是否允许作者填写官方 DOI。
+    # 运营开关：注册是否必须答验证码、发布是否允许作者填写官方 DOI。
     captcha_required_for_registration: bool
     doi_author_entry_enabled: bool
     # 上传约束对外暴露：前端不再把 50 MB / 扩展名列表写死在两处，

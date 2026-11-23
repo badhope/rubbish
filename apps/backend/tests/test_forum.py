@@ -37,7 +37,7 @@ async def test_create_topic_and_list(client: AsyncClient, test_user: dict) -> No
     created = await client.post(
         "/api/forum/topics",
         json={
-            "title": "如何选择投稿赛道？",
+            "title": "如何选择发布赛道？",
             "body": "正经和荒诞该怎么选？",
             "category": "question",
         },
@@ -45,7 +45,7 @@ async def test_create_topic_and_list(client: AsyncClient, test_user: dict) -> No
     )
     assert created.status_code == 201, created.text
     body = created.json()
-    assert body["title"] == "如何选择投稿赛道？"
+    assert body["title"] == "如何选择发布赛道？"
     assert body["category"] == "question"
     assert body["author"]["username"] == test_user["username"]
     assert body["reply_count"] == 0

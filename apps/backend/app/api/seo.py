@@ -32,39 +32,39 @@ router = APIRouter(tags=["seo"])
 SITE_NAME = "Rubbish"
 SITE_TITLE = "Rubbish — 公开写作与讨论社区"
 DEFAULT_DESCRIPTION = (
-    "Rubbish 是一个公开写作与讨论社区。有人把问题拆开，有人留下失败，也有人一本正经地写不可能的事。"
-    "长文在内容库，短帖在讨论区，公开可读；这里不做学术评价，也不出具发表证明。"
+    "Rubbish 是一张公开的桌面。有人拆开一个问题，有人留下一次失败，也有人把不可能写得一本正经。"
+    "长文在内容库，短帖在讨论区，公开可读；这里不做学术评价，也不出具任何证明。"
 )
 
 PAGE_META: dict[str, tuple[str, str]] = {
     "": (SITE_TITLE, DEFAULT_DESCRIPTION),
     "catalog": (
         "内容库 · 长文、怪问题与随手写",
-        "长文、怪问题、小说和随笔都在这里。可以按合集慢慢读，也可以随手翻一篇。",
+        "长文、怪问题、小说与随笔。按合集慢慢读，或随手翻开一篇。",
     ),
     "forum": (
         "讨论区 · 写法、复盘与组队",
-        "写法、复盘、组队，还有写作之外的生活。登录就能发帖，不用攒积分。",
+        "写法、复盘、组队，以及写作之外的生活。登录即可发帖，不必攒经验。",
     ),
     "issues": (
         "合集 · 一组一组地读",
-        "合集只把内容放在一起，方便顺着读。编号用于定位，不是等级，也不是发表先后。",
+        "合集只把内容放在一起，便于顺着读。编号用于定位，不是等级，也不是公开先后。",
     ),
     "levels": (
-        "参与记录 · 你在这里走了多远",
-        "记录发帖、讨论、发布作品和互评留下的经验。它不换权限，所有人都从等级 1 开始。",
+        "参与记录 · 在站内留下的脚印",
+        "发帖、讨论、发布与互评留下的记录。它不换权限，所有人从第一档开始。",
     ),
     "submissions": (
         "我的作品 · 发布与进度",
-        "看已发布作品、互评进度和版本记录；新作品也从这里开始。",
+        "看已发布的作品、互评进度与版本；新作品也从这里开始。",
     ),
     "submissions/new": (
         "写新作品 · 从标题到正文",
-        "填标题、摘要和正文，草稿会自动保存；提交后进入基础检查和互评。",
+        "填题名、开头与正文，草稿自动保存；发布后进入基础检查与互评。",
     ),
     "about": (
         "关于 Rubbish",
-        "一个公开写作与讨论的地方。问题可以怪，稿子可以没写完，话要说明白。不做学术评价，也不出具发表证明。",
+        "一张公开的桌面。问题可以怪，文字可以未竟，话要说明白。不做学术评价，也不出具公开证明。",
     ),
     "review": (
         "互评广场 · 作品还没揭开时",
@@ -72,11 +72,11 @@ PAGE_META: dict[str, tuple[str, str]] = {
     ),
     "guide": (
         "怎么用 · 第一次来，先走一遍",
-        "四步上手、全站地图和边界说明。第一次来，照着走一遍就不会迷路。",
+        "四步上手、全站地图与边界。第一次来，照着走一遍，不必着急。",
     ),
     "privacy": (
         "隐私政策",
-        "Rubbish 只收集运行社区必需的数据，不做广告追踪。",
+        "只取社区运转所需之物，不做广告追踪，也不出售数据。",
     ),
 }
 
@@ -321,6 +321,45 @@ async def rss_feed(request: Request, db: AsyncSession = Depends(get_db)) -> Resp
     )
 
 
+@router.get("/feed.atom", response_class=Response, include_in_schema=False)
+@router.get("/atom.xml", response_class=Response, include_in_schema=False)
+async def atom_feed(request: Request, db: AsyncSession = Depends(get_db)) -> Response:
+    """Atom 1.0 feed of the latest published records; mirrors the RSS source."""
+    root = _root(request)
+    site = html.escape(settings.site_name)
+    rows = await _published_resources(db, limit=50)
+    entries: list[str] = []
+    for r in rows:
+        link = f"{root}/catalog/{r.id}"
+        updated = f"<updated>{r.created_at.isoformat()}</updated>" if r.created_at else ""
+        entries.append(
+            "<entry>"
+            f"<title>{html.escape(r.title)}</title>"
+            f"<id>{html.escape(link)}</id>"
+            f'<link rel="alternate" href="{html.escape(link)}"/>'
+            f"<summary>{html.escape((r.abstract or '')[:500])}</summary>"
+            f"<author><name>{html.escape(', '.join(r.authors or []))}</name></author>"
+            f'<category term="{html.escape(r.discipline or "")}"/>'
+            f"{updated}"
+            "</entry>"
+        )
+    latest = rows[0].created_at.isoformat() if rows else ""
+    body = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<feed xmlns="http://www.w3.org/2005/Atom">'
+        f"<title>{site}</title>"
+        f"<id>{html.escape(root)}/feed.atom</id>"
+        f'<link rel="self" href="{html.escape(root)}/feed.atom"/>'
+        f'<link rel="alternate" href="{html.escape(root)}/"/>'
+        f"<updated>{latest}</updated>" + "".join(entries) + "</feed>"
+    )
+    return Response(
+        content=body.encode("utf-8"),
+        media_type="application/atom+xml; charset=utf-8",
+        headers={"Content-Type": "application/atom+xml; charset=utf-8"},
+    )
+
+
 def _meta_tags(
     title: str,
     description: str,
@@ -333,11 +372,12 @@ def _meta_tags(
     t = html.escape(title, quote=True)
     d = html.escape(description, quote=True)
     c = html.escape(canonical, quote=True)
-    image = html.escape(f"{root.rstrip('/')}/og-cover.png", quote=True)
+    image = html.escape(f"{root.rstrip('/')}/brand/rubbish-og.png", quote=True)
     return (
         f'<meta name="description" content="{d}" />\n'
         f'<link rel="canonical" href="{c}" />\n'
         f'<link rel="alternate" type="application/rss+xml" title="{SITE_NAME} RSS" href="{root.rstrip("/")}/rss.xml" />\n'
+        f'<link rel="alternate" type="application/atom+xml" title="{SITE_NAME} Atom" href="{root.rstrip("/")}/feed.atom" />\n'
         f'<meta property="og:type" content="{og_type}" />\n'
         '<meta property="og:locale" content="zh_CN" />\n'
         f'<meta property="og:site_name" content="{SITE_NAME}" />\n'
@@ -417,7 +457,7 @@ async def build_index_html(
                 "publisher": {"@type": "Organization", "name": SITE_NAME, "url": f"{root}/"},
                 "isAccessibleForFree": True,
                 "inLanguage": resource.language or "zh",
-                "image": f"{root}/og-cover.png",
+                "image": f"{root}/brand/rubbish-og.png",
             }
             if resource.keywords:
                 payload["keywords"] = ", ".join(str(k) for k in resource.keywords)
@@ -468,7 +508,7 @@ async def build_index_html(
                 "@type": "Organization",
                 "name": SITE_NAME,
                 "url": f"{root}/",
-                "logo": f"{root}/og-cover.png",
+                "logo": f"{root}/brand/rubbish-r-512.png",
             },
         }
         extra += (

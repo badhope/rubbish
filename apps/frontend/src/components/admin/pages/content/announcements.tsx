@@ -69,8 +69,8 @@ const LEVEL_LABELS: Record<string, string> = {
 /**
  * 公告管理（管理员）。
  *
- * 此前公告只能改数据库——编辑部想发一条「本期已刊出」的提示都得找人
- * 改 SQL。公告是编辑部对外的第一句话，必须由编辑部自己掌握。
+ * 此前公告只能改数据库——内容整理想发一条「本组合已公开」的提示都得找人
+ * 改 SQL。公告是内容整理对外的第一句话，必须由内容整理自己掌握。
  */
 export default function AnnouncementsAdminPage() {
   const qc = useQueryClient()
@@ -159,7 +159,7 @@ export default function AnnouncementsAdminPage() {
       {listQ.isLoading ? (
         <Loading />
       ) : listQ.isError ? (
-        <ErrorState message="加载公告失败" onRetry={() => listQ.refetch()} />
+        <ErrorState message="公告加载失败，可重试。" onRetry={() => listQ.refetch()} />
       ) : !listQ.data?.length ? (
         <EmptyState
           title="还没有公告"

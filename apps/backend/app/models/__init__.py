@@ -206,13 +206,13 @@ class User(Base, TenantScopedMixin):
     department: Mapped[str | None] = mapped_column(String(200), nullable=True)
     academic_title: Mapped[str | None] = mapped_column(String(100), nullable=True)
     research_interests: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    # 审稿能力标签（P1-7）：自由文本短标签，参与候选匹配；空数组表示未填写。
+    # 互评能力标签（P1-7）：自由文本短标签，参与候选匹配；空数组表示未填写。
     # 与 research_interests 分开：后者是主页展示的研究兴趣，前者是可用于
     # 分派解释的能力标签，编辑不会因为一句简介就被当成专家。
     reviewer_tags: Mapped[list[str]] = mapped_column(
         JSONBVariant, nullable=False, default=list, server_default="[]"
     )
-    # 审稿学科标签（迁移 057）：受控词表 Discipline.slug 数组，与稿件
+    # 互评学科标签（迁移 057）：受控词表 Discipline.slug 数组，与作品
     # discipline 同源可精确匹配；自由补充仍走 reviewer_tags。
     reviewer_disciplines: Mapped[list[str]] = mapped_column(
         JSONBVariant, nullable=False, default=list, server_default="[]"
@@ -247,7 +247,7 @@ class User(Base, TenantScopedMixin):
     # --- 等级体系（gamification 模块） ---
     # 运行中的 XP 总分：ledger（user_xp_events）是事实源，这里是热路径快照。
     xp: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
-    # 投稿规范确认：作者必须读过当前版本的《投稿规范》才能提交。
+    # 写作规范确认：作者必须读过当前版本的《写作规范》才能提交。
     # 版本号与 docs/editorial-standards.md 的 front-matter 对齐。
     rules_ack_version: Mapped[str | None] = mapped_column(String(20), nullable=True)
     rules_ack_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -399,10 +399,10 @@ class EmailLoginCode(Base, TenantScopedMixin):
 
 
 class ContentReport(Base, TenantScopedMixin):
-    """通用内容举报：评论与投稿。
+    """通用内容举报：评论与发布。
 
     论坛帖子/回复继续用历史 ``forum_reports``（已有外键与幂等逻辑），
-    本表只承接后接入的评论与投稿，后台把两类记录合并成同一队列展示。
+    本表只承接后接入的评论与发布，后台把两类记录合并成同一队列展示。
     ``target_type`` 目前限定 ``comment`` / ``submission``；``status``
     与论坛举报一致：open / resolved / rejected。
     """

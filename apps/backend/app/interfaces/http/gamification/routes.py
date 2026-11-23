@@ -47,7 +47,7 @@ async def require_shop_manager(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    """积分后台专用：主编/副主编，或被单独授予 shop_manager 的账号。"""
+    """积分后台专用：站务组，或被单独授予 shop_manager 的账号。"""
     if current_user.is_admin:
         return current_user
     if await user_has_role(db, current_user, "editor_in_chief") or await user_has_role(
@@ -70,7 +70,7 @@ class LevelGrantRequest(BaseModel):
 
 
 class AuthorOnboardingRequest(BaseModel):
-    accept_rules: bool = Field(description="必须为 true：表示已读完并接受作品与发布规范")
+    accept_rules: bool = Field(description="必须为 true：表示已读完并接受写作与发布规范")
 
 
 class RoleApplicationCreate(BaseModel):
@@ -177,7 +177,7 @@ async def onboarding_author(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="accept_rules must be true to unlock author rights",
         )
-    # 记录确认版本——投稿门禁（require_rules_ack）读同一字段。
+    # 记录确认版本——发布门禁（require_rules_ack）读同一字段。
     await service.award(
         db, current_user, "onboarding.ack_rules", ref_type="rules", ref_id=CURRENT_RULES_VERSION
     )
@@ -305,7 +305,7 @@ async def get_level_detail(level: int) -> dict[str, object]:
     """单条身份详情。参数是身份序号 1–4（1=读者 … 4=编辑）。
 
     历史上这是 1–9 的九级阶梯。现在只认 1–4；>4 返回 404 而不是静默
-    落到编辑身份，避免旧客户端以为"L7 栏目编辑"还存在。
+    落到编辑身份，避免旧客户端以为"L7 分区整理"还存在。
     """
     from app.domain.gamification.ladder import IDENTITIES
 
@@ -315,7 +315,7 @@ async def get_level_detail(level: int) -> dict[str, object]:
 
 
 # ---------------------------------------------------------------------------
-# 职员角色申请（L5 审稿人 / L6 资深审稿人；L7+ 仅编辑部提拔）
+# 职员角色申请（L5 互评成员 / L6 资深互评成员；L7+ 仅编辑部提拔）
 # ---------------------------------------------------------------------------
 
 _ROLE_LABELS = {"reviewer": "互评成员", "senior_reviewer": "资深互评成员"}
@@ -421,7 +421,7 @@ async def my_applications(
             "senior_reviewer": {
                 **senior,
                 "already_role": already_senior,
-                # L6 的前提是 L5：没有 reviewer 角色时即使审稿份数够也不可申请。
+                # L6 的前提是 L5：没有 reviewer 角色时即使互评份数够也不可申请。
                 "has_reviewer_role": already_reviewer,
                 "eligible": already_senior
                 or (already_reviewer and applications.senior_reviewer_eligible(senior)),
@@ -447,8 +447,8 @@ async def create_application(
     else:
         profile = await applications.senior_reviewer_profile(db, current_user)
         already_role = "senior_reviewer" in roles
-        # L6 是 L5 之上的阶梯：口径要求「已是审稿人 + 完成审稿 ≥ 5 份」，
-        # 只满足份数不足以申请，否则会出现「资深审稿人但从未是审稿人」的断层。
+        # L6 是 L5 之上的阶梯：口径要求「已是互评成员 + 完成互评 ≥ 5 份」，
+        # 只满足份数不足以申请，否则会出现「资深互评成员但从未是互评成员」的断层。
         if "reviewer" not in roles and not already_role:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -614,7 +614,9 @@ async def decide_application(
         notification_body = "恭喜，站务组通过了你的申请。现在可以去互评广场参与互评了。"
     else:
         notification_title = f"申请未通过：{role_label}"
-        notification_body = body.note or "这次申请没有通过。你仍然可以发布作品、参与讨论，之后再来申请。"
+        notification_body = (
+            body.note or "这次申请没有通过。你仍然可以发布作品、参与讨论，之后再来申请。"
+        )
 
     # 通知是结果告知，不是审批本身。写通知失败不能让角色已经授予/申请已终结
     # 的审批被回滚；用保存点把通知写入与主事务隔开。

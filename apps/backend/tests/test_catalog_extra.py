@@ -147,3 +147,21 @@ async def test_facets_respect_type_and_discipline_filters(
     # Only the dataset-tagged facet-2 row falls inside the filter.
     tags = [b["value"] for b in facets.json()["tags"]]
     assert "乙" in tags and "甲" not in tags
+
+
+def test_authors_detail_exposes_username_for_claimed_position() -> None:
+    from app.interfaces.http.catalog.schemas import _build_authors_detail
+
+    detail = _build_authors_detail(
+        ["张三", "李四"],
+        [
+            {"claimed": True, "user_id": 175, "username": "zhangsan", "email": "z@x.com"},
+            {"claimed": False},
+        ],
+    )
+    assert detail[0].user_id == 175
+    assert detail[0].username == "zhangsan"
+    # 未认领位：user_id / username / email 一律为 null。
+    assert detail[1].user_id is None
+    assert detail[1].username is None
+    assert detail[1].email is None

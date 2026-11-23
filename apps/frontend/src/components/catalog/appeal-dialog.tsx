@@ -30,13 +30,13 @@ const KIND_OPTIONS: { value: AppealKind; label: string; hint: string }[] = [
   },
   {
     value: 'rescore',
-    label: '重审评分',
-    hint: '请站务组复核质量分；不会自动改分，需编辑核对后给出结论。',
+    label: '复核作品判断',
+    hint: '请站务组复核对作品的判断；不会自动改判，需内容整理核对后给出结论。',
   },
   {
     value: 'rescore_zone',
-    label: '重审分区',
-    hint: '请站务组复核栏目/分区归属；不会自动改栏目，需编辑核对后给出结论。',
+    label: '复核分区',
+    hint: '请站务组复核话题与分区归属；不会自动改动，需内容整理核对后给出结论。',
   },
 ]
 

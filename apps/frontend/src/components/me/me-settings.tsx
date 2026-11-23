@@ -87,7 +87,7 @@ export function MeSettings({ username, initialSection }: { username: string; ini
                       { email: me.email as string },
                       {
                         onSuccess: () => toast.success('验证邮件已重新发送，请查收（含垃圾箱）'),
-                        onError: () => toast.error('发送失败，请稍后再试'),
+                        onError: () => toast.error('验证邮件发送失败，可再试一次。'),
                       },
                     )
                   }

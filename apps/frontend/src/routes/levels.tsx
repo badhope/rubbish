@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { ArrowRight, Gauge, MessagesSquare, PenLine, ShieldCheck, Sparkles } from 'lucide-react'
+import { ArrowRight, Gauge, ShieldCheck, Sparkles } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useMe } from '@/hooks/api/use-auth'
 import { PageHeader } from '@/components/common/page-header'
@@ -17,24 +17,24 @@ const IDENTITY_ROWS = [
   {
     label: '站点管理组',
     who: '总协调 / 站务组',
-    body: '管站点设置、审计、权限分配与侵权申诉，也参与内容复核。',
+    body: '管站点设置、审计、权限分配与侵权申诉，也参与内容整理。',
   },
   {
     label: '内容工作组',
     who: '内容整理 / 互评成员 / 资深互评成员',
-    body: '做基础整理、互评和内容复核；不碰站点设置、审计与权限分配。',
+    body: '做基础整理、互评和内容核对；不碰站点设置、审计与权限分配。',
   },
   {
     label: '成员组',
     who: '作者 / 成员',
-    body: '能读、能发帖、能评论、能发布作品；所有公开内容都开放阅读。',
+    body: '能读、能说话、能回应、能写一篇；所有公开内容都开放阅读。',
   },
 ]
 
 const XP_SOURCES = [
-    '注册、补全资料、确认作品规范',
-    '发帖、回复、评论、每日签到',
-    '发布作品、作品通过、参与互评',
+    '注册、补全资料、确认写作规范',
+    '说话、回应、每日签到',
+    '发布作品、作品公开、参与互评',
     '内容整理与社区治理',
 ]
 
@@ -54,20 +54,20 @@ function LevelsPage() {
     <div className="mx-auto max-w-4xl space-y-7">
       <PageHeader
         title="参与记录"
-        description="这里记录的是参与，不是头衔。发帖、评论、发布作品、参与互评、签到，都会留下经验。它不换权限；所有人都从等级 1 开始。"
+        description="这里记的是脚印，不是头衔。说话、回应、写一篇、参与互评、签到，都会留下经验。它不换权限；所有人从第一档开始。"
       />
 
       {isAuthenticated ? (
         <Card className="border-primary/20 bg-primary/[0.03]">
           <CardContent className="flex flex-wrap items-center gap-4 p-4 sm:flex-nowrap sm:p-5">
             <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center border border-primary/30 bg-background">
-              <span className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground">等级</span>
+              <span className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground">档位</span>
               <span className="font-mono text-2xl font-semibold leading-none text-primary">{currentLevel}</span>
             </div>
             <div className="min-w-0 flex-1">
               <p className="font-serif text-lg font-semibold">你在这里走了多远</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                {xp} 经验{next ? ` · 离等级 ${next.level} 还差 ${toNext}` : ' · 已到最高等级'}
+                {xp} 经验{next ? ` · 离下一档还差 ${toNext}` : ' · 已到最高档'}
               </p>
               <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
                 <div
@@ -80,7 +80,7 @@ function LevelsPage() {
             </div>
             <Button asChild variant="outline" size="sm" className="shrink-0">
               <Link to="/me">
-                个人中心
+                我的空间
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </Button>
@@ -89,7 +89,7 @@ function LevelsPage() {
       ) : (
         <Card className="border-dashed">
           <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm text-muted-foreground sm:p-5">
-            <span>登录后，能看到自己的经验、等级和下一级进度。</span>
+            <span>登录后，能看见自己的经验与档位，以及离下一档还有多远。</span>
             <Button asChild size="sm">
               <Link to="/login" search={{ redirect: '/levels' }}>登录查看</Link>
             </Button>
@@ -115,14 +115,14 @@ function LevelsPage() {
             经验，只说明你走了多远
           </p>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            等级 1 到 10 由经验推进，所有人同一条起跑线。经验高，不会自动拿到互评或管理权限；低，也不会被挡在阅读和发帖之外。
+            档位 1 到 10 由经验推进，所有人同一条起跑线。经验高，不会自动拿到互评或管理权限；低，也不会被挡在阅读和说话之外。
           </p>
         </div>
       </section>
 
       <section>
-        <h2 className="font-serif text-xl font-semibold">活跃等级</h2>
-        <p className="mt-1 text-sm text-muted-foreground">每一级只看累计经验，不看身份。</p>
+        <h2 className="font-serif text-xl font-semibold">参与记录</h2>
+        <p className="mt-1 text-sm text-muted-foreground">每一档只看累计经验，不看身份。</p>
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
           {ACTIVITY_BANDS.map((band) => {
             const active = band.level === currentLevel && isAuthenticated
@@ -166,7 +166,7 @@ function LevelsPage() {
 
       <section>
         <h2 className="font-serif text-xl font-semibold">身份与权限</h2>
-        <p className="mt-1 text-sm text-muted-foreground">上一层有下一层的全部权限；等级不在这张表里。</p>
+        <p className="mt-1 text-sm text-muted-foreground">上一层有下一层的全部权限；档位不在这张表里。</p>
         <div className="mt-4 space-y-2">
           {IDENTITY_ROWS.map((row, index) => (
             <div
@@ -184,20 +184,6 @@ function LevelsPage() {
         </div>
       </section>
 
-      <section className="flex flex-wrap items-center gap-2 border-t pt-5">
-        <Button asChild>
-          <Link to="/submissions/new">
-            <PenLine className="h-3.5 w-3.5" />
-            发布作品
-          </Link>
-        </Button>
-        <Button asChild variant="outline">
-          <Link to="/forum">
-            <MessagesSquare className="h-3.5 w-3.5" />
-            去讨论区
-          </Link>
-        </Button>
-      </section>
     </div>
   )
 }

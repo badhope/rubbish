@@ -11,10 +11,13 @@ Two response shapes:
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 from app.core.schemas import MessageResponse, PaginationMeta
+
+Visibility = Literal["public", "private"]
 
 
 class ReadingListBase(BaseModel):
@@ -27,12 +30,16 @@ class ReadingListBase(BaseModel):
 class ReadingListCreate(ReadingListBase):
     """Body for POST /reading-lists."""
 
+    # 缺省 private；显式传 public 才对其他读者可读。
+    visibility: Visibility | None = None
+
 
 class ReadingListUpdate(BaseModel):
     """Body for PATCH /reading-lists/{id}. All fields optional."""
 
     name: str | None = Field(default=None, min_length=1, max_length=100)
     description: str | None = Field(default=None, max_length=2000)
+    visibility: Visibility | None = None
 
 
 class ReadingListItemCreate(BaseModel):
@@ -74,6 +81,7 @@ class ReadingListResponse(BaseModel):
     id: int
     name: str
     description: str | None
+    visibility: Visibility = "private"
     # Loaded to compute item_count but excluded from the JSON output.
     items: list[ReadingListItemResponse] = Field(exclude=True, default_factory=list)
     created_at: datetime
@@ -93,6 +101,7 @@ class ReadingListDetailResponse(BaseModel):
     id: int
     name: str
     description: str | None
+    visibility: Visibility = "private"
     items: list[ReadingListItemResponse]
     created_at: datetime
     updated_at: datetime

@@ -338,6 +338,75 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* ── 设计规范 v1（2026-11 整改）─────────────────────────────────────────
+   全部收敛到现有 OKLCH 语义 token，不另起变量名体系。
+
+   配色：--background / --foreground / --card / --primary / --secondary /
+   --muted / --accent / --destructive / --border / --input / --ring；
+   暗色与四套调色板（jade/ink/clay/celadon）在上方定义，组件只引用语义色。
+
+   圆角：--radius 0.625rem，派生 --radius-sm/md/lg/xl。
+   控件 rounded-md；卡片 rounded-xl；胶囊（徽章、搜索框、头像按钮）rounded-full。
+
+   边框：1px var(--border)；输入框用 --input；全站不使用第二套灰边。
+
+   阴影：卡片 shadow-sm；弹层 shadow-2xl；可交互卡悬停走 .card-lift；
+   不做装饰性重阴影或彩色投影。
+
+   间距：沿用 Tailwind 阶梯（0.125rem 基数）0.5/1/1.5/2/2.5/3/4/5/6/8/10/12/16；
+   段内 gap-3/4，卡片 p-5/6，区块 py-8/12；不写魔法数字 padding。
+
+   字号：xs 12 / sm 13 / base 14（移动正文 15–16）/ lg 16 / xl 18 / 2xl 24；
+   页标题 .type-page，首屏 .type-hero；标题用衬线，正文用无衬线。
+
+   按钮层级（唯一用法，不跨级混用）：
+     default     primary   一屏一个主动作：提交、发布、写一篇。
+     secondary   次级实心  同屏第二动作，视觉弱于 primary。
+     outline     描边上下文动作：筛选、切换、次要跳转。
+     ghost       工具栏与邻近操作：图标按钮、标签页内动作。
+     destructive 仅不可逆操作：删除、退出登录、注销。
+     link        行内文字链接，不承担页面动作。
+
+   表单密度：控件 h-9；Label text-sm；字段 space-y-4；输入框 px-3；
+   校验错误走 aria-invalid 态，不另造红色描边。
+
+   卡片密度：Card py-6 px-6 gap-6；紧凑列表卡 py-3/4；不在卡里再套卡
+   （compact 空状态除外）。
+
+   空状态：state.tsx 的 EmptyState / ErrorState / Loading；必须给出具体
+   下一步（动作按钮或返回链接），不以“暂无数据”收尾。
+
+   提示条：.notice-bar；默认主色左边条，data-variant="danger" 用于警示。
+
+   原则：一屏一个主动作；内容优先，装饰让位；边角状态（空 / 错 / 加载 /
+   403 / 404）收敛到同一套面板；桌面与移动分别设计，移动端不堆砌桌面图标。
+------------------------------------------------------------------------- */
+
+/* 提示条：页面内的说明、提醒与处置告知；不是弹窗，不打断流程。 */
+.notice-bar {
+  display: flex;
+  gap: 0.625rem;
+  align-items: flex-start;
+  border: 1px solid color-mix(in oklab, var(--color-border) 80%, transparent);
+  border-left-width: 3px;
+  border-left-color: var(--color-primary);
+  background: color-mix(in oklab, var(--color-muted) 55%, transparent);
+  border-radius: var(--radius-md);
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--color-foreground);
+}
+.notice-bar[data-variant='danger'] {
+  border-left-color: var(--color-destructive);
+  background: color-mix(in oklab, var(--color-destructive) 8%, var(--color-muted));
+}
+.notice-bar :where(a) {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
 @layer base {
   * {
     border-color: var(--border);
@@ -382,7 +451,7 @@
   }
 }
 
-/* 标题统一衬线（期刊感），正文保持无衬线 */
+/* 标题统一衬线，正文保持无衬线 */
 h1,
 h2,
 h3,
@@ -390,7 +459,7 @@ h4 {
   font-family: var(--font-serif);
 }
 
-/* 期刊门面动效改由 motion 库驱动（MotionConfig reducedMotion="user" 自动尊重系统设置） */
+/* 首屏动效改由 motion 库驱动（MotionConfig reducedMotion="user" 自动尊重系统设置） */
 
 /* ---------------------------------------------------------------------------
  * 在线阅读 Markdown 学术排版（manuscript-view）
@@ -532,7 +601,7 @@ h4 {
   /* 白底只给图本身，暗色主题下不刺眼 */
   background: white;
 }
-/* 站内学术表情包：不按正文配图占满整行，保持“表情”的尺度。 */
+/* 站内互评表情包：不按正文配图占满整行，保持“表情”的尺度。 */
 /* 正文插图：点击查看原图（灯箱只做阅读放大，不改变正文排版）。 */
 .markdown-body img.md-image-zoom {
   cursor: zoom-in;
@@ -709,7 +778,7 @@ h4 {
   text-align: left;
   vertical-align: top;
 }
-/* 引用上标：正文中的 [1] / [1,2] / [1-3] 按期刊惯例排成上标。
+/* 引用上标：正文中的 [1] / [1,2] / [1-3] 按文献惯例排成上标。
    只作用于正文段落（不动参考文献列表本身），与 PDF 排版一致。 */
 .markdown-body p a[href^='#ref'],
 .markdown-body p sup.ref-mark {
@@ -996,37 +1065,9 @@ html {
   animation: shimmer 1.6s linear infinite;
 }
 
-/* 阅读进度：顶部一根 2px 的进度条，滚动时随页面推进 */
-.reading-progress {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 2px;
-  z-index: 60;
-  /* 纯装饰：绝不拦截顶部边缘的点击/滑动手势 */
-  pointer-events: none;
-  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
-  transition: width 120ms linear;
-}
-
-/* 数字突出显示：tabular-nums 让滚动计数不抖动 */
-.stat-number {
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
-}
-
-/* 徽章微动：hover 时轻微放大，提示可点 */
-.badge-pop {
-  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-.badge-pop:hover {
-  transform: scale(1.06);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .card-lift,
-  .link-underline::after,
-  .badge-pop {
+  .link-underline::after {
     transition: none;
   }
   .card-lift:hover {
@@ -1034,9 +1075,6 @@ html {
   }
   .skeleton-shimmer {
     animation: none;
-  }
-  .reading-progress {
-    transition: none;
   }
 }
 
@@ -1060,74 +1098,6 @@ html {
 }
 @media (prefers-reduced-motion: reduce) {
   .route-progress { animation: none; width: 100%; }
-}
-
-/* ── 2026 视觉升级：玻璃卡、渐变字、几何漂浮与组件高光 ── */
-.hero-title {
-  font-family: var(--font-display);
-  text-rendering: optimizeLegibility;
-  text-shadow: 0 1px 0 color-mix(in oklab, white 65%, transparent);
-}
-
-.gradient-text {
-  background: linear-gradient(
-    100deg,
-    var(--color-primary),
-    color-mix(in oklab, var(--color-primary) 55%, var(--color-accent))
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.glass-card {
-  background: color-mix(in oklab, var(--color-card) 82%, transparent);
-  border: 1px solid color-mix(in oklab, var(--color-border) 78%, white);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.55),
-    0 10px 34px -18px rgb(24 62 48 / 0.28);
-  backdrop-filter: blur(14px);
-}
-
-.button-shine {
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-}
-.button-shine::after {
-  content: '';
-  position: absolute;
-  inset: -40% auto -40% -70%;
-  width: 45%;
-  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.28), transparent);
-  transform: skewX(-18deg);
-  transition: left 520ms cubic-bezier(0.22, 1, 0.36, 1);
-  z-index: -1;
-}
-.button-shine:hover::after { left: 125%; }
-
-@keyframes geometric-float {
-  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
-  50% { transform: translate3d(0, -10px, 0) rotate(8deg); }
-}
-.geometric-float {
-  animation: geometric-float 7s ease-in-out infinite;
-}
-
-@keyframes soft-pulse-ring {
-  0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-primary) 22%, transparent); }
-  70% { box-shadow: 0 0 0 10px transparent; }
-  100% { box-shadow: 0 0 0 0 transparent; }
-}
-.pulse-ring { animation: soft-pulse-ring 2.4s ease-out infinite; }
-
-@media (prefers-reduced-motion: reduce) {
-  .button-shine::after,
-  .geometric-float,
-  .pulse-ring {
-    animation: none;
-    transition: none;
-  }
 }
 
 /* ── 内页轻量环境背景：CSS 几何图形，不启用持续 Canvas ── */
@@ -1484,52 +1454,6 @@ html {
   border-radius: 0.5rem;
 }
 
-/* 段式导航：关于本刊 / 投稿指南顶部那几个入口，统一成同一套形状与激活态 */
-.seg-link {
-  border: 1px solid var(--color-border);
-  border-radius: 0.75rem;
-  background: color-mix(in oklab, var(--color-card) 94%, white);
-  color: var(--color-muted-foreground);
-  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease, transform 160ms ease;
-}
-.seg-link:hover {
-  border-color: color-mix(in oklab, var(--color-primary) 28%, var(--color-border));
-  color: var(--color-foreground);
-  transform: translateY(-1px);
-}
-.seg-link[data-active='true'] {
-  border-color: color-mix(in oklab, var(--color-primary) 70%, transparent);
-  background-image: linear-gradient(140deg, color-mix(in oklab, var(--color-primary) 88%, white), var(--color-primary) 62%);
-  color: var(--color-primary-foreground);
-  box-shadow: 0 10px 22px -18px color-mix(in oklab, var(--color-primary) 75%, transparent);
-}
-.seg-link[data-active='true']:hover {
-  transform: none;
-  color: var(--color-primary-foreground);
-}
-.seg-link-desc {
-  color: var(--color-muted-foreground);
-}
-.seg-link[data-active='true'] .seg-link-desc {
-  color: color-mix(in oklab, var(--color-primary-foreground) 78%, transparent);
-}
-
-/* 小节标题：显示体只留给页面 h1，二级标题回到无衬线并统一字距 */
-.subhead {
-  font-family: var(--font-heading);
-  font-size: 1.0625rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-.subhead-icon {
-  color: color-mix(in oklab, var(--color-primary) 88%, var(--color-foreground));
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .seg-link { transition: none; }
-  .seg-link:hover { transform: none; }
-}
-
 @media (max-width: 767px) {
   body { scrollbar-gutter: auto; }
 }
@@ -1551,76 +1475,6 @@ html {
   line-height: 1.04;
 }
 
-.catalog-grid-wrap {
-  container-type: inline-size;
-}
-
-.catalog-grid {
-  display: grid;
-  gap: 0.75rem;
-  /* 手机也必须保持两列：一列长列表会让每张卡看起来一样，读者无法比较。
-     卡片改成纵向封面卡后，两列在 390px 下仍然能读清标题。 */
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-@container (min-width: 700px) {
-  .catalog-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-@container (min-width: 1080px) {
-  .catalog-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-}
-
-/* 封面比例跟着容器走：手机两列用 4:5 封面，平板方图，桌面宽图。
-   原来手机是横向 3:4 缩略图，视觉上退化成信息流；现在改为纵向封面卡。 */
-.catalog-cover { aspect-ratio: 4 / 5; }
-@container (min-width: 700px) {
-  .catalog-cover { aspect-ratio: 1 / 1; }
-}
-@container (min-width: 1080px) {
-  .catalog-cover { aspect-ratio: 4 / 3; }
-}
-
-/* 手机首篇做成横向主打，而不是又一张同尺寸封面卡：
-   读者第一眼先看到“这一期有什么值得点”，再进入双列浏览。 */
-@media (max-width: 699px) {
-  .catalog-grid > :first-child {
-    display: grid;
-    grid-column: 1 / -1;
-    grid-template-columns: 40% minmax(0, 1fr);
-  }
-  .catalog-grid > :first-child .catalog-cover {
-    height: 100%;
-    min-height: 188px;
-    aspect-ratio: auto;
-  }
-  .catalog-grid > :first-child .catalog-card-title {
-    font-size: 1rem;
-    line-height: 1.35;
-    -webkit-line-clamp: 3;
-  }
-  .catalog-grid > :first-child .catalog-card-body {
-    padding: 0.875rem;
-  }
-  /* 没有封面的头条不硬留 40% 空图位：直接让标题/摘要占满整行；
-     其余无封面小卡把封面压成一条学科色带，避免一眼看去像破图。 */
-  .catalog-grid > .catalog-card-no-cover:first-child {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .catalog-grid > .catalog-card-no-cover:first-child .catalog-cover {
-    display: none;
-  }
-  .catalog-grid > .catalog-card-no-cover:first-child .catalog-card-body {
-    padding: 1rem;
-  }
-}
-
-/* 无封面卡片在任何设备上都不该占满 4/5 封面位。 */
-.catalog-card-no-cover .catalog-cover {
-  height: 84px;
-  min-height: 84px;
-  aspect-ratio: auto;
-}
-
 @media (max-width: 699px) {
   /* 副刊普通无封面卡：把 4/5 空图位收成一条 72px 色带。 */
   .fun-card-no-cover > div:first-child {
@@ -1634,6 +1488,9 @@ html {
 
 /* 论文排版预览（Studio）：白纸黑字，不受暗色主题影响——纸张就是纸张。 */
 .paper-proof {
+  position: relative;
+  /* 收拢隐藏排版源与纸页，避免离屏元素在 1280/1440 宽档把栏位撑出横向溢出。 */
+  overflow: hidden;
   background: #eef0ec;
   padding: 18px;
   border-radius: 12px;
@@ -1653,16 +1510,6 @@ html {
   border-radius: 3px;
   box-shadow: 0 10px 28px rgba(24, 32, 26, 0.14);
   font-family: var(--font-serif);
-}
-.proof-running-head {
-  display: flex;
-  justify-content: space-between;
-  padding-bottom: 9px;
-  margin-bottom: 26px;
-  border-bottom: 1px solid #d6ddd4;
-  font-size: 10.5px;
-  letter-spacing: 0.08em;
-  color: #5d6b60;
 }
 .paper-proof-title {
   margin: 0;
@@ -1706,7 +1553,6 @@ html {
   line-height: 1.9;
   color: #33413a;
 }
-.paper-proof-body { margin-top: 18px; }
 .paper-proof-text {
   font-size: 13.5px;
   line-height: 2;
@@ -1729,16 +1575,6 @@ html {
 .paper-proof-text h1 { font-size: 16px; }
 .paper-proof-text h2 { font-size: 15px; }
 .paper-proof-text h3 { font-size: 14px; }
-.paper-proof-foot {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 34px;
-  padding-top: 9px;
-  border-top: 1px solid #dbe2da;
-  font-size: 10.5px;
-  color: #6b7a6f;
-}
 @media (max-width: 640px) {
   .paper-proof { padding: 10px; }
   .paper-proof-sheet { padding: 26px 20px 22px; }
@@ -1774,8 +1610,8 @@ html {
   visibility: hidden;
   pointer-events: none;
 }
-.paper-proof-pages-wrap { width: 100%; max-width: 100%; overflow: hidden; }
-.paper-proof-pages { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.paper-proof-pages-wrap { width: 100%; max-width: 100%; overflow: hidden; min-width: 0; }
+.paper-proof-pages { display: flex; flex-direction: column; align-items: center; gap: 18px; min-width: 0; }
 .paper-proof-pages .pagedjs_page {
   background: #ffffff;
   border: 1px solid rgba(31, 42, 36, 0.12);

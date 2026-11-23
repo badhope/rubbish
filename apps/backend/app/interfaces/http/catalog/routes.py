@@ -101,7 +101,7 @@ async def _can_preview_unpublished(
     """Whether ``viewer`` may see an unpublished (draft/in_review) record.
 
     刊前预览授权边界：editor 角色（deps 对 admin 直接放行）可预览全部
-    未刊稿；与该条目关联投稿的作者本人可预览自己的稿子。其余访问者
+    未刊稿；与该条目关联作品记录的作者本人可预览自己的稿子。其余访问者
     （含匿名）返回 False，调用方以 404 拒绝——不向公众确认未刊条目的
     存在。
     """
@@ -113,9 +113,9 @@ async def _can_preview_unpublished(
         return True
     from app.domain.submission.models import Submission
 
-    # 一篇资源可能关联多条投稿（重新投稿/合并链接），不能 scalar_one——
+    # 一篇资源可能关联多条发布（重新发布/合并链接），不能 scalar_one——
     # 否则详情页对这些资源直接 500（MultipleResultsFound，线上实锤事故）。
-    # 语义是「作者是任一关联投稿的提交者即可预览」。
+    # 语义是「作者是任一关联作品记录的提交者即可预览」。
     submitter_ids = set(
         (
             await db.execute(
@@ -174,7 +174,7 @@ async def list_resources(
     # essay（=fun+rant，前端「娱乐」tab 的完整口径）。
     category: str | None = Query(default=None),
     # 轨道筛选（v1.15.1）：按 content_track 过滤，paper=论文 / essay=娱乐（fun+rant）。
-    # 与 content_category 解耦：历史稿件的 category 可能未随 track 迁移。
+    # 与 content_category 解耦：历史作品的 category 可能未随 track 迁移。
     track: str | None = Query(default=None, pattern=r"^(paper|essay)$"),
     # 论文子类型（v1.17）：serious=学术论文 / absurd=荒诞论文。
     # 只对 track=paper 生效；副刊不使用该字段。
@@ -325,7 +325,7 @@ async def list_resources(
         )
     if doi:
         stmt = stmt.where(Resource.doi.ilike(f"%{doi.strip()}%"))
-    # 卷/期筛选：目录页与卷期归档页共用。空串按 None 处理（前端清空下拉框会传 ""）。
+    # 卷/期筛选：目录页与合集归档页共用。空串按 None 处理（前端清空下拉框会传 ""）。
     if volume:
         stmt = stmt.where(Resource.volume == volume)
     if issue:
@@ -333,9 +333,9 @@ async def list_resources(
     if issue_id is not None:
         stmt = stmt.where(Resource.issue_id == issue_id)
     if section:
-        # 顶层栏目（this-week）在库里的稿件挂在分部（editorial / world-view /
+        # 顶层分区（this-week）在库里的作品挂在分部（editorial / world-view /
         # research-highlights）上，只按顶层 slug 精确匹配会得到 0 篇；这里
-        # 把顶层栏目展开成它的全部分部。传入分部 slug 时仍精确匹配。
+        # 把顶层分区展开成它的全部分部。传入分部 slug 时仍精确匹配。
         from app.domain.catalog.sections import SECTIONS
 
         _section_parts: list[str] | None = None
@@ -352,7 +352,7 @@ async def list_resources(
     # 中图分类号前缀筛选：?clc=TP → clc_code 以 TP 开头（大小写不敏感）。
     if clc:
         stmt = stmt.where(Resource.clc_code.ilike(f"{clc.upper()}%"))
-    # 排序扩展：卷期归档按「卷 → 期 → 期内序号」排（pages 存三位期内序号）。
+    # 排序扩展：合集归档按「卷 → 期 → 期内序号」排（pages 存三位期内序号）。
     # 注意不能先 stmt.order_by(...) 再交给 paginate：paginate 会以传入的
     # order_by 覆盖（空元组等于清空排序）。
     if q is not None:
@@ -634,7 +634,7 @@ async def _with_engagement(db: AsyncSession, rows: Any) -> list[ResourceResponse
         response.r_index = metrics.r_index
         response.quartile = metrics.quartile
     if responses:
-        # 列表行的 has_file：与详情一致地按"挂了带文件稿件的 submission"
+        # 列表行的 has_file：与详情一致地按"挂了带文件作品的 submission"
         # 判定，一次 IN 查询整页取完（此前恒为 False，UI 无法提示可下载）。
         from app.domain.submission.models import Submission
 
@@ -710,12 +710,12 @@ async def download_resource_file(
     viewer: User | None = Depends(get_current_user_optional),
 ) -> Response:
     """流式返回资源文件：published 公开可读；draft/in_review 仅限刊前
-    预览（编辑角色或关联投稿作者本人）。
+    预览（编辑角色或关联作品记录作者本人）。
 
     这是替代原 `/uploads` 静态挂载的通道。区别是：
     - 已刊出（published）的资源任何人都可在这里读到文件；
-    - 未刊出的稿件对无权限者一律 404（不确认存在性），不再能经此端点
-      流出；在审稿件作者/审稿人仍可走鉴权端点 `GET /api/submissions/{id}/files`。
+    - 未刊出的作品对无权限者一律 404（不确认存在性），不再能经此端点
+      流出；在互评件作者/互评成员仍可走鉴权端点 `GET /api/submissions/{id}/files`。
 
     换句话说，公开取稿的授权边界是刊出状态本身；未刊稿仅对编辑与作者开放刊前预览。
     """
@@ -734,8 +734,8 @@ async def download_resource_file(
     )
     resource = result.scalar_one_or_none()
     # 纵深防御：published 公开取稿；draft/in_review 仅限编辑（含 admin）
-    # 与关联投稿的作者本人（刊前预览），无权限者（含匿名）404，不确认
-    # 未刊条目存在。编辑在 "接受" 决定里可把投稿对接到任一带 resource_id
+    # 与关联作品记录的作者本人（刊前预览），无权限者（含匿名）404，不确认
+    # 未刊条目存在。编辑在 "接受" 决定里可把发布对接到任一带 resource_id
     # 的现有条目（submission/routes.py accept 分支），此时预览走同一端点。
     is_published = is_public(resource)
     if resource is None or (
@@ -753,9 +753,9 @@ async def download_resource_file(
                 .where(
                     Submission.resource_id == resource_id,
                     Submission.tenant_id == tenant_id,
-                    # 2.0：一篇资源可能关联多条投稿（重复投稿/合并链接），
+                    # 2.0：一篇资源可能关联多条发布（重复提交/合并链接），
                     # 必须取有正文的那条且结果确定——空正文路径与无序 first()
-                    # 会让 manuscript/download 命中空投稿而 404（线上 34 实锤）。
+                    # 会让 manuscript/download 命中空发布而 404（线上 34 实锤）。
                     or_(
                         and_(
                             Submission.markdown_path.is_not(None),
@@ -888,7 +888,7 @@ async def _require_source_preview_viewer(
     db: AsyncSession,
     viewer: User | None,
 ) -> None:
-    """原件含姓名/邮箱/单位，只允许编辑部查看。"""
+    """原件含姓名/邮箱/单位，只允许内容整理查看。"""
     if viewer is None or not (viewer.is_admin or await user_has_role(db, viewer, ROLE_EDITOR)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -1180,10 +1180,10 @@ async def get_resource_manuscript(
     db: AsyncSession = Depends(get_db),
     viewer: User | None = Depends(get_current_user_optional),
 ) -> Response:
-    """在线阅读用 Markdown 稿件（0.6.2）：可见性边界与 /file 完全一致
+    """在线阅读用 Markdown 作品（0.6.2）：可见性边界与 /file 完全一致
     （published 公开；未刊稿仅刊前预览者，无权限 404）。
 
-    P0：无 Markdown 时不再假装回退 pdf.js 渲染——若该稿件被质量闸门判为
+    P0：无 Markdown 时不再假装回退 pdf.js 渲染——若该作品被质量闸门判为
     needs_docx（加密/扫描件/老 .doc/乱码），明确返回 409 + 原因 + 可下载原件，
     由前端引导作者另存为 .docx。
     """
@@ -1208,7 +1208,7 @@ async def get_resource_manuscript(
 
     from app.domain.submission.models import Submission
 
-    # 取一篇带正文的投稿：优先有 Markdown 的；没有就退而取带 file_path 的那篇，
+    # 取一篇带正文的发布：优先有 Markdown 的；没有就退而取带 file_path 的那篇，
     # 用于判定 needs_docx 原因侧car。
     submission = (
         (
@@ -1345,7 +1345,7 @@ async def get_resource_manuscript(
     except Exception:
         logger.warning("manuscript_rewrite_failed resource_id=%s", resource_id, exc_info=True)
         out_data = data
-    # 1.6.0：稿件含 220dpi 内嵌图（单篇可达 1-2MB），给协商缓存——
+    # 1.6.0：作品含 220dpi 内嵌图（单篇可达 1-2MB），给协商缓存——
     # 内容 sha256 作 ETag，重复阅读命中 304 不再重拉。
     etag = f'W/"{hashlib.sha256(out_data).hexdigest()[:32]}"'
     if if_none_match and etag in if_none_match:
@@ -1433,9 +1433,9 @@ async def get_resource_manuscript_image(
                 continue
             cache_root = storage_root / sub.markdown_path
             # 正文每次保存都会换一个新的 markdown 文件名，早期生成的
-            # `<旧 stem>.img/` 仍在同一稿件目录里；只认当前 stem 会让
+            # `<旧 stem>.img/` 仍在同一作品目录里；只认当前 stem 会让
             # 所有经过改稿的文章图片 404。这里按目录逐个回退，仍只读
-            # 当前 submission 的目录，不跨稿件取图。
+            # 当前 submission 的目录，不跨作品取图。
             cache_dirs = [cache_root.parent / f"{cache_root.stem}.img"]
             cache_dirs.extend(
                 p for p in sorted(cache_root.parent.glob("*.img")) if p != cache_dirs[0]
@@ -1531,9 +1531,9 @@ def _redact_essay_sensitive(md_text: str, resource) -> str:
 
 
 def _site_id_for(resource) -> str:
-    """本站刊号：R-六位刊号-YYYYMMDD-四位流水。
+    """本站站内编号：R-六位站内编号-YYYYMMDD-四位流水。
 
-    流水取 resources.id（全站自增），因此按刊号排序与按入库时间排序一致。
+    流水取 resources.id（全站自增），因此按站内编号排序与按入库时间排序一致。
     这不是 DOI，官方 DOI 仍由作者另行注册后填入 resources.doi。
     """
     from app.core.config import settings
@@ -1628,7 +1628,7 @@ def _localize_catalog_images(md_text: str, resource_id: int, submission) -> str:
 
 def _docx_meta_for_resource(resource, md_text: str):
     """统一的下载件元数据：作者单位取 authors_meta，不把刊名当单位；
-    关键词只取作者关键词，不拼内部学科标签；卷期/页码/DOI 一并带入。"""
+    关键词只取作者关键词，不拼内部学科标签；合集/页码/DOI 一并带入。"""
     from app.domain.submission.docx_template import Meta as DocxMeta
 
     affs = []
@@ -1729,11 +1729,16 @@ def _docx_meta_for_resource(resource, md_text: str):
         pages=(getattr(resource, "pages", None) or "").strip(),
         year=str(getattr(resource, "year", None) or ""),
         track=(getattr(resource, "content_track", None) or ""),
+        license=(getattr(resource, "license", None) or "").strip(),
+        funding=(getattr(resource, "funding", None) or "").strip(),
+        data_availability=(getattr(resource, "data_availability", None) or "").strip(),
+        coi_statement=(getattr(resource, "coi_statement", None) or "").strip(),
+        author_contributions=(getattr(resource, "author_contributions", None) or "").strip(),
     )
 
 
 def _studio_meta_for_resource(resource, md_text: str, meta=None) -> dict[str, object]:
-    """Catalog 条目 → Studio 排版元信息（与投稿工作台共用一套 PDF 内核）。"""
+    """Catalog 条目 → Studio 排版元信息（与发布工作台共用一套 PDF 内核）。"""
     meta = meta or _docx_meta_for_resource(resource, md_text)
     return {
         "title": meta.title,
@@ -1847,7 +1852,7 @@ async def export_resource_manuscript(
 ) -> Response:
     """规范化文档导出（1.10.0）：把线上阅读版 Markdown 生成干净排版的
     PDF / Word 供下载。可见性边界与 /manuscript 完全一致（published 公开，
-    未刊稿仅刊前预览者）。与「原稿 PDF」（作者投稿版式）互补——导出版是
+    未刊稿仅刊前预览者）。与「原稿 PDF」（作者作品版式）互补——导出版是
     统一版式的规范化文档，字体、标题层级、表格与图片均已清洗。
     """
     from fastapi.responses import FileResponse, JSONResponse, Response
@@ -1923,9 +1928,9 @@ async def export_resource_manuscript(
                 .where(
                     Submission.resource_id == resource_id,
                     Submission.tenant_id == tenant_id,
-                    # 2.0：一篇资源可能关联多条投稿（重复投稿/合并链接），
+                    # 2.0：一篇资源可能关联多条发布（重复提交/合并链接），
                     # 必须取有正文的那条且结果确定——空正文路径与无序 first()
-                    # 会让 manuscript/download 命中空投稿而 404（线上 34 实锤）。
+                    # 会让 manuscript/download 命中空发布而 404（线上 34 实锤）。
                     or_(
                         and_(
                             Submission.markdown_path.is_not(None),
@@ -2057,7 +2062,7 @@ async def export_resource_manuscript(
                     title=resource.title or "",
                     authors=list(resource.authors or []),
                     keywords=list(resource.keywords or []),
-                    subject="Rubbish Journal · " + (resource.content_track or "article"),
+                    subject="Rubbish · " + (resource.content_track or "article"),
                 )
             except Exception:
                 return html_to_pdf(md_to_html(md_text), resource.title, byline)
@@ -2083,7 +2088,7 @@ async def public_resource_updates(
     db: AsyncSession = Depends(get_db),
     tenant_id: int = Depends(require_tenant_id),
 ) -> list[ResourcePublicEventListItem]:
-    """公开的内容变更记录（更正 / 撤稿 / 署名变更 / 版本说明）。
+    """公开的内容变更记录（更正 / 撤回 / 署名变更 / 版本说明）。
 
     只返回公开可见文章的记录：草稿、未到刊期或已删除文章不能借事件表
     泄露存在性。按生效时间倒序，补记的历史事件也按真实生效时间排。
@@ -2129,7 +2134,7 @@ async def get_resource_history(
     """文章公开版本历史 + 内容变更记录，供读者核对“这篇稿子发生了什么”。
 
     versions 来自 ``submission_versions``：只暴露版本号、作者修改说明与
-    时间，不下发完整 payload（里面可能有审稿过程与未公开内容）。
+    时间，不下发完整 payload（里面可能有互评过程与未公开内容）。
     """
     from app.domain.submission.models import Submission, SubmissionVersion
 
@@ -2231,7 +2236,7 @@ async def create_resource_public_event(
     current_admin: User = Depends(require_admin),
     tenant_id: int = Depends(require_tenant_id),
 ) -> ResourcePublicEventResponse:
-    """编辑部登记公开变更；事件只追加，不覆盖历史。"""
+    """内容整理登记公开变更；事件只追加，不覆盖历史。"""
     resource = (
         await db.execute(
             select(Resource).where(
@@ -2384,14 +2389,14 @@ async def get_resource(
         response.saves = engagement.saves
         response.r_index = engagement.r_index
         response.quartile = engagement.quartile
-    # 评分细则与分区口径只对审稿/编辑端可见：作者与普通读者（含匿名）
+    # 评分细则与分区口径只对互评/编辑端可见：作者与普通读者（含匿名）
     # 不下发 quality_* / quartile。前端再按角色 gate 渲染，避免占位卡片。
     can_see_scores = viewer is not None and (
         PERMISSION_RANK[await effective_permission_role(db, viewer)] >= PERMISSION_RANK["reviewer"]
     )
     if not can_see_scores:
         # 评分总表可公开（用于阅读端展示档位），但评分细则与分区口径只给
-        # 审稿/编辑端；普通读者不下发 breakdown / quartile。
+        # 互评/编辑端；普通读者不下发 breakdown / quartile。
         response.quality_breakdown = None
     return response
 
@@ -2692,9 +2697,9 @@ async def delete_resource(
 # 作者认领（Author Claim）
 #
 # 早期文章由编辑部批量导入，authors 是字符串数组、与站内账号无关。
-# 本组端点让作者能认领这类"无人认领"的文章：登录用户对资源发起认领
-# → 编辑部批准后自动创建一条关联投稿（submitted_by = 认领人），从此
-# "我的文章"、录用统计、刊前预览等基于 Submission 链路的功能全部生效。
+# 本组端点让作者能认领这类"无人认领"的文章：登通过户对资源发起认领
+# → 编辑部批准后自动创建一条关联作品记录（submitted_by = 认领人），从此
+# "我的文章"、通过统计、刊前预览等基于 Submission 链路的功能全部生效。
 # ---------------------------------------------------------------------------
 
 
@@ -2731,8 +2736,7 @@ async def _notify_editors(
     editors = (
         (
             await db.execute(
-                select(User)
-                .where(
+                select(User).where(
                     User.tenant_id == tenant_id,
                     User.is_active.is_(True),
                     (User.id.in_(editor_ids)) | (User.is_admin.is_(True)),
@@ -2861,7 +2865,7 @@ async def claim_resource(
     if not state["claimable"]:
         if state.get("state") == "pending_review":
             msg = (
-                "你已提交过认领申请，请等待编辑部处理"
+                "你已提交过认领申请，请等待内容整理处理"
                 if state.get("mine")
                 else "该文章已有认领申请在审批中"
             )
@@ -2908,7 +2912,7 @@ async def admin_overview(
     tenant_id: int = Depends(require_tenant_id),
 ) -> dict[str, object]:
     """管理端实时概览（2.0 主编要求）：在线人数 / 今日与累计阅读 / 下载 /
-    稿件流水线 / 最热文章。数据全部来自真实阅读记录（ReadingHistory），
+    作品流水线 / 最热文章。数据全部来自真实阅读记录（ReadingHistory），
     30 秒轮询刷新由前端负责。"""
     from datetime import timedelta
 
@@ -2992,7 +2996,7 @@ class FeedbackIn(BaseModel):
     """全站问题反馈（2.0 主编要求：每个页面都可提 bug，交主编处理）。
 
     反馈不是只有“bug / 建议”两种：内容纠错、版式、性能、无障碍、
-    投稿咨询都需要单独归类，才能被对应的人接手。
+    发布咨询都需要单独归类，才能被对应的人接手。
     """
 
     kind: str = Field(
@@ -3092,7 +3096,7 @@ async def resolve_feedback(
     tenant_id: int = Depends(require_tenant_id),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, object]:
-    """编辑部标记反馈已解决；公开反馈墙随即显示「已解决」。"""
+    """站务组标记反馈已解决；公开反馈墙随即显示「已解决」。"""
     entry = (
         await db.execute(
             select(AuditLog).where(
@@ -3154,7 +3158,7 @@ async def submit_feedback(
     db: AsyncSession = Depends(get_db),
     tenant_id: int = Depends(require_tenant_id),
 ) -> dict[str, object]:
-    """任何读者/作者/审稿人都能提问题，落审计并向主编/编辑推送通知。"""
+    """任何读者/作者/互评成员都能提问题，落审计并向站务组/内容整理推送通知。"""
     from app.domain.notifications import services as _notify
 
     entry = AuditLog(
@@ -3280,15 +3284,19 @@ async def create_appeal(
             detail="作品当前不在公开目录，暂不需要申诉",
         )
     existing = (
-        await db.execute(
-            select(Appeal).where(
-                Appeal.tenant_id == tenant_id,
-                Appeal.resource_id == resource_id,
-                Appeal.user_id == current_user.id,
-                Appeal.kind == payload.kind,
+        (
+            await db.execute(
+                select(Appeal).where(
+                    Appeal.tenant_id == tenant_id,
+                    Appeal.resource_id == resource_id,
+                    Appeal.user_id == current_user.id,
+                    Appeal.kind == payload.kind,
+                )
             )
         )
-    ).scalars().first()
+        .scalars()
+        .first()
+    )
     if existing is not None:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -3302,14 +3310,18 @@ async def create_appeal(
     from app.domain.submission.models import Submission
 
     submission_id = (
-        await db.execute(
-            select(Submission.id).where(
-                Submission.tenant_id == tenant_id,
-                Submission.resource_id == resource_id,
-                Submission.submitted_by == current_user.id,
+        (
+            await db.execute(
+                select(Submission.id).where(
+                    Submission.tenant_id == tenant_id,
+                    Submission.resource_id == resource_id,
+                    Submission.submitted_by == current_user.id,
+                )
             )
         )
-    ).scalars().first()
+        .scalars()
+        .first()
+    )
     row = Appeal(
         tenant_id=tenant_id,
         resource_id=resource_id,
@@ -3366,7 +3378,9 @@ async def create_appeal(
 
 @router.get("/appeals/mine")
 async def list_my_appeals(
-    status_filter: str = Query(default="all", alias="status", pattern=r"^(all|pending|accepted|rejected)$"),
+    status_filter: str = Query(
+        default="all", alias="status", pattern=r"^(all|pending|accepted|rejected)$"
+    ),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, object]:
@@ -3388,7 +3402,9 @@ async def list_my_appeals(
 
 @router.get("/admin/appeals")
 async def admin_list_appeals(
-    status_filter: str = Query(default="all", alias="status", pattern=r"^(all|pending|accepted|rejected)$"),
+    status_filter: str = Query(
+        default="all", alias="status", pattern=r"^(all|pending|accepted|rejected)$"
+    ),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
     appeal_id: int | None = Query(default=None, ge=1),
@@ -3403,24 +3419,19 @@ async def admin_list_appeals(
     if appeal_id is not None:
         conditions.append(Appeal.id == appeal_id)
     total = int(
-        (
-            await db.execute(select(func.count()).select_from(Appeal).where(*conditions))
-        ).scalar_one()
+        (await db.execute(select(func.count()).select_from(Appeal).where(*conditions))).scalar_one()
     )
     rows = (
-        (
-            await db.execute(
-                select(Appeal, Resource.title, User.username)
-                .join(Resource, Resource.id == Appeal.resource_id)
-                .join(User, User.id == Appeal.user_id)
-                .where(*conditions)
-                .order_by(Appeal.id.desc())
-                .limit(page_size)
-                .offset((page - 1) * page_size)
-            )
+        await db.execute(
+            select(Appeal, Resource.title, User.username)
+            .join(Resource, Resource.id == Appeal.resource_id)
+            .join(User, User.id == Appeal.user_id)
+            .where(*conditions)
+            .order_by(Appeal.id.desc())
+            .limit(page_size)
+            .offset((page - 1) * page_size)
         )
-        .all()
-    )
+    ).all()
     return {
         "items": [_appeal_row(row[0], row[2], row[1]) for row in rows],
         "meta": _appeal_meta(page, page_size, total),

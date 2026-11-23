@@ -42,7 +42,7 @@ const EVIDENCE_LABEL: Record<string, string> = {
 }
 
 /**
- * 作者认领审批台（v5）：卡片列表。
+ * 作者认领处理台（v5）：卡片列表。
  * 通过/驳回/驳回后指定给其他申请人（逐位调用 assign-owner）。
  */
 export default function ClaimsAdminPage({ highlightClaimId }: { highlightClaimId?: number }) {
@@ -85,7 +85,7 @@ export default function ClaimsAdminPage({ highlightClaimId }: { highlightClaimId
       setRejectTarget(null)
       setRejectNote('')
     } catch (err) {
-      toast.error(extractError(err, '操作失败'))
+      toast.error(extractError(err, '没能驳回这份申请，可再试一次'))
     }
   }
 
@@ -97,7 +97,7 @@ export default function ClaimsAdminPage({ highlightClaimId }: { highlightClaimId
       })
       toast.success('已通过：这篇挂到认领人名下了')
     } catch (err) {
-      toast.error(extractError(err, '操作失败'))
+      toast.error(extractError(err, '没能通过这份认领，可再试一次'))
     }
   }
 
@@ -147,7 +147,7 @@ export default function ClaimsAdminPage({ highlightClaimId }: { highlightClaimId
         {isLoading ? (
           <Loading />
         ) : isError ? (
-          <ErrorState message="加载认领申请失败" onRetry={() => refetch()} />
+          <ErrorState message="认领申请加载失败，可重试。" onRetry={() => refetch()} />
         ) : rows.length === 0 ? (
           <EmptyState
             title={statusFilter === 'pending' ? '没有待处理的认领申请' : '暂无记录'}

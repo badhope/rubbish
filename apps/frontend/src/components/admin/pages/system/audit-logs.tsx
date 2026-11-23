@@ -23,12 +23,12 @@ export default function AuditLogsPage() {
 
   return (
     <div>
-      <PageHeader title="审计日志" description="记录管理员操作与关键事件。" />
+      <PageHeader title="审计日志" description="记录后台操作与关键事件。" />
 
       {isLoading ? (
         <Loading />
       ) : isError ? (
-        <ErrorState message="加载审计日志失败" onRetry={() => refetch()} />
+        <ErrorState message="审计日志加载失败，可重试。" onRetry={() => refetch()} />
       ) : !data || data.length === 0 ? (
         <EmptyState title="暂无审计日志" />
       ) : (

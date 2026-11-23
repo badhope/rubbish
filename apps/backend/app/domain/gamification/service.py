@@ -329,9 +329,9 @@ async def level_snapshot(db: AsyncSession, user: User, roles: list[str]) -> dict
 
     xp = int(user.xp or 0)
     slug = identity_for_roles(roles, is_admin=bool(user.is_admin))
-    # 作者身份是合规状态而非角色：已确认当版规范 = 可投稿。
+    # 作者身份是合规状态而非角色：已确认当版规范 = 可发布。
     author_ok = is_author_eligible(user.rules_ack_version, CURRENT_RULES_VERSION)
-    # 有审稿/编辑角色的人天然也是作者（他们当然可以投稿）。
+    # 有互评/编辑角色的人天然也是作者（他们当然可以发布）。
     if IDENTITY_RANK[slug] >= IDENTITY_RANK["author"]:
         author_ok = True
     # 读者 + 已确认规范 = 作者身份。不提升 slug 的话，作者会永远显示为
@@ -351,7 +351,7 @@ async def level_snapshot(db: AsyncSession, user: User, roles: list[str]) -> dict
             "xp": xp,
             "roles": roles,
             "author_eligible": author_ok,
-            # 下一个可争取的身份（读者→作者→审稿人），没有则 None。
+            # 下一个可争取的身份（读者→作者→互评成员），没有则 None。
             "next_identity": _next_identity(slug, author_ok),
         }
     )
@@ -364,7 +364,7 @@ def _next_identity(slug: str, author_ok: bool) -> dict[str, str] | None:
         return {
             "slug": "author",
             "name": "作者",
-            "how": "阅读并确认《作品与发布规范》，即可发布",
+            "how": "阅读并确认《写作与发布规范》，即可发布",
         }
     if slug in ("reader", "author"):
         return {

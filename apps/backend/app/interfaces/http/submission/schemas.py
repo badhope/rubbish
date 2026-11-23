@@ -17,9 +17,9 @@ from app.core.tracks import Track, normalize_track
 
 # 完整 workflow 状态机：
 #   pending → under_review → (major_revision | minor_revision | accepted | rejected)
-#   major_revision / minor_revision → resubmitted → under_review（再分配审稿人）
+#   major_revision / minor_revision → resubmitted → under_review（再分配互评成员）
 #   accepted → 自动物化 Resource 入 catalog（等价于旧 approved，保留向后兼容）
-# pending = 作者已提交、待编辑分配审稿人；accepted = 旧 approved 的同义词。
+# pending = 作者已提交、待编辑分配互评成员；accepted = 旧 approved 的同义词。
 # 旧测试用 pending/approved/rejected 路径仍走原 review 端点，保持兼容。
 SubmissionStatus = Literal[
     "pending",
@@ -28,8 +28,8 @@ SubmissionStatus = Literal[
     "minor_revision",
     "resubmitted",
     # 打回：评分 D 级时编辑发起的「补审/修改」状态（1.9.2 起）。
-    # 与 major_revision 的区别：后者是审稿意见驱动的修回，前者是
-    # 质量评分不达标驱动的打回，审稿人与作者都要有动作。
+    # 与 major_revision 的区别：后者是互评意见驱动的修回，前者是
+    # 质量评分不达标驱动的打回，互评成员与作者都要有动作。
     "rework_requested",
     "accepted",
     "rejected",
@@ -85,7 +85,7 @@ class SubmissionCreate(BaseModel):
     venue: str | None = Field(default=None, max_length=500)
     discipline: str = Field(min_length=1, max_length=100)
     subdiscipline: str | None = Field(default=None, max_length=100)
-    # 栏目 / 期次分部：与 catalog Resource 字段同名，录用时直接物化。
+    # 分区 / 合集分部：与 catalog Resource 字段同名，通过时直接物化。
     article_section: str | None = Field(default=None, max_length=40)
     issue_part: str | None = Field(default=None, max_length=40)
     keywords: list[str] = Field(default_factory=list, max_length=50)
@@ -93,13 +93,13 @@ class SubmissionCreate(BaseModel):
     tags: list[str] = Field(default_factory=list, max_length=50)
     abstract: str = Field(min_length=1, max_length=20000)
     # preview 可选：作者通常不知道要填，留空时自动从 abstract 截取前 500 字。
-    # 之所以放宽是因为旧版本必填导致大量首次投稿 422 失败（实测摩擦点）。
+    # 之所以放宽是因为旧版本必填导致大量首次发布 422 失败（实测摩擦点）。
     preview: str | None = Field(default=None, max_length=5000)
     download_url: AnyHttpUrl | None = None
     external_url: AnyHttpUrl | None = None
     doi: str | None = Field(default=None, max_length=200)
     corresponding_author_email: str | None = Field(default=None, max_length=255)
-    # P3-1：投稿阶段即结构化，录用后物化到目录条目，前台逐篇展示。
+    # P3-1：发布阶段即结构化，通过后物化到目录条目，前台逐篇展示。
     license: str | None = Field(default=None, max_length=100)
     author_contributions: str | None = Field(default=None, max_length=5000)
     funding: str | None = Field(default=None, max_length=5000)
@@ -179,11 +179,11 @@ class SubmissionDecision(BaseModel):
     decision: EditorDecision
     editor_note: str | None = Field(default=None, max_length=5000)
     resource_id: int | None = Field(default=None, ge=1)
-    # accept 且新建物化时生效：published（默认，录用即刊，兼容旧行为）或
+    # accept 且新建物化时生效：published（默认，通过即公开，兼容旧行为）或
     # draft（暂存草稿——发布前整理阶段，之后由 admin PATCH /catalog/{id} 发布）。
     # 指定现有 resource_id 时不改动该条目的发布状态。
     publication_status: Literal["published", "draft"] = "published"
-    # D 级（<60 分）默认不能录用：必须先打回审稿人补审或要求作者修改。
+    # D 级（<60 分）默认不能通过：必须先打回互评成员补审或要求作者修改。
     # 确需破例时置 true，且必须在 editor_note 里写明理由——破例本身要
     # 可追溯，否则"D 级硬发"会变成常规操作。
     force_accept_d_grade: bool = False
@@ -194,7 +194,7 @@ class SubmissionDecision(BaseModel):
 class AnonymizedFileUpdate(BaseModel):
     """Body for PUT /submissions/{id}/anonymized-file — editor only.
 
-    双盲评审下编辑提供给审稿人的匿名稿外链。与作者可控的 download_url
+    双盲评审下编辑提供给互评成员的匿名稿外链。与作者可控的 download_url
     完全隔离：本字段只能经此编辑端点写入。传 null 表示清除。
     """
 
@@ -202,7 +202,7 @@ class AnonymizedFileUpdate(BaseModel):
 
 
 class TriageRequest(BaseModel):
-    """P1-9 初筛决定：送外审 / 退回修改 / 补材料 / 直接拒稿。"""
+    """P1-9 基础检查决定：送互评 / 退回修改 / 补材料 / 直接不通过。"""
 
     decision: Literal["send_to_review", "return_for_revision", "desk_reject", "request_materials"]
     note: str = Field(default="", max_length=2000)
@@ -212,7 +212,7 @@ class ReworkRequest(BaseModel):
     """打回作品：必须列出具体修改要求。
 
     ``requirements`` 下限 3 条是刻意的：一句"不合格"对作者没有行动指引，
-    对审稿人也没有可补的方向。打回的成本应该落在"说清楚问题"上，而不是
+    对互评成员也没有可补的方向。打回的成本应该落在"说清楚问题"上，而不是
     落在作者反复猜测上。
     """
 
@@ -224,7 +224,7 @@ class WaiveReviewRequest(BaseModel):
     """Body for POST /submissions/{id}/waive-review — desk accept 前置声明。
 
     ``reason`` 强制非空且≥10 字：这条理由是「为什么这篇稿子没有走同行
-    评审」的唯一书面依据，会进审计日志并随录用通知发给作者。允许空理由
+    评审」的唯一书面依据，会进审计日志并随通过通知发给作者。允许空理由
     等于允许无声的例外。
     """
 
@@ -271,7 +271,7 @@ class SubmissionResponse(BaseModel):
     preview: str
     download_url: str | None = None
     external_url: str | None = None
-    # 双盲下编辑提供的匿名稿外链（审稿人可见）；作者视角本字段可空
+    # 双盲下编辑提供的匿名稿外链（互评成员可见）；作者视角本字段可空
     anonymized_file_url: str | None = None
     doi: str | None = None
     corresponding_author_email: str | None = None
@@ -283,7 +283,7 @@ class SubmissionResponse(BaseModel):
     status: SubmissionStatus
     admin_note: str | None = None
     editor_note: str | None = None
-    # 作者逐条回复审稿人；与版本修改说明分开，编辑可见。
+    # 作者逐条回复互评成员；与版本修改说明分开，编辑可见。
     author_response: str | None = None
     author_response_at: datetime | None = None
     # 关联目录条目的发布状态（published/draft/in_review）；无关联时为 None。
@@ -297,19 +297,19 @@ class SubmissionResponse(BaseModel):
     file_path: str | None = None
     # 在线阅读用 Markdown 作品的存储 key（可空 = 回退 PDF 视图）。
     markdown_path: str | None = None
-    # 完整正文（仅审稿人分配端点按需下发；详情/列表不返回，避免把正文塞进列表响应）
+    # 完整正文（仅互评成员分配端点按需下发；详情/列表不返回，避免把正文塞进列表响应）
     manuscript_body: str | None = None
-    # 双盲评审下审稿人视角会被抹掉，因此可空
+    # 双盲评审下互评成员视角会被抹掉，因此可空
     submitted_by: int | None = None
     submitted_at: datetime
     reviewed_by: int | None = None
     reviewed_at: datetime | None = None
-    # P1-9 两段式初筛：pending/passed/rework/rejected/materials。
+    # P1-9 两段式基础检查：pending/passed/rework/rejected/materials。
     triage_status: str | None = None
     triage_note: str | None = None
     triaged_at: datetime | None = None
     triaged_by: int | None = None
-    # 初筛 48 小时计时起点与提醒状态；补材料重投会重置起点。
+    # 基础检查 48 小时计时起点与提醒状态；补材料重投会重置起点。
     triage_started_at: datetime | None = None
     triage_reminded_at: datetime | None = None
     triage_reminder_count: int = 0
@@ -318,7 +318,7 @@ class SubmissionResponse(BaseModel):
     # 上传结果提示（P0）：扩展名与实际格式不一致、needs_docx 原因、
     # 中图分类号待校正等。仅上传端点返回。
     upload_warnings: list[str] = []
-    # 审稿进度（列表页/详情页共用）：发表闸门依赖这些数字。
+    # 互评进度（列表页/详情页共用）：发表闸门依赖这些数字。
     reports_completed: int = 0
     distinct_reviewers: int = 0
     accept_recommendations: int = 0
@@ -335,19 +335,19 @@ class SubmissionListResponse(BaseModel):
 
 
 class ReviewerCandidate(BaseModel):
-    """Editor 分配审稿人时的候选（持有 reviewer 角色且账号启用）。"""
+    """Editor 分配互评成员时的候选（持有 reviewer 角色且账号启用）。"""
 
     id: int
     username: str
     email: str
     # 可解释匹配分：传 submission_id 时按学科/关键词/负载计算；不传时
-    # score=0，但 active/completed 仍可用于展示审稿人经验。
+    # score=0，但 active/completed 仍可用于展示互评成员经验。
     score: int = 0
     active_assignments: int = 0
     completed_reviews: int = 0
     matched_keywords: list[str] = Field(default_factory=list)
     match_reasons: list[str] = Field(default_factory=list)
-    # P1-7：审稿人自填能力标签；候选理由里展示重合项。
+    # P1-7：互评成员自填能力标签；候选理由里展示重合项。
     reviewer_tags: list[str] = Field(default_factory=list)
     # 受控学科标签（Discipline.slug 数组；迁移 057），与作品学科精确匹配。
     reviewer_disciplines: list[str] = Field(default_factory=list)
@@ -364,7 +364,7 @@ class ReviewerCandidateListResponse(BaseModel):
 
 
 class AuthorResponseUpdate(BaseModel):
-    """Body for PUT /submissions/{id}/response — 作者逐条回复审稿人."""
+    """Body for PUT /submissions/{id}/response — 作者逐条回复互评成员."""
 
     response: str = Field(default="", max_length=20000)
 

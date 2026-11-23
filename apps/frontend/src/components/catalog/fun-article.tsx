@@ -25,16 +25,16 @@ import {
 } from '@/components/ui/dialog'
 import PdfImagePreview from '@/components/pdf-image-preview'
 
-// 娱乐文章页（v1.16）：和论文详情页不是同一套排版。
-// 论文页是“看一份学术记录”：摘要卡、CLC、引用、PDF、评审信息、R 评分；
-// 娱乐页是“看一篇网文”：大标题、作者、封面、正文、标签、评论。
-// 这里刻意不渲染任何学术块，也不使用论文页的 3/4 封面卡与侧栏。
+// 自由创作详情页（v1.16）：和研究长文详情页不是同一套排版。
+// 研究长文页是“看一份记录”：概要卡、分类、引用、PDF、整理信息、站内热度；
+// 自由创作页是“看一篇作品”：大标题、作者、封面、正文、标签、回应。
+// 这里刻意不渲染任何研究块，也不使用研究长文页的封面卡与侧栏。
 
 interface FunArticleProps {
   data: ResourceResponse
   progress: number
-  isAuthenticated: boolean
   isAdmin: boolean
+  saved: boolean
   onEdit: () => void
   onDelete: () => void
   onSave: () => void
@@ -43,8 +43,8 @@ interface FunArticleProps {
 export function FunArticle({
   data,
   progress,
-  isAuthenticated,
   isAdmin,
+  saved,
   onEdit,
   onDelete,
   onSave,
@@ -76,20 +76,14 @@ export function FunArticle({
           </Link>
           <div className="flex min-w-0 items-center gap-0.5">
             <Button
-              variant="ghost"
+              variant={saved ? 'secondary' : 'ghost'}
               size="sm"
               className="h-8 shrink-0 gap-1 px-2 text-muted-foreground"
-              aria-label="收藏"
-              onClick={() => {
-                if (!isAuthenticated) {
-                  toast.error('登录后才能收藏')
-                  return
-                }
-                onSave()
-              }}
+              aria-label={saved ? '已收藏，管理收藏' : '收藏'}
+              onClick={onSave}
             >
-              <Bookmark className="h-4 w-4" />
-              <span className="hidden sm:inline">收藏</span>
+              <Bookmark className={`h-4 w-4 ${saved ? 'fill-current' : ''}`} />
+              <span className="hidden sm:inline">{saved ? '已收藏' : '收藏'}</span>
             </Button>
             <Button
               variant="ghost"
@@ -177,7 +171,7 @@ export function FunArticle({
               {initial}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{authorName}</p>
+              <p className="min-w-0 break-words text-sm font-medium">{authorName}</p>
               <p className="text-xs text-muted-foreground">
                 作者
                 {author?.affiliation ? ` · ${author.affiliation}` : ''}
@@ -238,8 +232,8 @@ export function FunArticle({
         </Dialog>
 
         <section className="mt-8 border-t pt-6">
-          <h2 className="mb-4 text-sm font-medium">评论区</h2>
-          <Comments resourceId={data.id} />
+          <h2 className="mb-4 text-sm font-medium">回应</h2>
+          <Comments resourceId={data.id} title={data.title} />
         </section>
       </div>
     </div>

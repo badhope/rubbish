@@ -1,23 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Rubbish 横版组合（Lockup）—— 图形标 + 衬线字标
-  用途：README / 文档页头 / 页眉等横向空间；
-  深色背景用 logo-horizontal-white.svg。
-  图形标为「印章之 R」，与 favicon.svg / logo-mark.svg 同几何。
-  字标采用 Georgia / Times 系衬线，延续学术出版传统。
--->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 150" width="560" height="150" role="img" aria-label="Rubbish">
-  <!-- 印章之 R（mark，64 盒 × 1.875 = 120px，与 favicon.svg 同几何） -->
   <g transform="translate(10,15) scale(1.875)">
-    <rect width="64" height="64" rx="12" fill="#16324F"/>
-    <rect x="8" y="8" width="48" height="48" rx="5" fill="none" stroke="#FFFFFF" stroke-opacity="0.45" stroke-width="1.2"/>
-    <text x="32" y="44" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-size="34" font-weight="600" fill="#FFFFFF">R</text>
-    <path d="M 50.5 44.5 L 56 50 L 50.5 55.5 L 45 50 Z" fill="#C7A24B"/>
+    <rect x="1" y="1" width="62" height="62" rx="10" fill="#F4EFE4"/>
+    <path d="M17 13h18.5c8.8 0 14.3 4.6 14.3 12 0 5.6-3.2 9.6-8.6 11l11.4 15H40.4L30.5 37.2h-4.2v13.8H17V13Zm9.3 7.7v9.1h8.5c4 0 6.4-1.7 6.4-4.6 0-2.8-2.4-4.5-6.4-4.5h-8.5Z" fill="#2F5D46"/>
+    <path d="M45.5 8.5c4.2 1.4 7.2 4.6 8.4 8.6" fill="none" stroke="#1F7A4D" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M54.5 17.8 55 24l-6.2-1.2" fill="none" stroke="#1F7A4D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
-
-  <!-- 字标 -->
-  <text x="148" y="88" font-family="Georgia,'Times New Roman',serif" font-size="58"
-        font-weight="700" letter-spacing="1" fill="#16324F">Rubbish</text>
-  <text x="152" y="118" font-family="Georgia,'Times New Roman',serif" font-size="14"
-        letter-spacing="6.5" fill="#5A6B7C">OPEN SCHOLARLY PUBLISHING</text>
+  <text x="148" y="82" font-family="Georgia,'Noto Serif CJK SC','Songti SC',serif" font-size="56" font-weight="700" fill="#2F5D46">Rubbish</text>
+  <text x="152" y="114" font-family="'Noto Serif CJK SC','Songti SC',Georgia,serif" font-size="16" letter-spacing="4.4" fill="#5C6B60">公开写作与讨论</text>
 </svg>

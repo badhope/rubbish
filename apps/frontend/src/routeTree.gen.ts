@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as R403RouteImport } from './routes/403'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as AccessibilityRouteImport } from './routes/accessibility'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as GuideRouteImport } from './routes/guide'
@@ -23,6 +24,9 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RestoreAccountRouteImport } from './routes/restore-account'
+import { Route as SearchRouteImport } from './routes/search'
+import { Route as StatusRouteImport } from './routes/status'
+import { Route as TagsRouteImport } from './routes/tags'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminContentRouteImport } from './routes/admin/content'
@@ -56,6 +60,11 @@ const R403Route = R403RouteImport.update({
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccessibilityRoute = AccessibilityRouteImport.update({
+  id: '/accessibility',
+  path: '/accessibility',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -111,6 +120,21 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const RestoreAccountRoute = RestoreAccountRouteImport.update({
   id: '/restore-account',
   path: '/restore-account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StatusRoute = StatusRouteImport.update({
+  id: '/status',
+  path: '/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TagsRoute = TagsRouteImport.update({
+  id: '/tags',
+  path: '/tags',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VerifyEmailRoute = VerifyEmailRouteImport.update({
@@ -213,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/403': typeof R403Route
   '/about': typeof AboutRoute
+  '/accessibility': typeof AccessibilityRoute
   '/admin': typeof AdminRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/guide': typeof GuideRoute
@@ -224,6 +249,9 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/restore-account': typeof RestoreAccountRoute
+  '/search': typeof SearchRoute
+  '/status': typeof StatusRoute
+  '/tags': typeof TagsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/economy': typeof AdminEconomyRoute
@@ -248,6 +276,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/403': typeof R403Route
   '/about': typeof AboutRoute
+  '/accessibility': typeof AccessibilityRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/guide': typeof GuideRoute
   '/issues': typeof IssuesRoute
@@ -258,6 +287,9 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/restore-account': typeof RestoreAccountRoute
+  '/search': typeof SearchRoute
+  '/status': typeof StatusRoute
+  '/tags': typeof TagsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/economy': typeof AdminEconomyRoute
@@ -283,6 +315,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/403': typeof R403Route
   '/about': typeof AboutRoute
+  '/accessibility': typeof AccessibilityRoute
   '/admin': typeof AdminRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/guide': typeof GuideRoute
@@ -294,6 +327,9 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/restore-account': typeof RestoreAccountRoute
+  '/search': typeof SearchRoute
+  '/status': typeof StatusRoute
+  '/tags': typeof TagsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/admin/content': typeof AdminContentRoute
   '/admin/economy': typeof AdminEconomyRoute
@@ -320,6 +356,7 @@ export interface FileRouteTypes {
     | '/'
     | '/403'
     | '/about'
+    | '/accessibility'
     | '/admin'
     | '/forgot-password'
     | '/guide'
@@ -331,6 +368,9 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/restore-account'
+    | '/search'
+    | '/status'
+    | '/tags'
     | '/verify-email'
     | '/admin/content'
     | '/admin/economy'
@@ -355,6 +395,7 @@ export interface FileRouteTypes {
     | '/'
     | '/403'
     | '/about'
+    | '/accessibility'
     | '/forgot-password'
     | '/guide'
     | '/issues'
@@ -365,6 +406,9 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/restore-account'
+    | '/search'
+    | '/status'
+    | '/tags'
     | '/verify-email'
     | '/admin/content'
     | '/admin/economy'
@@ -389,6 +433,7 @@ export interface FileRouteTypes {
     | '/'
     | '/403'
     | '/about'
+    | '/accessibility'
     | '/admin'
     | '/forgot-password'
     | '/guide'
@@ -400,6 +445,9 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/restore-account'
+    | '/search'
+    | '/status'
+    | '/tags'
     | '/verify-email'
     | '/admin/content'
     | '/admin/economy'
@@ -425,6 +473,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   R403Route: typeof R403Route
   AboutRoute: typeof AboutRoute
+  AccessibilityRoute: typeof AccessibilityRoute
   AdminRoute: typeof AdminRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   GuideRoute: typeof GuideRoute
@@ -436,6 +485,9 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RestoreAccountRoute: typeof RestoreAccountRoute
+  SearchRoute: typeof SearchRoute
+  StatusRoute: typeof StatusRoute
+  TagsRoute: typeof TagsRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   CatalogResourceIdRoute: typeof CatalogResourceIdRoute
   EditorCalibrationRoute: typeof EditorCalibrationRoute
@@ -473,6 +525,13 @@ declare module '@tanstack/react-router' {
       path: '/about'
       fullPath: '/about'
       preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/accessibility': {
+      id: '/accessibility'
+      path: '/accessibility'
+      fullPath: '/accessibility'
+      preLoaderRoute: typeof AccessibilityRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -550,6 +609,27 @@ declare module '@tanstack/react-router' {
       path: '/restore-account'
       fullPath: '/restore-account'
       preLoaderRoute: typeof RestoreAccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/status': {
+      id: '/status'
+      path: '/status'
+      fullPath: '/status'
+      preLoaderRoute: typeof StatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tags': {
+      id: '/tags'
+      path: '/tags'
+      fullPath: '/tags'
+      preLoaderRoute: typeof TagsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/verify-email': {
@@ -710,6 +790,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   R403Route: R403Route,
   AboutRoute: AboutRoute,
+  AccessibilityRoute: AccessibilityRoute,
   AdminRoute: AdminRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   GuideRoute: GuideRoute,
@@ -721,6 +802,9 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RestoreAccountRoute: RestoreAccountRoute,
+  SearchRoute: SearchRoute,
+  StatusRoute: StatusRoute,
+  TagsRoute: TagsRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   CatalogResourceIdRoute: CatalogResourceIdRoute,
   EditorCalibrationRoute: EditorCalibrationRoute,

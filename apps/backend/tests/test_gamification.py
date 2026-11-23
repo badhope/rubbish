@@ -14,7 +14,7 @@ def _level(body: dict) -> int:
 
 
 async def test_ladder_is_public_and_lists_four_identities(client: AsyncClient) -> None:
-    """身份体系 3.0：四种身份（读者/作者/审稿人/编辑），不再是九级 XP 阶梯。"""
+    """身份体系 3.0：四种身份（读者/作者/互评成员/编辑），不再是九级 XP 阶梯。"""
     r = await client.get("/api/gamification/ladder")
     assert r.status_code == 200
     body = r.json()
@@ -22,7 +22,7 @@ async def test_ladder_is_public_and_lists_four_identities(client: AsyncClient) -
     identities = body["identities"]
     assert [item["slug"] for item in identities] == ["reader", "author", "reviewer", "editor"]
     by_slug = {item["slug"]: item for item in identities}
-    # 审稿人身份必须能对上后端角色，否则"授予"与"门禁"会脱节
+    # 互评成员身份必须能对上后端角色，否则"授予"与"门禁"会脱节
     assert "reviewer" in by_slug["reviewer"]["roles"]
     assert "editor" in by_slug["editor"]["roles"]
     # 读者与作者都不需要角色（注册/确认规范即得）

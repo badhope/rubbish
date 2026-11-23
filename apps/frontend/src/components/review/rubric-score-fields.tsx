@@ -12,7 +12,7 @@ export interface DimensionReview {
   score: number | null
   reason: string
   evidence: string
-  /** 逐维给作者的修改意见：证据右侧独立输入，避免和评分理由混在一起。 */
+  /** 逐项给作者的修改意见：证据右侧独立输入，避免和核对理由混在一起。 */
   suggestion: string
 }
 
@@ -32,7 +32,7 @@ export const ACADEMIC_REVIEW_DIMENSIONS: DimensionMeta[] = [
     label: '主题与问题',
     hint: '主题清楚、问题具体，读者知道这篇要写什么',
     weight: 20,
-    watch: '标题和开头能不能一句话说清写什么？有没有明确的新角度？只是泛泛而谈，这一维最多 60。',
+    watch: '标题和开头能不能一句话说清写什么？有没有明确的新角度？只是泛泛而谈，这一项最多 60。',
   },
   {
     key: 'argument',
@@ -70,14 +70,14 @@ export const ABSURD_REVIEW_DIMENSIONS: DimensionMeta[] = [
     label: '荒诞度',
     hint: '反讽、悖论、夸张推演、冷面错位进入正文并持续起作用',
     weight: 20,
-    watch: '正文至少 3 处可指认的荒诞信号，且服务于论点；只有标题/结尾玩梗，这一维不高。荒诞度低于 50，总分封顶 69。',
+    watch: '正文至少 3 处可指认的荒诞信号，且服务于论点；只有标题/结尾玩梗，这一项不高。荒诞度低于 50，总分封顶 69。',
   },
   {
     key: 'concept',
     label: '荒诞设定与原创',
     hint: '设定真荒诞、新鲜、有记忆点，不是普通吐槽换皮',
     weight: 20,
-    watch: '把核心设定用一句话讲给没看过的人听；他会不会想继续听？只是“离谱”但没有新规则，这一维不高。',
+    watch: '把核心设定用一句话讲给没看过的人听；他会不会想继续听？只是“离谱”但没有新规则，这一项不高。',
   },
   {
     key: 'coherence',
@@ -91,7 +91,7 @@ export const ABSURD_REVIEW_DIMENSIONS: DimensionMeta[] = [
     label: '一本正经的执行',
     hint: '用完整结构把荒诞当正事推进，不是段子拼贴',
     weight: 20,
-    watch: '摘要/方法/结果或叙事推进是否完整？作者有没有自己跳出来解释“这很好笑”？执行低于 50，总分封顶 69。',
+    watch: '开头/方法/结果或叙事推进是否完整？作者有没有自己跳出来解释“这很好笑”？执行低于 50，总分封顶 69。',
   },
   {
     key: 'material',
@@ -127,7 +127,7 @@ const ANCHORS: Record<ReviewTrack, { min: number; text: string }[]> = {
     { min: 70, text: '良好：主题与结构成立，材料或写法有一处实质不足，补充后可成立。' },
     { min: 60, text: '合格：能读下去，但材料透明度或完成度有明显缺口，需较大补充。' },
     { min: 50, text: '待改：核心环节勉强成立，完成度存疑，需要重做关键部分。' },
-    { min: 0, text: '需重写：该维度缺失、写法性错误，或存在抄袭造假。' },
+    { min: 0, text: '需重写：该条目缺失、写法性错误，或存在抄袭造假。' },
   ],
   absurd: [
     { min: 95, text: '荒诞范本：设定、执行、文风合一，读完想转给别人。' },
@@ -193,20 +193,20 @@ export function scoreReviewTotal(track: ReviewTrack, reviews: DimensionReviews):
   const entries = dims.map((d) => ({ key: d.key, score: reviews[d.key]?.score ?? 0 }))
   if (track === 'academic' && reviews.integrity?.score === 0) {
     caps.push(0)
-    capNotes.push('诚信维度 0 分：总分归零')
+    capNotes.push('诚信条目 0 分：总分归零')
   }
   const low = entries.filter((e) => e.score < 50)
   if (low.length >= 2) {
     caps.push(49)
-    capNotes.push('两项及以上维度低于 50 分：总分封顶 49（需重写）')
+    capNotes.push('两项及以上条目低于 50 分：总分封顶 49（需重写）')
   } else if (low.length === 1) {
     caps.push(59)
-    capNotes.push('有维度低于 50 分：总分封顶 59（不能进入良好及以上）')
+    capNotes.push('有条目低于 50 分：总分封顶 59（不能进入良好及以上）')
   }
   const mid = entries.filter((e) => e.score >= 50 && e.score < 60)
   if (mid.length && !low.length) {
     caps.push(79)
-    capNotes.push('有维度低于 60 分：总分封顶 79（不进高分段）')
+    capNotes.push('有条目低于 60 分：总分封顶 79（不进高分段）')
   }
   if (track === 'academic' && (reviews.argument?.score ?? 0) < 50) {
     caps.push(59)
@@ -227,8 +227,8 @@ export function scoreReviewTotal(track: ReviewTrack, reviews: DimensionReviews):
   // 不完整稿不评级，也不封顶诊断分：封顶只对完整稿的等级有意义。
   if (!complete) {
     capNotes = track === 'academic' && reviews.integrity?.score === 0
-      ? ['诚信维度 0 分：总分归零，不进入内容整理补充']
-      : ['任一维低于 50 分：暂不评级；内容整理按原思路补充后直接评级，不退回作者']
+      ? ['诚信条目 0 分：总分归零，不进入内容整理补充']
+      : ['任一条目低于 50 分：暂不评级；内容整理按原思路补充后直接评级，不退回作者']
   }
   const total = complete ? ratedTotal : uncapped
   const grade = complete
@@ -263,13 +263,13 @@ export function RubricScoreFields({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Label>评分（百分制 0–100）· 按赛道维度逐项审批</Label>
+        <Label>评分（百分制 0–100）· 按赛道条目逐项核对</Label>
         <span className="text-[11px] tabular-nums text-muted-foreground">
           {completed}/{dims.length} 维完整
         </span>
       </div>
       <p className="text-[11px] leading-5 text-muted-foreground">
-        每个维度必须给 <strong>分数</strong>；评分理由、正文证据、修改意见均为<strong>选填</strong>。
+        每个条目必须给 <strong>分数</strong>；核对理由、正文证据、修改意见均为<strong>选填</strong>。
         建议填写理由和证据方便复核，但不填不会阻断提交，也不影响计分。
       </p>
 
@@ -314,7 +314,7 @@ export function RubricScoreFields({
             <div className="mt-2 grid gap-2 lg:grid-cols-3">
               <div className="space-y-1">
                 <p className="flex items-center gap-1 text-[11px] font-medium">
-                  <FileSearch className="h-3.5 w-3.5" /> 评分理由（选填）
+                  <FileSearch className="h-3.5 w-3.5" /> 核对理由（选填）
                 </p>
                 <Textarea
                   value={value.reason}
@@ -323,7 +323,7 @@ export function RubricScoreFields({
                   placeholder="例：问题成立，但增量只对比了 1 篇 2019 年的旧文，没覆盖 2023 年后的同类工作。"
                   rows={3}
                   className="text-xs"
-                  aria-label={`${dim.label}评分理由`}
+                  aria-label={`${dim.label}核对理由`}
                 />
               </div>
               <div className="space-y-1">
@@ -386,7 +386,7 @@ export function RubricScoreFields({
         )}
         <p className="mt-1.5 flex items-start gap-1.5 text-[10px] leading-4 text-muted-foreground">
           <Info className="mt-0.5 h-3 w-3 shrink-0" />
-          90+ 高完成，80/70/60/50 分别为优秀/良好/合格/待改。完整稿才评级；任一维低于 50 进内容整理补充，暂不评级，补充后按实际内容重评。
+          90+ 高完成，80/70/60/50 分别为优秀/良好/合格/待改。完整稿才评级；任一条目低于 50 进内容整理补充，暂不评级，补充后按实际内容重评。
         </p>
       </div>
     </div>

@@ -19,10 +19,7 @@ import {
   Upload,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import {
-  REVIEW_DIMENSION_LABELS as SCORE_LABELS,
-  reviewDimensionEntries,
-} from '@/lib/review-dimensions'
+import { reviewDimensionEntries } from '@/lib/review-dimensions'
 import { getAuthState } from '@/lib/auth'
 import {
   downloadSubmissionFile,
@@ -96,12 +93,12 @@ interface SubmissionSearch {
 
 const STATUS_TABS: { value: SubmissionStatus | 'all'; label: string }[] = [
   { value: 'all', label: '全部' },
-  { value: 'pending', label: '排队中' },
+  { value: 'pending', label: '待回应' },
   { value: 'under_review', label: '互评中' },
-  { value: 'major_revision', label: '需要大改' },
-  { value: 'minor_revision', label: '需要小改' },
-  { value: 'accepted', label: '已通过' },
-  { value: 'rejected', label: '未通过' },
+  { value: 'major_revision', label: '待大改' },
+  { value: 'minor_revision', label: '待小改' },
+  { value: 'accepted', label: '已公开' },
+  { value: 'rejected', label: '已不通过' },
 ]
 
 // 作者可编辑内容的状态（与后端 update_submission 的状态门一致）
@@ -110,33 +107,33 @@ const EDITABLE_STATUSES = ['pending', 'major_revision', 'minor_revision', 'rewor
 function statusBadge(status: SubmissionStatus) {
   switch (status) {
     case 'pending':
-      return <Badge variant="secondary">排队中</Badge>
+      return <Badge variant="secondary">待回应</Badge>
     case 'under_review':
       return <Badge className="bg-primary/15 text-primary">互评中</Badge>
     case 'major_revision':
-      return <Badge className="bg-amber-500/15 text-amber-700">需要大改</Badge>
+      return <Badge className="bg-amber-500/15 text-amber-700">待大改</Badge>
     case 'minor_revision':
-      return <Badge className="bg-yellow-500/15 text-yellow-700">需要小改</Badge>
+      return <Badge className="bg-yellow-500/15 text-yellow-700">待小改</Badge>
     case 'accepted':
     case 'approved':
-      return <Badge className="bg-emerald-500/15 text-emerald-700">已通过</Badge>
+      return <Badge className="bg-emerald-500/15 text-emerald-700">已公开</Badge>
     case 'rejected':
-      return <Badge variant="destructive">未通过</Badge>
+      return <Badge variant="destructive">已不通过</Badge>
     default:
       return <Badge variant="outline">{status}</Badge>
   }
 }
 
-// 状态语义提示：第一次提交作品的作者最焦虑的是"这个状态是什么意思、我该做什么"。
+// 状态语义提示：第一次发布作品的作者最焦虑的是"这个状态是什么意思、我该做什么"。
 // 一句话讲清现状与下一步，展示在详情面板状态徽章下方。
 const STATUS_HINTS: Record<string, string> = {
-  pending: '内容整理会先做基础检查，通常 3–7 天更新；不用重复提交。',
-  under_review: '互评进行中：互评成员正在看你的作品，反馈会出现在详情里。',
-  major_revision: '需要大幅修改：按意见改完后，在详情逐条回复，再提交新版本。',
-  minor_revision: '需要小幅修改：调整后提交新版本，通常不用再走一轮互评。',
-  resubmitted: '修改版已提交，等待内容整理复核；有未尽事项可在详情补充。',
-  accepted: '已通过。作品会进入内容库；如果还在发布前整理，稍等公开。',
-  rejected: '本次未通过。可以按反馈修改后重新发布。',
+  pending: '内容整理会先做基础检查，通常 3–7 天更新；不用重复发布。',
+  under_review: '互评进行中：互评成员正在看你的作品，意见会出现在详情里。',
+  major_revision: '需要大幅修改：按意见改完后，在详情逐条回应，再更新一版。',
+  minor_revision: '需要小幅修改：调整后更新一版，通常不用再走一轮互评。',
+  resubmitted: '修改版已发布，等待内容整理复核；有未尽事项可在详情补充。',
+  accepted: '已公开。作品进入内容库，谁都能读到。',
+  rejected: '本次已不通过。可以按反馈修改后重新发布。',
 }
 
 function statusHint(status: string): string {
@@ -215,15 +212,15 @@ function SubmissionsPage() {
           duration: 8000,
         })
       } else if (report?.ok) {
-        toast.success('结构检查通过：摘要、关键词、章节与出处说明齐全')
+        toast.success('结构检查通过：开头、话题、章节与出处说明齐全')
       }
     } catch (err) {
       toast.error(extractError(err, '上传失败'))
     }
   }
 
-  // 大修/小修状态下作者提交新版本，触发 submission → resubmitted → under_review。
-  // 提交新版本会把当前作品内容快照为一个新版本，note 随版本存档并推送给编辑。
+  // 待大改/待小改状态下作者发布新版本，触发 submission → resubmitted → under_review。
+  // 新版本会把当前作品内容快照存档，note 随版本推送给内容整理。
   const onResubmit = async () => {
     if (!detail) return
     try {
@@ -234,9 +231,9 @@ function SubmissionsPage() {
       setDetail(updated)
       setResubmitOpen(false)
       setResubmitNote('')
-      toast.success('已提交新版本，等待内容整理复核')
+      toast.success('已更新版本，等待内容整理')
     } catch (err) {
-      toast.error(extractError(err, '提交新版本失败'))
+      toast.error(extractError(err, '更新版本失败'))
     }
   }
 
@@ -272,9 +269,9 @@ function SubmissionsPage() {
     setDeleteId(null)
     try {
       await deleteMut.mutateAsync(target)
-      toast.success('已撤销提交')
+      toast.success('已撤回')
     } catch (err) {
-      toast.error(extractError(err, '撤销失败'))
+      toast.error(extractError(err, '撤回失败'))
     }
   }
 
@@ -282,7 +279,7 @@ function SubmissionsPage() {
     <div>
       <PageHeader
         title="我的作品"
-        description="查看你提交的作品和进度；长文在这里发布，短帖直接去讨论区。"
+        description="查看你发布的作品与进度；长文在这里发布，短帖直接去讨论区。"
         actions={
           <>
             <Button
@@ -291,7 +288,7 @@ function SubmissionsPage() {
               }}
             >
               <Plus className="h-4 w-4" />
-              发布新作品
+              写新的一篇
             </Button>
           </>
         }
@@ -327,16 +324,16 @@ function SubmissionsPage() {
       {isLoading ? (
         <Loading />
       ) : isError ? (
-        <ErrorState message="加载提交失败" onRetry={() => refetch()} />
+        <ErrorState message="作品列表加载失败，可重试。" onRetry={() => refetch()} />
       ) : !data || data.data.length === 0 ? (
         <EmptyState
-          title="暂无提交"
-          description="新建一条提交，等待管理员审核。"
+          title="还没有作品"
+          description="从这里开始写一篇；草稿会自动保存在本机和账号里，随时回来接着写。"
           action={
             <Button asChild size="sm">
               <Link to="/submissions/new">
                 <Plus className="mr-1 h-4 w-4" />
-                创建第一条提交
+                写新的一篇
               </Link>
             </Button>
           }
@@ -365,7 +362,7 @@ function SubmissionsPage() {
                     {s.status === 'pending' && (
                       <Button variant="ghost" size="sm" onClick={() => setDeleteId(s.id)}>
                         <Trash2 className="h-4 w-4" />
-                        撤销
+                        撤回
                       </Button>
                     )}
                     {s.resource_id != null && (
@@ -394,7 +391,7 @@ function SubmissionsPage() {
                   <TableHead className="w-20">类型</TableHead>
                   <TableHead>话题</TableHead>
                   <TableHead className="w-24">状态</TableHead>
-                  <TableHead className="w-32">提交时间</TableHead>
+                  <TableHead className="w-32">发布时间</TableHead>
                   <TableHead className="w-24">操作</TableHead>
                 </TableRow>
               </TableHeader>
@@ -425,11 +422,11 @@ function SubmissionsPage() {
                           onClick={() => setDeleteId(s.id)}
                         >
                           <Trash2 className="h-4 w-4" />
-                          撤销
+                          撤回
                         </Button>
                       )}
-                      {/* 通过后物化出的目录条目：作者需要一条直达自己已公开文章的路径，
-                          否则"录用"之后整条链路就断在这里了 */}
+                      {/* 公开后物化出的目录条目：作者需要一条直达自己已公开作品的路径，
+                          否则公开之后整条链路就断在这里了 */}
                       {s.resource_id != null && (
                         <Button variant="ghost" size="sm" asChild>
                           <Link
@@ -487,8 +484,7 @@ function SubmissionsPage() {
                     </Badge>
                   </div>
                   <p className="text-muted-foreground">
-                    这是与本站已公开内容、已有作品的文本重合度，不是任何外部查重系统
-                    等外部查重库的结论。相似不等于抄袭，请核对引用与原创表述。
+                    这是与本站已公开内容、已有作品的文本重合度，不是任何外部查重系统的结论。相似不等于抄袭，请核对引用与原创表述。
                   </p>
                   {detail.similarity_matches && detail.similarity_matches.length > 0 ? (
                     <ul className="mt-2 space-y-1">
@@ -511,7 +507,7 @@ function SubmissionsPage() {
                 reviewedAt={detail.reviewed_at ? new Date(detail.reviewed_at) : null}
               />
               <div>
-                <span className="text-muted-foreground">作者：</span>
+                <span className="text-muted-foreground">署名：</span>
                 {detail.authors.join(', ')}
               </div>
               {detail.venue && (
@@ -528,7 +524,7 @@ function SubmissionsPage() {
               )}
               {detail.keywords && detail.keywords.length > 0 && (
                 <div>
-                  <span className="text-muted-foreground">关键词：</span>
+                  <span className="text-muted-foreground">话题：</span>
                   {detail.keywords.join(', ')}
                 </div>
               )}
@@ -542,7 +538,7 @@ function SubmissionsPage() {
                 </div>
               )}
               <div>
-                <span className="text-muted-foreground">摘要</span>
+                <span className="text-muted-foreground">开头</span>
                 <p className="mt-1 whitespace-pre-wrap">{normalizeAbstract(detail.abstract)}</p>
               </div>
               <div>
@@ -563,7 +559,7 @@ function SubmissionsPage() {
               )}
               {detail.admin_note && (
                 <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3">
-                  <span className="text-muted-foreground">审核备注：</span>
+                  <span className="text-muted-foreground">整理备注：</span>
                   {detail.admin_note}
                 </div>
               )}
@@ -573,8 +569,8 @@ function SubmissionsPage() {
                   {detail.editor_note}
                 </div>
               )}
-              {/* 通过后物化出的目录条目：已发布对访客公开；暂存草稿则
-                  处于发布前阶段，仅编辑与作者本人可预览（对外 404） */}
+              {/* 公开后物化出的目录条目：已公开对访客可见；暂存草稿则
+                  处于发布前阶段，仅内容整理与作者本人可预览（对外 404） */}
               {detail.resource_id != null &&
                 (detail.resource_publication_status === 'published' ? (
                   <div className="rounded-md border border-emerald-500/30 bg-emerald-500/5 p-3">
@@ -583,7 +579,7 @@ function SubmissionsPage() {
                       <span className="font-medium">已公开</span>
                     </div>
                     <p className="mb-2 text-xs text-muted-foreground">
-                      这篇文章已经公开，谁都能读，不用登录。
+                      这篇作品已经公开，谁都能读，不用登录。
                     </p>
                     <Button size="sm" variant="outline" asChild>
                       <Link
@@ -601,7 +597,7 @@ function SubmissionsPage() {
                       <span className="font-medium">发布前预览</span>
                     </div>
                     <p className="mb-2 text-xs text-muted-foreground">
-                      通过后暂存为草稿，尚未公开：发布前只有内容整理和作者能看，公开后所有人可读。
+                      暂存为草稿，尚未公开：发布前只有内容整理和作者能看，公开后所有人可读。
                     </p>
                     <Button size="sm" variant="outline" asChild>
                       <Link
@@ -694,9 +690,6 @@ function SubmissionsPage() {
                         className="rounded bg-muted/50 p-2 text-sm"
                       >
                         <div className="mb-1 flex items-center gap-2">
-                          <Badge variant="outline">
-                            推荐：{r.recommendation}
-                          </Badge>
                           <span className="text-xs text-muted-foreground">
                             {new Date(r.submitted_at).toLocaleString()}
                           </span>
@@ -714,13 +707,11 @@ function SubmissionsPage() {
                           (v.suggestion ?? '').trim(),
                         ) && (
                           <div className="mt-2 space-y-0.5 border-t pt-1.5 text-xs">
-                            <div className="font-medium text-muted-foreground">逐维修改意见</div>
+                            <div className="font-medium text-muted-foreground">补充意见</div>
                             {reviewDimensionEntries(r.scores)
                               .filter(([, v]) => (v.suggestion ?? '').trim())
                               .map(([k, v]) => (
-                                <p key={k}>
-                                  <strong>{SCORE_LABELS[k] ?? k}</strong>：{v.suggestion}
-                                </p>
+                                <p key={k}>· {v.suggestion}</p>
                               ))}
                           </div>
                         )}
@@ -729,7 +720,7 @@ function SubmissionsPage() {
                   </div>
                 </div>
               )}
-              {/* 作者逐条回复互评：仅在有已完成报告且处于修回/再审状态时开放 */}
+              {/* 作者逐条回复互评：仅在有已完成意见且处于待修改/再审状态时开放 */}
               {reportsQ.data &&
                 reportsQ.data.length > 0 &&
                 ['under_review', 'major_revision', 'minor_revision', 'resubmitted', 'rework_requested'].includes(
@@ -783,7 +774,7 @@ function SubmissionsPage() {
                         </Badge>
                         <div className="min-w-0">
                           <div className="text-xs text-muted-foreground">
-                            {v.version === 1 ? '初次提交' : '提交新版本'} ·{' '}
+                            {v.version === 1 ? '首次发布' : '更新版本'} ·{' '}
                             {new Date(v.created_at).toLocaleString()}
                             {v.file_path ? ' · 含作品文件' : ''}
                           </div>
@@ -812,7 +803,7 @@ function SubmissionsPage() {
                   </ol>
                 </div>
               )}
-              {/* 操作区：可编辑状态下开放「修改作品」（跳转四步向导）；大修/小修额外开放「提交新版本」 */}
+              {/* 操作区：可编辑状态下开放「修改作品」（跳转三步向导）；待大改/待小改额外开放「更新版本」 */}
               {EDITABLE_STATUSES.includes(detail.status) && (
                 <div className="flex flex-wrap justify-end gap-2">
                   <Button
@@ -832,16 +823,16 @@ function SubmissionsPage() {
                   ) && (
                     <Button onClick={() => setResubmitOpen(true)}>
                       <RefreshCw className="h-4 w-4" />
-                      提交修改
+                      更新版本
                     </Button>
                   )}
                 </div>
               )}
               <div className="text-xs text-muted-foreground">
-                提交于 {new Date(detail.submitted_at).toLocaleString()}
+                发布于 {new Date(detail.submitted_at).toLocaleString()}
                 {detail.reviewed_at && (
                   <>
-                    {' · 审核于 '}
+                    {' · 整理于 '}
                     {new Date(detail.reviewed_at).toLocaleString()}
                   </>
                 )}
@@ -852,7 +843,7 @@ function SubmissionsPage() {
       </Dialog>
 
 
-      {/* 提交新版本 Dialog：可附「针对互评意见做了哪些修改」，随版本存档并通知编辑 */}
+      {/* 更新版本 Dialog：可附「针对互评意见做了哪些修改」，随版本存档并通知内容整理 */}
       <Dialog
         open={resubmitOpen}
         onOpenChange={(o) => {
@@ -862,11 +853,11 @@ function SubmissionsPage() {
       >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>提交修改</DialogTitle>
+            <DialogTitle>更新版本</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              提交新版本会把作品当前内容存为一个新版本并交回内容整理。若还没改完，
+              更新版本会把作品此刻的内容存为一版，交回内容整理。若还没改完，
               先关掉这里用「修改作品」编辑内容。
             </p>
             <div className="space-y-2">
@@ -892,7 +883,7 @@ function SubmissionsPage() {
                 disabled={resubmitMut.isPending}
                 data-testid="confirm-resubmit"
               >
-                {resubmitMut.isPending ? '处理中…' : '确认提交新版本'}
+                {resubmitMut.isPending ? '处理中…' : '确认更新版本'}
               </Button>
             </div>
           </div>
@@ -901,9 +892,9 @@ function SubmissionsPage() {
 
       <ConfirmDialog
         open={deleteId !== null}
-        title="撤销提交"
-        description="确定撤销这条提交吗？此操作不可撤销。"
-        confirmText="撤销"
+        title="撤回作品"
+        description="确定撤回这件作品吗？撤回后需要重新发布。"
+        confirmText="撤回"
         destructive
         onConfirm={onConfirmDelete}
         onOpenChange={(o) => !o && setDeleteId(null)}

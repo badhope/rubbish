@@ -1,7 +1,7 @@
 """规范化文档导出（1.10.0）：Markdown → PDF / docx。
 
-背景：投稿管线已内置 PDF→MD（pymupdf4llm）与 docx→MD（mammoth +
-markdownify），但读者只能下载**原始 PDF**（排版混乱的投稿版）。本模块把
+背景：发布管线已内置 PDF→MD（pymupdf4llm）与 docx→MD（mammoth +
+markdownify），但读者只能下载**原始 PDF**（排版混乱的作品版）。本模块把
 线上规范化后的阅读版 Markdown 反向生成为干净排版的 PDF / Word，让
 「原稿 PDF」与「规范化版本」并存：阅读版=网站排版，导出版=打印/存档排版。
 
@@ -382,9 +382,9 @@ def issue_front_matter_pdf(
     note: str,
     range_label: str,
     entries: list[dict[str, Any]],
-    editor: str = "Rubbish 编辑部",
+    editor: str = "Rubbish 站务",
 ) -> bytes:
-    """把一期做成可下载的“版面”：封面、编后记、完整目录、版权页。"""
+    """把一组合集做成可下载的“版面”：封面、编后记、完整目录、版权页。"""
     import base64
     import html as _html
     from pathlib import Path
@@ -431,9 +431,9 @@ def issue_front_matter_pdf(
 {toc(papers, "文章")}
 {toc(essays, "自由创作与随笔")}
 <h2>版权页</h2>
-<p>发布：Rubbish 编辑部 · 纯数字发布 · 持续更新</p>
+<p>发布：Rubbish 站务 · 纯数字发布 · 持续更新</p>
 <p>主编：陆止于海　副主编：沈知非、顾荒唐</p>
-<p>编委：白鹿原上、林一苇、R. 编辑部</p>
+<p>站务组：白鹿原上、林一苇、R. 编辑部</p>
 <p>本卷：第 {esc(volume)} 卷 第 {int(issue)} 期 · {esc(range_label)}</p>
 <div class="footer">Rubbish · rubbish.argjiemi.cn · 本版面由站内排版器自动生成</div>
 </body></html>"""
@@ -485,7 +485,7 @@ def stamp_pdf_metadata(
             {
                 "title": title or meta.get("title") or "",
                 "author": "、".join(authors or []) or meta.get("author") or "",
-                "subject": subject or meta.get("subject") or "Rubbish Journal",
+                "subject": subject or meta.get("subject") or "Rubbish",
                 "keywords": "；".join(keywords or []) or meta.get("keywords") or "",
                 "creator": "Rubbish Typeset",
                 "producer": "Rubbish PDF Pipeline",

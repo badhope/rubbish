@@ -95,7 +95,7 @@ class Resource(Base, TenantScopedMixin):
     # Journal metadata (Phase 1)
     volume: Mapped[str | None] = mapped_column(String(50), nullable=True)
     issue: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    # 卷期一等对象（2026-11-19）：Issue 是真实记录，Resource.issue_id 是归属。
+    # 合集一等对象（2026-11-19）：Issue 是真实记录，Resource.issue_id 是归属。
     # volume/issue 字符串保留为兼容快照，公开筛选与旧 API 仍可读；新写入以
     # issue_id 为准，并在同步层回写字符串，避免两套数据漂移。
     issue_id: Mapped[int | None] = mapped_column(
@@ -110,7 +110,7 @@ class Resource(Base, TenantScopedMixin):
     publisher: Mapped[str | None] = mapped_column(String(500), nullable=True)
     short_container_title: Mapped[str | None] = mapped_column(String(200), nullable=True)
     keywords: Mapped[list[str] | None] = mapped_column(JSONBVariant, nullable=True)
-    # 本站是中文期刊：默认 zh 而不是 en。稿件的语言在目录条目上维护，
+    # 本站是中文内容库：默认 zh 而不是 en。作品的语言在目录条目上维护，
     # 因为 submission 模型没有 language 列（物化时沿用这里的中文默认值）。
     language: Mapped[str] = mapped_column(String(10), nullable=False, default="zh")
     publication_status: Mapped[str] = mapped_column(String(20), nullable=False, default="published")
@@ -157,7 +157,7 @@ class Resource(Base, TenantScopedMixin):
     # 娱乐轨文体细分（v1.16）：joke/fiction/review/guide/essay/poetry/rant。
     # 只对 essay 有值；论文轨恒为 NULL。用于娱乐区导航与筛选，不参与学术评分。
     content_genre: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
-    # 特别篇（篇幅特许）：正常稿件不得超过轨道篇幅上限；只有显式特批的
+    # 特别篇（篇幅特许）：正常作品不得超过轨道篇幅上限；只有显式特批的
     # 长稿才置 true，并在阅读端打「特别篇」标签。理由/操作人/时间留痕。
     is_special_issue: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default="false", index=True
@@ -180,10 +180,10 @@ class Resource(Base, TenantScopedMixin):
     )
     # 归类键：封面主题、专题聚合使用（如 universe / lab / ocean / society）。
     cover_theme: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    # Nature 式栏目：this-week / news-focus / books-arts / opinion / work /
+    # Nature 式分区：this-week / news-focus / books-arts / opinion / work /
     # research / amendments / collections。仅对外展示分组，不改轨道判定。
     article_section: Mapped[str | None] = mapped_column(String(40), nullable=True, index=True)
-    # 期次内分部分（Editorial / Features / Articles / Reviews / Corrections…）。
+    # 合集内分部分（Editorial / Features / Articles / Reviews / Corrections…）。
     issue_part: Mapped[str | None] = mapped_column(String(40), nullable=True, index=True)
     # 学术声明与许可（P3-1）：不再只埋在 PDF/正文里，逐篇结构化存字段。
     # 作者贡献用 CRediT 文本；基金写资助方与编号；COI/数据可用性保留原文。
@@ -301,9 +301,9 @@ class AuthorClaim(Base, TenantScopedMixin):
 
     背景：本刊早期文章由编辑部批量导入（authors 是纯字符串数组，
     与站内账号无关）。作者想在站内名下挂上自己的文章，需要走认领
-    流程：用户对资源发起认领 → 编辑部批准后自动创建一条关联投稿
+    流程：用户对资源发起认领 → 编辑部批准后自动创建一条关联作品记录
     （``submissions.submitted_by`` = 认领人），从此"我的文章"、
-    录用数统计、刊前预览等一切基于 Submission 链路的功能都能生效。
+    通过数统计、刊前预览等一切基于 Submission 链路的功能都能生效。
 
     状态机：``pending`` → ``approved`` | ``rejected``（终态）。
     同一 (tenant, resource, user) 只允许一条申请（唯一约束）；
@@ -351,10 +351,10 @@ class AuthorClaim(Base, TenantScopedMixin):
 
 
 class ResourcePublicEvent(Base, TenantScopedMixin):
-    """公开的内容变更记录：更正 / 撤稿 / 署名变更 / 版本说明。
+    """公开的内容变更记录：更正 / 撤回 / 署名变更 / 版本说明。
 
     与内部 ``AuditLog`` 分开：审计日志回答“谁在后台改了什么”，本表回答
-    “读者需要知道这篇稿子发生过什么”。事件只追加，不覆盖历史；撤稿不
+    “读者需要知道这篇稿子发生过什么”。事件只追加，不覆盖历史；撤回不
     删除文章，而是保留原文并在页面顶部给出可点开的记录。
     """
 
@@ -386,7 +386,7 @@ __all__ = ["AuthorClaim", "Discipline", "Resource", "ResourcePublicEvent", "Subd
 
 
 class Appeal(Base, TenantScopedMixin):
-    """作者申诉：撤回稿件、重审分数、重审分区。
+    """作者申诉：撤回作品、重审分数、重审分区。
 
     与站内反馈分开存：申诉需要状态流转（pending → accepted/rejected）、
     处置说明和操作人，不能只留一条审计日志。

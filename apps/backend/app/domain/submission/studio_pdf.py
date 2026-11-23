@@ -1,7 +1,7 @@
 """Studio 排版 PDF：用与网页预览同一套题录顺序和排版规则出 A4 PDF。
 
 与 catalog 导出（docx→LibreOffice）的区别：
-- 不经过 Word，直接由 PyMuPDF Story 渲染，适合“所见即所得”的投稿排版预览下载；
+- 不经过 Word，直接由 PyMuPDF Story 渲染，适合“所见即所得”的发布排版预览下载；
 - 题录结构化传入（主副标题、作者上标、单位、摘要、关键词、CLC/DOI/基金），
   不再依赖从 Markdown 正文里猜元信息；
 - 页眉页脚在渲染后统一盖章，与预览里的「RUBBISH JOURNAL / 第 x 页 / 共 n 页」一致。
@@ -313,26 +313,24 @@ def build_studio_html(meta: dict[str, Any], body_md: str) -> str:
         if meta.get("year"):
             vi.append(str(meta["year"]))
         if meta.get("volume"):
-            vi.append(f"第 {meta['volume']} 卷")
+            vi.append(f"合集 {meta['volume']}")
         if meta.get("issue"):
-            vi.append(f"第 {meta['issue']} 期")
+            vi.append(f"第 {meta['issue']} 组")
         cite_parts.append(" · ".join(vi))
     if meta.get("pages"):
         cite_parts.append(f"页码 {_esc(str(meta['pages']))}")
     if meta.get("site_id"):
-        cite_parts.append(f"本站刊号: {_esc(str(meta['site_id']))}")
+        cite_parts.append(f"本站站内编号: {_esc(str(meta['site_id']))}")
     cite_line = "　·　".join(cite_parts)
 
     abstract = meta.get("abstract") or ""
     abstract_html = (
-        f'<div class="abstract"><div class="label">摘 要</div>{_math_html(md_to_html(abstract))}</div>'
+        f'<div class="abstract"><div class="label">开头</div>{_math_html(md_to_html(abstract))}</div>'
         if abstract.strip()
         else ""
     )
     keywords_html = (
-        f'<div class="keywords"><b>关键词：</b>{_esc("；".join(keywords))}</div>'
-        if keywords
-        else ""
+        f'<div class="keywords"><b>话题：</b>{_esc("；".join(keywords))}</div>' if keywords else ""
     )
 
     return f"""<html><body>
@@ -389,7 +387,7 @@ def render_studio_pdf(meta: dict[str, Any], body_md: str) -> bytes:
     for i, page in enumerate(doc, start=1):
         page.insert_text(
             (40.5, 26),
-            "RUBBISH JOURNAL",
+            "RUBBISH",
             fontsize=7.5,
             fontname="helv",
             color=(0.36, 0.42, 0.38),
@@ -420,7 +418,7 @@ def render_studio_pdf(meta: dict[str, Any], body_md: str) -> bytes:
         {
             "title": str(meta.get("title") or ""),
             "author": "；".join(str(a) for a in (meta.get("authors") or [])),
-            "subject": "Rubbish Journal · " + str(meta.get("track") or "paper"),
+            "subject": "Rubbish · " + str(meta.get("track") or "article"),
             "keywords": "；".join(str(k) for k in (meta.get("keywords") or [])),
             "creator": "Rubbish Studio",
             "producer": "Rubbish",

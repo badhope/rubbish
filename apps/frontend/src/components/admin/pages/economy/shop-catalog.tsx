@@ -180,7 +180,7 @@ export function ShopCatalogCard() {
       await updateItem.mutateAsync({ id: item.id, is_active: !item.is_active })
       toast.success(item.is_active ? '已下架' : '已重新上架')
     } catch (err) {
-      toast.error(extractError(err, '操作失败'))
+      toast.error(extractError(err, '没能更改上架状态，可再试一次'))
     }
   }
 
@@ -194,7 +194,7 @@ export function ShopCatalogCard() {
                 <Gift className="h-4 w-4" /> 货品目录
               </CardTitle>
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                上架后会员能在积分商店看到并兑换。库存留空表示不限量；“自动生效”目前仅支持主题色解锁，其余货品进入下方人工履约队列。
+                上架后会员能在经验兑换区看到并兑换。库存留空表示不限量；“自动生效”目前仅支持主题色解锁，其余货品进入下方人工履约队列。
               </p>
             </div>
             <Button size="sm" onClick={openCreate}>
@@ -206,7 +206,7 @@ export function ShopCatalogCard() {
           {items.isLoading ? <p className="text-sm text-muted-foreground">加载中…</p> : null}
           {items.isError ? (
             <div className="flex items-center justify-between gap-3 border-y py-4 text-sm">
-              <span className="text-muted-foreground">货品目录加载失败。</span>
+              <span className="text-muted-foreground">货品目录加载失败，可重试。</span>
               <Button size="sm" variant="outline" onClick={() => void items.refetch()}>
                 重试
               </Button>
@@ -214,7 +214,7 @@ export function ShopCatalogCard() {
           ) : null}
           {!items.isLoading && !items.isError && (items.data?.length ?? 0) === 0 ? (
             <p className="border-y py-5 text-sm text-muted-foreground">
-              还没有货品。新增一件，会员就能在积分商店兑换。
+              还没有货品。新增一件，会员就能在经验兑换区兑换。
             </p>
           ) : null}
           {(items.data?.length ?? 0) > 0 ? (
@@ -250,7 +250,7 @@ export function ShopCatalogCard() {
                         {item.description || '暂无说明'}
                       </p>
                       <p className="mt-1 text-[11px] text-muted-foreground">
-                        #{item.id} · {item.price_coin} 积分 · {stockLabel(item.stock)} · 排序{' '}
+                        #{item.id} · {item.price_coin} 经验 · {stockLabel(item.stock)} · 排序{' '}
                         {item.sort_order}
                       </p>
                     </div>
@@ -285,7 +285,7 @@ export function ShopCatalogCard() {
           <DialogHeader>
             <DialogTitle>{editing ? '编辑货品' : '新增货品'}</DialogTitle>
             <DialogDescription>
-              价格和库存按积分记账；下架后会员立即看不到，但已兑换的订单仍会在履约队列里。
+              价格和库存按经验记账；下架后会员立即看不到，但已兑换的订单仍会在履约队列里。
             </DialogDescription>
           </DialogHeader>
 
@@ -313,7 +313,7 @@ export function ShopCatalogCard() {
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label htmlFor="shop-item-price">价格（积分）</Label>
+                <Label htmlFor="shop-item-price">价格（经验）</Label>
                 <Input
                   id="shop-item-price"
                   type="number"

@@ -59,7 +59,7 @@ export default function AdminCommentsPage() {
       await moderateMut.mutateAsync({ commentId: row.id, action: 'approve' })
       toast.success('已通过：评论保留在前台')
     } catch (err) {
-      toast.error(extractError(err, '操作失败'))
+      toast.error(extractError(err, '没能保留这条评论，可再试一次'))
     }
   }
 
@@ -75,7 +75,7 @@ export default function AdminCommentsPage() {
       setRejectTarget(null)
       setRejectNote('')
     } catch (err) {
-      toast.error(extractError(err, '操作失败'))
+      toast.error(extractError(err, '没能下架这条评论，可再试一次'))
     }
   }
 
@@ -113,7 +113,7 @@ export default function AdminCommentsPage() {
       {isLoading ? (
         <Loading />
       ) : isError ? (
-        <ErrorState message="加载评论失败" onRetry={() => refetch()} />
+        <ErrorState message="评论加载失败，可重试。" onRetry={() => refetch()} />
       ) : !data || data.data.length === 0 ? (
         <EmptyState
           title={tab === 'pending' ? '没有待处理评论' : '该状态下暂无评论'}

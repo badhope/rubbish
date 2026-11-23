@@ -39,7 +39,7 @@ function AppFallback({ error, resetErrorBoundary }: FallbackProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            应用遇到了未预期的错误。可以先重试，若反复出现请联系管理员。
+            应用遇到了未预期的错误。可以先重试，若反复出现请联系站务。
           </p>
           {import.meta.env.DEV && (
             <pre className="max-h-40 overflow-auto rounded-md bg-muted p-3 text-xs whitespace-pre-wrap">

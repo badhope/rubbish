@@ -183,7 +183,7 @@ async def test_admin_creates_invited_reviewer_account(
         "email": "invited.reviewer@example.com",
         "username": "invited_reviewer",
         "role": "reviewer",
-        "note": "负责本期方法学稿件",
+        "note": "负责本期方法学作品",
     }
     r = await client.post("/api/admin/users", json=body, headers=auth_headers(admin_user))
     assert r.status_code == 201, r.text

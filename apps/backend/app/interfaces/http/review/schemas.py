@@ -38,13 +38,13 @@ class AssignmentResponse(BaseModel):
     invited_at: datetime
     responded_at: datetime | None = None
     completed_at: datetime | None = None
-    # 列表展开审稿人用户名（避免 N+1 前端要再查 user）
+    # 列表展开互评成员用户名（避免 N+1 前端要再查 user）
     reviewer_username: str | None = None
     submission_title: str | None = None
-    # 催办状态（编辑可见「已催 N 次」；审稿人可见最近提醒时间）
+    # 催办状态（编辑可见「已催 N 次」；互评成员可见最近提醒时间）
     last_reminded_at: datetime | None = None
     reminder_count: int = 0
-    # 已完成任务：关联报告 id 与附件，供审稿人自查/补传批注件
+    # 已完成任务：关联报告 id 与附件，供互评成员自查/补传批注件
     report_id: int | None = None
     attachments: list[dict[str, Any]] = Field(default_factory=list)
     round: int = 1
@@ -64,12 +64,12 @@ class ReviewSubmit(BaseModel):
 
     recommendation: Recommendation
     # scores 是自由结构 JSON：e.g. {"originality": 4, "methodology": 5, ...}
-    # 不强制 schema 让不同期刊可以自定义评分维度
+    # 不强制 schema 让不同内容库可以自定义评分维度
     scores: dict[str, Any] = Field(default_factory=dict)
     comments_to_editor: str | None = Field(default=None, max_length=20000)
     comments_to_author: str | None = Field(default=None, max_length=20000)
-    # 审稿端「特别篇」特许标记：普通作品不得超篇幅上限；勾选即视为
-    # 审稿人建议/确认特许，落库到资源并显示显式标签。理由单独留痕。
+    # 互评端「特别篇」特许标记：普通作品不得超篇幅上限；勾选即视为
+    # 互评成员建议/确认特许，落库到资源并显示显式标签。理由单独留痕。
     special_issue: bool = False
     special_issue_reason: str | None = Field(default=None, max_length=500)
 
@@ -82,12 +82,12 @@ class ReviewReportResponse(BaseModel):
     recommendation: Recommendation
     scores: dict[str, Any]
     comments_to_editor: str | None = None
-    # 单盲模式：作者只看作者评论 + 推荐，看不到审稿人身份 + editor-only 评论
+    # 单盲模式：作者只看作者评论 + 推荐，看不到互评成员身份 + editor-only 评论
     comments_to_author: str | None = None
-    # 审稿人身份：仅编辑可见（单盲对作者隐藏，接口按调用者裁剪）。
+    # 互评成员身份：仅编辑可见（单盲对作者隐藏，接口按调用者裁剪）。
     reviewer_id: int | None = None
     reviewer_username: str | None = None
-    # 审稿附件元数据：filename / path / content_type / size。
+    # 互评附件元数据：filename / path / content_type / size。
     attachments: list[dict[str, Any]] = Field(default_factory=list)
     submitted_at: datetime
 
@@ -108,7 +108,7 @@ __all__ = [
 
 
 class ReviewDraftIn(BaseModel):
-    """审稿意见草稿正文；payload 是前端 ReviewFormValue 的 JSON。"""
+    """互评意见草稿正文；payload 是前端 ReviewFormValue 的 JSON。"""
 
     payload: dict[str, Any] = Field(default_factory=dict)
 
@@ -119,7 +119,7 @@ class ReviewDraftResponse(BaseModel):
 
 
 class ExpertiseDiscipline(BaseModel):
-    """匿名学科覆盖：仅 slug/名称/人数，不含任何身份信息。"""
+    """匿名话题覆盖：仅 slug/名称/人数，不含任何身份信息。"""
 
     slug: str
     name: str
@@ -132,7 +132,7 @@ class ExpertiseTag(BaseModel):
 
 
 class PublicExpertiseResponse(BaseModel):
-    """GET /review/public-expertise — 投稿人可见的审稿团队匿名画像。"""
+    """GET /review/public-expertise — 作者可见的互评团队匿名画像。"""
 
     total_reviewers: int = 0
     disciplines: list[ExpertiseDiscipline] = Field(default_factory=list)

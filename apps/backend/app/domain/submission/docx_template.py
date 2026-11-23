@@ -7,8 +7,8 @@
 | 篇名 | 思源黑体（Noto Sans SC） | 小二（18pt） | 居中，段后 0.5 行 |
 | 作者 | 霞鹜文楷（LXGW WenKai） | 小四（12pt） | 居中 |
 | 单位 | 思源宋体（Noto Serif SC） | 小五（9pt） | 居中，含城市与邮编位 |
-| 摘要 | 思源宋体 | 五号（10.5pt） | 「摘要：」思源黑体，两端对齐，首行不缩进 |
-| 关键词 | 思源宋体 | 五号 | 「关键词：」思源黑体，分号分隔 |
+| 开头 | 思源宋体 | 五号（10.5pt） | 「开头：」思源黑体，两端对齐，首行不缩进 |
+| 话题 | 思源宋体 | 五号 | 「话题：」思源黑体，分号分隔 |
 | 一级标题 | 思源黑体 | 四号（14pt） | 段前 0.5 行，编号与题名间空一格 |
 | 二级标题 | 思源黑体 | 小四（12pt）加粗 | 段前 0.3 行 |
 | 三级标题 | 思源黑体 | 五号加粗（10.5pt） | 段前 0.25 行 |
@@ -16,9 +16,9 @@
 | 图题 | 思源宋体 | 小五（9pt） | 图下居中，「图 N　题名」 |
 | 表题 | 思源宋体 | 小五 | 表上居中，「表 N　题名」 |
 | 表格 | 思源宋体 | 小五 | 三线表，无竖线 |
-| 参考文献 | 思源宋体 | 小五 | 悬挂缩进，GB/T 7714-2015 |
+| 引用与出处 | 思源宋体 | 小五 | 悬挂缩进，出处可附链接、ISBN、DOI（如有） |
 
-为什么要有它：投稿进来的是 PDF，PDF 里没有"这是图注、这是二级标题"这种
+为什么要有它：发布进来的是 PDF，PDF 里没有"这是图注、这是二级标题"这种
 信息，只有坐标。先按这套模板把内容落进 Word，编辑在 Word 里改一遍，再回
 传系统——入库的就是结构化好的稿子，阅读页自然不会再乱。
 
@@ -73,7 +73,7 @@ class Meta:
     abstract: str = ""
     keywords: list[str] = field(default_factory=list)
     doi: str = ""
-    # 站内编号（R-六位刊号-日期-流水），不再打印 DOI。
+    # 站内编号（R-六位站内编号-日期-流水），不再打印 DOI。
     site_id: str = ""
     volume: str = ""
     issue: str = ""
@@ -82,6 +82,12 @@ class Meta:
     # paper / essay：娱乐轨不排“摘要/关键词/编号章节”，避免把吐槽稿
     # 印成论文。缺省当 paper，兼容旧调用。
     track: str = ""
+    # 材料与边界说明、公开范围与许可：仅在作者填写时打印，缺省留空。
+    license: str = ""
+    funding: str = ""
+    data_availability: str = ""
+    coi_statement: str = ""
+    author_contributions: str = ""
 
 
 def _set_font(
@@ -393,6 +399,37 @@ def _caption(doc: Any, text: str, *, above: bool = False) -> None:
     _add_inline(p, text, size=CAPTION_PT)
 
 
+def _render_boundary_and_license(doc: Any, meta: Meta) -> None:
+    """文末「材料与边界说明」与「公开范围与许可」块；作者未填写则整块省略。"""
+    boundary = [
+        ("作者分工", meta.author_contributions),
+        ("资助", meta.funding),
+        ("材料与数据", meta.data_availability),
+        ("利益说明", meta.coi_statement),
+    ]
+    boundary = [
+        (label, re.sub(r"\s*\n\s*", " ", text).strip())
+        for label, text in boundary
+        if text and text.strip()
+    ]
+    if boundary:
+        p = _para(doc, before=12, after=2, line=1.3)
+        r = p.add_run("材料与边界说明")
+        _set_font(r, name=HEAD_FONT, size=BODY_PT, bold=True)
+        r.font.color.rgb = BRAND_DARK
+        for label, text in boundary:
+            bp = _para(doc, indent_chars=0, after=2, line=1.4)
+            lr = bp.add_run(f"{label}：")
+            _set_font(lr, name=HEAD_FONT, size=CAPTION_PT, bold=True)
+            _add_inline(bp, text, size=CAPTION_PT)
+    license_text = (meta.license or "").strip()
+    if license_text:
+        lp = _para(doc, before=2 if boundary else 12, after=2, line=1.3)
+        lr = lp.add_run("公开范围与许可：")
+        _set_font(lr, name=HEAD_FONT, size=CAPTION_PT, bold=True)
+        _add_inline(lp, license_text, size=CAPTION_PT)
+
+
 _MATH_SYMBOLS = ("⟩", "〈", "```")
 
 
@@ -425,7 +462,7 @@ _BACK_MATTER = (
     "伦理声明",
     "伦理与数据声明",
     "作者回复",
-    "审稿意见",
+    "互评意见",
     "声明",
     "基金",
     "资助",
@@ -618,7 +655,7 @@ def _clean_body_start(md: str, meta: Meta) -> str:
 def _strip_front_matter(md: str, meta: Meta) -> str:
     """去掉正文里与模板标题块重复的 H1 / 摘要 / 关键词区。
 
-    投稿 Markdown 普遍是 `# 标题` → `## 摘要` → `## 关键词` → `## 引言`，
+    发布 Markdown 普遍是 `# 标题` → `## 摘要` → `## 关键词` → `## 引言`，
     而品牌模板已经用 meta 打印标题、作者、摘要和关键词。若不剥离，Word 与
     PDF 会出现“标题→摘要→关键词→标题→摘要→关键词”的重复前戏（303 实锤）。
     仅当模板确实有对应内容时才删，避免把唯一一份摘要删掉。
@@ -665,8 +702,8 @@ def _strip_front_matter(md: str, meta: Meta) -> str:
             if _is_title_line(first, meta) or _long_title:
                 i += 1
     lines = lines[i:]
-    # 投稿编辑器会把「作者信息」整块塞进 Markdown（298 实锤）：
-    # ## 作者信息 + 第一作者/合作者/通讯作者 + 投稿须知。模板顶部已经有
+    # 发布编辑器会把「作者信息」整块塞进 Markdown（298 实锤）：
+    # ## 作者信息 + 第一作者/合作者/通讯作者 + 发布须知。模板顶部已经有
     # 作者行，这块必须整段丢弃，否则邮箱会印到 PDF 首页标题上方。
     for k, raw in enumerate(lines):
         st = raw.strip()
@@ -910,7 +947,7 @@ def build(md: str, meta: Meta, *, base_dir: Path | None = None) -> bytes:
     sec.different_first_page_header_footer = True
     _page_number_footer(sec)
     # 首页也要有页码：different_first_page_header_footer 只让页眉不出现，
-    # 不代表首页可以没有页码。期刊 PDF 的首页同样需要可引用页码。
+    # 不代表首页可以没有页码。内容库 PDF 的首页同样需要可引用页码。
     try:
         _page_number_footer(sec.first_page_footer)
     except Exception:
@@ -964,22 +1001,22 @@ def build(md: str, meta: Meta, *, base_dir: Path | None = None) -> bytes:
         _abs = re.sub(r"\s*\n\s*", "" if _cjk > 8 else " ", _abs)
         _abs = re.sub(r"[ \t]{2,}", " ", _abs)
         p = _para(doc, indent_chars=0, before=4, after=2, line=1.4)
-        r = p.add_run("导读：" if (meta.track or "").lower() == "essay" else "摘要：")
+        r = p.add_run("导读：" if (meta.track or "").lower() == "essay" else "开头：")
         _set_font(r, name=HEAD_FONT, size=BODY_PT, bold=True)
         r.font.color.rgb = BRAND_DARK
         _add_inline(p, _abs, size=BODY_PT)
 
     if meta.keywords and (meta.track or "").lower() != "essay":
-        # 关键词只放作者给定的关键词；内部学科/栏目标签不能混进来。
+        # 关键词只放作者给定的关键词；内部学科/分区标签不能混进来。
         _kws = [k.strip(" 　*~；;，,。.") for k in meta.keywords if k and k.strip(" 　*~；;，,。.")]
         if _kws:
             p = _para(doc, indent_chars=0, before=0, after=4, line=1.4)
-            r = p.add_run("关键词：")
+            r = p.add_run("话题：")
             _set_font(r, name=HEAD_FONT, size=BODY_PT, bold=True)
             r.font.color.rgb = BRAND_DARK
             _add_inline(p, "；".join(_kws), size=BODY_PT)
 
-    # 刊名/卷期/年份/页码/DOI：期刊 PDF 的引用信息。此前 Meta 里有字段，
+    # 刊名/合集/年份/页码/DOI：内容库 PDF 的引用信息。此前 Meta 里有字段，
     # 但 build() 从未打印，导致每篇下载件都缺引用信息。
     _cite = []
     if meta.year:
@@ -1171,6 +1208,8 @@ def build(md: str, meta: Meta, *, base_dir: Path | None = None) -> bytes:
         p = _para(doc, indent_chars=2, after=0, line=1.5)
         _add_inline(p, "".join(para))
         i = j
+
+    _render_boundary_and_license(doc, meta)
 
     buf = io.BytesIO()
     doc.save(buf)

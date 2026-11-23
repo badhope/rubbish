@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import { createFileRoute, Link, redirect } from '@tanstack/react-router'
-import { ChevronLeft, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { createFileRoute, Link, useLocation, useNavigate } from '@tanstack/react-router'
+import { ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { getAuthState } from '@/lib/auth'
 import {
@@ -11,6 +11,7 @@ import {
   useUpdateReadingList,
 } from '@/hooks/api/use-modules'
 import type { ReadingListUpdate } from '@/lib/types'
+import { typeLabel } from '@/lib/resource-labels'
 import { extractError } from '@/lib/utils'
 import { PageHeader } from '@/components/common/page-header'
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
@@ -38,17 +39,19 @@ import {
 } from '@/components/ui/table'
 
 export const Route = createFileRoute('/library/$listId')({
-  beforeLoad: () => {
-    if (!getAuthState().isAuthenticated) throw redirect({ to: '/login' })
-  },
+  // 不在路由层一刀切跳登录：公开合集允许游客直接读；只有私有列表（或未授权）
+  // 才在组件内按可见性判断跳登录，并带上当前深链作为回跳目的地。
   component: LibraryListDetailPage,
 })
 
 function LibraryListDetailPage() {
   const { listId } = Route.useParams()
   const id = Number(listId)
+  const navigate = useNavigate()
+  const location = useLocation()
+  const auth = getAuthState()
 
-  const { data, isLoading, isError, refetch } = useReadingList(id)
+  const { data, isLoading, isError, error, refetch } = useReadingList(id)
   const updateMut = useUpdateReadingList()
   const removeMut = useRemoveReadingListItem()
   const addMut = useAddReadingListItem()
@@ -57,6 +60,28 @@ function LibraryListDetailPage() {
   const [form, setForm] = useState({ name: '', description: '' })
   const [removeResourceId, setRemoveResourceId] = useState<number | null>(null)
   const [addOpen, setAddOpen] = useState(false)
+
+  // 私有列表且当前访客不是本人 → 回登录页，登录后回到这条深链。
+  const isPrivate = Boolean(data && data.is_owner === false && data.visibility !== 'public')
+
+  useEffect(() => {
+    if (isPrivate) {
+      void navigate({ to: '/login', search: { redirect: location.pathname } })
+    }
+  }, [isPrivate, navigate, location.pathname])
+
+  // 未授权（401/403）：后端暂未透出公开态时，游客访问私有列表会落到这里，同样带回跳。
+  useEffect(() => {
+    if (isError && !auth.isAuthenticated) {
+      const status = (error as { response?: { status?: number } } | null)?.response?.status
+      if (status === 401 || status === 403) {
+        void navigate({ to: '/login', search: { redirect: location.pathname } })
+      }
+    }
+  }, [isError, error, auth.isAuthenticated, navigate, location.pathname])
+
+  // 仅本人可编辑；后端未透出归属字段时默认按本人处理（旧行为）。
+  const canEdit = data?.is_owner !== false
 
   const openEdit = () => {
     if (!data) return
@@ -115,30 +140,77 @@ function LibraryListDetailPage() {
         title={data.name}
         description={data.description ?? undefined}
         actions={
-          <>
-            <Button variant="outline" onClick={openEdit}>
-              <Pencil className="h-4 w-4" />
-              编辑
-            </Button>
-            <Button onClick={() => setAddOpen(true)}>
-              <Plus className="h-4 w-4" />
-              添加资源
-            </Button>
-          </>
+          canEdit ? (
+            <>
+              <Button variant="outline" onClick={openEdit}>
+                <Pencil className="h-4 w-4" />
+                编辑
+              </Button>
+              <Button onClick={() => setAddOpen(true)}>
+                <Plus className="h-4 w-4" />
+                添加作品
+              </Button>
+            </>
+          ) : null
         }
       />
 
       {data.items.length === 0 ? (
         <EmptyState
           title="列表为空"
-          description="点上方“添加资源”来收藏第一条内容。"
+          description="点上方“添加作品”，收录第一条内容。"
         />
-      ) : (
+      ) : null}
+
+      {data.items.length > 0 ? (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          {data.items.length > 1 ? (
+            <>
+              <span className="text-xs text-muted-foreground">按上面的顺序连读，共 {data.items.length} 篇。</span>
+              <div className="flex items-center gap-2">
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="disabled:pointer-events-none disabled:opacity-40"
+                >
+                  <Link
+                    to="/catalog/$resourceId"
+                    params={{ resourceId: String(data.items[0].resource_id) }}
+                  >
+                    <ChevronLeft className="h-3.5 w-3.5" />
+                    第一篇
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="disabled:pointer-events-none disabled:opacity-40"
+                >
+                  <Link
+                    to="/catalog/$resourceId"
+                    params={{ resourceId: String(data.items[data.items.length - 1].resource_id) }}
+                  >
+                    最后一篇
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </Link>
+                </Button>
+              </div>
+            </>
+          ) : (
+            <span className="text-xs text-muted-foreground">共 {data.items.length} 篇。</span>
+          )}
+        </div>
+      ) : null}
+
+      {data.items.length > 0 ? (
         <Card>
           <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12">顺序</TableHead>
                   <TableHead>标题</TableHead>
                   <TableHead className="w-20">类型</TableHead>
                   <TableHead>作者</TableHead>
@@ -148,19 +220,20 @@ function LibraryListDetailPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.items.map((item) => (
+                {data.items.map((item, index) => (
                   <TableRow key={item.id}>
+                    <TableCell className="tabular-nums text-muted-foreground">{index + 1}</TableCell>
                     <TableCell>
                       <Link
                         to="/catalog/$resourceId"
                         params={{ resourceId: String(item.resource_id) }}
-                        className="font-medium hover:text-primary"
+                        className="break-words font-medium hover:text-primary"
                       >
                         {item.resource.title}
                       </Link>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{item.resource.type}</Badge>
+                      <Badge variant="outline">{typeLabel(item.resource.type)}</Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {item.resource.authors.join(', ')}
@@ -170,14 +243,16 @@ function LibraryListDetailPage() {
                       {new Date(item.added_at).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setRemoveResourceId(item.resource_id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        移除
-                      </Button>
+                      {canEdit ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setRemoveResourceId(item.resource_id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          移除
+                        </Button>
+                      ) : null}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -185,7 +260,7 @@ function LibraryListDetailPage() {
             </Table>
           </CardContent>
         </Card>
-      )}
+      ) : null}
 
       {/* 编辑列表 Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
@@ -231,7 +306,7 @@ function LibraryListDetailPage() {
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>添加资源到列表</DialogTitle>
+            <DialogTitle>把作品加入列表</DialogTitle>
           </DialogHeader>
           <AddResourceDialogBody
             existingIds={new Set(data.items.map((i) => i.resource_id))}
@@ -251,8 +326,8 @@ function LibraryListDetailPage() {
 
       <ConfirmDialog
         open={removeResourceId !== null}
-        title="移除资源"
-        description="确定从列表中移除该资源吗？"
+        title="移除作品"
+        description="确定从列表中移除这篇作品吗？"
         confirmText="移除"
         destructive
         onConfirm={onConfirmRemove}
@@ -292,7 +367,7 @@ function AddResourceDialogBody({
     e.preventDefault()
     const resourceId = Number(manualId)
     if (!resourceId || Number.isNaN(resourceId)) {
-      toast.error('请输入有效的 资源 ID')
+      toast.error('请输入有效的作品编号')
       return
     }
     await onAdd(resourceId)
@@ -307,7 +382,8 @@ function AddResourceDialogBody({
     <div className="space-y-4">
       <form onSubmit={onSearch} className="flex gap-2">
         <Input
-          placeholder="搜索标题/作者/摘要"
+          placeholder="标题/作者/开头"
+          aria-label="在合集内搜索作品"
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
@@ -355,11 +431,12 @@ function AddResourceDialogBody({
       )}
 
       <div className="border-t pt-4">
-        <p className="mb-2 text-xs text-muted-foreground">或直接输入 资源 ID</p>
+        <p className="mb-2 text-xs text-muted-foreground">或直接输入作品编号</p>
         <form onSubmit={onAddManual} className="flex gap-2">
           <Input
             type="number"
-            placeholder="资源 ID"
+            placeholder="作品编号"
+            aria-label="输入作品编号添加到合集"
             value={manualId}
             onChange={(e) => setManualId(e.target.value)}
           />

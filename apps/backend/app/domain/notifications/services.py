@@ -87,9 +87,7 @@ def email_pref_key(event_type: str) -> str | None:
 
 
 async def _pref_owner(db: AsyncSession, user_id: int) -> User | None:
-    return (
-        await db.execute(select(User).where(User.id == user_id))
-    ).scalar_one_or_none()
+    return (await db.execute(select(User).where(User.id == user_id))).scalar_one_or_none()
 
 
 def merged_prefs(user: object) -> dict[str, bool]:
@@ -122,8 +120,8 @@ async def create(
     and flushes, so the notification rides on the caller's transaction
     (rollback cancels both the business write and the notification).
     """
-    # ``notifications.title`` is VARCHAR(200). 稿件标题没有长度上限，
-    # 直接拼进通知会在长标题稿件上触发 StringDataRightTruncationError，
+    # ``notifications.title`` is VARCHAR(200). 作品标题没有长度上限，
+    # 直接拼进通知会在长标题作品上触发 StringDataRightTruncationError，
     # 并让整个指派事务回滚（生产曾因此返回 500）。统一在写入边界截断。
     title = (title or "").strip()
     if len(title) > 200:

@@ -439,7 +439,7 @@ export function EditorPipeline() {
                 {digestRecords.isLoading ? (
                   <p className="py-2 text-muted-foreground">加载记录中…</p>
                 ) : digestRecords.isError ? (
-                  <p className="py-2 text-muted-foreground">记录加载失败</p>
+                  <p className="py-2 text-muted-foreground">投递记录加载失败</p>
                 ) : (digestRecords.data?.items.length ?? 0) === 0 ? (
                   <p className="py-2 text-muted-foreground">暂无投递记录</p>
                 ) : (
@@ -515,9 +515,9 @@ export function EditorPipeline() {
       {isLoading ? (
         <LoadingSkeleton rows={4} />
       ) : isError ? (
-        <ErrorState message="加载失败" onRetry={() => refetch()} />
+        <ErrorState message="工作台数据加载失败，可重试。" onRetry={() => refetch()} />
       ) : !columns ? (
-        <EmptyState title="暂无数据" />
+        <EmptyState title="还没有进行中的作品" description="新作品发布后会出现在这里。" />
       ) : (
         <>
           {/* 桌面四列 / 移动横向滚动 */}
@@ -927,9 +927,9 @@ export function EditorPipeline() {
                     className="mt-0.5 size-4 accent-primary"
                   />
                   <span>
-                    <span className="font-medium">该稿免互评（内容整理直接通过）</span>
+                    <span className="font-medium">本篇免互评（内容整理直接通过）</span>
                     <span className="mt-0.5 block text-xs text-muted-foreground">
-                      仅用于约稿、编委特稿、重复公开复核等确实无需外审的作品；会写审计并通知作者。
+                      仅用于站务特约、专题复核等确实无需互评的作品；会写审计并通知作者。
                     </span>
                   </span>
                 </label>
@@ -940,7 +940,7 @@ export function EditorPipeline() {
                       id="waive-reason"
                       value={waiveReason}
                       onChange={(e) => setWaiveReason(e.target.value)}
-                      placeholder="例如：编委特稿，已由两位编委完成内部复核"
+                      placeholder="例如：站务特约，已由两位内容整理完成内部复核"
                     />
                   </div>
                 )}
@@ -1011,7 +1011,7 @@ function SubmissionReportsPanel({ submissionId }: { submissionId: number }) {
   if (isLoading) return <LoadingSkeleton rows={2} />
   if (isError)
     return (
-      <ErrorState message="互评意见加载失败" onRetry={() => void refetch()} />
+      <ErrorState message="互评意见加载失败，可重试。" onRetry={() => void refetch()} />
     )
   if (!data || data.length === 0) {
     return (
@@ -1056,7 +1056,7 @@ function SubmissionReportsPanel({ submissionId }: { submissionId: number }) {
           ) : null}
           {reviewDimensionEntries(r.scores).some(([, v]) => (v.suggestion ?? '').trim()) ? (
             <div className="mt-2 space-y-0.5 rounded bg-muted/40 p-2 text-xs">
-              <div className="font-medium text-muted-foreground">逐维修改意见</div>
+              <div className="font-medium text-muted-foreground">逐条修改意见</div>
               {reviewDimensionEntries(r.scores)
                 .filter(([, v]) => (v.suggestion ?? '').trim())
                 .map(([k, v]) => (
@@ -1149,7 +1149,7 @@ function EditorReportSearchDialog({
         {isLoading ? (
           <LoadingSkeleton rows={3} />
         ) : !data || data.items.length === 0 ? (
-          <EmptyState title="没有匹配的互评意见" description="换一个标题关键词或互评成员用户名。" />
+          <EmptyState title="没有匹配的互评意见" description="换一个标题话题或互评成员用户名。" />
         ) : (
           <div className="max-h-[60vh] space-y-2 overflow-y-auto pr-1">
             <p className="text-xs text-muted-foreground">命中 {data.count} 条</p>
@@ -1219,7 +1219,7 @@ function EditorManuscriptDialog({
         <DialogHeader>
           <DialogTitle>查看作品</DialogTitle>
           <DialogDescription>
-            复核前先读正文、摘要与互评意见；Markdown 稿直接读全文，PDF/Word 稿可在线打开原件。
+            复核前先读正文、开头与互评意见；Markdown 稿直接读全文，PDF/Word 稿可在线打开原件。
           </DialogDescription>
         </DialogHeader>
         {subQ.isLoading ? (
@@ -1238,11 +1238,11 @@ function EditorManuscriptDialog({
               </div>
             </div>
             <div>
-              <div className="text-xs text-muted-foreground">作者</div>
+              <div className="text-xs text-muted-foreground">署名</div>
               <div>{(data.authors ?? []).join(' · ') || '—'}</div>
             </div>
             <div>
-              <div className="text-xs text-muted-foreground">摘要</div>
+              <div className="text-xs text-muted-foreground">开头</div>
               <p className="whitespace-pre-wrap leading-relaxed">{data.abstract || '—'}</p>
             </div>
             {mdQ.data?.content ? (

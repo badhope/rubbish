@@ -77,7 +77,7 @@ export default function ForumInspectionPage() {
       void qc.invalidateQueries({ queryKey: ['admin', 'forum-inspection'] })
       void qc.invalidateQueries({ queryKey: ['forum', 'topics'] })
     },
-    onError: (err) => toast.error(extractError(err, '操作失败')),
+    onError: (err) => toast.error(extractError(err, '没能更新巡检状态，可再试一次')),
   })
 
   const rows = useMemo(() => topicsQ.data?.data ?? [], [topicsQ.data])
@@ -105,7 +105,7 @@ export default function ForumInspectionPage() {
         <Card>
           <CardContent className="flex items-center justify-between p-4">
             <div>
-              <p className="text-xs text-muted-foreground">全站帖子</p>
+              <p className="text-xs text-muted-foreground">全站话题</p>
               <p className="mt-1 font-mono text-2xl font-semibold">{meta?.total ?? '—'}</p>
             </div>
             <ShieldCheck className="h-5 w-5 text-muted-foreground" />
@@ -156,11 +156,11 @@ export default function ForumInspectionPage() {
       {topicsQ.isLoading ? (
         <Loading />
       ) : topicsQ.isError ? (
-        <ErrorState message="加载讨论主题失败" onRetry={() => topicsQ.refetch()} />
+        <ErrorState message="讨论主题加载失败，可重试。" onRetry={() => topicsQ.refetch()} />
       ) : filtered.length === 0 ? (
         <EmptyState
           title={query ? '没有匹配的主题' : '讨论区还没有主题'}
-          description={query ? '换一个关键词试试。' : '用户发布文章或讨论后会出现在这里。'}
+          description={query ? '换一个话题试试。' : '用户发布文章或讨论后会出现在这里。'}
         />
       ) : (
         <div className="space-y-2">

@@ -166,8 +166,8 @@ async def run_bootstrap() -> None:
 async def _ensure_review_roles(session: AsyncSession, tenant: Tenant) -> None:
     """Idempotently create the editorial role chain + reviewer rows.
 
-    v1.11 编辑职权链：主编 > 副主编 > 编委 > 执行编辑 > 审稿人。
-    终审权（四元决定）只属主编/副主编；编委与执行编辑负责初筛、送审
+    v1.11 编辑职权链：主编 > 副主编 > 站务组 > 执行编辑 > 互评成员。
+    终审权（四元决定）只属主编/副主编；站务组与执行编辑负责基础检查、分派互评
     与推荐。幂等：已存在的角色行不动。
     """
     for name, desc in (

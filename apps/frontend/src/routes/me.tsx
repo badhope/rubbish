@@ -69,7 +69,7 @@ function MePage() {
 
   if (profile.isLoading) return <Loading />
   if (profile.isError || !profile.data) {
-    return <ErrorState message="加载个人中心失败" onRetry={() => profile.refetch()} />
+    return <ErrorState message="加载我的空间失败" onRetry={() => profile.refetch()} />
   }
 
   const data = profile.data
@@ -81,10 +81,11 @@ function MePage() {
     void navigate({ to: '/me', search: { tab }, replace: true })
   }
 
+  // 一级分区：继续写（我的作品/草稿/通知入口）、继续读（收藏与最近阅读）、设置。
+  // 经验（points）保留路由分支兼容旧链接，入口收进「参与记录」独立页，不在此平铺。
   const tabs = [
-    { key: 'overview' as const, label: '概览' },
-    { key: 'library' as const, label: '收藏' },
-    { key: 'points' as const, label: '积分' },
+    { key: 'overview' as const, label: '继续写' },
+    { key: 'library' as const, label: '继续读' },
     { key: 'settings' as const, label: '设置' },
   ]
 

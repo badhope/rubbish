@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 export const Route = createFileRoute('/forgot-password')({
   component: ForgotPasswordPage,
 })
@@ -18,11 +20,21 @@ function ForgotPasswordPage() {
   const emailDelivery = capabilities.data?.email_delivery ?? false
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
+  const [touched, setTouched] = useState(false)
+
+  const emailValid = EMAIL_RE.test(email.trim())
+  const emailHint = !email.trim()
+    ? '请输入注册邮箱'
+    : emailValid
+      ? ''
+      : '邮箱格式不正确，请检查后再填'
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setTouched(true)
+    if (!emailValid) return
     try {
-      await mut.mutateAsync({ email })
+      await mut.mutateAsync({ email: email.trim() })
       setSent(true)
       // backend 总是返回 200，不暴露账号是否存在
       toast.success('如果该邮箱已注册，重置邮件已发送')
@@ -60,7 +72,7 @@ function ForgotPasswordPage() {
               </p>
             </div>
           ) : (
-            <form onSubmit={onSubmit} className="space-y-4">
+            <form onSubmit={onSubmit} className="space-y-4" noValidate>
               <div className="space-y-2">
                 <Label htmlFor="email">邮箱</Label>
                 <Input
@@ -69,10 +81,18 @@ function ForgotPasswordPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
+                  aria-invalid={touched && !emailValid}
                   required
                 />
+                {touched && emailHint ? (
+                  <p className="text-xs text-destructive">{emailHint}</p>
+                ) : null}
               </div>
-              <Button type="submit" className="w-full" disabled={mut.isPending}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={mut.isPending || !emailValid}
+              >
                 {mut.isPending ? '发送中…' : '发送重置邮件'}
               </Button>
               <p className="text-center text-sm text-muted-foreground">

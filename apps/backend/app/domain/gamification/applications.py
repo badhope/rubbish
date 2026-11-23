@@ -1,10 +1,10 @@
-"""职员角色申请资格（L5 审稿人 / L6 资深审稿人）。
+"""职员角色申请资格（L5 互评成员 / L6 资深互评成员）。
 
 口径（冻结在代码里，与 /levels 页展示一致）：
 
-- **L5 审稿人**：至少 1 篇作品被本站录用，且其中最高 RQS 质量分 ≥ 60
+- **L5 互评成员**：至少 1 篇作品被本站通过，且其中最高 RQS 质量分 ≥ 60
   （C 级及以上）。未评分的作品不参与门槛——新作者不被历史数据卡死。
-- **L6 资深审稿人**：已是审稿人，且完成审稿 ≥ 5 份。
+- **L6 资深互评成员**：已是互评成员，且完成互评 ≥ 5 份。
 - L7–L9（编辑职）不开放申请，仅编辑部直接提拔。
 
 资格判定只读不改；申请写入 role_applications，管理员批准时才授角色。
@@ -23,7 +23,7 @@ from app.models import User
 
 # L5：最高 RQS 质量分门槛（C 级下限）。
 SENIOR_RQS_THRESHOLD = 60
-# L6：完成审稿份数门槛。
+# L6：完成互评份数门槛。
 SENIOR_REVIEW_COUNT = 5
 
 ELIGIBLE_TARGET_ROLES = ("reviewer", "senior_reviewer")
@@ -45,7 +45,7 @@ def _profile_payload(
 
 
 async def accepted_paper_count(db: AsyncSession, user: User) -> int:
-    """该作者被本站录用的作品数（accepted / approved；供 L4 指标与 L5 画像共用）。"""
+    """该作者被本站通过的作品数（accepted / approved；供 L4 指标与 L5 画像共用）。"""
     return int(
         (
             await db.execute(
@@ -63,7 +63,7 @@ async def accepted_paper_count(db: AsyncSession, user: User) -> int:
 
 
 async def reviewer_profile(db: AsyncSession, user: User) -> dict[str, object]:
-    """L5 资格画像：已录用作品数 + 最高 RQS。"""
+    """L5 资格画像：已通过作品数 + 最高 RQS。"""
     rows = (
         (
             await db.execute(
@@ -90,7 +90,7 @@ async def reviewer_profile(db: AsyncSession, user: User) -> dict[str, object]:
 
 
 def reviewer_eligible(profile: dict[str, object]) -> bool:
-    """L5 门槛：≥1 篇录用 且 最高 RQS ≥ 60（未评分作品不参与）。"""
+    """L5 门槛：≥1 篇通过 且 最高 RQS ≥ 60（未评分作品不参与）。"""
     accepted_raw = profile.get("accepted_papers") or 0
     best = profile.get("best_rqs")
     if not isinstance(accepted_raw, int) or not isinstance(best, (int, float)):
@@ -99,7 +99,7 @@ def reviewer_eligible(profile: dict[str, object]) -> bool:
 
 
 async def senior_reviewer_profile(db: AsyncSession, user: User) -> dict[str, object]:
-    """L6 资格画像：已完成审稿份数。"""
+    """L6 资格画像：已完成互评份数。"""
     reviews = int(
         (
             await db.execute(

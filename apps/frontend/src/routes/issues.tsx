@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowRight, Layers3, PenLine } from 'lucide-react'
+import { ArrowRight, Layers3 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
@@ -55,25 +55,17 @@ function CollectionsPage() {
     <div className="mx-auto max-w-4xl space-y-6">
       <PageHeader
         title="合集"
-        description={`有些东西适合放在一起读。合集就是那条线：不排名，不分高低，只按一个题目把内容串起来。现在有 ${issues.length} 组、${totalArticles} 条。`}
-        actions={
-          <Button asChild variant="outline">
-            <Link to="/catalog">
-              随便翻翻
-              <ArrowRight className="ml-1 h-4 w-4" />
-            </Link>
-          </Button>
-        }
+        description={`有些东西适合放在一起读。合集就是那条线：不排名，不分高低，只按一个题目把内容串起来。现在有 ${issues.length} 组、${totalArticles} 篇。`}
       />
 
       <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-y bg-muted/20 px-4 py-3 text-xs leading-5 text-muted-foreground sm:px-5">
         <p><span className="font-medium text-foreground">合集</span>：一条阅读线，顺着走就好。</p>
-        <p><span className="font-medium text-foreground">顺序</span>：先来后到，或者按主题。不是热度，也不是等级。</p>
+        <p><span className="font-medium text-foreground">顺序</span>：先来后到，或者按主题。不是热度，也不排名。</p>
         <p><span className="font-medium text-foreground">编号</span>：只在站内找东西时用。</p>
       </div>
 
       {issues.length === 0 ? (
-        <EmptyState title="还没有合集" description="内容公开后，会自己落到合集里。" />
+        <EmptyState title="还没有合集" description="作品公开后，会自己落进合集。" />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {issues.map((issue, index) => (
@@ -86,7 +78,7 @@ function CollectionsPage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="font-serif text-lg font-semibold">{issueTitle(issue.issue)}</h2>
-                    <Badge variant="secondary">{issue.article_count} 条</Badge>
+                    <Badge variant="secondary">{issue.article_count} 篇</Badge>
                     {(issue.first_year || issue.last_year) && (
                       <span className="text-xs text-muted-foreground">
                         {issue.first_year ?? issue.last_year}
@@ -97,7 +89,7 @@ function CollectionsPage() {
                     )}
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    合集 {padNo(index + 1)} · 按主题放在一起，方便顺着读
+                    按主题放在一起，方便顺着读
                   </p>
                 </div>
                 <Button asChild variant="ghost" size="sm" className="shrink-0">
@@ -123,22 +115,14 @@ function CollectionsPage() {
         <CardContent className="flex flex-wrap items-center gap-3 p-3.5 sm:p-4">
           <Layers3 className="h-5 w-5 shrink-0 text-primary" />
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium">刚公开的内容，会先落到最新合集里</p>
+            <p className="text-sm font-medium">刚放上桌的作品，会先落进最新合集</p>
             <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
-              只有一句想说的话，不必等合集，直接去讨论区。
+              只有一句话，不必等合集，直接去讨论区。
             </p>
           </div>
-          <div className="flex shrink-0 flex-wrap gap-2">
-            <Button asChild size="sm">
-              <Link to="/submissions/new">
-                <PenLine className="h-3.5 w-3.5" />
-                写点东西
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/forum">去说话</Link>
-            </Button>
-          </div>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/forum">去讨论区</Link>
+          </Button>
         </CardContent>
       </Card>
     </div>

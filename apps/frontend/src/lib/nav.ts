@@ -12,9 +12,9 @@ export interface NavItem {
    * 真正的权限由后端 require_* 依赖强制。
    */
   roles?: string[]
-  /** 侧边栏一级分组标题：角色化导航 —— 读者/作者/审稿人/编辑各自只见自己的分区 */
+  /** 侧边栏一级分组标题：角色化导航 —— 读者/作者/互评成员/内容整理各自只见自己的分区 */
   group?: string
-  /** 二级分组：后台「站点管理」内部再分层（内容治理/用户权限/期刊发布/系统） */
+  /** 二级分组：后台「站点管理」内部再分层（内容治理/用户权限/合集编排/系统） */
   subgroup?: string
 }
 
@@ -27,7 +27,7 @@ export interface NavViewer {
 /**
  * 导航可见性过滤：登录要求 + 管理员限定 + 角色命中（任一）。
  *
- * 不用「登录就显示审稿工作台」这种粗粒度判断：普通作者点进去只会看到
+ * 不用「登录就显示互评工作台」这种粗粒度判断：普通作者点进去只会看到
  * 403 空壳。admin 绕过角色检查（后端同样把 admin 视为全角色）。
  */
 export function filterNav<T extends NavItem>(items: T[], viewer: NavViewer): T[] {
@@ -44,9 +44,9 @@ export function filterNav<T extends NavItem>(items: T[], viewer: NavViewer): T[]
 /**
  * 侧边栏高亮解析：**最长前缀胜出**。
  *
- * - `/submissions/pending` 同时匹配「我的提交」(`/submissions`) 与
- *   「编辑工作台」(`/submissions/pending`)，取更长的那个，避免编辑工作台
- *   页面误高亮成"我的提交"（语义归属错误）。
+ * - `/submissions/pending` 同时匹配「我的作品」(`/submissions`) 与
+ *   「内容整理工作台」(`/submissions/pending`)，取更长的那个，避免内容整理工作台
+ *   页面误高亮成"我的作品"（语义归属错误）。
  * - 段级匹配（`===` 或 `${to}/` 前缀）而非裸 `startsWith`，避免
  *   `/submissionsfoo` 误匹配 `/submissions` 这类假阳性。
  *

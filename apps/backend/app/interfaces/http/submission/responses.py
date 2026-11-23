@@ -109,7 +109,7 @@ def _to_response(
 async def _review_stats_for_submissions(
     db: AsyncSession, ids: list[int], tenant_id: str
 ) -> dict[int, dict[str, Any]]:
-    """批量算当前轮审稿进度，避免列表把“已有 1 份意见”显示成 0。"""
+    """批量算当前轮互评进度，避免列表把“已有 1 份意见”显示成 0。"""
     if not ids:
         return {}
     from app.domain.review.models import ReviewAssignment, ReviewReport

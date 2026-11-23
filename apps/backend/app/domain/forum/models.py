@@ -139,7 +139,7 @@ class ForumReply(Base, TenantScopedMixin):
 class ForumReaction(Base, TenantScopedMixin):
     """帖子/回复的多维反馈：赞同、有帮助、收藏。
 
-    不做“反对/踩”：期刊社区要讨论问题，不是把异见踩下去。
+    不做“反对/踩”：内容库社区要讨论问题，不是把异见踩下去。
     用 target_type + target_id 而不是两个可空 FK，是为了让唯一约束在
     PostgreSQL 下真正生效（可空列会让 UNIQUE 放过多条 NULL）。
     """

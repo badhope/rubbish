@@ -19,6 +19,8 @@ export const Route = createFileRoute('/login')({
 
 type LoginMode = 'password' | 'email-code'
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 function LoginPage() {
   const navigate = useNavigate()
   const search = useSearch({ strict: false }) as { redirect?: string }
@@ -39,6 +41,8 @@ function LoginPage() {
   // 非 null = 凭据已通过，等待第二因子（TOTP / 恢复码）
   const [pendingToken, setPendingToken] = useState<string | null>(null)
   const [totpCode, setTotpCode] = useState('')
+
+  const emailValid = EMAIL_RE.test(email.trim())
 
   const afterLogin = () => {
     toast.success('登录成功')
@@ -62,8 +66,8 @@ function LoginPage() {
 
   // 发送验证码 → 倒计时 60 秒（与后端节流窗口一致）
   const onSendCode = async () => {
-    if (!email.trim()) {
-      toast.error('请先输入注册邮箱')
+    if (!emailValid) {
+      toast.error(email.trim() ? '邮箱格式不正确，请检查后再填' : '请先输入注册邮箱')
       return
     }
     try {
@@ -154,6 +158,7 @@ function LoginPage() {
   if (pendingToken) {
     return (
       <div className="mx-auto flex min-h-[calc(100svh-2rem)] max-w-md items-center">
+        <h1 className="sr-only">两步验证</h1>
         <Card className="w-full">
           <CardHeader>
             <CardTitle className="text-2xl">两步验证</CardTitle>
@@ -180,7 +185,7 @@ function LoginPage() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={twoFactorMut.isPending}
+                disabled={twoFactorMut.isPending || totpCode.trim().length < 6}
                 data-testid="confirm-2fa"
               >
                 {twoFactorMut.isPending ? '验证中…' : '验证并登录'}
@@ -202,6 +207,7 @@ function LoginPage() {
 
   return (
     <div className="mx-auto flex min-h-[calc(100svh-2rem)] max-w-md items-center">
+      <h1 className="sr-only">登录</h1>
       <Card className="w-full">
         <CardHeader>
           <CardTitle className="text-2xl">登录</CardTitle>
@@ -270,7 +276,11 @@ function LoginPage() {
                   required
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loginMut.isPending}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loginMut.isPending || !username.trim() || !password}
+              >
                 {loginMut.isPending ? '登录中…' : '登录'}
               </Button>
             </form>
@@ -292,7 +302,7 @@ function LoginPage() {
                     type="button"
                     variant="outline"
                     onClick={onSendCode}
-                    disabled={sendCodeMut.isPending || resendIn > 0 || !email.trim()}
+                    disabled={sendCodeMut.isPending || resendIn > 0 || !emailValid}
                     className="shrink-0"
                   >
                     {resendIn > 0
@@ -318,8 +328,12 @@ function LoginPage() {
                   required
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={!codeSent || code.length < 6}>
-                {codeSent ? '验证并登录' : '请先获取验证码'}
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={verifyCodeMut.isPending || !codeSent || !emailValid || code.length < 6}
+              >
+                {verifyCodeMut.isPending ? '验证中…' : codeSent ? '验证并登录' : '请先获取验证码'}
               </Button>
               <p className="text-xs text-muted-foreground">
                 没收到？检查垃圾邮件箱；60 秒后可重新发送。站务不会向你索要验证码。

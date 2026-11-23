@@ -12,17 +12,17 @@ describe('homepage issue information', () => {
 describe('community onboarding', () => {
   it('points long-form writers to the publish wizard', () => {
     const authors = readFileSync('src/components/guide/research-guide.tsx', 'utf8')
-    expect(authors).toContain('写作品')
+    expect(authors).toContain('写一篇')
     expect(authors).toContain('to="/submissions/new"')
     expect(authors).not.toContain('文章指南')
   })
 
   it('keeps the guide to four plain-language tabs', () => {
     const guide = source('guide')
-    expect(guide).toContain("label: '三分钟，先走一遍'")
-    expect(guide).toContain("label: '写作品'")
-    expect(guide).toContain("label: '去讨论'")
-    expect(guide).toContain("label: '规则与边界'")
+    expect(guide).toContain("label: '先走一遍'")
+    expect(guide).toContain("label: '写一篇'")
+    expect(guide).toContain("label: '说话'")
+    expect(guide).toContain("label: '边界与处理'")
   })
 
   it('states the site is a community, not an evaluation body', () => {

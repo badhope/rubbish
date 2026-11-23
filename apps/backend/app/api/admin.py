@@ -51,7 +51,7 @@ logger = get_logger("rubbish.admin")
 # privilege is governed by User.is_admin, not by role membership.
 #
 # 作者/读者不再作为可分配角色：读者身份 = 注册即得，作者身份 = 确认
-# 《投稿规范》即得（users.rules_ack_version），二者是"身份"不是"角色"，
+# 《写作规范》即得（users.rules_ack_version），二者是"身份"不是"角色"，
 # 由编辑部手工分配只会造成授权逻辑混乱（2026-11 收窄口径）。
 ASSIGNABLE_ROLES = {
     "reviewer",
@@ -65,13 +65,13 @@ ASSIGNABLE_ROLES = {
 }
 
 ROLE_LABELS = {
-    "reviewer": "版主",
-    "senior_reviewer": "资深版主",
-    "editor": "内容管理员",
-    "section_editor": "分区管理员",
+    "reviewer": "互评成员",
+    "senior_reviewer": "资深互评成员",
+    "editor": "内容整理",
+    "section_editor": "分区整理",
     "board_editor": "内容策展",
-    "deputy_editor": "副站长",
-    "chief_editor": "站长",
+    "deputy_editor": "副站务负责人",
+    "chief_editor": "站务负责人",
     "shop_manager": "积分管理员",
 }
 
@@ -703,7 +703,7 @@ async def email_status(
 # 作者认领审批（Author Claim review）
 #
 # 作者对"无人认领"的存量文章发起认领（见 catalog.routes.claim_resource），
-# 编辑部在这里批准 / 拒绝。批准 = 创建一条 accepted 关联投稿，把文章
+# 编辑部在这里批准 / 拒绝。批准 = 创建一条 accepted 关联作品记录，把文章
 # 正式挂到认领人名下；拒绝 = 保留申请记录供仲裁。
 # ---------------------------------------------------------------------------
 
@@ -714,13 +714,17 @@ class ClaimDecision(BaseModel):
 
 
 def _mark_author_position_claimed(
-    resource: Any, position: int | None, user_id: int, user_email: str | None
+    resource: Any,
+    position: int | None,
+    user_id: int,
+    user_email: str | None,
+    user_username: str | None = None,
 ) -> None:
     """把 resource.authors_meta 里对应作者位标记为已认领。
 
     - position 为 1-based；缺失时默认第 1 位。
     - 未初始化 authors_meta 时按 authors 列表补齐（全部 claimed=false）。
-    - 已认领位的 email 在此拷入账号邮箱，公开面才透出；未认领位 email 为 null。
+    - 已认领位的 email / username 在此拷入账号资料，公开面才透出；未认领位为 null。
     """
     count = len(resource.authors or [])
     if count == 0:
@@ -737,6 +741,8 @@ def _mark_author_position_claimed(
     entry["user_id"] = user_id
     if user_email:
         entry["email"] = user_email
+    if user_username:
+        entry["username"] = user_username
     roles = entry.get("roles") or (["first"] if idx == 0 else [])
     entry["roles"] = [r for r in roles if r in ("first", "corresponding")] or (
         ["first"] if idx == 0 else []
@@ -751,7 +757,7 @@ async def list_claims(
     db: AsyncSession = Depends(get_db),
     _admin: User = Depends(require_admin),
 ) -> list[dict[str, Any]]:
-    """认领申请列表（编辑部审批台）。"""
+    """认领申请列表（站务组审批台）。"""
     from app.domain.catalog.models import AuthorClaim, Resource
 
     tenant_id = require_tenant_id()
@@ -795,7 +801,7 @@ async def decide_claim(
 ) -> dict[str, Any]:
     """批准 / 拒绝一篇认领申请。
 
-    批准会创建一条 ``accepted`` 关联投稿（submitted_by = 认领人，
+    批准会创建一条 ``accepted`` 关联作品记录（submitted_by = 认领人，
     resource_id 指向文章），使"我的文章"等 Submission 链路功能生效；
     同时给认领人发通知。全程写审计日志。
     """
@@ -836,11 +842,15 @@ async def decide_claim(
         # P0：批准即绑定 owner_id——这是认领的权威归属，POST claim 据此 403。
         resource.owner_id = claim.user_id
         # P1：把对应作者位标记为已认领，拷入账号邮箱（公开面据此透出）。
-        claimer_email = (
-            await db.execute(select(User.email).where(User.id == claim.user_id))
-        ).scalar_one_or_none()
-        _mark_author_position_claimed(resource, claim.author_position, claim.user_id, claimer_email)
-        # 防重复：同一资源已有该用户名下的投稿就不重复建
+        claimer = (
+            await db.execute(select(User.email, User.username).where(User.id == claim.user_id))
+        ).first()
+        claimer_email = claimer[0] if claimer else None
+        claimer_username = claimer[1] if claimer else None
+        _mark_author_position_claimed(
+            resource, claim.author_position, claim.user_id, claimer_email, claimer_username
+        )
+        # 防重复：同一资源已有该用户名下的发布就不重复建
         existing_sub = (
             await db.execute(
                 select(Submission.id).where(
@@ -869,12 +879,12 @@ async def decide_claim(
                     abstract=resource.abstract or "",
                     preview=resource.preview or "",
                     status="accepted",
-                    admin_note="作者认领批准后自动创建的关联投稿",
+                    admin_note="作者认领批准后自动创建的关联作品记录",
                 )
             )
         claim.status = "approved"
         notify_title = f"认领已批准：{resource.title}"
-        notify_body = "编辑部已批准你对该文章的认领，文章已挂到你的名下。"
+        notify_body = "内容整理已批准你对该作品的认领，作品已挂到你的名下。"
         # 活跃经验：认领审核通过 +20（幂等，同一 claim 只记一次）。
         # 旧身份内积分账本仍保留，但它不参与全站 Level 展示。
         from app.domain.gamification import levels_axis
@@ -904,11 +914,11 @@ async def decide_claim(
     else:
         claim.status = "rejected"
         notify_title = f"认领未通过：{resource.title}"
-        notify_body = "编辑部未能确认你与该文章的作者关系。如有异议，请通过申诉渠道联系编辑部。"
+        notify_body = "内容整理未能确认你与该作品的作者关系。如有异议，请通过申诉渠道联系站务组。"
 
     if body.note:
         claim.decision_note = body.note
-        notify_body += f"\n编辑部备注：{body.note}"
+        notify_body += f"\n内容整理备注：{body.note}"
     claim.decided_by = current_admin.id
     claim.decided_at = utcnow()
 
@@ -969,14 +979,17 @@ async def assign_owner(
     if resource is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
 
-    target_email = (
-        await db.execute(select(User.email).where(User.id == body.user_id))
-    ).scalar_one_or_none()
-    if target_email is None:
+    target = (
+        await db.execute(select(User.email, User.username).where(User.id == body.user_id))
+    ).first()
+    if target is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="目标用户不存在")
+    target_email, target_username = target[0], target[1]
 
     resource.owner_id = body.user_id
-    _mark_author_position_claimed(resource, body.author_position, body.user_id, target_email)
+    _mark_author_position_claimed(
+        resource, body.author_position, body.user_id, target_email, target_username
+    )
     db.add(
         AuditLog(
             tenant_id=tenant_id,
@@ -1068,6 +1081,7 @@ async def edit_resource_authors(
                 # 保留既有认领状态（管理员手动改稿不剥夺已认领位）
                 "claimed": bool(prior.get("claimed")),
                 "user_id": prior.get("user_id"),
+                "username": prior.get("username"),
             }
         )
     resource.authors_meta = new_meta
@@ -1092,7 +1106,7 @@ async def edit_submission_authors(
     db: AsyncSession = Depends(get_db),
     current_admin: User = Depends(require_admin),
 ) -> dict[str, Any]:
-    """管理端编辑投稿作者位（发布前）：保存到 submission.authors。"""
+    """管理端编辑发布作者位（发布前）：保存到 submission.authors。"""
     from app.domain.submission.models import Submission
 
     tenant_id = require_tenant_id()

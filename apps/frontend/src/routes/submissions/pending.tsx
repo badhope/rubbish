@@ -117,7 +117,7 @@ const DECISION_OPTIONS: { value: EditorDecision; label: string; hint?: string }[
   { value: 'reject', label: '不通过' },
 ]
 
-// 维度中文口径统一在 @/lib/review-dimensions，旧四维作为历史数据兜底。
+// 条目中文口径统一在 @/lib/review-dimensions，旧四维作为历史数据兜底。
 // 内容台状态 tab：全部 + 7 种 submission status
 type StatusTab = SubmissionStatus | 'all'
 const STATUS_TABS: { value: StatusTab; label: string }[] = [
@@ -126,8 +126,8 @@ const STATUS_TABS: { value: StatusTab; label: string }[] = [
   { value: 'under_review', label: '互评中' },
   { value: 'major_revision', label: '大改' },
   { value: 'minor_revision', label: '小改' },
-  { value: 'resubmitted', label: '重新提交' },
-  { value: 'accepted', label: '已通过' },
+  { value: 'resubmitted', label: '修改版' },
+  { value: 'accepted', label: '已公开' },
   { value: 'rejected', label: '已不通过' },
 ]
 
@@ -151,7 +151,7 @@ function statusBadge(status: string) {
       return <Badge className="bg-yellow-500/15 text-yellow-700">小改</Badge>
     case 'accepted':
     case 'approved':
-      return <Badge className="bg-emerald-500/15 text-emerald-700">已通过</Badge>
+      return <Badge className="bg-emerald-500/15 text-emerald-700">已公开</Badge>
     case 'rejected':
       return <Badge variant="destructive">已不通过</Badge>
     default:
@@ -269,7 +269,7 @@ function PendingSubmissionsPage() {
     null,
   )
   const [decisionForm, setDecisionForm] = useState<DecisionFormState>(EMPTY_DECISION)
-  // 做决定时内嵌互评报告摘要：推荐 + 评分 + 内容整理保密意见，内容整理不必另开弹窗
+  // 做决定时内嵌互评报告概要：推荐 + 评分 + 内容整理保密意见，内容整理不必另开弹窗
   const decisionReportsQ = useSubmissionReports(decisionTarget?.id ?? 0)
   const decisionMatrixQ = useReviewMatrix(decisionTarget?.id ?? 0)
 
@@ -302,7 +302,7 @@ function PendingSubmissionsPage() {
     const matrix = decisionMatrixQ.data
     if (decisionForm.decision === 'accept') {
       if (!matrix) {
-        toast.error('正在读取互评进度，请稍后再试')
+        toast.error('互评进度还没读完，请稍等再试。')
         return
       }
       if (matrix.accept_count < 2) {
@@ -335,7 +335,7 @@ function PendingSubmissionsPage() {
       setDecisionTarget(null)
       setDecisionForm(EMPTY_DECISION)
     } catch (err) {
-      toast.error(extractError(err, '操作失败'))
+      toast.error(extractError(err, '没能记录处理决定，可再试一次'))
     }
   }
 
@@ -365,7 +365,7 @@ function PendingSubmissionsPage() {
       {isSectionOnly && (
         <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
           你以分类整理（L7）身份查看工作台：可以初审、分配互评成员并给出推荐意见，
-          最终通过 / 修回 / 不通过决定由内容整理（L8）作出。
+          最终通过 / 修改 / 不通过决定由内容整理（L8）作出。
         </div>
       )}
 
@@ -388,9 +388,9 @@ function PendingSubmissionsPage() {
       {isLoading ? (
         <Loading />
       ) : isError ? (
-        <ErrorState message="加载失败" onRetry={() => refetch()} />
+        <ErrorState message="待处理队列加载失败，可重试。" onRetry={() => refetch()} />
       ) : !data || data.data.length === 0 ? (
-        <EmptyState title="暂无提交" />
+        <EmptyState title="暂无待处理作品" description="新发布的作品会出现在这里；没有待办时不用停留。" />
       ) : (
         <div className="space-y-4">
           {data.data.map((s) => (
@@ -422,7 +422,7 @@ function PendingSubmissionsPage() {
                     <span>{s.discipline}</span>
                     <span>{s.year}</span>
                     <span>
-                      提交于 {new Date(s.submitted_at).toLocaleDateString()}
+                      发布于 {new Date(s.submitted_at).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
@@ -545,11 +545,11 @@ function PendingSubmissionsPage() {
             <DialogTitle>做决定 — {decisionTarget?.title}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            {/* 互评报告摘要：有报告时直接展示，帮助内容整理在同一个弹窗里完成决定 */}
+            {/* 互评报告概要：有报告时直接展示，帮助内容整理在同一个弹窗里完成决定 */}
             {decisionReportsQ.data && decisionReportsQ.data.length > 0 && (
               <div className="space-y-2 rounded-md border bg-muted/30 p-3 text-sm">
                 <div className="text-xs font-medium text-muted-foreground">
-                  互评意见摘要（{decisionReportsQ.data.length} 份）
+                  互评意见概要（{decisionReportsQ.data.length} 份）
                 </div>
                 {decisionReportsQ.data.map((r) => (
                   <div key={r.id} className="space-y-1.5">
@@ -576,7 +576,7 @@ function PendingSubmissionsPage() {
                         )}
                         {reportDimensionEntries(r.scores).some(([, v]) => v.evidence) && (
                           <details className="text-xs text-muted-foreground">
-                            <summary className="cursor-pointer">查看逐维证据</summary>
+                            <summary className="cursor-pointer">查看逐条证据</summary>
                             <div className="mt-1 space-y-1">
                               {reportDimensionEntries(r.scores).map(([k, v]) => (
                                 <p key={k}>
@@ -698,7 +698,7 @@ function PendingSubmissionsPage() {
             )}
           </div>
 
-          {/* D 级打回：评分不达标时不直接不通过，而是要求互评成员补审/作者修改。
+          {/* D 级打回：分数不达标时不直接不通过，而是要求互评成员补互评/作者修改。
               与"做决定"并列而不是藏在菜单里——它是与通过/不通过同级的处置。 */}
           <div className="space-y-2 rounded-lg border border-destructive/25 bg-destructive/5 p-3">
             <div className="flex items-center justify-between">
@@ -715,7 +715,7 @@ function PendingSubmissionsPage() {
             {reworkOpen && (
               <div className="space-y-2">
                 <p className="text-[11px] text-muted-foreground">
-                  打回会同时通知互评成员（补审或说明理由）与作者（逐条修改要求）。
+                  打回会同时通知互评成员（补互评或说明理由）与作者（逐条修改要求）。
                   至少填 3 条具体问题——只说"不合格"对作者没有帮助。
                 </p>
                 {decisionTarget?.quality_score != null && decisionTarget.quality_score < 40 && (
@@ -785,7 +785,7 @@ function PendingSubmissionsPage() {
       <ConfirmDialog
         open={rejectConfirm}
         title="确认不通过"
-        description="不通过后该发布将进入「已不通过」状态，作者不能继续修改或重投。确定要不通过吗？"
+        description="不通过后该发布将进入「已不通过」状态，作者不能继续修改或重新发布。确定要不通过吗？"
         confirmText="确认不通过"
         destructive
         onConfirm={() => {
@@ -800,7 +800,7 @@ function PendingSubmissionsPage() {
 
 // 详情面板：抽出为组件避免主组件过于臃肿
 function SubmissionDetailBody({ sub }: { sub: SubmissionResponse }) {
-  // 版本历史：内容整理需要知道作品被重投过几次、每次作者说明了什么
+  // 版本历史：内容整理需要知道作品被重新发布过几次、每次作者说明了什么
   const versionsQ = useSubmissionVersions(sub.id)
   const putAuthors = usePutAuthors()
   // 作者内容整理：从 sub.authors（字符串数组）初始化
@@ -844,15 +844,15 @@ function SubmissionDetailBody({ sub }: { sub: SubmissionResponse }) {
         )}
         {(sub.author_affiliations ?? []).length > 0 && (
           <span className="text-xs text-muted-foreground">
-            作者单位：{(sub.author_affiliations ?? []).join('；')}
+            署名单位：{(sub.author_affiliations ?? []).join('；')}
           </span>
         )}
       </div>
 
-      {/* 作者内容整理面板：增删/排序/第一/通讯 */}
+      {/* 作者内容整理面板：增删/排序/第一/联系 */}
       <div className="rounded-md border p-3">
         <div className="mb-2 flex items-center justify-between">
-          <span className="font-medium">作者（发布前可内容整理）</span>
+          <span className="font-medium">署名（发布前可内容整理）</span>
           <div className="flex items-center gap-2">
             {dirty && <Badge variant="outline" className="text-amber-700">未保存</Badge>}
             <Button size="sm" variant="outline" onClick={onSaveAuthors} disabled={putAuthors.isPending}>
@@ -877,7 +877,7 @@ function SubmissionDetailBody({ sub }: { sub: SubmissionResponse }) {
       )}
       {sub.keywords && sub.keywords.length > 0 && (
         <div>
-          <span className="text-muted-foreground">关键词：</span>
+          <span className="text-muted-foreground">话题：</span>
           {sub.keywords.join(', ')}
         </div>
       )}
@@ -891,7 +891,7 @@ function SubmissionDetailBody({ sub }: { sub: SubmissionResponse }) {
         </div>
       )}
       <div>
-        <span className="text-muted-foreground">摘要</span>
+        <span className="text-muted-foreground">开头</span>
         <p className="mt-1 whitespace-pre-wrap">{normalizeAbstract(sub.abstract)}</p>
       </div>
       <div>
@@ -1246,9 +1246,9 @@ function AssignmentsDialog({
         {isLoading ? (
           <Loading />
         ) : isError ? (
-          <ErrorState message="加载失败" onRetry={() => refetch()} />
+          <ErrorState message="互评分配加载失败，可重试。" onRetry={() => refetch()} />
         ) : !data || data.data.length === 0 ? (
-          <EmptyState title="暂无互评分配" />
+          <EmptyState title="暂无互评分配" description="回到作品卡片，先分配互评成员。" />
         ) : (
           <div className="space-y-3">
             {matrixQ.data && (
@@ -1412,7 +1412,7 @@ function AdjudicateDialog({
         <div className="space-y-3">
           <p className="text-xs text-muted-foreground">
             当前已有 {matrix.distinct_reviewers} 位互评成员提交意见，通过推荐 {matrix.accept_count}/2。
-            复核人不能是本稿已参与互评的成员，也不能是作者。
+            复核人不能是本篇已参与互评的成员，也不能是作者。
           </p>
           <div className="max-h-[35vh] space-y-1 overflow-y-auto">
             {isLoading ? (
@@ -1497,7 +1497,7 @@ function ReportsDialog({
         {isLoading ? (
           <Loading />
         ) : isError ? (
-          <ErrorState message="加载失败" onRetry={() => refetch()} />
+          <ErrorState message="互评意见加载失败，可重试。" onRetry={() => refetch()} />
         ) : !data || data.length === 0 ? (
           <EmptyState title="暂无已完成的互评意见" />
         ) : (

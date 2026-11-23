@@ -1,4 +1,4 @@
-/** 投稿向导里的「互评成员专长覆盖」：匿名聚合画像（只有人数与标签，
+/** 发布向导里的「互评成员专长覆盖」：匿名聚合画像（只有人数与标签，
  * 不含任何互评成员身份），帮作者判断自己方向的互评覆盖情况。 */
 import { useState } from 'react'
 import { ChevronDown, Users } from 'lucide-react'
@@ -49,7 +49,7 @@ export function ExpertiseCoverage({ currentDiscipline }: { currentDiscipline?: s
                   位互评成员覆盖。
                 </>
               ) : (
-                <>「{current}」方向暂无自选该方向的互评成员，内容整理会按关键词与历史互评匹配。</>
+                <>「{current}」话题暂无自选该方向的互评成员，内容整理会按话题与历史互评匹配。</>
               )}
             </p>
           )}

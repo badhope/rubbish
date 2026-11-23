@@ -18,9 +18,9 @@ import { Textarea } from '@/components/ui/textarea'
 /**
  * P1-8：互评成员利益冲突声明。
  *
- * 声明是“可解释”的：分派时只用作者姓名/通讯邮箱做匹配。机构、项目等
+ * 声明是“可解释”的：分派时只用作者姓名/联系邮箱做匹配。机构、项目等
  * 发布信息里没有的字段只在声明中留档，不假装能自动识别。未声明不会挡住
- * 分派，但编辑侧会看到“未声明”；有声明且命中则后端直接 409。
+ * 分派，但内容整理侧会看到“未声明”；有声明且命中则后端直接 409。
  */
 export function ReviewerConflictCard() {
   const { data, isLoading } = useMyCoiDeclaration()
@@ -82,7 +82,7 @@ export function ReviewerConflictCard() {
           <DialogHeader>
             <DialogTitle>{year} 年度利益冲突声明</DialogTitle>
             <DialogDescription>
-              每行一个冲突对象：作者姓名、通讯邮箱、机构或项目。分派时会用作者姓名和通讯邮箱匹配；
+              每行一个冲突对象：作者姓名、联系邮箱、机构或项目。分派时会用作者姓名和联系邮箱匹配；
               命中即拦截，机构信息仅留档。
             </DialogDescription>
           </DialogHeader>

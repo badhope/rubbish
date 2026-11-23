@@ -1,34 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Rubbish 图形标 —— 「印章之 R」
-
-  与 favicon.svg / 应用内 brand-mark.tsx 同几何（双线方框 + 衬线 R + 金色菱形）：
-    - 深学术蓝双线方框（#16324F 系渐变），严格居中；
-    - 中央衬线 R，右下一枚出版金（#C7A24B）菱形点缀 —— 印章落款意象；
-    - 透明底、任意底色可用；小尺寸（favicon / 头像 / 导航小图）使用本文件；
-    - 单色场景可把金色菱形替换为主色，或使用内联组件（brand-mark.tsx）跟随 currentColor。
-
-  配色规范：主色 #16324F（深学术蓝）、点缀 #C7A24B（出版金）。
--->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="Rubbish mark">
-  <defs>
-    <linearGradient id="sh-mark-blue" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#1B3A5C"/>
-      <stop offset="100%" stop-color="#122A44"/>
-    </linearGradient>
-    <linearGradient id="sh-mark-gold" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#D8B76A"/>
-      <stop offset="100%" stop-color="#B8933F"/>
-    </linearGradient>
-  </defs>
-
-  <!-- 外粗框 / 内细框 -->
-  <rect x="15" y="15" width="210" height="210" rx="26" fill="none" stroke="url(#sh-mark-blue)" stroke-width="13"/>
-  <rect x="39.4" y="39.4" width="161.3" height="161.3" rx="13" fill="none" stroke="#16324F" stroke-opacity="0.5" stroke-width="4.1"/>
-
-  <!-- 中央衬线 R -->
-  <text x="120" y="163" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-size="124" font-weight="600" fill="url(#sh-mark-blue)">R</text>
-
-  <!-- 金色菱形落款 -->
-  <path d="M 189.4 166.9 L 210 187.5 L 189.4 208.1 L 168.8 187.5 Z" fill="url(#sh-mark-gold)"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="1024" height="1024" role="img" aria-label="Rubbish">
+  <rect x="1" y="1" width="62" height="62" rx="10" fill="#F4EFE4"/>
+  <path d="M17 13h18.5c8.8 0 14.3 4.6 14.3 12 0 5.6-3.2 9.6-8.6 11l11.4 15H40.4L30.5 37.2h-4.2v13.8H17V13Zm9.3 7.7v9.1h8.5c4 0 6.4-1.7 6.4-4.6 0-2.8-2.4-4.5-6.4-4.5h-8.5Z" fill="#2F5D46"/>
+  <path d="M45.5 8.5c4.2 1.4 7.2 4.6 8.4 8.6" fill="none" stroke="#1F7A4D" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M54.5 17.8 55 24l-6.2-1.2" fill="none" stroke="#1F7A4D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

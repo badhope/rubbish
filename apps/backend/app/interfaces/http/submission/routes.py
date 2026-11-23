@@ -1,6 +1,6 @@
 """Submission API routes — 作者侧（创建 / 查询 / 编辑 / 版本 / 删除 / 重投）。
 
-编辑与审稿侧见 routes_editor.py；文件上传下载见 routes_files.py。
+编辑与互评侧见 routes_editor.py；文件上传下载见 routes_files.py。
 本文件末尾通过底部 import 把三个路由文件注册到同一个 router 上
 （FastAPI 拆分路由文件的惯例做法，避免循环导入）。
 """
@@ -66,14 +66,14 @@ router = APIRouter(prefix="/submissions", tags=["submissions"])
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# 注册编辑/审稿侧与文件侧路由（必须在 GET /{submission_id} 之前 import：
+# 注册编辑/互评侧与文件侧路由（必须在 GET /{submission_id} 之前 import：
 # FastAPI 按注册顺序匹配，静态路径（/pending、/me）必须先于路径参数注册）。
 # 此处 router 与常量已就绪，子模块 `from .routes import router` 无循环导入。
 # ---------------------------------------------------------------------------
 from importlib import import_module as _import_module  # noqa: E402
 
 # 子路由必须在 router 与常量就绪后导入：它们在本模块的 router 上继续
-# 追加编辑/审稿与文件端点。用 import_module 表达副作用注册，避免被
+# 追加编辑/互评与文件端点。用 import_module 表达副作用注册，避免被
 # 静态检查当成未使用导入删除。
 _import_module("app.interfaces.http.submission.routes_editor")
 _import_module("app.interfaces.http.submission.routes_files")
@@ -206,7 +206,7 @@ async def _create_submission_record(
             detail={
                 "code": "rules_ack_required",
                 "version": CURRENT_RULES_VERSION,
-                "message": "发布前请先阅读并确认《Rubbish 作品与发布规范》。",
+                "message": "发布前请先阅读并确认《Rubbish 写作与发布规范》。",
             },
         )
     blocked = rejection_detail(f"{body.title}\n{body.abstract}")
@@ -284,8 +284,8 @@ async def create_submission(
 ) -> SubmissionResponse:
     """Submit a record for editor review.
 
-    投稿零等级门槛：注册登录即可投（只要确认当版规范）。
-    唯一前置是确认当版《作品与发布规范》（rules_ack_version，见下）——这是
+    发布零等级门槛：注册登录即可投（只要确认当版规范）。
+    唯一前置是确认当版《写作与发布规范》（rules_ack_version，见下）——这是
     合规动作而非等级门槛；确认动作在个人中心 / gamification/onboarding/author，
     同时授予作者引导积分。
     """
@@ -317,7 +317,7 @@ async def create_submissions_batch(
             detail={
                 "code": "rules_ack_required",
                 "version": CURRENT_RULES_VERSION,
-                "message": "发布前请先阅读并确认《Rubbish 作品与发布规范》。",
+                "message": "发布前请先阅读并确认《Rubbish 写作与发布规范》。",
             },
         )
 
@@ -434,10 +434,10 @@ async def update_submission(
     任何内容 —— 修回等于空转。此端点让作者在以下状态可编辑：
 
     - ``pending``：还没进入评审，随便改；
-    - ``major_revision`` / ``minor_revision``：按审稿意见修改，
+    - ``major_revision`` / ``minor_revision``：按互评意见修改，
       改完再点重投（重投时快照为新版本）。
 
-    under_review 不可编辑：审稿人正在看的稿子不能被作者悄悄换掉。
+    under_review 不可编辑：互评成员正在看的稿子不能被作者悄悄换掉。
     终态（accepted/rejected/approved）不可编辑。
     """
     entry = await _get_or_404(db, submission_id)
@@ -460,7 +460,7 @@ async def update_submission(
             value = str(value)
         setattr(entry, field, value)
     # 标题/摘要变了，敏感词与站内相似度都必须重算；否则详情页会继续
-    # 展示旧分，编辑入口就等于绕过了投稿时的风控。
+    # 展示旧分，编辑入口就等于绕过了发布时的风控。
     if "title" in updates or "abstract" in updates:
         blocked = rejection_detail(f"{entry.title}\n{entry.abstract or ''}")
         if blocked is not None:
@@ -503,7 +503,7 @@ async def _body_access_or_error(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only the submitter or editorial staff can access the body",
         )
-    # 读取不限状态：审稿期作者仍要能看自己的稿子与修改建议。
+    # 读取不限状态：互评期作者仍要能看自己的稿子与修改建议。
     # 写入门禁：编辑部改稿不受状态限制；作者本人仅在可编辑状态开放。
     if require_editable and not is_staff and entry.status not in _ONLINE_EDITABLE_STATUSES:
         raise HTTPException(
@@ -519,7 +519,7 @@ async def get_submission_markdown(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, str]:
-    """读取在线正文（作者本人 / 编辑部，不限作品状态）。"""
+    """读取在线正文（作者本人 / 内容整理，不限作品状态）。"""
     entry = await _body_access_or_error(submission_id, current_user, db, require_editable=False)
     if not entry.markdown_path:
         return {"content": ""}
@@ -570,8 +570,8 @@ async def list_submission_versions(
 ) -> SubmissionVersionListResponse:
     """作品版本历史（v1 = 初次提交；之后每次重投一个版本）。
 
-    可见方：作者本人、admin/editor。审稿人故意不给 —— 双盲模式下
-    历史版本可能残留身份信息，且审稿人只需要看「当前版本」。
+    可见方：作者本人、admin/editor。互评成员故意不给 —— 双盲模式下
+    历史版本可能残留身份信息，且互评成员只需要看「当前版本」。
     """
     entry = await _get_or_404(db, submission_id)
     allowed = (
@@ -691,10 +691,10 @@ async def author_response(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> SubmissionResponse:
-    """作者逐条回复审稿人（Response to Reviewers）。
+    """作者逐条回复互评成员（Response to Reviewers）。
 
     与重投时的版本修改说明分开保存：编辑在裁决/查看作品时直接可见。
-    仅作者本人、且作品至少有一份已完成审稿报告时可写。
+    仅作者本人、且作品至少有一份已完成互评报告时可写。
     """
     entry = await _get_or_404(db, submission_id)
     if entry.submitted_by != current_user.id:
@@ -753,7 +753,7 @@ async def author_resubmit(
 
     将状态置为 under_review（编辑可再次分配/决断），并把当前（作者已
     通过 PATCH 修改过的）作品内容快照为新版本。可选 ``note`` 记录
-    「针对审稿意见做了哪些修改」，随版本一起存档并推送给编辑。
+    「针对互评意见做了哪些修改」，随版本一起存档并推送给编辑。
 
     仅作者本人可操作。body 可省略，兼容旧的无 body 调用。
     """
@@ -770,16 +770,16 @@ async def author_resubmit(
         )
     note = body.note if body else None
     entry.status = "under_review"
-    # 补材料后重投：回到初筛队列，而不是直接进入已送外审状态。
+    # 补材料后重投：回到基础检查队列，而不是直接进入已送互评状态。
     if (entry.triage_status or "") == "materials":
         entry.status = "resubmitted"
         entry.triage_status = "pending"
         entry.triaged_at = None
         entry.triaged_by = None
         entry.triage_started_at = utcnow()
-    # 作者修回后，上一轮的审稿意见不能再计入新一轮闸门；否则“大修后
-    # 重投”会拿旧录用意见直接放行。旧报告保留在 review_reports 里供
-    # 追溯，但本轮 assignment 置 cancelled，必须重新送审。
+    # 作者修回后，上一轮的互评意见不能再计入新一轮闸门；否则“退回修改后
+    # 重投”会拿旧通过意见直接放行。旧报告保留在 review_reports 里供
+    # 追溯，但本轮 assignment 置 cancelled，必须重新分派互评。
     from sqlalchemy import update as _update
 
     from app.domain.review.models import ReviewAssignment as _RA
@@ -822,8 +822,7 @@ async def author_resubmit(
     editors = (
         (
             await db.execute(
-                select(User)
-                .where(
+                select(User).where(
                     User.tenant_id == entry.tenant_id,
                     User.is_active.is_(True),
                     (User.id.in_(editor_ids)) | (User.is_admin.is_(True)),

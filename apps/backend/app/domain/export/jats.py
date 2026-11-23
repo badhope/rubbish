@@ -371,7 +371,7 @@ def _front(meta: JatsMeta) -> str:
 
 
 def markdown_to_jats(md: str, meta: JatsMeta | None = None) -> str:
-    """Markdown 稿件 → JATS 1.3 journalpublishing 全文 XML。"""
+    """Markdown 作品 → JATS 1.3 journalpublishing 全文 XML。"""
     meta = meta or JatsMeta()
     blocks = _parse_blocks(md or "")
     body = _sec_tree(blocks)
@@ -383,7 +383,7 @@ def markdown_to_jats(md: str, meta: JatsMeta | None = None) -> str:
         "<front>" + _front(meta) + "</front>\n"
         f"<body>{body}</body>\n"
         "<back><notes><sec><title>发表说明</title><p>"
-        "本文由 Rubbish 编辑部按开放获取条款发布；正文随线上版本更新。</p></sec></notes></back>\n"
+        "本文由 Rubbish 发布；正文随线上版本更新。</p></sec></notes></back>\n"
         f"<!-- schema: {_JATS_XSD} -->\n"
         "</article>\n"
     )

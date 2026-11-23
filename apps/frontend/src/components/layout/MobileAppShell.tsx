@@ -61,7 +61,7 @@ function MobileTabButton({
           <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive" />
         )}
       </span>
-      <span>{tab.label}</span>
+      <span className="max-w-full truncate">{tab.label}</span>
     </button>
   )
 }
@@ -90,13 +90,13 @@ export function MobileAppShell() {
   ].some((p) => location.pathname.startsWith(p))
   const showChrome = !isAuthPage
 
-  // 首页是期刊门面 Hero，自带报头/导航/页脚：不套 MobileAppShell 的 h-14 头部，
-  // 但必须渲染底部 4 Tab（任务要求首页也能切 Tab）。
+  // 首页自带报头/导航/页脚：不套 MobileAppShell 的 h-14 头部，
+  // 但必须渲染底部 Tab（首页也能切 Tab）。
   const isHome = location.pathname === '/'
 
   // 资源详情页自带底部固定操作栏（z-40），会盖住 Tab 栏
   const hasOwnBottomBar = /^\/catalog\/\d+/.test(location.pathname)
-  // 沉浸阅读：Tab 栏随滚动方向隐藏
+  // 阅读页：Tab 栏随滚动方向隐藏
   const immersive = /^\/catalog\/\d+/.test(location.pathname)
   const [barHidden, setBarHidden] = useState(false)
 
@@ -124,7 +124,7 @@ export function MobileAppShell() {
     }
   }, [immersive])
 
-  // 导入是投稿流程的一部分，不再做右下角悬浮“＋”。创建动作从页面内主按钮进入。
+  // 创建动作从页面内主按钮进入，不再做右下角悬浮“＋”。
 
   // 认证页：不套业务外壳，只保留返回首页的品牌入口
   if (isAuthPage) {
@@ -166,7 +166,7 @@ export function MobileAppShell() {
     void navigate({ to })
   }
 
-  // 底部 4 Tab 栏：首页与所有非认证页都渲染
+  // 底部 5 Tab 栏：首页与所有非认证页都渲染
   // z-50 确保压在首页自己的 sticky header(z-40) 与 back-to-top 按钮之上
   const bottomTab = showChrome && !hasOwnBottomBar && (
     <nav

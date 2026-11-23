@@ -77,7 +77,7 @@ async def list_notifications(
     category: str | None = Query(
         default=None,
         pattern=r"^(assigned|reminder|decision|claim|review|submission|feedback|community|system)$",
-        description="聚合分类：审稿/投稿/认领/反馈/系统",
+        description="聚合分类：互评/发布/认领/反馈/系统",
     ),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),

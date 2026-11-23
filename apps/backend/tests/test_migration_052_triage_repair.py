@@ -1,12 +1,12 @@
 """P1 #10 — 迁移 052 triage 回填修复（SQLite 口径）。
 
-043 的裸 UPDATE 被 submissions 的 FORCE RLS 静默过滤成 0 行，导致已录用稿
+043 的裸 UPDATE 被 submissions 的 FORCE RLS 静默过滤成 0 行，导致已通过稿
 triage_status 卡在 pending。052 按租户设 GUC 重跑回填。这里用 importlib 加载
 052 + 真实 SQLite MigrationContext 执行 upgrade()，验证：
 
   * accepted/under_review + pending → passed
   * rejected + pending → rejected
-  * 仍 pending 的初筛稿（status=pending）保持 pending
+  * 仍 pending 的基础检查稿（status=pending）保持 pending
   * 人工 triage 决定（rework / 已 passed）不被覆盖
   * 重跑幂等
 
@@ -55,7 +55,7 @@ def _seed(conn) -> None:
         (1, "accepted", "pending"),  # → passed
         (2, "rejected", "pending"),  # → rejected
         (3, "under_review", "pending"),  # → passed
-        (4, "pending", "pending"),  # 保持 pending（仍在初筛队列）
+        (4, "pending", "pending"),  # 保持 pending（仍在基础检查队列）
         (5, "accepted", "rework"),  # 人工 rework 不被覆盖
         (6, "accepted", "passed"),  # 已 passed，幂等
         (7, "major_revision", "pending"),  # → passed

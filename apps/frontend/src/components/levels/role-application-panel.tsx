@@ -29,7 +29,7 @@ function statusBadge(status: RoleApplicationItem['status']) {
     return <Badge className="bg-emerald-500/15 text-emerald-700">已通过</Badge>
   }
   if (status === 'rejected') return <Badge variant="destructive">未通过</Badge>
-  return <Badge variant="secondary">审核中</Badge>
+  return <Badge variant="secondary">处理中</Badge>
 }
 
 function formatDay(value: string) {
@@ -104,15 +104,15 @@ export function RoleApplicationPanel() {
   const reviewerReason = reviewer.already_role
     ? '你已经拥有这个身份。'
     : pendingReviewer
-      ? '上次申请还在审核中，不用重复提交。'
+      ? '上次申请还在处理中，不用重复提交。'
       : reviewer.eligible
         ? '资格够了，可以提交申请；站务组会看你的作品和说明。'
-        : `门槛还差一点：至少 1 篇作品通过，且最高质量分达到 60；你目前是通过 ${reviewer.accepted_papers} 篇、最高 ${reviewer.best_rqs ?? '未评分'}。`
+        : `门槛还差一点：至少 1 篇作品通过；你目前通过 ${reviewer.accepted_papers} 篇。`
 
   const seniorReason = senior.already_role
     ? '你已经拥有这个身份。'
     : pendingSenior
-      ? '上次申请还在审核中，不用重复提交。'
+      ? '上次申请还在处理中，不用重复提交。'
       : !senior.has_reviewer_role
         ? '要申请资深互评成员，得先成为互评成员。'
         : senior.eligible
@@ -152,7 +152,7 @@ export function RoleApplicationPanel() {
                 ) : item.pending ? (
                   <Badge variant="secondary">
                     <Clock3 className="mr-1 h-3 w-3" />
-                    审核中
+                    处理中
                   </Badge>
                 ) : null}
               </div>
@@ -160,7 +160,7 @@ export function RoleApplicationPanel() {
               {item.already ? (
                 <Button size="sm" variant="outline" asChild>
                   <Link to="/review" search={{ tab: 'board' }}>
-                    去互评广场
+                    去互评台
                     <ArrowUpRight className="h-3.5 w-3.5" />
                   </Link>
                 </Button>
@@ -175,7 +175,7 @@ export function RoleApplicationPanel() {
                   }}
                 >
                   <PenLine className="h-3.5 w-3.5" />
-                  {item.pending ? '等待审核' : item.apply ? '写申请' : '暂未达到门槛'}
+                  {item.pending ? '等待处理' : item.apply ? '写申请' : '暂未达到门槛'}
                 </Button>
               )}
             </CardContent>

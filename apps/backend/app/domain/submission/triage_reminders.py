@@ -1,8 +1,8 @@
-"""P1-9：初筛 48 小时自动提醒。
+"""P1-9：基础检查 48 小时自动提醒。
 
-初筛队列最怕“稿件排进来就没人再看”。这里按投稿的初筛起始时间
+基础检查队列最怕“作品排进来就没人再看”。这里按发布的基础检查起始时间
 （``triage_started_at``，补材料重投会重置）扫描超过 48 小时仍未处理的
-pending 稿件，给编辑部发一条汇总站内通知和可选邮件。只提醒一次，
+pending 作品，给编辑部发一条汇总站内通知和可选邮件。只提醒一次，
 避免每 6 小时重复骚扰；补材料重投后会重新计时并再次进入提醒窗口。
 """
 
@@ -34,6 +34,9 @@ def _aware(value: datetime | None) -> datetime | None:
 
 
 async def _editor_recipients(db: AsyncSession, tenant_id: Any) -> list[User]:
+    # 不在 SQL 层 DISTINCT：User 行含纯 json 列（历史库 notification_prefs），
+    # PostgreSQL 对 json 类型无等值运算符，SELECT DISTINCT 整行会直接报错；
+    # 多角色重复行由下方 by_id 字典在 Python 层去重。
     rows = (
         (
             await db.execute(
@@ -47,7 +50,6 @@ async def _editor_recipients(db: AsyncSession, tenant_id: Any) -> list[User]:
                     Role.tenant_id == tenant_id,
                     Role.name.in_(_EDITOR_ROLES),
                 )
-                .distinct()
             )
         )
         .scalars()
@@ -114,9 +116,9 @@ async def run_triage_reminders(db: AsyncSession, *, tenant_id: Any) -> dict[str,
                     tenant_id=tenant_id,
                     user_id=editor.id,
                     type_="submission.triage_overdue",
-                    title=f"初筛已等待 {hours} 小时：{submission.title}",
+                    title=f"基础检查已等待 {hours} 小时：{submission.title}",
                     body=(
-                        f"作品 #{submission.id} 进入初筛队列已超过 {TRIAGE_DUE_HOURS} 小时。"
+                        f"作品 #{submission.id} 进入基础检查队列已超过 {TRIAGE_DUE_HOURS} 小时。"
                         "请安排互评、退回修改、补材料或直接不通过。"
                     ),
                     related_type="submission",

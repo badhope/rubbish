@@ -14,8 +14,8 @@ XP_RULES: dict[str, int] = {
     "verify_email": 10,
     "complete_profile": 10,
     # 新手引导：确认作品规范 + 申请作者身份（一次性）
-    # 10(注册) + 30(社区规范) + 120(投稿规范) = 160 → L3（门槛 150）。
-    # 2.0 起 XP 单独封顶 L3：L4 需要 XP>=400 且录用 >= 1（作品录用才是升级的重磅）。
+    # 10(注册) + 30(社区规范) + 120(写作规范) = 160 → L3（门槛 150）。
+    # 2.0 起 XP 单独封顶 L3：L4 需要 XP>=400 且通过 >= 1（作品通过才是升级的重磅）。
     "onboarding.ack_rules": 30,
     "onboarding.author": 120,
     # 阅读（每篇一次）
@@ -35,11 +35,11 @@ XP_RULES: dict[str, int] = {
     "library.save": 1,
     "follow.author": 2,
     "subscribe.discipline": 2,
-    # 投稿
+    # 发布
     "submission.create": 10,
     "submission.accepted": 60,
     "submission.rejected": 5,
-    # 审稿
+    # 互评
     "review.accepted": 5,
     "review.completed": 25,
     # 编辑

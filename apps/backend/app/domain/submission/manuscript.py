@@ -3,7 +3,7 @@
 设计取舍（0.6.2）：
 
 - 在线阅读渲染 Markdown（富排版、图片、公式、移动端友好），PDF 原件
-  只作为下载通道；浏览器端 PDF 渲染（pdf.js）降级为无 md 稿件的兜底。
+  只作为下载通道；浏览器端 PDF 渲染（pdf.js）降级为无 md 作品的兜底。
 - 转换是**尽力而为**：任何失败返回 None（保留 PDF 即可），绝不让上传
   失败。日志记录原因，不向作者报错。
 - PDF 用 pymupdf4llm（版面感知的文本流 + 图片抽取，图片以 data URI
@@ -59,7 +59,7 @@ _PDF_MIN_AVG_PARAGRAPH_LEN = 10  # 段落平均长度下限（过碎=版面抽�
 
 @dataclass(frozen=True)
 class ManuscriptResult:
-    """稿件转换的结构化结果（P0）。
+    """作品转换的结构化结果（P0）。
 
     - ``markdown`` 非空 = 可在线阅读；
     - ``needs_docx`` 为真 = 不可在线阅读，``reason`` 给出具体原因，
@@ -308,7 +308,7 @@ def convert_manuscript(contents: bytes, filename: str) -> ManuscriptResult:
 
 
 def convert_to_markdown(contents: bytes, filename: str) -> str | None:
-    """尽力把上传稿件转成 Markdown；不支持或失败一律返回 None。
+    """尽力把上传作品转成 Markdown；不支持或失败一律返回 None。
 
     保留此签名以兼容历史调用方与既有测试；新代码请用
     :func:`convert_manuscript` 拿到 needs_docx 原因。
@@ -317,7 +317,7 @@ def convert_to_markdown(contents: bytes, filename: str) -> str | None:
 
 
 # 转换的硬超时（秒）。超过即放弃 Markdown、回退 PDF 视图。
-# 取值依据：正常稿件（<10MB）在 4 核上转换耗时 2–15 秒；60 秒足以覆盖
+# 取值依据：正常作品（<10MB）在 4 核上转换耗时 2–15 秒；60 秒足以覆盖
 # 大稿，又能把"恶意构造的慢输入"压到用户可感知的等待上限内。
 CONVERT_TIMEOUT_SECONDS = 60.0
 
@@ -337,7 +337,7 @@ async def convert_to_markdown_async(
 
     两层保护：
     1. ``anyio.to_thread.run_sync`` 把它挪到工作线程，事件循环继续服务；
-    2. ``asyncio.wait_for`` 硬超时，防止线程被单份稿件长期占用（线程池
+    2. ``asyncio.wait_for`` 硬超时，防止线程被单份作品长期占用（线程池
        满了一样会拖垮后续请求）。
 
     超时/异常一律返回 None：调用方已经把 None 当作"回退 PDF 视图"。
@@ -430,7 +430,7 @@ def _convert_manuscript_inner(contents: bytes, filename: str) -> ManuscriptResul
     if actual in (FMT_MARKDOWN, FMT_TEXT):
         text = contents.decode("utf-8", errors="replace").strip()
         if not text:
-            return _needs_docx(actual, mismatch, "文件为空，请上传含正文的稿件")
+            return _needs_docx(actual, mismatch, "文件为空，请上传含正文的作品")
         from app.domain.submission.markdown_clean import reflow_paragraphs
 
         md = reflow_paragraphs(text)
@@ -500,11 +500,11 @@ def markdown_storage_key(file_path: str) -> str:
 # 解析失败一律原样返回 Markdown，不得丢图、不得报错。
 _DATA_URI_IMG_RE = re.compile(r"!\[([^\]]*)\]\(data:image/([a-zA-Z0-9.+-]+);base64,([^)]*)\)")
 
-# 期刊刊头 logo 的 sha256。历史稿里它被当作“图表”插进正文（297/299/302），
+# 内容库刊头 logo 的 sha256。历史稿里它被当作“图表”插进正文（297/299/302），
 # 阅读端按字节指纹识别并剔除；不碰原稿、不影响图片序号。
 JOURNAL_LOGO_SHA256 = "4e9299a816964e4844d5876fa391a79f64928f896ddf801ca9f62f641a204e8c"
 
-# 期刊刊头 logo 的 sha256。历史稿里它被当作“图表”插进正文（297/299/302），
+# 内容库刊头 logo 的 sha256。历史稿里它被当作“图表”插进正文（297/299/302），
 # 阅读端按字节指纹识别并剔除；不碰原稿、不影响图片序号。
 JOURNAL_LOGO_SHA256 = "4e9299a816964e4844d5876fa391a79f64928f896ddf801ca9f62f641a204e8c"
 
@@ -559,7 +559,7 @@ def rewrite_embedded_images(md: str, resource_id: int) -> str:
 
 
 def strip_known_journal_logo(md: str, resource_id: int) -> str:
-    """剔除正文里被误当配图的期刊刊头 logo。
+    """剔除正文里被误当配图的内容库刊头 logo。
 
     只在阅读端生效：先按原始图片序号改写 URL（保证其余图片 n 不漂移），
     再删掉 logo 对应的 Markdown 图片。297 的 ``图1`` 假题注与被删图共用

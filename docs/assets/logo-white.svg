@@ -1,42 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Rubbish 主标志 —— 「学术徽章」反白版
-  与 logo.svg 同几何、同构图；用于深色背景（官网 Hero / 深色导航 / 深色印刷）。
-  外环与文字反白，中央印章 R 用白色渐变，金色菱形落款与引用星保留品牌点缀。
--->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="Rubbish">
-  <defs>
-    <linearGradient id="shw-gold" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#E4C988"/>
-      <stop offset="100%" stop-color="#C7A24B"/>
-    </linearGradient>
-    <linearGradient id="shw-white" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#FFFFFF"/>
-      <stop offset="100%" stop-color="#C7D6E8"/>
-    </linearGradient>
-    <path id="shw-arc-top" d="M 46 120 A 74 74 0 0 1 194 120"/>
-    <path id="shw-arc-bottom" d="M 194 120 A 74 74 0 0 1 46 120"/>
-  </defs>
-
-  <circle cx="120" cy="120" r="108" fill="none" stroke="#F2F6FA" stroke-width="8"/>
-  <circle cx="120" cy="120" r="91" fill="none" stroke="url(#shw-gold)" stroke-width="2.8"/>
-
-  <text font-family="Georgia,'Times New Roman',serif" font-size="21"
-        font-weight="700" letter-spacing="4.4" fill="#FFFFFF">
-    <textPath href="#shw-arc-top" startOffset="50%" text-anchor="middle">RUBBISH</textPath>
-  </text>
-  <text font-family="Georgia,'Times New Roman',serif" font-size="11.2"
-        letter-spacing="2.3" fill="#A9B7C9">
-    <textPath href="#shw-arc-bottom" startOffset="50%" text-anchor="middle">OPEN SCHOLARLY PUBLISHING</textPath>
-  </text>
-
-  <!-- 中央印章 R -->
-  <text x="120" y="152" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-size="76" font-weight="600" fill="url(#shw-white)">R</text>
-
-  <!-- 金色菱形落款 -->
-  <path d="M 146 154 L 158 166 L 146 178 L 134 166 Z" fill="url(#shw-gold)"/>
-
-  <!-- 底部金色引用星（DOI 意象） -->
-  <path d="M 120 215 L 122.6 220.6 L 128.2 223.2 L 122.6 225.8 L 120 231.4 L 117.4 225.8 L 111.8 223.2 L 117.4 220.6 Z"
-        fill="#E4C988"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="1024" height="1024" role="img" aria-label="Rubbish">
+  <path d="M17 13h18.5c8.8 0 14.3 4.6 14.3 12 0 5.6-3.2 9.6-8.6 11l11.4 15H40.4L30.5 37.2h-4.2v13.8H17V13Zm9.3 7.7v9.1h8.5c4 0 6.4-1.7 6.4-4.6 0-2.8-2.4-4.5-6.4-4.5h-8.5Z" fill="#F4EFE4"/>
+  <path d="M45.5 8.5c4.2 1.4 7.2 4.6 8.4 8.6" fill="none" stroke="#F4EFE4" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M54.5 17.8 55 24l-6.2-1.2" fill="none" stroke="#F4EFE4" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

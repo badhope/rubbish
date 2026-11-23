@@ -1,41 +1,25 @@
-import { type FormEvent, useState } from 'react'
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import {
   ArrowRight,
-  BookOpen,
   ChevronRight,
-  Compass,
-  FileText,
-  Layers3,
   LogIn,
-  MessagesSquare,
   PenLine,
-  Search,
-  ShieldCheck,
-  Sparkles,
 } from 'lucide-react'
-import '@fontsource-variable/playfair-display'
 import { api } from '@/lib/api'
 import { useAuth } from '@/hooks/use-auth'
-import { useCatalogStats, useEditorialPicks } from '@/hooks/api/use-modules'
+import { useEditorialPicks } from '@/hooks/api/use-modules'
 import { formatAuthors } from '@/lib/utils'
 import { AnnouncementChip, AnnouncementDialog, useAnnouncementPortal } from '@/components/common/announcement-dialog'
 import { AppearanceMenu } from '@/components/appearance-menu'
 import { ArticleCover } from '@/components/common/article-cover'
 import { BrandMark } from '@/components/common/brand-mark'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export const Route = createFileRoute('/')({
   component: HomePage,
 })
-
-const DISPLAY_FONT =
-  "'Playfair Display Variable', Georgia, 'Songti SC', 'DejaVu Serif', serif"
 
 interface HomeTopic {
   id: number
@@ -47,70 +31,13 @@ interface HomeTopic {
   author: { display_name?: string | null; username: string } | null
 }
 
-const FIRST_STEPS = [
-  {
-    no: '01',
-    icon: BookOpen,
-    title: '读一篇',
-    body: '不登录也能读。挑一篇长文，看看别人怎么把一件事写完。',
-    to: '/catalog',
-    label: '打开内容库',
-  },
-  {
-    no: '02',
-    icon: MessagesSquare,
-    title: '说一句',
-    body: '有想接的话，就在讨论区留一句。不用等想清楚，半句话也算开始。',
-    to: '/forum',
-    label: '去讨论区',
-  },
-  {
-    no: '03',
-    icon: PenLine,
-    title: '写一点',
-    body: '长文放进内容库，短帖留在讨论区。注册就能发，不收钱。',
-    to: '/submissions/new',
-    label: '开始写',
-  },
-  {
-    no: '04',
-    icon: Compass,
-    title: '找地图',
-    body: '迷路了就去「怎么用」，那里有一张全站地图。',
-    to: '/guide',
-    label: '看三分钟，先走一遍',
-  },
-] as const
-
-const CONTENT_KINDS = [
-  {
-    label: '研究长文',
-    body: '把真实问题拆开，材料、过程、结论都摆出来。',
-    to: '/catalog',
-    search: { kind: 'serious' as const },
-    icon: FileText,
-  },
-  {
-    label: '荒诞写作',
-    body: '设定认真，推理认真，结论可以离谱。',
-    to: '/catalog',
-    search: { kind: 'absurd' as const },
-    icon: Sparkles,
-  },
-  {
-    label: '自由创作',
-    body: '小说、随笔、评论、诗。不用套研究骨架，想怎么写就怎么写。',
-    to: '/catalog',
-    search: { track: 'essay' as const },
-    icon: PenLine,
-  },
-  {
-    label: '按合集读',
-    body: '一组一组地读，像顺着一条线往前走。',
-    to: '/issues',
-    search: {},
-    icon: Layers3,
-  },
+const PRIMARY_NAV = [
+  ['/', '首页'],
+  ['/catalog', '内容库'],
+  ['/issues', '合集'],
+  ['/forum', '讨论区'],
+  ['/guide', '怎么用'],
+  ['/me', '我的'],
 ] as const
 
 function displayTitle(resource: { short_title?: string | null; title: string }): string {
@@ -124,18 +51,10 @@ function displayDate(iso: string | null | undefined): string {
   return new Intl.DateTimeFormat('zh-CN', { month: 'short', day: 'numeric' }).format(d)
 }
 
-function Count({ value, ready }: { value: number | undefined; ready: boolean }) {
-  return <span className="tabular-nums">{ready ? value ?? 0 : '…'}</span>
-}
-
 function HomePage() {
   const { isAuthenticated } = useAuth()
-  const navigate = useNavigate()
   const notice = useAnnouncementPortal()
-  const [q, setQ] = useState('')
-  const editorialQuery = useEditorialPicks(10)
-  const stats = useCatalogStats('paper')
-  const funStats = useCatalogStats('essay')
+  const editorialQuery = useEditorialPicks(4)
   const forumQ = useQuery({
     queryKey: ['home', 'forum-latest'],
     queryFn: async () =>
@@ -150,13 +69,6 @@ function HomePage() {
   const featured = picks[0]
   const sidePicks = picks.slice(1, 4)
   const topics: HomeTopic[] = forumQ.data?.data ?? []
-  const total = (stats.data?.total ?? 0) + (funStats.data?.total ?? 0)
-
-  const submitSearch = (e: FormEvent) => {
-    e.preventDefault()
-    const value = q.trim()
-    void navigate({ to: '/catalog', search: value ? { q: value } : {} })
-  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -169,26 +81,19 @@ function HomePage() {
       )}
 
       <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-[1280px] items-center justify-between gap-4 px-5 py-3 sm:px-8">
-          <Link to="/" className="flex items-center gap-2.5">
-            <BrandMark decorative className="h-7 w-7" />
+        <div className="mx-auto flex w-full max-w-[1280px] items-center justify-between gap-3 px-5 py-3 sm:px-8">
+          <Link to="/" className="flex min-w-0 items-center gap-2">
+            <BrandMark decorative className="h-6 w-6" />
             <span className="flex flex-col leading-none">
               <span className="font-serif text-base font-semibold tracking-tight">Rubbish</span>
-              <span className="mt-1 hidden text-[9px] tracking-[0.18em] text-muted-foreground sm:block">
+              <span className="mt-0.5 hidden text-[9px] tracking-[0.18em] text-muted-foreground sm:block">
                 公开写作与讨论
               </span>
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-4 text-sm md:flex" aria-label="主导航">
-            {[
-              ['/', '首页'],
-              ['/catalog', '内容'],
-              ['/issues', '合集'],
-              ['/forum', '讨论'],
-              ['/guide', '怎么用'],
-              ['/me', '我的'],
-            ].map(([to, label]) => (
+          <nav className="hidden items-center gap-3 text-sm md:flex" aria-label="主导航">
+            {PRIMARY_NAV.map(([to, label]) => (
               <Link key={to} to={to} className="text-muted-foreground transition-colors hover:text-foreground">
                 {label}
               </Link>
@@ -196,18 +101,6 @@ function HomePage() {
           </nav>
 
           <div className="flex items-center gap-1.5">
-            <form onSubmit={submitSearch} className="hidden lg:block">
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder="搜内容…"
-                  aria-label="搜索内容"
-                  className="h-9 w-44 rounded-full border bg-transparent pl-8 text-sm"
-                />
-              </div>
-            </form>
             <span className="hidden sm:inline-flex">
               <AnnouncementChip
                 announcement={notice.announcement}
@@ -219,7 +112,7 @@ function HomePage() {
             <Button asChild size="sm" className="hidden sm:inline-flex">
               <Link to="/submissions/new">
                 <PenLine className="h-3.5 w-3.5" />
-                写点东西
+                写一篇
               </Link>
             </Button>
             {isAuthenticated ? (
@@ -240,80 +133,38 @@ function HomePage() {
 
       <main>
         <section className="border-b border-border/70">
-          <div className="mx-auto grid w-full max-w-[1280px] gap-10 px-5 py-12 sm:px-8 sm:py-16 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:items-center">
-            <div>
-              <p className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-primary">
-                <span aria-hidden className="h-1.5 w-1.5 rotate-45 bg-primary" />
-                公开写作与讨论社区
-              </p>
-              <h1 className="mt-5 text-4xl leading-[1.15] tracking-tight sm:text-5xl" style={{ fontFamily: DISPLAY_FONT }}>
-                把一个问题，
-                <br />
-                写到它亮起来。
-              </h1>
-              <p className="mt-5 max-w-xl text-[15px] leading-7 text-muted-foreground">
-                有人把问题拆开，有人把失败留下，也有人一本正经地写不可能的事。
-                读别人的过程，写自己的卡点；不收费，注册就能发。
-              </p>
-              <div className="mt-7 flex flex-wrap items-center gap-3">
-                <Button asChild size="lg" className="h-12 px-5">
-                  <Link to="/catalog">
-                    先读一篇
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button asChild size="lg" variant="outline" className="h-12 px-5">
-                  <Link to="/submissions/new">
-                    <PenLine className="h-4 w-4" />
-                    我也写一篇
-                  </Link>
-                </Button>
-                <Button asChild size="lg" variant="ghost" className="h-12 px-5 text-muted-foreground">
-                  <Link to="/guide" search={{ tab: 'start' }}>
-                    <Compass className="h-4 w-4" />
-                    怎么用
-                  </Link>
-                </Button>
-              </div>
-              <p className="mt-7 text-xs text-muted-foreground">
-                已有 <Count value={total} ready={Boolean(stats.data || funStats.data)} /> 篇公开内容 · 谁都能读
-              </p>
+          <div className="mx-auto max-w-2xl px-5 py-12 text-center sm:px-8 sm:py-16">
+            <p className="text-[10px] uppercase tracking-[0.3em] text-primary">
+              公开写作与讨论社区
+            </p>
+            <h1 className="mt-5 font-serif text-3xl leading-[1.2] tracking-tight sm:text-4xl">
+              长文在内容库，半句话在讨论区。
+            </h1>
+            <p className="mx-auto mt-4 max-w-xl text-[15px] leading-7 text-muted-foreground">
+              读别人的路，也写自己的停顿。不必登录，谁都能读；注册后就能写一篇、说一句。
+            </p>
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+              <Button asChild size="lg" className="h-11 px-5">
+                <Link to="/catalog">
+                  先读一篇
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="h-11 px-5">
+                <Link to="/submissions/new">
+                  <PenLine className="h-4 w-4" />
+                  我也写一篇
+                </Link>
+              </Button>
             </div>
-
-            <Card className="border-primary/20 bg-primary/[0.025]">
-              <CardContent className="p-5 sm:p-6">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-[0.28em] text-primary">第一次来</p>
-                    <h2 className="mt-1 font-serif text-2xl tracking-tight">先随便走走</h2>
-                  </div>
-                  <Badge variant="outline" className="border-primary/30 text-primary">三分钟够用</Badge>
-                </div>
-                <div className="mt-4 divide-y">
-                  {FIRST_STEPS.map(({ no, icon: Icon, title, body, to }) => (
-                    <Link key={no} to={to} className="group flex gap-3 py-3 first:pt-0 last:pb-0">
-                      <span className="font-mono text-[11px] text-muted-foreground">{no}</span>
-                      <span className="min-w-0 flex-1">
-                        <span className="flex items-center gap-2 text-sm font-medium group-hover:text-primary">
-                          <Icon className="h-3.5 w-3.5 text-primary/80" />
-                          {title}
-                          <ArrowRight className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
-                        </span>
-                        <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">{body}</span>
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </section>
 
-        <section className="mx-auto w-full max-w-[1280px] px-5 py-12 sm:px-8 sm:py-16">
+        <section className="mx-auto w-full max-w-[1280px] px-5 py-10 sm:px-8 sm:py-14">
           <div className="mb-6 flex flex-wrap items-end justify-between gap-3 border-b pb-3">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.28em] text-primary">停一会儿</p>
-              <h2 className="mt-1 font-serif text-2xl tracking-tight sm:text-3xl">先读这几篇</h2>
+              <p className="text-[10px] uppercase tracking-[0.28em] text-primary">精选</p>
+              <h2 className="mt-1 font-serif text-2xl tracking-tight">先读这些</h2>
             </div>
             <Link to="/catalog" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary">
               去内容库 <ChevronRight className="h-4 w-4" />
@@ -322,7 +173,7 @@ function HomePage() {
 
           {editorialQuery.isLoading ? (
             <div className="grid gap-5 md:grid-cols-3">
-              {[0, 1, 2].map((i) => <Skeleton key={i} className="h-72 w-full" />)}
+              {[0, 1, 2].map((i) => <Skeleton key={i} className="h-64 w-full" />)}
             </div>
           ) : featured ? (
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)]">
@@ -336,17 +187,14 @@ function HomePage() {
                   aspect="aspect-[4/3]"
                   priority
                   showDiscipline={false}
-                  className="transition-transform duration-500 group-hover:scale-[1.02]"
                 />
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                    <span className="text-primary">推荐 #{featured.featured_rank ?? 1}</span>
-                    <span aria-hidden>·</span>
                     <span>{featured.discipline || '跨领域'}</span>
                     <span aria-hidden>·</span>
                     <span>{displayDate(featured.created_at)}</span>
                   </div>
-                  <h3 className="mt-3 font-serif text-2xl leading-snug tracking-tight group-hover:text-primary sm:text-3xl">
+                  <h3 className="mt-3 font-serif text-2xl leading-snug tracking-tight group-hover:text-primary">
                     {displayTitle(featured)}
                   </h3>
                   {featured.editor_note ? (
@@ -397,91 +245,44 @@ function HomePage() {
           )}
         </section>
 
-        <section className="border-y border-border/70 bg-muted/20">
-          <div className="mx-auto grid w-full max-w-[1280px] gap-8 px-5 py-12 sm:px-8 sm:py-16 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-            <div>
-              <div className="mb-4 flex items-end justify-between gap-3">
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.28em] text-primary">正在发生</p>
-                  <h2 className="mt-1 font-serif text-2xl tracking-tight">讨论区里，话还没说完</h2>
-                </div>
-                <Link to="/forum" className="text-sm text-muted-foreground hover:text-primary">去讨论区 →</Link>
+        <section className="border-t border-border/70 bg-muted/20">
+          <div className="mx-auto w-full max-w-[1280px] px-5 py-10 sm:px-8 sm:py-14">
+            <div className="mb-4 flex items-end justify-between gap-3">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.28em] text-primary">讨论区</p>
+                <h2 className="mt-1 font-serif text-2xl tracking-tight">正在发生的讨论</h2>
               </div>
-              {forumQ.isLoading ? (
-                <div className="space-y-2">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-14 w-full" />)}</div>
-              ) : topics.length > 0 ? (
-                <div className="divide-y border-y bg-background/60">
-                  {topics.map((topic) => (
-                    <Link
-                      key={topic.id}
-                      to="/forum/$topicId"
-                      params={{ topicId: String(topic.id) }}
-                      className="group flex items-start justify-between gap-4 px-3 py-3.5 hover:bg-background"
-                    >
-                      <span className="min-w-0">
-                        <span className="block text-sm font-medium leading-5 group-hover:text-primary">{topic.title}</span>
-                        <span className="mt-1 block text-[11px] text-muted-foreground">
-                          {topic.board_name || '讨论'} · {topic.author?.display_name || topic.author?.username || '匿名'} · {displayDate(topic.last_reply_at || topic.created_at)}
-                        </span>
-                      </span>
-                      <span className="shrink-0 font-mono text-[11px] text-muted-foreground">{topic.reply_count} 回复</span>
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <p className="border-y py-8 text-sm text-muted-foreground">
-                  还没人开帖。你可以发第一个问题。
-                  <Link to="/forum" search={{ compose: 1 }} className="ml-2 text-primary hover:underline">去说两句</Link>
-                </p>
-              )}
+              <Link to="/forum" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary">
+                去讨论区 <ChevronRight className="h-4 w-4" />
+              </Link>
             </div>
-
-            <div>
-              <div className="mb-4">
-                <p className="text-[10px] uppercase tracking-[0.28em] text-primary">随便翻翻</p>
-                <h2 className="mt-1 font-serif text-2xl tracking-tight">找一个入口</h2>
-              </div>
+            {forumQ.isLoading ? (
+              <div className="space-y-2">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-14 w-full" />)}</div>
+            ) : topics.length > 0 ? (
               <div className="divide-y border-y bg-background/60">
-                {CONTENT_KINDS.map(({ label, body, to, search, icon: Icon }) => (
+                {topics.map((topic) => (
                   <Link
-                    key={label}
-                    to={to}
-                    search={search}
-                    className="group flex items-center gap-3 px-3 py-4 hover:bg-background"
+                    key={topic.id}
+                    to="/forum/$topicId"
+                    params={{ topicId: String(topic.id) }}
+                    className="group flex items-start justify-between gap-4 px-3 py-3.5 hover:bg-background"
                   >
-                    <Icon className="h-4 w-4 shrink-0 text-primary" />
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-medium group-hover:text-primary">{label}</span>
-                      <span className="mt-0.5 block text-xs text-muted-foreground">{body}</span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium leading-5 group-hover:text-primary">{topic.title}</span>
+                      <span className="mt-1 block text-[11px] text-muted-foreground">
+                        {topic.board_name || '讨论'} · {topic.author?.display_name || topic.author?.username || '匿名'} · {displayDate(topic.last_reply_at || topic.created_at)}
+                      </span>
                     </span>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                    <span className="shrink-0 font-mono text-[11px] text-muted-foreground">{topic.reply_count} 回复</span>
                   </Link>
                 ))}
               </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="mx-auto w-full max-w-[1280px] px-5 py-12 sm:px-8 sm:py-16">
-          <div className="mb-6">
-            <p className="text-[10px] uppercase tracking-[0.28em] text-primary">不知道从哪开始</p>
-            <h2 className="mt-1 font-serif text-2xl tracking-tight">不急着写，先熟悉这里</h2>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {[
-              ['三分钟，先走一遍', '全站地图和四步，照着走一遍。', '/guide', 'start'],
-              ['写作品', '定题、结构、材料、发布前检查。', '/guide', 'authors'],
-              ['规则与边界', '版权、隐私、虚构标注与处理流程。', '/guide', 'policies'],
-            ].map(([title, body, to, tab]) => (
-              <Link key={title} to={to} search={{ tab }} className="group border-t pt-4">
-                <p className="flex items-center gap-2 text-sm font-medium group-hover:text-primary">
-                  <ShieldCheck className="h-4 w-4 text-primary" />
-                  {title}
-                  <ArrowRight className="h-3.5 w-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
-                </p>
-                <p className="mt-1 text-xs leading-5 text-muted-foreground">{body}</p>
-              </Link>
-            ))}
+            ) : (
+              <p className="border-y py-8 text-sm text-muted-foreground">
+                讨论区还空着。你可以开第一个话题。
+                <Link to="/forum" search={{ compose: 1 }} className="ml-2 text-primary hover:underline">去说一句</Link>
+              </p>
+            )}
           </div>
         </section>
       </main>
@@ -494,7 +295,7 @@ function HomePage() {
               <span className="font-serif text-xl font-semibold">Rubbish</span>
             </div>
             <p className="mt-2 max-w-md text-xs leading-6 text-muted-foreground">
-              Rubbish 是一个公开写作与讨论社区。这里不做学术评价，也不出具发表、职称、学分或学历证明；站内编号只用来定位。
+              Rubbish 是一张公开的桌面：可读，可写，可聊。它不做学术评价，也不出具职称、学分、学历或公开证明；站内编号只用于定位。
             </p>
           </div>
           <div>
@@ -503,15 +304,19 @@ function HomePage() {
               <li><Link to="/catalog" className="hover:text-primary">内容库</Link></li>
               <li><Link to="/issues" className="hover:text-primary">合集</Link></li>
               <li><Link to="/forum" className="hover:text-primary">讨论区</Link></li>
+              <li><Link to="/search" className="hover:text-primary">站内搜索</Link></li>
+              <li><Link to="/tags" className="hover:text-primary">标签与归档</Link></li>
               <li><Link to="/guide" search={{ tab: 'start' }} className="hover:text-primary">怎么用</Link></li>
             </ul>
           </div>
           <div>
             <p className="mb-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">规则与联系</p>
             <ul className="space-y-1.5">
-              <li><Link to="/guide" search={{ tab: 'policies' }} className="hover:text-primary">规则与边界</Link></li>
+              <li><Link to="/guide" search={{ tab: 'policies' }} className="hover:text-primary">边界与处理</Link></li>
               <li><Link to="/privacy" className="hover:text-primary">隐私政策</Link></li>
-              <li><Link to="/about" className="hover:text-primary">关于站点</Link></li>
+              <li><Link to="/status" className="hover:text-primary">站点状态</Link></li>
+              <li><Link to="/accessibility" className="hover:text-primary">可访问性说明</Link></li>
+              <li><Link to="/about" className="hover:text-primary">关于此处</Link></li>
               <li>
                 <a href="mailto:info@rubbishasci.cn" className="break-all hover:text-primary">
                   info@rubbishasci.cn
@@ -523,7 +328,7 @@ function HomePage() {
         <div className="border-t border-border/70">
           <div className="mx-auto flex w-full max-w-[1280px] flex-wrap items-center justify-between gap-2 px-5 py-3 text-xs text-muted-foreground sm:px-8">
             <span>© {new Date().getFullYear()} Rubbish · 公开写作与讨论</span>
-            <span>认真写，允许荒诞，公开聊。</span>
+            <span>认真写。允许荒诞。把话留在公开处。</span>
           </div>
         </div>
       </footer>

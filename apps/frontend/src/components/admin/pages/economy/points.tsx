@@ -40,7 +40,7 @@ export default function AdminPointsPage() {
   const [purchaseStatus, setPurchaseStatus] = useState<ShopPurchaseStatus>('paid')
   const purchases = useAdminShopPurchases(purchaseStatus)
   const decidePurchase = useDecideShopPurchase()
-  // 旧审稿、投稿、编辑裁决和零额度回复不再占界面；只保留社区当前四类动作。
+  // 旧互评、发布与处理决定和零额度回复不再占界面；只保留社区当前四类动作。
   const currentReasons = new Set(['checkin.daily', 'checkin.weekly_bonus', 'forum.topic', 'claim.approve'])
   const rules = config.data?.rules.filter((rule) => currentReasons.has(rule.reason)) ?? []
 
@@ -80,8 +80,8 @@ export default function AdminPointsPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="积分与货品"
-        description="积分是社区贡献值：无现金价值、不可充值、不可转让。这里管理发放口径、兑换货品和人工履约。"
+        title="经验与货品"
+        description="经验是社区贡献值：无现金价值、不可充值、不可转让。这里管理发放口径、兑换货品和人工履约。"
       />
 
       <ShopCatalogCard />
@@ -98,11 +98,11 @@ export default function AdminPointsPage() {
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label>日常收入每日上限（积分）</Label>
+                <Label>日常收入每日上限（经验）</Label>
                 <Input type="number" min={1} value={policy.daily_earn_cap} onChange={(e) => setPolicy({ ...policy, daily_earn_cap: Number(e.target.value) })} />
               </div>
               <div className="space-y-1.5">
-                <Label>全站每月发放上限（积分）</Label>
+                <Label>全站每月发放上限（经验）</Label>
                 <Input type="number" min={1} value={policy.monthly_issue_cap} onChange={(e) => setPolicy({ ...policy, monthly_issue_cap: Number(e.target.value) })} />
               </div>
             </div>
@@ -111,7 +111,7 @@ export default function AdminPointsPage() {
             </p>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-xs text-muted-foreground">
-                本月已发 {config.data.monthly_issued} 积分。
+                本月已发 {config.data.monthly_issued} 经验。
                 超过月度上限后所有发放自动暂停。
               </p>
               <Button size="sm" onClick={() => void savePolicy()} disabled={updatePolicy.isPending}>
@@ -148,10 +148,10 @@ export default function AdminPointsPage() {
           </div>
           <p className="text-xs leading-relaxed text-muted-foreground">
             {purchaseStatus === 'paid'
-              ? '只处理人工权益：确认已远程处理后标记完成；无法履约则驳回并自动退回积分。自动生效的主题色不会出现在这里。'
+              ? '只处理人工权益：确认已远程处理后标记完成；无法履约则驳回并自动退回经验。自动生效的主题色不会出现在这里。'
               : purchaseStatus === 'fulfilled'
                 ? '已完成的兑换记录：用于回看发货时间和处理备注；不会重复出现待履约操作。'
-                : '已驳回的兑换记录：积分已退回，保留原因备查。'}
+                : '已驳回的兑换记录：经验已退回，保留原因备查。'}
           </p>
           {purchases.isLoading ? <p className="text-sm text-muted-foreground">加载中…</p> : null}
           {!purchases.isLoading && (purchases.data?.length ?? 0) === 0 ? (
@@ -167,7 +167,7 @@ export default function AdminPointsPage() {
                     <p className="text-sm font-medium">
                       {purchase.item_name}
                       <span className="ml-2 font-mono text-xs font-normal text-muted-foreground">
-                        -{purchase.price_coin} 积分
+                        -{purchase.price_coin} 经验
                       </span>
                       <Badge variant="outline" className="ml-2 align-middle">
                         {PURCHASE_STATUS_LABEL[purchase.status]}
@@ -188,10 +188,10 @@ export default function AdminPointsPage() {
                         onClick={() => {
                           if (!window.confirm(`确认已为「${purchase.item_name}」完成履约？`)) return
                           decidePurchase.mutate(
-                            { id: purchase.id, status: 'fulfilled', note: '管理员已标记处理' },
+                            { id: purchase.id, status: 'fulfilled', note: '内容整理已标记处理' },
                             {
                               onSuccess: () => toast.success('已标记完成'),
-                              onError: (err) => toast.error(extractError(err, '操作失败')),
+                              onError: (err) => toast.error(extractError(err, '没能完成履约，可再试一次')),
                             },
                           )
                         }}
@@ -205,15 +205,15 @@ export default function AdminPointsPage() {
                         onClick={() => {
                           if (
                             !window.confirm(
-                              `驳回「${purchase.item_name}」并退回 ${purchase.price_coin} 积分？`,
+                              `驳回「${purchase.item_name}」并退回 ${purchase.price_coin} 经验？`,
                             )
                           )
                             return
                           decidePurchase.mutate(
-                            { id: purchase.id, status: 'rejected', note: '管理员驳回，积分已退回' },
+                            { id: purchase.id, status: 'rejected', note: '内容整理驳回，经验已退回' },
                             {
-                              onSuccess: () => toast.success('已驳回并退回积分'),
-                              onError: (err) => toast.error(extractError(err, '操作失败')),
+                              onSuccess: () => toast.success('已驳回并退回经验'),
+                              onError: (err) => toast.error(extractError(err, '没能驳回并退回经验，可再试一次')),
                             },
                           )
                         }}

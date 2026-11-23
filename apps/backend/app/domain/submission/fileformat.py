@@ -88,7 +88,7 @@ def detect_format(contents: bytes, filename: str = "") -> DetectedFormat:
             with zipfile.ZipFile(io.BytesIO(contents)) as zf:
                 names = zf.namelist()
             if "[Content_Types].xml" in names:
-                # 进一步区分：xlsx/pptx 也有该文件。稿件通道只关心 docx。
+                # 进一步区分：xlsx/pptx 也有该文件。作品通道只关心 docx。
                 has_docx = any(n.startswith("word/") for n in names) or any(
                     "wordprocessingml" in n.lower() for n in names
                 )

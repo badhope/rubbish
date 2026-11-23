@@ -10,6 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 export const Route = createFileRoute('/register')({
   component: RegisterPage,
 })
@@ -26,6 +28,32 @@ export function RegisterPage() {
   const [confirm, setConfirm] = useState('')
   const [captcha, setCaptcha] = useState<{ token: string; question: string } | null>(null)
   const [captchaAnswer, setCaptchaAnswer] = useState('')
+  const [attempted, setAttempted] = useState(false)
+
+  const emailValid = EMAIL_RE.test(email.trim())
+  const usernameValid = username.trim().length >= 3
+  const passwordValid = password.length >= 8
+  const confirmValid = confirm.length >= 8
+  const passwordsMatch = password === confirm
+  const captchaValid = !captchaRequired || (captcha !== null && captchaAnswer.trim() !== '')
+  const formValid =
+    emailValid && usernameValid && passwordValid && confirmValid && passwordsMatch && captchaValid
+
+  const emailHint = emailValid ? '' : '邮箱格式不正确，请检查后再填'
+  const usernameHint = usernameValid ? '' : '用户名至少 3 个字符'
+  const passwordHint = passwordValid ? '' : '密码至少 8 位'
+  const confirmHint = !confirmValid
+    ? '请再次输入密码'
+    : passwordsMatch
+      ? ''
+      : '两次输入的密码不一致'
+  const captchaHint = captchaRequired
+    ? captcha === null
+      ? '验证码还没加载好，请稍等或刷新页面'
+      : captchaAnswer.trim() === ''
+        ? '请回答验证码'
+        : ''
+    : ''
 
   useEffect(() => {
     if (capabilities.isLoading || !captchaRequired) {
@@ -48,24 +76,12 @@ export function RegisterPage() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (password !== confirm) {
-      toast.error('两次输入的密码不一致')
-      return
-    }
-    if (password.length < 8) {
-      toast.error('密码至少 8 位')
-      return
-    }
+    setAttempted(true)
+    if (!formValid) return
     try {
-      if (captchaRequired) {
-        if (!captcha) {
-          toast.error('验证码还没加载好，请稍等或刷新页面')
-          return
-        }
-        if (!captchaAnswer.trim()) {
-          toast.error('请先回答验证码')
-          return
-        }
+      if (captchaRequired && !captcha) {
+        toast.error('验证码还没加载好，请稍等或刷新页面')
+        return
       }
       const result = await registerMut.mutateAsync({
         email,
@@ -107,11 +123,12 @@ export function RegisterPage() {
 
   return (
     <div className="mx-auto flex min-h-[80vh] max-w-md items-center">
+      <h1 className="sr-only">开一个账号</h1>
       <Card className="w-full">
         <CardHeader>
           <CardTitle className="text-2xl">开一个账号</CardTitle>
           <CardDescription>
-          有了账号，就能发帖、评论，把写下的东西放上来。
+          有了账号，就可以留下句子、发布作品，也能在别处读到更多。
           {capabilities.isFetched && !emailDelivery && (
             <span className="mt-2 block text-xs text-muted-foreground">
               当前站点未开通邮件服务：注册后可直接用邮箱和密码登录，邮箱验证与找回密码暂不可用，
@@ -121,7 +138,7 @@ export function RegisterPage() {
         </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={onSubmit} className="space-y-4">
+          <form onSubmit={onSubmit} className="space-y-4" noValidate>
             <div className="space-y-2">
               <Label htmlFor="email">邮箱</Label>
               <Input
@@ -130,8 +147,12 @@ export function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
+                aria-invalid={attempted && !emailValid}
                 required
               />
+              {attempted && emailHint ? (
+                <p className="text-xs text-destructive">{emailHint}</p>
+              ) : null}
             </div>
             <div className="space-y-2">
               <Label htmlFor="username">用户名</Label>
@@ -141,8 +162,12 @@ export function RegisterPage() {
                 onChange={(e) => setUsername(e.target.value)}
                 autoComplete="username"
                 minLength={3}
+                aria-invalid={attempted && !usernameValid}
                 required
               />
+              {attempted && usernameHint ? (
+                <p className="text-xs text-destructive">{usernameHint}</p>
+              ) : null}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">密码</Label>
@@ -153,8 +178,12 @@ export function RegisterPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="new-password"
                 minLength={8}
+                aria-invalid={attempted && !passwordValid}
                 required
               />
+              {attempted && passwordHint ? (
+                <p className="text-xs text-destructive">{passwordHint}</p>
+              ) : null}
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirm">确认密码</Label>
@@ -165,8 +194,12 @@ export function RegisterPage() {
                 onChange={(e) => setConfirm(e.target.value)}
                 autoComplete="new-password"
                 minLength={8}
+                aria-invalid={attempted && !confirmValid}
                 required
               />
+              {attempted && confirmHint ? (
+                <p className="text-xs text-destructive">{confirmHint}</p>
+              ) : null}
             </div>
             {captchaRequired && (
               <div className="space-y-2">
@@ -178,17 +211,25 @@ export function RegisterPage() {
                   value={captchaAnswer}
                   onChange={(e) => setCaptchaAnswer(e.target.value)}
                   placeholder="填计算结果，防批量注册"
+                  aria-invalid={attempted && !captchaValid}
                 />
-                <p className="text-xs text-muted-foreground">自建算术题，不接第三方验证码，不产生费用。</p>
+                {attempted && captchaHint ? (
+                  <p className="text-xs text-destructive">{captchaHint}</p>
+                ) : null}
+                <p className="text-xs text-muted-foreground">一道自建的算术题：不接第三方验证，也不产生费用。</p>
               </div>
             )}
-            <Button type="submit" className="w-full" disabled={registerMut.isPending}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={registerMut.isPending || !formValid}
+            >
               {registerMut.isPending ? '注册中…' : '注册'}
             </Button>
           </form>
           <p className="mt-3 text-center text-xs leading-5 text-muted-foreground">
             注册即表示你已阅读并同意
-            <Link to="/guide" search={{ tab: 'policies' }} className="mx-1 text-primary hover:underline">规则与边界</Link>
+            <Link to="/guide" search={{ tab: 'policies' }} className="mx-1 text-primary hover:underline">边界与处理</Link>
             和
             <Link to="/privacy" className="mx-1 text-primary hover:underline">隐私政策</Link>。
           </p>

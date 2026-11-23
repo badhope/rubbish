@@ -154,8 +154,8 @@ async def get_current_user_optional(
 
 
 # 预定义角色名（与 Role 表保持一致；bootstrap 创建时用此 slug）
-# 编辑职权链（v1.11）：主编 > 副主编 > 编委（栏目编辑）> 执行编辑 > 审稿人。
-# 主编/副主编持有终审权（四元决定）；编委与执行编辑负责初筛、送审与推荐。
+# 编辑职权链（v1.11）：主编 > 副主编 > 站务组（分区整理）> 执行编辑 > 互评成员。
+# 主编/副主编持有终审权（四元决定）；站务组与执行编辑负责基础检查、分派互评与推荐。
 ROLE_REVIEWER = "reviewer"
 ROLE_SENIOR_REVIEWER = "senior_reviewer"
 ROLE_EDITOR = "editor"
@@ -165,7 +165,7 @@ ROLE_DEPUTY_EDITOR = "deputy_editor"
 ROLE_CHIEF_EDITOR = "chief_editor"
 # 有终审权的角色集合（require_chief_editor 使用）
 CHIEF_ROLES = (ROLE_CHIEF_EDITOR, ROLE_DEPUTY_EDITOR)
-# 有编辑部职权（初筛/送审/推荐/工作台读）的角色集合（require_editor 使用）
+# 有编辑部职权（基础检查/分派互评/推荐/工作台读）的角色集合（require_editor 使用）
 EDITORIAL_ROLES = (
     ROLE_EDITOR,
     ROLE_SECTION_EDITOR,
@@ -176,8 +176,8 @@ EDITORIAL_ROLES = (
 
 # ---------------------------------------------------------------------------
 # 权限轴：五层收敛（v1.14）
-# 访客（不入库） < user（读者=作者已合并） < reviewer（审稿人）
-#   < editor（栏目编辑） < editor_in_chief（主编）
+# 访客（不入库） < user（读者=作者已合并） < reviewer（互评成员）
+#   < editor（分区整理） < editor_in_chief（主编）
 # 大身份包含小身份全部权限；主编不叠加小身份。所有权限校验统一走
 # require_role(min_role)；旧 require_admin/require_reviewer/require_editor/
 # require_chief_editor 保留为薄包装，内部映射到本轴。
@@ -239,7 +239,7 @@ async def effective_permission_role(db: AsyncSession, user: User) -> str:
 async def user_has_editor_access(db: AsyncSession, user: User) -> bool:
     """是否具备编辑部读/写权限（五层轴 >= editor）。
 
-    不能再直接 ``user_has_role(user, "editor")``：主编/副主编/栏目编辑
+    不能再直接 ``user_has_role(user, "editor")``：主编/副主编/分区整理
     的实际档位不是字面 ``editor``，精确匹配会把非 admin 的主编挡在
     ``GET /submissions/{id}`` 之外，工作台就会“能进但打不开稿”。
     """
@@ -321,7 +321,7 @@ async def user_has_role(db: AsyncSession, user: User, role_name: str) -> bool:
     """公开版本的角色检查，供路由内做细粒度授权判断。
 
     与 ``require_*`` 依赖的区别：这里返回布尔值而不是抛 403，适合
-    「作者 OR 编辑 OR 被指派审稿人」这类多路授权。
+    「作者 OR 编辑 OR 被指派互评成员」这类多路授权。
     """
     return await _user_has_role(db, user, role_name)
 
@@ -371,7 +371,7 @@ async def require_editor(
 ) -> User:
     """要求当前用户权限档位 >= editor（五层轴）。
 
-    用于编辑工作台的读端点与送审操作（分配/撤销审稿人、匿名稿）。
+    用于编辑工作台的读端点与分派互评操作（分配/撤销互评成员、匿名稿）。
     """
     actual = await effective_permission_role(db, current_user)
     if PERMISSION_RANK[actual] < PERMISSION_RANK["editor"]:

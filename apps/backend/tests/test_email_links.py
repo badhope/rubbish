@@ -49,6 +49,4 @@ async def test_decision_email_links_to_exact_submission(monkeypatch) -> None:
     )
 
     assert len(sender.messages) == 1
-    assert "https://example.test/submissions?submission=305" in str(
-        sender.messages[0]["body"]
-    )
+    assert "https://example.test/submissions?submission=305" in str(sender.messages[0]["body"])

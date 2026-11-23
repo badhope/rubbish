@@ -65,7 +65,7 @@ export default function SystemHealthPage() {
       const res = await api.get<Health>('/admin/system/health')
       setData(res.data)
     } catch {
-      toast.error('系统健康数据加载失败')
+      toast.error('系统健康数据加载失败，可重试。')
     } finally {
       setLoading(false)
     }
@@ -115,7 +115,7 @@ export default function SystemHealthPage() {
       {!data ? (
         <Card>
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            {loading ? '加载中…' : '暂无数据'}
+            {loading ? '加载中…' : '暂无运行数据'}
           </CardContent>
         </Card>
       ) : (
@@ -201,7 +201,7 @@ export default function SystemHealthPage() {
                 <p className="font-medium tabular-nums">{data.counts.new_users_24h ?? '—'}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">24h 发放积分</p>
+                <p className="text-xs text-muted-foreground">24h 发放经验</p>
                 <p className="font-medium tabular-nums">{data.counts.coin_issued_24h ?? '—'}</p>
               </div>
               <div>

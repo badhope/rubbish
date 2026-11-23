@@ -23,7 +23,7 @@ const GROUPS = [
   },
 ]
 
-/** 站内“学术表情包”：比外链 GIF 更可控，加载快，也不会突然变成失效图。 */
+/** 站内“互评表情包”：比外链 GIF 更可控，加载快，也不会突然变成失效图。 */
 const STICKERS = [
   { name: '数据呢', src: '/stickers/data.svg' },
   { name: '再想想', src: '/stickers/again.svg' },
@@ -32,7 +32,7 @@ const STICKERS = [
   { name: '裂开', src: '/stickers/crack.svg' },
   { name: '先睡', src: '/stickers/sleep.svg' },
   { name: '收到', src: '/stickers/got.svg' },
-  { name: '研究员2', src: '/stickers/reviewer2.svg' },
+  { name: '互评人 2', src: '/stickers/peer2.svg' },
 ]
 
 export function EmojiStickerPicker({
@@ -53,7 +53,7 @@ export function EmojiStickerPicker({
           size="sm"
           disabled={disabled}
           className="h-7 gap-1 px-1.5 text-xs font-medium text-muted-foreground"
-          title="插入表情或学术表情包"
+          title="插入表情或互评表情包"
           data-testid="md-tool-emoji"
         >
           <SmilePlus className="h-3.5 w-3.5" />
@@ -98,7 +98,7 @@ export function EmojiStickerPicker({
 
         <div className="mt-3 border-t pt-2">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium">学术表情包</p>
+            <p className="text-xs font-medium">互评表情包</p>
             <span className="text-[10px] text-muted-foreground">点一下插进正文</span>
           </div>
           <div className="mt-1.5 grid grid-cols-4 gap-1.5">

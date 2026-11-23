@@ -223,11 +223,11 @@ async def reviewer_workbench(
     current_user: User = Depends(require_reviewer),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
-    """审稿人工作台：只有「待审」「已审」两栏。
+    """互评成员工作台：只有「待审」「已审」两栏。
 
     待审 = pending/accepted（待回应 + 已接受未交报告）；
     已审 = completed（已提交报告）。
-    审稿人看不到主编的四栏与任何指派/裁决操作。
+    互评成员看不到主编的四栏与任何指派/裁决操作。
     """
     now = utcnow()
     rows = (
@@ -257,7 +257,7 @@ async def reviewer_workbench(
             pending.append(_assignment_row(a, now))
         elif a.status == "completed":
             row = _assignment_row(a, now)
-            # 已审栏附带推荐结论，便于审稿人自查
+            # 已审栏附带推荐结论，便于互评成员自查
             rec = None
             if a.report:
                 rec = a.report[0].recommendation
@@ -280,15 +280,15 @@ async def editor_workbench(
     current_user: User = Depends(require_editor),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
-    """主编/栏目编辑工作台四栏：待指派 → 评审中 → 待裁决 → 已决定。
+    """主编/分区整理工作台四栏：待指派 → 评审中 → 待裁决 → 已决定。
 
-    每栏带计数。``评审中`` 展开每位审稿人的状态与剩余时间（超期整行高亮）；
-    ``待裁决`` 汇总各审稿意见。两栏互斥按当前阶段归位。
+    每栏带计数。``评审中`` 展开每位互评成员的状态与剩余时间（超期整行高亮）；
+    ``待裁决`` 汇总各互评意见。两栏互斥按当前阶段归位。
     """
     now = utcnow()
     tenant_id = require_tenant_id()
 
-    # 审稿广场的申请意愿：只读审计日志，按作品聚合后带给主编工作台。
+    # 互评广场的申请意愿：只读审计日志，按作品聚合后带给主编工作台。
     interest_rows = (
         (
             await db.execute(
@@ -389,7 +389,7 @@ async def editor_workbench(
             bucket = dict(base)
             bucket["assignments"] = assignment_items
             bucket["is_overdue"] = has_overdue
-            # 拒审/撤销后没有任何在途审稿人：必须回到「待指派」，并明确
+            # 拒审/撤销后没有任何在途互评成员：必须回到「待指派」，并明确
             # 告诉主编是改派还是补派，而不是继续挂在「评审中/未交」。
             if not active and len(distinct_done) < 2:
                 bucket["needs_reassign"] = True
@@ -414,8 +414,8 @@ async def editor_workbench(
                 in_review.append(bucket)
             continue
 
-        # 返修中单独成栏：主编需要看到作者是否已返修、上一轮编辑说明和
-        # 返修说明，而不是把返修稿混在“评审中”。
+        # 退回修改中单独成栏：主编需要看到作者是否已退回修改、上一轮编辑说明和
+        # 退回修改说明，而不是把退回修改稿混在“评审中”。
         if s.status in ("major_revision", "minor_revision", "resubmitted"):
             bucket = dict(base)
             bucket["assignments"] = [_assignment_row_editor(a, now) for a in round_rows]
@@ -499,9 +499,9 @@ async def search_editor_reports(
     current_user: User = Depends(require_editor),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
-    """主编按标题/审稿意见全文检索所有已完成报告。
+    """主编按标题/互评意见全文检索所有已完成报告。
 
-    单盲只对作者成立：主编需要看到审稿人身份才能追溯与改派，因此本
+    单盲只对作者成立：主编需要看到互评成员身份才能追溯与改派，因此本
     端点返回 reviewer_username。``round`` 保留历史轮次，避免重投后
     旧意见被误认为当前轮。
     """
@@ -571,7 +571,7 @@ async def editor_email_digest_records(
     每条带事件类型、收件人、主题、状态与时间。可按 ``status`` 过滤
     （``sent`` / ``failed`` / ``skipped_no_smtp`` / ``skipped_disabled`` /
     ``skipped_user_pref``）。
-    仅 editor 及以上；审稿人不需要看运维侧审计。
+    仅 editor 及以上；互评成员不需要看运维侧审计。
     """
     tenant_id = require_tenant_id()
     allowed = {"sent", "failed", "skipped_no_smtp", "skipped_disabled", "skipped_user_pref"}
@@ -626,9 +626,9 @@ async def reviewer_workload(
     current_user: User = Depends(require_editor),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
-    """审稿人负载与完成情况：接受中、已完成、逾期、累计邀请。
+    """互评成员负载与完成情况：接受中、已完成、逾期、累计邀请。
 
-    只做聚合，不返回审稿报告内容；供主编决定把新稿派给谁。
+    只做聚合，不返回互评报告内容；供主编决定把新稿派给谁。
     """
     tenant_id = require_tenant_id()
     now = utcnow()
@@ -689,9 +689,9 @@ async def batch_assign(
     current_user: User = Depends(require_editor),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
-    """批量勾选待指派作品，一次选审稿人并设截止时间。
+    """批量勾选待指派作品，一次选互评成员并设截止时间。
 
-    同一事务内创建全部 assignment，逐篇给审稿人发站内通知 + 邮件摘要。
+    同一事务内创建全部 assignment，逐篇给互评成员发站内通知 + 邮件摘要。
     禁止指派给作品作者（自审）；重复指派跳过并记录原因。
     """
     tenant_id = require_tenant_id()
@@ -909,7 +909,7 @@ async def check_conflicts(
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
     """指派前的利益冲突提示：作者/共同作者 → 黄色警告默认不选；
-    同单位无法从 User 字段判定（无 affiliation 列），退化为"该作者已有投稿"提示。
+    同单位无法从 User 字段判定（无 affiliation 列），退化为"该作者已有作品"提示。
     """
     tenant_id = require_tenant_id()
     sub = (
@@ -954,7 +954,7 @@ async def check_conflicts(
                 f"这位已经有 {own_count} 篇作品。同单位或利益关系系统看不出来，需要你判断。"
             )
 
-        # 默认不选：命中作者/共同作者硬警告；仅"已有投稿"黄警仍默选，由编辑人工决定。
+        # 默认不选：命中作者/共同作者硬警告；仅"已有作品"黄警仍默选，由编辑人工决定。
         default_selected = not (is_submitter or name_match)
         out.append(
             {
@@ -987,7 +987,7 @@ async def remind_reviewers(
     current_user: User = Depends(require_editor),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
-    """手动催审：给未交报告的审稿人发站内通知 + 邮件摘要。
+    """手动催审：给未交报告的互评成员发站内通知 + 邮件摘要。
 
     仅作用于 pending/accepted（未完成）的 assignment；completed/declined/cancelled 跳过。
     更新 last_reminded_at 与 reminder_count。

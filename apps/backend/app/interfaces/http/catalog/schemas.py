@@ -57,6 +57,7 @@ def _build_authors_detail(
                 roles=roles,
                 claimed=claimed,
                 user_id=entry.get("user_id") if claimed else None,
+                username=entry.get("username") if claimed else None,
                 affiliation=entry.get("affiliation"),
                 email=entry.get("email") if claimed else None,
             )
@@ -82,6 +83,7 @@ class AuthorMeta(BaseModel):
     # P1：认领状态与角色（公开面由 _build_authors_detail 统一透出）。
     claimed: bool = False
     user_id: int | None = None
+    username: str | None = Field(default=None, max_length=100)
     roles: list[str] = Field(default_factory=list)
 
     @field_validator("orcid")
@@ -123,7 +125,7 @@ class ResourceBase(BaseModel):
     # 娱乐轨文体细分（v1.16）：小说/评论/指南/整活…；论文轨不填。
     content_genre: EssayGenre | None = None
     # 中图分类号（P0）：clc_code 如 TP3，clc_label 如「计算技术、计算机技术」。
-    # 从稿件 front-matter 解析；非法值原样保留，详情接口 clc_status 标待校正。
+    # 从作品 front-matter 解析；非法值原样保留，详情接口 clc_status 标待校正。
     clc_code: str | None = Field(default=None, max_length=20)
     clc_label: str | None = Field(default=None, max_length=80)
     title: str = Field(min_length=1, max_length=1000)
@@ -148,7 +150,7 @@ class ResourceBase(BaseModel):
     reading_path: Literal["start", "research", "weird"] | None = None
     # download_url / external_url 允许两种形态：
     #   1) http(s) 绝对链接（外部托管）；
-    #   2) 以 / 开头的同源相对路径（本地托管的稿件文件，如 /uploads/...）。
+    #   2) 以 / 开头的同源相对路径（本地托管的作品文件，如 /uploads/...）。
     # 其余 scheme（javascript:、data: 等）一律拒绝，避免存入后
     # 被阅读器 iframe 当成可执行内容（存储型 XSS）。
     download_url: str | None = None
@@ -174,7 +176,7 @@ class ResourceBase(BaseModel):
     @field_validator("track", mode="before")
     @classmethod
     def _normalize_track(cls, v: object) -> object:
-        """论文子类型只接受 serious / absurd；脏值保守归 serious。"""
+        """作品子类型只接受 serious / absurd；脏值保守归 serious。"""
         if v is None:
             return None
         return normalize_track(v) if isinstance(v, str) else v
@@ -199,7 +201,7 @@ class ResourceBase(BaseModel):
     # Journal metadata
     volume: str | None = Field(default=None, max_length=50)
     issue: str | None = Field(default=None, max_length=50)
-    # Nature 式栏目 / 期次分部分（021）
+    # Nature 式分区 / 合集分部分（021）
     article_section: str | None = Field(default=None, max_length=40)
     issue_part: str | None = Field(default=None, max_length=40)
     pages: str | None = Field(default=None, max_length=50)
@@ -287,7 +289,7 @@ class ResourceUpdate(BaseModel):
     cover_image: str | None = Field(default=None, max_length=500)
     cover_theme: str | None = Field(default=None, max_length=50)
     publish_at: datetime | None = None
-    # Nature 式栏目与期次分部分（021）
+    # Nature 式分区与合集分部分（021）
     article_section: str | None = Field(default=None, max_length=40)
     issue_part: str | None = Field(default=None, max_length=40)
     # 内容赛道/类别：content_track 为唯一权威；只传类别时按类别回推赛道
@@ -318,6 +320,7 @@ class AuthorDetail(BaseModel):
     roles: list[str] = Field(default_factory=list)  # ["first","corresponding"]
     claimed: bool = False
     user_id: int | None = None
+    username: str | None = None
     affiliation: str | None = None
     email: str | None = None
 
@@ -333,17 +336,17 @@ class ResourceResponse(ResourceBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    # 本站刊号：R-<六位刊号>-<YYYYMMDD>-<四位流水>，不是官方 DOI。
+    # 本站站内编号：R-<六位站内编号>-<YYYYMMDD>-<四位流水>，不是官方 DOI。
     site_id: str | None = None
     slug: str | None = None
     created_at: datetime
     updated_at: datetime
     has_file: bool = False
-    # 是否有在线阅读用 Markdown 稿件（列表与详情都返回）
+    # 是否有在线阅读用 Markdown 作品（列表与详情都返回）
     has_markdown: bool = False
     # 内容赛道（唯一权威）：paper|essay。响应层按 track 校正 content_category。
     content_track: str | None = None  # type: ignore[assignment]
-    # 特别篇：篇幅超过轨道上限、经显式特许的稿件。阅读端显示标签。
+    # 特别篇：篇幅超过轨道上限、经显式特许的作品。阅读端显示标签。
     is_special_issue: bool = False
     special_issue_reason: str | None = None
     # 中图分类号校正状态：valid / needs_correction / absent（由 clc_code 反推）。
@@ -386,8 +389,8 @@ class ResourceResponse(ResourceBase):
         """
         from app.domain.submission.clc import clc_status_of
 
-        # 本站刊号：六位刊号 + 创建日期 + 四位全站流水。按 id 单调递增，
-        # 因此按刊号排序与按发表时间排序一致；它不是 DOI，也不冒充 DOI。
+        # 本站站内编号：六位站内编号 + 创建日期 + 四位全站流水。按 id 单调递增，
+        # 因此按站内编号排序与按发表时间排序一致；它不是 DOI，也不冒充 DOI。
         if not self.site_id:
             from app.core.config import settings
 
@@ -436,7 +439,7 @@ class VolumeSummary(BaseModel):
     """一卷的汇总（期数、文章数）。
 
     为什么不复用列表接口：列表单页上限 100，管理端的卷统计需要的是
-    **全量**聚合。前端拿一页数据自己数，期刊一过 100 篇就会显示
+    **全量**聚合。前端拿一页数据自己数，内容库一过 100 篇就会显示
     「100 篇」，并附一句「数字可能偏小」——那是把后端的活推给用户看。
     """
 
@@ -499,7 +502,7 @@ class JournalMetrics(BaseModel):
     median_review_days: float | None = None
     open_access_rate: float | None = None
     # R 因子：全刊已发表记录 R 指数的均值（保留两位小数）——本刊自设计
-    # 的旗舰指标，角色类似传统影响因子，但口径不公开。
+    # 的旗舰指标，角色类似传统站点阅读指标，但口径不公开。
     r_factor: float | None = None
     # 无引文数据，自引率恒为 0.0（诚实标注，页面上作为固定项展示）。
     self_citation_rate: float = 0.0

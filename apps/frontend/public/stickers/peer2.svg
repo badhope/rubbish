@@ -9,5 +9,5 @@
     <path d="M82 134 Q104 146 126 134" stroke="#24334d" stroke-width="4" fill="none"/>
     <text x="178" y="76" text-anchor="middle" font-size="44" font-weight="800" fill="#2f5d46">2</text>
   </g>
-<text x="120" y="204" text-anchor="middle" font-size="26" font-weight="700" fill="#24334d" font-family="'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif">审稿人2</text>
+<text x="120" y="204" text-anchor="middle" font-size="26" font-weight="700" fill="#24334d" font-family="'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif">互评人 2</text>
 </svg>

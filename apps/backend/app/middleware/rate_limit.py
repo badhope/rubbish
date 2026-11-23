@@ -46,6 +46,15 @@ STRICT_PATHS: dict[str, int] = {
     #   forgot-password 的 8 次/分），发信轰炸另有 mail_guard 按收件人兜底；
     # - /api/auth/email-code/verify：验证码核对，对齐 reset-password 的 10 次/分。
     "/api/comments": 20,
+    # 举报与反馈是写审计表的入口，按提交频率从紧，防止刷举报淹没处置队列。
+    "/api/forum/reports": 10,
+    "/api/forum/content-reports": 10,
+    "/api/catalog/feedback": 10,
+    # 上传前解析/预览会跑文档格式识别，成本高，单独压到低频。
+    "/api/submissions/convert-preview": 10,
+    "/api/submissions/source-preview": 10,
+    "/api/submissions/source-preview/pages": 10,
+    "/api/media/images": 20,
     "/api/auth/2fa/authenticate": 10,
     "/api/auth/login/2fa": 10,
     "/api/auth/login": 10,

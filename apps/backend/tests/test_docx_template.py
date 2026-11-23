@@ -68,7 +68,7 @@ def test_title_and_labels_use_brand_dark() -> None:
     title_runs = [r for r in title_para.runs if r.font.color and r.font.color.rgb]
     assert title_runs
     assert str(title_runs[0].font.color.rgb) == "2E5E4A"
-    labels = [r for r in _runs(doc) if r.text in {"摘要：", "关键词："}]
+    labels = [r for r in _runs(doc) if r.text in {"开头：", "话题："}]
     assert len(labels) == 2
     assert all(str(r.font.color.rgb) == "2E5E4A" for r in labels)
 
@@ -124,6 +124,31 @@ def test_fonts_are_domestic_system_fonts() -> None:
             names.add(fonts.get(qn("w:ascii")))
     assert BODY_FONT in names
     assert not any(n and "google" in n.lower() for n in names)
+
+
+def test_boundary_and_license_rendered_when_present() -> None:
+    blob = build(
+        SAMPLE,
+        Meta(
+            title="边界测试稿",
+            license="CC BY-NC-SA 4.0",
+            data_availability="数据来自公开问卷，样本 120 份。",
+            coi_statement="无相关利益说明。",
+        ),
+    )
+    doc = Document(io.BytesIO(blob))
+    texts = [p.text for p in doc.paragraphs]
+    assert any("材料与边界说明" in t for t in texts)
+    assert any("材料与数据：" in t for t in texts)
+    assert any("利益说明：" in t for t in texts)
+    assert any("公开范围与许可：CC BY-NC-SA 4.0" in t for t in texts)
+
+
+def test_boundary_blocks_absent_when_empty() -> None:
+    doc = _render()
+    texts = [p.text for p in doc.paragraphs]
+    assert not any("材料与边界说明" in t for t in texts)
+    assert not any("公开范围与许可" in t for t in texts)
 
 
 def test_essayize_removes_paper_labels_and_multilevel_numbering() -> None:

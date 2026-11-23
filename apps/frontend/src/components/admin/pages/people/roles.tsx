@@ -105,7 +105,7 @@ export default function RolesPage({
       setNote('')
       void qc.invalidateQueries({ queryKey: ['admin', 'role-applications'] })
     },
-    onError: (err) => toast.error(extractError(err, '操作失败')),
+    onError: (err) => toast.error(extractError(err, '没能处理这份角色申请，可再试一次')),
   })
 
   const items = query.data?.data ?? []
@@ -134,7 +134,7 @@ export default function RolesPage({
     <div>
       <PageHeader
         title="角色申请"
-        description="互评成员和资深互评成员由这里审批；通过后身份立即生效，对方会收到通知。"
+        description="互评成员和资深互评成员由这里处理；通过后身份立即生效，对方会收到通知。"
       />
 
       {focused ? (
@@ -175,7 +175,7 @@ export default function RolesPage({
       {query.isLoading ? (
         <LoadingSkeleton rows={3} />
       ) : query.isError ? (
-        <ErrorState message="加载角色申请失败" onRetry={() => void query.refetch()} />
+        <ErrorState message="角色申请加载失败，可重试。" onRetry={() => void query.refetch()} />
       ) : missingFocused ? (
         <EmptyState
           title="没有找到这份角色申请"

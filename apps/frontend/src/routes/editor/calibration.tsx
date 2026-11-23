@@ -113,7 +113,7 @@ function CalibrationPage() {
       {isLoading ? (
         <LoadingSkeleton rows={5} />
       ) : isError ? (
-        <ErrorState message="校准数据加载失败" onRetry={() => refetch()} />
+        <ErrorState message="校准数据加载失败，可重试。" onRetry={() => refetch()} />
       ) : rows.length === 0 ? (
         <EmptyState
           title="本季度还没有完成的互评意见"

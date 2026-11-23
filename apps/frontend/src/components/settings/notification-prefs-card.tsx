@@ -22,11 +22,11 @@ type PrefRow = { key: PrefKey; label: string; hint: string }
 
 const IN_APP_ROWS: PrefRow[] = [
   { key: 'in_app_comment', label: '记录评论', hint: '有人评论你发布的记录时，在站内通知你' },
-  { key: 'in_app_forum', label: '讨论回复', hint: '有人回复你的帖子时，在站内通知你' },
+  { key: 'in_app_forum', label: '讨论回复', hint: '有人回应你的话题时，在站内通知你' },
   {
     key: 'in_app_review',
-    label: '互评与裁决',
-    hint: '收到互评邀请、催办提醒或裁决邀请时，在站内通知你',
+    label: '互评与核对',
+    hint: '收到互评邀请、催办提醒或核对邀请时，在站内通知你',
   },
   {
     key: 'in_app_submission',
@@ -36,7 +36,7 @@ const IN_APP_ROWS: PrefRow[] = [
   {
     key: 'in_app_release',
     label: '发布失败告警',
-    hint: '定时发布失败时，在站内通知负责这一期的编辑',
+    hint: '定时发布失败时，在站内通知负责这件作品的内容整理',
   },
 ]
 
@@ -45,13 +45,13 @@ const EMAIL_ROWS: PrefRow[] = [
   { key: 'email_forum', label: '讨论回复邮件', hint: '额外发一封邮件；默认关闭' },
   {
     key: 'email_review',
-    label: '互评与裁决邮件',
-    hint: '互评邀请、催办和裁决邀请的邮件副本；默认开启',
+    label: '互评与核对邮件',
+    hint: '互评邀请、催办和核对邀请的邮件副本；默认开启',
   },
   {
     key: 'email_submission',
     label: '作品处理邮件',
-    hint: '作品处理结果与初筛超时摘要；默认开启',
+    hint: '作品处理结果与检查超时提醒；默认开启',
   },
   {
     key: 'email_release',
@@ -116,7 +116,7 @@ export function NotificationPrefsCard() {
         if (alive) setPrefs(res.data)
       })
       .catch(() => {
-        if (alive) toast.error('通知偏好加载失败，请稍后再试')
+        if (alive) toast.error('通知偏好加载失败，可再试一次。')
       })
     return () => {
       alive = false
@@ -131,7 +131,7 @@ export function NotificationPrefsCard() {
       setPrefs(res.data)
       toast.success('通知偏好已保存')
     } catch {
-      toast.error('保存失败，请稍后再试')
+      toast.error('通知偏好保存失败，可再试一次。')
     } finally {
       setSaving(false)
     }

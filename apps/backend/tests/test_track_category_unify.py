@@ -4,7 +4,7 @@
 - 写入：paper 强制 academic；essay 只允许 fun/rant（缺省 fun）；
   essay 带 rant 透传；track 缺失时 category 回推赛道。
 - 读：列表/详情对历史脏数据（paper+fun、essay+academic）按 track 校正。
-- 物化：投稿 content_track=essay → 资源 content_category=fun。
+- 物化：发布 content_track=essay → 资源 content_category=fun。
 """
 
 from __future__ import annotations
@@ -208,7 +208,7 @@ async def test_list_and_detail_correct_dirty_rows(
 async def test_materialize_submission_essay_track(
     client: AsyncClient, admin_user: dict, db_session: AsyncSession
 ) -> None:
-    """投稿 content_track=essay → 物化出的资源 category=fun。"""
+    """发布 content_track=essay → 物化出的资源 category=fun。"""
     from app.domain.submission._helpers import _materialize_resource_from_submission
     from app.domain.submission.models import Submission
 

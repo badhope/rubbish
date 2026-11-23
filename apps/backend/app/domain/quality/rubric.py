@@ -6,7 +6,7 @@ v4.0 是七维百分制，但站内对外一直写“五维两段式”；更要
 权重套到荒诞稿上，会把“无厘头但自洽”的稿子按样本量、伦理审批逐条扣死。
 v5.0 先收成两条赛道，v5.1 再补荒诞度；核心是两件事：
 
-1. **两条赛道：学术五维、荒诞六维。** 学术稿按同行评审的五个判断面审；
+1. **两条赛道：学术五维、荒诞六维。** 长文稿按互评的五个判断面核对；
    荒诞稿在原有五维之外单列“荒诞度”，用来判断反讽、悖论、夸张推演等
    荒诞信号是否真的进入正文，而不是只在标题玩梗。两套维度名、权重、
    锚点都不同，不共用一把尺子。
@@ -248,7 +248,7 @@ def auto_precheck(m: PaperMetrics) -> list[dict[str, str]]:
                     "dimension": "integrity",
                     "message": (
                         f"{m.reference_dois} 条含 DOI 的文献中有 {unresolved} 条未能解析。"
-                        "请逐条核实（编辑部会抽查 ≥30%）。"
+                        "请逐条核实（站务组会抽查 ≥30%）。"
                     ),
                 }
             )
@@ -289,7 +289,7 @@ def auto_precheck(m: PaperMetrics) -> list[dict[str, str]]:
 class DimensionScore:
     """一个维度的评分：分值必填，理由 / 证据 / 修改意见均选填。
 
-    评审可以先给分，再决定是否补充可复核的正文依据；选填内容一旦填写
+    互评成员可以先给分，再决定是否补充可复核的正文依据；选填内容一旦填写
     就原样保留，不做最低字数或“必须定位正文”的门槛。
     """
 
@@ -297,7 +297,7 @@ class DimensionScore:
     score: float  # 0–100
     reason: str = ""
     evidence: str = ""
-    # 逐维修改意见（审稿人写给作者的可执行修改建议，可选）
+    # 逐维修改意见（互评成员写给作者的可执行修改建议，可选）
     suggestion: str = ""
 
     def __post_init__(self) -> None:
@@ -389,7 +389,7 @@ def evaluate(
     """按维度评分计算 RQS v5.1。
 
     ``dimension_scores`` 必须覆盖该赛道全部维度（学术五维 / 荒诞六维）——缺一个就拒绝计算，
-    而不是按缺失维度给 0 分：那会让“审稿人漏填”看起来像“这篇很差”。
+    而不是按缺失维度给 0 分：那会让“互评成员漏填”看起来像“这篇很差”。
     """
     track = track if track in WEIGHTS else "academic"
     profile_type = article_type if article_type in PROFILES else "research"
@@ -448,13 +448,13 @@ def evaluate(
         quartile: str | None = grade
     else:
         grade = "NA"
-        grade_label = "待编辑部补全，暂不评级"
+        grade_label = "待内容整理补全，暂不评级"
         # 不完整不等于不通过：由内容整理按作者原思路补全后直接进入评级/发布，
         # 不打回作者。rejected 只表示“完整稿但总分 <50”。
         rejected = veto
         borderline = False
         quartile = None
-        # 诊断分不封顶：封顶只在“完整稿”里限制等级；不完整稿本就不评级。
+        # 诊断分不封顶：封顶只在“完整稿”里限制档位；不完整稿本就不定档。
         # 诚信一票否决仍保留 0 分，不能用“诊断”名义把造假稿救回来。
         total = 0.0 if veto else uncapped
     requires_rework = rejected
@@ -474,9 +474,9 @@ def evaluate(
         "complete": complete,
         "incomplete_dimensions": incomplete,
         "completeness_note": (
-            "全部维度完整，进入上限评审"
+            "全部维度完整，进入上限核对"
             if complete
-            else "存在未交付维度（<50）：由编辑部按原思路补全，补全后再评级；不打回作者"
+            else "存在未交付维度（<50）：由内容整理按原思路补全，补全后再评级；不打回作者"
         ),
         "editorial_completion_required": (not complete) and not veto,
         "completion_owner": "editorial" if ((not complete) and not veto) else None,
@@ -493,7 +493,7 @@ def evaluate(
 
 
 def rubric_payload() -> dict[str, object]:
-    """公开口径：审稿人、作者、外部 AI 都用这一份。"""
+    """公开口径：互评成员、作者、外部 AI 都用这一份。"""
     return {
         "version": RUBRIC_VERSION,
         "model": "学术五维 / 荒诞六维双赛道百分制；每维必须给分，理由与正文证据选填",

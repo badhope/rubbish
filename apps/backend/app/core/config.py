@@ -162,11 +162,11 @@ class Settings(BaseSettings):
     # 只有运维显式设置 RUBBISH_EMAIL_OUTBOUND_ENABLED=true 才允许真实发信；
     # 上线前请确认收件人范围、并取得负责人同意后再打开。
     email_outbound_enabled: bool = False
-    # 恭喜邮件独立开关：录用/接收后的作者祝贺邮件不受总闸约束，由主编
+    # 恭喜邮件独立开关：通过/接收后的作者祝贺邮件不受总闸约束，由主编
     # 单独授权（2026-11-06 主编指令：发布成功要发恭喜邮件）。其余类型
     # （验证码/催审/裁决/补审）仍受 email_outbound_enabled 管控。
     email_congrat_enabled: bool = False
-    # 审稿工作流邮件摘要（指派/催审/裁决/认领结果）独立开关。
+    # 互评工作流邮件摘要（指派/催审/裁决/认领结果）独立开关。
     # 即便打开，也只有在 SMTP 已配置且 email_outbound_enabled=true 时才真正投递；
     # 未配置时仍会把摘要落库（email_digest_records.status='skipped_no_smtp'），
     # 便于运维核对"本该发什么"，而不是假装已发。
@@ -204,7 +204,7 @@ class Settings(BaseSettings):
     password_reset_expire_minutes: int = Field(default=60, ge=1)
     # 站内信/邮件共用的站点名，出现在邮件标题与正文。
     site_name: str = "Rubbish"
-    # 进程内定时任务（审稿催办等）。单节点部署默认开启；多节点部署时
+    # 进程内定时任务（互评催办等）。单节点部署默认开启；多节点部署时
     # 应只在一个实例上开启，或用外部调度器触发 admin 端点。
     scheduler_enabled: bool = True
     # 首次运行延迟（秒）。线上曾用 10**9 直接把催办永久挂起，这是事故补丁
@@ -279,8 +279,8 @@ class Settings(BaseSettings):
     # 六位站点代码：站内编号 R-<code>-<YYYYMMDD>-<四位流水>。
     # 这不是 DOI；官方 DOI 仍由作者决定是否另行注册。
     publication_code: str = "000001"
-    # 新录用文章默认进入的卷、期（文章归档，不是身份等级）。
-    # 旧文章已归入第 1 卷第 01–06 期；2026-11-21 起新录用文章进入第 07 期。
+    # 新通过文章默认进入的卷、期（文章归档，不是身份等级）。
+    # 旧文章已归入第 1 卷第 01–06 期；2026-11-21 起新通过文章进入第 07 期。
     current_volume: str = "1"
     current_issue: str = "07"
 

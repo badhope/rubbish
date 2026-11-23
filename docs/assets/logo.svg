@@ -1,53 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Rubbish 主标志 —— 「学术徽章」（Seal）
-
-  设计语言：
-    - 双环徽章：外环深学术蓝粗线、内环出版金细线 —— 学术机构 / 期刊印章惯例；
-    - 环带字标：上 RUBBISH、下 OPEN SCHOLARLY PUBLISHING，衬线体（Georgia / Times 系），
-      延续学术出版的字形传统；
-    - 中央图形：「印章之 R」—— 深学术蓝衬线 R + 金色菱形落款，
-      与 logo-mark.svg（图形标）/ favicon.svg 共享同一图形基因；
-    - 底部金色四角星：引用星 / DOI 意象，学术出版的星标惯例。
-
-  配色规范：主色 #16324F（深学术蓝）、点缀 #C7A24B（出版金）、辅助灰蓝 #5A6B7C。
-  使用规范：期刊封面 / 官网 Hero / 正式传播用本徽章；小尺寸（<48px）与 favicon 用 logo-mark.svg。
--->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="Rubbish">
-  <defs>
-    <linearGradient id="sh-seal-gold" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#D8B76A"/>
-      <stop offset="100%" stop-color="#B8933F"/>
-    </linearGradient>
-    <linearGradient id="sh-seal-blue" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#1B3A5C"/>
-      <stop offset="100%" stop-color="#122A44"/>
-    </linearGradient>
-    <path id="sh-arc-top" d="M 46 120 A 74 74 0 0 1 194 120"/>
-    <path id="sh-arc-bottom" d="M 194 120 A 74 74 0 0 1 46 120"/>
-  </defs>
-
-  <!-- 外环 / 内环 -->
-  <circle cx="120" cy="120" r="108" fill="none" stroke="#16324F" stroke-width="8"/>
-  <circle cx="120" cy="120" r="91" fill="none" stroke="url(#sh-seal-gold)" stroke-width="2.8"/>
-
-  <!-- 环带文字 -->
-  <text font-family="Georgia,'Times New Roman',serif" font-size="21"
-        font-weight="700" letter-spacing="4.4" fill="#16324F">
-    <textPath href="#sh-arc-top" startOffset="50%" text-anchor="middle">RUBBISH</textPath>
-  </text>
-  <text font-family="Georgia,'Times New Roman',serif" font-size="11.2"
-        letter-spacing="2.3" fill="#5A6B7C">
-    <textPath href="#sh-arc-bottom" startOffset="50%" text-anchor="middle">OPEN SCHOLARLY PUBLISHING</textPath>
-  </text>
-
-  <!-- 中央印章 R（与 logo-mark.svg / favicon.svg 同几何基因） -->
-  <text x="120" y="152" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-size="76" font-weight="600" fill="url(#sh-seal-blue)">R</text>
-
-  <!-- 金色菱形落款 -->
-  <path d="M 146 154 L 158 166 L 146 178 L 134 166 Z" fill="url(#sh-seal-gold)"/>
-
-  <!-- 底部金色引用星（DOI 意象） -->
-  <path d="M 120 215 L 122.6 220.6 L 128.2 223.2 L 122.6 225.8 L 120 231.4 L 117.4 225.8 L 111.8 223.2 L 117.4 220.6 Z"
-        fill="#C7A24B"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="1024" height="1024" role="img" aria-label="Rubbish">
+  <rect x="1" y="1" width="62" height="62" rx="10" fill="#F4EFE4"/>
+  <path d="M17 13h18.5c8.8 0 14.3 4.6 14.3 12 0 5.6-3.2 9.6-8.6 11l11.4 15H40.4L30.5 37.2h-4.2v13.8H17V13Zm9.3 7.7v9.1h8.5c4 0 6.4-1.7 6.4-4.6 0-2.8-2.4-4.5-6.4-4.5h-8.5Z" fill="#2F5D46"/>
+  <path d="M45.5 8.5c4.2 1.4 7.2 4.6 8.4 8.6" fill="none" stroke="#1F7A4D" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M54.5 17.8 55 24l-6.2-1.2" fill="none" stroke="#1F7A4D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

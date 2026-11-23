@@ -1,6 +1,8 @@
 import { Fragment, useEffect, useState, type FormEvent } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router'
 import {
+  Accessibility,
+  Activity,
   Bell,
   BookOpen,
   Building2,
@@ -13,10 +15,9 @@ import {
   Kanban,
   Menu,
   Search,
-  ShieldCheck,
+  Tags,
   User,
   Award,
-  FileSignature,
   FileText,
   Layers3,
   MessagesSquare,
@@ -54,9 +55,9 @@ import { primaryRoleLabel } from '@/lib/role-labels'
 const NAV: NavItem[] = [
   // 一级入口只留六个：看得懂、找得到、点得进。
   { to: '/', label: '首页', icon: Home, group: '一级入口' },
-  { to: '/catalog', label: '内容', icon: BookOpen, group: '一级入口' },
+  { to: '/catalog', label: '内容库', icon: BookOpen, group: '一级入口' },
   { to: '/issues', label: '合集', icon: Layers3, group: '一级入口' },
-  { to: '/forum', label: '讨论', icon: MessagesSquare, group: '一级入口' },
+  { to: '/forum', label: '讨论区', icon: MessagesSquare, group: '一级入口' },
   { to: '/guide', label: '怎么用', icon: Compass, group: '一级入口' },
   { to: '/me', label: '我的', icon: User, group: '一级入口' },
 
@@ -78,7 +79,10 @@ const NAV: NavItem[] = [
     roles: ['editor', 'editor_in_chief'],
     group: '工作台',
   },
-  { to: '/about', label: '关于站点', icon: Building2, group: '关于' },
+  { to: '/about', label: '关于此处', icon: Building2, group: '关于' },
+  { to: '/tags', label: '标签与归档', icon: Tags, group: '关于' },
+  { to: '/status', label: '站点状态', icon: Activity, group: '关于' },
+  { to: '/accessibility', label: '可访问性', icon: Accessibility, group: '关于' },
   { to: '/admin', label: '站务管理', icon: Gavel, auth: true, adminOnly: true, group: '站点管理' },
 ]
 
@@ -227,13 +231,13 @@ export function AppShell() {
     e.preventDefault()
     const q = cmdQ.trim()
     setCmdOpen(false)
-    void navigate({ to: '/catalog', search: q ? { q } : {} })
+    void navigate({ to: '/search', search: q ? { q } : {} })
   }
 
   const submitPublicSearch = (e: FormEvent) => {
     e.preventDefault()
     const q = publicQ.trim()
-    void navigate({ to: '/catalog', search: q ? { q } : {} })
+    void navigate({ to: '/search', search: q ? { q } : {} })
   }
 
   const onLogout = async () => {
@@ -271,20 +275,20 @@ export function AppShell() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="gap-2" aria-label={text('账号菜单', lang)}>
-          <Avatar className="h-7 w-7">
+          <Avatar className="h-7 w-7 shrink-0">
             <AvatarImage src={user.avatar_url ?? undefined} alt="" />
             <AvatarFallback>{displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
-          <span className="hidden text-sm sm:inline">{displayName}</span>
+          <span className="hidden max-w-[8rem] truncate text-sm sm:inline">{displayName}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>{displayName}</DropdownMenuLabel>
+        <DropdownMenuLabel className="max-w-56 truncate">{displayName}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link to="/me">
             <Award className="h-4 w-4" />
-            {text('个人中心', lang)}
+            我的
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
@@ -298,42 +302,6 @@ export function AppShell() {
             ) : null}
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="/submissions">
-            <FileSignature className="h-4 w-4" />
-            我的作品
-          </Link>
-        </DropdownMenuItem>
-        {(isAdmin ||
-          (user.roles ?? []).some((role) =>
-            ['reviewer', 'senior_reviewer', 'editor', 'editor_in_chief'].includes(role),
-          )) && (
-          <DropdownMenuItem asChild>
-            <Link to="/review" search={{ tab: 'assignments' }}>
-              <ClipboardCheck className="h-4 w-4" />
-              互评台
-            </Link>
-          </DropdownMenuItem>
-        )}
-        {(isAdmin ||
-          (user.roles ?? []).some((role) =>
-            ['editor', 'editor_in_chief'].includes(role),
-          )) && (
-          <DropdownMenuItem asChild>
-            <Link to="/submissions/pending">
-              <Kanban className="h-4 w-4" />
-              内容台
-            </Link>
-          </DropdownMenuItem>
-        )}
-        {isAdmin && (
-          <DropdownMenuItem asChild>
-            <Link to="/admin">
-              <ShieldCheck className="h-4 w-4" />
-              站务管理
-            </Link>
-          </DropdownMenuItem>
-        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onLogout} className="text-destructive">
           {text('退出登录', lang)}
@@ -386,7 +354,7 @@ export function AppShell() {
   // 注意：提前返回必须放在全部 hooks 之后（rules of hooks），
   // 否则会形成条件式 hook 调用（react-hooks/rules-of-hooks 会拦截）。
   // 访客入口页（登录/注册/找回密码/邮箱验证）同样不套工作台侧栏：
-  // 未登录用户看到「我的提交/用户管理」这类导航只会困惑，且登录框应居中独立。
+  // 未登录用户看到「我的作品/站务管理」这类导航只会困惑，且登录框应居中独立。
   const AUTH_FACADE = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email']
   if (location.pathname === '/' || AUTH_FACADE.includes(location.pathname)) {
     return (
@@ -427,18 +395,18 @@ export function AppShell() {
           {text('跳到主要内容', lang)}
         </a>
         <header className="app-header-rule sticky top-0 z-40 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="mx-auto flex h-16 w-full max-w-[1600px] items-center justify-between gap-4 px-5 sm:px-7 lg:px-10 xl:px-12">
-            <Link to="/" className="flex min-w-0 items-center gap-2.5">
-              <BrandMark className="h-7 w-7 shrink-0 text-primary" />
+          <div className="mx-auto flex h-14 w-full max-w-[1600px] items-center justify-between gap-3 px-5 sm:px-7 lg:px-10 xl:px-12">
+            <Link to="/" className="flex min-w-0 items-center gap-2">
+              <BrandMark className="h-6 w-6 shrink-0 text-primary" />
               <span className="flex min-w-0 flex-col leading-none">
-                <span className="font-serif text-lg font-semibold tracking-tight">Rubbish</span>
-                <span className="mt-1 hidden truncate text-[10px] tracking-[0.18em] text-muted-foreground sm:block">
+                <span className="font-serif text-base font-semibold tracking-tight">Rubbish</span>
+                <span className="mt-0.5 hidden truncate text-[10px] tracking-[0.18em] text-muted-foreground sm:block">
                   公开写作与讨论
                 </span>
               </span>
             </Link>
 
-            <nav className="hidden items-center gap-5 text-sm md:flex" aria-label="主导航">
+            <nav className="hidden items-center gap-3 text-sm md:flex" aria-label="主导航">
               {PUBLIC_NAV.map((item) => {
                 const active = publicActive === item.to
                 return (
@@ -458,7 +426,7 @@ export function AppShell() {
             </nav>
 
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <form onSubmit={submitPublicSearch} className="hidden lg:block">
+              <form onSubmit={submitPublicSearch} className="hidden lg:block" aria-label="站内检索">
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                   <Input
@@ -474,7 +442,7 @@ export function AppShell() {
               <Button asChild size="sm" className="hidden sm:inline-flex">
                 <Link to="/submissions/new">
                   <PenLine className="h-3.5 w-3.5" />
-                  写点东西
+                  写一篇
                 </Link>
               </Button>
               {notificationBell}
@@ -623,7 +591,7 @@ export function AppShell() {
               </div>
             ) : (
               <div className="space-y-2">
-                <p className="text-[11px] leading-relaxed text-sidebar-foreground/70">登录后可发帖、评论、收藏与关注。</p>
+                <p className="text-[11px] leading-relaxed text-sidebar-foreground/70">登录后可说话、回复、收藏与关注。</p>
                 <Button asChild size="sm" className="h-8 w-full text-xs"><Link to="/login">登录 / 注册</Link></Button>
               </div>
             )}
@@ -700,7 +668,7 @@ export function AppShell() {
               <input autoFocus value={cmdQ} onChange={(e) => setCmdQ(e.target.value)} placeholder="搜索内容标题、作者、关键词…" className="h-9 flex-1 bg-transparent text-sm outline-none" />
               <kbd className="rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">Enter</kbd>
             </div>
-            <div className="px-4 py-2 text-[11px] text-muted-foreground">回车进入内容库；帖子可在讨论区单独搜索。Esc 关闭。</div>
+            <div className="px-4 py-2 text-[11px] text-muted-foreground">回车查看作品与话题结果。Esc 关闭。</div>
           </form>
         </div>
       )}

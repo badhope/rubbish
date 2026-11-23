@@ -39,7 +39,7 @@ export function MeIdentityHeader({
           </Avatar>
           <div className="min-w-0">
             <p className="editorial-kicker text-[10px] tracking-[0.24em] text-muted-foreground">
-              个人中心
+              我的空间
             </p>
             <h1 className="mt-1 font-serif text-2xl leading-tight tracking-tight sm:text-3xl">
               {displayName}
@@ -60,7 +60,7 @@ export function MeIdentityHeader({
                 className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
               >
                 <Gauge className="h-3.5 w-3.5" />
-                等级 {profile.activity.level}
+                档位 {profile.activity.level}
                 <span className="font-mono text-[10px]">{profile.activity.xp} 经验</span>
               </Link>
             </div>
@@ -76,8 +76,8 @@ export function MeIdentityHeader({
               </div>
               <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
                 {profile.activity.next_threshold
-                  ? `还差 ${profile.activity.to_next} 经验升到 ${profile.activity.level + 1} 级`
-                  : '已满级'}
+                  ? `还差 ${profile.activity.to_next} 经验到下一档`
+                  : '已满档'}
               </span>
             </div>
           </div>
@@ -94,7 +94,7 @@ export function MeIdentityHeader({
             </span>
             <span className="min-w-0">
               <span className="block text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                积分
+                经验
               </span>
               <span className="block font-mono text-lg font-semibold leading-tight text-primary">
                 {formatCoins(balance)}

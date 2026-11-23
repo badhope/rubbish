@@ -1,7 +1,7 @@
 /**
  * 轻量双语壳层：仅覆盖导航、分组、页头与通用操作。
  *
- * 不假装“全站已英文化”——正文、栏目、稿件与后台表单仍是中文。
+ * 不假装“全站已英文化”——话题、作品与后台表单仍是中文。
  * 这里的目标是让英文用户在首屏能看懂去哪里，不制造 70 个页面的
  * 半翻译状态。语言选择持久化到 localStorage。
  */
@@ -13,7 +13,7 @@ const KEY = 'rubbish.lang'
 const EVENT = 'rubbish:lang'
 
 /**
- * 全站英文化尚未完成（正文、栏目、表单、后台仍是中文）。
+ * 全站英文化尚未完成（话题、作品、表单、后台仍是中文）。
  * 在词条齐备前不暴露切换入口：半翻译比不翻译更容易被当成 bug。
  * 保留这里的所有词表，后续按页面补齐后再把开关打开。
  */
@@ -21,8 +21,8 @@ export const SHELL_I18N_ENABLED = false
 
 const NAV_EN: Record<string, string> = {
   '/': 'Home',
-  '/forum': 'Discussion',
-  '/catalog': 'Content',
+  '/forum': 'Discussions',
+  '/catalog': 'Library',
   '/issues': 'Collections',
   '/guide': 'How to use',
   '/me': 'Me',

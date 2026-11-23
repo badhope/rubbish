@@ -44,7 +44,7 @@ export function MePoints() {
   const onCheckin = async () => {
     try {
       const result = await checkin.mutateAsync()
-      if (result.checked_in_today) toast.success('签到成功，积分已到账')
+      if (result.checked_in_today) toast.success('签到成功，经验已到账')
       else toast.info('今天已经签到过了')
     } catch (err) {
       toast.error(extractError(err, '签到失败'))
@@ -68,21 +68,21 @@ export function MePoints() {
       <section>
         <SectionTitle
           kicker="BALANCE"
-          title="积分"
-          hint="积分只记录社区贡献：无现金价值，不能充值或转让；可以在下面的积分商店兑换站内虚拟权益。日常收入有上限，不鼓励刷量。"
+          title="经验"
+          hint="经验只记录社区贡献：无现金价值，不能充值或转让；可以在下面的经验兑换区兑换站内虚拟权益。日常收入有上限，不鼓励刷量。"
         />
         <div className="grid gap-4 border-y py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
           <div>
             <p className="font-serif text-4xl leading-none tracking-tight text-primary">
               {formatCoins(wallet.data?.balance)}
-              <span className="ml-2 font-sans text-sm font-normal text-muted-foreground">积分</span>
+              <span className="ml-2 font-sans text-sm font-normal text-muted-foreground">经验</span>
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
-              累计获得 {formatCoins(wallet.data?.total_earned)} 积分
+              累计获得 {formatCoins(wallet.data?.total_earned)} 经验
             </p>
             <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
-              <span>今日收入上限 {wallet.data?.daily_earn_cap ?? 5} 积分</span>
-              <span>本月全站已发 {wallet.data?.monthly_issued ?? 0} / {wallet.data?.monthly_issue_cap ?? 5000} 积分</span>
+              <span>今日收入上限 {wallet.data?.daily_earn_cap ?? 5} 经验</span>
+              <span>本月全站已发 {wallet.data?.monthly_issued ?? 0} / {wallet.data?.monthly_issue_cap ?? 5000} 经验</span>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -94,12 +94,12 @@ export function MePoints() {
             ) : (
               <Button size="sm" onClick={() => void onCheckin()} disabled={checkin.isPending}>
                 <Coins className="h-3.5 w-3.5" />
-                {checkin.isPending ? '签到中…' : '签到领积分'}
+                {checkin.isPending ? '签到中…' : '签到领经验'}
               </Button>
             )}
             <Button variant="outline" size="sm" asChild>
               <Link to="/guide" search={{ tab: 'help' }}>
-                积分说明
+                经验说明
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </Button>
@@ -110,13 +110,13 @@ export function MePoints() {
       <section>
         <SectionTitle
           kicker="SHOP"
-          title="积分商店"
-          hint="只兑换站内虚拟权益，不涉及现金、充值和实物；自动权益即时生效，人工权益由管理员在站内处理。"
+          title="经验兑换"
+          hint="只兑换站内虚拟权益，不涉及现金、充值和实物；自动权益即时生效，人工权益由站务在站内处理。"
           action={<span className="font-mono text-xs text-muted-foreground">{items.data?.length ?? 0} 件</span>}
         />
         {items.isLoading ? <p className="border-y py-6 text-sm text-muted-foreground">加载中…</p> : null}
         {!items.isLoading && (items.data?.length ?? 0) === 0 ? (
-          <p className="border-y py-6 text-sm text-muted-foreground">商店暂时没有上架权益。</p>
+          <p className="border-y py-6 text-sm text-muted-foreground">兑换区暂时没有上架权益。</p>
         ) : null}
         {(items.data?.length ?? 0) > 0 ? (
           <div className="divide-y border-y">
@@ -149,7 +149,7 @@ export function MePoints() {
                   </div>
                   <div className="flex shrink-0 items-center justify-between gap-4 sm:justify-end">
                     <div className="text-right">
-                      <p className="font-mono text-sm font-semibold text-primary">{formatCoins(item.price_coin)} 积分</p>
+                      <p className="font-mono text-sm font-semibold text-primary">{formatCoins(item.price_coin)} 经验</p>
                       <p className="text-[10px] text-muted-foreground">
                         {item.stock === null ? '不限量' : soldOut ? '已售罄' : `剩 ${item.stock} 件`}
                       </p>
@@ -161,7 +161,7 @@ export function MePoints() {
                       onClick={() => void onBuy(item.id, item.name)}
                     >
                       <ShoppingBag className="h-3.5 w-3.5" />
-                      {soldOut ? '已售罄' : insufficient ? '积分不足' : buyingId === item.id ? '兑换中…' : '兑换'}
+                      {soldOut ? '已售罄' : insufficient ? '经验不足' : buyingId === item.id ? '兑换中…' : '兑换'}
                     </Button>
                   </div>
                 </div>
@@ -178,10 +178,10 @@ export function MePoints() {
                   <span>{purchase.item_name}</span>
                   <span className="text-muted-foreground">
                     {purchase.note ||
-                      ({ paid: '待管理员处理', fulfilled: '已生效', rejected: '已驳回' }[purchase.status] ??
+                      ({ paid: '待站务处理', fulfilled: '已生效', rejected: '已驳回' }[purchase.status] ??
                         purchase.status)}
                   </span>
-                  <span className="font-mono text-primary">-{formatCoins(purchase.price_coin)} 积分</span>
+                  <span className="font-mono text-primary">-{formatCoins(purchase.price_coin)} 经验</span>
                 </li>
               ))}
             </ul>
@@ -192,8 +192,8 @@ export function MePoints() {
       <section>
         <SectionTitle
           kicker="LEDGER"
-          title="积分流水"
-          hint="只展示最近记录；完整流水以服务端为准。"
+          title="经验记录"
+          hint="只展示最近记录；完整记录以服务端为准。"
           action={
             <Button variant="ghost" size="sm" onClick={() => setShowLedger((value) => !value)}>
               {showLedger ? '收起' : `展开 ${wallet.data?.recent.length ?? 0} 条`}
@@ -202,7 +202,7 @@ export function MePoints() {
           }
         />
         {!showLedger ? null : (wallet.data?.recent.length ?? 0) === 0 ? (
-          <p className="border-y py-5 text-sm text-muted-foreground">还没有积分记录。</p>
+          <p className="border-y py-5 text-sm text-muted-foreground">还没有经验记录。</p>
         ) : (
           <ul className="divide-y border-y">
             {wallet.data?.recent.map((event, index) => (

@@ -22,8 +22,8 @@ const PAGE_SIZE = 20
 
 const KIND_LABEL: Record<AppealKind, string> = {
   withdraw: '撤回作品',
-  rescore: '重审评分',
-  rescore_zone: '重审分区',
+  rescore: '重新核对分数',
+  rescore_zone: '重新核对分区',
 }
 
 const STATUS_LABEL: Record<AppealStatus, string> = {
@@ -166,7 +166,7 @@ export default function AppealsPage({
             作者申诉
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            申诉进入队列后按状态处理。通过“撤回作品”会立即下架；重评分、重分区只记录决定，需编辑另行核对。
+            申诉进入队列后按状态处理。通过“撤回作品”会立即下架；重核、重分区只记录决定，需内容整理另行核对。
           </p>
         </div>
         {meta && !focused ? <Badge variant="secondary">当前筛选 {meta.total} 条</Badge> : null}
@@ -201,7 +201,7 @@ export default function AppealsPage({
         {query.isLoading ? <p className="text-sm text-muted-foreground">加载中…</p> : null}
         {query.isError ? (
           <div className="flex items-center justify-between gap-3 border-y py-4 text-sm">
-            <span className="text-muted-foreground">申诉队列加载失败。</span>
+            <span className="text-muted-foreground">申诉队列加载失败，可重试。</span>
             <Button size="sm" variant="outline" onClick={() => void query.refetch()}>重试</Button>
           </div>
         ) : null}

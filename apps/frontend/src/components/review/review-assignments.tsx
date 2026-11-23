@@ -85,7 +85,7 @@ function SimilarityNotice({
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="outline">站内相似度 {score.toFixed(1)} / 100</Badge>
         <span className="text-muted-foreground">
-          {score >= 70 ? '高度重复，建议核对' : '建议核对'} · 仅比对本站资源与已接收作品，不是 外部查重系统 结论
+          {score >= 70 ? '高度重复，建议核对' : '建议核对'} · 仅比对本站资源与已公开作品，不是外部查重系统结论
         </span>
       </div>
       {(matches?.length ?? 0) > 0 ? (
@@ -181,7 +181,7 @@ export function ReviewAssignments() {
       await acceptMut.mutateAsync(id)
       toast.success('已接受互评邀请')
     } catch (err) {
-      toast.error(extractError(err, '操作失败'))
+      toast.error(extractError(err, '没能接受互评邀请，可再试一次'))
     }
   }
 
@@ -193,7 +193,7 @@ export function ReviewAssignments() {
       await declineMut.mutateAsync(id)
       toast.success('已拒绝邀请')
     } catch (err) {
-      toast.error(extractError(err, '操作失败'))
+      toast.error(extractError(err, '没能拒绝互评邀请，可再试一次'))
     }
   }
 
@@ -245,7 +245,7 @@ export function ReviewAssignments() {
       .filter((d) => dimensionIssue(d, reviewForm.dimensions[d.key]) !== null)
       .map((d) => `${d.label}（${dimensionIssue(d, reviewForm.dimensions[d.key])}）`)
     if (incomplete.length) {
-      toast.error(`还有 ${incomplete.length} 个维度未完成：${incomplete.join('、')}`)
+      toast.error(`还有 ${incomplete.length} 个条目未完成：${incomplete.join('、')}`)
       return
     }
     const summary = scoreReviewTotal(reviewForm.track, reviewForm.dimensions)
@@ -292,8 +292,8 @@ export function ReviewAssignments() {
       } else {
         toast.success(
           reviewAttachments.length
-            ? `互评意见与 ${reviewAttachments.length} 个附件已提交`
-            : '互评意见已提交',
+            ? `互评意见与 ${reviewAttachments.length} 个附件已提交；可在「已完成」里查看或补传附件。`
+            : '互评意见已提交；可在「已完成」里查看，有附件可稍后补传。',
         )
       }
       setReviewTargetId(null)
@@ -311,7 +311,7 @@ export function ReviewAssignments() {
     <div>
       <PageHeader
         title="互评工作台"
-        description="写互评意见：先过四问，再按作品类型逐项打分。可以写 Markdown，也可以先看作者/内容整理两个视角；作品默认下载 Word，也能切 PDF。"
+        description="写互评意见：先过四问，再按作品类型逐项核对。可以写 Markdown，也可以先看作者/内容整理两个视角；作品默认下载 Word，也能切 PDF。"
       />
 
       {linkedAssignment.data ? (
@@ -394,7 +394,7 @@ export function ReviewAssignments() {
         <a className="font-medium text-primary hover:underline" href="/guide?tab=authors">
           发布指南
         </a>
-        <div className="mt-1">互评时请对照发布规范看结构、材料、出处和完成度，不必套论文模板。</div>
+        <div className="mt-1">互评时请对照发布规范看结构、材料、出处和完成度，不必套研究模板。</div>
       </div>
 
       <div
@@ -427,7 +427,7 @@ export function ReviewAssignments() {
       {isLoading ? (
         <LoadingSkeleton rows={4} />
       ) : isError ? (
-        <ErrorState message="加载失败" onRetry={() => refetch()} />
+        <ErrorState message="互评任务加载失败，可重试。" onRetry={() => refetch()} />
       ) : !data || data.data.length === 0 ? (
         <EmptyState
           title="暂无互评任务"
@@ -602,7 +602,7 @@ export function ReviewAssignments() {
                     {submitMut.isPending
                       ? '提交中…'
                       : missingReviewDims.length > 0
-                        ? `还差 ${missingReviewDims.length} 维`
+                        ? `还差 ${missingReviewDims.length} 项`
                         : '提交互评意见'}
                   </Button>
                 </DialogFooter>
@@ -776,11 +776,11 @@ function ReviewManuscriptPane({ assignmentId }: { assignmentId: number }) {
         </div>
       </div>
       <div>
-        <div className="text-xs text-muted-foreground">作者</div>
+        <div className="text-xs text-muted-foreground">署名</div>
         <div>{(data.authors ?? []).join(' · ') || '—'}</div>
       </div>
       <div>
-        <div className="text-xs text-muted-foreground">摘要</div>
+        <div className="text-xs text-muted-foreground">开头</div>
         <p className="whitespace-pre-wrap leading-relaxed">{data.abstract || '—'}</p>
       </div>
       <SimilarityNotice score={data.similarity_score} matches={data.similarity_matches} />
@@ -803,7 +803,7 @@ function ReviewManuscriptPane({ assignmentId }: { assignmentId: number }) {
       ) : null}
       {(data.keywords?.length ?? 0) > 0 && (
         <div>
-          <div className="text-xs text-muted-foreground">关键词</div>
+          <div className="text-xs text-muted-foreground">话题</div>
           <div className="mt-1 flex flex-wrap gap-1">
             {data.keywords.map((k) => (
               <Badge key={k} variant="outline" className="text-xs">
@@ -860,11 +860,11 @@ function SubmissionDetailDialog({
               </div>
             </div>
             <div>
-              <div className="text-xs text-muted-foreground">作者</div>
+              <div className="text-xs text-muted-foreground">署名</div>
               <div>{(data.authors ?? []).join(' · ') || '—'}</div>
             </div>
             <div>
-              <div className="text-xs text-muted-foreground">摘要</div>
+              <div className="text-xs text-muted-foreground">开头</div>
               <p className="whitespace-pre-wrap leading-relaxed">
                 {data.abstract || '—'}
               </p>
@@ -891,7 +891,7 @@ function SubmissionDetailDialog({
             ) : null}
             {(data.keywords?.length ?? 0) > 0 && (
               <div>
-                <div className="text-xs text-muted-foreground">关键词</div>
+                <div className="text-xs text-muted-foreground">话题</div>
                 <div className="flex flex-wrap gap-1">
                   {data.keywords.map((k) => (
                     <Badge key={k} variant="outline" className="text-xs">
@@ -916,7 +916,7 @@ function SubmissionDetailDialog({
               )}
               {data.corresponding_author_email && (
                 <div>
-                  <span className="text-muted-foreground">通讯邮箱：</span>
+                  <span className="text-muted-foreground">联系邮箱：</span>
                   {data.corresponding_author_email}
                 </div>
               )}

@@ -66,7 +66,9 @@ NEW_BOARDS_SLUGS = tuple(row[0] for row in NEW_BOARDS)
 
 
 def _tenant_ids(bind) -> list[str]:
-    return [str(row[0]) for row in bind.execute(sa.text("SELECT id FROM tenants ORDER BY id")).all()]
+    return [
+        str(row[0]) for row in bind.execute(sa.text("SELECT id FROM tenants ORDER BY id")).all()
+    ]
 
 
 def upgrade() -> None:
@@ -140,9 +142,7 @@ def upgrade() -> None:
         # Normalize the rooms that remain.
         for old_slug in OLD_SLUGS:
             bind.execute(
-                sa.text(
-                    "DELETE FROM forum_boards WHERE tenant_id = :tid AND slug = :slug"
-                ),
+                sa.text("DELETE FROM forum_boards WHERE tenant_id = :tid AND slug = :slug"),
                 {"tid": tenant_id, "slug": old_slug},
             )
 

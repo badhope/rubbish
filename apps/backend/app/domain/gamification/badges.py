@@ -46,19 +46,19 @@ BADGES: tuple[BadgeSpec, ...] = (
     ),
     # --- 评论 ---
     BadgeSpec("comment.first", "首次发声", "bronze", "讨论", "发布第一条评论。", "comments", 1),
-    BadgeSpec("comment.25", "常驻评审席", "silver", "讨论", "发布 25 条评论。", "comments", 25),
+    BadgeSpec("comment.25", "常来回应", "silver", "讨论", "发布 25 条评论。", "comments", 25),
     BadgeSpec("comment.100", "公共领域", "gold", "讨论", "发布 100 条评论。", "comments", 100),
     # --- 收藏与关注 ---
     BadgeSpec(
         "library.first", "第一格书架", "bronze", "收藏", "建立第一个阅读列表。", "reading_lists", 1
     ),
-    BadgeSpec("library.50", "目录学家", "silver", "收藏", "收藏 50 条条目。", "saved_items", 50),
-    BadgeSpec("follow.5", "学术雷达", "bronze", "关注", "关注 5 位作者。", "followed_authors", 5),
+    BadgeSpec("library.50", "藏书整理人", "silver", "收藏", "收藏 50 条条目。", "saved_items", 50),
+    BadgeSpec("follow.5", "关注者", "bronze", "关注", "关注 5 位作者。", "followed_authors", 5),
     BadgeSpec(
-        "subscribe.3", "学科地图", "silver", "关注", "订阅 3 个学科。", "subscribed_disciplines", 3
+        "subscribe.3", "话题地图", "silver", "关注", "订阅 3 个话题。", "subscribed_disciplines", 3
     ),
     # --- 作品 ---
-    BadgeSpec("submit.first", "第一篇作品", "bronze", "作品", "提交第一篇作品。", "submissions", 1),
+    BadgeSpec("submit.first", "第一篇作品", "bronze", "作品", "发布第一篇作品。", "submissions", 1),
     BadgeSpec(
         "submit.accepted",
         "已发布",
@@ -69,7 +69,13 @@ BADGES: tuple[BadgeSpec, ...] = (
         1,
     ),
     BadgeSpec(
-        "submit.5", "多产作者", "gold", "作品", "累计 5 篇作品通过并公开。", "accepted_submissions", 5
+        "submit.5",
+        "多产作者",
+        "gold",
+        "作品",
+        "累计 5 篇作品通过并公开。",
+        "accepted_submissions",
+        5,
     ),
     BadgeSpec(
         "submit.rejected",
@@ -81,7 +87,7 @@ BADGES: tuple[BadgeSpec, ...] = (
         1,
         True,
     ),
-    # --- 审稿 ---
+    # --- 互评 ---
     BadgeSpec(
         "review.first",
         "第一份互评",
@@ -97,7 +103,13 @@ BADGES: tuple[BadgeSpec, ...] = (
     ),
     # --- 编辑 ---
     BadgeSpec(
-        "editor.first", "第一次内容复核", "silver", "内容整理", "作出第一次内容决定。", "decisions_made", 1
+        "editor.first",
+        "第一次内容复核",
+        "silver",
+        "内容整理",
+        "作出第一次内容决定。",
+        "decisions_made",
+        1,
     ),
     BadgeSpec(
         "editor.50", "内容复核者", "gold", "内容整理", "作出 50 次内容决定。", "decisions_made", 50
@@ -115,10 +127,10 @@ BADGES: tuple[BadgeSpec, ...] = (
     # --- 探索 ---
     BadgeSpec(
         "explore.all-disciplines",
-        "全学科漫游",
+        "全话题漫游",
         "gold",
         "探索",
-        "在全部学科栏目中至少各读完 1 篇。",
+        "在全部话题分区中至少各读完 1 篇。",
         "distinct_disciplines_read",
         5,
     ),

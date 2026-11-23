@@ -104,7 +104,7 @@ export default function AdminReportsPage() {
     <div>
       <PageHeader
         title="举报处置"
-        description="统一查看帖子、回复与评论举报；移除内容走软删除或下架，停用作者会立即让登录态失效。所有动作写入审计日志。"
+        description="统一查看话题、回应与评论举报；移除内容走软删除或下架，停用作者会立即让登录态失效。所有动作写入审计日志。"
       />
 
       <Tabs
@@ -126,7 +126,7 @@ export default function AdminReportsPage() {
       {listQ.isLoading ? (
         <Loading />
       ) : listQ.isError ? (
-        <ErrorState message="加载举报失败" onRetry={() => listQ.refetch()} />
+        <ErrorState message="举报加载失败，可重试。" onRetry={() => listQ.refetch()} />
       ) : rows.length === 0 ? (
         <EmptyState
           title={tab === 'open' ? '没有待处理举报' : '这一栏还是空的'}
@@ -143,12 +143,12 @@ export default function AdminReportsPage() {
                   </Badge>
                   <Badge variant="secondary">
                     {row.target_type === 'reply'
-                      ? '回帖'
+                      ? '回应'
                       : row.target_type === 'comment'
                         ? '评论'
                         : row.target_type === 'submission'
                           ? '其他内容'
-                          : '帖子'}
+                          : '话题'}
                   </Badge>
                   <span className="text-xs text-muted-foreground">
                     举报人：{row.reporter?.display_name || row.reporter?.username || '已注销'}
@@ -219,7 +219,7 @@ export default function AdminReportsPage() {
             <DialogDescription>
               {target?.action === 'suspend_author'
                 ? '会下架被举报内容，并停用作者账号（现有登录态立即失效）。请确认举报属实。'
-                : '会下架被举报内容；帖子与回复软删，评论转为拒绝。'}
+                : '会下架被举报内容；话题与回应软删，评论转为拒绝。'}
             </DialogDescription>
           </DialogHeader>
           <Textarea

@@ -134,7 +134,7 @@ async def check_issue(db: AsyncSession, tenant_id: UUID, volume: str, issue: str
     seen_slugs: dict[str, int] = {}
 
     if not rows:
-        checks.append(_check("issue_empty", "error", f"Vol. {volume} Issue {issue} 没有任何资源"))
+        checks.append(_check("issue_empty", "error", f"合集 {volume}-{issue} 没有任何内容"))
 
     for resource in rows:
         snapshot = _resource_snapshot(resource, submissions.get(resource.id))
@@ -161,7 +161,7 @@ async def check_issue(db: AsyncSession, tenant_id: UUID, volume: str, issue: str
         if not resource.authors:
             checks.append(_check("metadata_authors", "error", f"资源 #{rid} 缺少作者", rid))
         if not (resource.discipline or "").strip():
-            checks.append(_check("metadata_discipline", "warning", f"资源 #{rid} 缺少学科", rid))
+            checks.append(_check("metadata_discipline", "warning", f"资源 #{rid} 缺少话题", rid))
         if not (resource.content_category or "").strip():
             checks.append(_check("metadata_category", "error", f"资源 #{rid} 缺少内容类别", rid))
 

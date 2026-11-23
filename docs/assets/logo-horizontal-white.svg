@@ -1,19 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Rubbish 横版组合 · 反白版 —— 深色背景（官网导航 / 深色文档页头）用。
-  图形标为「印章之 R」双线线框版，与 logo-mark.svg 同几何。
--->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 150" width="560" height="150" role="img" aria-label="Rubbish">
-  <!-- 印章之 R · 反白（64 盒 × 1.875 = 120px） -->
   <g transform="translate(10,15) scale(1.875)">
-    <rect x="3.5" y="3.5" width="57" height="57" rx="11" fill="none" stroke="#F2F6FA" stroke-width="3"/>
-    <rect x="9" y="9" width="46" height="46" rx="5" fill="none" stroke="#F2F6FA" stroke-opacity="0.5" stroke-width="1.2"/>
-    <text x="32" y="44" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-size="34" font-weight="600" fill="#F2F6FA">R</text>
-    <path d="M 50.5 44.5 L 56 50 L 50.5 55.5 L 45 50 Z" fill="#E4C988"/>
+    <path d="M17 13h18.5c8.8 0 14.3 4.6 14.3 12 0 5.6-3.2 9.6-8.6 11l11.4 15H40.4L30.5 37.2h-4.2v13.8H17V13Zm9.3 7.7v9.1h8.5c4 0 6.4-1.7 6.4-4.6 0-2.8-2.4-4.5-6.4-4.5h-8.5Z" fill="#F4EFE4"/>
+    <path d="M45.5 8.5c4.2 1.4 7.2 4.6 8.4 8.6" fill="none" stroke="#F4EFE4" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M54.5 17.8 55 24l-6.2-1.2" fill="none" stroke="#F4EFE4" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
-
-  <text x="148" y="88" font-family="Georgia,'Times New Roman',serif" font-size="58"
-        font-weight="700" letter-spacing="1" fill="#FFFFFF">Rubbish</text>
-  <text x="152" y="118" font-family="Georgia,'Times New Roman',serif" font-size="14"
-        letter-spacing="6.5" fill="#A9B7C9">OPEN SCHOLARLY PUBLISHING</text>
+  <text x="148" y="82" font-family="Georgia,'Noto Serif CJK SC','Songti SC',serif" font-size="56" font-weight="700" fill="#F4EFE4">Rubbish</text>
+  <text x="152" y="114" font-family="'Noto Serif CJK SC','Songti SC',Georgia,serif" font-size="16" letter-spacing="4.4" fill="#CFD8D0">公开写作与讨论</text>
 </svg>

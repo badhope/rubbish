@@ -69,15 +69,27 @@ function PublicProfilePage() {
             <Link to="/me">编辑我的主页</Link>
           </Button>
         ) : (
-          <Button
-            size="sm"
-            variant={data.following ? 'outline' : 'default'}
-            onClick={() => void toggle()}
-            disabled={follow.isPending || unfollow.isPending}
-          >
-            {data.following ? <UserMinus className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
-            {data.following ? '已关注' : '关注'}
-          </Button>
+          <div className="flex items-center gap-2">
+            {data.works.length > 0 ? (
+              <Button asChild size="sm">
+                <Link
+                  to="/catalog/$resourceId"
+                  params={{ resourceId: String(data.works[0].id) }}
+                >
+                  读他的一篇
+                </Link>
+              </Button>
+            ) : null}
+            <Button
+              size="sm"
+              variant={data.following ? 'outline' : 'default'}
+              onClick={() => void toggle()}
+              disabled={follow.isPending || unfollow.isPending}
+            >
+              {data.following ? <UserMinus className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
+              {data.following ? '已关注' : '关注'}
+            </Button>
+          </div>
         )
       }
     />

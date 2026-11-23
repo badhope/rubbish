@@ -1,15 +1,15 @@
 """赛道口径：paper 轨内部再分「研究文章 / 荒诞研究」。
 
-历史背景：本刊曾有 serious / absurd 双赛道，后来一度被荒诞指数取代而
+历史背景：本站曾有 serious / absurd 双赛道，后来一度被荒诞指数取代而
 下线；2026-11 起重新启用为 paper 轨的子类型：serious=研究文章（正经
-研究），absurd=荒诞研究（严格学术文章格式、一本正经地论证一个荒诞命题）。
-它只描述「论文的写法与命题」，不改变 content_track=paper 的评审/计分
-口径，也不影响副刊（content_track=essay）。
+研究），absurd=荒诞研究（严格长文格式、一本正经地论证一个荒诞命题）。
+它只描述「长文的写法与命题」，不改变 content_track=paper 的互评/计分
+口径，也不影响自由创作轨（content_track=essay）。
 
 兼容策略：
 - resources.track / submissions.track 原样保留；
 - 新写入允许 serious / absurd；历史脏值仍归一为 serious；
-- 副刊不展示该字段，读者只看研究文章 / 荒诞研究 / 自由创作三区。
+- 自由创作轨不展示该字段，读者只看研究文章 / 荒诞研究 / 自由创作三区。
 """
 
 from __future__ import annotations
@@ -39,8 +39,8 @@ _CATEGORY_TO_TRACK: Final[dict[str, ContentTrack]] = {
 def resolve_content_track(track: str | None, category: str | None = None) -> ContentTrack:
     """规范化 content_track：合法 track 权威胜出；缺失时按 category 回推。
 
-    fun / rant → essay；academic 或两者都缺省时按学术稿（paper）保守处理——
-    本刊默认是学术刊。
+    fun / rant → essay；academic 或两者都缺省时按长文稿（paper）保守处理——
+    本站默认走长文轨。
     """
     if track in ("paper", "essay"):
         return track  # type: ignore[return-value]
@@ -83,7 +83,7 @@ def derive_content_track(content_category: str | None, db_value: str | None = No
 
 
 def is_paper_track(content_category: str | None, db_value: str | None = None) -> bool:
-    """是否学术稿（paper）：R 因子/篇均指标只统计 paper。"""
+    """是否长文稿（paper）：R 因子/篇均指标只统计 paper。"""
     return resolve_content_track(db_value, content_category) == "paper"
 
 

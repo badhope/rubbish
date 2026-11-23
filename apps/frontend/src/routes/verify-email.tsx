@@ -15,6 +15,8 @@ export const Route = createFileRoute('/verify-email')({
 
 type Phase = 'form' | 'verifying' | 'success' | 'error'
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 function VerifyEmailPage() {
   const navigate = useNavigate()
   const search = useSearch({ strict: false }) as { token?: string; email?: string }
@@ -24,6 +26,8 @@ function VerifyEmailPage() {
   const [email, setEmail] = useState(search.email ?? '')
   const [phase, setPhase] = useState<Phase>('form')
   const [failReason, setFailReason] = useState('')
+  const emailValid = EMAIL_RE.test(email.trim())
+  const tokenValid = token.trim().length > 0
   // ref guard：自动验证只跑一次（StrictMode 下 effect 会跑两遍）
   const autoRanRef = useRef(false)
 
@@ -69,16 +73,17 @@ function VerifyEmailPage() {
 
   const onVerify = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!tokenValid) return
     await runVerify(token)
   }
 
   const onResend = async () => {
-    if (!email) {
-      toast.error('请填写邮箱')
+    if (!emailValid) {
+      toast.error(email.trim() ? '邮箱格式不正确，请检查后再填' : '请填写邮箱')
       return
     }
     try {
-      await resendMut.mutateAsync({ email })
+      await resendMut.mutateAsync({ email: email.trim() })
       toast.success('如果该邮箱已注册，验证邮件已重新发送')
     } catch {
       toast.error('发送失败，请稍后重试')
@@ -167,7 +172,11 @@ function VerifyEmailPage() {
                 required
               />
             </div>
-            <Button type="submit" className="w-full" disabled={verifyMut.isPending}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={verifyMut.isPending || !tokenValid}
+            >
               {verifyMut.isPending ? '验证中…' : '验证'}
             </Button>
           </form>
@@ -185,7 +194,7 @@ function VerifyEmailPage() {
                 type="button"
                 variant="outline"
                 onClick={onResend}
-                disabled={resendMut.isPending}
+                disabled={resendMut.isPending || !emailValid}
               >
                 {resendMut.isPending ? '发送中…' : '发送'}
               </Button>

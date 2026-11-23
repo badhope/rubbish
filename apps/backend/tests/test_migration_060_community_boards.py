@@ -1,4 +1,4 @@
-"""迁移 060：把旧论文栏目重建成荒诞科研社区版块树（SQLite 口径）。"""
+"""迁移 060：把旧论文分区重建成荒诞科研社区版块树（SQLite 口径）。"""
 
 from __future__ import annotations
 

@@ -61,18 +61,18 @@ def test_templates_escape_user_input() -> None:
 
 
 def test_review_templates_carry_due_and_days() -> None:
-    _s1, t1, h1 = review_assigned("审稿人", "论文标题", "https://x/review", 14)
+    _s1, t1, h1 = review_assigned("互评成员", "论文标题", "https://x/review", 14)
     assert "14 天" in t1 and "论文标题" in t1 and "review" in h1
-    s2, t2, _h2 = review_reminder("审稿人", "论文标题", "https://x/review", 9)
+    s2, t2, _h2 = review_reminder("互评成员", "论文标题", "https://x/review", 9)
     assert "9 天" in s2 and "9 天" in t2
 
 
 def test_decision_notice_includes_note() -> None:
     subject, text, html = decision_notice(
-        "作者", "论文", "录用", "按意见修订后录用。", "https://x/s/1"
+        "作者", "论文", "通过", "按意见修订后通过。", "https://x/s/1"
     )
-    assert "录用" in subject
-    assert "按意见修订后录用。" in text and "按意见修订后录用。" in html
+    assert "通过" in subject
+    assert "按意见修订后通过。" in text and "按意见修订后通过。" in html
 
 
 def test_duplicate_registration_template() -> None:

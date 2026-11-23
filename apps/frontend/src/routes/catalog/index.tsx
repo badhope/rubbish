@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute, Link, useNavigate, useSearch } from '@tanstack/react-router'
-import { ChevronDown, FileDown, RefreshCw, SlidersHorizontal } from 'lucide-react'
-import { useIsMobile } from '@/hooks/use-is-mobile'
+import { ArrowRight, ChevronDown, FileDown, RefreshCw, SlidersHorizontal } from 'lucide-react'
 import { useCatalogStats, useResources } from '@/hooks/api/use-modules'
 import type { ResourceType } from '@/lib/types'
 import { formatAuthors, cn } from '@/lib/utils'
@@ -44,10 +43,10 @@ interface CatalogSearch {
   q?: string
   type?: ResourceType
   category?: 'academic' | 'fun' | 'rant' | 'essay'
-  /** 轨道切换：paper=文章，essay=自由创作。
+  /** 轨道切换：paper=研究长文，essay=自由创作。
    *  不写 = 全部。URL 持久化，刷新不丢。 */
   track?: 'paper' | 'essay'
-  /** 文章子类型：serious=实证研究 / absurd=荒诞写作。 */
+  /** 作品子类型：serious=实证研究 / absurd=荒诞写作。 */
   kind?: 'serious' | 'absurd'
   /** 娱乐轨文体（v1.16）：只在 track=essay 时生效 */
   genre?: 'joke' | 'fiction' | 'review' | 'guide' | 'essay' | 'poetry' | 'rant'
@@ -58,40 +57,39 @@ interface CatalogSearch {
   author?: string
   doi?: string
   clc?: string
-  /** 栏目 slug（article_section）。 */
+  /** 话题分区 slug（article_section）。 */
   section?: string
-  /** 卷号。 */
+  /** 合集分组（旧 volume 字段，仅兼容数据）。 */
   volume?: string
-  /** 期号。 */
+  /** 合集编号（旧 issue 字段，仅兼容数据）。 */
   issue?: string
-  /** 旧目录字段：期 ID。 */
+  /** 旧目录字段：合集 ID。 */
   issue_id?: number
-  /** 目录排序；random=随机，issue=旧目录顺序，latest=最近更新。 */
+  /** 目录排序；random=随机，issue=合集顺序，latest=最近更新。 */
   sort?: 'issue' | 'random' | 'latest'
   page?: number
   view?: 'list' | 'index'
 }
 
-// 档案只分“研究 / 创作”，不承载旧刊期与栏目叙事。
+// 档案只分“研究 / 创作”，不承载旧报刊分期与分区叙事。
 const TYPE_OPTIONS: { value: ResourceType | 'all'; label: string }[] = [
   { value: 'all', label: '全部类型' },
   { value: 'paper', label: '写作' },
   { value: 'book', label: '图书' },
   { value: 'dataset', label: '数据集' },
-  { value: 'tutorial', label: '教程' },
+  { value: 'tutorial', label: '自由创作' },
 ]
 
 
 export function CatalogListPage() {
   const navigate = useNavigate()
   const search = useSearch({ strict: false }) as CatalogSearch
-  const isMobile = useIsMobile()
 
   // 轨道切换 → 后端 ?track=paper|essay（按 content_track 过滤，与旧 content_category 解耦）。
   // 目录是唯一入口；只有 kind 没有 track 时，按写作处理。
   const effectiveTrack: 'paper' | 'essay' | undefined =
     search.track ?? (search.kind ? 'paper' : undefined)
-  // 档案内默认进入「研究文章」；荒诞写作是同页的并列分区。
+  // 档案内默认进入「研究长文」；荒诞写作是同页的并列分区。
   const paperKind: 'serious' | 'absurd' = search.kind ?? 'serious'
   const statsTrack = effectiveTrack === 'essay' ? 'essay' : effectiveTrack === 'paper' ? 'paper' : undefined
 
@@ -109,7 +107,7 @@ export function CatalogListPage() {
     q: search.q || undefined,
     type: search.type,
     category: search.category || undefined,
-    // 搜索结果页的文案是“全站写作与自由创作”，所以有关键词时必须解除当前分区
+    // 搜索结果页的文案是“全站写作与自由创作”，所以有搜索词时必须解除当前分区
     // 的 track/paper_kind 收窄；否则已改判荒诞、或被分到自由创作的稿在目录检索下会假性 0 命中。
     track: search.q ? undefined : effectiveTrack,
     paper_kind: search.q || search.volume ? undefined : effectiveTrack === 'paper' ? paperKind : undefined,
@@ -178,7 +176,7 @@ export function CatalogListPage() {
     )
   }
 
-  // 总目录不把内容混成一列：先选「文章 / 自由创作」，
+  // 总目录不把内容混成一列：先选「研究长文 / 自由创作」，
   // 档案里再选「实证 / 荒诞」。
   const hasCatalogFilter = Boolean(
     search.q || search.type || search.category || search.discipline || search.year || search.kind || search.volume || search.issue,
@@ -203,7 +201,7 @@ export function CatalogListPage() {
       <div className={cn(isCover && 'flex flex-1 flex-col justify-center')}>
       {!search.q && effectiveTrack === 'paper' && (
         <p className="mb-2 text-center text-[10px] uppercase tracking-[0.35em] text-muted-foreground">
-          {search.issue ? `合集 ${String(search.issue).padStart(2, '0')}` : 'CONTENT'}
+          {search.issue ? `合集 ${String(search.issue).padStart(2, '0')}` : 'ARCHIVE'}
         </p>
       )}
       <PageHeader
@@ -221,12 +219,12 @@ export function CatalogListPage() {
         size={!search.q && effectiveTrack === 'paper' ? 'cover' : 'default'}
         description={
           search.q
-            ? `在全站内容中检索“${search.q}”，命中 ${data?.meta.total ?? '…'} 条。`
+            ? `在全站公开文字中检索“${search.q}”，命中 ${data?.meta.total ?? '…'} 条。`
             : search.volume
-              ? `${search.issue ? `合集 ${String(search.issue).padStart(2, '0')}` : `合集 ${String(search.volume).padStart(2, '0')}`}共 ${data?.meta.total ?? '…'} 篇文章，按发布顺序排列。`
+              ? `${search.issue ? `合集 ${String(search.issue).padStart(2, '0')}` : `合集 ${String(search.volume).padStart(2, '0')}`}共 ${data?.meta.total ?? '…'} 篇作品，按发布顺序排列。`
               : effectiveTrack === 'paper'
-                ? '长文把真问题做清楚，荒诞把离谱的设定做完整。长文有长文的写法，荒诞有荒诞的规矩，各读各的。'
-                : '小说、随笔、评论、指南和吐槽，想怎么写就怎么写。'
+                ? '把真问题做清楚，也允许把荒唐的设定做完整。材料、过程与结论都留在纸面上；各读各的，不必互相假装。'
+                : '小说、随笔、评论、指南与吐槽。无须借研究的骨架，文字自己走路。'
         }
       />
 
@@ -244,46 +242,16 @@ export function CatalogListPage() {
       {isCover ? <ScrollCue label="往下翻" className="pb-36 sm:pb-10" /> : null}
       </section>
 
-      {/* 顶部只留视图切换。文章 / 自由创作的主入口在侧栏与移动端「更多」菜单。 */}
-      <div className="mb-0 hidden flex-wrap items-center justify-between gap-2 sm:mb-4 sm:flex">
-        {!search.volume && (
-          <p className="text-[13px] text-muted-foreground">
-            {effectiveTrack === 'paper'
-              ? paperKind === 'absurd'
-                ? '荒诞写作：设定清楚，推理完整，结论可以离谱'
-                : '研究长文：真问题，材料能对上，过程走得完'
-              : '小说、随笔、评论、指南和吐槽。'}
-          </p>
-        )}
-        <div className="flex items-center gap-2">
-          <Button
-            variant={search.sort === 'latest' ? 'default' : 'outline'}
-            size="sm"
-            className="h-10 px-3"
-            onClick={() => updateSearch({ sort: 'latest', page: 1 })}
-            title="按最近更新排序"
-          >
-            最新
-          </Button>
-          <Button variant="outline" size="sm" className="h-10 px-4" onClick={shuffleFeed} title="随机换一批">
-            <RefreshCw className="h-4 w-4" />
-            换一批
-          </Button>
-          <ViewSwitcher
-            value={viewMode}
-            onChange={(view) => updateSearch({ view })}
-          />
-        </div>
-      </div>
-
-      {/* 桌面端：筛选常驻卡片（md 及以上） */}
-      {!isMobile && (
-        <DesktopFilters search={search} updateSearch={updateSearch} />
-      )}
-
-      {/* 移动端：筛选收进可折叠面板，默认收起，避免挤占浏览空间 */}
-      {isMobile && <MobileFilters search={search} updateSearch={updateSearch} track={statsTrack} resultTotal={data?.meta.total} onShuffle={shuffleFeed} />}
-
+      {/* 筛选只露一层：搜索 + 话题；类型、分区、年份、作者收进“更多筛选”。 */}
+      <Filters
+        search={search}
+        updateSearch={updateSearch}
+        track={statsTrack}
+        resultTotal={data?.meta.total}
+        onShuffle={shuffleFeed}
+        viewMode={viewMode}
+        onViewChange={(view) => updateSearch({ view })}
+      />
 
       {isLoading ? (
         <div className="space-y-3" aria-hidden>
@@ -305,14 +273,22 @@ export function CatalogListPage() {
           title={search.q ? '没有找到匹配的内容' : '这里还空着'}
           description={
             search.q
-              ? '换个更短的关键词，或点上方“清除搜索”回到全部文章。'
+              ? '换个更短的关键词，或清除搜索回到全部作品；也可以按合集顺着读。'
               : effectiveTrack === 'paper'
-                ? '换个筛选条件，或切到另一个写作分区看看。'
-                : '还没有匹配的自由创作，换个筛选条件。'
+                ? '换个话题或分区看看，也可以去合集顺着读。'
+                : '还没有匹配的自由创作，换个文体或关键词试试。'
+          }
+          action={
+            <Button asChild variant="outline" size="sm">
+              <Link to="/issues">
+                按合集浏览
+                <ArrowRight className="ml-1 h-3.5 w-3.5" />
+              </Link>
+            </Button>
           }
         />
       ) : viewMode === 'index' ? (
-        // 默认索引：手机一栏，桌面两栏；没有封面、没有卡片，标题和摘要先读。
+        // 默认索引：手机一栏，桌面两栏；没有封面、没有卡片，标题和开头先读。
         <div className="grid border-t sm:grid-cols-2 sm:gap-x-12" data-testid="catalog-resource-list">
           {data.data.map((r, index) => (
             <div key={r.id} className="border-b">
@@ -407,12 +383,17 @@ export function CatalogListPage() {
 }
 
 // 总目录落地页：不把研究/创作做成两张“门户卡”。
-// 用一个编辑目录：先文章（实证 / 荒诞两行），再自由创作（文体一行）。
+// 用一个整理目录：先研究长文（实证 / 荒诞两行），再自由创作（文体一行）。
 function CatalogHub() {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
-  const { data: stats } = useCatalogStats()
-  const { data: latest } = useResources({ page: 1, page_size: 6, sort: 'created_at', order: 'desc' })
+  const { data: stats, isLoading: statsLoading } = useCatalogStats()
+  const { data: latest, isLoading: latestLoading } = useResources({
+    page: 1,
+    page_size: 6,
+    sort: 'created_at',
+    order: 'desc',
+  })
   const seriousTotal = stats ? stats.by_paper_kind?.serious ?? 0 : undefined
   const absurdTotal = stats ? stats.by_paper_kind?.absurd ?? 0 : undefined
   const paperTotal = seriousTotal == null || absurdTotal == null ? undefined : seriousTotal + absurdTotal
@@ -429,7 +410,7 @@ function CatalogHub() {
     <div className="mx-auto w-full max-w-[1320px]">
       <PageHeader
         title="内容库"
-        description="长文、怪问题、小说和随笔都在这里。可以按合集慢慢读；想发短帖去讨论区，想发长文去发布作品。"
+        description="长文、怪问题、小说与随笔都在这里。按合集慢慢读；想发短帖去讨论区，想写长文去发布作品。"
         actions={
           <Button asChild variant="outline">
             <Link to="/issues">按合集浏览</Link>
@@ -457,15 +438,29 @@ function CatalogHub() {
         </Button>
       </form>
 
-      {latest?.data?.length ? (
+      {latestLoading ? (
+        <section className="mt-8 border-y py-6" aria-hidden>
+          <div className="divide-y">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex gap-4 py-5">
+                <Skeleton className="h-4 w-8 shrink-0" />
+                <div className="min-w-0 flex-1 space-y-2">
+                  <Skeleton className="h-4 w-2/3" />
+                  <Skeleton className="h-3 w-1/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : latest?.data?.length ? (
         <section className="mt-8 border-y py-6">
           <div className="flex flex-wrap items-baseline justify-between gap-3">
             <div>
-              <h2 className="font-serif text-2xl font-semibold tracking-tight">刚刚公开</h2>
+              <h2 className="font-serif text-2xl font-semibold tracking-tight">刚刚放上桌</h2>
               <p className="mt-1 text-sm text-muted-foreground">刚放上桌的几篇。先读一两篇，再决定往哪走。</p>
             </div>
             <Link to="/catalog" search={{ sort: 'latest' }} className="text-sm text-primary hover:underline">
-              全部内容 →
+              全部文字 →
             </Link>
           </div>
           <div className="mt-2 divide-y">
@@ -476,7 +471,7 @@ function CatalogHub() {
         </section>
       ) : null}
 
-      <ContentSpectrum stats={stats} />
+      {statsLoading ? <ContentSpectrumSkeleton /> : <ContentSpectrum stats={stats} />}
 
       <section className="mt-10 border-t pt-7">
         <div className="flex items-baseline justify-between gap-4">
@@ -539,7 +534,7 @@ function CatalogHub() {
         </div>
 
         <p className="mt-4 max-w-2xl text-sm leading-7 text-muted-foreground">
-          {essayTotal ?? '…'} 篇 · 小说、随笔、评论、指南、吐槽；不套研究格式，只谈写得好不好。
+          {essayTotal ?? '…'} 篇 · 小说、随笔、评论、指南、吐槽；不套研究格式，也不计分。
         </p>
         <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
           <Link to="/catalog" search={{ track: 'essay' }} className="text-muted-foreground hover:text-primary">
@@ -578,6 +573,31 @@ function CatalogHub() {
         </p>
       </section>
     </div>
+  )
+}
+
+// 内容地图骨架：统计接口返回前先占住与最终区块接近的高度，
+// 避免数据到达后整段插入、把下面的研究长文/自由创作两节往下推（CLS）。
+function ContentSpectrumSkeleton() {
+  return (
+    <section className="mt-10 border-y py-8" aria-hidden>
+      <div className="space-y-3">
+        <Skeleton className="h-3 w-24" />
+        <Skeleton className="h-8 w-56" />
+        <Skeleton className="h-6 w-72 max-w-full" />
+      </div>
+      <Skeleton className="mt-6 h-3 w-full rounded-full" />
+      <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-5 w-20" />
+        ))}
+      </div>
+      <div className="mt-7 grid gap-x-10 gap-y-3 sm:grid-cols-2">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <Skeleton key={i} className="h-5 w-full" />
+        ))}
+      </div>
+    </section>
   )
 }
 
@@ -635,7 +655,7 @@ function DebouncedSearchInput({
   }, [value, initial, onCommit])
   return (
     <Input
-      placeholder="标题/作者/摘要"
+      placeholder="标题/作者/开头"
       value={value}
       onChange={(e) => setValue(e.target.value)}
       onKeyDown={(e) => {
@@ -644,35 +664,107 @@ function DebouncedSearchInput({
     />
   )
 }
-
-// 桌面常驻卡片与移动折叠面板共用同一组筛选字段（此前是整段复制）。
-// 两边只有容器布局不同，所以布局由调用方用 className 指定。
-function CatalogFilterFields({
+// 筛选只露一层：搜索 + 话题快捷筛选；类型、分区、年份、作者收进“更多筛选”。
+function Filters({
   search,
   updateSearch,
-  className,
-  hideSearch = false,
+  track,
+  resultTotal,
+  onShuffle,
+  viewMode,
+  onViewChange,
 }: {
   search: CatalogSearch
   updateSearch: (patch: Partial<CatalogSearch>) => void
-  className: string
-  hideSearch?: boolean
+  track?: 'paper' | 'essay'
+  resultTotal?: number
+  onShuffle?: () => void
+  viewMode: 'list' | 'index'
+  onViewChange: (view: 'list' | 'index') => void
 }) {
-  const { data: stats } = useCatalogStats()
-  const facetDisciplines = Object.keys(stats?.by_discipline ?? {})
+  const [advancedOpen, setAdvancedOpen] = useState(false)
+  const advancedActive = [
+    search.type,
+    search.section,
+    search.year,
+    search.year_from,
+    search.year_to,
+    search.author,
+  ].filter(Boolean).length
+
   return (
-    <div className={className}>
-      {hideSearch ? null : (
-        <div className="space-y-1.5">
-          <label className="text-xs text-muted-foreground">
-            搜索（输入即搜，回车立即）
-          </label>
+    <div className="mb-4 space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="min-w-0 flex-1 basis-56">
           <DebouncedSearchInput
             initial={search.q ?? ''}
             onCommit={(q) => updateSearch({ q: q || undefined, page: 1 })}
           />
         </div>
+        <Button
+          type="button"
+          variant={search.sort === 'latest' ? 'default' : 'outline'}
+          size="sm"
+          className="h-9 shrink-0 px-3 text-xs"
+          onClick={() => updateSearch({ sort: 'latest', page: 1 })}
+          aria-label="按最近更新排序"
+        >
+          最新
+        </Button>
+        {onShuffle && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-9 shrink-0 gap-1 px-3 text-xs"
+            onClick={onShuffle}
+            aria-label="随机换一批"
+            title="随机换一批"
+          >
+            <RefreshCw className="h-4 w-4" />
+            换一批
+          </Button>
+        )}
+        <ViewSwitcher value={viewMode} onChange={onViewChange} />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="relative h-9 shrink-0 gap-1.5 px-3 text-xs"
+          onClick={() => setAdvancedOpen((v) => !v)}
+          aria-expanded={advancedOpen}
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          更多筛选
+          {advancedActive > 0 && (
+            <span className="rounded-full bg-primary px-1.5 text-[10px] text-primary-foreground">
+              {advancedActive}
+            </span>
+          )}
+        </Button>
+      </div>
+
+      <DisciplineChips search={search} updateSearch={updateSearch} track={track} resultTotal={resultTotal} />
+
+      {advancedOpen && (
+        <div className="rounded-lg border bg-muted/30 p-3">
+          <AdvancedFilters search={search} updateSearch={updateSearch} />
+        </div>
       )}
+    </div>
+  )
+}
+
+// 高级筛选：默认收起，避免打开页面先看到一面筛选墙。
+function AdvancedFilters({
+  search,
+  updateSearch,
+}: {
+  search: CatalogSearch
+  updateSearch: (patch: Partial<CatalogSearch>) => void
+}) {
+  return (
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
       <div className="space-y-1.5">
         <label className="text-xs text-muted-foreground">类型</label>
         <Select
@@ -712,32 +804,6 @@ function CatalogFilterFields({
             {ARTICLE_SECTION_OPTIONS.map((section) => (
               <SelectItem key={section.value} value={section.value}>
                 {section.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-1.5">
-        <label className="text-xs text-muted-foreground">话题</label>
-        <Select
-          value={search.discipline ?? 'all'}
-          onValueChange={(v) =>
-            updateSearch({ discipline: v === 'all' ? undefined : v, page: 1 })
-          }
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">全部方向</SelectItem>
-            {(facetDisciplines.length > 0
-              ? facetDisciplines
-              : search.discipline
-                ? [search.discipline]
-                : []
-            ).map((d) => (
-              <SelectItem key={d} value={d}>
-                {d}
               </SelectItem>
             ))}
           </SelectContent>
@@ -790,174 +856,9 @@ function CatalogFilterFields({
   )
 }
 
-// 移动端筛选：默认收起，点击"筛选"展开。字段与桌面共用，只是容器形态不同。
-function MobileFilters({
-  search,
-  updateSearch,
-  track,
-  resultTotal,
-  onShuffle,
-}: {
-  search: CatalogSearch
-  updateSearch: (patch: Partial<CatalogSearch>) => void
-  track?: 'paper' | 'essay'
-  resultTotal?: number
-  onShuffle?: () => void
-}) {
-  const [open, setOpen] = useState(false)
-  const activeCount = [
-    search.q,
-    search.type,
-    search.discipline,
-    search.year,
-    search.year_from,
-    search.year_to,
-    search.author,
-    search.section,
-    search.volume,
-    search.issue,
-  ].filter(Boolean).length
-
-  return (
-    <div className="mb-3">
-      {track && (
-        <div className="mb-2 flex items-baseline justify-between gap-3">
-          <p className="text-[13px] font-medium text-foreground">
-            {track === 'paper' ? '内容库' : '自由创作'}
-            <span className="ml-1.5 font-normal text-muted-foreground">
-              · {resultTotal ?? '…'} 篇
-            </span>
-          </p>
-          <p className="text-[11px] text-muted-foreground">按最近更新随机编排</p>
-        </div>
-      )}
-      <div className="flex items-start gap-2">
-        {/* 搜索是目录页的第一动作；筛选收成同一行的一个按钮，不再占一整行。 */}
-        <div className="min-w-0 flex-1">
-          <DebouncedSearchInput
-            initial={search.q ?? ''}
-            onCommit={(q) => updateSearch({ q: q || undefined, page: 1 })}
-          />
-        </div>
-        <Button
-          type="button"
-          variant={search.sort === 'latest' ? 'default' : 'outline'}
-          className="h-10 shrink-0 px-2.5 text-xs"
-          onClick={() => updateSearch({ sort: 'latest', page: 1 })}
-          aria-label="按最近更新排序"
-        >
-          最新
-        </Button>
-        {onShuffle && (
-          <Button
-            type="button"
-            variant="outline"
-            className="h-10 shrink-0 gap-1 px-2.5 text-xs"
-            onClick={onShuffle}
-            aria-label="随机换一批"
-            title="随机换一批"
-          >
-            <RefreshCw className="h-4 w-4" />
-            换一批
-          </Button>
-        )}
-        <Button
-          type="button"
-          variant="outline"
-          className="relative h-10 w-12 shrink-0 px-0"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          aria-label={open ? '收起筛选' : '展开筛选'}
-        >
-          <SlidersHorizontal className="h-4 w-4" />
-          {activeCount > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] text-primary-foreground">
-              {activeCount}
-            </span>
-          )}
-        </Button>
-      </div>
-
-      {open && (
-        <div className="mt-3 rounded-lg border bg-muted/30 p-3">
-          <DisciplineChips search={search} updateSearch={updateSearch} track={track} resultTotal={resultTotal} />
-          <CatalogFilterFields
-            search={search}
-            updateSearch={updateSearch}
-            className="mt-3 space-y-3"
-            hideSearch
-          />
-        </div>
-      )}
-    </div>
-  )
-}
-
-// 桌面端筛选：与移动端同策略——默认收起为一行工具栏（带活跃计数），
-// 带着筛选条件进来时自动展开，避免"打开页面先看到一面筛选墙"。
-function DesktopFilters({
-  search,
-  updateSearch,
-}: {
-  search: CatalogSearch
-  updateSearch: (patch: Partial<CatalogSearch>) => void
-}) {
-  const activeCount = [
-    search.q,
-    search.type,
-    search.discipline,
-    search.year,
-    search.year_from,
-    search.year_to,
-    search.author,
-    search.section,
-    search.volume,
-    search.issue,
-  ].filter(Boolean).length
-  const [open, setOpen] = useState(() => activeCount > 0)
-
-  return (
-    <div className="mb-4">
-      <div className="flex items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="justify-between"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-        >
-          <span className="flex items-center gap-2">
-            <SlidersHorizontal className="h-4 w-4" />
-            筛选
-            {activeCount > 0 && (
-              <span className="rounded-full bg-primary px-1.5 text-xs text-primary-foreground">
-                {activeCount}
-              </span>
-            )}
-          </span>
-        </Button>
-        {activeCount > 0 && !open && (
-          <span className="text-xs text-muted-foreground">正在按条件过滤，点击「筛选」可调整</span>
-        )}
-      </div>
-
-      {open && (
-        <div className="mt-3 rounded-lg border bg-muted/30 p-3">
-          <CatalogFilterFields
-            search={search}
-            updateSearch={updateSearch}
-            className="grid grid-cols-1 gap-3 md:grid-cols-4"
-          />
-        </div>
-      )}
-    </div>
-  )
-}
-
-// 栏目（研究方向）快捷筛选，
+// 话题快捷筛选，
 // 带篇数计数，点击即筛。超过 8 个时默认收起一排展开按钮 ——
-// 已选中的栏目即使排在收起区也会补显出来，不让筛选条件"隐身"。
+// 已选中的话题即使排在收起区也会补显出来，不让筛选条件"隐身"。
 const CHIP_COLLAPSE_AT = 8
 
 function ArchiveDirectory({
@@ -991,7 +892,7 @@ function ArchiveDirectory({
 
   return (
     <section className="mb-8 border-y" aria-label="内容库">
-      <div className="flex flex-wrap items-baseline gap-x-10 gap-y-2 py-5" role="tablist" aria-label="文章分区">
+      <div className="flex flex-wrap items-baseline gap-x-10 gap-y-2 py-5" role="tablist" aria-label="作品分区">
         {kinds.map((kind) => {
           const active = paperKind === kind.id
           return (
@@ -1039,10 +940,10 @@ function DisciplineChips({
     [stats],
   )
   // 搜索态下研究方向 chip 的计数是“全站存量”，与命中数无关，
-  // 继续展示会让人以为“心理学 38 条”就是搜索结果。这里换成结果摘要。
+  // 继续展示会让人以为“心理学 38 条”就是搜索结果。这里换成结果概览。
   if (search.q) {
     return (
-      <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="搜索结果摘要">
+      <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="搜索结果概览">
         <span className="inline-flex items-center gap-1.5 rounded-full border border-primary bg-primary px-3 py-1 text-xs text-primary-foreground">
           结果
           <span className="tabular-nums">{resultTotal ?? 0}</span>
@@ -1084,7 +985,7 @@ function DisciplineChips({
         className={chipCls(!search.discipline)}
         onClick={() => updateSearch({ discipline: undefined, page: 1 })}
       >
-        {track === 'paper' ? '写作' : track === 'essay' ? '自由创作' : '全部'}
+        '全部'
         <span className="tabular-nums opacity-60">{stats?.total ?? '…'}</span>
       </button>
       {visible.map(([name, count]) => (

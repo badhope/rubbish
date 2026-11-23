@@ -111,7 +111,7 @@ const CATEGORY_STYLE: Record<string, string> = {
   collab: 'border-amber-500/25 bg-amber-500/10 text-amber-800 dark:text-amber-300',
   life: 'bg-muted text-foreground border-border',
   site: 'border-primary/25 bg-primary/10 text-primary',
-  // 旧帖子未回填前的兜底
+  // 旧话题未回填前的兜底
   research: 'bg-muted text-foreground border-border',
   planning: 'bg-muted text-foreground border-border',
   'lab-notes': 'bg-muted text-foreground border-border',
@@ -134,7 +134,7 @@ const CATEGORY_LABEL: Record<string, string> = {
   collab: '组队招募',
   life: '创作生活',
   site: '站务与反馈',
-  // 旧帖子未回填前的兜底
+  // 旧话题未回填前的兜底
   research: '记录与复盘',
   planning: '记录与复盘',
   'lab-notes': '记录与复盘',
@@ -246,7 +246,7 @@ function ForumListPage() {
   const paperTitle = search.paperTitle ?? ''
   const discussionPrompt = search.prompt?.trim() ?? ''
   const paperDraftBody = (pid: number) =>
-    `研究文章链接：/catalog/${pid}\n\n${
+    `作品链接：/catalog/${pid}\n\n${
       discussionPrompt ? `先回应这个问题：${discussionPrompt}\n\n` : ''
     }`
 
@@ -255,7 +255,7 @@ function ForumListPage() {
   const titleRef = useRef<HTMLInputElement>(null)
   const bodyRef = useRef<HTMLTextAreaElement>(null)
   const [form, setForm] = useState({
-    title: paperId ? `讨论：${(paperTitle || `研究文章 #${paperId}`).slice(0, 170)}` : '',
+    title: paperId ? `讨论：${(paperTitle || `作品 #${paperId}`).slice(0, 170)}` : '',
     body: paperId ? paperDraftBody(paperId) : '',
     board_id: null as number | null,
     paper_id: paperId,
@@ -277,7 +277,7 @@ function ForumListPage() {
   const leafBoards = allBoards.filter((b) => b.children.length === 0)
   const defaultBoardId = leafBoards.find((b) => b.slug === 'planning')?.id ?? leafBoards[0]?.id ?? null
 
-  // 版块树是异步加载的：从 ?compose=1 直接打开发帖框时表单可能先于版块数据初始化。
+  // 版块树是异步加载的：从 ?compose=1 直接打开说话框时表单可能先于版块数据初始化。
   // 加载完成后再补上默认版块，避免标题和正文都填好后“发布”仍不可用。
   useEffect(() => {
     if (!open || form.board_id !== null || defaultBoardId === null) return
@@ -306,7 +306,7 @@ function ForumListPage() {
   const createMut = useMutation({
     mutationFn: async () => (await api.post('/forum/topics', form)).data,
     onSuccess: (data: ForumTopic) => {
-      toast.success('已发布')
+      toast.success('已发出')
       void qc.invalidateQueries({ queryKey: ['forum'] })
       setOpen(false)
       setForm({ title: '', body: '', board_id: defaultBoardId, paper_id: null, is_fictional: false })
@@ -317,7 +317,7 @@ function ForumListPage() {
       }
       void navigate({ to: '/forum/$topicId', params: { topicId: String(data.id) } })
     },
-    onError: (err) => toast.error(extractError(err, '发布失败')),
+    onError: (err) => toast.error(extractError(err, '发送失败')),
   })
 
   const reportMut = useMutation({
@@ -358,7 +358,7 @@ function ForumListPage() {
         : null
     setForm({
       title: paperId
-        ? `讨论：${(paperTitle || `研究文章 #${paperId}`).slice(0, 170)}`
+        ? `讨论：${(paperTitle || `作品 #${paperId}`).slice(0, 170)}`
         : usableDraft?.title ?? '',
       body: paperId
         ? paperDraftBody(paperId)
@@ -402,7 +402,7 @@ function ForumListPage() {
     <div className="mx-auto w-full max-w-4xl space-y-4">
       <PageHeader
         title="讨论区"
-        description="写法、复盘、组队，还有写作之外的生活。登录就能发帖，不用攒积分。"
+        description="写法、复盘、组队，以及写作之外的生活。登录即可说话，不必攒经验。"
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" asChild>
@@ -413,7 +413,7 @@ function ForumListPage() {
             </Button>
             <Button onClick={openComposer}>
               <Plus className="h-4 w-4" />
-              写一帖
+              说一句
             </Button>
           </div>
         }
@@ -426,7 +426,7 @@ function ForumListPage() {
             <p className="mt-1 font-serif text-base leading-snug">你最近一次推翻重写，是因为什么？</p>
           </div>
           <Button size="sm" variant="outline" onClick={openComposer}>
-            写一段
+            回应一下
           </Button>
         </div>
       ) : null}
@@ -435,7 +435,7 @@ function ForumListPage() {
         <Card className="border-primary/30 bg-primary/5">
           <CardContent className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm">
             <span className="min-w-0">
-              正在围绕研究文章
+              正在围绕一篇作品
               <Link
                 to="/catalog/$resourceId"
                 params={{ resourceId: String(paperId) }}
@@ -450,7 +450,7 @@ function ForumListPage() {
               onClick={openComposer}
             >
               <Plus className="h-4 w-4" />
-              写第一条
+              说一句
             </Button>
           </CardContent>
         </Card>
@@ -469,7 +469,7 @@ function ForumListPage() {
             value={queryInput}
             onChange={(e) => setQueryInput(e.target.value)}
             placeholder="搜索标题或正文"
-            aria-label="搜索帖子"
+            aria-label="搜索话题"
             className="h-8 pl-8 pr-8 text-xs"
           />
           {queryInput ? (
@@ -557,11 +557,11 @@ function ForumListPage() {
         <ErrorState message="加载社区失败" onRetry={() => listQ.refetch()} />
       ) : topics.length === 0 ? (
         <EmptyState
-          title={keyword ? '没有找到匹配的帖子' : '还没有帖子'}
+          title={keyword ? '没有找到匹配的话题' : '桌边还空着'}
           description={
             keyword
-              ? '换个更短的关键词，或清除搜索看全部帖子。'
-              : '第一个帖子可以是你：问一个问题，或提一条建议。'
+              ? '换个更短的关键词，或清除搜索看全部话题。'
+              : '第一句话可以从你开始：问一个问题，或留一条建议。'
           }
           action={
             keyword ? (
@@ -574,7 +574,7 @@ function ForumListPage() {
               </Button>
             ) : (
               <Button size="sm" onClick={openComposer}>
-                发第一个帖
+                写下第一句
               </Button>
             )
           }
@@ -585,8 +585,8 @@ function ForumListPage() {
             <div
               key={t.id}
               className={cn(
-                'flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-muted/20',
-                // 社区公告用左侧主色条突出：公告不是普通帖子
+                'flex items-start gap-3 px-4 py-4 transition-colors hover:bg-muted/20',
+                // 社区公告用左侧主色条突出：公告不是普通话题
                 (t.category === 'notice' || t.category === 'announcements') && 'border-l-4 border-l-primary',
               )}
             >
@@ -687,10 +687,10 @@ function ForumListPage() {
         >
           <div className="flex items-center justify-between border-b px-4 py-3 sm:px-6">
             <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">新帖</p>
-              <DialogTitle className="mt-1 font-serif text-xl tracking-tight">写一帖</DialogTitle>
+              <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">新话题</p>
+              <DialogTitle className="mt-1 font-serif text-xl tracking-tight">说一句</DialogTitle>
             </div>
-            <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="关闭发帖">
+            <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="关闭说话">
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -703,7 +703,7 @@ function ForumListPage() {
                 onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
                 maxLength={200}
                 placeholder="标题：你想聊什么"
-                aria-label="帖子标题"
+                aria-label="话题标题"
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
                     event.preventDefault()
@@ -722,7 +722,7 @@ function ForumListPage() {
                       setBoardPickerOpen(false)
                     }}
                   >
-                    <SelectTrigger className="h-8 w-[280px] text-xs" aria-label="选择分区">
+                    <SelectTrigger className="h-8 w-full text-xs" aria-label="选择分区">
                       <SelectValue placeholder="选择分区" />
                     </SelectTrigger>
                     <SelectContent>
@@ -744,7 +744,7 @@ function ForumListPage() {
                     <span className="text-primary">修改</span>
                   </button>
                 )}
-                <span className="text-[11px] text-muted-foreground">发布登录即可，不需要积分。</span>
+                <span className="text-[11px] text-muted-foreground">登录即可说话，不需要经验。</span>
                 <label className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs text-muted-foreground">
                   <input
                     type="checkbox"
@@ -783,7 +783,7 @@ function ForumListPage() {
                   onClick={publishTopic}
                   disabled={createMut.isPending || !form.board_id || form.title.trim().length < 2 || form.body.trim().length < 2}
                 >
-                  {createMut.isPending ? '发布中…' : '发布'}
+                  {createMut.isPending ? '发送中…' : '说一句'}
                 </Button>
               </div>
             </div>

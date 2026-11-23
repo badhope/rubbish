@@ -45,8 +45,8 @@ const PENDING_QUEUE: {
   count?: 'claims' | 'comments' | 'reports' | 'roles'
 }[] = [
   {
-    title: '认领审批',
-    desc: '作者认领存量文章',
+    title: '认领处理',
+    desc: '作者认领存量作品',
     to: '/admin/people',
     search: { section: 'claims' },
     icon: FileSignature,
@@ -61,7 +61,7 @@ const PENDING_QUEUE: {
     count: 'roles',
   },
   {
-    title: '评论审核',
+    title: '评论处理',
     desc: '待看、通过、不通过',
     to: '/admin/content',
     search: { section: 'comments' },
@@ -86,7 +86,7 @@ const DOMAINS: {
 }[] = [
   {
     title: '内容与讨论',
-    desc: '公告、分区、评论审核、举报',
+    desc: '公告、分区、评论处理、举报',
     to: '/admin/content',
     icon: Layers,
   },
@@ -97,8 +97,8 @@ const DOMAINS: {
     icon: Users,
   },
   {
-    title: '积分规则',
-    desc: '发放口径、每个动作的积分',
+    title: '经验规则',
+    desc: '发放口径、每个动作的经验',
     to: '/admin/economy',
     icon: Coins,
   },

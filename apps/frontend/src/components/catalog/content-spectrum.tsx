@@ -5,7 +5,7 @@ import type { ResourceStats } from '@/lib/types'
  * 这里有什么：用一条堆叠条和一组可点击的横条，回答“站里到底有什么”。
  *
  * 这不是运营仪表盘。它只展示公开目录的构成，并把每个数字变成筛选入口；
- * 读者不需要先理解“轨道 / 类别 / 学科”三套词，再开始找文章。
+ * 读者不需要先理解“轨道 / 类别 / 话题”三套词，再开始找作品。
  */
 export function ContentSpectrum({ stats }: { stats?: ResourceStats }) {
   if (!stats) return null

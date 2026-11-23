@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type KeyboardEvent } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { ArrowUpRight, Bell, CheckCheck, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -11,10 +11,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Loading } from '@/components/common/state'
+import { ErrorState, Loading } from '@/components/common/state'
 import { Pagination } from '@/components/common/pagination'
 import { notificationDestination } from '@/lib/notification-link'
 import { cn } from '@/lib/utils'
+import {
+  NOTIFICATION_LINE_SCROLL_PX,
+  NOTIFICATION_LIST_CLASS,
+  notificationListScrollAction,
+} from './notification-scroll'
 import { shortDateTime } from './format'
 
 export function NotificationsDialog({
@@ -40,7 +45,7 @@ export function NotificationsDialog({
       await markAll.mutateAsync()
       toast.success('通知已全部标为已读')
     } catch {
-      toast.error('操作失败，请稍后再试')
+      toast.error('没能全部标为已读，可再试一次')
     }
   }
 
@@ -57,7 +62,7 @@ export function NotificationsDialog({
       await remove.mutateAsync(id)
       toast.success('通知已删除')
     } catch {
-      toast.error('删除失败，请稍后再试')
+      toast.error('通知删除失败，可再试一次。')
     }
   }
 
@@ -84,10 +89,26 @@ export function NotificationsDialog({
     } as never)
   }
 
+  const onListKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const action = notificationListScrollAction(event.key)
+    if (!action) return
+    event.preventDefault()
+    const el = event.currentTarget
+    if (action.mode === 'top') {
+      el.scrollTo({ top: 0 })
+    } else if (action.mode === 'bottom') {
+      el.scrollTo({ top: el.scrollHeight })
+    } else {
+      const amount =
+        action.mode === 'page' ? el.clientHeight : NOTIFICATION_LINE_SCROLL_PX
+      el.scrollBy({ top: action.direction * amount })
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[86vh] max-w-2xl gap-0 overflow-hidden p-0">
-        <DialogHeader className="border-b px-5 py-4">
+      <DialogContent className="flex max-h-[86vh] max-w-2xl flex-col gap-0 overflow-hidden p-0">
+        <DialogHeader className="shrink-0 border-b px-5 py-4">
           <div className="flex flex-wrap items-start justify-between gap-3 pr-6">
             <div>
               <DialogTitle className="flex items-center gap-2 text-lg">
@@ -98,30 +119,60 @@ export function NotificationsDialog({
                 最近 50 条。点一条，直接去处理；已读会自己记上。
               </DialogDescription>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => void onMarkAll()}
-              disabled={markAll.isPending || (notifications.data?.data.length ?? 0) === 0}
-            >
-              <CheckCheck className="h-3.5 w-3.5" />
-              全部已读
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  onOpenChange(false)
+                  void navigate({
+                    to: '/me',
+                    search: { tab: 'settings', section: 'notifications' },
+                  })
+                }}
+              >
+                通知偏好
+              </Button>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void onMarkAll()}
+                disabled={markAll.isPending || (notifications.data?.data.length ?? 0) === 0}
+              >
+                <CheckCheck className="h-3.5 w-3.5" />
+                全部已读
+              </Button>
+            </div>
           </div>
         </DialogHeader>
 
-        <div className="min-h-0 overflow-y-auto px-5">
+        <div
+          className={NOTIFICATION_LIST_CLASS}
+          role="region"
+          aria-label="通知列表"
+          tabIndex={-1}
+          onKeyDown={onListKeyDown}
+        >
+          {notifications.isError ? (
+            <ErrorState
+              message="通知没加载出来"
+              onRetry={() => void notifications.refetch()}
+            />
+          ) : null}
           {notifications.isLoading ? <Loading /> : null}
-          {!notifications.isLoading && (notifications.data?.data.length ?? 0) === 0 ? (
-            <div className="py-14 text-center text-sm text-muted-foreground">
-              还没有通知。有人回复、提到你或关注的人发帖时会出现在这里。
+          {!notifications.isLoading && !notifications.isError && (notifications.data?.data.length ?? 0) === 0 ? (
+            <div className="flex min-h-[160px] items-center justify-center py-14 text-center text-sm text-muted-foreground">
+              还没有通知。有人回应、提到你或关注的人发布内容时会出现在这里。
             </div>
           ) : null}
+          {!notifications.isError ? (
           <ul className="divide-y">
             {notifications.data?.data.map((item) => {
               const destination = notificationDestination(item)
               return (
-                <li key={item.id} className="group flex items-start gap-2">
+                <li key={item.id} className="group flex min-w-0 items-start gap-2">
                   <button
                     type="button"
                     onClick={() => openNotification(item.id, item.is_read, destination)}
@@ -171,7 +222,8 @@ export function NotificationsDialog({
               )
             })}
           </ul>
-          {notifications.data && notifications.data.meta.total_pages > 1 ? (
+          ) : null}
+          {!notifications.isError && notifications.data && notifications.data.meta.total_pages > 1 ? (
             <div className="border-t py-3">
               <Pagination
                 page={notifications.data.meta.page}

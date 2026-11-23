@@ -1,4 +1,4 @@
-"""文章栏目定义（仅展示分组，不参与 paper/essay 判定）。"""
+"""文章分区定义（仅展示分组，不参与 paper/essay 判定）。"""
 
 from typing import Any
 
@@ -6,9 +6,9 @@ SECTIONS: list[dict[str, Any]] = [
     {
         "slug": "this-week",
         "label": "本周",
-        "description": "本周社论、世界观与方法亮点。",
+        "description": "本周编者按、世界观与方法亮点。",
         "parts": [
-            {"slug": "editorial", "label": "社论"},
+            {"slug": "editorial", "label": "编者按"},
             {"slug": "world-view", "label": "世界观"},
             {"slug": "research-highlights", "label": "研究亮点"},
         ],
@@ -25,9 +25,9 @@ SECTIONS: list[dict[str, Any]] = [
     {
         "slug": "books-arts",
         "label": "书与艺术",
-        "description": "书评与艺术评论。",
+        "description": "读后感与艺术评论。",
         "parts": [
-            {"slug": "book-review", "label": "书评"},
+            {"slug": "book-review", "label": "读后感"},
             {"slug": "arts-review", "label": "文艺评论"},
         ],
     },
@@ -43,7 +43,7 @@ SECTIONS: list[dict[str, Any]] = [
     {
         "slug": "工作",
         "label": "工作",
-        "description": "职业、技术与科研工作现场。",
+        "description": "职业、技术与工作现场。",
         "parts": [
             {"slug": "work-feature", "label": "工作特写"},
             {"slug": "technology-feature", "label": "技术特写"},
@@ -61,10 +61,10 @@ SECTIONS: list[dict[str, Any]] = [
     },
     {
         "slug": "amendments",
-        "label": "更正与撤稿",
-        "description": "更正、撤稿与编辑部说明。",
+        "label": "更正与撤回",
+        "description": "更正、撤回与内容整理说明。",
         "parts": [
-            {"slug": "amendments-corrections", "label": "更正与撤稿"},
+            {"slug": "amendments-corrections", "label": "更正与撤回"},
         ],
     },
     {

@@ -1,10 +1,10 @@
 """Reviewer annual conflict-of-interest declarations.
 
-P1-8：每位审稿人每年声明一次冲突对象（作者姓名、邮箱、机构、项目等），
-并新增机构级匹配：审稿人资料中的单位与投稿作者单位重合时直接 409 拦截。
+P1-8：每位互评成员每年声明一次冲突对象（作者姓名、邮箱、机构、项目等），
+并新增机构级匹配：互评成员资料中的单位与发布作者单位重合时直接 409 拦截。
 声明项命中作者姓名/邮箱/单位，或机构重合，都会给出可解释的 matched_terms。
 
-没有声明不阻止分派，编辑侧会显示“未声明”。这样既不会让存量审稿流程
+没有声明不阻止分派，编辑侧会显示“未声明”。这样既不会让存量互评流程
 因为一次迁移集体停摆，也不会假装平台已经知道所有人的利益关系。
 """
 
@@ -119,7 +119,7 @@ def institution_matches(reviewer: User, submission: Submission) -> list[str]:
     """
 
     # 只把“单位”作为主匹配项；院系单独出现（如“计算机系”）过于宽泛，
-    # 仅在审稿人没有填写单位时作为兜底，避免把同院系所有投稿都误判为冲突。
+    # 仅在互评成员没有填写单位时作为兜底，避免把同院系所有发布都误判为冲突。
     reviewer_terms = [text for text in (reviewer.affiliation,) if text and len(_norm(text)) >= 4]
     if not reviewer_terms and reviewer.department and len(_norm(reviewer.department)) >= 4:
         reviewer_terms = [reviewer.department]
@@ -188,7 +188,7 @@ async def latest_declaration(
 
 
 def name_matches_author(reviewer: User, submission: Submission) -> bool:
-    """审稿人用户名与稿件署名作者同名（忽略大小写/首尾空白）。
+    """互评成员用户名与作品署名作者同名（忽略大小写/首尾空白）。
 
     与主编工作台冲突提示同一口径；指派端点服务端强制，直调 API 不能
     绕过前端禁选。

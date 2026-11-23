@@ -32,7 +32,7 @@ export function ReviewBoard() {
       {isLoading ? (
         <LoadingSkeleton rows={4} />
       ) : isError ? (
-        <ErrorState message="互评广场加载失败" onRetry={() => void refetch()} />
+        <ErrorState message="互评广场加载失败，可重试。" onRetry={() => void refetch()} />
       ) : !data?.data.length ? (
         <EmptyState title="现在没有作品在互评" description="过一阵再来看看，或者先去内容库读几篇。" />
       ) : (

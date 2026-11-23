@@ -167,16 +167,16 @@ async def complete_one_review(
 ) -> None:
     """Drive a submission through one full review so it becomes decidable.
 
-    录用现在要求至少一份已完成的审稿意见（见
+    通过现在要求至少一份已完成的互评意见（见
     ``routes_editor.decide_submission`` 的 no_completed_reviews 分支）。
-    此前测试都用"投稿→直接 accept"两步走，靠的正是那个缺陷；现在需要
+    此前测试都用"发布→直接 accept"两步走，靠的正是那个缺陷；现在需要
     真正走一遍分配→接受→提交报告。
 
-    审稿人按 ``reviewer_name`` 区分，避免同一测试里多次调用撞
+    互评成员按 ``reviewer_name`` 区分，避免同一测试里多次调用撞
     (submission_id, reviewer_id) 唯一约束。
     """
-    # 发表闸门要求至少 2 名不同审稿人给出 accept；helper 名字保留历史，
-    # 但实际跑满两份独立意见，避免测试继续依赖“单人录用”的旧漏洞。
+    # 发表闸门要求至少 2 名不同互评成员给出 accept；helper 名字保留历史，
+    # 但实际跑满两份独立意见，避免测试继续依赖“单人通过”的旧漏洞。
     for i in range(2):
         reviewer = await register_reviewer(
             client,
@@ -245,7 +245,7 @@ async def register_user(
 async def test_user(client: AsyncClient) -> dict[str, str | int | bool]:
     """Register a normal user via the API and return login credentials."""
     user = await register_user(client, email="user@example.com", username="testuser")
-    # 等级体系上线后，新用户是 L1；投稿/评论/阅读列表分别要求 L3/L2/L2。
+    # 等级体系上线后，新用户是 L1；发布/评论/阅读列表分别要求 L3/L2/L2。
     # 测试主体默认代表"已完成引导的作者"，因此在这里走一次作者引导，
     # 让 L1→L3 的规则不被每个用例重复实现。
     onboard = await client.post(
@@ -303,7 +303,7 @@ async def admin_user(client: AsyncClient, db_session: AsyncSession) -> dict[str,
 
 
 def review_scores(score: int = 82) -> dict[str, object]:
-    """v5.0 合法审稿评分：五维 + 理由 + 正文证据。"""
+    """v5.0 合法互评评分：五维 + 理由 + 正文证据。"""
     # 90+ 的顶刊级分数在接口层有更长的理由/证据门槛，fixture 也要给出
     # 与该档位匹配的证据，而不是用同一句短话骗过校验。
     high = score >= 90
@@ -382,6 +382,6 @@ async def fake_email_sender() -> AsyncGenerator[FakeEmailSender, None]:
 
 
 async def complete_two_reviews(client: AsyncClient, admin: dict, submission_id: int) -> None:
-    """两位不同审稿人都给出录用意见：发表闸门的正常路径。"""
+    """两位不同互评成员都给出通过意见：发表闸门的正常路径。"""
     await complete_one_review(client, admin, submission_id, reviewer_name="reviewer_a")
     await complete_one_review(client, admin, submission_id, reviewer_name="reviewer_b")

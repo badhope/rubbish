@@ -260,7 +260,7 @@ async def export_documents(
 
     引用文件（BibTeX/RIS 等）走 ``/api/export``；这里只处理正文。最多 20 篇，
     既避免一次请求把 CPU 与内存打满，也让编辑能一次打包「本期专题」。
-    没有线上 Markdown 的稿件会被跳过；全部缺失时返回 404。
+    没有线上 Markdown 的作品会被跳过；全部缺失时返回 404。
     """
 
     import asyncio
@@ -284,7 +284,7 @@ async def export_documents(
 
     documents, skipped_ids = await _load_article_docs(db, ordered)
     if not documents:
-        raise HTTPException(status_code=404, detail="Selected resources have no online manuscript.")
+        raise HTTPException(status_code=404, detail="所选内容没有可导出的在线正文。")
 
     def _render() -> bytes:
         if format == "zip":
@@ -307,10 +307,10 @@ async def export_issue_package(
     issue: str = Query(min_length=1, max_length=20),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
-    """整期全文 ZIP：卷首版面 PDF + 每篇规范化 PDF + manifest。
+    """整组合集 ZIP：目录页 PDF + 每篇规范 PDF + manifest。
 
-    与 ``/api/catalog/issues/{volume}-{issue}/export`` 的「整期版面」互补：
-    后者只有封面/目录/版权页，这里把已公开论文正文一并打包。
+    与 ``/api/catalog/issues/{volume}-{issue}/export`` 的「整组合集版面」互补：
+    后者只有封面/目录/版权页，这里把已公开作品正文一并打包。
     """
 
     import asyncio
@@ -338,11 +338,11 @@ async def export_issue_package(
     if not rows:
         raise HTTPException(status_code=404, detail="Issue is empty or not published")
     if len(rows) > 60:
-        raise HTTPException(status_code=400, detail="Issue has too many resources (limit 60)")
+        raise HTTPException(status_code=400, detail="合集内容过多（上限 60 篇）")
 
     documents, skipped_ids = await _load_article_docs(db, list(rows))
     if not documents:
-        raise HTTPException(status_code=404, detail="Issue has no online manuscript")
+        raise HTTPException(status_code=404, detail="合集内没有可导出的在线正文")
 
     def _render() -> bytes:
         entries = [
@@ -359,9 +359,9 @@ async def export_issue_package(
         front = issue_front_matter_pdf(
             volume=volume,
             issue=issue,
-            theme=f"第 {volume} 卷第 {issue} 期",
-            note="本期全文合集：卷首版面 + 各篇规范化 PDF。",
-            range_label=f"第 {volume} 卷第 {issue} 期",
+            theme=f"合集 {volume}-{issue}",
+            note="合集全文：目录页 + 各篇规范 PDF。",
+            range_label=f"合集 {volume}-{issue}",
             entries=entries,
         )
         return _zip_documents(
@@ -373,8 +373,8 @@ async def export_issue_package(
     payload = await asyncio.wait_for(asyncio.to_thread(_render), timeout=240)
     headers = {
         "Content-Disposition": (
-            f'attachment; filename="rubbish-vol{volume}-issue{issue}.zip"; '
-            f"filename*=UTF-8''{quote(f'Rubbish-Vol{volume}-Issue{issue}.zip')}"
+            f'attachment; filename="rubbish-collection-{volume}-{issue}.zip"; '
+            f"filename*=UTF-8''{quote(f'Rubbish-Collection-{volume}-{issue}.zip')}"
         ),
         "X-Rubbish-Skipped-Ids": ",".join(str(i) for i in skipped_ids),
         "Cache-Control": "private, max-age=3600",

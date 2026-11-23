@@ -22,7 +22,7 @@ const AUTH_PREVIEW_CACHE_LIMIT = 20
 /**
  * 带鉴权的分页 PNG 预览。
  *
- * 原件只对编辑部开放，直接用 <img src> 带不上 Authorization；这里用 axios
+ * 原件只对内容整理开放，直接用 <img src> 带不上 Authorization；这里用 axios
  * 取 blob，再转 data URL（站点 CSP 允许 data:，不允许 blob:）。
  */
 export default function AuthPngPreview({

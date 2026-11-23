@@ -1307,6 +1307,32 @@ export function useReadingList(id: number) {
   })
 }
 
+// 当前用户所有合集里出现过的作品 id 集合：详情页「已收藏」按钮态以服务端
+// 收藏关系为准。合集列表接口只回 item_count，这里逐个取详情汇总作品 id。
+export function useMyLibraryItemIds(enabled = true) {
+  return useQuery<Set<number>>({
+    queryKey: ['library', 'my-item-ids'],
+    enabled,
+    queryFn: async () => {
+      const lists = (
+        await api.get<ReadingListListResponse>('/reading-lists', {
+          params: { page: 1, page_size: 100 },
+        })
+      ).data
+      const ids = new Set<number>()
+      await Promise.all(
+        lists.data.map(async (list) => {
+          const detail = (
+            await api.get<ReadingListDetailResponse>(`/reading-lists/${list.id}`)
+          ).data
+          detail.items.forEach((item) => ids.add(item.resource_id))
+        }),
+      )
+      return ids
+    },
+  })
+}
+
 export function useCreateReadingList() {
   const qc = useQueryClient()
   return useMutation<ReadingListDetailResponse, Error, ReadingListCreate>({
@@ -1344,15 +1370,31 @@ export function useDeleteReadingList() {
   })
 }
 
+type LibraryItemIdsSnapshot = { snapshot?: Set<number> }
+
 export function useAddReadingListItem() {
   const qc = useQueryClient()
   return useMutation<
     ReadingListDetailResponse,
     Error,
-    { listId: number; body: ReadingListItemCreate }
+    { listId: number; body: ReadingListItemCreate },
+    LibraryItemIdsSnapshot
   >({
     mutationFn: async ({ listId, body }) =>
       (await api.post<ReadingListDetailResponse>(`/reading-lists/${listId}/items`, body)).data,
+    // 乐观标记「已收藏」；失败时回滚到快照，按钮态不能停留在假的已收藏。
+    onMutate: ({ body }) => {
+      const snapshot = qc.getQueryData<Set<number>>(['library', 'my-item-ids'])
+      if (snapshot) {
+        const next = new Set(snapshot)
+        next.add(body.resource_id)
+        qc.setQueryData(['library', 'my-item-ids'], next)
+      }
+      return { snapshot }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.snapshot) qc.setQueryData(['library', 'my-item-ids'], context.snapshot)
+    },
     onSuccess: (data, { listId }) => {
       qc.setQueryData(keys.library.detail(listId), data)
       void qc.invalidateQueries({ queryKey: ['library'] })
@@ -1362,12 +1404,30 @@ export function useAddReadingListItem() {
 
 export function useRemoveReadingListItem() {
   const qc = useQueryClient()
-  return useMutation<void, Error, { listId: number; resourceId: number }>({
+  return useMutation<
+    void,
+    Error,
+    { listId: number; resourceId: number },
+    LibraryItemIdsSnapshot
+  >({
     mutationFn: async ({ listId, resourceId }) => {
       await api.delete(`/reading-lists/${listId}/items/${resourceId}`)
     },
+    onMutate: ({ resourceId }) => {
+      const snapshot = qc.getQueryData<Set<number>>(['library', 'my-item-ids'])
+      if (snapshot) {
+        const next = new Set(snapshot)
+        next.delete(resourceId)
+        qc.setQueryData(['library', 'my-item-ids'], next)
+      }
+      return { snapshot }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.snapshot) qc.setQueryData(['library', 'my-item-ids'], context.snapshot)
+    },
     onSuccess: (_, { listId }) => {
       void qc.invalidateQueries({ queryKey: keys.library.detail(listId) })
+      void qc.invalidateQueries({ queryKey: ['library', 'my-item-ids'] })
     },
   })
 }

@@ -86,7 +86,7 @@ class UserAchievement(Base, TenantScopedMixin):
 
 
 class RoleApplication(Base, TenantScopedMixin):
-    """职员角色申请（L5 审稿人 / L6 资深审稿人；L7+ 仅编辑部提拔）。
+    """职员角色申请（L5 互评成员 / L6 资深互评成员；L7+ 仅编辑部提拔）。
 
     状态机 pending → approved / rejected（终态；重申需新开一行）。
     批准动作由 API 层完成：授角色 + 站内通知 + 审计，同一事务。
@@ -138,7 +138,7 @@ __all__ = ["PointEvent", "RoleApplication", "UserAchievement", "UserLevel", "Use
 # ---------------------------------------------------------------------------
 # 等级轴（v1.14）：身份内等级，跨身份不比较、不并列、不进同一榜单。
 #   author  L1–L5（按累计积分）
-#   reviewer R1–R3（按完成审稿份数）
+#   reviewer R1–R3（按完成互评份数）
 #   editor  E1–E3（按累计积分）
 # 娱乐/吐槽轨（essay）可写 point_events 但 delta=0，不推进 user_levels。
 # ---------------------------------------------------------------------------
@@ -208,7 +208,7 @@ class PointEvent(Base, TenantScopedMixin):
 
 
 class CoinRule(Base, TenantScopedMixin):
-    """积分发放规则（主编可在后台调整金额与每日上限）。"""
+    """积分发放规则（站务组可在后台调整金额与每日上限）。"""
 
     __tablename__ = "coin_rules"
     __table_args__ = (UniqueConstraint("tenant_id", "reason", name="uq_coin_rule_tenant_reason"),)

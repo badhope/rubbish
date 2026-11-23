@@ -39,7 +39,7 @@ const TOPIC_CATEGORY_LABELS: Record<string, string> = {
 
 const STAT_ITEMS = [
   { key: 'works', label: '作品', icon: BookOpen },
-  { key: 'forum_topics', label: '帖子', icon: MessageSquareText },
+  { key: 'forum_topics', label: '话题', icon: MessageSquareText },
   { key: 'followers', label: '关注者', icon: Users },
   { key: 'badges', label: '徽章', icon: Award },
 ] as const
@@ -99,14 +99,14 @@ export function PublicProfileView({
             )}
             <div className="min-w-0 flex-1 pb-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="truncate text-xl font-semibold sm:text-2xl">{name}</h1>
+                <h1 className="min-w-0 break-words text-xl font-semibold sm:text-2xl">{name}</h1>
                 {profile.is_owner ? <Badge variant="outline">我的主页</Badge> : null}
               </div>
               <p className="mt-0.5 text-sm text-muted-foreground">@{user.username}</p>
               {user.bio ? (
                 <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">{user.bio}</p>
               ) : (
-                <p className="mt-2 text-sm text-muted-foreground">这个人很神秘，还没有写简介。</p>
+                <p className="mt-2 text-sm text-muted-foreground">还没有写简介。留白也是一种介绍。</p>
               )}
             </div>
           </div>
@@ -182,7 +182,7 @@ export function PublicProfileView({
             </div>
             {profile.works.length === 0 ? (
               <p className="rounded-lg border border-dashed bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
-                还没有公开记录。发布或关联记录后会出现在这里。
+                还没有公开作品。发布之后，会出现在这里。
               </p>
             ) : (
               <div className="grid gap-2 sm:grid-cols-2">
@@ -232,7 +232,7 @@ export function PublicProfileView({
                   <p className="mt-1 leading-relaxed">{user.research_interests}</p>
                 </div>
               ) : (
-                <p className="text-muted-foreground">还没有填写关注方向。</p>
+                <p className="text-muted-foreground">还没有留下关注方向。</p>
               )}
               {profile.badges.length > 0 && (
                 <div>
@@ -264,10 +264,10 @@ export function PublicProfileView({
           <Card>
             <CardContent className="pt-5">
               <h2 className="mb-3 flex items-center gap-2 font-semibold">
-                <MessageSquareText className="h-4 w-4" /> 最近发帖
+                <MessageSquareText className="h-4 w-4" /> 最近说话
               </h2>
               {profile.topics.length === 0 ? (
-                <p className="text-sm text-muted-foreground">还没有在讨论区发过帖子。</p>
+                <p className="text-sm text-muted-foreground">还没有在讨论区留下句子。</p>
               ) : (
                 <ul className="space-y-2">
                   {profile.topics.map((topic) => (
@@ -279,7 +279,7 @@ export function PublicProfileView({
                       >
                         <p className="line-clamp-2 text-sm font-medium group-hover:text-primary">{topic.title}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {TOPIC_CATEGORY_LABELS[topic.category] ?? topic.category} · {topic.reply_count} 回复 · {fmtDate(topic.created_at)}
+                          {TOPIC_CATEGORY_LABELS[topic.category] ?? topic.category} · {topic.reply_count} 回应 · {fmtDate(topic.created_at)}
                         </p>
                       </Link>
                     </li>

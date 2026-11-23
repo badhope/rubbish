@@ -78,9 +78,9 @@ MAX_PAGE_SIZE = 100
 
 
 def _normalize_review_scores(scores: dict[str, Any]) -> dict[str, Any]:
-    """校验并计算审稿评分：按赛道维度（学术五维 / 荒诞六维），分数必填，理由/证据/修改意见选填。
+    """校验并计算互评评分：按赛道维度（学术五维 / 荒诞六维），分数必填，理由/证据/修改意见选填。
 
-    先让审稿人能直接给分；理由和证据填写了就保留，不填也不阻断提交或
+    先让互评成员能直接给分；理由和证据填写了就保留，不填也不阻断提交或
     计分。旧版报告里的自由结构（originality: 4）仍不受理新提交。
     """
     track = str(scores.get("track") or "academic")
@@ -228,7 +228,7 @@ async def get_review_draft(
     current_user: User = Depends(require_reviewer),
     db: AsyncSession = Depends(get_db),
 ) -> ReviewDraftResponse:
-    """读取当前审稿人未提交的草稿；没有草稿时返回 null payload。"""
+    """读取当前互评成员未提交的草稿；没有草稿时返回 null payload。"""
     a = await _get_assignment_for_reviewer(db, assignment_id, current_user.id)
     if a.status not in ("accepted", "completed"):
         raise HTTPException(status_code=400, detail="Assignment is not editable")
@@ -246,7 +246,7 @@ async def save_review_draft(
     current_user: User = Depends(require_reviewer),
     db: AsyncSession = Depends(get_db),
 ) -> ReviewDraftResponse:
-    """保存审稿意见草稿（同一 assignment 仅一份，覆盖写）。"""
+    """保存互评意见草稿（同一 assignment 仅一份，覆盖写）。"""
     import json
 
     if len(json.dumps(body.payload, ensure_ascii=False)) > _REVIEW_DRAFT_MAX_BYTES:
@@ -280,7 +280,7 @@ async def delete_review_draft(
     current_user: User = Depends(require_reviewer),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
-    """丢弃草稿（审稿人主动清空）。"""
+    """丢弃草稿（互评成员主动清空）。"""
     a = await _get_assignment_for_reviewer(db, assignment_id, current_user.id)
     row = await _get_draft(db, a.id)
     if row is not None:
@@ -295,11 +295,11 @@ async def review_board(
     tenant_id=Depends(require_tenant_id),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
-    """公开的「审稿围观」列表。
+    """公开的「互评围观」列表。
 
-    只返回标题、摘要、学科和审稿人数；绝不返回作者身份、邮箱、正文或
-    作品文件。读者/作者可以看到当前有哪些作品在审，审稿人可以在这里
-    直接表达审稿意愿，由编辑部在指派台处理。
+    只返回标题、摘要、学科和互评成员数；绝不返回作者身份、邮箱、正文或
+    作品文件。读者/作者可以看到当前有哪些作品在审，互评成员可以在这里
+    直接表达互评意愿，由编辑部在指派台处理。
     """
     rows = (
         (
@@ -353,7 +353,7 @@ async def express_review_interest(
     tenant_id=Depends(require_tenant_id),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
-    """审稿人表达审稿意愿；不直接改变指派状态，由主编在指派台决定。"""
+    """互评成员表达互评意愿；不直接改变指派状态，由站务组在指派台决定。"""
     sub = (
         await db.execute(
             select(Submission).where(
@@ -388,7 +388,7 @@ async def express_review_interest(
             payload={"reviewer_username": current_user.username},
         )
     )
-    # 让主编在站内通知里直接看到审稿意愿，而不是只留在审计日志。
+    # 让主编在站内通知里直接看到互评意愿，而不是只留在审计日志。
     editor_ids = (
         (
             await db.execute(
@@ -476,13 +476,13 @@ async def get_assignment_submission(
     current_user: User = Depends(require_reviewer),
     db: AsyncSession = Depends(get_db),
 ) -> SubmissionResponse:
-    """审稿人查看分配作品的完整内容（abstract / preview / file_path 等）。
+    """互评成员查看分配作品的完整内容（abstract / preview / file_path 等）。
 
-    单盲（默认）：审稿人看到完整作品，含作者姓名。
+    单盲（默认）：互评成员看到完整作品，含作者姓名。
     双盲：作者姓名/通讯邮箱/venue/DOI/提交人 id 被抹掉（见 blinding 模块），
-    审稿人仍能拿到正文与所有学术内容。
+    互评成员仍能拿到正文与所有学术内容。
 
-    作者侧的剥离（作者看不到审稿人身份）两种模式下都生效，在
+    作者侧的剥离（作者看不到互评成员身份）两种模式下都生效，在
     ``submission.routes.list_review_reports`` 里处理。
 
     仅 pending/accepted/completed 状态可查看；declined/cancelled 不可查看。
@@ -515,7 +515,7 @@ async def get_assignment_submission(
         "id": s.id,
         "title": s.title,
         "type": s.type,
-        # 赛道：审稿人必须知道自己在按哪条赛道的标准评审——同一篇文字
+        # 赛道：互评成员必须知道自己在按哪条赛道的标准评审——同一篇文字
         # 按"正经研究"评可能结构不完整，按"荒诞研究"评则完全成立。
         "track": s.track,
         "authors": s.authors,
@@ -531,7 +531,7 @@ async def get_assignment_submission(
         "download_url": s.download_url,
         "external_url": s.external_url,
         # 双盲下作者可控外链会被 anonymize 抹掉；本字段是编辑提供的
-        # 匿名稿链接，审稿人需要看到，原样透传。
+        # 匿名稿链接，互评成员需要看到，原样透传。
         "anonymized_file_url": s.anonymized_file_url,
         "doi": s.doi,
         "corresponding_author_email": s.corresponding_author_email,
@@ -540,18 +540,18 @@ async def get_assignment_submission(
         "editor_note": s.editor_note,
         "resource_id": s.resource_id,
         "file_path": s.file_path,
-        # 审稿人必须能读到完整正文，而不是只看摘要/截断预览。
-        # 仅对「已分配给该审稿人」的 assignment 下发；由本端点鉴权保证。
+        # 互评成员必须能读到完整正文，而不是只看摘要/截断预览。
+        # 仅对「已分配给该互评成员」的 assignment 下发；由本端点鉴权保证。
         "manuscript_body": manuscript_body,
         "submitted_by": s.submitted_by,
         "submitted_at": s.submitted_at,
         "reviewed_by": s.reviewed_by,
         "reviewed_at": s.reviewed_at,
     }
-    # admin 例外：平台管理员需要能复现问题，且其身份天然不受盲审约束。
+    # admin 例外：平台管理员需要能复现问题，且其身份天然不受匿名互评约束。
     if not current_user.is_admin:
         # 单盲与双盲都走字段裁剪：编辑的内部备注在两种模式下都不属于
-        # 审稿人可见信息（单盲只解除"作者是谁"，不解除编辑的私密评语）。
+        # 互评成员可见信息（单盲只解除"作者是谁"，不解除编辑的私密评语）。
         payload = reviewer_facing_payload(payload, double_blind=(mode == "double_blind"))
     return SubmissionResponse(**payload)
 
@@ -570,7 +570,7 @@ async def accept_assignment(
     if a.submission is None or a.submission.submitted_by == current_user.id:
         raise HTTPException(status_code=403, detail="Cannot review own submission")
     if a.submission is not None:
-        # 接受邀请时再核一次：审稿人可能在收到邀请后才补报冲突。
+        # 接受邀请时再核一次：互评成员可能在收到邀请后才补报冲突。
         await ensure_no_declared_conflict(
             db,
             tenant_id=current_user.tenant_id,
@@ -737,8 +737,8 @@ async def submit_review_report(
         comments_to_author=body.comments_to_author,
     )
     db.add(report)
-    # 特别篇许可：审稿人在提交报告时可显式打标。只授予 true；撤标由编辑部
-    # 走资源管理入口，避免一份普通审稿把既有特许误清掉。
+    # 特别篇许可：互评成员在提交报告时可显式打标。只授予 true；撤标由编辑部
+    # 走资源管理入口，避免一份普通互评把既有特许误清掉。
     if body.special_issue and a.submission.resource_id:
         resource = (
             await db.execute(
@@ -762,7 +762,7 @@ async def submit_review_report(
         await gamification.award(
             db, current_user, "review.completed", ref_type="assignment", ref_id=str(a.id)
         )
-        # 等级轴：审稿人身份 +1（R 等级按完成审稿份数计）。幂等。
+        # 等级轴：互评成员身份 +1（R 等级按完成互评份数计）。幂等。
         from app.domain.gamification import levels_axis
 
         await levels_axis.award_points(
@@ -781,7 +781,7 @@ async def submit_review_report(
         ) from exc
     await db.refresh(report)
 
-    # 通知编辑分配者：审稿人提交了报告
+    # 通知编辑分配者：互评成员提交了报告
     if a.assigned_by is not None:
         await notifications.create(
             db,
@@ -811,7 +811,7 @@ async def upload_review_attachment(
     current_user: User = Depends(require_reviewer),
     db: AsyncSession = Depends(get_db),
 ) -> ReviewReportResponse:
-    """审稿人上传批注件/补充材料。报告提交后仍可补传。"""
+    """互评成员上传批注件/补充材料。报告提交后仍可补传。"""
     report = (
         await db.execute(
             select(ReviewReport)
@@ -869,7 +869,7 @@ async def download_review_attachment(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
-    """审稿人本人、编辑、管理员可下载批注附件；作者不可下载。"""
+    """互评成员本人、编辑、管理员可下载批注附件；作者不可下载。"""
     report = (
         await db.execute(
             select(ReviewReport)
@@ -905,7 +905,7 @@ async def download_review_attachment(
 
 
 # ============================================================================
-# Editor-facing endpoints (P1：双人审稿闸门)
+# Editor-facing endpoints (P1：双人互评闸门)
 # ============================================================================
 
 from pydantic import BaseModel, Field  # noqa: E402
@@ -914,7 +914,7 @@ from pydantic import BaseModel, Field  # noqa: E402
 class AssignReviewersBody(BaseModel):
     reviewer_ids: list[int] = Field(min_length=1, max_length=3)
     due_days: int = Field(default=14, ge=1, le=90)
-    # 主编指定的外审专家：只记录邀请性质，不另建账号。
+    # 主编指定的互评专家：只记录邀请性质，不另建账号。
     is_external: bool = False
     external_affiliation: str | None = Field(default=None, max_length=120)
 
@@ -945,7 +945,7 @@ async def assign_reviewers(
     current_user: User = Depends(require_editor),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
-    """批量指派审稿人（slot 1/2/3）。禁止指派给作品作者/共同作者。"""
+    """批量指派互评成员（slot 1/2/3）。禁止指派给作品作者/共同作者。"""
     tenant_id = require_tenant_id()
     sub = (
         await db.execute(
@@ -993,8 +993,8 @@ async def assign_reviewers(
         round_no = _last_round + 1
     else:
         round_no = _last_round
-    # Slot 代表“本轮第几位审稿人”，completed/declined 也占用过编号。
-    # 只看 pending/accepted 会让补派审稿人与已完成审稿人撞到同一个 slot。
+    # Slot 代表“本轮第几位互评成员”，completed/declined 也占用过编号。
+    # 只看 pending/accepted 会让补派互评成员与已完成互评成员撞到同一个 slot。
     used_slots = {a.slot for a in existing_all if (a.round or 1) == round_no and a.slot}
     next_slot = 1
     created = []
@@ -1087,7 +1087,7 @@ async def review_matrix(
     current_user: User = Depends(require_editor),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
-    """审稿矩阵：每位审稿人状态/推荐/截止/超期/冲突。"""
+    """互评矩阵：每位互评成员状态/推荐/截止/超期/冲突。"""
     tenant_id = require_tenant_id()
     assignments = (
         (
@@ -1143,7 +1143,7 @@ async def review_matrix(
     accept_count = sum(1 for rec in recommendations if rec == "accept")
     reject_count = sum(1 for rec in recommendations if rec == "reject")
     major_count = sum(1 for rec in recommendations if rec == "major_revision")
-    # 冲突：有录用推荐，同时有拒稿/大修；或两份意见方向完全相反。
+    # 冲突：有通过推荐，同时有不通过/退回修改；或两份意见方向完全相反。
     conflict = accept_count > 0 and (reject_count > 0 or major_count > 0)
     adjudicator_rows = [a for a in current if a.is_adjudicator]
     adjudicator_accepted = any(
@@ -1180,7 +1180,7 @@ async def assign_adjudicator(
     只在已有至少 2 份 completed 报告时才允许发起；裁决人不能是作者，
     也不能已经参与过同一作品的评审。裁决意见同样通过
     POST /review/assignments/{id}/submit 提交，recommendation 为 accept
-    时，最终录用闸门才放行。
+    时，最终通过闸门才放行。
     """
     from app.api.deps import ROLE_REVIEWER, ROLE_SENIOR_REVIEWER
     from app.models import AuditLog
@@ -1244,7 +1244,9 @@ async def assign_adjudicator(
             },
         )
     if any(a.reviewer_id == body.reviewer_id for a in assignments):
-        raise HTTPException(status_code=409, detail="该互评成员已参与本作品互评，不能兼任第三方复核人")
+        raise HTTPException(
+            status_code=409, detail="该互评成员已参与本作品互评，不能兼任第三方复核人"
+        )
     await ensure_no_declared_conflict(
         db, tenant_id=tenant_id, reviewer_id=body.reviewer_id, submission=sub
     )
@@ -1252,7 +1254,7 @@ async def assign_adjudicator(
     due = utcnow() + timedelta(days=body.due_days)
     slot = max((a.slot or 0) for a in assignments) + 1
     # 裁决人与被裁决的意见必须同轮，否则矩阵当前轮只剩裁决人一份，
-    # 录用闸门反而永远过不了。
+    # 通过闸门反而永远过不了。
     round_no = current_round
     a = ReviewAssignment(
         tenant_id=tenant_id,
@@ -1272,7 +1274,7 @@ async def assign_adjudicator(
         tenant_id=tenant_id,
         user_id=body.reviewer_id,
         type_="review.adjudicator_invited",
-        title=f"第三方裁决邀请：{sub.title}",
+        title=f"第三方复核邀请：{sub.title}",
         body=(
             f"作品 #{sub.id} 的互评意见不一致。想请你做第三位，看看两边各说了什么，再给一个判断。"
             f"截止 {due.date().isoformat()}。" + (f" 说明：{body.reason}" if body.reason else "")
@@ -1309,7 +1311,7 @@ async def editor_decision(
 ) -> dict[str, Any]:
     """已废弃：最终裁决统一走 PATCH /submissions/{id}/decision。
 
-    旧端点只写 AuditLog、不改业务状态，和投稿模块的真裁决端点形成两套
+    旧端点只写 AuditLog、不改业务状态，和发布模块的真裁决端点形成两套
     互相矛盾的规则。保留路径是为了让旧客户端拿到明确指引，而不是静默
     记一条"已决定"却什么都没发生。
     """
@@ -1336,7 +1338,7 @@ async def editor_decision(
         status_code=status.HTTP_410_GONE,
         detail={
             "code": "deprecated_use_submission_decision",
-            "message": "最终裁决请使用 PATCH /api/submissions/{id}/decision（主编/执行编辑权限）。",
+            "message": "最终复核请使用 PATCH /api/submissions/{id}/decision（站务组权限）。",
         },
     )
 
@@ -1345,10 +1347,10 @@ async def editor_decision(
 async def public_expertise(
     db: AsyncSession = Depends(get_db),
 ) -> PublicExpertiseResponse:
-    """审稿团队匿名专长画像（公开，无需登录）。
+    """互评团队匿名专长画像（公开，无需登录）。
 
-    只输出聚合计数：学科覆盖人数 + 高频能力标签，绝不携带审稿人
-    id/姓名/邮箱——盲审策略下作者永远不可识别审稿人身份。
+    只输出聚合计数：学科覆盖人数 + 高频能力标签，绝不携带互评成员
+    id/姓名/邮箱——匿名互评策略下作者永远不可识别互评成员身份。
     """
     from collections import Counter
 

@@ -1,11 +1,11 @@
 """娱乐稿的文体细分。
 
-``content_track`` 只回答“论文 / 娱乐”，无法回答“娱乐里到底是小说、评论还是整活”。
-本模块给娱乐轨一个独立的 ``content_genre``：编辑部可在后台改，发布时按标题
+``content_track`` 只回答“长文 / 娱乐”，无法回答“娱乐里到底是小说、评论还是整活”。
+本模块给娱乐轨一个独立的 ``content_genre``：内容整理可在后台改，发布时按标题
 给一个可用的初值，避免新稿全都落进“未分类”。
 
-刻意不做“按摘要长度 / 关键词数量”判文体——那是把形式当内容；只按标题里的
-强文体词判，判不出来统一落到 ``joke``（本刊娱乐稿的主体就是学术整活）。
+刻意不做“按开头长度 / 话题数量”判文体——那是把形式当内容；只按标题里的
+强文体词判，判不出来统一落到 ``joke``（本站娱乐稿的主体就是学术整活）。
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ ESSAY_GENRES: tuple[tuple[str, str], ...] = (
 
 ESSAY_GENRE_CODES = {code for code, _ in ESSAY_GENRES}
 
-# 人工兜底：标题里没有强文体词、但编辑部已经明确知道文体的少量稿件。
+# 人工兜底：标题里没有强文体词、但内容整理已经明确知道文体的少量作品。
 # 只列 id，不按标题模糊匹配，避免把同题不同稿一起改掉。
 _MANUAL_GENRE_BY_ID: dict[int, str] = {
     49: "review",  # 旧瓶装新流量：陈年言情 IP 的工业复活术
@@ -40,7 +40,7 @@ _MANUAL_GENRE_BY_ID: dict[int, str] = {
     265: "fiction",  # 论谋反
     266: "essay",  # 一场“自欺欺人”的 Suno 大模型探索记
     301: "fiction",  # 形骸
-    # 吐槽轨：content_category=rant 的 6 篇，即使标题像论文也归“吐槽”，
+    # 吐槽轨：content_category=rant 的 6 篇，即使标题像长文也归“吐槽”，
     # 否则娱乐区会看不到“吐槽”这个入口。
     32: "rant",
     143: "rant",
@@ -107,14 +107,14 @@ _REVIEW = (
 def classify_essay_genre(
     title: str | None, *, category: str | None = None, resource_id: int | None = None
 ) -> str:
-    """给娱乐稿判一个可用的文体初值；论文轨不调用本函数。"""
+    """给娱乐稿判一个可用的文体初值；长文轨不调用本函数。"""
     if resource_id is not None and resource_id in _MANUAL_GENRE_BY_ID:
         return _MANUAL_GENRE_BY_ID[resource_id]
     t = (title or "").strip()
     if not t:
         return "joke"
     # 顺序有讲究：先判“故事/小说”，再判诗，再判指南、随笔、评论，
-    # 最后才按吐槽类别兜底；判不出来统一算本刊主打的“学术整活”。
+    # 最后才按吐槽类别兜底；判不出来统一算本站主打的“学术整活”。
     if any(k in t for k in _FICTION):
         return "fiction"
     if any(k in t for k in _POETRY):

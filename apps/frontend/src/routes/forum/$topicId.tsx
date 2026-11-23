@@ -24,6 +24,8 @@ import { uploadForumImage } from '@/lib/forum'
 import { extractError } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
+import { ConfirmDialog } from '@/components/common/confirm-dialog'
+import { ShareDialog } from '@/components/common/share-dialog'
 import { MarkdownContent } from '@/components/common/markdown-content'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -91,7 +93,7 @@ const CATEGORY_LABEL: Record<string, string> = {
   collab: '组队招募',
   life: '创作生活',
   site: '站务与反馈',
-  // 旧帖子兜底
+  // 旧话题兜底
   research: '记录与复盘',
   planning: '记录与复盘',
   'lab-notes': '记录与复盘',
@@ -222,7 +224,7 @@ function ReplyCard({
           <div className="min-w-0">
             {!isRoot && parentAuthor && (
               <p className="mb-0.5 text-[11px] text-muted-foreground">
-                回复 @{parentAuthor}
+                回应 @{parentAuthor}
               </p>
             )}
             <p className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
@@ -234,7 +236,7 @@ function ReplyCard({
               </span>
               {isTopicAuthor && (
                 <Badge variant="outline" className="h-4 px-1 text-[10px]">
-                  楼主
+                  话题作者
                 </Badge>
               )}
               <span>·</span>
@@ -248,7 +250,7 @@ function ReplyCard({
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6 shrink-0 text-muted-foreground"
-                  aria-label="举报回复"
+                  aria-label="举报回应"
                 >
                   <Flag className="h-3.5 w-3.5" />
                 </Button>
@@ -285,7 +287,7 @@ function ReplyCard({
               className="ml-auto h-7 gap-1 rounded-full px-2 text-[11px] text-muted-foreground"
             >
               <Reply className="h-3.5 w-3.5" />
-              回复
+              回应
             </Button>
           )}
         </div>
@@ -330,9 +332,9 @@ function ForumTopicPage() {
       setReplyTo(null)
       setComposerOpen(false)
       void qc.invalidateQueries({ queryKey: ['forum'] })
-      toast.success(replyTo ? '已回复' : '已发布回复')
+      toast.success(replyTo ? '已回应' : '已发出回应')
     },
-    onError: (err) => toast.error(extractError(err, '回复失败')),
+    onError: (err) => toast.error(extractError(err, '回应失败')),
   })
 
   const sendReply = () => {
@@ -365,7 +367,7 @@ function ForumTopicPage() {
       ).data,
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['forum', 'topic', id, 'follow'] })
-      toast.success(followQ.data?.following ? '已取消关注' : '已关注，有新回复会通知你')
+      toast.success(followQ.data?.following ? '已取消关注' : '已关注，有新回应会通知你')
     },
     onError: (err) => toast.error(extractError(err, '操作失败')),
   })
@@ -375,6 +377,7 @@ function ForumTopicPage() {
   const [editBody, setEditBody] = useState('')
   const [editFictional, setEditFictional] = useState(false)
   const [editBoardId, setEditBoardId] = useState<number | null>(null)
+  const [shareOpen, setShareOpen] = useState(false)
   const boardsQ = useQuery({
     queryKey: ['forum', 'boards'],
     queryFn: async () => (await api.get('/forum/boards')).data,
@@ -407,7 +410,7 @@ function ForumTopicPage() {
     onSuccess: () => {
       setEditOpen(false)
       void qc.invalidateQueries({ queryKey: ['forum'] })
-      toast.success('帖子已更新')
+      toast.success('话题已更新')
     },
     onError: (err) => toast.error(extractError(err, '保存失败')),
   })
@@ -418,6 +421,16 @@ function ForumTopicPage() {
     onSuccess: () => toast.success('已举报，站务会尽快处理'),
     onError: (err) => toast.error(extractError(err, '举报失败')),
   })
+
+  // 举报属对外动作：先选类别，再二次确认；确认后才提交。
+  const [pendingReport, setPendingReport] = useState<{
+    topic_id?: number
+    reply_id?: number
+    reason: string
+  } | null>(null)
+
+  const requestReport = (target: { topic_id?: number; reply_id?: number; reason: string }) =>
+    setPendingReport(target)
 
   const threads = useMemo(() => {
     const roots = (repliesQ.data ?? []).filter((r) => !r.parent_id)
@@ -449,7 +462,7 @@ function ForumTopicPage() {
     return (
       <div className="mt-2 rounded-lg border bg-muted/25 p-2.5">
         <div className="mb-2 text-[11px] text-muted-foreground">
-          回复 @{target.author?.display_name || target.author?.username || '已注销用户'}
+          回应 @{target.author?.display_name || target.author?.username || '已注销用户'}
         </div>
         <Suspense fallback={<div className="flex h-[120px] items-center justify-center rounded-md border bg-muted/20 text-xs text-muted-foreground">编辑器加载中…</div>}>
           <ForumEditor
@@ -458,8 +471,9 @@ function ForumTopicPage() {
             onUploadImage={uploadForumImage}
             minHeight={120}
             autoFocus
+            ariaLabel={`回应 @${target.author?.display_name || target.author?.username || '已注销用户'}`}
             onSubmitShortcut={sendReply}
-            placeholder="写在这条回复下面；Ctrl / ⌘ + Enter 发送"
+            placeholder="写在这条回应下面；Ctrl / ⌘ + Enter 发送"
           />
         </Suspense>
         <div className="mt-2 flex items-center justify-end gap-2">
@@ -468,27 +482,25 @@ function ForumTopicPage() {
           </Button>
           <Button size="sm" onClick={sendReply} disabled={replyMut.isPending || reply.trim().length < 1}>
             <Send className="h-4 w-4" />
-            {replyMut.isPending ? '发送中…' : '回复'}
+            {replyMut.isPending ? '发送中…' : '回应'}
           </Button>
         </div>
       </div>
     )
   }
 
-  const share = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href)
-      toast.success('链接已复制，可以发给同好或朋友')
-    } catch {
-      toast.error('复制失败，请手动复制地址栏')
-    }
-  }
-
   if (topicQ.isLoading) return <Loading />
   if (topicQ.isError || !topicQ.data) {
-    return <ErrorState message="帖子不存在或已被删除" onRetry={() => topicQ.refetch()} />
+    return <ErrorState message="话题不存在或已被删除" onRetry={() => topicQ.refetch()} />
   }
   const topic = topicQ.data
+  const shareDescription = topic.body
+    .replace(/[#>*_`~]/g, '')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+    .replace(/\[[^\]]*\]\([^)]*\)/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 160)
   const canDelete = isAuthenticated && (isAdmin || topic.author?.id === user?.id)
   const canEdit = isAuthenticated && topic.author?.id === user?.id && !topic.is_locked
   const following = followQ.data?.following ?? false
@@ -529,7 +541,7 @@ function ForumTopicPage() {
               </Badge>
             )}
           </div>
-          <h1 className="text-xl font-semibold leading-snug">{topic.title}</h1>
+          <h1 className="min-w-0 break-words text-xl font-semibold leading-snug">{topic.title}</h1>
           <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
             {topic.author?.avatar_url ? (
               <img src={topic.author.avatar_url} alt="" className="h-5 w-5 rounded-full object-cover" />
@@ -537,7 +549,7 @@ function ForumTopicPage() {
             {topic.author?.display_name || topic.author?.username || '已注销用户'} ·{' '}
             {new Date(topic.created_at).toLocaleString('zh-CN')}
           </p>
-          {/* 主楼按 Markdown 渲染；react-markdown 默认转义原始 HTML，XSS 面为零。 */}
+          {/* 话题正文按 Markdown 渲染；react-markdown 默认转义原始 HTML，XSS 面为零。 */}
           <div className="markdown-body text-sm leading-relaxed">
             <MarkdownContent text={topic.body} />
           </div>
@@ -553,7 +565,7 @@ function ForumTopicPage() {
               type="button"
               size="sm"
               variant="ghost"
-              onClick={() => void share()}
+              onClick={() => setShareOpen(true)}
               className="h-7 gap-1 rounded-full px-2 text-[11px] text-muted-foreground"
             >
               <Share2 className="h-3.5 w-3.5" />
@@ -591,7 +603,7 @@ function ForumTopicPage() {
                     variant="ghost"
                     className="h-7 gap-1 px-2 text-[11px] text-destructive"
                     onClick={() => {
-                      if (window.confirm('确定删除这个帖子？')) deleteMut.mutate()
+                      if (window.confirm('确定删除这个话题？')) deleteMut.mutate()
                     }}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -616,7 +628,7 @@ function ForumTopicPage() {
                   {REPORT_REASONS.map((reason) => (
                     <DropdownMenuItem
                       key={reason}
-                      onClick={() => reportMut.mutate({ topic_id: id, reason })}
+                      onClick={() => requestReport({ topic_id: id, reason })}
                     >
                       {reason}
                     </DropdownMenuItem>
@@ -631,12 +643,12 @@ function ForumTopicPage() {
       <div className="space-y-2">
         <p className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
           <MessageSquare className="h-4 w-4" />
-          回复（{topic.reply_count}）
+          回应（{topic.reply_count}）
         </p>
         {repliesQ.isLoading ? (
           <Loading />
         ) : !repliesQ.data?.length ? (
-          <EmptyState title="还没有回复" description="你可以是第一个回应的人。" />
+          <EmptyState title="还没有回应" description="你可以是第一个回应的人。" />
         ) : (
           <div className="space-y-3">
             {threads.map(({ root, children }) => (
@@ -648,7 +660,7 @@ function ForumTopicPage() {
                   topicAuthorId={topic.author?.id}
                   canReply={isAuthenticated && !topic.is_locked}
                   onReply={startReply}
-                  onReport={(target) => reportMut.mutate(target)}
+                  onReport={requestReport}
                   inlineReply={renderInlineReply(root)}
                 />
                 {children.length > 0 && (
@@ -662,7 +674,7 @@ function ForumTopicPage() {
                         topicAuthorId={topic.author?.id}
                         canReply={isAuthenticated && !topic.is_locked}
                         onReply={startReply}
-                        onReport={(target) => reportMut.mutate(target)}
+                        onReport={requestReport}
                         inlineReply={renderInlineReply(child)}
                       />
                     ))}
@@ -676,7 +688,7 @@ function ForumTopicPage() {
 
       {topic.is_locked ? (
         <p className="rounded-md border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-          该帖已锁定，不再接受新回复。
+          这个话题已锁定，不再接受新回应。
         </p>
       ) : replyTo ? null : (
         <Card>
@@ -691,6 +703,7 @@ function ForumTopicPage() {
                       onUploadImage={uploadForumImage}
                       minHeight={160}
                       autoFocus
+                      ariaLabel="回应这条话题"
                       onSubmitShortcut={sendReply}
                       placeholder="写下你的回应…（支持标题、引用、列表、表情和站内表情包）"
                     />
@@ -704,7 +717,7 @@ function ForumTopicPage() {
                       disabled={replyMut.isPending || reply.trim().length < 1}
                     >
                       <Send className="h-4 w-4" />
-                      {replyMut.isPending ? '发送中…' : '发布回复'}
+                      {replyMut.isPending ? '发送中…' : '回应'}
                     </Button>
                   </div>
                 </>
@@ -724,7 +737,7 @@ function ForumTopicPage() {
                 <Link to="/login" search={{ redirect: `/forum/${topicId}` }} className="text-primary hover:underline">
                   登录
                 </Link>{' '}
-                后可以回复。
+                后可以回应。
               </p>
             )}
           </CardContent>
@@ -737,7 +750,7 @@ function ForumTopicPage() {
           className="forum-writing-desk top-0 left-0 flex h-[100dvh] max-h-none w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 p-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:h-[min(90vh,900px)] sm:max-h-[min(90vh,900px)] sm:max-w-[1100px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:border"
         >
           <div className="flex items-center justify-between border-b px-4 py-3 sm:px-6">
-            <DialogTitle className="font-serif text-xl tracking-tight">编辑帖子</DialogTitle>
+            <DialogTitle className="font-serif text-xl tracking-tight">编辑话题</DialogTitle>
             <Button variant="ghost" size="sm" onClick={() => setEditOpen(false)}>
               关闭
             </Button>
@@ -748,14 +761,14 @@ function ForumTopicPage() {
               onChange={(event) => setEditTitle(event.target.value)}
               maxLength={200}
               placeholder="标题"
-              aria-label="帖子标题"
+              aria-label="话题标题"
               className="border-0 bg-transparent px-0 font-serif text-2xl shadow-none focus-visible:ring-0"
             />
             <div className="flex flex-wrap items-center gap-3">
               <select
                 value={editBoardId ?? ''}
                 onChange={(event) => setEditBoardId(event.target.value ? Number(event.target.value) : null)}
-                aria-label="帖子分区"
+                aria-label="话题分区"
                 className="rounded-full border bg-card px-3 py-1 text-xs text-foreground outline-none focus:border-primary"
               >
                 <option value="" disabled>
@@ -789,6 +802,7 @@ function ForumTopicPage() {
                 onChange={setEditBody}
                 onUploadImage={uploadForumImage}
                 minHeight={520}
+                ariaLabel="编辑话题正文"
                 placeholder="修改正文…"
               />
             </Suspense>
@@ -806,6 +820,26 @@ function ForumTopicPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <ShareDialog
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        title={topic.title}
+        description={shareDescription}
+        url={window.location.href}
+      />
+
+      <ConfirmDialog
+        open={pendingReport !== null}
+        title="提交举报？"
+        description="这条内容会提交给站务组处理；举报人身份不会公开。"
+        confirmText="提交举报"
+        onConfirm={() => {
+          if (pendingReport) reportMut.mutate(pendingReport)
+          setPendingReport(null)
+        }}
+        onOpenChange={(open) => !open && setPendingReport(null)}
+      />
     </div>
   )
 }

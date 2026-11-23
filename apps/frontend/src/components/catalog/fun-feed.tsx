@@ -5,14 +5,15 @@ import { ESSAY_GENRES, essayGenreMeta } from '@/lib/essay-genres'
 import { ArticleCover } from '@/components/common/article-cover'
 import { formatAuthors, cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/common/pagination'
 import { EmptyState, ErrorState } from '@/components/common/state'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ScrollCue } from '@/components/common/scroll-cue'
 
-// 自由创作：不是“研究文章换个底色”，而是一套自己的阅读入口。
+// 自由创作：不是“研究长文换个底色”，而是一套自己的阅读入口。
 // 档案区回答“这份记录做得怎么样”；自由创作回答“这篇东西好不好玩”。
-// 因此这里不出现研究方向、评分、PDF 徽章，只用文体 + 作者 + 阅读量。
+// 因此这里不出现话题、站内热度、PDF 徽章，只用文体 + 作者 + 阅读量。
 
 interface FunCatalogProps {
   data?: { data: ResourceResponse[]; meta: { page: number; total_pages: number; total: number } }
@@ -55,7 +56,7 @@ export function FunCatalog({
     updateSearch({ ...patch, page: 1 })
   }
 
-  // 社区栏目说明不跟普通自由创作稿抢头图：抽成顶部一条紧凑说明栏，
+  // 话题说明不跟普通自由创作稿抢头图：抽成顶部一条紧凑说明栏，
   // 首篇推荐也只从真正的自由创作稿里选，避免推荐永远落在公告上；顺序由随机目录决定。
   const editorialNotes = data?.data.filter(isEditorialNote) ?? []
   const stories = data?.data.filter((r) => !isEditorialNote(r)) ?? []
@@ -74,7 +75,7 @@ export function FunCatalog({
             </p>
             <div className="inline-flex shrink-0 items-center rounded-full border border-border bg-card p-0.5 text-[11px]">
               <Link to="/catalog" search={{ track: 'paper' }} className="rounded-full px-2.5 py-0.5 text-muted-foreground hover:text-foreground">
-                研究文章
+                研究长文
               </Link>
               <span className="rounded-full bg-primary px-2.5 py-0.5 font-medium text-primary-foreground">自由创作</span>
             </div>
@@ -179,7 +180,7 @@ export function FunCatalog({
         <div className="mt-4 border-t">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="flex gap-4 border-b py-4">
-              <Skeleton className="h-20 w-20 shrink-0 rounded-md sm:h-24 sm:w-24" />
+              <Skeleton className="aspect-[4/5] w-20 shrink-0 rounded-md sm:aspect-square sm:w-24" />
               <div className="min-w-0 flex-1 space-y-2">
                 <Skeleton className="h-4 w-2/3 rounded-sm" />
                 <Skeleton className="h-3 w-1/3 rounded-sm" />
@@ -198,8 +199,16 @@ export function FunCatalog({
             title="这一栏还空着"
             description={
               search.genre
-                ? '换个文体看看，或者直接把这篇稿子投过来。'
-                : '还没有匹配的内容，换个关键词试试。'
+                ? '换个文体看看，或换个关键词；也可以去合集顺着读。'
+                : '换个关键词或文体看看，也可以去合集顺着读。'
+            }
+            action={
+              <Button asChild variant="outline" size="sm">
+                <Link to="/issues">
+                  按合集浏览
+                  <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                </Link>
+              </Button>
             }
           />
         </div>
@@ -230,7 +239,7 @@ export function FunCatalog({
                   to="/catalog"
                   className="inline-flex items-center gap-0.5 text-[11px] text-primary hover:underline"
                 >
-                  全部分区
+                  全部话题
                   <ArrowRight className="h-3 w-3" />
                 </Link>
               </div>
@@ -272,7 +281,7 @@ export function FunCatalog({
               to="/catalog" search={{ track: 'paper' }}
               className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
             >
-              想看研究文章？去文章区
+              想看研究长文？去研究区
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
             <Pagination
@@ -372,7 +381,7 @@ function FunCard({ resource, featured }: { resource: ResourceResponse; featured:
           </div>
         </div>
         <div
-          className="relative order-1 min-h-[210px] overflow-hidden md:order-2 md:block md:min-h-[260px]"
+          className="relative order-1 aspect-[4/3] overflow-hidden md:order-2 md:aspect-[16/10]"
         >
           <ArticleCover
             resource={resource}

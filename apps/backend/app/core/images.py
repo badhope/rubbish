@@ -1,6 +1,6 @@
 """Shared image upload rules for user-generated content.
 
-论坛、投稿正文、后续的评论/消息都只接受浏览器能直接显示的四种位图。
+论坛、作品正文、后续的评论/消息都只接受浏览器能直接显示的四种位图。
 SVG 不能收——SVG 可带脚本和外部引用，不能和正文 Markdown 共享同源执行权限。
 """
 

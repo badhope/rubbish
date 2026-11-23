@@ -89,7 +89,7 @@ class Submission(Base, TenantScopedMixin):
     type: Mapped[str] = mapped_column(String(50), nullable=False)
     authors: Mapped[list[str]] = mapped_column(JSONBVariant, nullable=False)
     # 作者单位（P1-8）：逐行/逐项自由文本。用于机构级利益冲突匹配；
-    # 可空数组不阻塞投稿，作者未填时只做姓名/邮箱匹配。
+    # 可空数组不阻塞发布，作者未填时只做姓名/邮箱匹配。
     author_affiliations: Mapped[list[str]] = mapped_column(
         JSONBVariant, nullable=False, default=list, server_default="[]"
     )
@@ -97,8 +97,8 @@ class Submission(Base, TenantScopedMixin):
     venue: Mapped[str | None] = mapped_column(Text, nullable=True)
     discipline: Mapped[str] = mapped_column(String(100), nullable=False)
     subdiscipline: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    # Nature 式栏目 / 期次分部：投稿时即确定，录用物化时原样带入
-    # Resource，避免“表单能选、目录永远是空栏目”的断链。
+    # Nature 式分区 / 合集分部：发布时即确定，通过物化时原样带入
+    # Resource，避免“表单能选、目录永远是空分区”的断链。
     article_section: Mapped[str | None] = mapped_column(String(40), nullable=True, index=True)
     issue_part: Mapped[str | None] = mapped_column(String(40), nullable=True, index=True)
     # 关键词：补 submission → catalog 物化时丢失的字段，与 catalog.Resource
@@ -118,7 +118,7 @@ class Submission(Base, TenantScopedMixin):
     anonymized_file_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     doi: Mapped[str | None] = mapped_column(String(200), nullable=True)
     corresponding_author_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    # P3-1 学术声明：投稿时即结构化，录用物化到 Resource 后前台逐篇展示。
+    # P3-1 学术声明：发布时即结构化，通过物化到 Resource 后前台逐篇展示。
     # 空值表示作者未填，不用默认文案冒充声明。
     license: Mapped[str | None] = mapped_column(String(100), nullable=True)
     author_contributions: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -126,15 +126,15 @@ class Submission(Base, TenantScopedMixin):
     coi_statement: Mapped[str | None] = mapped_column(Text, nullable=True)
     data_availability: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    # 站内相似度（0–100）：提交时与本站已发表 Resource / 已有投稿比对。
-    # 仅作编辑与作者的提示，不是外部查重库结论，不自动拒稿。
+    # 站内相似度（0–100）：提交时与本站已发表 Resource / 已有发布比对。
+    # 仅作编辑与作者的提示，不是外部查重库结论，不自动不通过。
     similarity_score: Mapped[float | None] = mapped_column(Float, nullable=True)
-    # 投稿来源：web / ai。AI 来源便于后台区分自动化投稿，不影响评审权重。
+    # 作品来源：web / ai。AI 来源便于后台区分自动化发布，不影响评审权重。
     source: Mapped[str] = mapped_column(
         String(20), nullable=False, default="web", server_default="web"
     )
     # 调用方幂等键（MCP / 脚本传入 Idempotency-Key）；同一作者重复调用
-    # 返回同一稿件，不重复入库。
+    # 返回同一作品，不重复入库。
     client_ref: Mapped[str | None] = mapped_column(String(100), nullable=True)
     # Top 3 命中：[{kind: resource|submission, id, title, score}]
     similarity_matches: Mapped[list[dict[str, Any]] | None] = mapped_column(
@@ -146,17 +146,17 @@ class Submission(Base, TenantScopedMixin):
     # under_review/major_revision/minor_revision/resubmitted/accepted。
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="pending", index=True)
     # 赛道（serious / absurd）：历史字段，已下线（见 core/tracks.py），
-    # 投稿侧由 schema 归一为 serious；录用物化时原样带到
+    # 作者侧由 schema 归一为 serious；通过物化时原样带到
     # catalog.resources.track。为兼容历史数据保留本列。
     track: Mapped[str] = mapped_column(
         String(16), nullable=False, default="serious", server_default="serious"
     )
     admin_note: Mapped[str | None] = mapped_column(Text, nullable=True)
-    # 免评审录用（desk accept）的显式豁免记录。
-    # 正常情况下录用必须有至少一份已完成的审稿意见（见 routes_editor
-    # decide_submission）。真实期刊确实存在"编辑直接录用"的场景（约稿、
-    # 编委特稿、纪念专辑），但那必须是一个被明确声明、可审计的例外，
-    # 而不是沉默的默认路径。置位后才允许零审稿录用，且理由进审计日志。
+    # 免评审通过（desk accept）的显式豁免记录。
+    # 正常情况下通过必须有至少一份已完成的互评意见（见 routes_editor
+    # decide_submission）。真实内容库确实存在"编辑直接通过"的场景（约稿、
+    # 站务组特稿、纪念专辑），但那必须是一个被明确声明、可审计的例外，
+    # 而不是沉默的默认路径。置位后才允许零互评通过，且理由进审计日志。
     review_waived_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
@@ -167,17 +167,17 @@ class Submission(Base, TenantScopedMixin):
     # 编辑 4 元决定（accept/minor_revision/major_revision/reject）的备注，
     # 区别于 admin_note（兼容旧 review 端点的备注字段）
     editor_note: Mapped[str | None] = mapped_column(Text, nullable=True)
-    # 作者逐条回复审稿人（Response to Reviewers）。与重投时的
+    # 作者逐条回复互评成员（Response to Reviewers）。与重投时的
     # SubmissionVersion.note 分开：后者是版本变更说明，这里是作者对
-    # 审稿意见的正式回应，编辑在裁决/查看稿件时直接可见。
+    # 互评意见的正式回应，编辑在裁决/查看作品时直接可见。
     author_response: Mapped[str | None] = mapped_column(Text, nullable=True)
     author_response_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    # P1-9 两段式初筛：编辑先做 triage（送外审 / 退回修改 / 直接拒稿），
-    # 之后才进入分派与同行评审。旧库迁移时按 status 回填，避免把已在外审
-    # 的稿件重新排进初筛队列。
-    # pending=待初筛, passed=已送外审, rework=退回修改, rejected=直接拒稿
+    # P1-9 两段式基础检查：编辑先做 triage（送互评 / 退回修改 / 直接不通过），
+    # 之后才进入分派与同行评审。旧库迁移时按 status 回填，避免把已在互评
+    # 的作品重新排进基础检查队列。
+    # pending=待基础检查, passed=已送互评, rework=退回修改, rejected=直接不通过
     triage_status: Mapped[str] = mapped_column(
         String(20), nullable=False, default="pending", server_default="pending", index=True
     )
@@ -186,7 +186,7 @@ class Submission(Base, TenantScopedMixin):
     triaged_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
-    # P1-9 初筛 48 小时提醒：最近一次自动提醒时间与累计次数。只提醒一次，
+    # P1-9 基础检查 48 小时提醒：最近一次自动提醒时间与累计次数。只提醒一次，
     # 避免每 6 小时给编辑重复发同一篇的催促。
     triage_started_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=True
@@ -202,7 +202,7 @@ class Submission(Base, TenantScopedMixin):
     # 空 = 未上传，前端回退到按学科自动分配的默认封面。
     cover_image: Mapped[str | None] = mapped_column(String(500), nullable=True)
     file_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    # 在线阅读用 Markdown 稿件（上传 PDF/Word 后服务端转换，见
+    # 在线阅读用 Markdown 作品（上传 PDF/Word 后服务端转换，见
     # manuscript.py）；可空 = 未转换或转换失败（needs_docx，见
     # ``{file_path}.needs_docx`` 侧car 存具体原因）。
     markdown_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
@@ -234,8 +234,8 @@ class SubmissionVersion(Base, TenantScopedMixin):
 
     版本产生时机（追加式，绝不回写）：
 
-    - **v1**：作者创建投稿时立即快照，保证「最初提交了什么」永远可查。
-    - **v2..n**：作者在大修/小修后点「重投」时，把当前（可能已被作者
+    - **v1**：作者创建发布时立即快照，保证「最初提交了什么」永远可查。
+    - **v2..n**：作者在退回修改/修改后再交后点「重投」时，把当前（可能已被作者
       编辑过的）payload 再快照一份，并可附「给编辑的修改说明」。
 
     快照存 JSONB 整体 payload 而不是逐列复制：submission 的字段形状
@@ -264,13 +264,13 @@ class SubmissionVersion(Base, TenantScopedMixin):
     version: Mapped[int] = mapped_column(Integer, nullable=False)
     # 完整书目 payload 快照（title/authors/abstract/... 与 Submission 列同形）
     payload: Mapped[dict[str, Any]] = mapped_column(JSONBVariant, nullable=False)
-    # 该版本对应的稿件文件 key（可能为 None：作者还没传文件）
+    # 该版本对应的作品文件 key（可能为 None：作者还没传文件）
     # 封面图（作者上传 / 编辑指定）。存储 key 与 file_path 同族，
     # 物化到 catalog.resources.cover_image 时原样带过去。
     # 空 = 未上传，前端回退到按学科自动分配的默认封面。
     cover_image: Mapped[str | None] = mapped_column(String(500), nullable=True)
     file_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    # 作者附言：v1 恒空；重投版本可填「针对审稿意见做了哪些修改」
+    # 作者附言：v1 恒空；重投版本可填「针对互评意见做了哪些修改」
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_by: Mapped[int | None] = mapped_column(
         Integer,

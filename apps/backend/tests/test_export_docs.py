@@ -82,7 +82,7 @@ def test_md_pdf_docx_contract_keeps_core_fields() -> None:
     doc_text = "\n".join(p.text for p in document.paragraphs)
     assert "转换契约测试" in doc_text
     assert "这是摘要正文" in doc_text
-    assert "关键词" in doc_text
+    assert "话题" in doc_text
     table_text = "\n".join(
         cell.text for table in document.tables for row in table.rows for cell in row.cells
     )

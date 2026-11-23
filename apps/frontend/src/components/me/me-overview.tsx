@@ -56,7 +56,7 @@ export function MeOverview({
   return (
     <div className="space-y-8">
       <section>
-        <SectionHeading kicker="COMMUNITY" title="社区入口" />
+        <SectionHeading kicker="COMMUNITY" title="桌边" />
         <div className="grid gap-3 border-y py-5 sm:grid-cols-2">
           <Link
             to="/forum"
@@ -64,7 +64,7 @@ export function MeOverview({
           >
             <MessagesSquare className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <span>
-              <span className="block text-sm font-medium">去讨论区看看</span>
+              <span className="block text-sm font-medium">去讨论区</span>
               <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
                 读帖、回复、收藏；先聊起来，再补记录。
               </span>
@@ -76,7 +76,7 @@ export function MeOverview({
           >
             <PenLine className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <span>
-              <span className="block text-sm font-medium">写点东西</span>
+              <span className="block text-sm font-medium">写一篇</span>
               <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
                 可以先存草稿；短帖留给讨论区。
               </span>
@@ -96,8 +96,21 @@ export function MeOverview({
             </Button>
           }
         />
-        {latestNotifications.length === 0 ? (
-          <p className="border-y py-5 text-sm text-muted-foreground">暂时没有通知。</p>
+        {notifications.isLoading ? (
+          <p className="border-y py-5 text-sm text-muted-foreground">加载中…</p>
+        ) : notifications.isError ? (
+          <p className="border-y py-5 text-sm text-muted-foreground">
+            通知没加载出来。
+            <button
+              type="button"
+              className="ml-2 text-primary underline-offset-2 hover:underline"
+              onClick={() => void notifications.refetch()}
+            >
+              重试
+            </button>
+          </p>
+        ) : latestNotifications.length === 0 ? (
+          <p className="border-y py-5 text-sm text-muted-foreground">还没有通知。</p>
         ) : (
           <div className="divide-y border-y">
             {latestNotifications.map((item) => (

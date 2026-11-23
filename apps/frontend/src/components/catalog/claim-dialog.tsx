@@ -24,14 +24,14 @@ const EVIDENCE_LABEL: Record<ClaimEvidenceType, string> = {
 }
 
 const EVIDENCE_HINT: Record<ClaimEvidenceType, string> = {
-  email: '填提交作品时留下的邮箱',
+  email: '填发布作品时留下的邮箱',
   orcid: '填你的 ORCID iD',
   manuscript_id: '填作品编号，例如 RUB-A-2603-00634',
 }
 
 /**
  * 作者认领入口：一个弹窗完成，不再单开认领页。
- * 只对 owner_id 为空、且没有待审申请的文章显示。
+ * 只对 owner_id 为空、且没有待处理申请的作品显示。
  */
 export function ClaimDialog({
   open,
@@ -70,7 +70,7 @@ export function ClaimDialog({
           note: note.trim() || null,
         },
       })
-      toast.success('认领申请已提交，内容整理组核对后会通知你')
+      toast.success('认领申请已提交，内容整理核对后会通知你')
       setEvidenceValue('')
       setNote('')
       onOpenChange(false)
@@ -85,7 +85,7 @@ export function ClaimDialog({
         <DialogHeader>
           <DialogTitle>认领这篇记录</DialogTitle>
           <DialogDescription>
-            认领会交给内容整理组核对；通过后文章会挂到你的主页。请只认领自己参与过的文章。
+            认领会交给内容整理核对；通过后作品会挂到你的主页。请只认领自己参与过的作品。
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">

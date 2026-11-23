@@ -28,7 +28,7 @@ registry.register(
         version="0.1.0",
         description="Peer-review assignment and report workflow.",
         # 不在 dependencies 里声明 submission / notifications：submission.routes
-        # 反向 import review.models（编辑分配审稿人），声明依赖会循环。
+        # 反向 import review.models（编辑分配互评成员），声明依赖会循环。
         # review.models 通过 Base.metadata 与 submission 共表空间，无加载顺序约束。
         dependencies=frozenset(),
         router=router,

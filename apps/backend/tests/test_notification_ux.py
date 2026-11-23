@@ -64,13 +64,17 @@ async def test_feedback_resolution_notifies_the_submitter(client, db_session, ad
     ]
     assert len(repeated_hits) == 1
     resolve_rows = (
-        await db_session.execute(
-            select(AuditLog).where(
-                AuditLog.action == "feedback.resolve",
-                AuditLog.target_id == str(feedback_id),
+        (
+            await db_session.execute(
+                select(AuditLog).where(
+                    AuditLog.action == "feedback.resolve",
+                    AuditLog.target_id == str(feedback_id),
+                )
             )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     assert len(resolve_rows) == 1
     assert repeated_hits[0]["body"] == "已经修好了。"
 
@@ -151,7 +155,6 @@ async def test_role_application_notifies_admin_and_result_reaches_applicant(
     user_hit = next(
         row
         for row in user_rows
-        if row["related_type"] == "role_application"
-        and int(row["related_id"]) == application_id
+        if row["related_type"] == "role_application" and int(row["related_id"]) == application_id
     )
     assert "申请已通过" in user_hit["title"]

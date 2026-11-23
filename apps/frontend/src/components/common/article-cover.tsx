@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import type { ResourceResponse } from '@/lib/types'
 
-// 专题封面：优先用编辑为本刊选定的主题图（/covers/xx.jpg，已本地化，
+// 专题封面：优先用编辑选定的主题图（/covers/xx.jpg，已本地化，
 // 1600×900，无外链依赖）；没有封面时回退到生成式纸面卡（CoverArt 的
 // 极简版本），保证任何条目都有视觉锚点且不会出现破图占位。
 //
@@ -31,6 +31,7 @@ export function ArticleCover({
   aspect = '',
 }: ArticleCoverProps) {
   const [broken, setBroken] = useState(false)
+  const [loaded, setLoaded] = useState(false)
   const hasImage = Boolean(resource.cover_image) && !broken
   return (
     <div
@@ -49,6 +50,7 @@ export function ArticleCover({
           loading={priority ? 'eager' : 'lazy'}
           decoding="async"
           onError={() => setBroken(true)}
+          onLoad={() => setLoaded(true)}
           // 宽高比由父容器锁定，图片填满；object-cover 防拉伸。
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
         />
@@ -58,6 +60,10 @@ export function ArticleCover({
           className="absolute inset-0 bg-[radial-gradient(120%_100%_at_0%_0%,oklch(0.93_0.05_150),transparent_60%),radial-gradient(120%_100%_at_100%_100%,oklch(0.90_0.04_120),transparent_55%)]"
         />
       )}
+      {/* 图片解码完成前的静态占位：只铺底色，不做高度/位移动画，避免加载后撑动卡片。 */}
+      {hasImage && !loaded ? (
+        <div aria-hidden className="absolute inset-0 bg-accent/60" />
+      ) : null}
       {/* 无封面时的识别符号。旧版放的是一个回收箭头 SVG（text-primary/20），
           在浅绿渐变上缩到 1/3 大小后极像浏览器的「图片加载失败」占位符，
           读者第一反应是破图。改成衬线刊名水印：一眼看出是设计，不是故障。 */}

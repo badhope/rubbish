@@ -322,7 +322,7 @@ CSV_HEADER_ALIASES = {
     "类型": "type",
     "venue": "venue",
     "journal": "venue",
-    "期刊": "venue",
+    "内容库": "venue",
     "来源": "venue",
     "刊物": "venue",
     "discipline": "discipline",

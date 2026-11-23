@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { MarkdownContent } from '@/components/common/markdown-content'
 
 /**
@@ -154,6 +154,7 @@ export function PaperProof({
   const outerRef = useRef<HTMLDivElement>(null)
   const sourceRef = useRef<HTMLDivElement>(null)
   const pagesRef = useRef<HTMLDivElement>(null)
+  const statusId = `paper-proof-status-${useId().replace(/[^a-zA-Z0-9]/g, '')}`
   const [scale, setScale] = useState(1)
   const [actualSize, setActualSize] = useState(false)
   const [pageCount, setPageCount] = useState(0)
@@ -228,9 +229,15 @@ export function PaperProof({
   }, [title, authorsKey, affiliations, abstract, keywordsKey, body, doi, funding, clc, licenseText, track, chars])
 
   return (
-    <div className="paper-proof" ref={outerRef}>
+    <div
+      className="paper-proof"
+      ref={outerRef}
+      role="region"
+      aria-label="排版预览"
+      aria-describedby={statusId}
+    >
       <div className="paper-proof-toolbar">
-        <span>
+        <span id={statusId}>
           纸张预览 · {pageCount > 0 ? `${pageCount} 页` : '排版中…'} · {chars} 字
         </span>
         <div className="flex items-center gap-2">
@@ -268,14 +275,14 @@ export function PaperProof({
 
           {abstract.trim() ? (
             <section className="paper-proof-block">
-              <h2 className="paper-proof-abbr">摘要</h2>
+              <h2 className="paper-proof-abbr">开头</h2>
               <MarkdownContent text={abstract} className="paper-proof-text" />
             </section>
           ) : null}
 
           {keywords.length > 0 ? (
             <p className="paper-proof-keywords">
-              <span className="font-semibold">关键词：</span>
+              <span className="font-semibold">话题：</span>
               {keywords.join('；')}
             </p>
           ) : null}
@@ -320,13 +327,13 @@ export function PaperProof({
             ) : null}
               {abstract.trim() ? (
               <section className="paper-proof-block">
-                <h2 className="paper-proof-abbr">摘要</h2>
+                <h2 className="paper-proof-abbr">开头</h2>
                 <MarkdownContent text={abstract} className="paper-proof-text" />
               </section>
             ) : null}
             {keywords.length > 0 ? (
               <p className="paper-proof-keywords">
-                <span className="font-semibold">关键词：</span>
+                <span className="font-semibold">话题：</span>
                 {keywords.join('；')}
               </p>
             ) : null}

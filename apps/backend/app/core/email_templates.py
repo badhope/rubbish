@@ -14,11 +14,11 @@ from html import escape
 
 from app.core.config import settings
 
-INK = "#1b2430"
-MUTED = "#5b6b7c"
-ACCENT = "#2c5aa0"
-PAPER = "#f7f6f3"
-LINE = "#e3e0d8"
+INK = "#22342A"
+MUTED = "#5C6B60"
+ACCENT = "#2F5D46"
+PAPER = "#F4EFE4"
+LINE = "#D8D1C0"
 
 
 def _shell(title: str, body_html: str, footer_note: str = "") -> str:
@@ -311,8 +311,8 @@ def triage_overdue_digest(
     html = _shell(
         f"还有 {count} 篇作品等待基础检查",
         f"<p>你好，{escape(editor)}：</p>"
-        f"<p>以下作品进入初筛队列已超过 <strong>48 小时</strong>：</p>"
-        f"<ul>{lis}</ul>" + _button("打开初筛队列", link),
+        f"<p>以下作品进入基础检查队列已超过 <strong>48 小时</strong>：</p>"
+        f"<ul>{lis}</ul>" + _button("打开基础检查队列", link),
     )
     return subject, text, html
 
@@ -327,11 +327,11 @@ def release_failure(
         extra = "\n" + "\n".join(f"- {escape(str(k))}: {escape(str(v))}" for k, v in detail.items())
     text = (
         f"合集 {target} 的定时发布失败。\n\n原因：{reason}{extra}\n\n"
-        f"请打开卷期编排，核对内容后联系管理员发布或重新排期：\n{link}\n"
+        f"请打开合集编排，核对内容后联系管理员发布或重新排期：\n{link}\n"
     )
     html = _shell(
         f"定时发布失败：{target}",
-        f"<p>期次 <strong>{escape(target)}</strong> 的定时发布失败。</p>"
+        f"<p>合集 <strong>{escape(target)}</strong> 的定时发布失败。</p>"
         f"<p>原因：{escape(reason)}</p>"
         + (
             "<ul>"
@@ -342,6 +342,6 @@ def release_failure(
             if detail
             else ""
         )
-        + _button("打开卷期编排", link),
+        + _button("打开合集编排", link),
     )
     return subject, text, html

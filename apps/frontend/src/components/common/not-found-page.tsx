@@ -17,7 +17,7 @@ export function NotFoundPage() {
           <h1 className="state-title text-5xl font-semibold tabular-nums sm:text-6xl">404</h1>
           <p className="text-base font-medium">这一页不在了</p>
           <p className="text-sm text-muted-foreground">
-            链接可能写错了，或者内容已经下架。你可以回首页，也可以去内容库随便翻一篇。
+            链接可能走岔了，或者这一页已经收起。回首页，或去内容库随便翻一篇。
           </p>
         </div>
         <div className="flex flex-wrap justify-center gap-2">

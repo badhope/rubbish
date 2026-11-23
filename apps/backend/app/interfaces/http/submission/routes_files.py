@@ -1,4 +1,4 @@
-"""Submission API routes — 文件上传与下载（作者/编辑/审稿人）。
+"""Submission API routes — 文件上传与下载（作者/编辑/互评成员）。
 
 从 routes.py（52KB 单文件）拆出。router 来自 routes.py，本模块在其上
 追加端点；注册顺序见 routes.py 文件末尾的底部 import。
@@ -85,7 +85,7 @@ _ALLOWED_UPLOAD_MIMES = frozenset(
         "text/x-markdown",
         "application/x-tex",
         "application/x-latex",
-        # 富文本与幻灯片：审稿人常收到 .rtf / .odt / .pptx
+        # 富文本与幻灯片：互评成员常收到 .rtf / .odt / .pptx
         "application/rtf",
         "text/rtf",
         "application/vnd.oasis.opendocument.text",
@@ -96,7 +96,7 @@ _ALLOWED_UPLOAD_MIMES = frozenset(
         "text/csv",
         "application/json",
         "application/x-bibtex",
-        # 图表：单独提交的高分辨率图（期刊常要求 300dpi 独立图文件）
+        # 图表：单独提交的高分辨率图（内容库常要求 300dpi 独立图文件）
         "image/png",
         "image/jpeg",
         "image/svg+xml",
@@ -197,7 +197,7 @@ _SOURCE_PREVIEW_MAX_FILES = 200
 def _prune_source_previews(now: float | None = None) -> None:
     """清理过期/超量的预览 PDF。
 
-    token 是 PDF 内容哈希，同一份文件会复用；但登录用户反复上传不同文件
+    token 是 PDF 内容哈希，同一份文件会复用；但登通过户反复上传不同文件
     会不断新增缓存。这里按 mtime 做 TTL + 数量上限，避免把 /tmp 堆满。
     """
     path = _source_preview_dir()
@@ -255,7 +255,7 @@ async def preview_uploaded_source_pages(
     """提交前原件预览：先落一份 PDF，返回分页 PNG 的 token 与页数。
 
     和发表版文章页的「PDF 版式预览」走同一条分页 PNG 渲染链路，不再让
-    投稿页单独跑 pdf.js。页面图片由下面的 GET 端点按需渲染，避免一次
+    发布页单独跑 pdf.js。页面图片由下面的 GET 端点按需渲染，避免一次
     返回几十张大图。
     """
     import pymupdf
@@ -514,7 +514,7 @@ async def upload_submission_file(
     await _try_delete_storage(old_md)
 
     resp = _to_response(entry)
-    # 结构报告：作者上传后立刻知道"离《投稿规范》还差什么"，而不是等
+    # 结构报告：作者上传后立刻知道"离《写作规范》还差什么"，而不是等
     # 编辑部初审退修。转换失败（无 md）就不报——没有内容可分析。
     if result.markdown:
         from app.domain.submission.markdown_clean import analyze_structure
@@ -534,7 +534,7 @@ async def upload_submission_cover(
 ) -> SubmissionResponse:
     """作者上传封面图（替换式）。
 
-    为什么允许作者自选封面：本站是双赛道期刊，荒诞稿的封面往往就是
+    为什么允许作者自选封面：本站是双赛道内容库，荒诞稿的封面往往就是
     作品的一部分（一张梗图胜过一千字摘要）。不给作者这个入口，所有
     文章只能长成同一个样子。
 
@@ -944,12 +944,12 @@ async def download_submission_file(
     """下载作品文件。
 
     这里补上了此前缺失的链路终点：作品此前只能上传、无法取回，
-    编辑与被指派的审稿人拿不到作者的 PDF，评审无从谈起。
+    编辑与被指派的互评成员拿不到作者的 PDF，评审无从谈起。
 
     可访问方：
     - 作者本人
     - admin / editor
-    - 该作品的被指派审稿人（assignment 处于 pending/accepted/completed）
+    - 该作品的被指派互评成员（assignment 处于 pending/accepted/completed）
 
     S3 后端会尽量返回 302 预签名直链（省一次服务端带宽）；本地后端
     与预签名失败时改为服务端流式返回，权限校验始终发生在这里。
@@ -1006,7 +1006,7 @@ async def download_submission_file(
             detail="Authentication required",
         )
 
-    # 作者/编辑持票可取回 Markdown 源文件（审稿人仍走匿名通道）。
+    # 作者/编辑持票可取回 Markdown 源文件（互评成员仍走匿名通道）。
     if file_format == "md" and (entry.file_path or entry.markdown_path):
         is_privileged_md = actor is not None and (
             entry.submitted_by == actor.id or await user_has_editor_access(db, actor)
@@ -1028,10 +1028,10 @@ async def download_submission_file(
                 headers={"Content-Disposition": f'attachment; filename="submission-{entry.id}.md"'},
             )
 
-    # 双盲评审：原始上传文件不能交给审稿人。
+    # 双盲评审：原始上传文件不能交给互评成员。
     #
     # 旧实现要求编辑先上传一条 ``anonymized_file_url``，否则直接 403；线上
-    # ``review_mode=double_blind``，但 328/329 都没有匿名稿，于是审稿人连
+    # ``review_mode=double_blind``，但 328/329 都没有匿名稿，于是互评成员连
     # 作品都下载不了，整个评审流程卡死。现在改为**从 Markdown 现场生成**
     # 匿名 Word/PDF：不依赖外部 URL，也不会把原始 PDF 的元数据带出去。
     is_privileged = actor is not None and (

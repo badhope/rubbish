@@ -45,7 +45,7 @@ function writeConsent(value: ConsentValue): void {
 export function CookieBanner() {
   // null = undecided (show banner), otherwise hide.
   const [consent, setConsent] = useState<ConsentValue | null>(() => readConsent())
-  // 有模态弹窗（编辑部公告）占用视口时先让位：手机上 390px 宽、844px 高，
+  // 有模态弹窗（社区公告）占用视口时先让位：手机上 390px 宽、844px 高，
   // 弹窗 + Cookie 条同时压屏等于把首屏全部遮死。弹窗关掉后再问。
   const [blocked, setBlocked] = useState(false)
 

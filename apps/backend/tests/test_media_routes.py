@@ -51,9 +51,7 @@ async def test_upload_media_image_rejects_unknown_purpose(
     assert response.status_code == 422
 
 
-async def test_shop_cover_has_its_own_media_purpose(
-    client: AsyncClient, admin_user: dict
-) -> None:
+async def test_shop_cover_has_its_own_media_purpose(client: AsyncClient, admin_user: dict) -> None:
     response = await client.post(
         "/api/media/images?purpose=shop",
         files={"file": ("cover.png", _PNG, "image/png")},

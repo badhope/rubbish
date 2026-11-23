@@ -1,7 +1,7 @@
 """Submission 模块共享辅助函数与常量（从 routes.py 拆出，供各路由文件复用）。
 
 拆分说明：routes.py 曾是 52KB 单文件（作者侧 + 编辑侧 + 文件侧混在一起）。
-现按工作流拆为 routes.py（作者侧）/ routes_editor.py（编辑与审稿侧）/
+现按工作流拆为 routes.py（作者侧）/ routes_editor.py（编辑与互评侧）/
 routes_files.py（文件上传下载），本模块承载三者共享的纯辅助逻辑。
 """
 
@@ -68,23 +68,23 @@ async def _materialize_resource_from_submission(
     rather than re-routing through the HTTP layer to keep it
     transactional with the review commit.
 
-    ``publication_status`` 支持录用即刊（默认 published，兼容旧行为）或
+    ``publication_status`` 支持通过即公开（默认 published，兼容旧行为）或
     暂存草稿（draft）——后者进入发布前整理阶段，由 admin 发布。
     """
     # 本地作品文件：不再使用 /uploads 静态路径（该挂载无鉴权，任何人都能
     # 下载在审作品，见 app/main.py 的说明）。改为物化后在下方写入指向
     # 公开端点 /api/catalog/{id}/file 的 download_url——只有进入公开目录的
-    # 资源才能读到文件，未公开的投稿仍然只走鉴权端点。
+    # 资源才能读到文件，未公开的发布仍然只走鉴权端点。
     settings = get_settings()
     resource = ResourceORM(
         tenant_id=submission.tenant_id,
         publication_status=publication_status,
-        # 新录用文章进入当前卷、期；卷期只做文章归档，不表示身份等级。
+        # 新通过文章进入当前卷、期；合集只做文章归档，不表示身份等级。
         volume=settings.current_volume,
         issue=settings.current_issue,
         type=submission.type,
         title=submission.title,
-        # 发布即绑定作者（P0）：owner_id = 投稿人。已绑定的文章不再可被他人
+        # 发布即绑定作者（P0）：owner_id = 作者。已绑定的文章不再可被他人
         # 认领（POST claim 返回 403）；历史批量导入稿 owner_id 为 NULL 才可走认领。
         owner_id=submission.submitted_by,
         # 赛道随物化带过去。目录的公开面按 track 分组，丢失这一列等于
@@ -162,8 +162,8 @@ _VERSIONED_FIELDS = (
     "venue",
     "discipline",
     "subdiscipline",
-    # 栏目/分部也是作者可改的实质元数据：版本回滚时必须一起恢复，
-    # 否则会出现“回滚了正文但栏目仍留在新版本”的静默错位。
+    # 分区/分部也是作者可改的实质元数据：版本回滚时必须一起恢复，
+    # 否则会出现“回滚了正文但分区仍留在新版本”的静默错位。
     "article_section",
     "issue_part",
     "keywords",

@@ -92,7 +92,7 @@ function AdminContentPage() {
           to="/editor/issue-plan"
           className="inline-flex items-center gap-1 rounded-md border bg-background px-2.5 py-1 text-xs transition-colors hover:border-primary hover:text-primary"
         >
-          卷期编排
+          合集编排
         </Link>
       </div>
       <AdminSectionTabs items={SECTIONS} active={section} onChange={changeSection} label="内容域子段" />

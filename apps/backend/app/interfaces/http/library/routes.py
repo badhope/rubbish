@@ -1,10 +1,15 @@
 """Library API routes — member-curated reading lists.
 
-All endpoints require authentication; every list operation is scoped
-to the current user (owner-only). Owner-check happens at load time:
-the SELECT for ``list_id`` includes ``user_id == current_user.id``, so a
-missing-or-owned-by-someone-else list both surface as 404 (no existence
-leak).
+Read/write split:
+
+- Write endpoints (create / update / delete / add-remove item) are
+  owner-only. The SELECT for ``list_id`` includes ``user_id == current_user.id``,
+  so a missing-or-owned-by-someone-else list both surface as 404 (no existence
+  leak).
+- Read endpoints carry a visibility gate: the owner always reads; a
+  ``public`` list is readable by anyone (anonymous included); a ``private``
+  list owned by someone else surfaces as 403 (frontend jumps to login on
+  403); a missing list still 404.
 
 Adding/removing items is idempotent:
 
@@ -25,9 +30,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_current_user_optional
 from app.api.levels import require_reader
 from app.core.db import get_db, paginate
+from app.core.tenant import get_current_tenant_id
 from app.domain.catalog.models import Resource
 from app.domain.catalog.visibility import public_conditions
 from app.domain.library.models import ReadingList, ReadingListItem
@@ -76,6 +82,41 @@ async def _load_owned_list(db: AsyncSession, list_id: int, user: User) -> Readin
     return rl
 
 
+async def _load_readable_list(db: AsyncSession, list_id: int, user: User | None) -> ReadingList:
+    """Load a list for read: owner always readable; public readable by anyone.
+
+    Private lists owned by someone else surface as 403 (frontend jumps to login
+    on 403); a missing list still 404. Cross-tenant lists 404 as well.
+    """
+    tenant_id = get_current_tenant_id()
+    rl = (
+        await db.execute(
+            select(ReadingList)
+            .where(ReadingList.id == list_id)
+            .where(
+                ReadingList.tenant_id == tenant_id
+                if tenant_id is not None
+                else ReadingList.tenant_id.is_not(None)
+            )
+            .options(selectinload(ReadingList.items).selectinload(ReadingListItem.resource))
+            .execution_options(populate_existing=True)
+        )
+    ).scalar_one_or_none()
+    if rl is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Reading list not found",
+        )
+    if user is not None and rl.user_id == user.id:
+        return rl
+    if rl.visibility == "public":
+        return rl
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="This reading list is private",
+    )
+
+
 @router.get("", response_model=ReadingListListResponse)
 async def list_my_lists(
     page: int = Query(default=1, ge=1),
@@ -106,6 +147,31 @@ async def list_my_lists(
     )
 
 
+@router.get("/public", response_model=ReadingListListResponse)
+async def list_public_lists(
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
+    db: AsyncSession = Depends(get_db),
+) -> ReadingListListResponse:
+    """List public reading lists, newest first. Anonymous-friendly."""
+    tenant_id = get_current_tenant_id()
+    base = select(ReadingList).where(ReadingList.visibility == "public")
+    if tenant_id is not None:
+        base = base.where(ReadingList.tenant_id == tenant_id)
+    base = base.options(selectinload(ReadingList.items))
+    rows, meta = await paginate(
+        db,
+        base,
+        page=page,
+        page_size=page_size,
+        order_by=(desc(ReadingList.created_at), ReadingList.id.asc()),
+    )
+    return ReadingListListResponse(
+        data=[ReadingListResponse.model_validate(r) for r in rows],
+        meta=meta,
+    )
+
+
 @router.post(
     "",
     response_model=ReadingListDetailResponse,
@@ -122,6 +188,7 @@ async def create_list(
         user_id=current_user.id,
         name=payload.name,
         description=payload.description,
+        visibility=payload.visibility or "private",
     )
     db.add(rl)
     try:
@@ -148,11 +215,12 @@ async def create_list(
 @router.get("/{list_id}", response_model=ReadingListDetailResponse)
 async def get_list(
     list_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User | None = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db),
 ) -> ReadingListDetailResponse:
-    """Get a single list with its items. Owner-only."""
-    rl = await _load_owned_list(db, list_id, current_user)
+    """Get a single list with its items. Public lists are readable by anyone;
+    private lists are owner-only (403 for other readers)."""
+    rl = await _load_readable_list(db, list_id, current_user)
     return ReadingListDetailResponse.model_validate(rl)
 
 

@@ -273,7 +273,7 @@ async def journal_metrics(db: AsyncSession, tenant_id: Any) -> dict[str, Any]:
         )
     ).scalar_one()
     # reads / saves 只统计公开可见条目：排期稿在指标页同样要隐身，
-    # 否则「期刊指标」会替还没上线的期数预热阅读量。
+    # 否则「内容库指标」会替还没上线的期数预热阅读量。
     reads = (
         await db.execute(
             select(func.coalesce(func.sum(ReadingHistory.visit_count), 0)).where(
@@ -338,7 +338,7 @@ async def journal_metrics(db: AsyncSession, tenant_id: Any) -> dict[str, Any]:
     serious_rows = [r for r in paper_rows if (r.track or "serious") != "absurd"]
     absurd_rows = [r for r in paper_rows if (r.track or "serious") == "absurd"]
     r_factor: float | None = None
-    # R 因子只算学术轨：荒诞论文是讽刺内容，不能拿来给“期刊指标”抬轿子。
+    # R 因子只算学术轨：荒诞论文是讽刺内容，不能拿来给“内容库指标”抬轿子。
     if serious_rows:
         raw = await load_raw_engagement(db, [r.id for r in serious_rows], tenant_id)
         total_events = sum(sum(raw.get(r.id, (0, 0, 0))) for r in serious_rows)

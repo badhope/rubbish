@@ -1,7 +1,7 @@
-"""角色信息贯通：/auth/me、登录响应、editor 侧审稿人候选。
+"""角色信息贯通：/auth/me、登录响应、editor 侧互评成员候选。
 
 - 登录响应与 /auth/me 都带 roles，前端据此渲染角色化导航；
-- 审稿人候选走 /submissions/reviewer-candidates（仅 require_editor），
+- 互评成员候选走 /submissions/reviewer-candidates（仅 require_editor），
   非 admin 的 editor 也能拿到，普通作者 403。
 """
 

@@ -55,7 +55,7 @@ class TokenResponse(BaseModel):
     username: str
     is_admin: bool
     # 当前用户的角色名列表（reviewer/editor/section_editor/author/reader）。
-    # 登录响应即携带，前端据此渲染「审稿工作台 / 编辑工作台」等入口，
+    # 登录响应即携带，前端据此渲染「互评工作台 / 编辑工作台」等入口，
     # 不必再调 /admin/users（那个接口要求 admin 权限）。
     roles: list[str] = Field(default_factory=list)
     # M2 2FA: when 2FA is required but not yet completed, access/refresh
@@ -231,7 +231,7 @@ class UserResponse(BaseModel):
     department: str | None = None
     academic_title: str | None = None
     research_interests: str | None = None
-    # P1-7 审稿能力标签（空列表 = 未填写）
+    # P1-7 互评能力标签（空列表 = 未填写）
     reviewer_tags: list[str] = Field(default_factory=list)
     # 受控学科标签（迁移 057；空列表 = 未填写）
     reviewer_disciplines: list[str] = Field(default_factory=list)
@@ -305,7 +305,7 @@ class RoleAssign(BaseModel):
     """Body for POST /admin/users/{id}/roles — assign a role to a user."""
 
     # 仅允许分配编辑部/社区角色；admin 角色由 is_admin 字段控制，不在此处
-    # 编辑职权链（v1.11）：主编/副主编/编委与执行编辑同级可分配；
+    # 编辑职权链（v1.11）：主编/副主编/站务组与执行编辑同级可分配；
     # author/reader 是身份不是角色（见 admin.ASSIGNABLE_ROLES 注释）。
     role: Literal[
         "chief_editor",
@@ -485,7 +485,7 @@ class UserUpdate(BaseModel):
             if not slug:
                 continue
             if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,99}", slug):
-                raise ValueError("学科标签必须是学科词表的 slug（小写字母/数字/连字符）")
+                raise ValueError("话题标签必须是话题词表的 slug（小写字母/数字/连字符）")
             if slug in seen:
                 continue
             seen.add(slug)

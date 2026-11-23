@@ -118,7 +118,7 @@ async def update_me(
             if unknown:
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=f"未知学科标签：{', '.join(unknown)}",
+                    detail=f"未知话题标签：{', '.join(unknown)}",
                 )
     # 扩展资料：字段出现即写入，缺键保持不变。空串在 schema 层已归一为 None。
     for field in (
@@ -294,7 +294,7 @@ async def get_public_profile(
     if (user.profile_visibility or "public") != "public" and not (is_owner or is_admin_viewer):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="该主页未公开")
 
-    # 已发表作品：走 Submission -> Resource，避免把未录用的投稿暴露出去。
+    # 已发表作品：走 Submission -> Resource，避免把未通过的发布暴露出去。
     rows = (
         await db.execute(
             select(Submission, Resource)

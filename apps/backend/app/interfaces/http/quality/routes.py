@@ -4,8 +4,8 @@
 
 - 公开：``/rubric``、``/form``、``/prompt`` —— 口径必须公开，作者才能自查，
   外部 AI 才能复现。
-- 审稿人：``/score`` —— 提交维度评分，系统按权重算出总分与等级。
-- 编辑：``/rework-queue`` —— 查看不合格（<40 分）待打回稿件。
+- 互评成员：``/score`` —— 提交维度评分，系统按权重算出总分与等级。
+- 编辑：``/rework-queue`` —— 查看不合格（<40 分）待打回作品。
 - 管理员：``/override`` —— 直接改分（必须写理由，写审计）。
 
 为什么把"算分"做成服务端端点而不是前端计算：前端算分意味着口径在
@@ -86,7 +86,7 @@ class OverrideRequest(BaseModel):
 
 @router.get("/rubric")
 async def get_rubric() -> dict[str, object]:
-    """评分口径（公开）：作者自查、审稿人对照、外部 AI 复现。"""
+    """评分口径（公开）：作者自查、互评成员对照、外部 AI 复现。"""
     return rubric_payload()
 
 
@@ -94,7 +94,7 @@ async def get_rubric() -> dict[str, object]:
 async def get_review_form(
     track: str = Query(default="academic", pattern=r"^(academic|absurd)$"),
 ) -> dict[str, object]:
-    """审稿评分表单（公开）：按赛道返回对应维度下的逐条事实检查项。"""
+    """互评评分表单（公开）：按赛道返回对应维度下的逐条事实检查项。"""
     return form_payload(track)
 
 
@@ -115,7 +115,7 @@ async def get_ai_prompt(
 async def suggest_scores(payload: AnswersRequest) -> dict[str, object]:
     """按检查项答案折算七个维度的建议分（不落库）。
 
-    审稿人先勾检查项，拿到建议分后再决定是否覆盖——先事实、后判断，
+    互评成员先勾检查项，拿到建议分后再决定是否覆盖——先事实、后判断，
     比一上来就拖滑杆更不容易拍脑袋。此端点无需登录：作者自查也要能用。
     """
     return {"dimensions": score_answers(payload.answers, payload.track)}
@@ -126,7 +126,7 @@ async def compute_score(
     payload: ScoreRequest,
     _: User = Depends(require_reviewer),
 ) -> dict[str, object]:
-    """按维度评分计算总分与等级（不落库，供审稿页实时预览）。
+    """按维度评分计算总分与等级（不落库，供互评页实时预览）。
 
     缺维度会直接 422（Pydantic 已保证 7 个），而不是把缺失维度当 0 分——
     "漏填"与"很差"必须区分开。
@@ -213,13 +213,13 @@ async def rework_queue(
     current_user: User = Depends(require_editor),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, object]:
-    """不合格稿件打回队列：等待审稿人补审或作者修改的稿件。
+    """不合格作品打回队列：等待互评成员补审或作者修改的作品。
 
     读未刊出且总分低于 40（不合格，rubric v5.0 的 ``rejected`` 语义）的
     条目。编辑部在通知栏看到的「待处理」就是这一批——不合格不是终点，
     是"必须有人推进"的状态。
 
-    ``?include_published=true``：存量重审时已发布稿件也可能被判 <40
+    ``?include_published=true``：存量重审时已发布作品也可能被判 <40
     （复核发现旧口径虚高），编辑需要看到完整处置面；默认仍只看未刊出。
     """
     from app.domain.catalog.models import Resource

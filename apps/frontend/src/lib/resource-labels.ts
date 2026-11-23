@@ -25,7 +25,7 @@ const TYPE_LABELS: Record<string, string> = {
   paper: '研究长文',
   book: '图书',
   dataset: '数据集',
-  tutorial: '教程',
+  tutorial: '自由创作',
 }
 
 export function typeLabel(type: string | null | undefined): string {

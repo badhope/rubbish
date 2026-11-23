@@ -35,6 +35,7 @@ import {
   useUpdateSubmission,
   useUploadSubmissionFile,
   useConvertSubmissionPreview,
+  useMeProfile,
   previewUploadedSourcePages,
 } from '@/hooks/api/use-modules'
 import { MarkdownEditor } from '@/components/common/markdown-editor'
@@ -82,7 +83,7 @@ interface WizardSearch {
   section?: string
 }
 
-// Nature 式栏目 / 分部选项与后台新建资源共用 lib/article-sections.ts。
+// 话题 / 分部选项与后台新建资源共用 lib/article-sections.ts。
 
 // 年份给前后两年，避免手打错；合集主题仍可手填。
 const YEAR_OPTIONS = Array.from({ length: 5 }, (_, i) =>
@@ -127,7 +128,7 @@ interface WizardForm {
   externalUrl: string
   downloadUrl: string
   // 声明（纯前端勾选，提交时随 body 一起发出——后端 SubmissionCreate 无对应字段，
-  // 但勾选本身是作者的承诺动作；编辑部在详情/审稿环节可读到对应承诺）。
+  // 但勾选本身是作者的承诺动作；内容整理在详情/互评环节可读到对应承诺）。
   declOriginal: boolean
   declConfidential: boolean
   declCopyright: boolean
@@ -238,7 +239,11 @@ function draftPayloadToForm(
   return next
 }
 
-function submissionToForm(s: SubmissionResponse, body: string): WizardForm {
+function submissionToForm(
+  s: SubmissionResponse,
+  body: string,
+  rulesAccepted = false,
+): WizardForm {
   const validTypes: SubmissionType[] = ['paper', 'book', 'dataset', 'tutorial']
   const type = validTypes.includes(s.type as SubmissionType)
     ? (s.type as SubmissionType)
@@ -266,6 +271,15 @@ function submissionToForm(s: SubmissionResponse, body: string): WizardForm {
     doi: s.doi ?? '',
     externalUrl: s.external_url ?? '',
     downloadUrl: s.download_url ?? '',
+    // 已结构化保存的许可与补充声明按旧值回填；未保存过的字段留空。
+    license: s.license ?? '',
+    authorContributions: s.author_contributions ?? '',
+    funding: s.funding ?? '',
+    coiStatement: s.coi_statement ?? '',
+    dataAvailability: s.data_availability ?? '',
+    // 发布规范确认是账号级门禁（rules_ack_version），按账号当前确认状态回填；
+    // 原创性 / 隐私合规 / 发布授权三项承诺后端无逐篇字段，旧作品没有可回填的存档，留空待作者重勾。
+    declRules: rulesAccepted,
   }
 }
 
@@ -307,7 +321,7 @@ declare module '@tanstack/history' {
 }
 
 // ---------------------------------------------------------------------------
-// 硬门槛：摘要 / 关键词 / 中图分类号 / 参考文献（外加标题、作者、三项声明）。
+// 硬门槛：开头 / 话题 / 中图分类号 / 参考文献（外加标题、署名、三项声明）。
 //   参考文献：正文 Markdown 出现「参考文献/References」标题，或已选择上传文件
 //   （上传后由后端 format_report 复核，前端只能做启发式判定）。
 // ---------------------------------------------------------------------------
@@ -315,7 +329,7 @@ const RE_REFS_HEADING =
   /^#{1,6}\s*(参考文献|参考资料|References|Bibliography)\s*$/m
 
 // 上传文件识别后的轻量元数据：只做“能填就填”，解析不出来不阻塞。
-// 正文仍以 Markdown 为准；标题/摘要/关键词只是给作者省手工录入。
+// 正文仍以 Markdown 为准；标题/开头/话题只是给作者省手工录入。
 function extractMarkdownMeta(markdown: string): {
   title?: string
   abstract?: string
@@ -342,7 +356,7 @@ function extractMarkdownMeta(markdown: string): {
     }
     return out.join('\n').trim()
   }
-  // DOCX/PDF 转换器常把标题、作者、摘要压成一个 **...** 前置块；
+  // DOCX/PDF 转换器常把标题、署名、开头压成一个 **...** 前置块；
   // 没有 # 标题时从首个加粗短语兜底识别标题。
   const firstNonEmpty = lines.find((line) => line.trim())?.trim() ?? ''
   const boldLead = firstNonEmpty.match(/^\*\*([^*]{2,120})\*\*/)?.[1]?.trim()
@@ -373,7 +387,7 @@ function extractMarkdownMeta(markdown: string): {
 interface GateResult {
   key: string
   label: string
-  step: number // 所属步骤 0..3
+  step: number // 所属步骤 0..2
   ok: boolean
 }
 
@@ -381,49 +395,55 @@ function computeGates(f: WizardForm): GateResult[] {
   return [
     { key: 'title', label: '标题', step: 0, ok: f.title.trim().length > 0 },
     {
+      key: 'discipline',
+      label: '话题',
+      step: 0,
+      // 后端 SubmissionCreate.discipline 必填（min_length=1），前端同口径拦截，避免发布时 422。
+      ok: f.discipline.trim().length > 0,
+    },
+    {
       key: 'abstract',
-      label: '摘要',
+      label: '开头',
       step: 0,
       ok: f.abstract.trim().length > 0,
     },
     {
       key: 'authors',
-      label: '作者',
-      step: 2,
+      label: '署名',
+      step: 1,
       ok: parseListField(f.authors).length > 0,
     },
     {
       key: 'declOriginal',
       label: '原创性声明',
-      step: 2,
+      step: 1,
       ok: f.declOriginal,
     },
     {
       key: 'declConfidential',
-      label: '保密声明',
-      step: 2,
+      label: '隐私与合规确认',
+      step: 1,
       ok: f.declConfidential,
     },
     {
       key: 'declCopyright',
-      label: '版权许可确认',
-      step: 2,
+      label: '发布授权',
+      step: 1,
       ok: f.declCopyright,
     },
     {
       key: 'declRules',
       label: '发布规范确认',
-      step: 2,
+      step: 1,
       ok: f.declRules,
     },
   ]
 }
 
 const STEPS = [
-  { id: 0, title: '基本信息', hint: '标题、摘要、关键词、方向' },
-  { id: 1, title: '正文与文件', hint: '在线写，或上传作品文件' },
-  { id: 2, title: '署名与确认', hint: '署名顺序、联系邮箱、四项确认' },
-  { id: 3, title: '预览并提交', hint: '通读一遍，确认后提交' },
+  { id: 0, title: '基本信息', hint: '标题、开头、话题、方向' },
+  { id: 1, title: '正文与署名', hint: '在线写或上传文件，署名与确认' },
+  { id: 2, title: '预览并发布', hint: '通读一遍，确认后发布' },
 ]
 
 const DRAFT_KEY = 'submission-wizard-draft-v1'
@@ -450,7 +470,7 @@ function SubmissionWizardPage() {
   const showSidePreview = useMediaQuery('(min-width: 1280px)')
   // 用户已访问过的步骤：进入过 / 点过「上一步/下一步」的步骤才显示红框，
   // 避免刚打开页面就满屏红字。
-  const [visited, setVisited] = useState<boolean[]>([true, false, false, false])
+  const [visited, setVisited] = useState<boolean[]>([true, false, false])
   const [form, setForm] = useState<WizardForm>(() => ({
     ...EMPTY_FORM,
     articleSection: typeof search.section === 'string' ? search.section : '',
@@ -478,6 +498,7 @@ function SubmissionWizardPage() {
   // --- 编辑模式：拉取已有作品回填 ---
   const editSubQ = useSubmission(editId ?? 0)
   const editBodyQ = useSubmissionMarkdown(editId ?? 0, editId !== undefined)
+  const meQ = useMeProfile()
   const editLoadedRef = useRef<number | null>(null)
   useEffect(() => {
     if (!editId) return
@@ -486,8 +507,20 @@ function SubmissionWizardPage() {
     // 也不会再触发（ref 已标记），移动端尤其容易丢正文。两者都结束再回填。
     if (!editSubQ.data || editBodyQ.isLoading) return
     editLoadedRef.current = editId
-    setForm(submissionToForm(editSubQ.data, editBodyQ.data?.content ?? ''))
-  }, [editId, editSubQ.data, editBodyQ.data?.content, editBodyQ.isLoading])
+    setForm(
+      submissionToForm(
+        editSubQ.data,
+        editBodyQ.data?.content ?? '',
+        meQ.data?.rules_accepted ?? false,
+      ),
+    )
+  }, [editId, editSubQ.data, editBodyQ.data?.content, editBodyQ.isLoading, meQ.data?.rules_accepted])
+
+  // 账号规范确认状态若晚于作品详情返回，单独补回填 declRules，不覆盖其它已填内容。
+  useEffect(() => {
+    if (!editId || meQ.data === undefined) return
+    setForm((prev) => ({ ...prev, declRules: meQ.data?.rules_accepted ?? false }))
+  }, [editId, meQ.data])
 
   // --- 新建模式：从 localStorage 恢复草稿 ---
   useEffect(() => {
@@ -619,6 +652,28 @@ function SubmissionWizardPage() {
   const missing = gates.filter((g) => !g.ok)
   const missingCount = missing.length
 
+  // 发布前基础检查：阻断项必须先处理才能发布；提醒项只展示计数，不阻断。
+  const issues = useMemo(() => checkManuscript(form.body), [form.body])
+  const blockers = useMemo(
+    () => issues.filter((issue) => issue.level === 'blocker'),
+    [issues],
+  )
+  const warnings = useMemo(
+    () => issues.filter((issue) => issue.level === 'warning'),
+    [issues],
+  )
+  const firstBlockerRef = useRef<HTMLLIElement>(null)
+
+  // 进入预览步且存在阻断项时，滚动并聚焦到第一条阻断项，提示作者先改这里。
+  useEffect(() => {
+    if (step !== 2 || blockers.length === 0) return
+    const timer = setTimeout(() => {
+      firstBlockerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      firstBlockerRef.current?.focus({ preventScroll: true })
+    }, 150)
+    return () => clearTimeout(timer)
+  }, [step, blockers.length])
+
   // 每个步骤的红/绿状态：当前步骤只在 visited 后才标红
   const stepGateState = useMemo(() => {
     return STEPS.map((s) => {
@@ -698,7 +753,7 @@ function SubmissionWizardPage() {
         toast.error(
           extractError(
             err,
-            '文件识别失败，可先提交文件，服务器会在上传后再解析',
+            '文件识别失败，可先上传文件，服务器会在上传后再解析',
           ),
         )
       } finally {
@@ -708,9 +763,21 @@ function SubmissionWizardPage() {
   }
 
   const onSubmit = async () => {
+    if (blockers.length > 0) {
+      // 阻断项没过门禁：不发请求，就地聚焦第一条阻断并说明改法。
+      setVisited([true, true, true])
+      toast.error(
+        `还有 ${blockers.length} 个阻断项需要先处理：${blockers
+          .map((b) => b.message)
+          .join('、')}`,
+      )
+      firstBlockerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      firstBlockerRef.current?.focus({ preventScroll: true })
+      return
+    }
     if (missingCount > 0) {
       // 把所有步骤都 visited，让红框一次性全部亮出来
-      setVisited([true, true, true, true])
+      setVisited([true, true, true])
       toast.error(
         `还有 ${missingCount} 项未完成：${missing.map((m) => m.label).join('、')}`,
       )
@@ -788,7 +855,7 @@ function SubmissionWizardPage() {
           // ignore
         }
         void deleteDraftMut.mutate()
-        toast.success('已提交，等待内容整理处理')
+        toast.success('已发布，等待内容整理处理')
       }
       // 回到列表页；列表会自动 invalidate，新提交出现在第一行
       void navigate({ to: '/submissions' })
@@ -798,7 +865,7 @@ function SubmissionWizardPage() {
       const code =
         typeof detail === 'object' && detail !== null ? detail.code : undefined
       if (code === 'rules_ack_required') {
-        toast.error('发布前需要先阅读并确认《作品与发布规范》', {
+        toast.error('发布前需要先阅读并确认《写作与发布规范》', {
           description: '正在为你打开确认页…',
           duration: 6000,
         })
@@ -806,7 +873,7 @@ function SubmissionWizardPage() {
         return
       }
       toast.error(
-        extractError(err, editId !== undefined ? '更新失败' : '提交失败'),
+        extractError(err, editId !== undefined ? '更新失败' : '发布失败'),
       )
     }
   }
@@ -847,7 +914,7 @@ function SubmissionWizardPage() {
       URL.revokeObjectURL(url)
       toast.success('排版 PDF 已生成')
     } catch {
-      toast.error('排版 PDF 生成失败，请稍后再试')
+      toast.error('排版 PDF 生成失败，可再试一次。')
     } finally {
       setPdfBusy(false)
     }
@@ -862,13 +929,13 @@ function SubmissionWizardPage() {
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">
-            {editId !== undefined ? '修改作品' : '写新作品'}
+            {editId !== undefined ? '修改作品' : '写一篇'}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            分四步：填基本信息、写正文、署名确认、预览提交。草稿会自动存在本机和登录账号里。
+            分三步：填基本信息、写正文与署名、预览发布。草稿会自动存在本机和登录账号里。
             <HelpTip
               className="ml-1"
-              text="研究长文可以申请互评；自由创作不套固定格式，也不计分，只做基础校对。"
+              text="研究长文与荒诞写作可以申请互评；自由创作不套固定格式，只做发布前的基础校对。"
             />
           </p>
         </div>
@@ -889,6 +956,7 @@ function SubmissionWizardPage() {
             variant="outline"
             size="sm"
             className="gap-1.5"
+            aria-haspopup="dialog"
             onClick={() => setProofOpen(true)}
           >
             <Eye className="h-4 w-4" />
@@ -902,43 +970,6 @@ function SubmissionWizardPage() {
             <ChevronLeft className="h-4 w-4" />
             返回列表
           </Button>
-        </div>
-      </div>
-
-      <div className="mb-4 rounded-md border border-dashed bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
-        <span className="mr-2 font-medium text-foreground">
-          发布前先看规格与版式：
-        </span>
-        <a
-          className="font-medium text-primary hover:underline"
-          href="/templates/rubbish-submission-template.docx"
-          download
-        >
-          Word 模板（推荐）
-        </a>
-        <span className="mx-2">·</span>
-        <a
-          className="font-medium text-primary hover:underline"
-          href="/templates/rubbish-submission-template-word.md"
-          download
-        >
-          排版说明
-        </a>
-        <span className="mx-2">·</span>
-        <a
-          className="font-medium text-primary hover:underline"
-          href="/templates/rubbish-editorial-standards.md"
-          download
-        >
-          发布规范
-        </a>
-        <span className="mx-2">·</span>
-        <a className="font-medium text-primary hover:underline" href="/guide?tab=authors">
-          作品指南
-        </a>
-        <div className="mt-1">
-          推荐提交 Word（.docx）：系统识别和排版最稳，互评成员也更好读；PDF
-          也可上传，下载时会自动转成 Word。
         </div>
       </div>
 
@@ -1010,28 +1041,34 @@ function SubmissionWizardPage() {
               />
             )}
             {step === 1 && (
-              <StepUpload
-                form={form}
-                set={set}
-                acceptAttr={acceptAttr}
-                uploadMaxMb={uploadMaxMb}
-                fileInputRef={fileInputRef}
-                onPickFile={onPickFile}
-                converting={converting}
-                snapshotKey={
-                  editId !== undefined
-                    ? `submission-${editId}`
-                    : 'submission-wizard-new'
-                }
-              />
+              <>
+                <StepUpload
+                  form={form}
+                  set={set}
+                  acceptAttr={acceptAttr}
+                  uploadMaxMb={uploadMaxMb}
+                  fileInputRef={fileInputRef}
+                  onPickFile={onPickFile}
+                  converting={converting}
+                  snapshotKey={
+                    editId !== undefined
+                      ? `submission-${editId}`
+                      : 'submission-wizard-new'
+                  }
+                />
+                <div className="mt-6 border-t pt-6">
+                  <StepAuthors form={form} set={set} fieldError={fieldError} />
+                </div>
+              </>
             )}
             {step === 2 && (
-              <StepAuthors form={form} set={set} fieldError={fieldError} />
-            )}
-            {step === 3 && (
               <StepReview
                 form={form}
                 missing={missing}
+                issues={issues}
+                blockers={blockers}
+                warnings={warnings}
+                firstBlockerRef={firstBlockerRef}
                 uploadMaxMb={uploadMaxMb}
               />
             )}
@@ -1053,14 +1090,21 @@ function SubmissionWizardPage() {
                 )}
               </div>
               <div className="flex items-center gap-2">
-                {missingCount > 0 && step === 3 && (
+                {blockers.length > 0 && step === 2 && (
+                  <span className="inline-flex items-center gap-1 text-xs text-destructive">
+                    <AlertCircle className="h-3.5 w-3.5" />
+                    {blockers.length} 个阻断项待处理
+                    {warnings.length > 0 ? `，另有 ${warnings.length} 个提醒项` : ''}
+                  </span>
+                )}
+                {missingCount > 0 && step === 2 && (
                   <span className="inline-flex items-center gap-1 text-xs text-destructive">
                     <AlertCircle className="h-3.5 w-3.5" />
                     还差 {missingCount} 项：
                     {missing.map((m) => m.label).join('、')}
                   </span>
                 )}
-                {step < 3 ? (
+                {step < 2 ? (
                   <Button
                     onClick={() => goTo(step + 1)}
                     disabled={!canProceed && visited[step]}
@@ -1073,6 +1117,7 @@ function SubmissionWizardPage() {
                     onClick={onSubmit}
                     disabled={
                       missingCount > 0 ||
+                      blockers.length > 0 ||
                       createMut.isPending ||
                       updateMut.isPending ||
                       uploadMut.isPending
@@ -1086,10 +1131,12 @@ function SubmissionWizardPage() {
                         ? '保存中…'
                         : '保存修改'
                       : createMut.isPending
-                        ? '提交中…'
-                        : missingCount > 0
-                          ? `还差 ${missingCount} 项`
-                          : '确认提交'}
+                        ? '发布中…'
+                        : blockers.length > 0
+                          ? `${blockers.length} 个阻断项待处理`
+                          : missingCount > 0
+                            ? `还差 ${missingCount} 项`
+                            : '发布'}
                   </Button>
                 )}
               </div>
@@ -1099,7 +1146,8 @@ function SubmissionWizardPage() {
 
         {/* 宽屏常驻右栏：边写边看纸面，不必反复开抽屉。 */}
         {showSidePreview && !proofOpen ? (
-        <aside>
+        <aside aria-labelledby="proof-side-title" className="min-w-0">
+          <h2 id="proof-side-title" className="sr-only">排版预览</h2>
           <div className="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-lg border bg-card p-3">
             <PaperProof
               title={form.title}
@@ -1163,7 +1211,7 @@ function StepBibliography({
       <div>
         <h2 className="text-lg font-semibold">基本信息</h2>
         <p className="text-sm text-muted-foreground">
-          这一步写清「这是什么」。标题和摘要就够了；关键词、方向、合集分类都可以之后再补。
+          这一步写清「这是什么」。标题、话题、开头先定下来；方向、合集分类可以之后再补。
         </p>
       </div>
 
@@ -1219,12 +1267,12 @@ function StepBibliography({
           >
             自由创作
             <span className="mt-0.5 block text-xs text-muted-foreground">
-              小说、随笔、评论、指南、吐槽。不用套论文骨架，想怎么写就怎么写
+              小说、随笔、评论、指南、吐槽。不用套研究骨架，想怎么写就怎么写
             </span>
           </button>
         </div>
         <p className="text-[11px] leading-5 text-muted-foreground">
-          研究长文和荒诞写作都可以申请互评，区别只在命题是否荒诞；自由创作不套固定格式，也不计分。
+          研究长文和荒诞写作都可以申请互评，区别只在命题是否荒诞；自由创作不套固定格式。
         </p>
       </div>
 
@@ -1244,15 +1292,20 @@ function StepBibliography({
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="w-discipline">话题（选填）</Label>
+          <Label htmlFor="w-discipline">
+            话题 <span className="text-destructive">*</span>
+          </Label>
           <Input
             id="w-discipline"
             list="w-discipline-options"
             value={form.discipline}
             onChange={(e) => set('discipline', e.target.value)}
-            placeholder="如：计算机、社会学、语言、游戏"
+            placeholder="先选一个话题，或者写一句它属于什么"
             className={fieldError('discipline') ? 'border-destructive' : ''}
           />
+          {fieldError('discipline') && (
+            <FieldError>先选一个话题，或者写一句它属于什么</FieldError>
+          )}
           <datalist id="w-discipline-options">
             {DISCIPLINES.flatMap((c) => c.items).map((d) => (
               <option key={d.code} value={d.name}>
@@ -1260,16 +1313,15 @@ function StepBibliography({
               </option>
             ))}
           </datalist>
-
         </div>
         <div className="space-y-2">
-          <Label htmlFor="w-subdiscipline">细分方向（选填）</Label>
+          <Label htmlFor="w-subdiscipline">细分话题（选填）</Label>
           <Input
             id="w-subdiscipline"
             list="w-subdiscipline-options"
             value={form.subdiscipline}
             onChange={(e) => set('subdiscipline', e.target.value)}
-            placeholder="更细的方向，可留空"
+            placeholder="更细的话题，可留空"
           />
           <datalist id="w-subdiscipline-options">
             {DISCIPLINES.flatMap((c) => c.items).map((d) => (
@@ -1300,7 +1352,7 @@ function StepBibliography({
             ))}
           </select>
           <p className="text-xs text-muted-foreground">
-            分类只做浏览分组，不改变作品类型；通过后进入内容库对应分类。
+            分类只做浏览分组，不改变作品类型；发布后进入内容库对应分类。
           </p>
         </div>
         <div className="space-y-2">
@@ -1322,7 +1374,7 @@ function StepBibliography({
 
       <div className="space-y-2">
         <Label htmlFor="w-abstract">
-          摘要 <span className="text-destructive">*</span>
+          开头 <span className="text-destructive">*</span>
         </Label>
         <Textarea
           id="w-abstract"
@@ -1332,11 +1384,11 @@ function StepBibliography({
           placeholder="两三百字，写清你想说什么、怎么写的、最后落在哪。自由创作可以只写故事梗概。"
           className={fieldError('abstract') ? 'border-destructive' : ''}
         />
-        {fieldError('abstract') && <FieldError>还没写摘要</FieldError>}
+        {fieldError('abstract') && <FieldError>还没写开头</FieldError>}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="w-keywords">关键词（选填，逗号分隔）</Label>
+        <Label htmlFor="w-keywords">话题（选填，逗号分隔）</Label>
         <Input
           id="w-keywords"
           value={form.keywords}
@@ -1414,7 +1466,7 @@ function StepUpload({
       setSourcePreviewOpen(true)
     } catch (err) {
       toast.error(
-        extractError(err, '原件预览失败；可先提交，服务器会在上传后解析'),
+        extractError(err, '原件预览失败；可先上传，服务器会在上传后解析'),
       )
     } finally {
       setSourcePreviewLoading(false)
@@ -1445,7 +1497,7 @@ function StepUpload({
               </Badge>
             </div>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              选完文件就会自动识别并回填正文，不需要先提交。DOCX 识别最稳；PDF
+              选完文件就会自动识别并回填正文，不需要先上传。DOCX 识别最稳；PDF
               识别后会转成可编辑正文。
             </p>
           </div>
@@ -1593,7 +1645,7 @@ function StepUpload({
             {uploadMaxMb} MB。
           </li>
           <li>
-            正文写清标题、摘要和分段就好；出处说明可选，不必硬凑条目。
+            正文写清标题、开头和分段就好；出处说明可选，不必硬凑条目。
           </li>
           <li>
             版式：先下载
@@ -1619,6 +1671,13 @@ function StepUpload({
               download
             >
               发布规范
+            </a>
+            ，写法见
+            <a
+              className="mx-1 font-medium text-primary hover:underline"
+              href="/guide?tab=authors"
+            >
+              写一篇指南
             </a>
             。
           </li>
@@ -1721,7 +1780,7 @@ function StepAuthors({
           placeholder="清华大学计算机系, 北京大学信息学院"
         />
         <p className="text-xs text-muted-foreground">
-          多位署名者可按顺序对应填写；只用于站内联系与互评回避，不对外展示。
+          多位署名者可按顺序对应填写；只用于站内联系与互评匹配，不对外展示。
         </p>
       </div>
 
@@ -1735,7 +1794,7 @@ function StepAuthors({
           placeholder="corresponding@example.com"
         />
         <p className="text-xs text-muted-foreground">
-          互评反馈和通过通知会发到这里；留空则用账号注册邮箱。
+          互评意见和处理结果会发到这里；留空则用账号注册邮箱。
         </p>
       </div>
 
@@ -1757,7 +1816,7 @@ function StepAuthors({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="w-contributions">作者贡献（选填）</Label>
+          <Label htmlFor="w-contributions">署名贡献（选填）</Label>
           <Textarea
             id="w-contributions"
             value={form.authorContributions}
@@ -1782,7 +1841,7 @@ function StepAuthors({
             id="w-coi"
             value={form.coiStatement}
             onChange={(e) => set('coiStatement', e.target.value)}
-            placeholder="作者声明无利益冲突"
+            placeholder="署名者声明无利益关系"
             rows={2}
           />
         </div>
@@ -1826,7 +1885,7 @@ function StepAuthors({
           checked={form.declRules}
           onChange={(v) => set('declRules', v)}
           label="发布规范确认"
-          description="我已阅读并同意《作品与发布规范》：不冒充真实研究、不伪造材料、不侵犯他人隐私与版权。详见站内“写内容”指南。"
+          description="我已阅读并同意《写作与发布规范》：不冒充真实研究、不伪造材料、不侵犯他人隐私与版权。详见站内“写一篇”指南。"
           error={fieldError('declRules')}
         />
       </div>
@@ -1834,11 +1893,26 @@ function StepAuthors({
   )
 }
 
-function ManuscriptCheck({ body }: { body: string }) {
-  const issues = useMemo(() => checkManuscript(body), [body])
-  if (!body.trim()) return null
-  const blockers = issues.filter((issue) => issue.level === 'blocker').length
-  const warnings = issues.filter((issue) => issue.level === 'warning').length
+// 阻断项的改法指引：按检查码给出具体下一步，避免作者只看到“阻断”不知道怎么改。
+const BLOCKER_HINTS: Record<string, string> = {
+  empty: '先上传 Word / PDF，或在在线正文里写出内容，再发布。',
+  placeholder: '把 TODO、待补、XXX、Lorem ipsum 等占位标记删掉或替换成定稿内容。',
+}
+
+function ManuscriptCheck({
+  issues,
+  blockers,
+  warnings,
+  firstBlockerRef,
+}: {
+  issues: ManuscriptIssue[]
+  blockers: ManuscriptIssue[]
+  warnings: ManuscriptIssue[]
+  firstBlockerRef: React.RefObject<HTMLLIElement | null>
+}) {
+  if (issues.length === 0) return null
+  const blockerCount = blockers.length
+  const warningCount = warnings.length
   return (
     <div className="rounded-lg border p-4 text-sm">
       <div className="flex items-center gap-2 font-medium">
@@ -1846,38 +1920,54 @@ function ManuscriptCheck({ body }: { body: string }) {
         发布前基础检查
       </div>
       <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-        {blockers > 0
-          ? `发现 ${blockers} 个阻断项、${warnings} 个提醒项，建议修正后再提交。`
-          : warnings > 0
-            ? `发现 ${warnings} 个提醒项，请确认是否需要调整。`
+        {blockerCount > 0
+          ? `发现 ${blockerCount} 个阻断项、${warningCount} 个提醒项；阻断项处理完才能发布，提醒项请自行确认。`
+          : warningCount > 0
+            ? `发现 ${warningCount} 个提醒项，请确认是否需要调整；不阻断发布。`
             : '未发现编号、引用序号或重复段落等明显问题。'}
       </p>
       {issues.length > 0 ? (
-        <details className="mt-2">
+        <details open={blockerCount > 0} className="mt-2">
           <summary className="cursor-pointer text-xs text-primary">
             查看 {issues.length} 条检查结果
           </summary>
           <ul className="mt-2 space-y-2">
-            {issues.map((issue: ManuscriptIssue, index) => (
-              <li key={`${issue.code}-${issue.line ?? 0}-${index}`} className="flex items-start gap-2 text-xs">
-                <span
-                  className={
-                    issue.level === 'blocker'
-                      ? 'shrink-0 rounded bg-destructive/10 px-1.5 py-0.5 text-destructive'
-                      : 'shrink-0 rounded bg-muted px-1.5 py-0.5 text-muted-foreground'
+            {issues.map((issue: ManuscriptIssue, index) => {
+              const isBlocker = issue.level === 'blocker'
+              const hint = isBlocker ? BLOCKER_HINTS[issue.code] : undefined
+              return (
+                <li
+                  key={`${issue.code}-${issue.line ?? 0}-${index}`}
+                  ref={
+                    isBlocker && index === issues.findIndex((i) => i.level === 'blocker')
+                      ? firstBlockerRef
+                      : undefined
                   }
+                  tabIndex={isBlocker ? -1 : undefined}
+                  className="flex items-start gap-2 text-xs"
                 >
-                  {issue.level === 'blocker' ? '阻断' : issue.level === 'warning' ? '提醒' : '提示'}
-                </span>
-                <span className="min-w-0">
-                  {issue.message}
-                  <span className="ml-1 text-muted-foreground">
-                    {issue.line ? `第 ${issue.line} 行 · ` : ''}
-                    {issue.code}
+                  <span
+                    className={
+                      isBlocker
+                        ? 'shrink-0 rounded bg-destructive/10 px-1.5 py-0.5 text-destructive'
+                        : 'shrink-0 rounded bg-muted px-1.5 py-0.5 text-muted-foreground'
+                    }
+                  >
+                    {isBlocker ? '阻断' : issue.level === 'warning' ? '提醒' : '提示'}
                   </span>
-                </span>
-              </li>
-            ))}
+                  <span className="min-w-0">
+                    {issue.message}
+                    <span className="ml-1 text-muted-foreground">
+                      {issue.line ? `第 ${issue.line} 行 · ` : ''}
+                      {issue.code}
+                    </span>
+                    {hint && (
+                      <span className="mt-0.5 block text-muted-foreground">怎么改：{hint}</span>
+                    )}
+                  </span>
+                </li>
+              )
+            })}
           </ul>
         </details>
       ) : null}
@@ -1888,10 +1978,18 @@ function ManuscriptCheck({ body }: { body: string }) {
 function StepReview({
   form,
   missing,
+  issues,
+  blockers,
+  warnings,
+  firstBlockerRef,
   uploadMaxMb,
 }: {
   form: WizardForm
   missing: { key: string; label: string }[]
+  issues: ManuscriptIssue[]
+  blockers: ManuscriptIssue[]
+  warnings: ManuscriptIssue[]
+  firstBlockerRef: React.RefObject<HTMLLIElement | null>
   uploadMaxMb: number
 }) {
   const authors = parseListField(form.authors)
@@ -1904,13 +2002,18 @@ function StepReview({
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-lg font-semibold">预览并提交</h2>
+        <h2 className="text-lg font-semibold">预览并发布</h2>
         <p className="text-sm text-muted-foreground">
-          请通读一遍。确认无误后点击下方「确认提交」，提交后状态为「排队中」。
+          通读无误后点击下方「发布」。发布后内容整理会先做基础检查，不用重复发送。
         </p>
       </div>
 
-      <ManuscriptCheck body={form.body} />
+      <ManuscriptCheck
+        issues={issues}
+        blockers={blockers}
+        warnings={warnings}
+        firstBlockerRef={firstBlockerRef}
+      />
 
       {missing.length > 0 && (
         <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
@@ -1943,12 +2046,12 @@ function StepReview({
             </div>
           </div>
           <div>
-            <div className="text-xs text-muted-foreground">方向 / 分类</div>
+            <div className="text-xs text-muted-foreground">话题 / 分组</div>
             <div>{form.discipline || '—'}</div>
           </div>
         </div>
         <div>
-          <div className="text-xs text-muted-foreground">摘要（首段）</div>
+          <div className="text-xs text-muted-foreground">开头（首段）</div>
           <p className="mt-0.5 whitespace-pre-wrap text-muted-foreground">
             {firstPara || '—'}
           </p>
@@ -1961,13 +2064,13 @@ function StepReview({
               </Badge>
             ))
           ) : (
-            <span className="text-xs text-muted-foreground">关键词未填</span>
+            <span className="text-xs text-muted-foreground">话题未填</span>
           )}
         </div>
         <div>
         </div>
         <div>
-          <div className="text-xs text-muted-foreground">作者</div>
+          <div className="text-xs text-muted-foreground">署名</div>
           <div className="mt-0.5">
             {authors.length > 0 ? authors.join('、') : '—'}
           </div>

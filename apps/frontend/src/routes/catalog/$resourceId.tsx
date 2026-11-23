@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, useLocation, useNavigate } from '@tanstack/react-router'
 import {
   Bookmark,
   ArrowUp,
@@ -27,6 +27,7 @@ import { useIsMobile } from '@/hooks/use-is-mobile'
 import {
   useClaimStatus,
   useDeleteResource,
+  useMyLibraryItemIds,
   useRecordView,
   useResource,
   useResources,
@@ -40,7 +41,7 @@ import type {
   ResourceUpdate,
 } from '@/lib/types'
 import { normalizeAbstract } from '@/lib/abstract'
-import { extractError, parseListField, sanitizeAuthors } from '@/lib/utils'
+import { cn, extractError, parseListField, sanitizeAuthors } from '@/lib/utils'
 import { formatSiteCitation } from '@/lib/citation'
 import { safeHref } from '@/lib/url-safety'
 import {
@@ -83,6 +84,7 @@ import { ClaimDialog } from '@/components/catalog/claim-dialog'
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
 import { FunArticle } from '@/components/catalog/fun-article'
 import { MetaItem } from '@/components/common/meta-item'
+import { ShareDialog } from '@/components/common/share-dialog'
 import { ErrorState, LoadingSkeleton } from '@/components/common/state'
 
 // 详情页向访客开放（后端 GET /catalog/{id} 本就是公开接口）。
@@ -108,6 +110,10 @@ function CatalogDetailPage() {
   })
   const claimStatus = useClaimStatus(Number.isFinite(id) && id > 0 ? id : null, isAuthenticated)
   const navigate = useNavigate()
+  const location = useLocation()
+  // 收藏关系以服务端为准：当前用户任一合集收录了这篇，按钮才显示已收藏。
+  const savedQ = useMyLibraryItemIds(isAuthenticated)
+  const saved = savedQ.data?.has(id) ?? false
 
   const { data, isLoading, isError, refetch } = useResource(id)
   const recordView = useRecordView()
@@ -127,15 +133,27 @@ function CatalogDetailPage() {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [eventOpen, setEventOpen] = useState(false)
   const [listOpen, setListOpen] = useState(false)
+
+  // 游客点收藏：引导登录并带回当前深链；登录后再打开合集选择。
+  const handleSave = () => {
+    if (!isAuthenticated) {
+      void navigate({ to: '/login', search: { redirect: location.pathname } })
+      return
+    }
+    setListOpen(true)
+  }
   const [claimOpen, setClaimOpen] = useState(false)
   const [appealOpen, setAppealOpen] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false)
 
   // ManuscriptView 把 TOC 上提到这里，供右侧 sticky 侧栏渲染。
   const [toc, setToc] = useState<TocEntry[]>([])
+  // 目录解析完成前，侧栏先留同高占位，避免目录卡晚挂载把下方下载/引用卡挤下去（CLS）。
+  const [tocReady, setTocReady] = useState(false)
   const [progress, setProgress] = useState(0)
   const [showTop, setShowTop] = useState(false)
-  // 稿件加载失败（409 needs_docx / 404 无正文）时由 ManuscriptView 回调上来。
+  // 正文加载失败（409 needs_docx / 404 无正文）时由 ManuscriptView 回调上来。
   const [manuscriptError, setManuscriptError] = useState<unknown>(null)
 
   useEffect(() => {
@@ -194,11 +212,11 @@ function CatalogDetailPage() {
         <FunArticle
           data={data}
           progress={progress}
-          isAuthenticated={isAuthenticated}
           isAdmin={isAdmin}
+          saved={saved}
           onEdit={() => setEditOpen(true)}
           onDelete={() => setDeleteOpen(true)}
-          onSave={() => setListOpen(true)}
+          onSave={handleSave}
         />
         {editOpen && (
           <EditDialog
@@ -252,7 +270,7 @@ function CatalogDetailPage() {
 
       <div className="mx-auto flex w-full max-w-[1280px] items-start gap-10">
         {/* 主体 */}
-        <div className="min-w-0 flex-1" id="article">
+        <div className="min-w-0 max-w-[44rem] flex-1" id="article">
           {/* 类型 chip + 标题 + 作者 */}
           <div className="mb-5">
             <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -295,7 +313,7 @@ function CatalogDetailPage() {
                 </Badge>
               )}
             </div>
-            <h1 className="text-xl font-semibold leading-snug tracking-tight sm:text-2xl">
+            <h1 className="min-w-0 break-words text-xl font-semibold leading-snug tracking-tight sm:text-2xl">
               {titleMain}
               {titleSub ? (
                 <span className="mt-1 block text-base font-normal text-muted-foreground sm:text-lg">
@@ -359,7 +377,7 @@ function CatalogDetailPage() {
                 </Button>
               ) : null}
               {isAuthenticated && claimStatus.data?.state === 'pending_review' && claimStatus.data.mine ? (
-                <Badge variant="outline" className="self-center">认领审批中</Badge>
+                <Badge variant="outline" className="self-center">认领核对中</Badge>
               ) : null}
             </div>
           </div>
@@ -388,7 +406,7 @@ function CatalogDetailPage() {
                 }}
                 className="mt-3 inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
               >
-                去社区开帖 <ArrowRight className="h-4 w-4" />
+                去讨论区回应 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           ) : null}
@@ -403,8 +421,14 @@ function CatalogDetailPage() {
               onProgress={setProgress}
               useWindowScroll
               hideTocNav
-              onTocReady={setToc}
-              onFatalError={setManuscriptError}
+              onTocReady={(entries) => {
+                setToc(entries)
+                setTocReady(true)
+              }}
+              onFatalError={(err) => {
+                setManuscriptError(err)
+                setTocReady(true)
+              }}
               contentCategory={data.content_category}
               contentTrack={data.content_track}
               title={data.title}
@@ -415,7 +439,7 @@ function CatalogDetailPage() {
           {/* 社区内容声明：正文由作者发布，站点不做学术背书。 */}
           <p className="mt-8 border-t pt-4 text-xs leading-6 text-muted-foreground">
             本文由社区成员发布，观点、数据与出处由作者负责。
-            Rubbish 不做学术评价，也不出具发表、职称或学分证明。
+            Rubbish 不做学术评价，也不出具职称、学分、学历或公开证明。
           </p>
 
           {/* 文末折叠区 */}
@@ -428,13 +452,14 @@ function CatalogDetailPage() {
                 <CardContent>
                   <div className="flex min-w-0 max-w-full flex-wrap gap-2">
                     {data.tags.map((t) => (
-                      <Badge
-                        key={t}
-                        variant="outline"
-                        className="max-w-full whitespace-normal break-words text-left"
-                      >
-                        {t}
-                      </Badge>
+                      <Link key={t} to="/search" search={{ q: t }}>
+                        <Badge
+                          variant="outline"
+                          className="max-w-full whitespace-normal break-words text-left transition-colors hover:border-primary/40 hover:text-primary"
+                        >
+                          {t}
+                        </Badge>
+                      </Link>
                     ))}
                   </div>
                 </CardContent>
@@ -451,11 +476,11 @@ function CatalogDetailPage() {
                   <MetaItem label="年份" value={String(data.year)} />
                   {data.venue ? <MetaItem label="来源说明" value={data.venue} /> : null}
                   <MetaItem label="话题" value={data.discipline} />
-                  <MetaItem label="子方向" value={data.subdiscipline} />
+                  <MetaItem label="子话题" value={data.subdiscipline} />
                   <MetaItem label="站内编号" value={data.site_id} />
                   <MetaItem label="语言" value={languageLabel(data.language)} />
                   {data.keywords && data.keywords.length > 0 && (
-                    <MetaItem label="关键词" value={data.keywords.join('；')} />
+                    <MetaItem label="标签" value={data.keywords.join('；')} />
                   )}
                 </CardContent>
               </FoldCard>
@@ -475,7 +500,7 @@ function CatalogDetailPage() {
 
         {/* 右侧 sticky 侧栏：≥1280px（xl）才渲染 */}
         <aside className="article-aside sticky top-24 hidden w-72 shrink-0 self-start space-y-4 xl:block">
-          {toc.length > 2 && (
+          {(!tocReady || toc.length > 2) && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-1.5 text-sm">
@@ -484,28 +509,42 @@ function CatalogDetailPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ul className="max-h-[55vh] space-y-0.5 overflow-y-auto border-l border-border">
-                  {toc.map((t) => (
-                    <li key={t.id}>
-                      <button
-                        onClick={() => {
-                          const el = document.getElementById(t.id)
-                          if (el) {
-                            const top = el.getBoundingClientRect().top + window.scrollY - 88
-                            window.scrollTo({ top, behavior: 'smooth' })
+                {!tocReady ? (
+                  // 目录解析前留同高占位：只铺底色扫光，不改几何尺寸；卡片外壳常驻，
+                  // 解析后只换内部列表，避免整卡晚挂载把下方下载/引用卡挤下去。
+                  <div className="space-y-2" aria-hidden>
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="skeleton-shimmer h-3 rounded"
+                        style={{ width: `${82 - (i % 3) * 16}%` }}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <ul className="max-h-[55vh] space-y-0.5 overflow-y-auto border-l border-border">
+                    {toc.map((t) => (
+                      <li key={t.id}>
+                        <button
+                          onClick={() => {
+                            const el = document.getElementById(t.id)
+                            if (el) {
+                              const top = el.getBoundingClientRect().top + window.scrollY - 88
+                              window.scrollTo({ top, behavior: 'smooth' })
+                            }
+                          }}
+                          className={
+                            'block w-full truncate rounded px-2 py-1 text-left text-xs transition-colors hover:bg-muted hover:text-primary ' +
+                            (t.level === 3 ? 'pl-5 text-muted-foreground' : 'font-medium')
                           }
-                        }}
-                        className={
-                          'block w-full truncate rounded px-2 py-1 text-left text-xs transition-colors hover:bg-muted hover:text-primary ' +
-                          (t.level === 3 ? 'pl-5 text-muted-foreground' : 'font-medium')
-                        }
-                        title={t.text}
-                      >
-                        {t.text}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+                          title={t.text}
+                        >
+                          {t.text}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </CardContent>
             </Card>
           )}
@@ -608,12 +647,30 @@ function CatalogDetailPage() {
           )}
 
           <DeclarationsCard data={data} />
-          {historyQ.data && <PublicHistoryCard history={historyQ.data} />}
+          {historyQ.isLoading ? (
+            <Card aria-hidden>
+              <CardHeader>
+                <CardTitle className="text-sm">版本与公开记录</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="skeleton-shimmer h-3 rounded w-3/4" />
+                <div className="skeleton-shimmer h-3 rounded w-1/2" />
+              </CardContent>
+            </Card>
+          ) : (
+            historyQ.data && <PublicHistoryCard history={historyQ.data} />
+          )}
 
           {isAuthenticated ? (
-            <Button variant="outline" size="sm" className="w-full" onClick={() => setListOpen(true)}>
+            <Button
+              variant={saved ? 'secondary' : 'outline'}
+              size="sm"
+              className="w-full"
+              onClick={handleSave}
+              aria-label={saved ? '已收藏，管理收藏' : '加入阅读列表'}
+            >
               <Bookmark className="h-3.5 w-3.5" />
-              加入阅读列表
+              {saved ? '已在阅读列表' : '加入阅读列表'}
             </Button>
           ) : (
             <p className="rounded-lg border border-dashed bg-muted/30 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
@@ -690,11 +747,22 @@ function CatalogDetailPage() {
           isAdmin={isAdmin}
           hasFile={Boolean(data.has_file)}
           externalUrl={data.external_url}
+          saved={saved}
           onEdit={() => setEditOpen(true)}
           onDelete={() => setDeleteOpen(true)}
-          onSave={() => setListOpen(true)}
+          onSave={handleSave}
+          onShare={() => setShareOpen(true)}
         />
       )}
+
+      <ShareDialog
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        title={data.title}
+        description={data.abstract}
+        url={window.location.href}
+        image={data.cover_image}
+      />
 
       {editOpen && data && (
         <EditDialog
@@ -874,7 +942,7 @@ function ScannedPdfFallback({ resourceId, hasFile }: { resourceId: number; hasFi
   )
 }
 
-// 公开的版本与变更记录：更正、撤回、署名变更、作者修回版本。
+// 公开的版本与变更记录：更正、撤回、署名变更、作者更新版本。
 // 只展示真实存在的事件；没有记录就不渲染“已核验”之类的空壳。
 const PUBLIC_EVENT_LABELS: Record<string, string> = {
   correction: '更正',
@@ -918,7 +986,7 @@ function PublicHistoryCard({ history }: { history: ResourceHistory }) {
             <span className="font-medium">v{version.version}</span>
             <span className="text-muted-foreground">{formatPublicDate(version.created_at)}</span>
             <span className="w-full text-muted-foreground">
-              {version.note?.trim() || (version.version === 1 ? '首次提交版本' : '作者修回版本')}
+              {version.note?.trim() || (version.version === 1 ? '首次收录版本' : '作者更新版本')}
             </span>
           </div>
         ))}
@@ -1257,17 +1325,21 @@ function MobileDetailActions({
   isAdmin,
   hasFile,
   externalUrl,
+  saved,
   onEdit,
   onDelete,
   onSave,
+  onShare,
 }: {
   resourceId: number
   isAdmin: boolean
   hasFile: boolean
   externalUrl?: string | null
+  saved: boolean
   onEdit: () => void
   onDelete: () => void
   onSave: () => void
+  onShare: () => void
 }) {
   const [moreOpen, setMoreOpen] = useState(false)
   return (
@@ -1282,14 +1354,14 @@ function MobileDetailActions({
           </Button>
         )}
         <Button
-          variant="ghost"
+          variant={saved ? 'secondary' : 'ghost'}
           size="sm"
           className="flex-1 gap-1"
           onClick={onSave}
-          aria-label="收藏"
+          aria-label={saved ? '已收藏，管理收藏' : '收藏'}
         >
-          <Bookmark className="h-4 w-4" />
-          收藏
+          <Bookmark className={cn('h-4 w-4', saved && 'fill-current')} />
+          {saved ? '已收藏' : '收藏'}
         </Button>
         <Button
           variant="ghost"
@@ -1307,19 +1379,14 @@ function MobileDetailActions({
         <div className="flex flex-col">
           <button
             type="button"
-            onClick={async () => {
+            onClick={() => {
               setMoreOpen(false)
-              try {
-                await navigator.clipboard.writeText(window.location.href)
-                toast.success('链接已复制')
-              } catch {
-                toast.error('复制失败')
-              }
+              onShare()
             }}
             className="flex min-h-[48px] items-center gap-3 rounded-md px-2 text-left text-sm hover:bg-accent"
           >
             <Share2 className="h-5 w-5 shrink-0 text-muted-foreground" />
-            复制分享链接
+            分享链接
           </button>
           {externalUrl && (
             <a
@@ -1374,7 +1441,17 @@ function AuthorRow({ detail, fallbackNames }: { detail: AuthorDetail[] | null; f
       <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
         {sorted.map((a, i) => (
           <span key={i} className="inline-flex items-center gap-1">
-            <span className="text-foreground">{a.name}</span>
+            {a.claimed && a.username ? (
+              <Link
+                to="/u/$username"
+                params={{ username: a.username }}
+                className="min-w-0 break-words text-foreground underline-offset-2 hover:underline"
+              >
+                {a.name}
+              </Link>
+            ) : (
+              <span className="min-w-0 break-words text-foreground">{a.name}</span>
+            )}
             {a.roles.includes('first') && <sup title="第一作者">†</sup>}
             {a.roles.includes('corresponding') && <sup title="通讯作者">✉</sup>}
             {a.claimed && (
@@ -1393,7 +1470,7 @@ function AuthorRow({ detail, fallbackNames }: { detail: AuthorDetail[] | null; f
     <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
       {fallbackNames.map((name, i) => (
         <span key={`${name}-${i}`} className="inline-flex items-center gap-1">
-          <span className="text-foreground">{name}</span>
+          <span className="min-w-0 break-words text-foreground">{name}</span>
           {i === 0 && <sup title="第一作者">†</sup>}
           {i < fallbackNames.length - 1 && <span className="ml-1 text-border">·</span>}
         </span>
@@ -1410,17 +1487,34 @@ function RelatedResources({
   resourceId: number
   discipline?: string | null
 }) {
-  const { data: sameDiscipline } = useResources({
+  const sameDiscipline = useResources({
     page: 1,
     page_size: 8,
     discipline: discipline ?? undefined,
   })
-  const { data: fallback } = useResources({ page: 1, page_size: 8 })
-  const pool =
-    (sameDiscipline?.data ?? []).filter((r) => r.id !== resourceId).length >= 1
-      ? (sameDiscipline?.data ?? [])
-      : (fallback?.data ?? [])
+  const fallback = useResources({ page: 1, page_size: 8 })
+  const pending = sameDiscipline.isLoading || fallback.isLoading
+  const same = sameDiscipline.data?.data ?? []
+  const fb = fallback.data?.data ?? []
+  const pool = same.filter((r) => r.id !== resourceId).length >= 1 ? same : fb
   const items = pool.filter((r) => r.id !== resourceId).slice(0, 4)
+  if (pending) {
+    return (
+      <Card aria-hidden>
+        <CardHeader>
+          <CardTitle className="text-base">相关记录</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="space-y-1.5 border-b pb-2 last:border-0">
+              <div className="skeleton-shimmer h-3.5 rounded w-4/5" />
+              <div className="skeleton-shimmer h-3 rounded w-1/3" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    )
+  }
   if (items.length === 0) return null
   return (
     <Card>

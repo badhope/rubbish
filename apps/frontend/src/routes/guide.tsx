@@ -21,10 +21,10 @@ export const Route = createFileRoute('/guide')({
 })
 
 const TABS = [
-  { value: 'start', label: '三分钟，先走一遍', desc: '这里有什么、从哪进' },
-  { value: 'authors', label: '写作品', desc: '定题、结构、材料与发布' },
-  { value: 'help', label: '去讨论', desc: '读帖、发帖、回复与举报' },
-  { value: 'policies', label: '规则与边界', desc: '版权、隐私、法律与处理' },
+  { value: 'start', label: '先走一遍', desc: '这里有什么，从哪进' },
+  { value: 'authors', label: '写一篇', desc: '定题、取材、结构与发布' },
+  { value: 'help', label: '说话', desc: '读、说、回应、举报' },
+  { value: 'policies', label: '边界与处理', desc: '版权、隐私与处理' },
 ] as const
 
 function GuidePage() {
