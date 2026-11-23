@@ -200,7 +200,8 @@ def gate_page(
     group_html = (
         f"""
     <p class="group">
-      没有访问密码？请加入读者群完成认证后获取。
+      访问不了本站？这是中国大陆网络的密码验证页，不是封禁。
+      请加入读者群完成认证后获取访问密码。
       <span class="group-number">QQ 群号：{html.escape(group_number)}</span>
     </p>"""
         if group_number
@@ -321,7 +322,7 @@ _GATE_TEMPLATE = Template(
   <main class="card">
     <div class="mark" aria-hidden="true">R</div>
     <p class="kicker">RUBBISH · ACCESS GATE</p>
-    <h1>这里需要访问密码。</h1>
+    <h1>本站对中国大陆访客开放。</h1>
     <p class="copy">
       检测到你的网络出口位于中国大陆。本站没有封锁大陆访问，只对中国大陆访客做密码验证；
       输入正确密码后即可正常使用。
