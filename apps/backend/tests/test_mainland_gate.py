@@ -24,6 +24,12 @@ def test_gate_token_roundtrip():
     assert not mg.is_valid_gate_token(None)
 
 
+def test_gate_token_is_bound_to_password(monkeypatch):
+    token = mg.make_gate_token(now=1_000_000)
+    monkeypatch.setattr(settings, "mainland_gate_password", "another-password", raising=False)
+    assert not mg.is_valid_gate_token(token, now=1_000_000)
+
+
 def test_safe_next_only_local_paths():
     assert mg.safe_next("/catalog/304?x=1") == "/catalog/304?x=1"
     assert mg.safe_next("//evil.example") == "/"

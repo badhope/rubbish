@@ -56,9 +56,12 @@ _DEFAULT_IP_LIST = Path(__file__).resolve().parents[1] / "data" / "mainland_cn_i
 
 
 def _gate_key() -> bytes:
+    # Bind the cookie to the current password: rotating the password should
+    # invalidate every gate cookie immediately, not only after max-age.
+    material = f"rubbish-mainland-gate-v1\0{settings.secret_key}\0{settings.mainland_gate_password}"
     return hmac.new(
-        settings.secret_key.encode("utf-8"),
-        b"rubbish-mainland-gate-v1",
+        material.encode("utf-8"),
+        b"gate-cookie-key",
         hashlib.sha256,
     ).digest()
 
