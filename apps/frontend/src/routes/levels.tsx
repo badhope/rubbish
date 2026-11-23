@@ -121,8 +121,8 @@ function LevelsPage() {
       </section>
 
       <section>
-        <h2 className="font-serif text-xl font-semibold">参与记录</h2>
-        <p className="mt-1 text-sm text-muted-foreground">每一档只看累计经验，不看身份。</p>
+        <h2 className="font-serif text-xl font-semibold">十档经验</h2>
+        <p className="mt-1 text-sm text-muted-foreground">档位从 1 到 10，只看累计经验，不看身份。</p>
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
           {ACTIVITY_BANDS.map((band) => {
             const active = band.level === currentLevel && isAuthenticated

@@ -18,6 +18,7 @@ function ForgotPasswordPage() {
   const mut = useForgotPassword()
   const capabilities = useCapabilities()
   const emailDelivery = capabilities.data?.email_delivery ?? false
+  const noEmailService = capabilities.isFetched && !emailDelivery
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [touched, setTouched] = useState(false)
@@ -44,22 +45,39 @@ function ForgotPasswordPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-[80vh] max-w-md items-center">
+    <div className="mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-md items-start px-4 pb-12 pt-16 sm:items-center sm:px-0 sm:py-0">
       <Card className="w-full">
+        <h1 className="sr-only">找回密码</h1>
         <CardHeader>
           <CardTitle className="text-2xl">找回密码</CardTitle>
           <CardDescription>
-            输入注册邮箱，我们把重置链接发过去。
-            {capabilities.isFetched && !emailDelivery && (
-              <span className="mt-2 block text-xs text-muted-foreground">
-                当前站点未开通邮件服务，自助重置暂不可用；请直接联系站务邮箱 info@rubbishasci.cn
-                info@rubbishasci.cn 重置密码。
-              </span>
-            )}
+            {noEmailService
+              ? '当前站点没有接通邮件投递，自助重置暂时用不了。'
+              : '输入注册邮箱，我们把重置链接发过去。'}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {sent ? (
+          {noEmailService ? (
+            <div className="space-y-4 text-sm text-muted-foreground">
+              <p className="leading-6">
+                请直接写信到{' '}
+                <a href="mailto:info@rubbishasci.cn" className="text-primary hover:underline">
+                  info@rubbishasci.cn
+                </a>
+                ，写明账号邮箱或用户名；站务会人工核对后帮你重置。
+              </p>
+              <Button asChild className="w-full">
+                <a href="mailto:info@rubbishasci.cn">
+                  写信给站务
+                </a>
+              </Button>
+              <p className="text-center">
+                <Link to="/login" className="text-primary hover:underline">
+                  返回登录
+                </Link>
+              </p>
+            </div>
+          ) : sent ? (
             <div className="space-y-4 text-sm text-muted-foreground">
               <p>
                 如果该邮箱已注册，重置邮件已发送，请在 30 分钟内点击

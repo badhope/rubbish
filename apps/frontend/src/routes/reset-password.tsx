@@ -56,8 +56,9 @@ function ResetPasswordPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-[80vh] max-w-md items-center">
+    <div className="mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-md items-start px-4 pb-12 pt-16 sm:items-center sm:px-0 sm:py-0">
       <Card className="w-full">
+        <h1 className="sr-only">重置密码</h1>
         <CardHeader>
           <CardTitle className="text-2xl">重置密码</CardTitle>
           <CardDescription>输入邮件中的令牌和新密码。</CardDescription>

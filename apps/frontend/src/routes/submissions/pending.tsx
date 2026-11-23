@@ -376,7 +376,7 @@ function PendingSubmissionsPage() {
         }
         className="mb-4"
       >
-        <TabsList>
+        <TabsList className="!h-auto min-h-9 w-full flex-wrap justify-start overflow-visible">
           {STATUS_TABS.map((t) => (
             <TabsTrigger key={t.value} value={t.value}>
               {t.label}

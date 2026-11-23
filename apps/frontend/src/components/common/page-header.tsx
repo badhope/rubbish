@@ -6,11 +6,32 @@ interface Props {
   actions?: ReactNode
   /** cover：用于目录封面屏，标题和说明比普通内页大一档。 */
   size?: 'default' | 'cover'
+  /** 页面内再分一层时用 2，避免同一页出现两个 h1。 */
+  headingLevel?: 1 | 2
 }
 
 // 页面标题区，所有列表/详情页统一头部
 // 窄屏 flex-col：标题在上，actions 在下左对齐；sm+ 横排右对齐
-export function PageHeader({ title, description, actions, size = 'default' }: Props) {
+export function PageHeader({
+  title,
+  description,
+  actions,
+  size = 'default',
+  headingLevel = 1,
+}: Props) {
+  const titleClass =
+    size === 'cover'
+      ? 'section-title text-[2rem] font-semibold leading-tight tracking-tight sm:text-[3rem]'
+      : headingLevel === 2
+        ? 'section-title text-xl font-semibold tracking-tight sm:text-2xl'
+        : 'section-title type-page font-semibold'
+  const titleNode =
+    headingLevel === 2 ? (
+      <h2 className={titleClass}>{title}</h2>
+    ) : (
+      <h1 className={titleClass}>{title}</h1>
+    )
+
   return (
     <div
       className={
@@ -20,16 +41,10 @@ export function PageHeader({ title, description, actions, size = 'default' }: Pr
       }
     >
       <div className={size === 'cover' ? 'mx-auto min-w-0' : 'min-w-0'}>
-        {size !== 'cover' && <span className="page-title-rule" aria-hidden="true" />}
-        <h1
-          className={
-            size === 'cover'
-              ? 'section-title text-[2rem] font-semibold leading-tight tracking-tight sm:text-[3rem]'
-              : 'section-title type-page font-semibold'
-          }
-        >
-          {title}
-        </h1>
+        {size !== 'cover' && headingLevel === 1 && (
+          <span className="page-title-rule" aria-hidden="true" />
+        )}
+        {titleNode}
         {description && (
           <p
             className={

@@ -67,7 +67,10 @@ function toForm(user?: UserResponse | null): ProfileForm {
     bio: user?.bio ?? '',
     avatar_url: user?.avatar_url ?? '',
     banner_url: user?.banner_url ?? '',
-    accent_color: user?.accent_color || '#2f5d46',
+    accent_color:
+      user?.accent_color && /^#[0-9a-f]{6}$/i.test(user.accent_color)
+        ? user.accent_color
+        : '#2f5d46',
     contact_email: user?.contact_email ?? '',
     profile_visibility: user?.profile_visibility === 'private' ? 'private' : 'public',
   }
@@ -198,6 +201,11 @@ export function ProfileDetailsCard({ initial }: { initial?: UserResponse | null 
                 : `linear-gradient(120deg, ${form.accent_color}22, ${form.accent_color}55)`,
             }}
           >
+            {!form.banner_url ? (
+              <span className="pointer-events-none absolute left-3 top-3 text-[11px] text-muted-foreground">
+                还没有封面 · 建议 1600×400
+              </span>
+            ) : null}
             <button
               type="button"
               onClick={() => bannerInput.current?.click()}

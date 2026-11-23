@@ -59,6 +59,7 @@ export function ResearchGuide() {
       </Link>
 
       <PageHeader
+        headingLevel={2}
         title="写一篇"
         description="从一个问题开始，不必先有答案。写清楚你想讲什么；写不完，也可以先放一段上来。"
         actions={

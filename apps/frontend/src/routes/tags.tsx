@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { Archive, BookOpen, Tags } from 'lucide-react'
@@ -37,9 +38,11 @@ function FacetCloud({
           key={b.value}
           to={to}
           search={search(b.value)}
-          className="inline-flex max-w-full items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors hover:border-primary/40 hover:text-primary"
+          className="inline-flex max-w-[18rem] items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors hover:border-primary/40 hover:text-primary"
         >
-          <span className="min-w-0 truncate">{b.value}</span>
+          <span className="min-w-0 truncate" title={b.value}>
+            {b.value}
+          </span>
           <span className="shrink-0 font-mono text-[10px] text-muted-foreground">{b.count}</span>
         </Link>
       ))}
@@ -55,16 +58,25 @@ function TagsPage() {
   })
   const disciplines = useDisciplines()
   const stats = useCatalogStats()
+  const [showAllTags, setShowAllTags] = useState(false)
+  const sortedTags = useMemo(
+    () =>
+      [...(facets.data?.tags ?? [])].sort(
+        (a, b) => b.count - a.count || a.value.localeCompare(b.value, 'zh-CN'),
+      ),
+    [facets.data?.tags],
+  )
 
   if (facets.isPending) return <Loading />
   if (facets.isError) {
     return <ErrorState message="标签与年份没加载出来" onRetry={() => void facets.refetch()} />
   }
 
-  const tags = facets.data?.tags ?? []
   const years = facets.data?.years ?? []
   const disciplineRows = disciplines.data ?? []
   const disciplineCounts = stats.data?.by_discipline ?? {}
+  const visibleTags = showAllTags ? sortedTags : sortedTags.slice(0, 24)
+  const hiddenTagCount = sortedTags.length - visibleTags.length
 
   return (
     <div className="mx-auto w-full max-w-[880px] space-y-8">
@@ -79,11 +91,36 @@ function TagsPage() {
           标签
         </h2>
         <FacetCloud
-          buckets={tags}
+          buckets={visibleTags}
           to="/search"
           search={(value) => ({ q: value })}
           empty="还没有标签。作品公开后，标签会出现在这里。"
         />
+        {hiddenTagCount > 0 || showAllTags ? (
+          <div className="flex flex-wrap items-center gap-3 pt-0.5">
+            {hiddenTagCount > 0 ? (
+              <button
+                type="button"
+                onClick={() => setShowAllTags(true)}
+                className="text-xs text-primary hover:underline"
+              >
+                展开全部 {sortedTags.length} 个标签
+              </button>
+            ) : null}
+            {showAllTags && sortedTags.length > 24 ? (
+              <button
+                type="button"
+                onClick={() => setShowAllTags(false)}
+                className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+              >
+                收起，只看常用
+              </button>
+            ) : null}
+            <span className="font-mono text-[10px] text-muted-foreground">
+              当前显示 {visibleTags.length} / {sortedTags.length}
+            </span>
+          </div>
+        ) : null}
       </section>
 
       <section className="space-y-3">

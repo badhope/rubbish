@@ -120,6 +120,7 @@ export function CommunityRules() {
       </Link>
 
       <PageHeader
+        headingLevel={2}
         title="边界与处理"
         description="什么能写，什么不能写，出了事怎么处理，都写在这里。"
       />

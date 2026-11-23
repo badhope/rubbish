@@ -42,6 +42,15 @@ const FLAG_LABELS: Record<string, string> = {
   insufficient_volume: '样本不足',
 }
 
+/** 接口字段缺失或不是合法日期时不要渲染 Invalid Date；整段日期隐藏即可。 */
+function formatDateRange(start?: string, end?: string) {
+  if (!start || !end) return null
+  const startDate = new Date(start)
+  const endDate = new Date(end)
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return null
+  return `${startDate.toLocaleDateString('zh-CN')} – ${endDate.toLocaleDateString('zh-CN')}`
+}
+
 function CalibrationPage() {
   const now = new Date()
   const currentYear = now.getFullYear()
@@ -55,6 +64,7 @@ function CalibrationPage() {
   const rows = data?.reviewers ?? []
   const samples = samplesQuery.data?.samples ?? []
   const years = Array.from({ length: 5 }, (_, i) => currentYear - i)
+  const period = data ? formatDateRange(data.period_start, data.period_end) : null
 
   return (
     <div>
@@ -104,8 +114,7 @@ function CalibrationPage() {
         </div>
         {data ? (
           <div className="text-xs text-muted-foreground">
-            {new Date(data.period_start).toLocaleDateString()} –{' '}
-            {new Date(data.period_end).toLocaleDateString()} · 纳入 {data.submission_count} 篇已有互评的作品
+            {period ? `${period} · ` : ''}纳入 {data.submission_count ?? 0} 篇已有互评的作品
           </div>
         ) : null}
       </div>

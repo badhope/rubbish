@@ -92,8 +92,9 @@ function VerifyEmailPage() {
 
   if (phase === 'verifying') {
     return (
-      <div className="mx-auto flex min-h-[80vh] max-w-md items-center">
+      <div className="mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-md items-start px-4 pb-12 pt-16 sm:items-center sm:px-0 sm:py-0">
         <Card className="w-full">
+          <h1 className="sr-only">验证邮箱</h1>
           <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
             <RefreshCw className="h-8 w-8 animate-spin text-primary" />
             <p className="text-sm text-muted-foreground">正在验证邮箱，请稍候…</p>
@@ -105,8 +106,9 @@ function VerifyEmailPage() {
 
   if (phase === 'success') {
     return (
-      <div className="mx-auto flex min-h-[80vh] max-w-md items-center">
+      <div className="mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-md items-start px-4 pb-12 pt-16 sm:items-center sm:px-0 sm:py-0">
         <Card className="w-full">
+          <h1 className="sr-only">验证邮箱</h1>
           <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
             <CheckCircle2 className="h-12 w-12 text-emerald-600" />
             <CardTitle className="text-xl">验证成功</CardTitle>
@@ -122,8 +124,9 @@ function VerifyEmailPage() {
 
   if (phase === 'error') {
     return (
-      <div className="mx-auto flex min-h-[80vh] max-w-md items-center">
+      <div className="mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-md items-start px-4 pb-12 pt-16 sm:items-center sm:px-0 sm:py-0">
         <Card className="w-full border-destructive/30">
+          <h1 className="sr-only">验证邮箱</h1>
           <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
             <MailWarning className="h-12 w-12 text-destructive" />
             <CardTitle className="text-xl">验证未通过</CardTitle>
@@ -152,8 +155,9 @@ function VerifyEmailPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-[80vh] max-w-md items-center">
+    <div className="mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-md items-start px-4 pb-12 pt-16 sm:items-center sm:px-0 sm:py-0">
       <Card className="w-full">
+        <h1 className="sr-only">验证邮箱</h1>
         <CardHeader>
           <CardTitle className="text-2xl">验证邮箱</CardTitle>
           <CardDescription>

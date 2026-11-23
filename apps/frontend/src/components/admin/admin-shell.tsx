@@ -55,13 +55,8 @@ export function AdminShell() {
     <div className="w-full">
       <header className="border-b bg-background/95">
         <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-6">
-          <div className="flex items-center justify-between gap-4 pt-5">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary/75">
-                管理台
-              </p>
-              <h1 className="mt-1 font-serif text-lg tracking-tight sm:text-xl">管理后台</h1>
-            </div>
+          <div className="flex items-center justify-between gap-4 pt-4">
+            <div className="font-serif text-lg tracking-tight sm:text-xl">管理后台</div>
             <p className="hidden max-w-[260px] text-right text-[11px] leading-relaxed text-muted-foreground sm:block">
               成员、内容、经验、系统，各管一摊。能在这里处理，不用来回跳页。
             </p>

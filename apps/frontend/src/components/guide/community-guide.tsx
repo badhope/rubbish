@@ -48,6 +48,7 @@ export function CommunityGuide() {
       </Link>
 
       <PageHeader
+        headingLevel={2}
         title="在讨论区说话"
         description="从读到说，四步就够。登录即可说话，不必先申请。"
         actions={

@@ -214,7 +214,9 @@ export function CatalogListPage() {
                 : `合集 ${String(search.volume).padStart(2, '0')}`
               : effectiveTrack === 'paper'
                 ? '研究长文'
-                : '自由创作'
+                : effectiveTrack === 'essay'
+                  ? '自由创作'
+                  : '全部文字'
         }
         size={!search.q && effectiveTrack === 'paper' ? 'cover' : 'default'}
         description={
@@ -224,7 +226,9 @@ export function CatalogListPage() {
               ? `${search.issue ? `合集 ${String(search.issue).padStart(2, '0')}` : `合集 ${String(search.volume).padStart(2, '0')}`}共 ${data?.meta.total ?? '…'} 篇作品，按发布顺序排列。`
               : effectiveTrack === 'paper'
                 ? '把真问题做清楚，也允许把荒唐的设定做完整。材料、过程与结论都留在纸面上；各读各的，不必互相假装。'
-                : '小说、随笔、评论、指南与吐槽。无须借研究的骨架，文字自己走路。'
+                : effectiveTrack === 'essay'
+                  ? '小说、随笔、评论、指南与吐槽。无须借研究的骨架，文字自己走路。'
+                  : '按条件筛出的全部作品；研究长文与自由创作都在这里，先看标题和开头。'
         }
       />
 
@@ -457,15 +461,17 @@ function CatalogHub() {
           <div className="flex flex-wrap items-baseline justify-between gap-3">
             <div>
               <h2 className="font-serif text-2xl font-semibold tracking-tight">刚刚放上桌</h2>
-              <p className="mt-1 text-sm text-muted-foreground">刚放上桌的几篇。先读一两篇，再决定往哪走。</p>
+              <p className="mt-1 text-sm text-muted-foreground">最近公开的六篇。先读一两篇，再决定往哪走。</p>
             </div>
             <Link to="/catalog" search={{ sort: 'latest' }} className="text-sm text-primary hover:underline">
               全部文字 →
             </Link>
           </div>
-          <div className="mt-2 divide-y">
+          <div className="mt-2 grid border-t sm:grid-cols-2 sm:gap-x-12">
             {latest.data.map((item, index) => (
-              <CatalogIndexRow key={item.id} resource={item} index={index + 1} />
+              <div key={item.id} className="border-b">
+                <CatalogIndexRow resource={item} index={index + 1} />
+              </div>
             ))}
           </div>
         </section>

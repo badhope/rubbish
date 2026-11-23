@@ -2,13 +2,11 @@ import { Link } from '@tanstack/react-router'
 import { ArrowUpRight, Coins, ExternalLink, Gauge, Pencil } from 'lucide-react'
 import type { MeProfile } from '@/hooks/api/use-modules'
 import type { UserResponse } from '@/lib/types'
-import { useWallet } from '@/hooks/api/use-currency'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { roleLabel } from '@/lib/role-labels'
-import { formatCoins } from './format'
 
 const ROLE_STYLE: Record<string, string> = {
   user: 'border-border bg-muted/40 text-foreground',
@@ -24,10 +22,9 @@ export function MeIdentityHeader({
   profile: MeProfile
   account?: UserResponse
 }) {
-  const wallet = useWallet()
   const displayName = account?.display_name || account?.username || profile.username
   const initials = displayName.slice(0, 2).toUpperCase()
-  const balance = wallet.data?.balance ?? account?.coin_balance
+  const xp = profile.activity.xp ?? 0
 
   return (
     <section className="border-b pb-7 sm:pb-9">
@@ -97,7 +94,7 @@ export function MeIdentityHeader({
                 经验
               </span>
               <span className="block font-mono text-lg font-semibold leading-tight text-primary">
-                {formatCoins(balance)}
+                {xp.toLocaleString('zh-CN')}
               </span>
             </span>
             <ArrowUpRight className="ml-auto h-3.5 w-3.5 text-muted-foreground transition-colors group-hover:text-primary" />

@@ -87,6 +87,7 @@ export function GettingStarted() {
   return (
     <div className="mx-auto max-w-4xl">
       <PageHeader
+        headingLevel={2}
         title="三分钟，先走一遍"
         description="先看看这里有什么，再决定从哪走。规则可以晚点读。"
         actions={

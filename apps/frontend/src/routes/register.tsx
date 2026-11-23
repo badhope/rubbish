@@ -28,6 +28,8 @@ export function RegisterPage() {
   const [confirm, setConfirm] = useState('')
   const [captcha, setCaptcha] = useState<{ token: string; question: string } | null>(null)
   const [captchaAnswer, setCaptchaAnswer] = useState('')
+  const [captchaError, setCaptchaError] = useState(false)
+  const [captchaAttempt, setCaptchaAttempt] = useState(0)
   const [attempted, setAttempted] = useState(false)
 
   const emailValid = EMAIL_RE.test(email.trim())
@@ -48,31 +50,42 @@ export function RegisterPage() {
       ? ''
       : '两次输入的密码不一致'
   const captchaHint = captchaRequired
-    ? captcha === null
-      ? '验证码还没加载好，请稍等或刷新页面'
-      : captchaAnswer.trim() === ''
-        ? '请回答验证码'
-        : ''
+    ? captchaError
+      ? ''
+      : captcha === null
+        ? '验证码还没加载好，请稍等或刷新页面'
+        : captchaAnswer.trim() === ''
+          ? '请回答验证码'
+          : ''
     : ''
 
   useEffect(() => {
     if (capabilities.isLoading || !captchaRequired) {
       setCaptcha(null)
+      setCaptchaError(false)
       return
     }
     let cancelled = false
+    setCaptcha(null)
+    setCaptchaError(false)
     void api
       .get<{ token: string; question: string }>('/auth/captcha')
       .then((r) => {
-        if (!cancelled) setCaptcha(r.data)
+        if (!cancelled) {
+          setCaptcha(r.data)
+          setCaptchaError(false)
+        }
       })
       .catch(() => {
-        if (!cancelled) toast.error('验证码加载失败，请刷新页面重试')
+        if (!cancelled) {
+          setCaptchaError(true)
+          toast.error('验证码加载失败，请刷新页面重试')
+        }
       })
     return () => {
       cancelled = true
     }
-  }, [capabilities.isLoading, captchaRequired])
+  }, [capabilities.isLoading, captchaRequired, captchaAttempt])
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -122,7 +135,7 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-[80vh] max-w-md items-center">
+    <div className="mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-md items-start px-4 pb-12 pt-16 sm:items-center sm:px-0 sm:py-0">
       <h1 className="sr-only">开一个账号</h1>
       <Card className="w-full">
         <CardHeader>
@@ -203,7 +216,9 @@ export function RegisterPage() {
             </div>
             {captchaRequired && (
               <div className="space-y-2">
-                <Label htmlFor="captcha">验证码：{captcha?.question ?? '加载中…'}</Label>
+                <Label htmlFor="captcha">
+                  验证码：{captcha?.question ?? (captchaError ? '暂时不可用' : '加载中…')}
+                </Label>
                 <Input
                   id="captcha"
                   inputMode="numeric"
@@ -213,6 +228,18 @@ export function RegisterPage() {
                   placeholder="填计算结果，防批量注册"
                   aria-invalid={attempted && !captchaValid}
                 />
+                {captchaError ? (
+                  <p className="text-xs text-destructive">
+                    验证码没加载出来。
+                    <button
+                      type="button"
+                      className="ml-1 underline underline-offset-2 hover:text-foreground"
+                      onClick={() => setCaptchaAttempt((n) => n + 1)}
+                    >
+                      重试
+                    </button>
+                  </p>
+                ) : null}
                 {attempted && captchaHint ? (
                   <p className="text-xs text-destructive">{captchaHint}</p>
                 ) : null}

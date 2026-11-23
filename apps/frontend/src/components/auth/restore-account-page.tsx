@@ -54,6 +54,7 @@ export function RestoreAccountPage() {
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-lg items-center px-4 py-10">
       <Card className="w-full">
+        <h1 className="sr-only">恢复已注销账号</h1>
         <CardHeader>
           <CardTitle className="font-serif text-2xl">恢复已注销账号</CardTitle>
           <CardDescription className="leading-relaxed">

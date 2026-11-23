@@ -157,7 +157,7 @@ function LoginPage() {
   // --- 第二步：两步验证 ---
   if (pendingToken) {
     return (
-      <div className="mx-auto flex min-h-[calc(100svh-2rem)] max-w-md items-center">
+      <div className="mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-md items-start px-4 pb-12 pt-16 sm:items-center sm:px-0 sm:py-0">
         <h1 className="sr-only">两步验证</h1>
         <Card className="w-full">
           <CardHeader>
@@ -206,7 +206,7 @@ function LoginPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-[calc(100svh-2rem)] max-w-md items-center">
+    <div className="mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-md items-start px-4 pb-12 pt-16 sm:items-center sm:px-0 sm:py-0">
       <h1 className="sr-only">登录</h1>
       <Card className="w-full">
         <CardHeader>

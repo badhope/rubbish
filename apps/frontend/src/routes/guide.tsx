@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { createFileRoute, Link, useSearch } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
+import { PageHeader } from '@/components/common/page-header'
 import { GettingStarted } from '@/components/guide/getting-started'
 import { ResearchGuide } from '@/components/guide/research-guide'
 import { CommunityGuide } from '@/components/guide/community-guide'
@@ -35,7 +36,13 @@ function GuidePage() {
   }, [current.label])
   return (
     <div className="guide-page">
-      <div className="mx-auto mb-8 flex w-full max-w-[1100px] flex-wrap border-t">
+      <div className="mx-auto w-full max-w-[1100px]">
+        <PageHeader
+          title="怎么用"
+          description="第一次来、准备写、想说话，或者先弄清边界；四条线，按需要走。"
+        />
+      </div>
+      <div className="mx-auto mb-6 flex w-full max-w-[1100px] flex-wrap border-t">
         {TABS.map((t) => (
           <Link
             key={t.value}
