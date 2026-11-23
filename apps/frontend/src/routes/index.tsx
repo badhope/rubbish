@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import {
+  ArrowDown,
   ArrowRight,
   ChevronRight,
   LogIn,
@@ -132,14 +133,23 @@ function HomePage() {
       </header>
 
       <main>
-        <section className="border-b border-border/70">
-          <div className="mx-auto max-w-2xl px-5 py-12 text-center sm:px-8 sm:py-16">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-primary">
+        <section className="relative flex min-h-[calc(100svh-3.75rem)] items-center justify-center overflow-hidden border-b border-border/70 px-5 py-14 text-center sm:px-8">
+          <div className="pointer-events-none absolute inset-0 opacity-70" aria-hidden>
+            <div className="absolute -left-24 top-16 h-56 w-56 rounded-full border border-border/60" />
+            <div className="absolute -right-20 bottom-10 h-64 w-64 rounded-full border border-dashed border-border/70" />
+          </div>
+
+          <div className="relative mx-auto flex w-full max-w-3xl flex-col items-center">
+            <BrandMark decorative className="h-20 w-20 sm:h-24 sm:w-24" />
+            <p className="mt-6 text-[10px] uppercase tracking-[0.34em] text-primary">
               公开写作与讨论社区
             </p>
-            <h1 className="mt-5 font-serif text-3xl leading-[1.2] tracking-tight sm:text-4xl">
-              长文在内容库，半句话在讨论区。
+            <h1 className="mt-4 font-serif text-4xl leading-none tracking-tight sm:text-6xl">
+              Rubbish
             </h1>
+            <p className="mt-5 max-w-xl font-serif text-xl leading-snug tracking-tight text-foreground sm:text-2xl">
+              长文在内容库，半句话在讨论区。
+            </p>
             <p className="mx-auto mt-4 max-w-xl text-[15px] leading-7 text-muted-foreground">
               读别人的路，也写自己的停顿。不必登录，谁都能读；注册后就能写一篇、说一句。
             </p>
@@ -157,10 +167,15 @@ function HomePage() {
                 </Link>
               </Button>
             </div>
+
+            <div className="mt-12 flex flex-col items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+              <span>往下读</span>
+              <ArrowDown className="h-4 w-4 animate-bounce" />
+            </div>
           </div>
         </section>
 
-        <section className="mx-auto w-full max-w-[1280px] px-5 py-10 sm:px-8 sm:py-14">
+        <section className="mx-auto flex w-full max-w-[1280px] flex-col justify-center px-5 py-10 sm:min-h-[calc(100svh-3.75rem)] sm:px-8 sm:py-14">
           <div className="mb-6 flex flex-wrap items-end justify-between gap-3 border-b pb-3">
             <div>
               <p className="text-[10px] uppercase tracking-[0.28em] text-primary">精选</p>
@@ -245,7 +260,7 @@ function HomePage() {
           )}
         </section>
 
-        <section className="border-t border-border/70 bg-muted/20">
+        <section className="border-t border-border/70 bg-muted/20 sm:flex sm:min-h-[calc(100svh-3.75rem)] sm:items-center">
           <div className="mx-auto w-full max-w-[1280px] px-5 py-10 sm:px-8 sm:py-14">
             <div className="mb-4 flex items-end justify-between gap-3">
               <div>
