@@ -59,6 +59,8 @@ Enable it in the live service environment:
 RUBBISH_MAINLAND_GATE_ENABLED=true
 RUBBISH_MAINLAND_GATE_PASSWORD=<at least 7 characters>
 RUBBISH_MAINLAND_GATE_COOKIE_DAYS=7
+# QQ group shown on the password page for mainland visitors without a password.
+RUBBISH_MAINLAND_GATE_GROUP=1084870548
 # Nginx / Caddy is one hop in front of the app.
 RUBBISH_TRUSTED_PROXIES_COUNT=1
 ```

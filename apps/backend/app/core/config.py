@@ -310,6 +310,7 @@ class Settings(BaseSettings):
     mainland_gate_enabled: bool = False
     mainland_gate_password: str = ""
     mainland_gate_cookie_days: int = Field(default=7, ge=1, le=30)
+    mainland_gate_group: str = "1084870548"
     mainland_gate_ip_list_path: str = ""
 
     # --- Logging ---

@@ -73,6 +73,12 @@ def test_middleware_blocks_mainland_and_accepts_cookie(monkeypatch):
     assert outside.status_code == 200
 
 
+def test_gate_page_shows_group_number():
+    page = mg.gate_page(group_number="1084870548")
+    assert "QQ 群号：1084870548" in page
+    assert "没有封锁大陆访问" in page
+
+
 def test_gate_accepts_non_ascii_password(monkeypatch):
     monkeypatch.setattr(settings, "mainland_gate_enabled", True, raising=False)
     monkeypatch.setattr(settings, "mainland_gate_password", "测试口令甲乙丙", raising=False)

@@ -189,8 +189,23 @@ def safe_next(value: str | None) -> str:
     return candidate
 
 
-def gate_page(*, next_path: str = "/", error: str = "", show_form: bool = True) -> str:
+def gate_page(
+    *,
+    next_path: str = "/",
+    error: str = "",
+    show_form: bool = True,
+    group_number: str = "",
+) -> str:
     error_html = f'<p class="error">{html.escape(error)}</p>' if error else ""
+    group_html = (
+        f"""
+    <p class="group">
+      没有访问密码？请加入读者群完成认证后获取。
+      <span class="group-number">QQ 群号：{html.escape(group_number)}</span>
+    </p>"""
+        if group_number
+        else ""
+    )
     form_html = (
         f"""
     <form method="post" action="{GATE_SUBMIT_PATH}">
@@ -208,6 +223,7 @@ def gate_page(*, next_path: str = "/", error: str = "", show_form: bool = True) 
     return _GATE_TEMPLATE.substitute(
         next_path=html.escape(next_path, quote=True),
         form_html=form_html,
+        group_html=group_html,
     )
 
 
@@ -281,6 +297,22 @@ _GATE_TEMPLATE = Template(
     cursor: pointer;
   }
   button:hover { background: #244a37; }
+  .group {
+    margin: 18px 0 0;
+    padding: 12px 14px;
+    border: 1px dashed #cbc4b4;
+    background: rgba(255,253,248,.7);
+    color: #5b574d;
+    font-size: 13px;
+    line-height: 1.8;
+  }
+  .group-number {
+    display: block;
+    margin-top: 4px;
+    color: #2f5d46;
+    font: 600 16px/1.5 ui-monospace, monospace;
+    user-select: all;
+  }
   .error { margin: 10px 0 0; color: #8a2f2f; font-size: 12px; line-height: 1.6; }
   .foot { margin: 22px 0 0; padding-top: 14px; border-top: 1px solid #ddd6c7; color: #777267; font-size: 11px; line-height: 1.8; }
 </style>
@@ -289,10 +321,12 @@ _GATE_TEMPLATE = Template(
   <main class="card">
     <div class="mark" aria-hidden="true">R</div>
     <p class="kicker">RUBBISH · ACCESS GATE</p>
-    <h1>这里暂时不向该网络开放。</h1>
+    <h1>这里需要访问密码。</h1>
     <p class="copy">
-      检测到你的网络出口位于中国大陆。本站目前不向该地区开放。如果你已获得站务授权，请输入访问密码。
+      检测到你的网络出口位于中国大陆。本站没有封锁大陆访问，只对中国大陆访客做密码验证；
+      输入正确密码后即可正常使用。
     </p>
+    $group_html
     $form_html
     <p class="foot">
       IP 归属按网络出口判断，可能因代理、VPN 或机房线路出现误判。
@@ -305,9 +339,15 @@ _GATE_TEMPLATE = Template(
 )
 
 
-def gate_html_response(*, next_path: str, status_code: int = 403, error: str = "") -> HTMLResponse:
+def gate_html_response(
+    *,
+    next_path: str,
+    status_code: int = 403,
+    error: str = "",
+    group_number: str = "",
+) -> HTMLResponse:
     return HTMLResponse(
-        gate_page(next_path=next_path, error=error),
+        gate_page(next_path=next_path, error=error, group_number=group_number),
         status_code=status_code,
         headers={
             "Cache-Control": "no-store",
@@ -344,4 +384,7 @@ class MainlandGateMiddleware(BaseHTTPMiddleware):
                 media_type="application/json",
                 headers={"Cache-Control": "no-store"},
             )
-        return gate_html_response(next_path=next_path)
+        return gate_html_response(
+            next_path=next_path,
+            group_number=settings.mainland_gate_group,
+        )

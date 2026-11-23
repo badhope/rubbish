@@ -36,7 +36,7 @@ async def gate_entry(request: Request) -> HTMLResponse | RedirectResponse:
     if not is_mainland_ip(client_ip(request)) or has_valid_gate_cookie(request):
         return RedirectResponse("/", status_code=303)
     return HTMLResponse(
-        gate_page(next_path="/"),
+        gate_page(next_path="/", group_number=settings.mainland_gate_group),
         status_code=403,
         headers={"Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow"},
     )
@@ -79,6 +79,7 @@ async def submit_gate(
             next_path=safe_next(next),
             status_code=429,
             error="尝试过于频繁，请十分钟后再试。",
+            group_number=settings.mainland_gate_group,
         )
 
     if not hmac.compare_digest(
@@ -90,6 +91,7 @@ async def submit_gate(
             next_path=safe_next(next),
             status_code=401,
             error="密码不正确。",
+            group_number=settings.mainland_gate_group,
         )
 
     response = RedirectResponse(safe_next(next), status_code=303)
