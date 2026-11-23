@@ -327,8 +327,8 @@ _GATE_TEMPLATE = Template(
       检测到你的网络出口位于中国大陆。本站没有封锁大陆访问，只对中国大陆访客做密码验证；
       输入正确密码后即可正常使用。
     </p>
-    $group_html
     $form_html
+    $group_html
     <p class="foot">
       IP 归属按网络出口判断，可能因代理、VPN 或机房线路出现误判。
       如果你不在中国大陆却被拦下，请把出口 IP 发给站务核对。
