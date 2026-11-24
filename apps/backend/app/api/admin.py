@@ -70,9 +70,11 @@ ROLE_LABELS = {
     "editor": "内容整理",
     "section_editor": "分区整理",
     "board_editor": "内容策展",
-    "deputy_editor": "副站务负责人",
-    "chief_editor": "站务负责人",
-    "shop_manager": "积分管理员",
+    "deputy_editor": "内容副主管",
+    "chief_editor": "内容主管",
+    "shop_manager": "经验管理员",
+    "editor_in_chief": "总协调",
+    "admin": "站务",
 }
 
 
@@ -628,18 +630,30 @@ async def list_audit_logs(
         .limit(limit)
         .offset(offset)
     )
+    logs = list(result.scalars())
+    actor_ids = {log.actor_user_id for log in logs if log.actor_user_id is not None}
+    actor_names: dict[int, str] = {}
+    if actor_ids:
+        actors = await db.execute(
+            select(User.id, User.username, User.display_name).where(User.id.in_(actor_ids))
+        )
+        actor_names = {
+            row.id: (row.display_name or row.username)
+            for row in actors
+        }
     return [
         {
             "id": log.id,
             "tenant_id": str(log.tenant_id) if log.tenant_id else None,
             "actor_user_id": log.actor_user_id,
+            "actor_name": actor_names.get(log.actor_user_id) if log.actor_user_id else None,
             "action": log.action,
             "target_type": log.target_type,
             "target_id": log.target_id,
             "payload": log.payload,
             "created_at": log.created_at.isoformat(),
         }
-        for log in result.scalars()
+        for log in logs
     ]
 
 

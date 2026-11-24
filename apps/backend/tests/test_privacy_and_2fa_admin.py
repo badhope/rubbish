@@ -14,7 +14,7 @@ from app.core.config import settings
 async def test_privacy_endpoint_returns_html(
     client: AsyncClient,
 ) -> None:
-    r = await client.get("/privacy")
+    r = await client.get("/api/privacy")
     assert r.status_code == 200
     assert r.headers["content-type"].startswith("text/html")
     body = r.text
@@ -33,7 +33,7 @@ async def test_privacy_endpoint_does_not_require_auth(
     client: AsyncClient,
 ) -> None:
     """The privacy page must be reachable without a token."""
-    r = await client.get("/privacy")
+    r = await client.get("/api/privacy")
     assert r.status_code == 200
 
 

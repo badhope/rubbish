@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import {
   Award,
@@ -56,6 +56,10 @@ export function PublicProfileView({
   const user = profile.user
   const accent = user.accent_color || '#2f5d46'
   const name = user.display_name || user.username
+  // 图片网关会因地区/鉴权或文件损坏返回非图片内容。浏览器 <img> 此时会留下
+  // 破图图标和 alt 文字，主页看起来像坏模板；这里显式降级为品牌渐变和首字。
+  const [bannerFailed, setBannerFailed] = useState(false)
+  const [avatarFailed, setAvatarFailed] = useState(false)
   const links = [
     user.website
       ? { href: user.website, label: '个人主页', icon: Globe2 }
@@ -69,8 +73,13 @@ export function PublicProfileView({
     <div className="space-y-5">
       <Card className="overflow-hidden">
         <div className="relative h-32 sm:h-44" style={{ backgroundColor: `${accent}18` }}>
-          {user.banner_url ? (
-            <img src={user.banner_url} alt="" className="h-full w-full object-cover" />
+          {user.banner_url && !bannerFailed ? (
+            <img
+              src={user.banner_url}
+              alt=""
+              className="h-full w-full object-cover"
+              onError={() => setBannerFailed(true)}
+            />
           ) : (
             <div
               className="h-full w-full"
@@ -83,11 +92,12 @@ export function PublicProfileView({
         </div>
         <CardContent className="relative px-4 pb-5 sm:px-6">
           <div className="flex items-start gap-4">
-            {user.avatar_url ? (
+            {user.avatar_url && !avatarFailed ? (
               <img
                 src={user.avatar_url}
-                alt={`${name} 的头像`}
+                alt=""
                 className="-mt-10 h-20 w-20 shrink-0 rounded-full border-4 border-card object-cover shadow-sm sm:-mt-12 sm:h-24 sm:w-24"
+                onError={() => setAvatarFailed(true)}
               />
             ) : (
               <span

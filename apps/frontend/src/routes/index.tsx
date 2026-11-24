@@ -205,9 +205,6 @@ function MemberHome() {
                 写一篇
               </Link>
             </Button>
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/me">我的</Link>
-            </Button>
           </div>
         </div>
       </header>

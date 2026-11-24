@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { ClipboardCheck, Kanban } from 'lucide-react'
+import { ArrowUpRight, ClipboardCheck, Kanban, Layers, SlidersHorizontal } from 'lucide-react'
 import { requireEditorGuard } from '@/lib/route-guards'
 import { AdminSectionTabs, type AdminSectionItem } from '@/components/admin/admin-section-tabs'
 import AnnouncementsPage from '@/components/admin/pages/content/announcements'
@@ -21,7 +21,7 @@ interface ContentSearch {
 
 const SECTIONS: readonly AdminSectionItem<SectionKey>[] = [
   { key: 'moderation', label: '人工核验' },
-  { key: 'forum', label: '讨论巡检' },
+  { key: 'forum', label: '主题巡检' },
   { key: 'announcements', label: '公告' },
   { key: 'boards', label: '分区' },
   { key: 'reports', label: '举报' },
@@ -57,6 +57,37 @@ export const Route = createFileRoute('/admin/content')({
   component: AdminContentPage,
 })
 
+const QUICK_ENTRIES = [
+  {
+    title: '内容台',
+    description: '待核验投稿、草稿与发布前的整理。',
+    to: '/submissions/pending',
+    search: undefined,
+    icon: Kanban,
+  },
+  {
+    title: '互评台',
+    description: '按指派与进度处理互评任务。',
+    to: '/review',
+    search: { tab: 'assignments' },
+    icon: ClipboardCheck,
+  },
+  {
+    title: '互评校准',
+    description: '查看成员季度校准与评分偏差。',
+    to: '/editor/calibration',
+    search: undefined,
+    icon: SlidersHorizontal,
+  },
+  {
+    title: '合集编排',
+    description: '按卷组织文章顺序与封面。',
+    to: '/editor/issue-plan',
+    search: undefined,
+    icon: Layers,
+  },
+] as const
+
 function AdminContentPage() {
   const navigate = useNavigate()
   const { section: sectionParam, appeal, topic } = Route.useSearch()
@@ -73,35 +104,36 @@ function AdminContentPage() {
 
   return (
     <div>
-      <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border bg-muted/20 p-2.5">
-        <span className="mr-1 text-xs text-muted-foreground">快捷入口</span>
-        <Link
-          to="/submissions/pending"
-          className="inline-flex items-center gap-1 rounded-md border bg-background px-2.5 py-1 text-xs transition-colors hover:border-primary hover:text-primary"
-        >
-          <Kanban className="h-3.5 w-3.5" />
-          内容台
-        </Link>
-        <Link
-          to="/review"
-          search={{ tab: 'assignments' }}
-          className="inline-flex items-center gap-1 rounded-md border bg-background px-2.5 py-1 text-xs transition-colors hover:border-primary hover:text-primary"
-        >
-          <ClipboardCheck className="h-3.5 w-3.5" />
-          互评台
-        </Link>
-        <Link
-          to="/editor/calibration"
-          className="inline-flex items-center gap-1 rounded-md border bg-background px-2.5 py-1 text-xs transition-colors hover:border-primary hover:text-primary"
-        >
-          互评校准
-        </Link>
-        <Link
-          to="/editor/issue-plan"
-          className="inline-flex items-center gap-1 rounded-md border bg-background px-2.5 py-1 text-xs transition-colors hover:border-primary hover:text-primary"
-        >
-          合集编排
-        </Link>
+      <div className="mb-4">
+        <p className="mb-2 text-xs text-muted-foreground">跨域工作台</p>
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          {QUICK_ENTRIES.map((entry) => {
+            const Icon = entry.icon
+            return (
+            <Link
+              key={entry.title}
+              to={entry.to}
+              search={entry.search as never}
+              className="group rounded-xl border bg-card p-3 transition-colors hover:border-primary/50 hover:bg-primary/[0.03]"
+            >
+              <div className="flex items-start gap-2.5">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Icon className="h-4 w-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="flex items-center gap-1 text-sm font-medium">
+                    {entry.title}
+                    <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                  </p>
+                  <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+                    {entry.description}
+                  </p>
+                </div>
+              </div>
+            </Link>
+            )
+          })}
+        </div>
       </div>
       <AdminSectionTabs items={SECTIONS} active={section} onChange={changeSection} label="内容域子段" />
       {section === 'moderation' ? <ForumModerationPage highlightTopicId={topic} /> : null}

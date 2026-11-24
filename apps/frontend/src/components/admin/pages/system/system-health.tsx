@@ -63,6 +63,9 @@ export default function SystemHealthPage() {
   const [email, setEmail] = useState<EmailStatus | null>(null)
   const [opsBusy, setOpsBusy] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [securityLoading, setSecurityLoading] = useState(true)
+  const [emailLoading, setEmailLoading] = useState(true)
+  const [showWarningsOnly, setShowWarningsOnly] = useState(false)
 
   async function load() {
     setLoading(true)
@@ -76,13 +79,28 @@ export default function SystemHealthPage() {
     }
   }
 
-  async function loadOps() {
-    const [sec, mail] = await Promise.allSettled([
-      api.get<SecurityStatus>('/admin/security/status'),
-      api.get<EmailStatus>('/admin/maintenance/email-status'),
-    ])
-    if (sec.status === 'fulfilled') setSecurity(sec.value.data)
-    if (mail.status === 'fulfilled') setEmail(mail.value.data)
+  async function loadSecurity() {
+    setSecurityLoading(true)
+    try {
+      const res = await api.get<SecurityStatus>('/admin/security/status')
+      setSecurity(res.data)
+    } catch {
+      toast.error('安全状态读取失败')
+    } finally {
+      setSecurityLoading(false)
+    }
+  }
+
+  async function loadEmail() {
+    setEmailLoading(true)
+    try {
+      const res = await api.get<EmailStatus>('/admin/maintenance/email-status')
+      setEmail(res.data)
+    } catch {
+      toast.error('邮件通道状态读取失败')
+    } finally {
+      setEmailLoading(false)
+    }
   }
 
   async function reloadSecurity() {
@@ -91,7 +109,7 @@ export default function SystemHealthPage() {
     try {
       await api.post('/admin/security/reload')
       toast.success('已重新加载安全配置')
-      await loadOps()
+      await loadSecurity()
     } catch {
       toast.error('安全配置重载失败')
     } finally {
@@ -99,9 +117,22 @@ export default function SystemHealthPage() {
     }
   }
 
+  // 健康接口只检查 SMTP 配置存在，不逐个账号建连；邮件状态接口才会暴露
+  // 535 之类的认证失败。两处口径要合起来，否则“总体正常”和下面的红字互相打脸。
+  const emailProblem = Boolean(email && email.configured && email.detail.includes('失败'))
+  const checks = (data?.checks ?? []).map((check) =>
+    check.key === 'email' && emailProblem
+      ? { ...check, status: 'warn' as const, detail: '主账号认证失败，备用发件账号可用' }
+      : check,
+  )
+  const attentions = checks.filter((check) => check.status !== 'ok')
+  const hasFail = attentions.some((check) => check.status === 'fail')
+
   useEffect(() => {
     void load()
-    void loadOps()
+    // 邮件状态会逐个 SMTP 服务器建连，可能十几秒；拆开请求，别拖住安全卡。
+    void loadSecurity()
+    void loadEmail()
   }, [])
 
   return (
@@ -131,17 +162,15 @@ export default function SystemHealthPage() {
                 <CardTitle className="text-xs text-muted-foreground">总体状态</CardTitle>
               </CardHeader>
               <CardContent>
-                <Badge
-                  variant={
-                    data.status === 'ok'
-                      ? 'secondary'
-                      : data.status === 'fail'
-                        ? 'destructive'
-                        : 'outline'
-                  }
-                >
-                  {data.status === 'ok' ? '正常' : data.status === 'fail' ? '出问题了' : '有几件事要留意'}
+                <Badge variant={hasFail ? 'destructive' : attentions.length ? 'outline' : 'secondary'}>
+                  {hasFail ? '出问题了' : attentions.length ? `${attentions.length} 项需留意` : '正常'}
                 </Badge>
+                <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
+                  {attentions.length
+                    ? attentions.slice(0, 2).map((c) => c.label).join('、') +
+                      (attentions.length > 2 ? ` 等 ${attentions.length} 项` : '')
+                    : '所有检查项通过'}
+                </p>
               </CardContent>
             </Card>
             <Card>
@@ -169,14 +198,23 @@ export default function SystemHealthPage() {
           </div>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="flex-row items-center justify-between gap-2">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Activity className="h-4 w-4" />
                 检查项
               </CardTitle>
+              {attentions.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => setShowWarningsOnly((v) => !v)}
+                  className="rounded-md border px-2 py-1 text-xs text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                >
+                  {showWarningsOnly ? '显示全部' : `只看需留意（${attentions.length}）`}
+                </button>
+              ) : null}
             </CardHeader>
             <CardContent className="grid gap-2 md:grid-cols-2">
-              {data.checks.map((c) => (
+              {(showWarningsOnly ? attentions : checks).map((c) => (
                 <div key={c.key} className="flex items-start gap-3 rounded-md border p-3">
                   <StatusIcon status={c.status} />
                   <div className="min-w-0">
@@ -233,7 +271,9 @@ export default function SystemHealthPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
-                {security ? (
+                {securityLoading && !security ? (
+                  <p className="text-muted-foreground">正在读取安全状态…</p>
+                ) : security ? (
                   <>
                     <p className="text-muted-foreground">
                       当前签名密钥 {security.signing_key_count} 把，历史密钥{' '}
@@ -254,9 +294,9 @@ export default function SystemHealthPage() {
                     </p>
                   </>
                 ) : (
-                  <p className="text-muted-foreground">状态未加载</p>
+                  <p className="text-muted-foreground">安全状态读取失败，可重试。</p>
                 )}
-                <Button variant="outline" size="sm" onClick={reloadSecurity} disabled={opsBusy}>
+                <Button variant="outline" size="sm" onClick={reloadSecurity} disabled={opsBusy || securityLoading}>
                   <RefreshCw className="mr-1.5 h-4 w-4" />
                   重载安全配置
                 </Button>
@@ -271,7 +311,9 @@ export default function SystemHealthPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
-                {email ? (
+                {emailLoading && !email ? (
+                  <p className="text-muted-foreground">正在连接邮件服务器…（首次可能要十几秒）</p>
+                ) : email ? (
                   <>
                     <p className="text-muted-foreground">
                       后端 {email.backend}；配置{' '}
@@ -281,8 +323,11 @@ export default function SystemHealthPage() {
                     <p className="break-words text-xs text-muted-foreground">{email.detail}</p>
                   </>
                 ) : (
-                  <p className="text-muted-foreground">状态未加载</p>
+                  <p className="text-muted-foreground">邮件状态读取失败，可重试。</p>
                 )}
+                {email && email.detail.includes('失败') ? (
+                  <p className="text-xs text-amber-700">备用发件账号仍可用，主账号认证失败会影响该地址发出的信。</p>
+                ) : null}
               </CardContent>
             </Card>
           </div>

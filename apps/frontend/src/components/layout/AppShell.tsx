@@ -400,7 +400,7 @@ export function AppShell() {
           {text('跳到主要内容', lang)}
         </a>
         <header className="app-header-rule sticky top-0 z-40 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="mx-auto flex h-14 w-full max-w-[1600px] items-center justify-between gap-3 px-5 sm:px-7 lg:px-10 xl:px-12">
+          <div className="mx-auto flex h-14 w-full max-w-[1280px] items-center justify-between gap-3 px-5 sm:px-8">
             <Link to="/" className="flex min-w-0 items-center gap-2">
               <BrandMark className="h-6 w-6 shrink-0 text-primary" />
               <span className="flex min-w-0 flex-col leading-none">
@@ -463,7 +463,7 @@ export function AppShell() {
         </header>
 
         <main id="main-content" tabIndex={-1} className="outline-none">
-          <div className="mx-auto w-full max-w-[1600px] px-5 py-6 sm:px-7 sm:py-8 lg:px-10 xl:px-12">
+          <div className="mx-auto w-full max-w-[1280px] px-5 py-6 sm:px-8 sm:py-8">
             <ModuleErrorBoundary name="页面" resetKeys={[location.pathname]}>
               <PageTransition>
                 <Outlet />

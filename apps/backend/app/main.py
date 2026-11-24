@@ -337,7 +337,8 @@ app.include_router(health.legacy_router, prefix="/api")
 app.include_router(metrics.router)
 # All other core routers under /api.
 # Privacy is also mounted at root so it's accessible without /api prefix.
-app.include_router(privacy.router)
+# 前端只保留 AppShell 版 /privacy。裸 HTML 版继续以 /api/privacy 提供，
+# 但不再抢占根路由，否则直接打开 URL 和站内 <Link> 会看到两套不同文案。
 app.include_router(privacy.router, prefix="/api")
 # Feature availability for the SPA (email delivery, SSO, registration).
 app.include_router(capabilities.router, prefix="/api")

@@ -470,7 +470,7 @@ function SubmissionWizardPage() {
   const showSidePreview = useMediaQuery('(min-width: 1280px)')
   // 用户已访问过的步骤：进入过 / 点过「上一步/下一步」的步骤才显示红框，
   // 避免刚打开页面就满屏红字。
-  const [visited, setVisited] = useState<boolean[]>([true, false, false])
+  const [visited, setVisited] = useState<boolean[]>([false, false, false])
   const [form, setForm] = useState<WizardForm>(() => ({
     ...EMPTY_FORM,
     articleSection: typeof search.section === 'string' ? search.section : '',
@@ -1106,8 +1106,15 @@ function SubmissionWizardPage() {
                 )}
                 {step < 2 ? (
                   <Button
-                    onClick={() => goTo(step + 1)}
-                    disabled={!canProceed && visited[step]}
+                    onClick={() => {
+                      if (!canProceed) {
+                        // 只有用户真的想进入下一步时才亮红框，避免一打开编辑器
+                        // 就满屏错误态。
+                        setVisited((prev) => prev.map((v, i) => (i === step ? true : v)))
+                        return
+                      }
+                      goTo(step + 1)
+                    }}
                   >
                     下一步
                     <ChevronRight className="h-4 w-4" />

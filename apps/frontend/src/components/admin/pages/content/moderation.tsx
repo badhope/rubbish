@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import { useAuth } from '@/hooks/use-auth'
 import { extractError } from '@/lib/utils'
+import { plainTextPreview } from '@/lib/text-preview'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
 import { Badge } from '@/components/ui/badge'
@@ -357,7 +358,7 @@ export default function ForumModerationPage({ highlightTopicId }: { highlightTop
                       <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground" />
                     </div>
                     <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-                      {row.body.replace(/\s+/g, ' ').slice(0, 180)}
+                      {plainTextPreview(row.body, 180)}
                     </p>
                     <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
                       <span>{row.board_path || row.board_name || '未分区'}</span>

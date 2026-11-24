@@ -12,6 +12,8 @@ gets the usual 401 and the SPA refreshes or signs out.
 
 from __future__ import annotations
 
+import re
+
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -54,6 +56,17 @@ PUBLIC_API_PREFIXES = (
     "/api/access/",
 )
 
+# Capability URLs for images embedded in public articles, topic posts and
+# profiles. Browsers fetch <img src> without an Authorization header, so these
+# random-filename endpoints must stay readable outside the bearer gate; the
+# region middleware applies the same allowlist before it can return 403.
+PUBLIC_API_PATTERNS = (
+    re.compile(r"^/api/forum/images/[\w.-]+$"),
+    re.compile(r"^/api/media/images/[\w.-]+$"),
+    re.compile(r"^/api/users/profile-images/[\w.-]+$"),
+    re.compile(r"^/api/catalog/\d+/img/[\w.-]+$"),
+)
+
 
 def _bearer_token(request: Request) -> str | None:
     header = request.headers.get("authorization", "")
@@ -64,7 +77,11 @@ def _bearer_token(request: Request) -> str | None:
 
 
 def is_public_api_path(path: str) -> bool:
-    return path in PUBLIC_API_PATHS or any(path.startswith(p) for p in PUBLIC_API_PREFIXES)
+    return (
+        path in PUBLIC_API_PATHS
+        or any(path.startswith(p) for p in PUBLIC_API_PREFIXES)
+        or any(pattern.match(path) for pattern in PUBLIC_API_PATTERNS)
+    )
 
 
 class AuthWallMiddleware(BaseHTTPMiddleware):

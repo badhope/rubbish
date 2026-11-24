@@ -4,6 +4,7 @@ import type { ResourceResponse, ResourceStats } from '@/lib/types'
 import { ESSAY_GENRES, essayGenreMeta } from '@/lib/essay-genres'
 import { ArticleCover } from '@/components/common/article-cover'
 import { formatAuthors, cn } from '@/lib/utils'
+import { plainTextPreview } from '@/lib/text-preview'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/common/pagination'
@@ -26,15 +27,6 @@ interface FunCatalogProps {
   onShuffle?: () => void
 }
 
-function plainPreview(text?: string | null): string {
-  return (text ?? '')
-    .replace(/[#>*_`~]/g, '')
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
-    .replace(/\[[^\]]*\]\([^)]*\)/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 150)
-}
 
 export function FunCatalog({
   data,
@@ -340,7 +332,7 @@ function isEditorialNote(resource: ResourceResponse): boolean {
 
 function FunCard({ resource, featured }: { resource: ResourceResponse; featured: boolean }) {
   const genre = essayGenreMeta(resource.content_genre)
-  const preview = plainPreview(resource.editor_note || resource.preview || resource.abstract)
+  const preview = plainTextPreview(resource.editor_note || resource.preview || resource.abstract)
   const displayTitle = resource.short_title?.trim() || resource.title
 
   if (featured) {

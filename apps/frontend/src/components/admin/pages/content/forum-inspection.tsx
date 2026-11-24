@@ -7,6 +7,7 @@ import {
   ExternalLink,
   Lock,
   LockOpen,
+  MessageSquare,
   Pin,
   PinOff,
   Search,
@@ -16,6 +17,7 @@ import { toast } from 'sonner'
 
 import { api } from '@/lib/api'
 import { extractError } from '@/lib/utils'
+import { plainTextPreview } from '@/lib/text-preview'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
 import { Badge } from '@/components/ui/badge'
@@ -88,7 +90,7 @@ export default function ForumInspectionPage() {
     const needle = query.trim().toLowerCase()
     if (!needle) return rows
     return rows.filter((row) =>
-      [row.title, row.body, row.author?.display_name, row.author?.username, row.board_name]
+      [row.title, plainTextPreview(row.body, 10000), row.author?.display_name, row.author?.username, row.board_name]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(needle)),
     )
@@ -114,10 +116,15 @@ export default function ForumInspectionPage() {
         <Card>
           <CardContent className="flex items-center justify-between p-4">
             <div>
-              <p className="text-xs text-muted-foreground">当前页</p>
+              <p className="text-xs text-muted-foreground">本页主题帖</p>
               <p className="mt-1 font-mono text-2xl font-semibold">{filtered.length}</p>
+              {meta ? (
+                <p className="mt-0.5 text-[10px] text-muted-foreground">
+                  共 {meta.total} 条 · 第 {meta.page} / {meta.total_pages} 页
+                </p>
+              ) : null}
             </div>
-            <Pin className="h-5 w-5 text-muted-foreground" />
+            <MessageSquare className="h-5 w-5 text-muted-foreground" />
           </CardContent>
         </Card>
         <Card>
@@ -177,7 +184,7 @@ export default function ForumInspectionPage() {
                       {row.is_locked ? <Badge variant="outline">已锁定</Badge> : null}
                     </div>
                     <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-                      {row.body.replace(/\s+/g, ' ').slice(0, 160)}
+                      {plainTextPreview(row.body, 160)}
                     </p>
                     <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
                       <span>{row.board_path || row.board_name || '未分区'}</span>

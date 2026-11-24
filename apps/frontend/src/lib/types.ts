@@ -1154,6 +1154,7 @@ export interface AuditLogEntry {
   id: number
   tenant_id: string | null
   actor_user_id: number | null
+  actor_name?: string | null
   action: string
   target_type: string | null
   target_id: string | null

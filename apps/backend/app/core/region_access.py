@@ -64,6 +64,15 @@ _OVERSEAS_EXACT = frozenset(
         "/api/announcements/",
     }
 )
+# 图片能力 URL：文件名是 128 位随机串，img 标签不会带 Authorization，
+# 因此必须对所有地区放行，否则大陆登录用户的正文图、头像、封面全是破图。
+_PUBLIC_MEDIA_PATTERNS = (
+    re.compile(r"^/api/forum/images/[\w.-]+$"),
+    re.compile(r"^/api/media/images/[\w.-]+$"),
+    re.compile(r"^/api/users/profile-images/[\w.-]+$"),
+    re.compile(r"^/api/catalog/\d+/img/[\w.-]+$"),
+)
+
 _OVERSEAS_PATTERNS = (
     re.compile(r"^/api/catalog/\d+$"),
     re.compile(r"^/api/catalog/\d+/history$"),
@@ -115,6 +124,10 @@ def region_for_request(request: Request) -> str:
     return RESTRICTED if is_restricted_ip(client_ip(request)) else OVERSEAS
 
 
+def is_public_media_path(path: str) -> bool:
+    return any(pattern.match(path) for pattern in _PUBLIC_MEDIA_PATTERNS)
+
+
 def is_overseas_read_request(path: str, method: str) -> bool:
     if method not in {"GET", "HEAD"}:
         return False
@@ -152,7 +165,12 @@ class RegionAccessMiddleware(BaseHTTPMiddleware):
         region = region_for_request(request)
         request.state.rubbish_region = region
 
-        if _valid_bearer(request) or _has_bearer(request) or is_public_api_path(path):
+        if (
+            _valid_bearer(request)
+            or _has_bearer(request)
+            or is_public_api_path(path)
+            or is_public_media_path(path)
+        ):
             # A stale/expired bearer must reach AuthWall so the SPA gets a
             # 401 and can try its refresh cookie. Invalid tokens cannot read
             # anything anyway.

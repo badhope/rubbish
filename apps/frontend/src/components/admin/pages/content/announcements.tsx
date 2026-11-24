@@ -143,6 +143,12 @@ export default function AnnouncementsAdminPage() {
     saveMut.mutate(payload)
   }
 
+  const announcements = listQ.data
+    ? [...listQ.data].sort(
+        (a, b) => Number(b.is_active) - Number(a.is_active) || b.id - a.id,
+      )
+    : []
+
   return (
     <div className="space-y-4">
       <PageHeader
@@ -160,7 +166,7 @@ export default function AnnouncementsAdminPage() {
         <Loading />
       ) : listQ.isError ? (
         <ErrorState message="公告加载失败，可重试。" onRetry={() => listQ.refetch()} />
-      ) : !listQ.data?.length ? (
+      ) : !announcements.length ? (
         <EmptyState
           title="还没有公告"
           description="写一条放在门楣上。登录用户第一次进来，会看到它。"
@@ -172,7 +178,7 @@ export default function AnnouncementsAdminPage() {
         />
       ) : (
         <div className="space-y-3">
-          {listQ.data.map((a) => (
+          {announcements.map((a) => (
             <Card key={a.id}>
               <CardContent className="flex items-start gap-3 py-4">
                 <Megaphone className="mt-0.5 h-4 w-4 shrink-0 text-primary" />

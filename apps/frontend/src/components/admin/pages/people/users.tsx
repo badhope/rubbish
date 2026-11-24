@@ -64,18 +64,6 @@ const ASSIGNABLE_ROLES: AssignableRole[] = [
   'shop_manager',
 ]
 
-const ROLE_LABELS: Record<AssignableRole, string> = {
-  chief_editor: '内容主管',
-  deputy_editor: '内容副主管',
-  board_editor: '分区主持',
-  reviewer: '互评成员',
-  senior_reviewer: '资深互评成员',
-  editor: '内容整理',
-  section_editor: '分区主持',
-  shop_manager: '站务',
-  author: '作者',
-  reader: '成员',
-}
 
 
 
@@ -142,10 +130,10 @@ export default function AdminUsersPage() {
     try {
       if (has) {
         await revokeRoleMut.mutateAsync({ userId: u.id, role })
-        toast.success(`已撤销 ${ROLE_LABELS[role]} 角色`)
+        toast.success(`已撤销 ${roleLabel(role)} 角色`)
       } else {
         await assignRoleMut.mutateAsync({ userId: u.id, role })
-        toast.success(`已分配 ${ROLE_LABELS[role]} 角色`)
+        toast.success(`已分配 ${roleLabel(role)} 角色`)
       }
     } catch (err) {
       toast.error(extractError(err, '没能更改角色分配，可再试一次'))
@@ -159,7 +147,7 @@ export default function AdminUsersPage() {
         description="管理用户、启用状态与社区角色分配。读者身份=注册即得，作者身份=确认《边界与处理》即得，均不在此分配。"
         actions={
           <div className="flex items-center gap-2">
-            {data ? <Badge variant="secondary">当前页 {data.length}</Badge> : null}
+            {data ? <Badge variant="secondary">本页 {data.length} 人</Badge> : null}
             <Button size="sm" onClick={() => setCreateOpen(true)}>
               <Plus className="mr-1 h-4 w-4" />
               新增成员
@@ -214,7 +202,7 @@ export default function AdminUsersPage() {
                         活跃 Lv {u.level ?? 1}
                       </span>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="max-w-[220px] truncate text-muted-foreground" title={u.email}>
                       {u.email}
                     </TableCell>
                     <TableCell>
@@ -318,7 +306,7 @@ export default function AdminUsersPage() {
                                   void onToggleRole(u, role).finally(() => setOpenUserId(null))
                                 }}
                               >
-                                {ROLE_LABELS[role]}
+                                {roleLabel(role)}
                               </DropdownMenuCheckboxItem>
                             )
                           })}
@@ -381,7 +369,7 @@ export default function AdminUsersPage() {
               >
                 {ASSIGNABLE_ROLES.map((role) => (
                   <option key={role} value={role}>
-                    {ROLE_LABELS[role]}
+                    {roleLabel(role)}
                   </option>
                 ))}
               </select>

@@ -50,7 +50,9 @@ export function MeIdentityHeader({
                 {profile.permission_label || roleLabel(profile.permission_role)}
               </Badge>
               {profile.permission_role === 'editor_in_chief' && profile.permission_role_label ? (
-                <span className="text-xs">{profile.permission_role_label}</span>
+                <span className="text-xs text-muted-foreground">
+                  · {profile.permission_role_label}
+                </span>
               ) : null}
               <Link
                 to="/levels"

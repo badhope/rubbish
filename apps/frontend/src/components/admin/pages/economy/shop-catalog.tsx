@@ -102,6 +102,13 @@ export function ShopCatalogCard() {
 
   const editing = editor?.item ?? null
   const saving = createItem.isPending || updateItem.isPending
+  // 在售货品排在前面：后台目录首先是「现在能兑换什么」，下架项不该挡视线。
+  const orderedItems = [...(items.data ?? [])].sort(
+    (a, b) =>
+      Number(b.is_active) - Number(a.is_active) ||
+      a.sort_order - b.sort_order ||
+      a.id - b.id,
+  )
 
   const set = <K extends keyof ItemForm>(key: K, value: ItemForm[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -212,14 +219,14 @@ export function ShopCatalogCard() {
               </Button>
             </div>
           ) : null}
-          {!items.isLoading && !items.isError && (items.data?.length ?? 0) === 0 ? (
+          {!items.isLoading && !items.isError && (orderedItems.length) === 0 ? (
             <p className="border-y py-5 text-sm text-muted-foreground">
               还没有货品。新增一件，会员就能在经验兑换区兑换。
             </p>
           ) : null}
-          {(items.data?.length ?? 0) > 0 ? (
+          {(orderedItems.length) > 0 ? (
             <div className="divide-y border-y">
-              {items.data?.map((item) => (
+              {orderedItems.map((item) => (
                 <div
                   key={item.id}
                   className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between"
