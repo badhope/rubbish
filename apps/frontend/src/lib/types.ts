@@ -228,6 +228,8 @@ export interface CapabilitiesResponse {
   doi_author_entry_enabled: boolean
   /** 服务端允许的单文件上限（字节）；前端据此做预校验与文案 */
   upload_max_bytes: number
+  upload_daily_file_limit?: number
+  upload_daily_bytes_limit?: number
   /** 服务端接受的扩展名清单（含点号），用于 <input accept> 与文案 */
   upload_extensions: string[]
 }
@@ -532,6 +534,7 @@ export type SubmissionStatus =
   | 'accepted'
   | 'rejected'
   | 'approved'
+  | 'withdrawn'
 export type SubmissionType = 'paper' | 'book' | 'dataset' | 'tutorial'
 
 export interface SubmissionCreate {
@@ -616,6 +619,14 @@ export interface FormatReport {
   items: FormatCheckItem[]
 }
 
+export interface ReworkRequirement {
+  id: string
+  text: string
+  status: 'pending' | 'addressed' | 'disputed'
+  response?: string
+  updated_at?: string | null
+}
+
 export interface SubmissionResponse {
   id: number
   title: string
@@ -647,6 +658,11 @@ export interface SubmissionResponse {
   status: SubmissionStatus
   admin_note?: string | null
   editor_note?: string | null
+  /** 退回修改的结构化要求；旧数据为空时回退 editor_note */
+  rework_requirements?: ReworkRequirement[]
+  rework_due_at?: string | null
+  withdrawn_at?: string | null
+  withdrawn_reason?: string | null
   /** 作者逐条回复审稿人（Response to Reviewers） */
   author_response?: string | null
   author_response_at?: string | null
@@ -739,6 +755,24 @@ export interface SubmissionVersionResponse {
 
 export interface SubmissionVersionListResponse {
   data: SubmissionVersionResponse[]
+}
+
+export interface ResourceAnalytics {
+  resource_id: number
+  title: string
+  days: number
+  total_views: number
+  downloads: number
+  daily: Array<{ date: string; views: number }>
+  referrers: Array<{ referrer: string; views: number }>
+}
+
+export interface SubmissionVersionDiff {
+  from_version: number
+  to_version: number
+  body_diff: string[]
+  field_changes: Array<{ field: string; before: unknown; after: unknown }>
+  has_body_diff: boolean
 }
 
 // --- Peer review ---
@@ -844,6 +878,8 @@ export interface ReviewReportResponse {
   reviewer_id?: number | null
   reviewer_username?: string | null
   attachments?: ReviewAttachment[]
+  round?: number
+  assignment_status?: 'completed' | 'cancelled'
   submitted_at: string
 }
 

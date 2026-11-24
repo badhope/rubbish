@@ -8,6 +8,8 @@ import {
   useSearch,
 } from '@tanstack/react-router'
 import {
+  CheckCircle2,
+  Clock,
   Download,
   ExternalLink,
   FileText,
@@ -17,6 +19,7 @@ import {
   RefreshCw,
   Trash2,
   Upload,
+  XCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { reviewDimensionEntries } from '@/lib/review-dimensions'
@@ -30,14 +33,19 @@ import {
   useSubmission,
   useSubmissionReports,
   useSubmissionVersions,
+  useSubmissionVersionDiff,
+  useResourceAnalytics,
   useSaveAuthorResponse,
+  useSaveReworkResponse,
   useUploadSubmissionFile,
+  useWithdrawSubmission,
 } from '@/hooks/api/use-modules'
 import type {
   IngestResource,
   ReviewReportResponse,
   SubmissionResponse,
   SubmissionStatus,
+  ReworkRequirement,
 } from '@/lib/types'
 import { displayTypeLabel } from '@/lib/resource-labels'
 import { useIsMobile } from '@/hooks/use-is-mobile'
@@ -100,6 +108,7 @@ const STATUS_TABS: { value: SubmissionStatus | 'all'; label: string }[] = [
   { value: 'rework_requested', label: '待修改' },
   { value: 'accepted', label: '已公开' },
   { value: 'rejected', label: '已不通过' },
+  { value: 'withdrawn', label: '已撤稿' },
 ]
 
 // 作者可编辑内容的状态（与后端 update_submission 的状态门一致）
@@ -122,6 +131,8 @@ function statusBadge(status: SubmissionStatus) {
       return <Badge className="bg-emerald-500/15 text-emerald-700">已公开</Badge>
     case 'rejected':
       return <Badge variant="destructive">已不通过</Badge>
+    case 'withdrawn':
+      return <Badge variant="outline">已撤稿</Badge>
     default:
       return <Badge variant="outline">{status}</Badge>
   }
@@ -138,6 +149,7 @@ const STATUS_HINTS: Record<string, string> = {
   resubmitted: '修改版已发布，等待内容整理复核；有未尽事项可在详情补充。',
   accepted: '已公开。作品进入内容库，登录后可读。',
   rejected: '本次已不通过。可以按反馈修改后重新发布。',
+  withdrawn: '已由作者主动撤回；版本与互评历史仍保留在详情中。',
 }
 
 function statusHint(status: string): string {
@@ -164,8 +176,16 @@ function SubmissionsPage() {
   const uploadMut = useUploadSubmissionFile()
   const resubmitMut = useResubmitSubmission()
   const saveResponseMut = useSaveAuthorResponse()
+  const saveReworkMut = useSaveReworkResponse()
+  const withdrawMut = useWithdrawSubmission()
 
   const [detail, setDetail] = useState<SubmissionResponse | null>(null)
+  const [requirementDraft, setRequirementDraft] = useState<
+    Record<string, { status: ReworkRequirement['status']; note: string }>
+  >({})
+  const [withdrawOpen, setWithdrawOpen] = useState(false)
+  const [withdrawReason, setWithdrawReason] = useState('')
+  const [diffVersion, setDiffVersion] = useState<number | null>(null)
   const [authorResponseDraft, setAuthorResponseDraft] = useState('')
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [resubmitOpen, setResubmitOpen] = useState(false)
@@ -174,10 +194,30 @@ function SubmissionsPage() {
   // 必须放在 detail useState 之后，否则 TS2448/2454 报"使用先于声明"。
   const reportsQ = useSubmissionReports(detail?.id ?? 0)
   const versionsQ = useSubmissionVersions(detail?.id ?? 0, detail !== null)
+  const diffQ = useSubmissionVersionDiff(
+    detail?.id ?? 0,
+    diffVersion ?? 0,
+    detail !== null && diffVersion !== null,
+  )
+  const analyticsQ = useResourceAnalytics(
+    detail?.resource_id ?? 0,
+    detail?.status === 'accepted' && (detail?.resource_id ?? 0) > 0,
+  )
 
   useEffect(() => {
     setAuthorResponseDraft(detail?.author_response ?? '')
   }, [detail?.id, detail?.author_response])
+
+  useEffect(() => {
+    const draft: Record<string, { status: ReworkRequirement['status']; note: string }> = {}
+    for (const item of detail?.rework_requirements ?? []) {
+      draft[item.id] = {
+        status: item.status || 'pending',
+        note: item.response || '',
+      }
+    }
+    setRequirementDraft(draft)
+  }, [detail?.id, detail?.rework_requirements])
 
   const linkedDetailApplied = useRef(0)
   useEffect(() => {
@@ -198,6 +238,38 @@ function SubmissionsPage() {
       toast.success('已保存逐条回复，内容整理复核时可看到')
     } catch (err) {
       toast.error(extractError(err, '回复保存失败'))
+    }
+  }
+
+  const onSaveRequirements = async () => {
+    if (!detail) return
+    const items = (detail.rework_requirements ?? []).map((item) => ({
+      requirement_id: item.id,
+      status: requirementDraft[item.id]?.status ?? 'pending',
+      note: requirementDraft[item.id]?.note ?? '',
+    }))
+    try {
+      const updated = await saveReworkMut.mutateAsync({ id: detail.id, items })
+      setDetail(updated)
+      toast.success('逐条回应已保存，内容整理复核时可看到')
+    } catch (err) {
+      toast.error(extractError(err, '逐条回应保存失败'))
+    }
+  }
+
+  const onWithdraw = async () => {
+    if (!detail) return
+    try {
+      const updated = await withdrawMut.mutateAsync({
+        id: detail.id,
+        reason: withdrawReason.trim(),
+      })
+      setDetail(updated)
+      setWithdrawOpen(false)
+      setWithdrawReason('')
+      toast.success('作品已撤回；版本和互评历史仍保留')
+    } catch (err) {
+      toast.error(extractError(err, '撤稿失败'))
     }
   }
 
@@ -492,6 +564,12 @@ function SubmissionsPage() {
                         先点「修改作品」按意见改完并保存；确认内容已更新后，再点「重新提交修改稿」。
                         只修改不重交，作品不会回到互评。
                       </p>
+                      {detail.rework_due_at ? (
+                        <p className="mt-1 inline-flex items-center gap-1 text-xs text-sky-800">
+                          <Clock className="h-3.5 w-3.5" />
+                          修回截止 {new Date(detail.rework_due_at).toLocaleDateString()}
+                        </p>
+                      ) : null}
                     </div>
                     <div className="flex shrink-0 flex-wrap gap-2">
                       <Button
@@ -513,6 +591,85 @@ function SubmissionsPage() {
                       </Button>
                     </div>
                   </div>
+                  {detail.rework_requirements && detail.rework_requirements.length > 0 ? (
+                    <div className="mt-3 space-y-2 border-t border-sky-500/20 pt-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="text-xs font-medium text-sky-900">
+                          逐条回应修改要求
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => void onSaveRequirements()}
+                          disabled={saveReworkMut.isPending}
+                        >
+                          {saveReworkMut.isPending ? '保存中…' : '保存逐条回应'}
+                        </Button>
+                      </div>
+                      {detail.rework_requirements.map((item, index) => {
+                        const draft = requirementDraft[item.id] ?? {
+                          status: item.status,
+                          note: item.response ?? '',
+                        }
+                        return (
+                          <div key={item.id} className="rounded-md border bg-background/80 p-2">
+                            <div className="flex flex-wrap items-start gap-2">
+                              <span className="min-w-0 flex-1 text-sm">
+                                {index + 1}. {item.text}
+                              </span>
+                              <div className="flex shrink-0 gap-1">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant={draft.status === 'addressed' ? 'default' : 'outline'}
+                                  className="h-7 px-2 text-xs"
+                                  onClick={() =>
+                                    setRequirementDraft((prev) => ({
+                                      ...prev,
+                                      [item.id]: { ...draft, status: 'addressed' },
+                                    }))
+                                  }
+                                >
+                                  <CheckCircle2 className="h-3.5 w-3.5" />
+                                  已改
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant={draft.status === 'disputed' ? 'destructive' : 'outline'}
+                                  className="h-7 px-2 text-xs"
+                                  onClick={() =>
+                                    setRequirementDraft((prev) => ({
+                                      ...prev,
+                                      [item.id]: { ...draft, status: 'disputed' },
+                                    }))
+                                  }
+                                >
+                                  <XCircle className="h-3.5 w-3.5" />
+                                  有异议
+                                </Button>
+                              </div>
+                            </div>
+                            <Textarea
+                              className="mt-2 min-h-[52px] text-xs"
+                              rows={2}
+                              value={draft.note}
+                              placeholder="说明改在哪个版本/章节，或为什么有异议；编辑复核时会看到"
+                              onChange={(e) =>
+                                setRequirementDraft((prev) => ({
+                                  ...prev,
+                                  [item.id]: {
+                                    ...draft,
+                                    note: e.target.value.slice(0, 2000),
+                                  },
+                                }))
+                              }
+                            />
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
               {detail.similarity_score != null && detail.similarity_score >= 35 ? (
@@ -723,7 +880,43 @@ function SubmissionsPage() {
                     />
                   </label>
                 )}
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  单文件 ≤ {uploadMaxMb} MB · 每日最多{' '}
+                  {caps.data?.upload_daily_file_limit ?? 20} 次 /{' '}
+                  {Math.round((caps.data?.upload_daily_bytes_limit ?? 250 * 1024 * 1024) / 1024 / 1024)} MB；
+                  大文件请贴网盘或仓库链接。
+                </p>
               </div>
+              {analyticsQ.data ? (
+                <div className="rounded-md border p-3">
+                  <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                    <span className="font-medium">阅读趋势</span>
+                    <span className="text-xs text-muted-foreground">近 {analyticsQ.data.days} 天 · 聚合数据，不记录访客身份</span>
+                    <span className="ml-auto text-sm">
+                      阅读 <strong>{analyticsQ.data.total_views}</strong> · 下载{' '}
+                      <strong>{analyticsQ.data.downloads}</strong>
+                    </span>
+                  </div>
+                  <div className="mt-2 flex h-10 items-end gap-0.5">
+                    {analyticsQ.data.daily.map((day) => {
+                      const max = Math.max(1, ...analyticsQ.data!.daily.map((d) => d.views))
+                      return (
+                        <div
+                          key={day.date}
+                          className="min-w-0 flex-1 rounded-t bg-primary/50"
+                          style={{ height: `${Math.max(2, (day.views / max) * 100)}%` }}
+                          title={`${day.date}：${day.views} 次阅读`}
+                        />
+                      )
+                    })}
+                  </div>
+                  {analyticsQ.data.referrers.length > 0 ? (
+                    <p className="mt-2 truncate text-xs text-muted-foreground">
+                      来源：{analyticsQ.data.referrers.slice(0, 4).map((r) => `${r.referrer} ${r.views}`).join(' · ')}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
               {/* 互评意见（单盲：作者只可见 comments_to_author，互评成员身份保密） */}
               {reportsQ.data && reportsQ.data.length > 0 && (
                 <div className="rounded-md border p-3">
@@ -740,7 +933,11 @@ function SubmissionsPage() {
                         key={r.id}
                         className="rounded bg-muted/50 p-2 text-sm"
                       >
-                        <div className="mb-1 flex items-center gap-2">
+                        <div className="mb-1 flex flex-wrap items-center gap-2">
+                          <Badge variant="outline">第 {r.round ?? 1} 轮</Badge>
+                          {r.assignment_status === 'cancelled' ? (
+                            <Badge variant="secondary">历史</Badge>
+                          ) : null}
                           <span className="text-xs text-muted-foreground">
                             {new Date(r.submitted_at).toLocaleString()}
                           </span>
@@ -843,6 +1040,16 @@ function SubmissionsPage() {
                               下载该版本原件
                             </button>
                           )}
+                          {v.version > 1 && (
+                            <button
+                              type="button"
+                              className="ml-2 mt-1 inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                              onClick={() => setDiffVersion(v.version)}
+                            >
+                              <History className="h-3.5 w-3.5" />
+                              对比上一版
+                            </button>
+                          )}
                           {v.note && (
                             <p className="mt-0.5 whitespace-pre-wrap text-sm">
                               修改说明：{v.note}
@@ -877,6 +1084,21 @@ function SubmissionsPage() {
                       {detail.status === 'rework_requested' ? '重新提交修改稿' : '更新版本'}
                     </Button>
                   )}
+                </div>
+              )}
+              {['pending', 'under_review', 'major_revision', 'minor_revision', 'rework_requested', 'resubmitted'].includes(
+                detail.status,
+              ) && (
+                <div className="flex justify-end">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted-foreground hover:text-destructive"
+                    onClick={() => setWithdrawOpen(true)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    主动撤稿
+                  </Button>
                 </div>
               )}
               <div className="text-xs text-muted-foreground">
@@ -944,6 +1166,102 @@ function SubmissionsPage() {
                   : detail?.status === 'rework_requested'
                     ? '确认重新提交'
                     : '确认更新版本'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={diffVersion !== null} onOpenChange={(o) => !o && setDiffVersion(null)}>
+        <DialogContent className="max-h-[70vh] overflow-y-auto sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>
+              版本对比 v{diffQ.data?.from_version ?? Math.max(1, (diffVersion ?? 1) - 1)} → v
+              {diffVersion}
+            </DialogTitle>
+          </DialogHeader>
+          {diffQ.isLoading ? (
+            <p className="text-sm text-muted-foreground">正在读取两版快照…</p>
+          ) : diffQ.isError ? (
+            <p className="text-sm text-destructive">版本对比读取失败</p>
+          ) : diffQ.data ? (
+            <div className="space-y-4 text-sm">
+              {diffQ.data.field_changes.length > 0 && (
+                <div>
+                  <div className="mb-1 font-medium">题录字段变化</div>
+                  <div className="space-y-1">
+                    {diffQ.data.field_changes.map((change) => (
+                      <div key={change.field} className="rounded bg-muted/50 px-2 py-1 text-xs">
+                        <span className="font-medium">{change.field}</span>：{' '}
+                        <span className="text-muted-foreground line-through">
+                          {String(change.before ?? '—').slice(0, 80)}
+                        </span>{' '}
+                        → {String(change.after ?? '—').slice(0, 80)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div>
+                <div className="mb-1 font-medium">正文差异</div>
+                {diffQ.data.body_diff.length > 0 ? (
+                  <pre className="max-h-[45vh] overflow-auto rounded-md border bg-muted/40 p-3 text-xs leading-relaxed">
+                    {diffQ.data.body_diff.map((line, index) => (
+                      <div
+                        key={`${index}-${line.slice(0, 12)}`}
+                        className={
+                          line.startsWith('+')
+                            ? 'text-emerald-700'
+                            : line.startsWith('-')
+                              ? 'text-destructive'
+                              : 'text-muted-foreground'
+                        }
+                      >
+                        {line || ' '}
+                      </div>
+                    ))}
+                  </pre>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    这一版没有可比对的正文快照（旧版本只保存题录；新版重投会开始保存 Markdown 正文）。
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>主动撤稿</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <p className="text-muted-foreground">
+              撤稿不会删除作品、版本或互评历史，只把流程停在「已撤稿」。
+              撤回后不能再重新提交；如需重新投稿，请走新的发布流程。
+            </p>
+            <div className="space-y-2">
+              <Label htmlFor="withdraw-reason">撤稿原因</Label>
+              <Textarea
+                id="withdraw-reason"
+                rows={3}
+                value={withdrawReason}
+                onChange={(e) => setWithdrawReason(e.target.value.slice(0, 2000))}
+                placeholder="例如：选题方向调整，准备重写后再投。"
+              />
+            </div>
+            <div className="flex justify-end gap-2 border-t pt-3">
+              <Button type="button" variant="outline" onClick={() => setWithdrawOpen(false)}>
+                取消
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => void onWithdraw()}
+                disabled={withdrawMut.isPending || withdrawReason.trim().length < 4}
+              >
+                {withdrawMut.isPending ? '撤回中…' : '确认撤稿'}
               </Button>
             </div>
           </div>

@@ -8,11 +8,22 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from datetime import UTC, datetime, timedelta
+from zoneinfo import ZoneInfo
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import PERMISSION_RANK, effective_permission_role, get_current_user
+from app.api.deps import (
+    PERMISSION_RANK,
+    effective_permission_role,
+    get_current_user,
+    require_tenant_id,
+)
 from app.core.db import get_db
+from app.domain.catalog.models import PageView, Resource
+from app.domain.submission.models import Submission
 from app.domain.gamification.activity import activity_snapshot
 from app.models import User
 
@@ -92,4 +103,100 @@ async def my_profile(
         "permissions": perms,
         "activity": activity_snapshot(current_user.xp or 0),
         "rules_accepted": current_user.rules_ack_version is not None,
+    }
+
+
+@router.get("/resources/{resource_id}/analytics")
+async def resource_author_analytics(
+    resource_id: int,
+    days: int = Query(default=30, ge=7, le=90),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, object]:
+    """Author-facing readership trend for one published work.
+
+    Only the submitting author or an admin can read it. The page-view table
+    deliberately stores no IP/User-Agent, so this is aggregate interest, not
+    identity tracking.
+    """
+    tenant_id = require_tenant_id()
+    resource = (
+        await db.execute(
+            select(Resource).where(Resource.id == resource_id, Resource.tenant_id == tenant_id)
+        )
+    ).scalar_one_or_none()
+    if resource is None:
+        raise HTTPException(status_code=404, detail="作品不存在")
+    submission = (
+        await db.execute(
+            select(Submission)
+            .where(
+                Submission.tenant_id == tenant_id,
+                Submission.resource_id == resource_id,
+            )
+            .order_by(Submission.id.desc())
+            .limit(1)
+        )
+    ).scalar_one_or_none()
+    if submission is None or (submission.submitted_by != current_user.id and not current_user.is_admin):
+        raise HTTPException(status_code=403, detail="只有作者本人可以查看作品数据")
+
+    local_now = datetime.now(ZoneInfo("Asia/Shanghai"))
+    start_local = (local_now - timedelta(days=days - 1)).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
+    since = start_local.astimezone(UTC)
+    paths = [f"/catalog/{resource.id}"]
+    if resource.slug:
+        paths.append(f"/catalog/{resource.slug}")
+    base = select(PageView).where(
+        PageView.tenant_id == tenant_id,
+        PageView.created_at >= since,
+        PageView.path.in_(paths),
+    )
+    total = (
+        await db.execute(select(func.count()).select_from(base.subquery()))
+    ).scalar_one()
+    local_day = func.date(func.timezone("Asia/Shanghai", PageView.created_at)).label("day")
+    rows = (
+        await db.execute(
+            select(local_day, func.count(PageView.id).label("views"))
+            .where(
+                PageView.tenant_id == tenant_id,
+                PageView.created_at >= since,
+                PageView.path.in_(paths),
+            )
+            .group_by(local_day)
+            .order_by(local_day)
+        )
+    ).all()
+    daily_map = {str(day): int(views) for day, views in rows}
+    daily = [
+        {
+            "date": (start_local.date() + timedelta(days=offset)).isoformat(),
+            "views": daily_map.get((start_local.date() + timedelta(days=offset)).isoformat(), 0),
+        }
+        for offset in range(days)
+    ]
+    refs = (
+        await db.execute(
+            select(func.coalesce(PageView.referrer, ""), func.count(PageView.id))
+            .where(
+                PageView.tenant_id == tenant_id,
+                PageView.created_at >= since,
+                PageView.path.in_(paths),
+            )
+            .group_by(PageView.referrer)
+            .order_by(func.count(PageView.id).desc())
+            .limit(8)
+        )
+    ).all()
+    return {
+        "resource_id": resource.id,
+        "title": resource.title,
+        "days": days,
+        "total_views": int(total),
+        "downloads": int(resource.download_count or 0),
+        "daily": daily,
+        "referrers": [{"referrer": r or "direct", "views": int(c)} for r, c in refs],
     }

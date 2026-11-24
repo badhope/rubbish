@@ -17,6 +17,7 @@ Two responsibilities:
 
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select
@@ -24,6 +25,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.logging import get_logger
+from app.core.time import utcnow
 from app.domain.notifications.models import EmailDigestRecord, Notification
 from app.models import User
 
@@ -39,6 +41,7 @@ DEFAULT_PREFS: dict[str, bool] = {
     "in_app_review": True,
     "in_app_submission": True,
     "in_app_release": True,
+    "in_app_publication": True,
     # 邮件：社交通知默认关；工作流邮件（互评、作品处理、发布失败）默认开，
     # 因为收件人需要据此完成一件具体的事。SMTP 未配置时只记录跳过原因。
     "email_comment": False,
@@ -57,6 +60,7 @@ _IN_APP_PREF_BY_PREFIX = {
     "review.": "in_app_review",
     "submission.": "in_app_submission",
     "release.": "in_app_release",
+    "publication.": "in_app_publication",
 }
 
 # 邮件摘要事件到邮件偏好键。评论/论坛的调用方已先检查一遍，这里再兜底。
@@ -64,8 +68,12 @@ _EMAIL_PREF_BY_EVENT = {
     "comment.new": "email_comment",
     "forum.reply": "email_forum",
     "assigned": "email_review",
+    "review_assignment": "email_review",
     "reminder": "email_review",
+    "review_reminder": "email_review",
     "decision": "email_submission",
+    "triage_decision": "email_submission",
+    "rework_reminder": "email_submission",
     "submission.triage_overdue": "email_submission",
     "appeal.decision": "email_submission",
     "release.scheduled_failed": "email_release",
@@ -159,6 +167,7 @@ async def record_email_digest(
     subject: str,
     text: str,
     html: str | None = None,
+    channel: str = "default",
     related_type: str | None = None,
     related_id: str | None = None,
 ) -> str:
@@ -175,7 +184,11 @@ async def record_email_digest(
         recipient_email=recipient_email,
         subject=subject[:255],
         body=text,
+        html=html,
+        channel=channel,
         status="skipped_no_smtp",
+        attempts=0,
+        updated_at=utcnow(),
         related_type=related_type,
         related_id=related_id,
     )
@@ -192,20 +205,34 @@ async def record_email_digest(
             return record.status
 
     # 开关关闭：记录为 skipped_disabled，不尝试发送。
-    if not settings.email_review_digest_enabled:
+    # 通过邮件专用通道不受总闸影响，但仍要求有可用账号。
+    if channel != "congrat" and not settings.email_review_digest_enabled:
         record.status = "skipped_disabled"
         await db.flush()
         return record.status
 
-    from app.core.email import get_email_sender, smtp_configured
+    from app.core.email import configured_accounts, get_email_sender, smtp_configured
 
-    if not smtp_configured():
+    if channel == "congrat":
+        if not configured_accounts():
+            return record.status
+    elif not smtp_configured():
         # 未配置 SMTP：保持 skipped_no_smtp，落库但不假装已发。
         return record.status
 
+    record.attempts = 1
     try:
-        await get_email_sender().send(to=recipient_email, subject=subject, body=text, html=html)
+        if channel == "congrat":
+            from app.core.email import get_congrat_sender
+
+            sender = get_congrat_sender()
+        else:
+            sender = get_email_sender()
+        await sender.send(to=recipient_email, subject=subject, body=text, html=html)
         record.status = "sent"
+        record.sent_at = utcnow()
+        record.next_retry_at = None
+        record.last_error = None
     except Exception:
         logger.warning(
             "email_digest_send_failed",
@@ -215,6 +242,8 @@ async def record_email_digest(
             exc_info=True,
         )
         record.status = "failed"
+        record.last_error = "SMTP delivery failed"
+        record.next_retry_at = utcnow() + timedelta(minutes=5)
     await db.flush()
     return record.status
 

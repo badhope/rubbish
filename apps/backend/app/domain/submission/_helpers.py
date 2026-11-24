@@ -234,12 +234,25 @@ async def _snapshot_submission(
             )
         )
     ).scalar()
+    # 尽力抓取 Markdown 正文，供服务端版本 diff 使用；读取失败/无正文
+    # 不能阻断快照本身（版本记录仍以题录 payload 为准）。
+    body_text: str | None = None
+    markdown_path = getattr(entry, "markdown_path", None)
+    if markdown_path:
+        try:
+            from app.core.storage import get_storage
+
+            raw = await get_storage().load(markdown_path)
+            body_text = raw.decode("utf-8", errors="replace")[:2_000_000]
+        except Exception:
+            body_text = None
     snapshot = SubmissionVersion(
         tenant_id=entry.tenant_id,
         submission_id=entry.id,
         version=(current_max or 0) + 1,
         payload=_version_payload(entry),
         file_path=entry.file_path,
+        body=body_text,
         note=note,
         created_by=created_by,
     )

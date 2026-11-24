@@ -65,16 +65,37 @@ def decision_label(value: str) -> str:
 
 
 async def send_assignment_email(
-    reviewer: User, *, submission_title: str, assignment_id: int
+    reviewer: User,
+    *,
+    submission_title: str,
+    assignment_id: int,
+    db: AsyncSession | None = None,
+    tenant_id: Any | None = None,
 ) -> None:
-    """Best-effort 'you have a paper to review' email."""
-    if not smtp_configured() or not notifications.wants(reviewer, "email_review"):
+    """Best-effort 'you have a paper to review' email via the email outbox."""
+    if not notifications.wants(reviewer, "email_review"):
         return
     base = settings.frontend_base_url.rstrip("/")
     link = f"{base}/review?tab=assignments&assignment={assignment_id}"
     subject, text, html = review_assigned(
         reviewer.username, submission_title, link, REVIEW_DUE_DAYS
     )
+    if db is not None and tenant_id is not None:
+        await notifications.record_email_digest(
+            db,
+            tenant_id=tenant_id,
+            user_id=reviewer.id,
+            event_type="review_assignment",
+            recipient_email=reviewer.email,
+            subject=subject,
+            text=text,
+            html=html,
+            related_type="review_assignment",
+            related_id=str(assignment_id),
+        )
+        return
+    if not smtp_configured():
+        return
     try:
         await get_email_sender().send(to=reviewer.email, subject=subject, body=text, html=html)
     except Exception:
@@ -88,20 +109,19 @@ async def send_decision_email(
     decision: str,
     note: str | None,
     submission_id: int | None = None,
+    db: AsyncSession | None = None,
+    tenant_id: Any | None = None,
+    event_type: str = "decision",
 ) -> None:
-    """Best-effort decision email to the author.
+    """Decision email to the author, recorded in the email outbox when possible.
 
-    通过/接收（accept / approved）走**恭喜邮件专用通道**（主编单独授权，
-    不受外发总闸约束）；其余决定仍受总闸管控（总闸关闭时只写日志）。
+    When ``db``/``tenant_id`` are supplied (production paths), the message is
+    written to ``email_digest_records`` first and retried by the workflow
+    scheduler if SMTP fails. The legacy direct-send path remains for unit tests
+    and one-off scripts.
     """
     if not notifications.wants(author, "email_submission"):
         return
-    if not smtp_configured():
-        # smtp_configured 受总闸约束；恭喜通道绕过它，单独判断 SMTP 配置
-        from app.core.email import configured_accounts
-
-        if decision not in ("accept", "approved") or not configured_accounts():
-            return
     base = settings.frontend_base_url.rstrip("/")
     is_accept = decision in ("accept", "approved")
     link = (
@@ -115,19 +135,40 @@ async def send_decision_email(
         link,
     )
     if is_accept:
-        # 主编口径：通过即恭喜，主题突出祝贺
         subject = f"🎉 你的作品《{submission_title[:60]}》已经公开"
-        try:
-            from app.core.email import get_congrat_sender
 
-            await get_congrat_sender().send(to=author.email, subject=subject, body=text, html=html)
-            logger.info("congrat_email_sent", author_id=author.id, decision=decision)
-            return
-        except Exception:
-            logger.warning("congrat_email_failed", author_id=author.id, exc_info=True)
+    if db is not None and tenant_id is not None:
+        await notifications.record_email_digest(
+            db,
+            tenant_id=tenant_id,
+            user_id=author.id,
+            event_type=event_type,
+            recipient_email=author.email,
+            subject=subject,
+            text=text,
+            html=html,
+            channel="congrat" if is_accept else "default",
+            related_type="submission",
+            related_id=str(submission_id) if submission_id else None,
+        )
+        return
+
+    if not smtp_configured():
+        from app.core.email import configured_accounts
+
+        if not is_accept or not configured_accounts():
             return
     try:
-        await get_email_sender().send(to=author.email, subject=subject, body=text, html=html)
+        if is_accept:
+            from app.core.email import get_congrat_sender
+
+            await get_congrat_sender().send(
+                to=author.email, subject=subject, body=text, html=html
+            )
+        else:
+            await get_email_sender().send(
+                to=author.email, subject=subject, body=text, html=html
+            )
     except Exception:
         logger.warning("decision_email_failed", author_id=author.id, exc_info=True)
 
@@ -207,28 +248,139 @@ async def run_overdue_reminders(db: AsyncSession, *, tenant_id: Any) -> dict[str
         )
         stats["reminded"] += 1
 
-    if smtp_configured():
-        base = settings.frontend_base_url.rstrip("/")
-        for digest in digests.values():
-            reviewer = digest["reviewer"]
-            if not notifications.wants(reviewer, "email_review"):
-                continue
-            subject, text, html = review_reminder_digest(
-                reviewer.username,
-                digest["items"][:10],
-                f"{base}/review?tab=assignments",
+    base = settings.frontend_base_url.rstrip("/")
+    for digest in digests.values():
+        reviewer = digest["reviewer"]
+        if not notifications.wants(reviewer, "email_review"):
+            continue
+        subject, text, html = review_reminder_digest(
+            reviewer.username,
+            digest["items"][:10],
+            f"{base}/review?tab=assignments",
+        )
+        status = await notifications.record_email_digest(
+            db,
+            tenant_id=tenant_id,
+            user_id=reviewer.id,
+            event_type="review_reminder",
+            recipient_email=reviewer.email,
+            subject=subject,
+            text=text,
+            html=html,
+            related_type="review_assignment",
+            related_id=None,
+        )
+        if status == "sent":
+            stats["emailed"] += 1
+
+    await db.commit()
+    return stats
+
+
+async def run_rework_reminders(db: AsyncSession, *, tenant_id: Any) -> dict[str, int]:
+    """Nudge authors before/at the revision deadline; never auto-reject."""
+    now = datetime.now(UTC)
+    stats = {"checked": 0, "due_soon": 0, "overdue": 0, "emailed": 0}
+    rows = list(
+        (
+            await db.execute(
+                select(Submission, User)
+                .join(User, User.id == Submission.submitted_by)
+                .where(
+                    Submission.tenant_id == tenant_id,
+                    Submission.status == "rework_requested",
+                    Submission.rework_due_at.is_not(None),
+                )
             )
-            try:
-                await get_email_sender().send(
-                    to=reviewer.email, subject=subject, body=text, html=html
+        ).all()
+    )
+    stats["checked"] = len(rows)
+    for submission, author in rows:
+        due = submission.rework_due_at
+        if due is None:
+            continue
+        if due.tzinfo is None:
+            due = due.replace(tzinfo=UTC)
+        remaining = due - now
+        stage = None
+        if remaining.total_seconds() <= 0:
+            stage = "overdue"
+        elif remaining <= timedelta(days=3):
+            stage = "due_soon"
+        if stage is None:
+            continue
+
+        # 同一截止日只提醒一次：重投/改期后 due_at 变化，会重新提醒。
+        marker_action = f"submission.rework_{stage}"
+        prior = (
+            (
+                await db.execute(
+                    select(AuditLog).where(
+                        AuditLog.tenant_id == tenant_id,
+                        AuditLog.action == marker_action,
+                        AuditLog.target_type == "submission",
+                        AuditLog.target_id == str(submission.id),
+                    )
                 )
-                stats["emailed"] += 1
-            except Exception:
-                logger.warning(
-                    "review_reminder_email_failed",
-                    reviewer_id=reviewer.id,
-                    count=len(digest["items"]),
-                )
+            )
+            .scalars()
+            .all()
+        )
+        if any((row.payload or {}).get("due_at") == due.isoformat() for row in prior):
+            continue
+
+        if stage == "overdue":
+            days = max(0, (now - due).days)
+            title = f"修回已逾期：{submission.title}"
+            body = (
+                f"作品 #{submission.id} 的修回截止已过 {days} 天。\n"
+                "如果还需要修改，请尽快保存并点「重新提交修改稿」；"
+                "如果决定放弃，可以在作品详情里主动撤稿。"
+            )
+            stats["overdue"] += 1
+        else:
+            days = max(0, remaining.days)
+            title = f"修回即将到期：{submission.title}"
+            body = (
+                f"作品 #{submission.id} 的修回截止还有约 {days} 天（{due.date().isoformat()}）。\n"
+                "改完后记得在详情页点「重新提交修改稿」，否则不会自动进入下一轮。"
+            )
+            stats["due_soon"] += 1
+
+        await notifications.create(
+            db,
+            tenant_id=tenant_id,
+            user_id=author.id,
+            type_=f"submission.rework_{stage}",
+            title=title,
+            body=body,
+            related_type="submission",
+            related_id=str(submission.id),
+        )
+        db.add(
+            AuditLog(
+                tenant_id=tenant_id,
+                actor_user_id=None,
+                action=marker_action,
+                target_type="submission",
+                target_id=str(submission.id),
+                payload={"due_at": due.isoformat(), "stage": stage},
+            )
+        )
+        # 邮件也走发件箱，失败由调度器重试；邮件偏好由 record_email_digest 兜底。
+        status = await notifications.record_email_digest(
+            db,
+            tenant_id=tenant_id,
+            user_id=author.id,
+            event_type="rework_reminder",
+            recipient_email=author.email,
+            subject=title,
+            text=body,
+            related_type="submission",
+            related_id=str(submission.id),
+        )
+        if status == "sent":
+            stats["emailed"] += 1
 
     await db.commit()
     return stats
@@ -252,6 +404,7 @@ __all__ = [
     "REVIEW_DUE_DAYS",
     "decision_label",
     "run_overdue_reminders",
+    "run_rework_reminders",
     "send_assignment_email",
     "send_decision_email",
 ]

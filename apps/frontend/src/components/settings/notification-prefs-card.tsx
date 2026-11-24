@@ -10,6 +10,7 @@ type Prefs = {
   in_app_review: boolean
   in_app_submission: boolean
   in_app_release: boolean
+  in_app_publication: boolean
   email_comment: boolean
   email_forum: boolean
   email_review: boolean
@@ -37,6 +38,11 @@ const IN_APP_ROWS: PrefRow[] = [
     key: 'in_app_release',
     label: '发布失败告警',
     hint: '定时发布失败时，在站内通知负责这件作品的内容整理',
+  },
+  {
+    key: 'in_app_publication',
+    label: '作品公开与更正',
+    hint: '你关注的作品公开、更正或撤回署名时，在站内通知你；默认开启',
   },
 ]
 

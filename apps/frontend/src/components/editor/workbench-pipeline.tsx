@@ -24,6 +24,7 @@ import {
   useCheckConflicts,
   useEditorDecision,
   useEditorEmailDigestRecords,
+  useRetryEmailDigestRecord,
   useEditorWorkbench,
   useDisciplines,
   useRemindReviewers,
@@ -169,6 +170,7 @@ export function EditorPipeline() {
   const digestRecords = useEditorEmailDigestRecords({
     enabled: digestOpen && !!digest && (!digest.smtp_configured || digest.last_status === 'failed'),
   })
+  const retryEmailMut = useRetryEmailDigestRecord()
 
   // 状态条配色与文案：必须诚实，绝不能让总协调以为邮件真发了
   type DigestTone = 'idle' | 'amber' | 'red' | 'green'
@@ -461,9 +463,31 @@ export function EditorPipeline() {
                         <span className="truncate" title={r.subject}>
                           {r.subject}
                         </span>
+                        <span className="shrink-0 text-muted-foreground">
+                          {r.channel ?? 'smtp'} · {r.attempts ?? 0} 次
+                        </span>
                         <span className="ml-auto shrink-0 text-muted-foreground">
                           {r.recipient_email} · {new Date(r.created_at).toLocaleString()}
                         </span>
+                        {r.status === 'failed' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-6 shrink-0 px-2 text-xs"
+                            disabled={retryEmailMut.isPending}
+                            onClick={() => {
+                              retryEmailMut.mutate(
+                                { id: r.id },
+                                {
+                                  onSuccess: () => toast.success('已重新排队发送'),
+                                  onError: (err) => toast.error(extractError(err, '重试失败')),
+                                },
+                              )
+                            }}
+                          >
+                            重试
+                          </Button>
+                        )}
                       </li>
                     ))}
                   </ul>
@@ -649,6 +673,19 @@ export function EditorPipeline() {
                                     <span className="text-muted-foreground">内容整理未填备注</span>
                                   )}
                                 </div>
+                                {item.rework_due_at ? (
+                                  <p
+                                    className={
+                                      new Date(item.rework_due_at) < new Date()
+                                        ? 'font-medium text-red-600'
+                                        : 'text-muted-foreground'
+                                    }
+                                  >
+                                    <Clock className="inline h-3 w-3" /> 修回截止{' '}
+                                    {new Date(item.rework_due_at).toLocaleDateString()}
+                                    {new Date(item.rework_due_at) < new Date() ? ' · 已逾期' : ''}
+                                  </p>
+                                ) : null}
                                 {item.author_response ? (
                                   <div className="rounded bg-muted/40 p-2 text-muted-foreground">
                                     <span className="font-medium text-foreground">作者修改说明：</span>
@@ -1010,6 +1047,8 @@ function reportScore(scores: Record<string, unknown>): string | null {
 
 function SubmissionReportsPanel({ submissionId }: { submissionId: number }) {
   const { data, isLoading, isError, refetch } = useSubmissionReports(submissionId)
+  const subQ = useSubmission(submissionId)
+  const requirements = subQ.data?.rework_requirements ?? []
   if (isLoading) return <LoadingSkeleton rows={2} />
   if (isError)
     return (
@@ -1024,9 +1063,12 @@ function SubmissionReportsPanel({ submissionId }: { submissionId: number }) {
   }
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2 text-sm font-medium">
+      <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
         <FileText className="h-4 w-4" /> 互评意见
         <Badge variant="secondary">{data.length} 份</Badge>
+        <span className="text-xs font-normal text-muted-foreground">
+          含历史轮次；通过闸门只算当前一轮
+        </span>
       </div>
       {data.map((r, index) => (
         <div key={r.id} className="rounded-md border bg-card p-3 text-sm">
@@ -1034,6 +1076,10 @@ function SubmissionReportsPanel({ submissionId }: { submissionId: number }) {
             <span className="font-medium">
               互评成员 {r.reviewer_username ?? `#${r.reviewer_id ?? index + 1}`}
             </span>
+            <Badge variant="outline">第 {r.round ?? 1} 轮</Badge>
+            {r.assignment_status === 'cancelled' ? (
+              <Badge variant="secondary">历史</Badge>
+            ) : null}
             <Badge variant="outline">
               {RECOMMENDATION_LABELS[r.recommendation] ?? r.recommendation}
             </Badge>
@@ -1070,6 +1116,39 @@ function SubmissionReportsPanel({ submissionId }: { submissionId: number }) {
           ) : null}
         </div>
       ))}
+      {requirements.length > 0 ? (
+        <div className="rounded-md border border-sky-500/30 bg-sky-500/5 p-3 text-sm">
+          <div className="mb-2 flex flex-wrap items-center gap-2 font-medium">
+            退回修改要求
+            <span className="text-xs font-normal text-muted-foreground">
+              作者逐条回应，编辑复核时可对照
+            </span>
+          </div>
+          <ol className="space-y-2">
+            {requirements.map((item, index) => (
+              <li key={item.id} className="rounded bg-background/70 p-2">
+                <div className="flex flex-wrap items-start gap-2">
+                  <span className="min-w-0 flex-1">
+                    {index + 1}. {item.text}
+                  </span>
+                  <Badge variant={item.status === 'addressed' ? 'secondary' : item.status === 'disputed' ? 'destructive' : 'outline'}>
+                    {item.status === 'addressed'
+                      ? '作者已改'
+                      : item.status === 'disputed'
+                        ? '作者有异议'
+                        : '待回应'}
+                  </Badge>
+                </div>
+                {item.response ? (
+                  <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">
+                    作者说明：{item.response}
+                  </p>
+                ) : null}
+              </li>
+            ))}
+          </ol>
+        </div>
+      ) : null}
     </div>
   )
 }

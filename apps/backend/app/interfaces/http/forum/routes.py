@@ -277,6 +277,14 @@ class ModerationBatchIn(BaseModel):
     topic_ids: list[int] = Field(min_length=1, max_length=50)
     action: Literal["approve", "reject", "changes"]
     note: str = Field(default="", max_length=1000)
+    # 前端生成的批次号；为空时后端补一个，用于撤销时定位同一批事件。
+    batch_id: str | None = Field(default=None, max_length=32)
+
+
+class ModerationFeedbackIn(BaseModel):
+    verdict: Literal["false_positive", "correct"] = "false_positive"
+    signal_code: str | None = Field(default=None, max_length=40)
+    note: str = Field(default="", max_length=1000)
 
 
 class ModerationSettingsIn(BaseModel):
@@ -618,9 +626,13 @@ async def _apply_topic_decision(
     action: str,
     note: str,
     actor: User,
+    batch_id: str | None = None,
 ) -> str:
     """把人工处置写入主题与事件流。调用方负责 commit。"""
     before = topic.moderation_status
+    before_published = topic.published_at
+    before_reason = topic.manual_review_reason
+    before_eta = topic.review_eta_at
     now = utcnow()
     if action == "approve":
         topic.moderation_status = "published"
@@ -646,7 +658,13 @@ async def _apply_topic_decision(
         to_status=topic.moderation_status,
         actor_id=actor.id,
         note=note or None,
-        meta={"risk_score": topic.risk_score},
+        meta={
+            "risk_score": topic.risk_score,
+            "batch_id": batch_id,
+            "from_published_at": before_published.isoformat() if before_published else None,
+            "from_manual_review_reason": before_reason,
+            "from_review_eta_at": before_eta.isoformat() if before_eta else None,
+        },
     )
     return topic.moderation_status
 
@@ -1449,6 +1467,137 @@ async def moderation_events(
     ]
 
 
+@router.post("/moderation/topics/{topic_id}/feedback")
+async def moderation_feedback(
+    topic_id: int,
+    payload: ModerationFeedbackIn,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, object]:
+    """Record a human false-positive/correct verdict for rule tuning."""
+    tenant_id = require_tenant_id()
+    await _require_moderator(db, current_user)
+    topic = (
+        await db.execute(
+            select(ForumTopic).where(
+                ForumTopic.id == topic_id,
+                ForumTopic.tenant_id == tenant_id,
+                ForumTopic.deleted_at.is_(None),
+            )
+        )
+    ).scalar_one_or_none()
+    if topic is None:
+        raise HTTPException(status_code=404, detail="主题帖不存在")
+    signal_code = payload.signal_code
+    if signal_code is None:
+        signals = topic.moderation_signals or []
+        signal_code = str(signals[0].get("code")) if signals and isinstance(signals[0], dict) else None
+    db.add(
+        ForumModerationEvent(
+            tenant_id=tenant_id,
+            topic_id=topic.id,
+            actor_id=current_user.id,
+            action="feedback",
+            from_status=topic.moderation_status,
+            to_status=topic.moderation_status,
+            note=payload.note.strip() or None,
+            meta={
+                "verdict": payload.verdict,
+                "signal_code": signal_code,
+                "risk_score": topic.risk_score,
+            },
+            created_at=utcnow(),
+        )
+    )
+    await db.commit()
+    return {"topic_id": topic.id, "verdict": payload.verdict, "signal_code": signal_code}
+
+
+@router.get("/moderation/insights")
+async def moderation_insights(
+    days: int = Query(default=30, ge=1, le=90),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, object]:
+    """Rule hit / override trend for operators; read-only aggregation."""
+    tenant_id = require_tenant_id()
+    await _require_moderator(db, current_user)
+    since = utcnow() - timedelta(days=days)
+    events = (
+        (
+            await db.execute(
+                select(ForumModerationEvent)
+                .where(
+                    ForumModerationEvent.tenant_id == tenant_id,
+                    ForumModerationEvent.created_at >= since,
+                )
+                .order_by(ForumModerationEvent.created_at)
+                .limit(5000)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    topic_ids = {e.topic_id for e in events}
+    signals_by_topic: dict[int, list[dict]] = {}
+    if topic_ids:
+        rows = (
+            await db.execute(
+                select(ForumTopic.id, ForumTopic.moderation_signals).where(
+                    ForumTopic.tenant_id == tenant_id,
+                    ForumTopic.id.in_(topic_ids),
+                )
+            )
+        ).all()
+        signals_by_topic = {int(tid): (sig or []) for tid, sig in rows}
+    decisions = {"approve": 0, "reject": 0, "changes": 0}
+    feedback = {"false_positive": 0, "correct": 0}
+    by_signal: dict[str, dict[str, int]] = {}
+    daily: dict[str, dict[str, int]] = {}
+    for event in events:
+        day = event.created_at.date().isoformat()
+        bucket = daily.setdefault(day, {"decisions": 0, "false_positive": 0})
+        if event.action in decisions:
+            decisions[event.action] += 1
+            bucket["decisions"] += 1
+        if event.action == "feedback":
+            verdict = str((event.meta or {}).get("verdict") or "false_positive")
+            feedback[verdict] = feedback.get(verdict, 0) + 1
+            if verdict == "false_positive":
+                bucket["false_positive"] += 1
+            code = (event.meta or {}).get("signal_code")
+            if not code:
+                signals = signals_by_topic.get(event.topic_id, [])
+                code = signals[0].get("code") if signals and isinstance(signals[0], dict) else "unknown"
+            code = str(code or "unknown")
+            row = by_signal.setdefault(code, {"hits": 0, "false_positive": 0})
+            if event.action == "feedback":
+                row["false_positive"] += 1 if verdict == "false_positive" else 0
+    for event in events:
+        if event.action in decisions:
+            signals = signals_by_topic.get(event.topic_id, [])
+            for signal in signals:
+                if isinstance(signal, dict):
+                    code = str(signal.get("code") or "unknown")
+                    by_signal.setdefault(code, {"hits": 0, "false_positive": 0})["hits"] += 1
+    total_decisions = sum(decisions.values())
+    return {
+        "days": days,
+        "decisions": decisions,
+        "feedback": feedback,
+        "false_positive_rate": round(
+            feedback.get("false_positive", 0) / total_decisions * 100, 1
+        )
+        if total_decisions
+        else 0.0,
+        "signals": [
+            {"code": code, **row, "false_positive_rate": round(row["false_positive"] / row["hits"] * 100, 1) if row["hits"] else 0.0}
+            for code, row in sorted(by_signal.items(), key=lambda item: item[1]["hits"], reverse=True)
+        ],
+        "daily": [{"date": day, **row} for day, row in sorted(daily.items())],
+    }
+
+
 @router.get("/moderation/settings", response_model=ModerationSettingsOut)
 async def get_moderation_settings(
     current_user: User = Depends(get_current_user),
@@ -1558,12 +1707,68 @@ async def decide_topic(
     return _topic_out(topic, authors, boards=boards)
 
 
+@router.post("/moderation/batch/preflight")
+async def preflight_batch_decision(
+    payload: ModerationBatchIn,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, object]:
+    """Dry-run preview: show exactly which topics the batch will touch."""
+    tenant_id = require_tenant_id()
+    await _require_moderator(db, current_user)
+    if payload.action in ("reject", "changes") and len(payload.note.strip()) < 4:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="请写至少 4 个字的处理说明",
+        )
+    topics = (
+        (
+            await db.execute(
+                select(ForumTopic).where(
+                    ForumTopic.id.in_(payload.topic_ids),
+                    ForumTopic.tenant_id == tenant_id,
+                    ForumTopic.deleted_at.is_(None),
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+    if len(topics) != len(set(payload.topic_ids)):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="部分主题帖不存在")
+    target_status = {
+        "approve": "published",
+        "changes": "changes_requested",
+        "reject": "rejected",
+    }[payload.action]
+    items = [
+        {
+            "id": topic.id,
+            "title": topic.title,
+            "status": topic.moderation_status,
+            "target_status": target_status,
+            "will_change": topic.moderation_status != target_status,
+            "risk_score": topic.risk_score,
+            "signals": topic.moderation_signals or [],
+            "review_eta_at": topic.review_eta_at,
+        }
+        for topic in topics
+    ]
+    return {
+        "count": len(items),
+        "action": payload.action,
+        "will_change_count": sum(1 for item in items if item["will_change"]),
+        "unchanged_count": sum(1 for item in items if not item["will_change"]),
+        "items": items,
+    }
+
+
 @router.post("/moderation/batch")
 async def batch_decide_topics(
     payload: ModerationBatchIn,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> dict[str, int]:
+) -> dict[str, object]:
     tenant_id = require_tenant_id()
     await _require_moderator(db, current_user)
     if payload.action in ("reject", "changes") and len(payload.note.strip()) < 4:
@@ -1585,6 +1790,7 @@ async def batch_decide_topics(
     )
     if len(topics) != len(set(payload.topic_ids)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="部分主题帖不存在")
+    batch_id = payload.batch_id or uuid4().hex[:12]
     for topic in topics:
         await _apply_topic_decision(
             db,
@@ -1593,13 +1799,109 @@ async def batch_decide_topics(
             action=payload.action,
             note=payload.note.strip(),
             actor=current_user,
+            batch_id=batch_id,
         )
     await db.commit()
     for topic in topics:
         await _notify_moderation_author(
             db, tenant_id=tenant_id, topic=topic, action=payload.action, note=payload.note.strip()
         )
-    return {"count": len(topics)}
+    return {"count": len(topics), "batch_id": batch_id}
+
+
+@router.post("/moderation/batch/{batch_id}/undo")
+async def undo_batch_decision(
+    batch_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, int]:
+    """Compensating rollback for a batch, valid for ten minutes.
+
+    History is never rewritten: a new ``batch_undo`` event is appended and the
+    topic is restored to the status captured before the batch.
+    """
+    from app.domain.notifications import services as notifications
+
+    tenant_id = require_tenant_id()
+    await _require_moderator(db, current_user)
+    cutoff = utcnow() - timedelta(minutes=10)
+    events = (
+        (
+            await db.execute(
+                select(ForumModerationEvent)
+                .where(
+                    ForumModerationEvent.tenant_id == tenant_id,
+                    ForumModerationEvent.created_at >= cutoff,
+                    ForumModerationEvent.action.in_(("approve", "reject", "changes")),
+                )
+                .order_by(ForumModerationEvent.created_at.desc(), ForumModerationEvent.id.desc())
+            )
+        )
+        .scalars()
+        .all()
+    )
+    latest: dict[int, ForumModerationEvent] = {}
+    for event in events:
+        if (event.meta or {}).get("batch_id") != batch_id:
+            continue
+        latest.setdefault(event.topic_id, event)
+    if not latest:
+        raise HTTPException(status_code=404, detail="该批次不存在或已超过 10 分钟撤销窗口")
+    restored = 0
+    for topic_id, event in latest.items():
+        topic = (
+            await db.execute(
+                select(ForumTopic).where(
+                    ForumTopic.id == topic_id,
+                    ForumTopic.tenant_id == tenant_id,
+                    ForumTopic.deleted_at.is_(None),
+                )
+            )
+        ).scalar_one_or_none()
+        if topic is None or topic.moderation_status != event.to_status:
+            continue
+        meta = event.meta or {}
+        before = event.from_status or "published"
+        topic.moderation_status = before
+        topic.manual_review_reason = meta.get("from_manual_review_reason")
+        topic.review_eta_at = (
+            datetime.fromisoformat(meta["from_review_eta_at"])
+            if meta.get("from_review_eta_at")
+            else None
+        )
+        topic.published_at = (
+            datetime.fromisoformat(meta["from_published_at"])
+            if meta.get("from_published_at")
+            else None
+        )
+        topic.reviewed_by = current_user.id
+        topic.reviewed_at = utcnow()
+        db.add(
+            ForumModerationEvent(
+                tenant_id=tenant_id,
+                topic_id=topic.id,
+                actor_id=current_user.id,
+                action="batch_undo",
+                from_status=event.to_status,
+                to_status=before,
+                note="批量处置撤销",
+                meta={"batch_id": batch_id, "source_event_id": event.id},
+                created_at=utcnow(),
+            )
+        )
+        await notifications.create(
+            db,
+            tenant_id=tenant_id,
+            user_id=topic.author_id,
+            type_="forum.moderation",
+            title=f"审核结果已撤销：{topic.title[:80]}",
+            body="之前的一次批量处置已撤销，帖子状态恢复到操作前。",
+            related_type="forum_topic",
+            related_id=str(topic.id),
+        )
+        restored += 1
+    await db.commit()
+    return {"restored": restored}
 
 
 @router.patch("/topics/{topic_id}/edit", response_model=TopicOut)

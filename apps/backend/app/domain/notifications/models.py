@@ -128,11 +128,26 @@ class EmailDigestRecord(Base, TenantScopedMixin):
     recipient_email: Mapped[str] = mapped_column(String(255), nullable=False)
     subject: Mapped[str] = mapped_column(String(255), nullable=False)
     body: Mapped[str | None] = mapped_column(Text, nullable=True)
+    html: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # 投递通道：default=普通发信池；congrat=通过专用通道。
+    channel: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="default", server_default="default"
+    )
     status: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     related_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
     related_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    # 发件箱字段：每次投递尝试都更新；失败后由工作流调度器按退避重试。
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    next_retry_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True
+    )
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
     )
 
 

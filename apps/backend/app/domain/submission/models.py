@@ -167,6 +167,20 @@ class Submission(Base, TenantScopedMixin):
     # 编辑 4 元决定（accept/minor_revision/major_revision/reject）的备注，
     # 区别于 admin_note（兼容旧 review 端点的备注字段）
     editor_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # 退回修改的逐条要求（结构化）：[{id,text,status,response,updated_at}]。
+    # editor_note 仍保留纯文本版本，供邮件、旧客户端与通知正文使用。
+    rework_requirements: Mapped[list[dict[str, Any]] | None] = mapped_column(
+        JSONBVariant, nullable=True
+    )
+    # 作者修回截止时间。到期前 3 天自动提醒一次；逾期后编辑队列标红。
+    rework_due_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True
+    )
+    # 作者主动撤稿。与删除不同：记录、版本和互评历史全部保留。
+    withdrawn_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True
+    )
+    withdrawn_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     # 作者逐条回复互评成员（Response to Reviewers）。与重投时的
     # SubmissionVersion.note 分开：后者是版本变更说明，这里是作者对
     # 互评意见的正式回应，编辑在裁决/查看作品时直接可见。
@@ -272,6 +286,9 @@ class SubmissionVersion(Base, TenantScopedMixin):
     file_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
     # 作者附言：v1 恒空；重投版本可填「针对互评意见做了哪些修改」
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # 版本正文快照。旧版本可能为空；新版本在重投时尽力读取 Markdown 正文，
+    # 用于服务端版本 diff，而不是让前端只能对比本地草稿。
+    body: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_by: Mapped[int | None] = mapped_column(
         Integer,
         ForeignKey("users.id", ondelete="SET NULL"),

@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import difflib
 import logging
 import mimetypes
 from pathlib import Path
@@ -63,8 +64,10 @@ from app.interfaces.http.submission.schemas import (
     SubmissionUpdate,
     SubmissionVersionListResponse,
     SubmissionVersionResponse,
+    ReworkResponseUpdate,
+    WithdrawRequest,
 )
-from app.models import Role, User, UserRole
+from app.models import AuditLog, Role, User, UserRole
 
 router = APIRouter(prefix="/submissions", tags=["submissions"])
 logger = logging.getLogger(__name__)
@@ -375,7 +378,7 @@ async def list_my_submissions(
     status_filter: str = Query(
         default=None,
         alias="status",
-        pattern=r"^(pending|under_review|major_revision|minor_revision|resubmitted|rework_requested|accepted|approved|rejected)$",
+        pattern=r"^(pending|under_review|major_revision|minor_revision|resubmitted|rework_requested|accepted|approved|rejected|withdrawn)$",
     ),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
@@ -669,6 +672,82 @@ async def list_submission_versions(
     )
 
 
+@router.get("/{submission_id}/versions/{version}/diff")
+async def diff_submission_version(
+    submission_id: int,
+    version: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, object]:
+    """对比指定版本与上一版：正文行级 diff + 题录字段变更。"""
+    entry = await _get_or_404(db, submission_id)
+    allowed = (
+        entry.submitted_by == current_user.id
+        or current_user.is_admin
+        or await user_has_editor_access(db, current_user)
+    )
+    if not allowed:
+        raise HTTPException(status_code=403, detail="Access denied")
+    rows = (
+        (
+            await db.execute(
+                select(SubmissionVersion)
+                .where(
+                    SubmissionVersion.submission_id == entry.id,
+                    SubmissionVersion.version.in_((version, version - 1)),
+                )
+                .order_by(SubmissionVersion.version)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    current = next((r for r in rows if r.version == version), None)
+    if current is None:
+        raise HTTPException(status_code=404, detail="版本不存在")
+    previous = next((r for r in rows if r.version == version - 1), None)
+    left = (previous.body if previous and previous.body else "") if previous else ""
+    right = current.body or ""
+    body_diff = list(
+        difflib.unified_diff(
+            left.splitlines(),
+            right.splitlines(),
+            fromfile=f"v{previous.version}" if previous else "v0",
+            tofile=f"v{current.version}",
+            lineterm="",
+            n=3,
+        )
+    )
+    if len(body_diff) > 600:
+        body_diff = body_diff[:600] + ["… diff 过长，已截断"]
+    fields = (
+        "title",
+        "abstract",
+        "preview",
+        "keywords",
+        "authors",
+        "author_affiliations",
+        "discipline",
+        "subdiscipline",
+        "doi",
+    )
+    before = (previous.payload if previous else {}) or {}
+    after = current.payload or {}
+    field_changes = []
+    for key in fields:
+        old = before.get(key)
+        new = after.get(key)
+        if old != new:
+            field_changes.append({"field": key, "before": old, "after": new})
+    return {
+        "from_version": previous.version if previous else 0,
+        "to_version": current.version,
+        "body_diff": body_diff,
+        "field_changes": field_changes,
+        "has_body_diff": bool(left or right),
+    }
+
+
 @router.get("/{submission_id}/versions/{version}/file")
 async def download_submission_version(
     submission_id: int,
@@ -750,6 +829,160 @@ async def delete_submission(
     return MessageResponse(message="Submission deleted")
 
 
+@router.post(
+    "/{submission_id}/withdraw",
+    response_model=SubmissionResponse,
+)
+async def author_withdraw(
+    submission_id: int,
+    body: WithdrawRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> SubmissionResponse:
+    """作者主动撤稿：保留版本、互评报告和审计，不删除任何历史。"""
+    entry = await _get_or_404(db, submission_id)
+    if entry.submitted_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Only the submitter can withdraw")
+    if entry.status in ("accepted", "approved", "rejected", "withdrawn"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot withdraw in terminal status '{entry.status}'",
+        )
+    from sqlalchemy import update as _update
+
+    from app.domain.review.models import ReviewAssignment as _RA
+
+    open_reviewer_ids = (
+        (
+            await db.execute(
+                select(_RA.reviewer_id)
+                .where(
+                    _RA.submission_id == entry.id,
+                    _RA.tenant_id == entry.tenant_id,
+                    _RA.status.in_(("pending", "accepted")),
+                )
+                .distinct()
+            )
+        )
+        .scalars()
+        .all()
+    )
+    cancelled = (
+        await db.execute(
+            _update(_RA)
+            .where(
+                _RA.submission_id == entry.id,
+                _RA.tenant_id == entry.tenant_id,
+                _RA.status.in_(("pending", "accepted")),
+            )
+            .values(status="cancelled")
+        )
+    ).rowcount or 0
+    entry.status = "withdrawn"
+    entry.withdrawn_at = utcnow()
+    entry.withdrawn_reason = " ".join(body.reason.split()).strip()[:2000]
+    entry.rework_due_at = None
+    # 通知互评成员与编辑：任务不是凭空消失，而是作者明确撤稿。
+    for reviewer_id in open_reviewer_ids:
+        await notifications.create(
+            db,
+            tenant_id=entry.tenant_id,
+            user_id=reviewer_id,
+            type_="review.assignment_cancelled",
+            title=f"互评任务已撤回：{entry.title}",
+            body=f"作者已撤回作品 #{entry.id}，本轮互评任务关闭，无需再提交。",
+            related_type="submission",
+            related_id=str(entry.id),
+        )
+    editors = (
+        (
+            await db.execute(
+                select(User).where(
+                    User.tenant_id == entry.tenant_id,
+                    User.is_active.is_(True),
+                    User.id.in_(
+                        select(UserRole.user_id)
+                        .join(Role, Role.id == UserRole.role_id)
+                        .where(
+                            UserRole.tenant_id == entry.tenant_id,
+                            Role.tenant_id == entry.tenant_id,
+                            Role.name.in_(("editor", "chief_editor")),
+                        )
+                    )
+                    | User.is_admin.is_(True),
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+    for editor in editors:
+        await notifications.create(
+            db,
+            tenant_id=entry.tenant_id,
+            user_id=editor.id,
+            type_="submission.withdrawn",
+            title=f"作者已撤稿：{entry.title}",
+            body=f"作品 #{entry.id} 已由作者撤回。\n原因：{entry.withdrawn_reason}",
+            related_type="submission",
+            related_id=str(entry.id),
+        )
+    db.add(
+        AuditLog(
+            tenant_id=entry.tenant_id,
+            actor_user_id=current_user.id,
+            action="submission.withdrawn",
+            target_type="submission",
+            target_id=str(entry.id),
+            payload={
+                "reason": entry.withdrawn_reason,
+                "assignments_cancelled": cancelled,
+                "reviewers_notified": len(open_reviewer_ids),
+            },
+        )
+    )
+    await db.commit()
+    await db.refresh(entry)
+    return _to_response(entry)
+
+
+@router.put(
+    "/{submission_id}/rework-response",
+    response_model=SubmissionResponse,
+)
+async def author_rework_response(
+    submission_id: int,
+    body: ReworkResponseUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> SubmissionResponse:
+    """作者逐条回应退回要求；不改变作品状态，也不替代重投。"""
+    entry = await _get_or_404(db, submission_id)
+    if entry.submitted_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Only the submitter can respond")
+    if entry.status != "rework_requested":
+        raise HTTPException(status_code=400, detail="Not in rework_requested status")
+    requirements = [dict(item) for item in (entry.rework_requirements or [])]
+    if not requirements:
+        raise HTTPException(status_code=409, detail="No structured requirements to respond to")
+    by_id = {str(item.get("id")): item for item in requirements}
+    seen: set[str] = set()
+    for update in body.items:
+        if update.requirement_id in seen:
+            raise HTTPException(status_code=400, detail="Duplicate requirement id")
+        seen.add(update.requirement_id)
+        item = by_id.get(update.requirement_id)
+        if item is None:
+            raise HTTPException(status_code=400, detail="Requirement id not found")
+        item["status"] = update.status
+        item["response"] = " ".join(update.note.split()).strip()[:2000]
+        item["updated_at"] = utcnow().isoformat()
+    entry.rework_requirements = requirements
+    await db.commit()
+    await db.refresh(entry)
+    return _to_response(entry)
+
+
 @router.put(
     "/{submission_id}/response",
     response_model=SubmissionResponse,
@@ -782,16 +1015,17 @@ async def author_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot respond to reviewers in status '{entry.status}'",
         )
-    from app.domain.review.models import ReviewAssignment as _RA
+    from app.domain.review.models import ReviewAssignment as _RA, ReviewReport as _RR
 
     completed = (
         await db.execute(
             select(func.count())
-            .select_from(_RA)
+            .select_from(_RR)
+            .join(_RA, _RR.assignment_id == _RA.id)
             .where(
                 _RA.submission_id == entry.id,
                 _RA.tenant_id == entry.tenant_id,
-                _RA.status == "completed",
+                _RA.status.in_(("completed", "cancelled")),
             )
         )
     ).scalar_one()
@@ -839,6 +1073,7 @@ async def author_resubmit(
         )
     note = body.note if body else None
     entry.status = "under_review"
+    entry.rework_due_at = None
     # 补材料后重投：回到基础检查队列，而不是直接进入已送互评状态。
     if (entry.triage_status or "") == "materials":
         entry.status = "resubmitted"

@@ -7,6 +7,7 @@ import {
   Clock3,
   History,
   Loader2,
+  Undo2,
   ShieldCheck,
   SlidersHorizontal,
   X,
@@ -73,6 +74,28 @@ interface EventRow {
   note: string | null
   created_at: string
   actor: { username: string; display_name?: string | null } | null
+}
+
+interface PreflightItem {
+  id: number
+  title: string
+  status: string
+  target_status: string
+  will_change: boolean
+  risk_score: number
+}
+
+interface PreflightResult {
+  count: number
+  action: DecisionAction
+  will_change_count: number
+  unchanged_count: number
+  items: PreflightItem[]
+}
+
+interface BatchRecord {
+  batchId: string
+  count: number
 }
 
 type StatusFilter = 'manual_review' | 'changes_requested' | 'rejected' | 'all'
@@ -144,6 +167,32 @@ export default function ForumModerationPage({ highlightTopicId }: { highlightTop
   const [note, setNote] = useState('')
   const [historyId, setHistoryId] = useState<number | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [preflight, setPreflight] = useState<
+    { ids: number[]; action: DecisionAction; result: PreflightResult } | null
+  >(null)
+  const [lastBatch, setLastBatch] = useState<BatchRecord | null>(null)
+  const [feedbackTarget, setFeedbackTarget] = useState<QueueItem | null>(null)
+  const [feedbackVerdict, setFeedbackVerdict] = useState<'false_positive' | 'correct'>('false_positive')
+  const [feedbackNote, setFeedbackNote] = useState('')
+
+  const insightsQ = useQuery({
+    queryKey: ['admin', 'forum-moderation', 'insights'],
+    queryFn: async () =>
+      (
+        await api.get<{
+          days: number
+          decisions: Record<string, number>
+          feedback: Record<string, number>
+          false_positive_rate: number
+          signals: Array<{
+            code: string
+            hits: number
+            false_positive: number
+            false_positive_rate: number
+          }>
+        }>('/forum/moderation/insights', { params: { days: 30 } })
+      ).data,
+  })
 
   const statsQ = useQuery({
     queryKey: ['admin', 'forum-moderation', 'stats'],
@@ -183,17 +232,75 @@ export default function ForumModerationPage({ highlightTopicId }: { highlightTop
       if (ids.length === 1) {
         return (await api.post(`/forum/moderation/topics/${ids[0]}/decision`, { action, note: decisionNote })).data
       }
-      return (await api.post('/forum/moderation/batch', { topic_ids: ids, action, note: decisionNote })).data
+      return (await api.post<{ count: number; batch_id: string }>('/forum/moderation/batch', {
+        topic_ids: ids,
+        action,
+        note: decisionNote,
+      })).data
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       toast.success(actionDialog?.action === 'approve' ? '已通过核验并公开' : '已记录处理结果')
+      if (variables.ids.length > 1 && 'batch_id' in data) {
+        setLastBatch({ batchId: data.batch_id, count: data.count })
+      }
       setActionDialog(null)
       setNote('')
+      setPreflight(null)
       setSelected([])
       void qc.invalidateQueries({ queryKey: ['admin', 'forum-moderation'] })
       void qc.invalidateQueries({ queryKey: ['forum'] })
     },
     onError: (err) => toast.error(extractError(err, '处理失败，可稍后重试')),
+  })
+
+  const preflightMut = useMutation({
+    mutationFn: async (input: { ids: number[]; action: DecisionAction; note: string }) =>
+      (
+        await api.post<PreflightResult>('/forum/moderation/batch/preflight', {
+          topic_ids: input.ids,
+          action: input.action,
+          note: input.note,
+        })
+      ).data,
+    onSuccess: (result, variables) => {
+      setPreflight({ ids: variables.ids, action: variables.action, result })
+    },
+    onError: (err) => toast.error(extractError(err, '预检失败')),
+  })
+
+  const feedbackMut = useMutation({
+    mutationFn: async (input: {
+      topicId: number
+      verdict: 'false_positive' | 'correct'
+      note: string
+      signalCode?: string | null
+    }) =>
+      (
+        await api.post(`/forum/moderation/topics/${input.topicId}/feedback`, {
+          verdict: input.verdict,
+          note: input.note,
+          ...(input.signalCode ? { signal_code: input.signalCode } : {}),
+        })
+      ).data,
+    onSuccess: () => {
+      toast.success('误判反馈已记录，会进入规则命中率统计')
+      setFeedbackTarget(null)
+      setFeedbackNote('')
+      void qc.invalidateQueries({ queryKey: ['admin', 'forum-moderation', 'insights'] })
+    },
+    onError: (err) => toast.error(extractError(err, '反馈记录失败')),
+  })
+
+  const undoMut = useMutation({
+    mutationFn: async (batchId: string) =>
+      (await api.post<{ restored: number }>(`/forum/moderation/batch/${batchId}/undo`)).data,
+    onSuccess: (data) => {
+      toast.success(data.restored > 0 ? `已撤销 ${data.restored} 条处置` : '可撤销窗口内没有可恢复的条目')
+      setLastBatch(null)
+      void qc.invalidateQueries({ queryKey: ['admin', 'forum-moderation'] })
+      void qc.invalidateQueries({ queryKey: ['forum'] })
+    },
+    onError: (err) => toast.error(extractError(err, '撤销失败')),
   })
 
   const settingsMut = useMutation({
@@ -224,8 +331,16 @@ export default function ForumModerationPage({ highlightTopicId }: { highlightTop
   const openAction = (action: DecisionAction, ids: number[]) => {
     if (ids.length === 0) return
     setNote('')
+    setPreflight(null)
     setActionDialog({ action, ids })
   }
+
+  const preflightReady =
+    actionDialog !== null &&
+    preflight !== null &&
+    preflight.action === actionDialog.action &&
+    preflight.ids.length === actionDialog.ids.length &&
+    preflight.ids.every((id, index) => id === actionDialog.ids[index])
 
   return (
     <div>
@@ -261,12 +376,62 @@ export default function ForumModerationPage({ highlightTopicId }: { highlightTop
         ))}
       </div>
 
+      {insightsQ.data ? (
+        <Card className="mb-3">
+          <CardContent className="p-3 text-xs">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              <span className="font-medium">近 30 天规则命中</span>
+              <span className="text-muted-foreground">
+                通过 {insightsQ.data.decisions.approve ?? 0} · 要求修改{' '}
+                {insightsQ.data.decisions.changes ?? 0} · 不通过{' '}
+                {insightsQ.data.decisions.reject ?? 0}
+              </span>
+              <span className={insightsQ.data.false_positive_rate >= 15 ? 'font-medium text-amber-700' : ''}>
+                误判率 {insightsQ.data.false_positive_rate}%
+              </span>
+            </div>
+            {insightsQ.data.signals.length > 0 ? (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {insightsQ.data.signals.slice(0, 6).map((signal) => (
+                  <Badge key={signal.code} variant="outline" className="text-[10px]">
+                    {signal.code} · 命中 {signal.hits} · 误判 {signal.false_positive}（
+                    {signal.false_positive_rate}%）
+                  </Badge>
+                ))}
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
+
       {highlightTopicId ? (
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-primary/25 bg-primary/5 px-3 py-2 text-xs">
           <span>正在定位主题帖 #{highlightTopicId} 的核验记录；处置完成后可继续浏览全部队列。</span>
           <Button size="sm" variant="ghost" onClick={() => window.location.assign('/admin/content?section=moderation')}>
             查看全部队列
           </Button>
+        </div>
+      ) : null}
+
+      {lastBatch ? (
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-xs">
+          <span>
+            刚才批量处理了 {lastBatch.count} 条 · 批次 {lastBatch.batchId} · 10 分钟内可补偿撤销
+          </span>
+          <div className="flex gap-1">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={undoMut.isPending}
+              onClick={() => undoMut.mutate(lastBatch.batchId)}
+            >
+              {undoMut.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Undo2 className="h-3.5 w-3.5" />}
+              撤销这批
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setLastBatch(null)}>
+              收起
+            </Button>
+          </div>
         </div>
       ) : null}
 
@@ -398,6 +563,18 @@ export default function ForumModerationPage({ highlightTopicId }: { highlightTop
                     <Button size="sm" variant="ghost" className="text-destructive" onClick={() => openAction('reject', [row.id])}>
                       不通过
                     </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 px-1 text-[11px] text-muted-foreground"
+                      onClick={() => {
+                        setFeedbackVerdict('false_positive')
+                        setFeedbackNote('')
+                        setFeedbackTarget(row)
+                      }}
+                    >
+                      误判反馈
+                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -433,6 +610,67 @@ export default function ForumModerationPage({ highlightTopicId }: { highlightTop
                 {ACTION_COPY[actionDialog.action].hint}
                 {actionDialog.ids.length > 1 ? ` 本次将处理 ${actionDialog.ids.length} 条。` : ''}
               </p>
+              {actionDialog.ids.length > 1 ? (
+                <div className="rounded-lg border bg-muted/20 p-2.5 text-xs">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-medium">批量预检</span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={
+                        preflightMut.isPending ||
+                        (actionDialog.action !== 'approve' && note.trim().length < 4)
+                      }
+                      onClick={() =>
+                        preflightMut.mutate({
+                          ids: actionDialog.ids,
+                          action: actionDialog.action,
+                          note: note.trim(),
+                        })
+                      }
+                    >
+                      {preflightMut.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                      {preflightReady ? '重新预检' : `预检这 ${actionDialog.ids.length} 条`}
+                    </Button>
+                  </div>
+                  {preflightReady && preflight ? (
+                    <div className="mt-2 space-y-1">
+                      <p>
+                        将改变 <strong>{preflight.result.will_change_count}</strong> 条；已是目标状态、不会再变{' '}
+                        <strong>{preflight.result.unchanged_count}</strong> 条。
+                      </p>
+                      <ul className="max-h-32 space-y-0.5 overflow-y-auto">
+                        {preflight.result.items.slice(0, 20).map((item) => (
+                          <li key={item.id} className="flex items-center gap-1.5">
+                            <Badge
+                              variant="outline"
+                              className={item.will_change ? 'border-sky-400' : 'border-muted text-muted-foreground'}
+                            >
+                              {item.will_change ? '将处理' : '跳过'}
+                            </Badge>
+                            <span className="truncate">
+                              #{item.id} {item.title}
+                            </span>
+                            <span className="ml-auto shrink-0 text-muted-foreground">
+                              {MODERATION_STATUS_LABEL[item.status] ?? item.status} →{' '}
+                              {MODERATION_STATUS_LABEL[item.target_status] ?? item.target_status}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                      {preflight.result.items.length > 20 ? (
+                        <p className="text-muted-foreground">
+                          另有 {preflight.result.items.length - 20} 条未展开。
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-muted-foreground">
+                      先预检，确认这批会影响哪些帖子；预检不写任何处置，也不会通知作者。
+                    </p>
+                  )}
+                </div>
+              ) : null}
               <div>
                 <Label htmlFor="moderation-note">
                   处理说明{actionDialog.action === 'approve' ? '（可选）' : '（至少 4 个字）'}
@@ -449,11 +687,74 @@ export default function ForumModerationPage({ highlightTopicId }: { highlightTop
               <div className="flex justify-end gap-2">
                 <Button variant="ghost" onClick={() => setActionDialog(null)}>取消</Button>
                 <Button
-                  disabled={decisionMut.isPending || (actionDialog.action !== 'approve' && note.trim().length < 4)}
+                  disabled={
+                    decisionMut.isPending ||
+                    (actionDialog.action !== 'approve' && note.trim().length < 4) ||
+                    (actionDialog.ids.length > 1 && !preflightReady)
+                  }
                   onClick={() => decisionMut.mutate({ action: actionDialog.action, ids: actionDialog.ids, note: note.trim() })}
                 >
                   {decisionMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                   {ACTION_COPY[actionDialog.action].button}
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={feedbackTarget !== null} onOpenChange={(open) => { if (!open) setFeedbackTarget(null) }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>审核误判反馈</DialogTitle>
+          </DialogHeader>
+          {feedbackTarget ? (
+            <div className="space-y-3 text-sm">
+              <p className="text-muted-foreground">
+                #{feedbackTarget.id} {feedbackTarget.title}
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant={feedbackVerdict === 'false_positive' ? 'default' : 'outline'}
+                  onClick={() => setFeedbackVerdict('false_positive')}
+                >
+                  规则误报
+                </Button>
+                <Button
+                  size="sm"
+                  variant={feedbackVerdict === 'correct' ? 'default' : 'outline'}
+                  onClick={() => setFeedbackVerdict('correct')}
+                >
+                  命中正确
+                </Button>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="feedback-note">说明（可选）</Label>
+                <Textarea
+                  id="feedback-note"
+                  rows={3}
+                  value={feedbackNote}
+                  onChange={(e) => setFeedbackNote(e.target.value.slice(0, 1000))}
+                  placeholder="例如：只是正常讨论方法，不含攻击；误判原因是“对立表述”。"
+                />
+              </div>
+              <div className="flex justify-end gap-2 border-t pt-3">
+                <Button variant="outline" onClick={() => setFeedbackTarget(null)}>
+                  取消
+                </Button>
+                <Button
+                  disabled={feedbackMut.isPending}
+                  onClick={() =>
+                    feedbackMut.mutate({
+                      topicId: feedbackTarget.id,
+                      verdict: feedbackVerdict,
+                      note: feedbackNote.trim(),
+                      signalCode: feedbackTarget.moderation_signals[0]?.code,
+                    })
+                  }
+                >
+                  {feedbackMut.isPending ? '记录中…' : '记录反馈'}
                 </Button>
               </div>
             </div>

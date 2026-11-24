@@ -15,9 +15,11 @@ import os
 import re
 import tempfile
 import time
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
+from zoneinfo import ZoneInfo
 
 from fastapi import Depends, File, HTTPException, Query, Request, Response, UploadFile, status
 from fastapi.responses import RedirectResponse, StreamingResponse
@@ -37,7 +39,7 @@ from app.domain.submission._helpers import _try_delete_storage
 from app.interfaces.http.submission.responses import _get_or_404, _to_response
 from app.interfaces.http.submission.routes import router
 from app.interfaces.http.submission.schemas import SubmissionResponse
-from app.models import User
+from app.models import AuditLog, User
 
 # 扩展名白名单：字母数字加点，最多 12 字符（``.markdown`` 9 个）。
 # 严格到这种程度是刻意的——这个值会进入存储 key 和下载响应头，
@@ -113,6 +115,57 @@ _ALLOWED_UPLOAD_MIMES = frozenset(
 # 单文件 50 MB 上限：足够容纳 300 dpi 图集与源码包，又不会让上传走满
 # 整个请求超时窗口。前端从 /capabilities 读取同一数值，避免两边写死不一致。
 _MAX_UPLOAD_BYTES = 50 * 1024 * 1024  # 50 MB
+
+# 每作者的自然日上传配额。限制的是“上传动作”而不是作品数：替换文件、
+# 重投附件都算一次，防止有人把存储当网盘反复覆盖。数值按普通作者一
+# 天正常投稿 + 两三次换稿估算，明显高于正常使用，但能挡住批量刷盘。
+_UPLOAD_DAILY_FILE_LIMIT = 20
+_UPLOAD_DAILY_BYTES_LIMIT = 250 * 1024 * 1024  # 250 MB / 自然日
+
+
+async def _enforce_upload_quota(
+    db: AsyncSession, current_user: User, extra_bytes: int
+) -> None:
+    """在落盘前检查作者当天的上传次数与字节数。
+
+    只统计成功落盘的上传审计（``submission.file_upload``），失败/被拒的
+    上传不占额度。按 Asia/Shanghai 自然日切分，和站内其他“今日”口径一致。
+    """
+    local_now = datetime.now(ZoneInfo("Asia/Shanghai"))
+    day_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(UTC)
+    rows = (
+        (
+            await db.execute(
+                select(AuditLog).where(
+                    AuditLog.tenant_id == current_user.tenant_id,
+                    AuditLog.actor_user_id == current_user.id,
+                    AuditLog.action == "submission.file_upload",
+                    AuditLog.created_at >= day_start,
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+    used_files = len(rows)
+    used_bytes = sum(int((row.payload or {}).get("bytes") or 0) for row in rows)
+    if used_files >= _UPLOAD_DAILY_FILE_LIMIT:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=(
+                f"今日上传次数已达上限（{_UPLOAD_DAILY_FILE_LIMIT} 次/日）。"
+                "请明天再试，或把多份材料合并为一个压缩包；已在站内的稿件不受影响。"
+            ),
+        )
+    if used_bytes + extra_bytes > _UPLOAD_DAILY_BYTES_LIMIT:
+        remaining_mb = max(0, (_UPLOAD_DAILY_BYTES_LIMIT - used_bytes) // (1024 * 1024))
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=(
+                f"今日上传流量不足：剩余约 {remaining_mb} MB，本次文件 {extra_bytes // (1024 * 1024)} MB。"
+                "请把大文件放网盘/仓库后在表单里贴链接。"
+            ),
+        )
 
 # 前端 accept 属性与错误文案共用这份扩展名清单（由 /capabilities 下发）。
 _ALLOWED_UPLOAD_EXTENSIONS = (
@@ -435,6 +488,8 @@ async def upload_submission_file(
                 ),
             )
 
+    await _enforce_upload_quota(db, current_user, len(contents))
+
     # 存储 key：{tenant_id}/{submission_id}/{uuid}{ext}
     # 用 uuid 防文件名碰撞 + 路径穿越；本地/S3 后端共用同一 key 形状，
     # 切换后端无需迁移数据库。
@@ -508,6 +563,16 @@ async def upload_submission_file(
             if clc.status == "needs_correction":
                 warnings.append(f"中图分类号 {clc.code} 格式待校正")
 
+    db.add(
+        AuditLog(
+            tenant_id=entry.tenant_id,
+            actor_user_id=current_user.id,
+            action="submission.file_upload",
+            target_type="submission",
+            target_id=str(entry.id),
+            payload={"bytes": len(contents), "filename": original_filename},
+        )
+    )
     await db.commit()
     await db.refresh(entry)
     # 替换式上传会覆盖 file_path，被替换的旧文件（及旧 md/侧car）若不清会变成孤儿对象。

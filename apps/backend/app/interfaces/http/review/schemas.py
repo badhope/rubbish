@@ -89,6 +89,10 @@ class ReviewReportResponse(BaseModel):
     reviewer_username: str | None = None
     # 互评附件元数据：filename / path / content_type / size。
     attachments: list[dict[str, Any]] = Field(default_factory=list)
+    # 第几轮互评。退回/重投后旧报告仍保留，编辑按轮次分组查看。
+    round: int = 1
+    # 归档报告对应的 assignment 状态（completed/cancelled）。
+    assignment_status: str = "completed"
     submitted_at: datetime
 
 

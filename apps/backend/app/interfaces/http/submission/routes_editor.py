@@ -6,7 +6,9 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from types import SimpleNamespace
+from uuid import uuid4
 
 from fastapi import Depends, HTTPException, Query, status
 from sqlalchemy import func, or_, select, update
@@ -242,6 +244,9 @@ async def triage_submission(
                     ),
                     note=note,
                     submission_id=entry.id,
+                    db=db,
+                    tenant_id=entry.tenant_id,
+                    event_type="triage_decision",
                 )
         except Exception:
             logger.warning("triage_email_dispatch_failed", submission_id=entry.id, exc_info=True)
@@ -501,7 +506,7 @@ async def list_submissions(
     status_filter: str = Query(
         default=None,
         alias="status",
-        pattern=r"^(pending|under_review|major_revision|minor_revision|resubmitted|rework_requested|accepted|approved|rejected)$",
+        pattern=r"^(pending|under_review|major_revision|minor_revision|resubmitted|rework_requested|accepted|approved|rejected|withdrawn)$",
     ),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
@@ -846,7 +851,13 @@ async def assign_reviewer(
     # 邮件通知互评成员（best-effort：未配置 SMTP 时静默跳过，不影响指派）
     from app.domain.submission.review_reminders import send_assignment_email
 
-    await send_assignment_email(reviewer, submission_title=entry.title, assignment_id=assignment.id)
+    await send_assignment_email(
+        reviewer,
+        submission_title=entry.title,
+        assignment_id=assignment.id,
+        db=db,
+        tenant_id=entry.tenant_id,
+    )
     return AssignmentResponse(
         id=assignment.id,
         submission_id=assignment.submission_id,
@@ -1024,19 +1035,28 @@ async def list_review_reports(
 
     rows = (
         await db.execute(
-            select(ReviewReport, ReviewAssignment.reviewer_id, User.username)
+            select(
+                ReviewReport,
+                ReviewAssignment.reviewer_id,
+                User.username,
+                ReviewAssignment.round,
+                ReviewAssignment.status,
+            )
             .join(ReviewAssignment, ReviewReport.assignment_id == ReviewAssignment.id)
             .join(User, User.id == ReviewAssignment.reviewer_id)
             .where(
                 ReviewAssignment.submission_id == entry.id,
                 ReviewReport.tenant_id == entry.tenant_id,
-                ReviewAssignment.status == "completed",
+                # 退回/重投会把旧 assignment 置 cancelled，但报告仍是历史证据。
+                # 只过滤没有报告的取消任务，不能把整轮旧意见从编辑面板抹掉。
+                ReviewAssignment.status.in_(("completed", "cancelled")),
             )
+            .order_by(ReviewAssignment.round, ReviewReport.submitted_at)
         )
     ).all()
 
     out: list[ReviewReportResponse] = []
-    for r, reviewer_id, reviewer_username in rows:
+    for r, reviewer_id, reviewer_username, assignment_round, assignment_status in rows:
         # 互评成员（非编辑非作者）：只能看**自己**那一份报告。
         # 修复前的代码让任何有 assignment 的人落进 else 分支，把该作品全部
         # 已完成报告的 comments_to_editor（编辑机密）原样返回——甚至包括
@@ -1054,6 +1074,8 @@ async def list_review_reports(
                     scores=r.scores,
                     comments_to_editor=None,
                     comments_to_author=r.comments_to_author,
+                    round=assignment_round or 1,
+                    assignment_status=assignment_status,
                     submitted_at=r.submitted_at,
                 )
             )
@@ -1069,6 +1091,8 @@ async def list_review_reports(
                     attachments=r.attachments or [],
                     reviewer_id=reviewer_id,
                     reviewer_username=reviewer_username,
+                    round=assignment_round or 1,
+                    assignment_status=assignment_status,
                     submitted_at=r.submitted_at,
                 )
             )
@@ -1468,6 +1492,8 @@ async def editor_decision(
                 decision=decision,
                 note=body.editor_note,
                 submission_id=entry.id,
+                db=db,
+                tenant_id=entry.tenant_id,
             )
     except Exception:
         logger.warning("decision_email_dispatch_failed", submission_id=entry.id, exc_info=True)
@@ -1503,7 +1529,7 @@ async def request_rework(
     entry = await _get_or_404(db, submission_id)
     if entry.submitted_by == current_user.id:
         raise HTTPException(status_code=403, detail="Cannot request rework on own submission")
-    if entry.status in ("accepted", "approved", "rejected"):
+    if entry.status in ("accepted", "approved", "rejected", "withdrawn"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot request rework in terminal status '{entry.status}'",
@@ -1511,6 +1537,25 @@ async def request_rework(
 
     # 作者可操作的待修改状态：能改内容、能上传修订稿、能显式重交。
     entry.status = "rework_requested"
+    due_at = utcnow() + timedelta(days=body.due_days)
+    entry.rework_due_at = due_at
+    requirements = [
+        {
+            "id": uuid4().hex[:10],
+            "text": " ".join(str(r).split()).strip()[:2000],
+            "status": "pending",
+            "response": "",
+            "updated_at": None,
+        }
+        for r in body.requirements
+        if " ".join(str(r).split()).strip()
+    ]
+    if len(requirements) < 3:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="打回必须列出至少 3 条具体修改要求——只说'不合格'对作者没有帮助。",
+        )
+    entry.rework_requirements = requirements
     requirements_text = "\n".join(f"{i + 1}. {r}" for i, r in enumerate(body.requirements))
     # 要求必须落到作者详情页，而不是只躺在通知里：通知被读掉或翻走之后，
     # 作者仍需要能对着「修改作品」逐条核对。详情页展示 editor_note。
@@ -1572,6 +1617,7 @@ async def request_rework(
         body=(
             f"作品 #{entry.id} 已退回修改，当前状态是「待修改」。\n"
             f"修改要求：\n{requirements_text}\n\n"
+            f"修回截止：{due_at.date().isoformat()}（{body.due_days} 天）。逾期后会进入编辑队列告警。\n"
             "处理方式：在「我的作品」打开这件作品 → 点「修改作品」按意见修改并保存 "
             "→ 回到详情点「重新提交修改稿」。重交后才会重新进入互评，不会自动通过。"
         ),
@@ -1588,6 +1634,8 @@ async def request_rework(
             target_id=str(entry.id),
             payload={
                 "requirements": body.requirements,
+                "requirements_structured": requirements,
+                "due_at": due_at.isoformat(),
                 "resulting_status": "rework_requested",
                 "assignments_cancelled": cancelled_assignments,
                 "reviewers_notified": len(open_reviewer_ids),
@@ -1608,8 +1656,13 @@ async def request_rework(
                 author,
                 submission_title=entry.title,
                 decision="rework_requested",
-                note=entry.editor_note,
+                note=(
+                    f"{entry.editor_note}\n\n"
+                    f"修回截止：{due_at.date().isoformat()}（{body.due_days} 天）"
+                ),
                 submission_id=entry.id,
+                db=db,
+                tenant_id=entry.tenant_id,
             )
     except Exception:
         logger.warning("rework_email_dispatch_failed", submission_id=entry.id, exc_info=True)

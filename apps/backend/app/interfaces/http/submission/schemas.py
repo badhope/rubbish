@@ -33,6 +33,8 @@ SubmissionStatus = Literal[
     "rework_requested",
     "accepted",
     "rejected",
+    # 作者在终局决定前主动撤稿；记录、版本与互评历史全部保留。
+    "withdrawn",
     # 向后兼容别名（review 端点允许 approved 作为 accepted 的同义词写入）
     "approved",
 ]
@@ -218,6 +220,28 @@ class ReworkRequest(BaseModel):
 
     requirements: list[str] = Field(min_length=3, max_length=20)
     note: str | None = Field(default=None, max_length=5000)
+    # 作者修回期限。默认 14 天；到期前 3 天自动提醒，逾期进入编辑队列告警。
+    due_days: int = Field(default=14, ge=3, le=90)
+
+
+class WithdrawRequest(BaseModel):
+    """Body for POST /submissions/{id}/withdraw — author stops the workflow."""
+
+    reason: str = Field(min_length=4, max_length=2000)
+
+
+class ReworkRequirementUpdate(BaseModel):
+    """One author response to one editor requirement."""
+
+    requirement_id: str = Field(min_length=1, max_length=40)
+    status: Literal["pending", "addressed", "disputed"] = "pending"
+    note: str = Field(default="", max_length=2000)
+
+
+class ReworkResponseUpdate(BaseModel):
+    """Author's per-requirement response; replaces the item statuses atomically."""
+
+    items: list[ReworkRequirementUpdate] = Field(default_factory=list, max_length=30)
 
 
 class WaiveReviewRequest(BaseModel):
@@ -283,6 +307,11 @@ class SubmissionResponse(BaseModel):
     status: SubmissionStatus
     admin_note: str | None = None
     editor_note: str | None = None
+    # 结构化修改要求与作者逐条回应；旧数据为空时前端回退 editor_note。
+    rework_requirements: list[dict[str, Any]] = Field(default_factory=list)
+    rework_due_at: datetime | None = None
+    withdrawn_at: datetime | None = None
+    withdrawn_reason: str | None = None
     # 作者逐条回复互评成员；与版本修改说明分开，编辑可见。
     author_response: str | None = None
     author_response_at: datetime | None = None
@@ -494,6 +523,8 @@ __all__ = [
     "SubmissionCreate",
     "SubmissionDecision",
     "SubmissionDraftPayload",
+    "ReworkResponseUpdate",
+    "WithdrawRequest",
     "SubmissionDraftResponse",
     "SubmissionDraftState",
     "SubmissionListResponse",

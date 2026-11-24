@@ -24,7 +24,9 @@ from app.core.tenant import TENANT_CONTEXT_VAR
 from app.core.time import utcnow
 from app.domain.release.alerts import alert_release_failure
 from app.domain.release.gate import check_issue
+from app.domain.follows.fanout import notify_publication
 from app.domain.release.models import ReleaseManifest
+from app.domain.catalog.models import Resource
 from app.models import AuditLog, Tenant
 
 logger = get_logger("rubbish.release_scheduler")
@@ -133,6 +135,26 @@ async def publish_due_manifests() -> dict[str, int]:
                     continue
                 manifest.status = "published"
                 manifest.published_at = utcnow()
+                resources = list(
+                    (
+                        await session.execute(
+                            select(Resource).where(
+                                Resource.tenant_id == tenant_id,
+                                Resource.volume == manifest.volume,
+                                Resource.issue == manifest.issue,
+                            )
+                        )
+                    )
+                    .scalars()
+                    .all()
+                )
+                await notify_publication(
+                    session,
+                    tenant_id=tenant_id,
+                    resources=resources,
+                    notify_authors=True,
+                    event_type="published",
+                )
                 session.add(
                     AuditLog(
                         tenant_id=tenant_id,

@@ -48,6 +48,7 @@ from app.core.time import utcnow
 from app.domain.catalog.engagement import compute_engagement
 from app.domain.catalog.genre import classify_essay_genre
 from app.domain.catalog.journal import sync_resource_issue
+from app.domain.follows.fanout import notify_publication
 from app.domain.catalog.models import (
     Appeal,
     AuthorClaim,
@@ -2282,6 +2283,13 @@ async def create_resource_public_event(
             target_id=str(resource_id),
             payload={"event_id": event.id, "title": body.title.strip()},
         )
+    )
+    await notify_publication(
+        db,
+        tenant_id=tenant_id,
+        resources=[resource],
+        notify_authors=True,
+        event_type=body.event_type,
     )
     await db.commit()
     await db.refresh(event)

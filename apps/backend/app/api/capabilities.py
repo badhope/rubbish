@@ -40,6 +40,8 @@ class CapabilitiesResponse(BaseModel):
     # 后端改规则时前端自动跟随。
     upload_max_bytes: int
     upload_extensions: list[str]
+    upload_daily_file_limit: int
+    upload_daily_bytes_limit: int
 
 
 @router.get("", response_model=CapabilitiesResponse)
@@ -57,6 +59,8 @@ async def get_capabilities(
     from app.interfaces.http.submission.routes_files import (
         _ALLOWED_UPLOAD_EXTENSIONS,
         _MAX_UPLOAD_BYTES,
+        _UPLOAD_DAILY_BYTES_LIMIT,
+        _UPLOAD_DAILY_FILE_LIMIT,
     )
 
     sender = get_email_sender()
@@ -85,6 +89,8 @@ async def get_capabilities(
         doi_author_entry_enabled=flags["doi_author_entry_enabled"],
         upload_max_bytes=_MAX_UPLOAD_BYTES,
         upload_extensions=list(_ALLOWED_UPLOAD_EXTENSIONS),
+        upload_daily_file_limit=_UPLOAD_DAILY_FILE_LIMIT,
+        upload_daily_bytes_limit=_UPLOAD_DAILY_BYTES_LIMIT,
     )
 
 

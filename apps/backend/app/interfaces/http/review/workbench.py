@@ -332,6 +332,7 @@ async def editor_workbench(
             "editor_note": s.editor_note,
             "author_response": s.author_response,
             "author_response_at": s.author_response_at,
+            "rework_due_at": s.rework_due_at,
             "interest_count": len(interest_by_sub.get(s.id, [])),
             "interesters": interest_by_sub.get(s.id, [])[:5],
             "active_count": len(active),
@@ -514,7 +515,7 @@ async def search_editor_reports(
         .where(
             ReviewReport.tenant_id == tenant_id,
             ReviewAssignment.tenant_id == tenant_id,
-            ReviewAssignment.status == "completed",
+            ReviewAssignment.status.in_(("completed", "cancelled")),
         )
     )
     term = q.strip()
@@ -543,6 +544,7 @@ async def search_editor_reports(
                 "reviewer_id": assignment.reviewer_id,
                 "reviewer_username": username,
                 "round": assignment.round or 1,
+                "assignment_status": assignment.status,
                 "slot": assignment.slot,
                 "recommendation": report.recommendation,
                 "score": score,
@@ -609,10 +611,38 @@ async def editor_email_digest_records(
                 "status": r.status,
                 "related_type": r.related_type,
                 "related_id": r.related_id,
+                "attempts": r.attempts,
+                "last_error": r.last_error,
+                "next_retry_at": r.next_retry_at,
+                "sent_at": r.sent_at,
+                "channel": r.channel,
+                "can_retry": r.status in ("failed", "skipped_no_smtp"),
                 "created_at": r.created_at,
             }
             for r in rows
         ],
+    }
+
+
+@router.post("/editor/workbench/email-digest/records/{record_id}/retry")
+async def retry_email_digest_record(
+    record_id: int,
+    current_user: User = Depends(require_editor),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """Manual resend for a failed or SMTP-skipped email record."""
+    from app.domain.notifications.email_outbox import retry_record
+
+    try:
+        row = await retry_record(db, tenant_id=require_tenant_id(), record_id=record_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail="邮件记录不存在") from exc
+    return {
+        "id": row.id,
+        "status": row.status,
+        "attempts": row.attempts,
+        "last_error": row.last_error,
+        "sent_at": row.sent_at,
     }
 
 

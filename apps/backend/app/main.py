@@ -46,17 +46,19 @@ from app.api import (
     webauthn,
 )
 from app.api.oidc import router as oidc_router
+from app.core.auth_wall import AuthWallMiddleware
 from app.core.bootstrap import run_bootstrap
 from app.core.config import settings
 from app.core.db import check_db_connection, dispose_engine, get_db
 from app.core.logging import configure_logging, get_logger
+from app.core.mainland_gate import MainlandGateMiddleware
 from app.core.modules import load_all, registry
 from app.core.monitoring import init_monitoring
-from app.core.auth_wall import AuthWallMiddleware
-from app.core.mainland_gate import MainlandGateMiddleware
-from app.core.region_access import RegionAccessMiddleware
 from app.core.rate_limit_store import close_rate_limiter_store
+from app.core.region_access import RegionAccessMiddleware
 from app.core.tenant import TenantContextMiddleware
+from app.domain.release.scheduler import start_release_scheduler, stop_release_scheduler
+from app.domain.workflow_scheduler import start_workflow_scheduler, stop_workflow_scheduler
 from app.middleware.csrf import CSRFMiddleware
 from app.middleware.metrics import HTTPMetricsMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
@@ -135,10 +137,17 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         if settings.is_production:
             await _warn_if_db_role_bypasses_rls()
         await run_bootstrap()
+        # 这两个调度器此前只定义了函数、没有在 lifespan 里启动；生产上
+        # “定时发布”和“逾期提醒”因此永远不会触发。现在统一启动，并在
+        # 退出时取消，避免测试进程残留后台任务。
+        start_release_scheduler()
+        start_workflow_scheduler()
 
     yield
 
     if not settings.is_test:
+        await stop_workflow_scheduler()
+        await stop_release_scheduler()
         # Close the rate-limiter store (releases the Redis client) before
         # tearing down the engine / other resources that may depend on it.
         await close_rate_limiter_store()

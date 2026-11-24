@@ -15,6 +15,7 @@ ALL_PREF_KEYS = {
     "in_app_review",
     "in_app_submission",
     "in_app_release",
+    "in_app_publication",
     "email_comment",
     "email_forum",
     "email_review",
@@ -54,6 +55,7 @@ async def test_notification_preferences_expose_all_ten_keys(
     assert data["email_review"] is True
     assert data["email_submission"] is True
     assert data["email_release"] is True
+    assert data["in_app_publication"] is True
 
 
 @pytest.mark.asyncio

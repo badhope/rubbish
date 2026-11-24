@@ -48,6 +48,7 @@ import type {
   ResourceResponse,
   ResourceStats,
   ResourceUpdate,
+  ResourceAnalytics,
   ReviewMatrixResponse,
   SiteSettingsResponse,
   ReviewDraftResponse,
@@ -63,6 +64,7 @@ import type {
   SubmissionOverview,
   SubmissionResponse,
   SubmissionUpdate,
+  SubmissionVersionDiff,
   SubmissionVersionListResponse,
   SubmissionVersionResponse,
   SubscriptionStatusResponse,
@@ -924,6 +926,58 @@ export function useSubmissionVersions(id: number, enabled = true) {
         )
       ).data.data,
     enabled: enabled && id > 0,
+  })
+}
+
+// 作者本人单篇阅读趋势（聚合，不含访客身份）
+export function useResourceAnalytics(resourceId: number, enabled = true) {
+  return useQuery<ResourceAnalytics>({
+    queryKey: ['me', 'resources', resourceId, 'analytics'],
+    queryFn: async () =>
+      (await api.get<ResourceAnalytics>(`/me/resources/${resourceId}/analytics`)).data,
+    enabled: enabled && resourceId > 0,
+  })
+}
+
+// 指定版本与上一版的正文/题录 diff
+export function useSubmissionVersionDiff(id: number, version: number, enabled = true) {
+  return useQuery<SubmissionVersionDiff>({
+    queryKey: ['submissions', 'version-diff', id, version],
+    queryFn: async () =>
+      (
+        await api.get<SubmissionVersionDiff>(
+          `/submissions/${id}/versions/${version}/diff`,
+        )
+      ).data,
+    enabled: enabled && id > 0 && version > 0,
+  })
+}
+
+export function useSaveReworkResponse() {
+  const qc = useQueryClient()
+  return useMutation<
+    SubmissionResponse,
+    Error,
+    { id: number; items: Array<{ requirement_id: string; status: string; note: string }> }
+  >({
+    mutationFn: async ({ id, items }) =>
+      (await api.put<SubmissionResponse>(`/submissions/${id}/rework-response`, { items })).data,
+    onSuccess: (data, { id }) => {
+      qc.setQueryData(keys.submission.detail(id), data)
+      void qc.invalidateQueries({ queryKey: ['submissions'] })
+    },
+  })
+}
+
+export function useWithdrawSubmission() {
+  const qc = useQueryClient()
+  return useMutation<SubmissionResponse, Error, { id: number; reason: string }>({
+    mutationFn: async ({ id, reason }) =>
+      (await api.post<SubmissionResponse>(`/submissions/${id}/withdraw`, { reason })).data,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['submissions'] })
+      void qc.invalidateQueries({ queryKey: ['notifications'] })
+    },
   })
 }
 
@@ -2140,6 +2194,7 @@ export interface EditorColumnItem {
   editor_note?: string | null
   author_response?: string | null
   author_response_at?: string | null
+  rework_due_at?: string | null
   interest_count?: number
   interesters?: string[]
   assignments?: EditorAssignmentRow[]
@@ -2192,6 +2247,11 @@ export interface EmailDigestRecordRow {
     | 'skipped_user_pref'
   related_type: string | null
   related_id: string | null
+  channel?: string | null
+  attempts?: number
+  last_error?: string | null
+  next_retry_at?: string | null
+  sent_at?: string | null
   created_at: string
 }
 
@@ -2236,6 +2296,21 @@ export function useEditorEmailDigestRecords(opts: { enabled: boolean; status?: s
       )).data
     },
     enabled: opts.enabled,
+  })
+}
+
+export function useRetryEmailDigestRecord() {
+  const qc = useQueryClient()
+  return useMutation<EmailDigestRecordRow, Error, { id: number }>({
+    mutationFn: async ({ id }) =>
+      (
+        await api.post<EmailDigestRecordRow>(
+          `/editor/workbench/email-digest/records/${id}/retry`,
+        )
+      ).data,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['workbench', 'editor', 'email-digest-records'] })
+    },
   })
 }
 

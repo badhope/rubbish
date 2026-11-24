@@ -29,6 +29,7 @@ from app.core.config import settings
 from app.core.db import get_db
 from app.core.time import utcnow
 from app.domain.catalog.models import Issue, Resource, Volume
+from app.domain.follows.fanout import notify_publication
 from app.domain.release.gate import check_issue
 from app.domain.release.models import ReleaseManifest
 from app.models import AuditLog, User
@@ -490,6 +491,14 @@ async def publish_release(
             },
         )
     )
+    if next_status == "published":
+        await notify_publication(
+            db,
+            tenant_id=tenant_id,
+            resources=rows,
+            notify_authors=True,
+            event_type="published",
+        )
     await db.commit()
     await db.refresh(manifest)
     result = _serialize(manifest)
