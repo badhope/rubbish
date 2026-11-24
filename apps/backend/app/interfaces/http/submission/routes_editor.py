@@ -9,7 +9,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from fastapi import Depends, HTTPException, Query, status
-from sqlalchemy import func, select, update
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -490,6 +490,23 @@ async def list_submissions(
     query = select(Submission).where(Submission.tenant_id == tenant_id)
     if status_filter is not None:
         query = query.where(Submission.status == status_filter)
+    if status_filter in ("accepted", "approved"):
+        # 内容台的“已通过”只展示每部作品最近一次通过记录；历史重复提交
+        # 仍在“全部”和详情/版本里可查，避免同一篇文章在列表里出现两三次。
+        query = query.where(
+            or_(
+                Submission.resource_id.is_(None),
+                Submission.id.in_(
+                    select(func.max(Submission.id))
+                    .where(
+                        Submission.tenant_id == tenant_id,
+                        Submission.status.in_(("accepted", "approved")),
+                        Submission.resource_id.is_not(None),
+                    )
+                    .group_by(Submission.resource_id)
+                ),
+            )
+        )
     return await _list_submissions(db, query, page, page_size)
 
 

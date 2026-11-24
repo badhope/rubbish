@@ -459,6 +459,8 @@ class VolumeSummaryList(BaseModel):
 
 class ResourceStats(BaseModel):
     total: int
+    # 仅管理员总览使用：草稿数量单列，不混入 total 的“已公开”口径。
+    draft_total: int = 0
     by_type: dict[str, int]
     # 内容赛道（paper / essay）分布；by_type 是资源形态（paper/book/dataset）。
     by_track: dict[str, int] = {}

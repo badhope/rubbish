@@ -27,12 +27,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import (
     get_current_user,
+    require_editor,
+    require_tenant_id,
     user_has_editor_access,
 )
 from app.core.db import get_db
 from app.core.moderation import rejection_detail
 from app.core.storage import get_storage
 from app.core.time import utcnow
+from app.domain.catalog.models import Resource
 from app.domain.notifications import services as notifications
 from app.domain.submission._helpers import (
     DEFAULT_PAGE_SIZE,
@@ -55,6 +58,7 @@ from app.interfaces.http.submission.schemas import (
     SubmissionDraftResponse,
     SubmissionDraftState,
     SubmissionListResponse,
+    SubmissionOverview,
     SubmissionResponse,
     SubmissionUpdate,
     SubmissionVersionListResponse,
@@ -386,6 +390,71 @@ async def list_my_submissions(
     if status_filter is not None:
         query = query.where(Submission.status == status_filter)
     return await _list_submissions(db, query, page, page_size)
+
+
+@router.get("/overview", response_model=SubmissionOverview)
+async def submission_overview(
+    _: User = Depends(require_editor),
+    db: AsyncSession = Depends(get_db),
+) -> SubmissionOverview:
+    """Return submission-record and unique-work counts for the content desk."""
+    tenant_id = require_tenant_id()
+    status_rows = (
+        await db.execute(
+            select(Submission.status, func.count(Submission.id))
+            .where(Submission.tenant_id == tenant_id)
+            .group_by(Submission.status)
+        )
+    ).all()
+    status_counts = {str(code): int(count) for code, count in status_rows}
+    total = sum(status_counts.values())
+
+    accepted_count = status_counts.get("accepted", 0) + status_counts.get("approved", 0)
+    accepted_resources = int(
+        (
+            await db.execute(
+                select(func.count(func.distinct(Submission.resource_id))).where(
+                    Submission.tenant_id == tenant_id,
+                    Submission.status.in_(("accepted", "approved")),
+                    Submission.resource_id.is_not(None),
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+    resource_total = int(
+        (
+            await db.execute(
+                select(func.count(func.distinct(Submission.resource_id))).where(
+                    Submission.tenant_id == tenant_id,
+                    Submission.resource_id.is_not(None),
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+    resource_status_rows = (
+        await db.execute(
+            select(Resource.publication_status, func.count(func.distinct(Submission.resource_id)))
+            .join(Resource, Resource.id == Submission.resource_id)
+            .where(
+                Submission.tenant_id == tenant_id,
+                Submission.resource_id.is_not(None),
+            )
+            .group_by(Resource.publication_status)
+        )
+    ).all()
+    resource_status = {str(code): int(count) for code, count in resource_status_rows}
+
+    return SubmissionOverview(
+        total=total,
+        status_counts=status_counts,
+        resource_total=resource_total,
+        accepted_resources=accepted_resources,
+        published=resource_status.get("published", 0),
+        draft=resource_status.get("draft", 0),
+        duplicate_accepted=max(accepted_count - accepted_resources, 0),
+    )
 
 
 @router.get("/{submission_id}", response_model=SubmissionResponse)

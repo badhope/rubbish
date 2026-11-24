@@ -17,6 +17,7 @@ export function AdminAnalyticsPanel() {
   const { data: analytics, isLoading: analyticsLoading } = useAdminAnalytics(7)
 
   const records = stats?.total ?? 0
+  const drafts = stats?.draft_total ?? 0
   const reads = stats?.reads_total ?? 0
   const downloads = stats?.downloads_total ?? 0
   const views = analytics?.total ?? 0
@@ -24,9 +25,9 @@ export function AdminAnalyticsPanel() {
 
   const cards = [
     {
-      label: '文章条目',
+      label: '已公开文章',
       value: fmt(records),
-      sub: '已公开的研究文章与自由创作',
+      sub: drafts > 0 ? `另有 ${drafts} 篇草稿，不计入公开` : '研究文章与自由创作',
       icon: BookOpen,
     },
     {

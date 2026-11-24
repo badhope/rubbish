@@ -447,17 +447,21 @@ async def list_resources(
 @router.get("/stats", response_model=ResourceStats)
 async def get_stats(
     db: AsyncSession = Depends(get_db),
-    viewer: User | None = Depends(get_current_user_optional),
     track: str | None = None,
 ) -> ResourceStats:
-    """Aggregate stats: total count + breakdowns by track (paper/essay) and discipline."""
+    """Aggregate public catalog stats.
+
+    This endpoint is used on public pages and on the admin overview. Both must
+    report the same publicly visible set; drafts and scheduled records are
+    exposed separately through ``draft_total`` instead of being mixed into
+    ``total``.
+    """
     tenant_id = require_tenant_id()
     base_filter = Resource.tenant_id == tenant_id
     if track in ("paper", "essay"):
         base_filter = base_filter & (Resource.content_track == track)
-    if not (viewer and viewer.is_admin):
-        for condition in public_conditions():
-            base_filter = base_filter & condition
+    for condition in public_conditions():
+        base_filter = base_filter & condition
     total = (await db.execute(select(func.count(Resource.id)).where(base_filter))).scalar_one()
     by_type_rows = await db.execute(
         select(Resource.type, func.count(Resource.id)).where(base_filter).group_by(Resource.type)
@@ -496,8 +500,19 @@ async def get_stats(
             )
         )
     ).scalar_one()
+    draft_filter = Resource.tenant_id == tenant_id
+    if track in ("paper", "essay"):
+        draft_filter = draft_filter & (Resource.content_track == track)
+    draft_total = (
+        await db.execute(
+            select(func.count(Resource.id)).where(
+                draft_filter & (Resource.publication_status == "draft")
+            )
+        )
+    ).scalar_one()
     return ResourceStats(
         total=total,
+        draft_total=int(draft_total or 0),
         by_type={t: c for t, c in by_type_rows.all()},
         by_track={t: c for t, c in by_track_rows.all() if t},
         by_discipline={d: c for d, c in by_discipline_rows.all()},

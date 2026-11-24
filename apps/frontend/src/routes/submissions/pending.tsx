@@ -29,6 +29,7 @@ import {
   useSetAnonymizedFile,
   useSubmission,
   useSubmissionAssignments,
+  useSubmissionOverview,
   useSubmissionReports,
   useSubmissionVersions,
   useReviewMatrix,
@@ -127,7 +128,7 @@ const STATUS_TABS: { value: StatusTab; label: string }[] = [
   { value: 'major_revision', label: '大改' },
   { value: 'minor_revision', label: '小改' },
   { value: 'resubmitted', label: '修改版' },
-  { value: 'accepted', label: '已公开' },
+  { value: 'accepted', label: '已通过' },
   { value: 'rejected', label: '已不通过' },
 ]
 
@@ -139,7 +140,7 @@ interface PendingSearch {
   submission?: number
 }
 
-function statusBadge(status: string) {
+function statusBadge(status: string, resourcePublicationStatus?: string | null) {
   switch (status) {
     case 'pending':
       return <Badge variant="secondary">待分配</Badge>
@@ -149,9 +150,17 @@ function statusBadge(status: string) {
       return <Badge className="bg-amber-500/15 text-amber-700">大改</Badge>
     case 'minor_revision':
       return <Badge className="bg-yellow-500/15 text-yellow-700">小改</Badge>
+    case 'resubmitted':
+      return <Badge className="bg-primary/15 text-primary">修改版</Badge>
     case 'accepted':
     case 'approved':
-      return <Badge className="bg-emerald-500/15 text-emerald-700">已公开</Badge>
+      if (resourcePublicationStatus === 'draft') {
+        return <Badge className="bg-amber-500/15 text-amber-700">已通过 · 草稿</Badge>
+      }
+      if (resourcePublicationStatus === 'published') {
+        return <Badge className="bg-emerald-500/15 text-emerald-700">已公开</Badge>
+      }
+      return <Badge className="bg-emerald-500/15 text-emerald-700">已通过</Badge>
     case 'rejected':
       return <Badge variant="destructive">已不通过</Badge>
     default:
@@ -237,6 +246,7 @@ function PendingSubmissionsPage() {
   const isChief = isAdmin || (user?.roles ?? []).some((r) => ['editor', 'editor_in_chief'].includes(r))
   const isSectionOnly = !isChief && (user?.roles ?? []).includes('section_editor')
 
+  const { data: overview } = useSubmissionOverview()
   const { data, isLoading, isError, refetch } = useAllSubmissions(
     statusFilter,
     page,
@@ -362,6 +372,26 @@ function PendingSubmissionsPage() {
         }
       />
 
+      {overview && (
+        <div className="mb-4 rounded-lg border border-border/70 bg-muted/30 px-4 py-3">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+            <span><strong className="font-semibold tabular-nums">{overview.resource_total}</strong> 部作品</span>
+            <span className="text-emerald-700 dark:text-emerald-400">{overview.published} 已公开</span>
+            <span className="text-amber-700 dark:text-amber-400">{overview.draft} 草稿</span>
+            <span className="text-muted-foreground">{overview.total} 条投稿记录</span>
+            {overview.duplicate_accepted > 0 && (
+              <span className="text-muted-foreground">
+                “已通过”已折叠 {overview.duplicate_accepted} 条历史重复记录
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            投稿记录不等于已公开作品。通过只代表审稿流程完成；资源状态为“已公开”才进入内容库，
+            “草稿”需要在资源详情里手动公开。
+          </p>
+        </div>
+      )}
+
       {isSectionOnly && (
         <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
           你以分类整理（L7）身份查看工作台：可以初审、分配互评成员并给出推荐意见，
@@ -377,11 +407,23 @@ function PendingSubmissionsPage() {
         className="mb-4"
       >
         <TabsList className="!h-auto min-h-9 w-full flex-wrap justify-start overflow-visible">
-          {STATUS_TABS.map((t) => (
-            <TabsTrigger key={t.value} value={t.value}>
-              {t.label}
-            </TabsTrigger>
-          ))}
+          {STATUS_TABS.map((t) => {
+            const count = !overview
+              ? null
+              : t.value === 'all'
+                ? overview.total
+                : t.value === 'accepted'
+                  ? overview.accepted_resources
+                  : (overview.status_counts[t.value] ?? 0)
+            return (
+              <TabsTrigger key={t.value} value={t.value}>
+                {t.label}
+                {count !== null && (
+                  <span className="ml-1 tabular-nums text-muted-foreground">{count}</span>
+                )}
+              </TabsTrigger>
+            )
+          })}
         </TabsList>
       </Tabs>
 
@@ -399,7 +441,7 @@ function PendingSubmissionsPage() {
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="font-medium">{s.title}</h3>
-                    {statusBadge(s.status)}
+                    {statusBadge(s.status, s.resource_publication_status)}
                     {['pending', 'under_review', 'resubmitted'].includes(s.status) &&
                       waitingChip(s.submitted_at)}
                     {s.status === 'accepted' &&
@@ -411,10 +453,12 @@ function PendingSubmissionsPage() {
                           className="inline-flex items-center"
                           title="通过时选择了暂存：进入资源详情后可在「管理此条」里公开"
                         >
-                          <Badge className="bg-amber-500/15 text-amber-700">发布前整理 · 去公开</Badge>
+                          <span className="text-xs font-medium text-amber-700 underline decoration-amber-400 underline-offset-4 hover:text-amber-800">
+                          发布前整理 →
+                          </span>
                         </Link>
                       ) : (
-                        <Badge className="bg-amber-500/15 text-amber-700">发布前整理</Badge>
+                        <span className="text-xs font-medium text-amber-700">发布前整理</span>
                       ))}
                   </div>
                   <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -422,7 +466,7 @@ function PendingSubmissionsPage() {
                     <span>{s.discipline}</span>
                     <span>{s.year}</span>
                     <span>
-                      发布于 {new Date(s.submitted_at).toLocaleDateString()}
+                      提交于 {new Date(s.submitted_at).toLocaleDateString()}
                     </span>
                   </div>
                 </div>

@@ -568,6 +568,29 @@ async def test_stats_and_facets_exclude_drafts(client: AsyncClient, admin_user: 
     assert "1999" not in years
 
 
+async def test_admin_stats_keeps_public_count_and_reports_drafts(
+    client: AsyncClient, admin_user: dict
+) -> None:
+    await client.post(
+        "/api/catalog",
+        json={**_SAMPLE, "title": "Admin Stats Public", "year": 2024},
+        headers={"Authorization": f"Bearer {admin_user['token']}"},
+    )
+    await client.post(
+        "/api/catalog",
+        json={**_SAMPLE, "title": "Admin Stats Draft", "year": 1999, "publication_status": "draft"},
+        headers={"Authorization": f"Bearer {admin_user['token']}"},
+    )
+    stats = (
+        await client.get(
+            "/api/catalog/stats",
+            headers={"Authorization": f"Bearer {admin_user['token']}"},
+        )
+    ).json()
+    assert stats["total"] == 1
+    assert stats["draft_total"] == 1
+
+
 # ---------------------------------------------------------------------------
 # R 指数：公开指标必须可解释、可复算，且不伪造引用数据
 # ---------------------------------------------------------------------------

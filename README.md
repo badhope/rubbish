@@ -63,6 +63,16 @@ The frontend runs on `http://localhost:5173`; the API runs on `http://localhost:
 | **Manual review queue** | **Rule settings** |
 | ![Moderation queue](docs/screenshots/moderation-queue.png) | ![Rule settings](docs/screenshots/moderation-rules.png) |
 
+Admin data semantics: published articles and drafts are shown separately; the content desk distinguishes submission records from unique works.
+
+| Admin overview | Content desk |
+|---|---|
+| ![Admin overview](docs/screenshots/admin-overview.png) | ![Content desk](docs/screenshots/content-desk.png) |
+
+A draft work is labelled "approved · draft", never "published":
+
+![Draft status](docs/screenshots/content-desk-draft.png)
+
 Operator quick panel on a topic detail, jumping straight to the review record for that topic:
 
 ![Operator quick panel](docs/screenshots/operator-panel.png)
@@ -71,7 +81,7 @@ Mobile theme forum, same data and actions:
 
 ![Mobile theme forum](docs/screenshots/forum-mobile.png)
 
-The queue screenshot uses a temporary demo topic; it was deleted right after capture. The rest are live production UI at 1.19.46.
+The queue screenshot uses a temporary demo topic; it was deleted right after capture. The rest are live production UI at 1.19.47.
 
 ## Project layout
 

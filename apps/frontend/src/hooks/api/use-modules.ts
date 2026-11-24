@@ -60,6 +60,7 @@ import type {
   SubmissionCreate,
   SubmissionDecision,
   SubmissionListResponse,
+  SubmissionOverview,
   SubmissionResponse,
   SubmissionUpdate,
   SubmissionVersionListResponse,
@@ -455,6 +456,13 @@ export function useMySubmissions(
         params: { status, page, page_size: pageSize },
       })).data,
     enabled: options?.enabled ?? true,
+  })
+}
+
+export function useSubmissionOverview() {
+  return useQuery<SubmissionOverview>({
+    queryKey: ['submissions', 'overview'] as const,
+    queryFn: async () => (await api.get<SubmissionOverview>('/submissions/overview')).data,
   })
 }
 

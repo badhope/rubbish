@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db import paginate
 from app.core.tenant import require_tenant_id
 from app.core.tracks import normalize_track
+from app.domain.catalog.models import Resource
 from app.domain.submission.models import Submission
 from app.interfaces.http.submission.schemas import SubmissionListResponse, SubmissionResponse
 
@@ -176,7 +177,20 @@ async def _list_submissions(
         if tenant_id
         else {}
     )
+    responses = [_to_response(r, stats.get(r.id)) for r in rows]
+    resource_status: dict[int, str] = {}
+    resource_ids = {r.resource_id for r in rows if r.resource_id is not None}
+    if resource_ids:
+        resource_rows = (
+            await db.execute(
+                select(Resource.id, Resource.publication_status).where(Resource.id.in_(resource_ids))
+            )
+        ).all()
+        resource_status = {int(resource_id): str(status) for resource_id, status in resource_rows}
+    for response, entry in zip(responses, rows):
+        if entry.resource_id is not None:
+            response.resource_publication_status = resource_status.get(int(entry.resource_id))
     return SubmissionListResponse(
-        data=[_to_response(r, stats.get(r.id)) for r in rows],
+        data=responses,
         meta=meta,
     )

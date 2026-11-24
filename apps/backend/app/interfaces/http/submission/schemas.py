@@ -334,6 +334,22 @@ class SubmissionListResponse(BaseModel):
     meta: PaginationMeta
 
 
+class SubmissionOverview(BaseModel):
+    """内容台的“记录”和“作品”两种口径。
+
+    投稿记录会包含同一作品的历史重复提交；作品数按关联资源去重。已公开数
+    必须来自资源发布状态，不能直接用 submission.status=accepted 代替。
+    """
+
+    total: int
+    status_counts: dict[str, int]
+    resource_total: int = 0
+    accepted_resources: int = 0
+    published: int = 0
+    draft: int = 0
+    duplicate_accepted: int = 0
+
+
 class ReviewerCandidate(BaseModel):
     """Editor 分配互评成员时的候选（持有 reviewer 角色且账号启用）。"""
 

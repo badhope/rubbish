@@ -63,6 +63,16 @@ npm run dev
 | **人工核验队列** | **规则设置** |
 | ![核验队列](docs/screenshots/moderation-queue.png) | ![规则设置](docs/screenshots/moderation-rules.png) |
 
+后台数据口径：已公开文章与草稿分开计数；内容台把投稿记录与作品数分开，草稿不再冒充“已公开”。
+
+| 站务总览 | 内容台 |
+|---|---|
+| ![站务总览](docs/screenshots/admin-overview.png) | ![内容台](docs/screenshots/content-desk.png) |
+
+草稿作品显示为“已通过 · 草稿”，不再显示“已公开”：
+
+![草稿状态](docs/screenshots/content-desk-draft.png)
+
 主题详情页的运营快捷面板，可直达当前主题帖的核验记录：
 
 ![运营快捷面板](docs/screenshots/operator-panel.png)
@@ -71,7 +81,7 @@ npm run dev
 
 ![移动端主题论坛](docs/screenshots/forum-mobile.png)
 
-核验队列截图中使用了一条临时演示主题帖，截完即删除；其余为 1.19.46 生产界面。
+核验队列截图中使用了一条临时演示主题帖，截完即删除；其余为 1.19.47 生产界面。
 
 ## 目录
 

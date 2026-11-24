@@ -467,6 +467,8 @@ export interface ResourceListResponse {
 
 export interface ResourceStats {
   total: number
+  /** 草稿数量；单独展示，不混入“已公开文章”的 total。 */
+  draft_total?: number
   by_type: Record<string, number>
   // 内容赛道（paper / essay）分布：副刊总数不能用 by_genre 相加，
   // 没有文体的公告/说明会漏掉。
@@ -705,6 +707,17 @@ export interface SubmissionResponse {
 export interface SubmissionListResponse {
   data: SubmissionResponse[]
   meta: PaginationMeta
+}
+
+
+export interface SubmissionOverview {
+  total: number
+  status_counts: Record<string, number>
+  resource_total: number
+  accepted_resources: number
+  published: number
+  draft: number
+  duplicate_accepted: number
 }
 
 /** 作者修改稿件：所有字段可选，只提交改动的部分 */
