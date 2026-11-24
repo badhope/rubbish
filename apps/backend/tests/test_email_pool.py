@@ -167,6 +167,19 @@ async def test_pool_fails_over_on_first_send(monkeypatch) -> None:
 
 
 @pytest.mark.asyncio
+async def test_pool_sends_to_real_recipient_not_log_mask(monkeypatch) -> None:
+    """日志脱敏不能泄漏到 SMTP envelope：收件人必须保持真实地址。"""
+    monkeypatch.setattr(smtplib, "SMTP_SSL", _FakeSMTP)
+    pool = SmtpPoolEmailSender([_account("a")], retries=0)
+
+    await pool.send(to="reader@example.com", subject="s", body="b")
+
+    msg = _FakeSMTP.instances[0].sent[0]
+    assert msg["To"] == "reader@example.com"
+    assert "***" not in msg["To"]
+
+
+@pytest.mark.asyncio
 async def test_pool_parks_account_after_repeated_failures(monkeypatch) -> None:
     monkeypatch.setattr(smtplib, "SMTP_SSL", _FakeSMTP)
     _FakeSMTP.failing_hosts = {"smtp.a.test"}

@@ -406,7 +406,7 @@ class SmtpPoolEmailSender:
             if getattr(self, "_bypass_outbound_guard", False):
                 sender._bypass_outbound_guard = True
             try:
-                await sender.send(to=_mask_recipient(to), subject=subject, body=body, html=html)
+                await sender.send(to=to, subject=subject, body=body, html=html)
                 self._record_success(account)
                 logger.info("email_sent_pool", to=_mask_recipient(to), account=account.key)
                 return
