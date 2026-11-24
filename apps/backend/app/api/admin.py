@@ -700,11 +700,22 @@ async def email_status(
     current_admin: User = Depends(require_admin),
 ) -> dict[str, Any]:
     """邮件通道自检：是否配置、SMTP 是否可达（不发送真实邮件）。"""
-    from app.core.email import configured_accounts, smtp_configured, verify_smtp_connection
+    from app.core.email import (
+        configured_accounts,
+        get_email_sender,
+        smtp_configured,
+        verify_smtp_connection,
+    )
     from app.core.mail_guard import guard_stats
 
     ok, detail = await verify_smtp_connection()
     accounts = configured_accounts()
+    sender = get_email_sender()
+    pool = (
+        sender.status_snapshot()
+        if hasattr(sender, "status_snapshot")
+        else []
+    )
     return {
         "configured": smtp_configured(),
         "reachable": ok,
@@ -715,6 +726,7 @@ async def email_status(
         "accounts": [
             {"from_address": a.from_address, "host": a.host, "port": a.port} for a in accounts
         ],
+        "pool": pool,
         "from_address": accounts[0].from_address if accounts else "",
         "guard": guard_stats(),
     }

@@ -194,6 +194,9 @@ class Settings(BaseSettings):
     # 暂停使用该账号这么久。取值偏短，避免一次网络抖动把账号长期摘除。
     email_smtp_breaker_cooldown: int = Field(default=180, ge=10, le=3600)
     email_smtp_breaker_threshold: int = Field(default=2, ge=1, le=10)
+    # 单账号同时在途上限：达到上限的新邮件立即溢出到备用账号，避免一次
+    # 并发注册/通知把官方发件箱顶到服务商限流后才开始失败切换。
+    email_smtp_max_inflight_per_account: int = Field(default=2, ge=1, le=10)
     # 同一收件地址的发信冷却（秒）：验证邮件 / 重置邮件共用。
     # 超限时仍然返回 200（不泄露账号是否存在），只是不再真正发信。
     # 0 = 关闭冷却（仅测试用）。默认 45 秒：够挡住连点与脚本，

@@ -1,5 +1,6 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from './auth'
+import { describeHttpCause, emitProblem } from './problem'
 
 // In production, fall back to same-origin /api when VITE_API_URL is not
 // injected (avoids shipping a hard-coded localhost URL in the bundle).
@@ -39,6 +40,55 @@ export function csrfHeaders(): Record<string, string> {
 
 let refreshing: Promise<void> | null = null
 
+function reportApiProblem(error: AxiosError, title?: string): void {
+  if (axios.isCancel(error) || error.code === 'ERR_CANCELED') return
+  const status = error.response?.status
+  const data = error.response?.data as { detail?: unknown } | undefined
+  let message = ''
+  if (typeof data?.detail === 'string') message = data.detail
+  else if (data?.detail && typeof data.detail === 'object') {
+    const detail = data.detail as { message?: unknown }
+    if (typeof detail.message === 'string') message = detail.message
+  }
+  if (!message) {
+    if (error.code === 'ECONNABORTED') message = '请求超时，服务没有在预期时间内响应。'
+    else if (!status) message = '无法连接到服务，请检查网络后重试。'
+    else if (status >= 500) message = `服务端返回 ${status}，这次请求没有完成。`
+    else message = `请求没有完成（HTTP ${status}）。`
+  }
+  const method = (error.config?.method ?? 'get').toUpperCase()
+  const rawUrl = error.config?.url ?? ''
+  const url = rawUrl.split('?')[0]
+  const requestId =
+    (error.response?.headers?.['x-request-id'] as string | undefined) ||
+    (error.response?.headers?.['x-trace-id'] as string | undefined)
+  emitProblem({
+    source: 'api',
+    tone: status && status < 500 ? 'warning' : 'error',
+    title: title || '请求没有完成',
+    message,
+    cause: describeHttpCause(status),
+    hint:
+      status === 401
+        ? '重新登录后再操作；如果刚改过密码，请用新密码登录。'
+        : status === 429
+          ? '等待 1–2 分钟再试；不要连续点击提交。'
+          : status === 422
+            ? '按提示逐项修正字段后再提交。'
+            : status && status >= 500
+              ? '复制诊断信息发给站务，并附上操作时间。'
+              : !status
+                ? '检查网络；若其他页面正常，可到状态页确认服务是否在线。'
+                : undefined,
+    context: {
+      method,
+      path: url,
+      status,
+      request_id: requestId,
+    },
+  })
+}
+
 // Single-retry 401 handler: exchange the httpOnly refresh_token cookie for a
 // new access_token. Concurrent 401s share the same refresh promise so we never
 // fire multiple /auth/refresh calls in parallel (which would invalidate each
@@ -73,6 +123,7 @@ api.interceptors.response.use(
 
     // Non-401 or already retried: rethrow.
     if (error.response?.status !== 401 || original._retried) {
+      reportApiProblem(error, original._retried ? '登录后重试仍然失败' : undefined)
       return Promise.reject(error)
     }
 
@@ -87,6 +138,7 @@ api.interceptors.response.use(
       '/auth/verify-email',
     ]
     if (PUBLIC_AUTH.some((p) => original.url?.includes(p))) {
+      reportApiProblem(error, '登录没有完成')
       return Promise.reject(error)
     }
 
@@ -94,6 +146,7 @@ api.interceptors.response.use(
     // clear auth state so the route guard bounces to /login.
     if (original.url?.includes('/auth/refresh')) {
       useAuthStore.getState().logout()
+      reportApiProblem(error, '登录状态已失效')
       return Promise.reject(error)
     }
 
@@ -103,6 +156,10 @@ api.interceptors.response.use(
       return api(original)
     } catch (refreshError) {
       useAuthStore.getState().logout()
+      reportApiProblem(
+        refreshError as AxiosError,
+        '登录状态已失效，需要重新登录',
+      )
       // 会话过期后，页面本身通常还停在原地；仅清 store 会留下一个所有请求
       // 都 401 的死页面。把用户送回登录，并带上当前地址，登录后原地恢复。
       if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {

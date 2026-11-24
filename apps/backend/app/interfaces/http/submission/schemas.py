@@ -388,8 +388,8 @@ class AuthorResponseUpdate(BaseModel):
 class SubmissionUpdate(BaseModel):
     """Body for PATCH /submissions/{id} — author edits their manuscript.
 
-    仅在 pending / major_revision / minor_revision 状态下允许（编辑要求
-    修改后，作者要能真正改内容，而不是只把状态翻回去）。所有字段可选，
+    仅在 pending / major_revision / minor_revision / rework_requested 状态下允许
+    （编辑要求修改后，作者要能真正改内容，而不是只把状态翻回去）。所有字段可选，
     只更新提供的字段；约束与 SubmissionCreate 逐字段一致。
     """
 

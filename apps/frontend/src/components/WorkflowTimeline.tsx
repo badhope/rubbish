@@ -33,6 +33,7 @@ function resolveStep(status: SubmissionStatus): { current: number; rejected: boo
       return { current: 1, rejected: false }
     case 'major_revision':
     case 'minor_revision':
+    case 'rework_requested':
       return { current: 2, rejected: false }
     case 'accepted':
     case 'approved':

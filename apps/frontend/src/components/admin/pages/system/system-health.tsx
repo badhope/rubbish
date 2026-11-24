@@ -35,6 +35,15 @@ type EmailStatus = {
   outbound_enabled: boolean
   from_address: string
   accounts: { from_address: string; host: string; port: number }[]
+  pool?: {
+    from_address: string
+    host: string
+    inflight: number
+    max_inflight: number
+    failures: number
+    cooldown_seconds: number
+    available: boolean
+  }[]
   guard: Record<string, unknown>
 }
 
@@ -321,6 +330,24 @@ export default function SystemHealthPage() {
                       {email.reachable ? '正常' : '失败'}；发件 {email.from_address || '—'}
                     </p>
                     <p className="break-words text-xs text-muted-foreground">{email.detail}</p>
+                    {email.pool && email.pool.length > 1 ? (
+                      <div className="space-y-1 rounded-md border bg-muted/30 p-2 text-xs">
+                        <p className="font-medium">
+                          发件池：主账号 1 个，备用 {email.pool.length - 1} 个
+                          {email.pool.filter((a, i) => i > 0 && a.available).length > 0
+                            ? '，当前有备用账号待命'
+                            : '，备用账号均在冷却'}
+                        </p>
+                        {email.pool.map((a, i) => (
+                          <p key={`${a.from_address}-${i}`} className="text-muted-foreground">
+                            {i === 0 ? '主' : '备'} {a.from_address} · 在途 {a.inflight}/
+                            {a.max_inflight}
+                            {a.failures > 0 ? ` · 连续失败 ${a.failures}` : ''}
+                            {a.cooldown_seconds > 0 ? ` · 冷却 ${a.cooldown_seconds}s` : ' · 可用'}
+                          </p>
+                        ))}
+                      </div>
+                    ) : null}
                   </>
                 ) : (
                   <p className="text-muted-foreground">邮件状态读取失败，可重试。</p>

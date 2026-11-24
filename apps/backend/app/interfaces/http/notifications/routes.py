@@ -47,12 +47,24 @@ MAX_PAGE_SIZE = 100
 # 工作台四类事件的聚合筛选（前端 tab：指派/催审/裁决/认领结果）。
 _CATEGORY_TYPES: dict[str, tuple[str, ...]] = {
     # 旧键保留，避免老客户端/测试失效
-    "assigned": ("review.invited", "review.reminder", "review.accepted", "review.submitted"),
+    "assigned": (
+        "review.invited",
+        "review.reminder",
+        "review.accepted",
+        "review.submitted",
+        "review.assignment_cancelled",
+    ),
     "reminder": ("review.reminder",),
     "decision": ("submission.decision", "submission.resubmitted", "submission.rework_requested"),
     "claim": ("claim.created", "claim.decision"),
     # 新分组：通知页按工作流分开，不再全部倒进「全部」
-    "review": ("review.invited", "review.reminder", "review.accepted", "review.submitted"),
+    "review": (
+        "review.invited",
+        "review.reminder",
+        "review.accepted",
+        "review.submitted",
+        "review.assignment_cancelled",
+    ),
     "submission": ("submission.decision", "submission.resubmitted", "submission.rework_requested"),
     "feedback": ("site.feedback",),
     "community": ("comment.new", "forum.reply"),

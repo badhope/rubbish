@@ -133,6 +133,11 @@ export function notificationDestination(
       ? { to: '/submissions', search: { submission: id }, label: '去修改' }
       : { to: '/submissions', label: '我的作品' }
   }
+  if (type === 'review.assignment_cancelled') {
+    return id
+      ? { to: '/submissions', search: { submission: id }, label: '看作品' }
+      : { to: '/review', label: '去互评台' }
+  }
   if (type === 'review.rework_needs_assignment') {
     return id
       ? { to: '/submissions/pending', search: { submission: id }, label: '去指派' }

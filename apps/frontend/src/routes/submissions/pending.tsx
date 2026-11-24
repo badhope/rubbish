@@ -127,6 +127,7 @@ const STATUS_TABS: { value: StatusTab; label: string }[] = [
   { value: 'under_review', label: '互评中' },
   { value: 'major_revision', label: '大改' },
   { value: 'minor_revision', label: '小改' },
+  { value: 'rework_requested', label: '待修改' },
   { value: 'resubmitted', label: '修改版' },
   { value: 'accepted', label: '已通过' },
   { value: 'rejected', label: '已不通过' },
@@ -150,6 +151,8 @@ function statusBadge(status: string, resourcePublicationStatus?: string | null) 
       return <Badge className="bg-amber-500/15 text-amber-700">大改</Badge>
     case 'minor_revision':
       return <Badge className="bg-yellow-500/15 text-yellow-700">小改</Badge>
+    case 'rework_requested':
+      return <Badge className="bg-sky-500/15 text-sky-700">待修改</Badge>
     case 'resubmitted':
       return <Badge className="bg-primary/15 text-primary">修改版</Badge>
     case 'accepted':
@@ -742,25 +745,24 @@ function PendingSubmissionsPage() {
             )}
           </div>
 
-          {/* D 级打回：分数不达标时不直接不通过，而是要求互评成员补互评/作者修改。
-              与"做决定"并列而不是藏在菜单里——它是与通过/不通过同级的处置。 */}
+          {/* D 级处置：不直接不通过，而是退回作者按逐条要求修改。
+              作者改完并显式重交后才回到互评，不提前打扰互评成员。 */}
           <div className="space-y-2 rounded-lg border border-destructive/25 bg-destructive/5 p-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-destructive">打回补审（D 级处置）</span>
+              <span className="text-sm font-medium text-destructive">退回作者修改（D 级处置）</span>
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => setReworkOpen((v) => !v)}
                 type="button"
               >
-                {reworkOpen ? '收起' : '发起打回'}
+                {reworkOpen ? '收起' : '发起退回'}
               </Button>
             </div>
             {reworkOpen && (
               <div className="space-y-2">
                 <p className="text-[11px] text-muted-foreground">
-                  打回会同时通知互评成员（补互评或说明理由）与作者（逐条修改要求）。
-                  至少填 3 条具体问题——只说"不合格"对作者没有帮助。
+                  {`作品会进入「待修改」，作者会收到逐条修改要求，并可在「我的作品」里修改、上传修订稿、显式重新提交。重交后才重新进入互评；请至少填 3 条具体问题。`}
                 </p>
                 {decisionTarget?.quality_score != null && decisionTarget.quality_score < 40 && (
                   <p className="rounded bg-destructive/10 px-2 py-1 text-[11px] text-destructive">
@@ -791,7 +793,7 @@ function PendingSubmissionsPage() {
                     if (!decisionTarget) return
                     try {
                       await reworkMut.mutateAsync({ id: decisionTarget.id, requirements: reqs })
-                      toast.success('已打回：互评成员与作者都已收到通知')
+                      toast.success('已退回作者修改：作者已收到逐条要求，修改后可重新提交')
                       setReworkOpen(false)
                       setReworkRequirements('')
                       setDecisionTarget(null)
@@ -800,7 +802,7 @@ function PendingSubmissionsPage() {
                     }
                   }}
                 >
-                  {reworkMut.isPending ? '提交中…' : '确认打回'}
+                  {reworkMut.isPending ? '提交中…' : '确认退回作者修改'}
                 </Button>
               </div>
             )}

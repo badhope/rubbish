@@ -1,10 +1,11 @@
 /**
  * 前端错误上报的统一入口。
- *
  * 这里只定义"上报"这一件事的抽象，具体后端（Sentry / 自建接口 / 纯 console）
  * 由 `initMonitoring()` 在启动时决定。业务代码一律只 import `reportError`，
  * 换监控方案时不需要动任何调用点。
  */
+
+import { emitProblem } from '@/lib/problem'
 
 export interface ErrorContext {
   /** React 组件栈（来自 ErrorBoundary 的 info.componentStack） */
@@ -46,9 +47,28 @@ export function reportError(error: unknown, context?: ErrorContext): void {
 export function installGlobalErrorHandlers(): void {
   window.addEventListener('error', (event) => {
     reportError(event.error ?? event.message, { source: 'window.onerror' })
+    emitProblem({
+      source: 'runtime',
+      tone: 'error',
+      title: '页面出现未处理异常',
+      message: event.error instanceof Error ? event.error.message : String(event.message),
+      cause: '前端脚本在渲染或事件回调之外抛出了错误，页面可能有部分功能暂时不可用。',
+      hint: '先刷新页面；若反复出现，复制诊断信息发给站务。',
+      context: { source: 'window.onerror' },
+    })
   })
   window.addEventListener('unhandledrejection', (event) => {
-    reportError(event.reason, { source: 'unhandledrejection' })
+    const reason = event.reason
+    reportError(reason, { source: 'unhandledrejection' })
+    emitProblem({
+      source: 'runtime',
+      tone: 'error',
+      title: '一个后台操作没有完成',
+      message: reason instanceof Error ? reason.message : String(reason ?? ''),
+      cause: '异步请求或后台任务失败，而且调用处没有接住这个错误。',
+      hint: '刷新或重试一次；若持续出现，复制诊断信息发给站务。',
+      context: { source: 'unhandledrejection' },
+    })
   })
 }
 

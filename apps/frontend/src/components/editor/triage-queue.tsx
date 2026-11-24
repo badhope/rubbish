@@ -232,7 +232,7 @@ export function TriageQueue() {
             </DialogTitle>
             <DialogDescription>
               {dialog?.action === "return_for_revision"
-                ? "作品会进入 major_revision，作者可修改后重新发布；请写清必须改什么。"
+                ? "作品会进入 rework_requested（待修改），作者可修改并显式重新提交；请写清必须改什么。"
                 : dialog?.action === "request_materials"
                   ? "作品进入补材料状态；作者补齐后重新发布，会重新回到待处理队列。请逐项列明缺什么材料。"
                   : "作品直接进入 rejected，不进入互评；请写清范围/格式/规范上的硬性原因。"}

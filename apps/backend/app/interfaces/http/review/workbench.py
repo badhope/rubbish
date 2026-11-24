@@ -416,7 +416,7 @@ async def editor_workbench(
 
         # 退回修改中单独成栏：主编需要看到作者是否已退回修改、上一轮编辑说明和
         # 退回修改说明，而不是把退回修改稿混在“评审中”。
-        if s.status in ("major_revision", "minor_revision", "resubmitted"):
+        if s.status in ("major_revision", "minor_revision", "rework_requested", "resubmitted"):
             bucket = dict(base)
             bucket["assignments"] = [_assignment_row_editor(a, now) for a in round_rows]
             rework.append(bucket)

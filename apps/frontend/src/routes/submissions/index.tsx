@@ -97,6 +97,7 @@ const STATUS_TABS: { value: SubmissionStatus | 'all'; label: string }[] = [
   { value: 'under_review', label: '互评中' },
   { value: 'major_revision', label: '待大改' },
   { value: 'minor_revision', label: '待小改' },
+  { value: 'rework_requested', label: '待修改' },
   { value: 'accepted', label: '已公开' },
   { value: 'rejected', label: '已不通过' },
 ]
@@ -114,6 +115,8 @@ function statusBadge(status: SubmissionStatus) {
       return <Badge className="bg-amber-500/15 text-amber-700">待大改</Badge>
     case 'minor_revision':
       return <Badge className="bg-yellow-500/15 text-yellow-700">待小改</Badge>
+    case 'rework_requested':
+      return <Badge className="bg-sky-500/15 text-sky-700">待修改</Badge>
     case 'accepted':
     case 'approved':
       return <Badge className="bg-emerald-500/15 text-emerald-700">已公开</Badge>
@@ -131,6 +134,7 @@ const STATUS_HINTS: Record<string, string> = {
   under_review: '互评进行中：互评成员正在看你的作品，意见会出现在详情里。',
   major_revision: '需要大幅修改：按意见改完后，在详情逐条回应，再更新一版。',
   minor_revision: '需要小幅修改：调整后更新一版，通常不用再走一轮互评。',
+  rework_requested: '作品已退回修改：点「修改作品」按意见改完并保存，再点「重新提交修改稿」。重交后才会重新进入互评。',
   resubmitted: '修改版已发布，等待内容整理复核；有未尽事项可在详情补充。',
   accepted: '已公开。作品进入内容库，登录后可读。',
   rejected: '本次已不通过。可以按反馈修改后重新发布。',
@@ -231,7 +235,11 @@ function SubmissionsPage() {
       setDetail(updated)
       setResubmitOpen(false)
       setResubmitNote('')
-      toast.success('已更新版本，等待内容整理')
+      toast.success(
+        detail.status === 'rework_requested'
+          ? '修改稿已重新提交，等待内容整理复核'
+          : '已更新版本，等待内容整理',
+      )
     } catch (err) {
       toast.error(extractError(err, '更新版本失败'))
     }
@@ -475,6 +483,38 @@ function SubmissionsPage() {
                   {statusHint(detail.status)}
                 </p>
               )}
+              {detail.status === 'rework_requested' ? (
+                <div className="rounded-lg border border-sky-500/30 bg-sky-500/5 p-3">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="font-medium">作品已退回修改</div>
+                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                        先点「修改作品」按意见改完并保存；确认内容已更新后，再点「重新提交修改稿」。
+                        只修改不重交，作品不会回到互评。
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          void navigate({
+                            to: '/submissions/new',
+                            search: { edit: detail.id },
+                          })
+                        }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                        修改作品
+                      </Button>
+                      <Button size="sm" onClick={() => setResubmitOpen(true)}>
+                        <RefreshCw className="h-4 w-4" />
+                        重新提交修改稿
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
               {detail.similarity_score != null && detail.similarity_score >= 35 ? (
                 <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-xs leading-relaxed">
                   <div className="mb-1 flex items-center gap-2 font-medium">
@@ -644,8 +684,8 @@ function SubmissionsPage() {
                     </button>
                   </div>
                 )}
-                {/* 仅 pending / major_revision / minor_revision 可上传 */}
-                {['pending', 'major_revision', 'minor_revision'].includes(
+                {/* 仅 pending / major_revision / minor_revision / rework_requested 可上传 */}
+                {['pending', 'major_revision', 'minor_revision', 'rework_requested'].includes(
                   detail.status,
                 ) && (
                   <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-primary hover:underline">
@@ -816,14 +856,14 @@ function SubmissionsPage() {
                     }}
                   >
                     <Pencil className="h-4 w-4" />
-                    修改作品
+                    {detail.status === 'rework_requested' ? '继续修改' : '修改作品'}
                   </Button>
-                  {['major_revision', 'minor_revision'].includes(
+                  {['major_revision', 'minor_revision', 'rework_requested'].includes(
                     detail.status,
                   ) && (
                     <Button onClick={() => setResubmitOpen(true)}>
                       <RefreshCw className="h-4 w-4" />
-                      更新版本
+                      {detail.status === 'rework_requested' ? '重新提交修改稿' : '更新版本'}
                     </Button>
                   )}
                 </div>
@@ -853,15 +893,20 @@ function SubmissionsPage() {
       >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>更新版本</DialogTitle>
+            <DialogTitle>
+              {detail?.status === 'rework_requested' ? '重新提交修改稿' : '更新版本'}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              更新版本会把作品此刻的内容存为一版，交回内容整理。若还没改完，
-              先关掉这里用「修改作品」编辑内容。
+              {detail?.status === 'rework_requested'
+                ? '重新提交会把当前内容存为一版，交回内容整理重新分配互评。请先确认「修改作品」里的改动已经保存；未改完就重交，会和上一版一样。'
+                : '更新版本会把作品此刻的内容存为一版，交回内容整理。若还没改完，先关掉这里用「修改作品」编辑内容。'}
             </p>
             <div className="space-y-2">
-              <Label htmlFor="resubmit-note">修改说明（可选）</Label>
+              <Label htmlFor="resubmit-note">
+                {detail?.status === 'rework_requested' ? '修改说明（建议填写）' : '修改说明（可选）'}
+              </Label>
               <Textarea
                 id="resubmit-note"
                 rows={4}
@@ -883,7 +928,11 @@ function SubmissionsPage() {
                 disabled={resubmitMut.isPending}
                 data-testid="confirm-resubmit"
               >
-                {resubmitMut.isPending ? '处理中…' : '确认更新版本'}
+                {resubmitMut.isPending
+                  ? '处理中…'
+                  : detail?.status === 'rework_requested'
+                    ? '确认重新提交'
+                    : '确认更新版本'}
               </Button>
             </div>
           </div>

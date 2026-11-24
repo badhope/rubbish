@@ -72,18 +72,19 @@ describe('ResourceType discriminated union', () => {
 })
 
 describe('SubmissionStatus union', () => {
-  it('包含所有 9 个 workflow 状态', () => {
+  it('包含所有 workflow 状态', () => {
     const states: SubmissionStatus[] = [
       'pending',
       'under_review',
       'major_revision',
       'minor_revision',
+      'rework_requested',
       'resubmitted',
       'accepted',
       'rejected',
       'approved',
     ]
-    expect(states).toHaveLength(8)
+    expect(states).toHaveLength(9)
     // 每个状态都是合法的字符串字面量
     for (const s of states) {
       expect(typeof s).toBe('string')

@@ -519,14 +519,15 @@ export interface ResourceListParams {
 }
 
 // --- Submission ---
-// 完整 workflow 9-态机：pending → under_review → (major_revision | minor_revision | accepted | rejected)
-//   major_revision / minor_revision → resubmitted → under_review（作者重投后再分配）
+// 完整 workflow：pending → under_review → (major_revision | minor_revision | rework_requested | accepted | rejected)
+//   major_revision / minor_revision / rework_requested → resubmitted / under_review（作者重交后再分配）
 // approved/rejected 是旧 review 端点的别名，保留向后兼容
 export type SubmissionStatus =
   | 'pending'
   | 'under_review'
   | 'major_revision'
   | 'minor_revision'
+  | 'rework_requested'
   | 'resubmitted'
   | 'accepted'
   | 'rejected'

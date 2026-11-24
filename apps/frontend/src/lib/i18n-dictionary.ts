@@ -973,6 +973,89 @@ export const TEXT_EN: Record<string, string> = {
   "小改": 'Minor revision',
   "大改": 'Major revision',
   "修改版": 'Revised version',
+  "待修改": 'Needs revision',
+  "待作者修改": 'Waiting for author',
+  "去修改": 'Revise it',
+  "看作品": 'View the work',
+  "退回修改": 'Returned for revision',
+  "作品已退回修改：点「修改作品」按意见改完并保存，再点「重新提交修改稿」。重交后才会重新进入互评。":
+    'This work was returned for revision. Open “Edit work”, apply every requested change and save, then use “Resubmit revision”. It only re-enters peer review after you resubmit.',
+  "修改稿已重新提交，等待内容整理复核":
+    'Revision resubmitted. The content desk will review it again.',
+  "已更新版本，等待内容整理": 'Version updated. The content desk will take it from here.',
+  "继续修改": 'Continue editing',
+  "修改作品": 'Edit work',
+  "重新提交修改稿": 'Resubmit revision',
+  "重新提交会把当前内容存为一版，交回内容整理重新分配互评。请先确认「修改作品」里的改动已经保存；未改完就重交，会和上一版一样。":
+    'Resubmitting snapshots the current content as a new version and sends it back to the content desk. Make sure your edits in “Edit work” are saved; resubmitting before you finish changes nothing.',
+  "更新版本会把作品此刻的内容存成一版，交回内容整理。若还没改完，先关掉这里用「修改作品」编辑内容。":
+    'Updating the version snapshots the work as it stands now. If you are not done, close this and keep editing instead.',
+  "修改说明（建议填写）": 'Change note (recommended)',
+  "确认重新提交": 'Confirm resubmission',
+  "确认更新版本": 'Confirm version update',
+  "退回作者修改（D 级处置）": 'Return to author (Tier D)',
+  "发起退回": 'Start return',
+  "确认退回作者修改": 'Confirm return to author',
+  "已退回作者修改：作者已收到逐条要求，修改后可重新提交":
+    'Returned to the author. They received every requirement and can resubmit after revising.',
+  "作品会进入「待修改」，作者会收到逐条修改要求，并可在「我的作品」里修改、上传修订稿、显式重新提交。重交后才重新进入互评；请至少填 3 条具体问题。":
+    'The work moves to “Needs revision”. The author receives every requirement, can edit, upload a revision and explicitly resubmit. Peer review restarts only after resubmission. List at least three concrete issues.',
+  "操作没有完成": 'That did not go through',
+  "需要注意": 'Worth checking',
+  "提醒": 'Heads-up',
+  "可能原因": 'Likely cause',
+  "建议下一步": 'What to do next',
+  "复制诊断信息": 'Copy diagnostics',
+  "已复制诊断": 'Diagnostics copied',
+  "查看服务状态": 'Check service status',
+  "请求没有完成": 'Request did not complete',
+  "登录后重试仍然失败": 'Still failing after sign-in',
+  "登录没有完成": 'Sign-in did not complete',
+  "登录状态已失效": 'Session expired',
+  "登录状态已失效，需要重新登录": 'Session expired. Please sign in again.',
+  "请求超时，服务没有在预期时间内响应。":
+    'The request timed out before the service answered.',
+  "无法连接到服务，请检查网络后重试。":
+    'Could not reach the service. Check your network and try again.',
+  "请求没有到达服务器，通常是网络中断、代理超时或服务暂时不可达。":
+    'The request never reached the server. Usually a dropped network, proxy timeout, or the service being briefly unreachable.',
+  "提交内容或当前状态不满足操作条件，后端没有接受这次请求。":
+    'The submitted content or current state did not meet the conditions, so the server refused it.',
+  "登录状态已失效，或这次提交的凭据不正确。":
+    'The session expired, or the credentials in this submission were wrong.',
+  "当前账号没有这项权限，或受地区/角色访问策略限制。":
+    'This account lacks the permission, or a region/role access rule blocked it.',
+  "目标内容不存在、已删除，或链接已经过期。":
+    'The target no longer exists, was deleted, or the link has expired.',
+  "数据状态已变化，和页面上的旧状态发生了冲突；刷新后再试。":
+    'The data changed underneath this page. Refresh and try again.',
+  "上传内容超过大小限制。": 'The upload exceeds the size limit.',
+  "有字段没有通过服务端校验，请按提示逐项修改。":
+    'One or more fields failed server validation. Fix them as prompted.',
+  "操作太频繁，触发了限流；稍等片刻再试。":
+    'Too many requests, so the server rate-limited this action. Wait a minute and retry.',
+  "服务端处理这次请求时出错；问题不在你的输入。":
+    'The server failed while handling this request; the problem is not your input.',
+  "重新登录后再操作；如果刚改过密码，请用新密码登录。":
+    'Sign in again before retrying. If you just changed your password, use the new one.',
+  "等待 1–2 分钟再试；不要连续点击提交。":
+    'Wait 1–2 minutes and retry. Do not keep clicking submit.',
+  "按提示逐项修正字段后再提交。":
+    'Correct the flagged fields one by one, then submit again.',
+  "检查网络；若其他页面正常，可到状态页确认服务是否在线。":
+    'Check your network. If other pages work, open the status page to confirm the service is up.',
+  "复制诊断信息发给站务，并附上操作时间。":
+    'Copy the diagnostics and send them to the site team, with the time of the action.',
+  "页面出现未处理异常": 'An unhandled page error occurred',
+  "前端脚本在渲染或事件回调之外抛出了错误，页面可能有部分功能暂时不可用。":
+    'A front-end script threw outside the normal render path; part of the page may be temporarily unusable.',
+  "先刷新页面；若反复出现，复制诊断信息发给站务。":
+    'Refresh first. If it keeps happening, copy the diagnostics and send them to the site team.',
+  "一个后台操作没有完成": 'A background action did not complete',
+  "异步请求或后台任务失败，而且调用处没有接住这个错误。":
+    'An async request or background task failed and its caller did not catch the error.',
+  "刷新或重试一次；若持续出现，复制诊断信息发给站务。":
+    'Refresh or retry once. If it persists, copy the diagnostics and send them to the site team.',
   "初次提交": 'First submission',
   "首次发布": 'First published',
   "版本快照": 'Version snapshot',

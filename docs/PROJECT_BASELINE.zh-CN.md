@@ -1,6 +1,6 @@
 # Rubbish 项目基线
 
-> 版本：1.19.51
+> 版本：1.19.52
 > 更新：2026-11-24  
 > 仓库：`/home/user/work/rubbish-src`，主分支 `main`  
 > 生产入口：`https://rubbish.argjiemi.cn`
@@ -17,7 +17,7 @@ Rubbish 是自托管的公开写作与主题交流社区。长文进入内容库
 
 | 项目 | 状态 |
 |---|---|
-| 服务 | `rubbish-app.service`，监听 `127.0.0.1:8080`；健康接口确认 `1.19.51` |
+| 服务 | `rubbish-app.service`，监听 `127.0.0.1:8080`；健康接口确认 `1.19.52` |
 | 应用目录 | `/opt/rubbish-app` |
 | 静态目录 | `/opt/rubbish-app/static` |
 | 数据库 | Docker 容器 `rubbish-db-1`，库名 `rubbish`；迁移已到 `070_forum_moderation_pipeline` |
@@ -49,7 +49,7 @@ Rubbish 是自托管的公开写作与主题交流社区。长文进入内容库
 - 后端：FastAPI、SQLAlchemy async、Alembic、PostgreSQL RLS。
 - 前端：React、TypeScript、TanStack Router、Vite。
 - 论坛审核迁移：`070_forum_moderation_pipeline`。
-- 论坛回归：`tests/test_forum.py` 20 项、`tests/test_forum_moderation.py` 8 项、50 条批量压力回归 1 项；后端完整 pytest 套件 904 项通过、3 项跳过。
+- 论坛回归：`tests/test_forum.py` 20 项、`tests/test_forum_moderation.py` 8 项、50 条批量压力回归 1 项；后端完整 pytest 套件 912 项通过、3 项跳过。
 - 前端：`tsc -b --noEmit`、ESLint、Vitest 215 项、`vite build` 通过。
 
 ## 二、已交付功能清单
@@ -60,6 +60,20 @@ Rubbish 是自托管的公开写作与主题交流社区。长文进入内容库
 - 内容库按话题、年份、分区筛选；合集按阅读顺序编排。
 - 全文搜索、标签页、公开状态页、可访问性说明、Atom feed。
 - 作品正文、公开邮箱、图源与文献说明已完成批量整理；11 篇标题与正文错配已修复。
+
+### 投稿与审稿
+
+- 作者四步发布向导、服务端草稿、版本快照与版本历史。
+- 编辑内容台按 `pending / under_review / major_revision / minor_revision / rework_requested / resubmitted` 分页签；「待修改」可查作者是否仍在改。
+- 编辑「退回作者修改」：作品进入 `rework_requested`，只通知作者逐条要求；本轮互评任务立即撤回并通知相关互评成员。作者可改内容、换文件、显式重交；重交后进入 `under_review`，旧一轮指派作废并重新分派。
+- 作者端「待修改」卡片、页签与按钮闭环：修改作品 → 保存 → 重新提交修改稿，未保存直接重交会明确提示会与上一版相同。
+
+### 异常与提醒
+
+- 全局诊断卡片：API 最终失败、限流、超时、断网、未捕获异常与未处理 Promise 都显示紧凑卡片，含可能原因、建议下一步、method/path/status/request_id、页面和时间；可复制诊断或跳转 `/status`。
+- 成功提示保持轻量 toast；错误/警告 toast 自动升级为诊断卡片。后台轮询同一页面重复失败每分钟只弹一次，隐藏标签页不弹。
+- 通知弹窗为 `70vh`、`max-w-xl` 紧凑卡片，保留键盘滚动与滚动链隔离。
+- 发信池：官方主账号优先；单账号在途达到上限时新邮件立即溢出到待命备用账号；连续失败熔断后冷却，冷却结束自动恢复。管理端系统健康显示各账号在途、连续失败与冷却时间。
 
 ### 主题论坛
 
@@ -92,7 +106,7 @@ Rubbish 是自托管的公开写作与主题交流社区。长文进入内容库
 ### P0：上线与稳定性
 
 - [x] 生产执行 `070_forum_moderation_pipeline`，保留迁移前数据库备份与回滚路径。
-- [x] 部署后端与前端静态资源，健康接口确认版本 `1.19.51`。
+- [x] 部署后端与前端静态资源，健康接口确认版本 `1.19.52`。
 - [x] 生产验收：自动公开、人工队列、批量处置、作者通知、作者编辑重审、前台状态提示、运营快捷面板。
 - [ ] 生产压力与故障演练：规则引擎吞吐、连续提交、批量处置、数据库锁与进程重启恢复。
 

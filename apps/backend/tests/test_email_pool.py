@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import smtplib
 from email.message import EmailMessage
 from typing import ClassVar
@@ -164,6 +165,43 @@ async def test_pool_fails_over_on_first_send(monkeypatch) -> None:
     attempted = [inst.host for inst in _FakeSMTP.instances]
     assert attempted == ["smtp.a.test", "smtp.b.test"]
     assert len(_FakeSMTP.instances[-1].sent) == 1
+
+
+@pytest.mark.asyncio
+async def test_pool_overflows_to_standby_under_concurrency(monkeypatch) -> None:
+    """主账号在途数达到上限时，新邮件应立即改用备用账号，而不是等被限流。"""
+    hosts: list[str] = []
+
+    async def fake_send(self, *, to, subject, body, html=None):
+        hosts.append(self._host)
+        await asyncio.sleep(0.02)
+
+    monkeypatch.setattr(email_mod.SMTPEmailSender, "send", fake_send)
+    pool = SmtpPoolEmailSender([_account("a"), _account("b")], retries=0, max_inflight=1)
+
+    await asyncio.gather(
+        pool.send(to="first@example.com", subject="s", body="b"),
+        pool.send(to="second@example.com", subject="s", body="b"),
+    )
+
+    assert hosts == ["smtp.a.test", "smtp.b.test"]
+
+
+@pytest.mark.asyncio
+async def test_pool_returns_to_primary_after_inflight_released(monkeypatch) -> None:
+    hosts: list[str] = []
+
+    async def fake_send(self, *, to, subject, body, html=None):
+        hosts.append(self._host)
+        await asyncio.sleep(0)
+
+    monkeypatch.setattr(email_mod.SMTPEmailSender, "send", fake_send)
+    pool = SmtpPoolEmailSender([_account("a"), _account("b")], retries=0, max_inflight=1)
+
+    await pool.send(to="one@example.com", subject="s", body="b")
+    await pool.send(to="two@example.com", subject="s", body="b")
+
+    assert hosts == ["smtp.a.test", "smtp.a.test"]
 
 
 @pytest.mark.asyncio

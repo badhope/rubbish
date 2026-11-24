@@ -1461,24 +1461,16 @@ async def request_rework(
     current_user: User = Depends(require_editor),
     db: AsyncSession = Depends(get_db),
 ) -> SubmissionResponse:
-    """把作品打回：通知互评成员补审 / 通知作者修改。
+    """把作品退回作者修改（D 级处置），作者可显式重交。
 
-    D 级（<60 分）的标准处置。D 不是"拒绝"，是"当前不合格"——最常见的
-    成因是互评成员没细看，而不是稿子真的无救。直接不通过会冤枉作者，直接
-    通过会放进垃圾，打回是最诚实的处置。
+    D 级（<60 分）的标准处置。D 不是"拒绝"，是"当前不合格"——直接不通过
+    会冤枉作者，直接通过会放进垃圾，退回修改是最诚实的处置。
 
-    两条通知同时发出，因为两件事都要有人做：
-
-    1. **给互评成员**：附上具体缺陷清单，要求补审或说明为何应拒。
-       互评成员可以选择"我漏看了，补意见"或"我看清了，就是该拒"——
-       这个选择权必须留给互评成员，不能由编辑代劳。
-    2. **给作者**：列出逐条修改要求，让作者知道该改什么，而不是
-       只收到一句"不合格"。
-
-    状态置为 ``under_review``（2.0 主编口径：打回**先打回给互评成员**，不直接
-    通知作者——互评成员补审/说明后，编辑部再凭任一复审意见做最终决定
-    （通过发布或要求作者修改）；此时才需要作者出面。作者侧在复审结束前
-    不感知打回，避免"被不通过"的误伤。
+    状态置为 ``rework_requested``：作者能继续编辑、上传修订稿，并在「我的
+    作品」里显式点「重新提交修改稿」；重交后才重新进入 ``under_review``。
+    在作者重交前不通知互评成员，因为上一轮指派会在重交时整体作废，提前
+    通知只会制造一批注定失效的任务。通知正文逐条列出修改要求，作者不必
+    再去猜"到底哪里不合格"。
     """
     if len(body.requirements) < 3:
         raise HTTPException(
@@ -1494,14 +1486,55 @@ async def request_rework(
             detail=f"Cannot request rework in terminal status '{entry.status}'",
         )
 
-    # 2.0 主编口径：打回先回到互评环节（under_review），由互评成员复审；
-    # 只有复审确认需要作者修改时，才经由 decide(major/minor) 通知作者。
-    entry.status = "under_review"
+    # 作者可操作的待修改状态：能改内容、能上传修订稿、能显式重交。
+    entry.status = "rework_requested"
     entry.editor_note = body.note
     requirements_text = "\n".join(f"{i + 1}. {r}" for i, r in enumerate(body.requirements))
 
-    # 作者也要知道作品被退回修改：状态回到 under_review，作者仍可继续
-    # 上传修订稿；如果只通知互评成员，作者会在不知情的情况下等下去。
+    # 本轮互评任务立即作废：作品即将被作者改写，旧版本上的任务再留在
+    # 互评台里，只会让人对着过期稿子写意见。已交的报告仍留在 review_reports
+    # 里供追溯，但 assignment 置 cancelled，重交后必须重新分派。
+    open_reviewer_ids = (
+        (
+            await db.execute(
+                select(ReviewAssignment.reviewer_id)
+                .where(
+                    ReviewAssignment.submission_id == entry.id,
+                    ReviewAssignment.tenant_id == entry.tenant_id,
+                    ReviewAssignment.status.in_(("pending", "accepted")),
+                )
+                .distinct()
+            )
+        )
+        .scalars()
+        .all()
+    )
+    cancelled_assignments = (
+        await db.execute(
+            update(ReviewAssignment)
+            .where(
+                ReviewAssignment.submission_id == entry.id,
+                ReviewAssignment.tenant_id == entry.tenant_id,
+                ReviewAssignment.status.in_(("pending", "accepted", "completed")),
+            )
+            .values(status="cancelled")
+        )
+    ).rowcount or 0
+    for reviewer_id in open_reviewer_ids:
+        await notifications.create(
+            db,
+            tenant_id=entry.tenant_id,
+            user_id=reviewer_id,
+            type_="review.assignment_cancelled",
+            title=f"互评任务已撤回：{entry.title}",
+            body=(
+                f"作品 #{entry.id} 已退回作者修改，本轮互评任务已撤回，无需再提交意见。"
+                "作者重新提交后会按新一轮重新分派。"
+            ),
+            related_type="submission",
+            related_id=str(entry.id),
+        )
+
     await notifications.create(
         db,
         tenant_id=entry.tenant_id,
@@ -1509,69 +1542,14 @@ async def request_rework(
         type_="submission.rework_requested",
         title=f"作品需要修改：{entry.title}",
         body=(
-            f"作品 #{entry.id} 被退回来了，需要再改一版。\n"
+            f"作品 #{entry.id} 已退回修改，当前状态是「待修改」。\n"
             f"修改要求：\n{requirements_text}\n\n"
-            "可以在「我的作品」上传新版本；互评成员看过之后，站务组会给下一步结果。"
+            "处理方式：在「我的作品」打开这件作品 → 点「修改作品」按意见修改并保存 "
+            "→ 回到详情点「重新提交修改稿」。重交后才会重新进入互评，不会自动通过。"
         ),
         related_type="submission",
         related_id=str(entry.id),
     )
-
-    # 通知互评成员：该稿被打回，需要补审或说明（这是打回此刻的唯一外发通知）
-    from app.domain.review.models import ReviewAssignment
-
-    reviewer_rows = (
-        await db.execute(
-            select(ReviewAssignment.reviewer_id, ReviewAssignment.id)
-            .where(
-                ReviewAssignment.submission_id == entry.id,
-                ReviewAssignment.tenant_id == entry.tenant_id,
-                ReviewAssignment.status.in_(("pending", "accepted", "completed")),
-            )
-            .order_by(ReviewAssignment.id)
-        )
-    ).all()
-    # 同一互评成员只提醒一次；带上第一条有效指派，通知点击后能直接打开对应作品，
-    # 不必在互评台里再按作品标题找一遍。
-    first_assignment_by_reviewer: dict[int, int] = {}
-    for reviewer_id, assignment_id in reviewer_rows:
-        first_assignment_by_reviewer.setdefault(reviewer_id, assignment_id)
-    for reviewer_id, assignment_id in first_assignment_by_reviewer.items():
-        await notifications.create(
-            db,
-            tenant_id=entry.tenant_id,
-            user_id=reviewer_id,
-            type_="review.rework_requested",
-            title=f"互评被退回，请补充：{entry.title}",
-            body=(
-                f"作品 #{entry.id} 的质量分低于 60，站务组请你补一份意见。\n"
-                "可以二选一：\n"
-                "（a）补充或修正互评意见，特别是下面这些方面；\n"
-                "（b）说明为什么这篇确实应当不通过。\n\n"
-                f"需要补充的方面：\n{requirements_text}"
-            ),
-            related_type="review_assignment",
-            related_id=str(assignment_id),
-        )
-
-    # 若该稿还没有任何互评指派，编辑部需要先指派互评成员复审——写一条
-    # 提醒给当前编辑，避免作品卡在无人可审的状态。
-    if not reviewer_rows:
-        await notifications.create(
-            db,
-            tenant_id=entry.tenant_id,
-            user_id=current_user.id,
-            type_="review.rework_needs_assignment",
-            title=f"退回作品尚无互评成员，请先指派复核：{entry.title}",
-            body=(
-                f"作品 #{entry.id} 已按内容整理口径转入互评复核（under_review），"
-                "但还没有任何互评指派。\n请先在互评管理页指派一名或多名互评成员"
-                "（可多人共同互评，任一复核意见即可支撑最终决定）。\n\n"
-                f"需要补充的方面：\n{requirements_text}"
-            ),
-            related_type="submission",
-            related_id=str(entry.id),
-        )
 
     db.add(
         AuditLog(
@@ -1582,7 +1560,9 @@ async def request_rework(
             target_id=str(entry.id),
             payload={
                 "requirements": body.requirements,
-                "reviewers_notified": len(first_assignment_by_reviewer),
+                "resulting_status": "rework_requested",
+                "assignments_cancelled": cancelled_assignments,
+                "reviewers_notified": len(open_reviewer_ids),
             },
         )
     )

@@ -7,7 +7,9 @@ import { ThemeProvider } from './components/theme-provider'
 import { I18nRuntime } from './components/i18n-runtime'
 import { initLang } from './lib/i18n'
 import { AppErrorBoundary } from './components/common/error-boundary'
+import { ProblemDialogHost } from './components/common/problem-dialog'
 import { initMonitoring, installGlobalErrorHandlers } from './lib/monitoring'
+import { installProblemToasts } from './lib/notify'
 import { installQaAuth } from './lib/qa'
 // 衬线字体（自托管可变字重，中文按 unicode-range 分片按需加载）
 import './index.css'
@@ -17,6 +19,8 @@ initLang()
 
 // window.onerror + unhandledrejection 兜底（ErrorBoundary 只覆盖渲染期错误）
 installGlobalErrorHandlers()
+// Every error/warning toast also opens the compact diagnostic card.
+installProblemToasts()
 // QA-only machine identity; no-op in normal builds.
 installQaAuth()
 // 监控后端初始化。未配置 VITE_SENTRY_DSN 时为 no-op；
@@ -75,6 +79,7 @@ createRoot(root).render(
   <StrictMode>
     <ThemeProvider>
       <I18nRuntime />
+      <ProblemDialogHost />
       <QueryClientProvider client={queryClient}>
         <AppErrorBoundary>
           <RouterProvider router={router} />

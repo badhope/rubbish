@@ -818,7 +818,7 @@ async def author_resubmit(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> SubmissionResponse:
-    """作者收到 major_revision / minor_revision 后重新提交。
+    """作者收到 major_revision / minor_revision / rework_requested 后重新提交。
 
     将状态置为 under_review（编辑可再次分配/决断），并把当前（作者已
     通过 PATCH 修改过的）作品内容快照为新版本。可选 ``note`` 记录
@@ -832,7 +832,7 @@ async def author_resubmit(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only the submitter can resubmit",
         )
-    if entry.status not in ("major_revision", "minor_revision"):
+    if entry.status not in ("major_revision", "minor_revision", "rework_requested"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot resubmit in status '{entry.status}'",

@@ -637,7 +637,9 @@ export function EditorPipeline() {
                                       ? '大修'
                                       : item.status === 'minor_revision'
                                         ? '小修'
-                                        : '已修改，待复核'}
+                                        : item.status === 'rework_requested'
+                                          ? '待作者修改'
+                                          : '已修改，待复核'}
                                   </Badge>
                                   {item.editor_note ? (
                                     <span className="line-clamp-2 text-muted-foreground">

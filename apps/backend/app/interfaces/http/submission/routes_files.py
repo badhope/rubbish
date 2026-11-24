@@ -377,8 +377,8 @@ async def upload_submission_file(
 
     限制：
     - 仅作者本人
-    - submission 必须处于 pending / under_review / major_revision / minor_revision
-      （under_review 允许是为了让编辑要求作者替换作品时仍能上传）
+    - submission 必须处于 pending / under_review / major_revision / minor_revision / rework_requested
+      （under_review 允许是为了让编辑要求作者替换作品时仍能上传；rework_requested 是作者待修改状态）
     - accepted / rejected 终态下不可上传
     - MIME 必须在白名单内
     - 大小 ≤ 50 MB
@@ -395,6 +395,7 @@ async def upload_submission_file(
         "under_review",
         "major_revision",
         "minor_revision",
+        "rework_requested",
     ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

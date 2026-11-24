@@ -297,9 +297,12 @@ class SmtpPoolEmailSender:
     accounts are fallbacks for provider throttling or a bad primary minute.
     Failures are counted per account; after ``breaker_threshold`` consecutive
     failures the account is parked for ``breaker_cooldown`` seconds, then the
-    next configured account takes over. Do not round-robin the public official
-    address with the old personal mailboxes: that would make the sender identity
-    inconsistent and defeat the point of having an official address.
+    next configured account takes over. When the primary is merely busy
+    (more than ``max_inflight`` parallel sends), new mail overflows to a
+    standby account before the provider starts rejecting requests. Do not
+    round-robin the public official address with the old personal mailboxes:
+    that would make the sender identity inconsistent and defeat the point of
+    having an official address.
     """
 
     def __init__(
@@ -310,6 +313,7 @@ class SmtpPoolEmailSender:
         retries: int = 1,
         breaker_threshold: int = 2,
         breaker_cooldown: int = 180,
+        max_inflight: int = 2,
     ) -> None:
         if not accounts:
             raise ValueError("SmtpPoolEmailSender needs at least one account")
@@ -318,12 +322,32 @@ class SmtpPoolEmailSender:
         self._retries = retries
         self._breaker_threshold = breaker_threshold
         self._breaker_cooldown = breaker_cooldown
+        self._max_inflight = max(1, max_inflight)
         self._failures: dict[str, int] = {a.key: 0 for a in accounts}
         self._cooldown_until: dict[str, float] = {a.key: 0.0 for a in accounts}
+        self._inflight: dict[str, int] = {a.key: 0 for a in accounts}
 
     @property
     def account_count(self) -> int:
         return len(self._accounts)
+
+    def status_snapshot(self) -> list[dict[str, int | str | bool]]:
+        """Operational view for the health page; never includes credentials."""
+        now = time.monotonic()
+        return [
+            {
+                "from_address": a.from_address,
+                "host": a.host,
+                "inflight": self._inflight.get(a.key, 0),
+                "max_inflight": self._max_inflight,
+                "failures": self._failures.get(a.key, 0),
+                "cooldown_seconds": max(
+                    0, round(self._cooldown_until.get(a.key, 0.0) - now)
+                ),
+                "available": self._cooldown_until.get(a.key, 0.0) <= now,
+            }
+            for a in self._accounts
+        ]
 
     def _available(self, now: float) -> list[SmtpAccount]:
         live = [a for a in self._accounts if self._cooldown_until[a.key] <= now]
@@ -332,9 +356,17 @@ class SmtpPoolEmailSender:
         return live or list(self._accounts)
 
     def _order(self, now: float) -> list[SmtpAccount]:
-        # Keep configuration order: official address first, old mailboxes only
-        # when the official account is cooling down after throttling/failure.
-        return self._available(now)
+        # Keep configuration order among accounts with local capacity; once the
+        # official identity is busy, standby accounts move to the front. This
+        # is overflow, not round-robin: a single sequential send still uses the
+        # official address.
+        live = self._available(now)
+        free = [a for a in live if self._inflight[a.key] < self._max_inflight]
+        busy = sorted(
+            (a for a in live if self._inflight[a.key] >= self._max_inflight),
+            key=lambda a: self._inflight[a.key],
+        )
+        return free + busy
 
     def _record_success(self, account: SmtpAccount) -> None:
         self._failures[account.key] = 0
@@ -388,24 +420,32 @@ class SmtpPoolEmailSender:
             return
         last_error: Exception | None = None
         order = self._order(time.monotonic())
-        for account in order:
-            sender = SMTPEmailSender(
-                host=account.host,
-                port=account.port,
-                username=account.username,
-                password=account.password,
-                from_addr=account.from_address,
-                from_name=account.from_name,
-                use_tls=account.use_tls,
-                starttls=account.starttls,
-                timeout=self._timeout,
-                retries=self._retries,
-            )
-            # 内层实例必须继承外层的外发许可：否则恭喜通道（外层 bypass）
-            # 会被内层 guard 静默拦截，且 guard 静默 return 会让 pool 误记成功。
-            if getattr(self, "_bypass_outbound_guard", False):
-                sender._bypass_outbound_guard = True
+        for index, account in enumerate(order):
+            if index > 0:
+                logger.info(
+                    "email_pool_overflow",
+                    account=account.key,
+                    reason="primary_busy_or_cooling",
+                    inflight={k: v for k, v in self._inflight.items()},
+                )
+            self._inflight[account.key] += 1
             try:
+                sender = SMTPEmailSender(
+                    host=account.host,
+                    port=account.port,
+                    username=account.username,
+                    password=account.password,
+                    from_addr=account.from_address,
+                    from_name=account.from_name,
+                    use_tls=account.use_tls,
+                    starttls=account.starttls,
+                    timeout=self._timeout,
+                    retries=self._retries,
+                )
+                # 内层实例必须继承外层的外发许可：否则恭喜通道（外层 bypass）
+                # 会被内层 guard 静默拦截，且 guard 静默 return 会让 pool 误记成功。
+                if getattr(self, "_bypass_outbound_guard", False):
+                    sender._bypass_outbound_guard = True
                 await sender.send(to=to, subject=subject, body=body, html=html)
                 self._record_success(account)
                 logger.info("email_sent_pool", to=_mask_recipient(to), account=account.key)
@@ -418,6 +458,8 @@ class SmtpPoolEmailSender:
                     account=account.key,
                     error=str(exc)[:200],
                 )
+            finally:
+                self._inflight[account.key] = max(0, self._inflight[account.key] - 1)
         logger.error(
             "email_pool_gave_up",
             to=_mask_recipient(to),
@@ -477,6 +519,7 @@ def get_email_sender() -> EmailSender:
                 retries=min(settings.email_smtp_retries, 1),
                 breaker_threshold=settings.email_smtp_breaker_threshold,
                 breaker_cooldown=settings.email_smtp_breaker_cooldown,
+                max_inflight=settings.email_smtp_max_inflight_per_account,
             )
             logger.info("email_sender_pool", accounts=len(accounts))
             return _sender
