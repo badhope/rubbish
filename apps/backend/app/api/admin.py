@@ -1289,7 +1289,8 @@ async def system_health(
                 (
                     entry
                     for entry in entries
-                    if entry.name.startswith("db-") and entry.name.endswith(".dump")
+                    if entry.name.startswith("db-")
+                    and entry.name.endswith((".dump", ".sql", ".sql.gz"))
                 ),
                 key=lambda entry: entry.stat().st_mtime,
             )
