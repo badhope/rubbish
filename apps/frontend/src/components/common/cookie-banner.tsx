@@ -112,7 +112,7 @@ export function CookieBanner() {
       <div className="flex flex-nowrap items-center gap-2 sm:h-14 sm:justify-between sm:gap-3">
         <div className="min-w-0 flex-1 text-xs leading-relaxed text-foreground/90">
           <p className="text-[12px] font-medium leading-tight sm:hidden">Cookie 仅必要</p>
-          <p className="mt-0.5 whitespace-nowrap text-[11px] leading-snug text-foreground/70 sm:hidden">
+          <p className="mt-0.5 text-[11px] leading-snug text-foreground/70 sm:hidden">
             保持登录与防伪造；无广告追踪。
           </p>
           <p className="hidden text-xs text-foreground/70 sm:block sm:truncate">

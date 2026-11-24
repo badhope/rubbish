@@ -48,6 +48,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { AppearanceMenu } from '@/components/appearance-menu'
+import { LanguageButton } from '@/components/language-button'
 import { CookieBanner } from '@/components/common/cookie-banner'
 import { PageViewTracker } from '@/components/common/page-view-tracker'
 import { groupLabel, navLabel, text, useLang } from '@/lib/i18n'
@@ -375,6 +376,11 @@ export function AppShell() {
             <span className="hidden text-[11px] font-normal text-muted-foreground sm:inline">返回首页</span>
           </Link>
         )}
+        {location.pathname !== '/' && (
+          <div className="fixed right-4 top-4 z-10 sm:right-6">
+            <LanguageButton />
+          </div>
+        )}
         <ModuleErrorBoundary name="页面" resetKeys={[location.pathname]}>
           <PageTransition>
             <Outlet />
@@ -447,6 +453,7 @@ export function AppShell() {
                 </div>
               </form>
               )}
+              <LanguageButton />
               <AppearanceMenu />
               {isAuthenticated && (
                 <Button asChild size="sm" className="hidden sm:inline-flex">
@@ -652,6 +659,7 @@ export function AppShell() {
               {text('搜索', lang)}
               <kbd className="rounded border bg-muted px-1 font-mono text-[10px] text-muted-foreground">⌘K</kbd>
             </Button>
+            <LanguageButton />
             <AppearanceMenu />
             {notificationBell}
             {userMenu}

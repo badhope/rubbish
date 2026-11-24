@@ -100,7 +100,7 @@ function AccessibilityPage() {
             键盘操作、读屏朗读或颜色对比遇到问题，可以在
             <Link to="/forum" search={{ view: 'feedback' }} className="mx-1 text-primary hover:underline">
               反馈墙
-            </Link>
+            </Link>{' '}
             选择「无障碍与移动端问题」留言，或写信到 info@rubbishasci.cn。站务会尽快处理。
           </p>
         </RevealSection>

@@ -168,15 +168,14 @@ function AboutPage() {
             写信给我们
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            版权、隐私、举报与申诉请发邮件到
-            <a href="mailto:info@rubbishasci.cn" className="mx-1 text-primary hover:underline">
+            版权、隐私、举报与申诉请发邮件到{' '}
+            <a href="mailto:info@rubbishasci.cn" className="text-primary hover:underline">
               info@rubbishasci.cn
             </a>
-            。社区规则见
-            <Link to="/guide" search={{ tab: 'policies' }} className="mx-1 text-primary hover:underline">
+            。社区规则见{' '}
+            <Link to="/guide" search={{ tab: 'policies' }} className="text-primary hover:underline">
               边界与处理
-            </Link>
-            。
+            </Link>。
           </p>
         </RevealSection>
       </div>

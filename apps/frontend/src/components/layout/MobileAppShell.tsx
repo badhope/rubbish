@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { AppearanceMenu } from '@/components/appearance-menu'
+import { LanguageButton } from '@/components/language-button'
 import { BrandMark } from '@/components/common/brand-mark'
 import { AmbientBackdrop } from '@/components/common/ambient-backdrop'
 import { ModuleErrorBoundary } from '@/components/common/error-boundary'
@@ -141,6 +142,9 @@ export function MobileAppShell() {
           <span>Rubbish</span>
           <span className="text-[11px] font-normal text-muted-foreground">返回首页</span>
         </Link>
+        <div className="fixed right-4 top-3 z-10">
+          <LanguageButton />
+        </div>
         <CookieBanner />
         <ModuleErrorBoundary name="页面" resetKeys={[location.pathname]}>
           <PageTransition>
@@ -222,6 +226,7 @@ export function MobileAppShell() {
           <span>Rubbish</span>
         </Link>
         <div className="flex items-center gap-1.5">
+          <LanguageButton />
           <AppearanceMenu />
           {/* 次级入口不再藏在「⋯」里：用带文字的胶囊按钮，第一眼就知道能展开 */}
           <DropdownMenu>

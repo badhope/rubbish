@@ -12,8 +12,10 @@ import { useAuth } from '@/hooks/use-auth'
 import { useEditorialPicks, useResources } from '@/hooks/api/use-modules'
 import { formatAuthors } from '@/lib/utils'
 import { readAccessRegion } from '@/lib/access'
+import { navLabel, useLang } from '@/lib/i18n'
 import { AnnouncementChip, AnnouncementDialog, useAnnouncementPortal } from '@/components/common/announcement-dialog'
 import { AppearanceMenu } from '@/components/appearance-menu'
+import { LanguageButton } from '@/components/language-button'
 import { ArticleCover } from '@/components/common/article-cover'
 import { BrandMark } from '@/components/common/brand-mark'
 import { Button } from '@/components/ui/button'
@@ -57,8 +59,12 @@ const SITE_QQ_GROUP = '1084870548'
 
 function GuestCover() {
   const overseas = readAccessRegion() === 'overseas'
+  const lang = useLang()
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-5 py-16">
+      <div className="absolute right-3 top-3 z-20">
+        <LanguageButton />
+      </div>
       <div className="pointer-events-none absolute inset-0 opacity-70" aria-hidden>
         <div className="absolute -left-24 top-16 h-56 w-56 rounded-full border border-border/60" />
         <div className="absolute -right-20 bottom-10 h-64 w-64 rounded-full border border-dashed border-border/70" />
@@ -71,14 +77,28 @@ function GuestCover() {
         <p className="mt-7 text-[10px] uppercase tracking-[0.34em] text-primary">
           Rubbish
         </p>
-        <h1 className="mt-3 font-serif text-4xl leading-none tracking-tight sm:text-5xl">
+        <h1
+          className={
+            lang === 'en'
+              ? 'mt-3 font-serif text-[1.5rem] leading-[1.2] tracking-tight sm:text-[2.15rem]'
+              : 'mt-3 font-serif text-4xl leading-none tracking-tight sm:text-5xl'
+          }
+        >
           {overseas ? (
-            <>
-              <span className="block">文章与主题论坛</span>
-              <span className="block">对境外读者开放</span>
-            </>
+            lang === 'en' ? (
+              <>
+                <span className="block">Writing and the Forum</span>
+                <span className="block">Open to readers</span>
+                <span className="block">outside mainland China</span>
+              </>
+            ) : (
+              <>
+                <span className="block">文章与主题论坛</span>
+                <span className="block">对境外读者开放</span>
+              </>
+            )
           ) : (
-            '仅对注册用户开放'
+            lang === 'en' ? 'Members only' : '仅对注册用户开放'
           )}
         </h1>
         <p className="mt-4 text-sm leading-7 text-muted-foreground">
@@ -139,6 +159,7 @@ function HomePage() {
 }
 
 function MemberHome() {
+  const lang = useLang()
   const notice = useAnnouncementPortal()
   const editorialQuery = useEditorialPicks(4)
   const latestQ = useResources({ page: 1, page_size: 6, sort: 'created_at', order: 'desc' })
@@ -185,7 +206,7 @@ function MemberHome() {
           <nav className="hidden items-center gap-3 text-sm md:flex" aria-label="主导航">
             {PRIMARY_NAV.map(([to, label]) => (
               <Link key={to} to={to} className="text-muted-foreground transition-colors hover:text-foreground">
-                {label}
+                {navLabel(to, label, lang)}
               </Link>
             ))}
           </nav>
@@ -198,6 +219,7 @@ function MemberHome() {
                 onOpen={() => notice.setOpen(true)}
               />
             </span>
+            <LanguageButton />
             <AppearanceMenu />
             <Button asChild size="sm" className="hidden sm:inline-flex">
               <Link to="/submissions/new">

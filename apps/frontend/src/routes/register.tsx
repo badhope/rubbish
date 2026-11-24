@@ -384,9 +384,9 @@ export function RegisterPage() {
             </Button>
           </form>
           <p className="mt-3 text-center text-xs leading-5 text-muted-foreground">
-            注册即表示你已阅读并同意
-            <Link to="/guide" search={{ tab: 'policies' }} className="mx-1 text-primary hover:underline">边界与处理</Link>
-            和
+            注册即表示你已阅读并同意{' '}
+            <Link to="/guide" search={{ tab: 'policies' }} className="mx-1 text-primary hover:underline">边界与处理</Link>{' '}
+            和{' '}
             <Link to="/privacy" className="mx-1 text-primary hover:underline">隐私政策</Link>。
           </p>
           <p className="mt-3 text-center text-sm text-muted-foreground">

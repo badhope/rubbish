@@ -50,7 +50,10 @@ export function CatalogIndexRow({
         <span className="line-clamp-2 text-[15px] font-medium leading-snug sm:text-base">
           <Highlight text={displayTitle} query={query} />
         </span>
-        <span className="mt-1 block text-[11px] leading-5 text-muted-foreground sm:text-xs">
+        <span
+          data-i18n-allow
+          className="mt-1 block text-[11px] leading-5 text-muted-foreground sm:text-xs"
+        >
           {meta}
         </span>
         {preview && (

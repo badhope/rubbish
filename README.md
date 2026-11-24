@@ -17,6 +17,12 @@ Rubbish does not ask for a particular format. A long piece can be a careful inve
 
 It is one FastAPI service, one React app, and PostgreSQL. You can run the whole thing on a single small server.
 
+## Interface language
+
+The interface switches between Chinese (source) and English (a hand-written editorial layer) from the top-right button, or by opening a page with `?lang=en`. English browsers land on the English edition; the choice is remembered. Author titles, bodies, comments and names are never run through the translation layer — the English edition does not pretend a machine translation is the author's voice.
+
+![English home](docs/screenshots/i18n-home-en.png)
+
 ## What you can do
 
 - **Talk in the sections.** Writing methods, retrospectives, team-finding, creative life, and site feedback each have their own place.
@@ -24,6 +30,7 @@ It is one FastAPI service, one React app, and PostgreSQL. You can run the whole 
 - **Mark fiction as fiction.** Stories, jokes, and invented situations can carry a visible fiction label, so readers are not misled.
 - **Follow what matters.** Bookmarks, reading progress, author follows, notifications, and topic subscriptions work across devices.
 - **Keep moderation practical.** Reports, section management, announcements, audit logs, and a small admin area are built in. Topic posts go through an explainable rule pass first; borderline items land in a manual review queue with an SLA, audit trail and author notification.
+- **Read it in Chinese or English.** The interface has a visible language switch and a shareable `?lang=en` link. English is a hand-written editorial layer, not a machine pass; author-written titles and bodies stay in their original language.
 - **Run it yourself.** Docker Compose, automatic HTTPS through Caddy, Alembic migrations, and PostgreSQL row-level security are already wired up.
 
 ## Quick start
@@ -81,7 +88,7 @@ Mobile theme forum, same data and actions:
 
 ![Mobile theme forum](docs/screenshots/forum-mobile.png)
 
-The queue screenshot uses a temporary demo topic; it was deleted right after capture. The rest are live production UI at 1.19.49.
+The queue screenshot uses a temporary demo topic; it was deleted right after capture. The rest are live production UI at 1.19.50.
 
 ## Project layout
 

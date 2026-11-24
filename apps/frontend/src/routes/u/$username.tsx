@@ -76,7 +76,7 @@ function PublicProfilePage() {
                   to="/catalog/$resourceId"
                   params={{ resourceId: String(data.works[0].id) }}
                 >
-                  读他的一篇
+                  <span data-i18n-allow>读他的一篇</span>
                 </Link>
               </Button>
             ) : null}

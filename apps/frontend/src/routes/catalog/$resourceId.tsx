@@ -313,7 +313,7 @@ function CatalogDetailPage() {
                 </Badge>
               )}
             </div>
-            <h1 className="min-w-0 break-words text-xl font-semibold leading-snug tracking-tight sm:text-2xl">
+            <h1 data-i18n-skip className="min-w-0 break-words text-xl font-semibold leading-snug tracking-tight sm:text-2xl">
               {titleMain}
               {titleSub ? (
                 <span className="mt-1 block text-base font-normal text-muted-foreground sm:text-lg">
@@ -329,7 +329,7 @@ function CatalogDetailPage() {
             {/* 作者行：优先用 authors_detail（v5）；未认领者邮箱/单位为 null，绝不展示 PDF 抓出来的私人邮箱。 */}
             <AuthorRow detail={data.authors_detail ?? null} fallbackNames={cleanAuthors} />
             {data.editor_note ? (
-              <div className="mt-4 border-l-2 border-primary/60 bg-primary/[0.04] py-2 pl-4">
+              <div data-i18n-skip className="mt-4 border-l-2 border-primary/60 bg-primary/[0.04] py-2 pl-4">
                 <p className="text-[10px] uppercase tracking-[0.24em] text-primary">站内精选</p>
                 <p className="mt-1 text-sm leading-6 text-foreground/85">{data.editor_note}</p>
               </div>
@@ -364,7 +364,9 @@ function CatalogDetailPage() {
                   }}
                 >
                   <MessagesSquare className="h-4 w-4 shrink-0" />
-                  <span className="truncate">讨论{discussCount ? ` · ${discussCount}` : ''}</span>
+                  <span data-i18n-allow className="truncate">
+                    讨论{discussCount ? ` · ${discussCount}` : ''}
+                  </span>
                 </Link>
               </Button>
               {isAuthenticated && claimStatus.data?.claimable ? (
@@ -406,6 +408,7 @@ function CatalogDetailPage() {
                   paperTitle: data.title,
                   prompt: data.discussion_prompt,
                 }}
+                data-i18n-allow
                 className="mt-3 inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
               >
                 去主题论坛回应 <ArrowRight className="h-4 w-4" />
@@ -1440,7 +1443,7 @@ function AuthorRow({ detail, fallbackNames }: { detail: AuthorDetail[] | null; f
   if (detail && detail.length > 0) {
     const sorted = [...detail].sort((a, b) => a.order - b.order)
     return (
-      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+      <div data-i18n-skip className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
         {sorted.map((a, i) => (
           <span key={i} className="inline-flex items-center gap-1">
             {a.claimed && a.username ? (
@@ -1469,7 +1472,7 @@ function AuthorRow({ detail, fallbackNames }: { detail: AuthorDetail[] | null; f
   // 数组顺序就是署名顺序：第一位补 †（第一作者），避免读者只看到一串
   // 名字、分不清谁是一作；后续作者用「·」分隔，与 detail 分支保持一致。
   return fallbackNames.length > 0 ? (
-    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+    <div data-i18n-skip className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
       {fallbackNames.map((name, i) => (
         <span key={`${name}-${i}`} className="inline-flex items-center gap-1">
           <span className="min-w-0 break-words text-foreground">{name}</span>

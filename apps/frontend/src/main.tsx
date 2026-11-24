@@ -4,11 +4,16 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { routeTree } from './routeTree.gen'
 import { ThemeProvider } from './components/theme-provider'
+import { I18nRuntime } from './components/i18n-runtime'
+import { initLang } from './lib/i18n'
 import { AppErrorBoundary } from './components/common/error-boundary'
 import { initMonitoring, installGlobalErrorHandlers } from './lib/monitoring'
 import { installQaAuth } from './lib/qa'
 // 衬线字体（自托管可变字重，中文按 unicode-range 分片按需加载）
 import './index.css'
+
+// 语言先于 React 定下来：共享的 ?lang=en 链接不应先闪一帧中文。
+initLang()
 
 // window.onerror + unhandledrejection 兜底（ErrorBoundary 只覆盖渲染期错误）
 installGlobalErrorHandlers()
@@ -69,6 +74,7 @@ const root = document.getElementById('root')!
 createRoot(root).render(
   <StrictMode>
     <ThemeProvider>
+      <I18nRuntime />
       <QueryClientProvider client={queryClient}>
         <AppErrorBoundary>
           <RouterProvider router={router} />

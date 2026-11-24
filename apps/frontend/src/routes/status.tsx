@@ -146,7 +146,7 @@ function StatusPage() {
         页面打不开时可以先刷新一次。持续异常，可在
         <Link to="/forum" search={{ view: 'feedback' }} className="mx-1 text-primary hover:underline">
           反馈墙
-        </Link>
+        </Link>{' '}
         留言，或写信到 info@rubbishasci.cn。
       </p>
     </div>

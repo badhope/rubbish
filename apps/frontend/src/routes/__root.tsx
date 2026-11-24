@@ -30,6 +30,9 @@ const PUBLIC_PATHS = new Set([
   '/auth/oidc/callback',
   '/privacy',
   '/accessibility',
+  '/about',
+  '/guide',
+  '/status',
   '/403',
 ])
 
