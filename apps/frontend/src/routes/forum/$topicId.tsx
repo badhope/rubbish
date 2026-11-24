@@ -39,6 +39,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
+import { MODERATION_STATUS_LABEL } from '@/lib/forum-copy'
+import { ModerationNotice } from '@/components/forum/moderation-status'
+import { OperatorQuickPanel } from '@/components/forum/operator-quick-panel'
 
 const ForumEditor = lazy(() =>
   import('@/components/forum/forum-editor').then((m) => ({ default: m.ForumEditor })),
@@ -65,6 +68,11 @@ interface ForumTopic {
   reply_count: number
   created_at: string
   last_reply_at: string | null
+  moderation_status?: string | null
+  risk_score?: number | null
+  manual_review_reason?: string | null
+  review_eta_at?: string | null
+  published_at?: string | null
   author: { id: number; username: string; display_name?: string | null; avatar_url?: string | null } | null
   reactions?: Record<string, number>
   viewer_reactions?: string[]
@@ -224,7 +232,7 @@ function ReplyCard({
           <div className="min-w-0">
             {!isRoot && parentAuthor && (
               <p className="mb-0.5 text-[11px] text-muted-foreground">
-                回应 @{parentAuthor}
+                回复 @{parentAuthor}
               </p>
             )}
             <p className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
@@ -236,7 +244,7 @@ function ReplyCard({
               </span>
               {isTopicAuthor && (
                 <Badge variant="outline" className="h-4 px-1 text-[10px]">
-                  话题作者
+                  主题帖作者
                 </Badge>
               )}
               <span>·</span>
@@ -250,7 +258,7 @@ function ReplyCard({
                   variant="ghost"
                   size="icon"
                   className="h-6 w-6 shrink-0 text-muted-foreground"
-                  aria-label="举报回应"
+                  aria-label="举报该楼层"
                 >
                   <Flag className="h-3.5 w-3.5" />
                 </Button>
@@ -332,9 +340,9 @@ function ForumTopicPage() {
       setReplyTo(null)
       setComposerOpen(false)
       void qc.invalidateQueries({ queryKey: ['forum'] })
-      toast.success(replyTo ? '已回应' : '已发出回应')
+      toast.success(replyTo ? '已发布楼层互动' : '已发布楼层互动')
     },
-    onError: (err) => toast.error(extractError(err, '回应失败')),
+    onError: (err) => toast.error(extractError(err, '楼层互动发布失败')),
   })
 
   const sendReply = () => {
@@ -367,7 +375,7 @@ function ForumTopicPage() {
       ).data,
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['forum', 'topic', id, 'follow'] })
-      toast.success(followQ.data?.following ? '已取消关注' : '已关注，有新回应会通知你')
+      toast.success(followQ.data?.following ? '已取消关注' : '已关注，有新的楼层互动会通知你')
     },
     onError: (err) => toast.error(extractError(err, '操作失败')),
   })
@@ -410,7 +418,7 @@ function ForumTopicPage() {
     onSuccess: () => {
       setEditOpen(false)
       void qc.invalidateQueries({ queryKey: ['forum'] })
-      toast.success('话题已更新')
+      toast.success('主题帖已更新')
     },
     onError: (err) => toast.error(extractError(err, '保存失败')),
   })
@@ -462,7 +470,7 @@ function ForumTopicPage() {
     return (
       <div className="mt-2 rounded-lg border bg-muted/25 p-2.5">
         <div className="mb-2 text-[11px] text-muted-foreground">
-          回应 @{target.author?.display_name || target.author?.username || '已注销用户'}
+          回复 @{target.author?.display_name || target.author?.username || '已注销用户'}
         </div>
         <Suspense fallback={<div className="flex h-[120px] items-center justify-center rounded-md border bg-muted/20 text-xs text-muted-foreground">编辑器加载中…</div>}>
           <ForumEditor
@@ -471,7 +479,7 @@ function ForumTopicPage() {
             onUploadImage={uploadForumImage}
             minHeight={120}
             autoFocus
-            ariaLabel={`回应 @${target.author?.display_name || target.author?.username || '已注销用户'}`}
+            ariaLabel={`回复 @${target.author?.display_name || target.author?.username || '已注销用户'}`}
             onSubmitShortcut={sendReply}
             placeholder="写在这条回应下面；Ctrl / ⌘ + Enter 发送"
           />
@@ -482,7 +490,7 @@ function ForumTopicPage() {
           </Button>
           <Button size="sm" onClick={sendReply} disabled={replyMut.isPending || reply.trim().length < 1}>
             <Send className="h-4 w-4" />
-            {replyMut.isPending ? '发送中…' : '回应'}
+            {replyMut.isPending ? '发布中…' : '回应'}
           </Button>
         </div>
       </div>
@@ -491,7 +499,7 @@ function ForumTopicPage() {
 
   if (topicQ.isLoading) return <Loading />
   if (topicQ.isError || !topicQ.data) {
-    return <ErrorState message="话题不存在或已被删除" onRetry={() => topicQ.refetch()} />
+    return <ErrorState message="主题帖不存在或已被删除" onRetry={() => topicQ.refetch()} />
   }
   const topic = topicQ.data
   const shareDescription = topic.body
@@ -501,6 +509,12 @@ function ForumTopicPage() {
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, 160)
+  const statusPending = !!topic.moderation_status && topic.moderation_status !== 'published' && topic.moderation_status !== 'auto_approved' && topic.moderation_status !== 'approved'
+  const canOperate =
+    isAdmin ||
+    (user?.roles ?? []).some((role) =>
+      ['editor', 'editor_in_chief', 'chief_editor', 'deputy_editor', 'section_editor', 'board_editor'].includes(role),
+    )
   const canDelete = isAuthenticated && (isAdmin || topic.author?.id === user?.id)
   const canEdit = isAuthenticated && topic.author?.id === user?.id && !topic.is_locked
   const following = followQ.data?.following ?? false
@@ -513,8 +527,10 @@ function ForumTopicPage() {
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        返回讨论区
+        返回主题列表
       </Link>
+
+      <ModerationNotice topic={topic} canOperate={canOperate} />
 
       <Card>
         <CardContent className="space-y-3 py-5">
@@ -526,6 +542,9 @@ function ForumTopicPage() {
               </Badge>
             )}
             <Badge variant="outline">{topic.board_name ?? CATEGORY_LABEL[topic.category] ?? topic.category}</Badge>
+            {topic.moderation_status && topic.moderation_status !== 'published' ? (
+              <Badge variant="outline">{MODERATION_STATUS_LABEL[topic.moderation_status] ?? topic.moderation_status}</Badge>
+            ) : null}
             {topic.is_fictional ? (
               <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-800">
                 虚构
@@ -603,7 +622,7 @@ function ForumTopicPage() {
                     variant="ghost"
                     className="h-7 gap-1 px-2 text-[11px] text-destructive"
                     onClick={() => {
-                      if (window.confirm('确定删除这个话题？')) deleteMut.mutate()
+                      if (window.confirm('确定删除这个主题帖？')) deleteMut.mutate()
                     }}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -643,12 +662,15 @@ function ForumTopicPage() {
       <div className="space-y-2">
         <p className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
           <MessageSquare className="h-4 w-4" />
-          回应（{topic.reply_count}）
+          楼层互动（{topic.reply_count}）
         </p>
         {repliesQ.isLoading ? (
           <Loading />
         ) : !repliesQ.data?.length ? (
-          <EmptyState title="还没有回应" description="你可以是第一个回应的人。" />
+          <EmptyState
+            title={statusPending ? '核验通过后开放楼层互动' : '还没有楼层互动'}
+            description={statusPending ? '当前主题帖在运营人工核验中，通过后会自动开放楼层互动。' : '你可以成为第一个参与讨论的人。'}
+          />
         ) : (
           <div className="space-y-3">
             {threads.map(({ root, children }) => (
@@ -658,7 +680,7 @@ function ForumTopicPage() {
                   isRoot
                   parentAuthor={parentName(root)}
                   topicAuthorId={topic.author?.id}
-                  canReply={isAuthenticated && !topic.is_locked}
+                  canReply={isAuthenticated && !topic.is_locked && !statusPending}
                   onReply={startReply}
                   onReport={requestReport}
                   inlineReply={renderInlineReply(root)}
@@ -672,7 +694,7 @@ function ForumTopicPage() {
                         isRoot={false}
                         parentAuthor={parentName(child)}
                         topicAuthorId={topic.author?.id}
-                        canReply={isAuthenticated && !topic.is_locked}
+                        canReply={isAuthenticated && !topic.is_locked && !statusPending}
                         onReply={startReply}
                         onReport={requestReport}
                         inlineReply={renderInlineReply(child)}
@@ -686,9 +708,13 @@ function ForumTopicPage() {
         )}
       </div>
 
-      {topic.is_locked ? (
+      {statusPending ? (
+        <p className="rounded-md border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-sm text-muted-foreground">
+          这条主题帖还在运营人工核验中，核验通过后会自动开放楼层互动。
+        </p>
+      ) : topic.is_locked ? (
         <p className="rounded-md border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-          这个话题已锁定，不再接受新回应。
+          这个主题帖已锁定，不再接受新的楼层互动。
         </p>
       ) : replyTo ? null : (
         <Card>
@@ -703,9 +729,9 @@ function ForumTopicPage() {
                       onUploadImage={uploadForumImage}
                       minHeight={160}
                       autoFocus
-                      ariaLabel="回应这条话题"
+                      ariaLabel="回复这个主题帖"
                       onSubmitShortcut={sendReply}
-                      placeholder="写下你的回应…（支持标题、引用、列表、表情和站内表情包）"
+                      placeholder="写下你的楼层互动…（支持标题、引用、列表、表情和站内表情包）"
                     />
                   </Suspense>
                   <div className="flex items-center justify-between">
@@ -717,7 +743,7 @@ function ForumTopicPage() {
                       disabled={replyMut.isPending || reply.trim().length < 1}
                     >
                       <Send className="h-4 w-4" />
-                      {replyMut.isPending ? '发送中…' : '回应'}
+                      {replyMut.isPending ? '发布中…' : '回应'}
                     </Button>
                   </div>
                 </>
@@ -728,7 +754,7 @@ function ForumTopicPage() {
                   className="flex w-full items-center gap-2 rounded-md border border-dashed bg-muted/20 px-3 py-4 text-left text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:bg-muted/30 hover:text-foreground"
                 >
                   <MessageSquare className="h-4 w-4 shrink-0" />
-                  <span>写下你的回应…</span>
+                  <span>写下你的楼层互动…</span>
                   <span className="ml-auto text-[11px]">Markdown / 图片 / 表情</span>
                 </button>
               )
@@ -737,7 +763,7 @@ function ForumTopicPage() {
                 <Link to="/login" search={{ redirect: `/forum/${topicId}` }} className="text-primary hover:underline">
                   登录
                 </Link>{' '}
-                后可以回应。
+                后可以参与楼层互动。
               </p>
             )}
           </CardContent>
@@ -750,7 +776,7 @@ function ForumTopicPage() {
           className="forum-writing-desk top-0 left-0 flex h-[100dvh] max-h-none w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 p-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:h-[min(90vh,900px)] sm:max-h-[min(90vh,900px)] sm:max-w-[1100px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:border"
         >
           <div className="flex items-center justify-between border-b px-4 py-3 sm:px-6">
-            <DialogTitle className="font-serif text-xl tracking-tight">编辑话题</DialogTitle>
+            <DialogTitle className="font-serif text-xl tracking-tight">编辑主题帖</DialogTitle>
             <Button variant="ghost" size="sm" onClick={() => setEditOpen(false)}>
               关闭
             </Button>
@@ -761,14 +787,14 @@ function ForumTopicPage() {
               onChange={(event) => setEditTitle(event.target.value)}
               maxLength={200}
               placeholder="标题"
-              aria-label="话题标题"
+              aria-label="主题帖标题"
               className="border-0 bg-transparent px-0 font-serif text-2xl shadow-none focus-visible:ring-0"
             />
             <div className="flex flex-wrap items-center gap-3">
               <select
                 value={editBoardId ?? ''}
                 onChange={(event) => setEditBoardId(event.target.value ? Number(event.target.value) : null)}
-                aria-label="话题分区"
+                aria-label="主题帖分区"
                 className="rounded-full border bg-card px-3 py-1 text-xs text-foreground outline-none focus:border-primary"
               >
                 <option value="" disabled>
@@ -802,7 +828,7 @@ function ForumTopicPage() {
                 onChange={setEditBody}
                 onUploadImage={uploadForumImage}
                 minHeight={520}
-                ariaLabel="编辑话题正文"
+                ariaLabel="编辑主题帖正文"
                 placeholder="修改正文…"
               />
             </Suspense>
@@ -840,6 +866,7 @@ function ForumTopicPage() {
         }}
         onOpenChange={(open) => !open && setPendingReport(null)}
       />
+      {canOperate ? <OperatorQuickPanel topicId={topic.id} pending={statusPending} /> : null}
     </div>
   )
 }

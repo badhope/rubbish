@@ -158,7 +158,7 @@ export function notificationDestination(
     case 'forum_topic':
       return id
         ? { to: '/forum/$topicId', params: { topicId: String(id) }, label: '看回复' }
-        : { to: '/forum', label: '去讨论区' }
+        : { to: '/forum', label: '去主题论坛' }
     case 'review_assignment':
       return id
         ? { to: '/review', search: { tab: 'assignments', assignment: id }, label: '去互评' }

@@ -32,7 +32,7 @@ const ROLES = [
 ]
 
 const TIMELINE = [
-  ['2026 年 10 月', '社区和内容库开门：说话留在讨论区，长文放进内容库。'],
+  ['2026 年 10 月', '社区和内容库开门：说话留在主题论坛，长文放进内容库。'],
   ['2026 年 11 月', '指南和规则页补齐；说话不再需要申请资格。'],
   ['现在', '问题、失败、复盘、组队和站务，都还在同一张桌子上。'],
 ]
@@ -60,7 +60,7 @@ function AboutPage() {
               「认真到荒诞，公开到失败。」
             </p>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              Rubbish 从第一天起就是一张公开的桌面：说话留讨论区，长文进内容库。你可以只留一个问题，
+              Rubbish 从第一天起就是一张公开的桌面：说话留主题论坛，长文进内容库。你可以只留一个问题，
               也可以把一次写作、一次尝试、一段现场观察，慢慢写完。
             </p>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">

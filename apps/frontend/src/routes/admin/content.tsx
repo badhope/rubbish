@@ -1,23 +1,26 @@
 import { useEffect, useState } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { ClipboardCheck, Kanban } from 'lucide-react'
-import { requireAdminGuard } from '@/lib/route-guards'
+import { requireEditorGuard } from '@/lib/route-guards'
 import { AdminSectionTabs, type AdminSectionItem } from '@/components/admin/admin-section-tabs'
 import AnnouncementsPage from '@/components/admin/pages/content/announcements'
 import ForumBoardsPage from '@/components/admin/pages/content/forum-boards'
 import ForumInspectionPage from '@/components/admin/pages/content/forum-inspection'
+import ForumModerationPage from '@/components/admin/pages/content/moderation'
 import ReportsPage from '@/components/admin/pages/content/reports'
 import CommentsPage from '@/components/admin/pages/content/comments'
 import AppealsPage from '@/components/admin/pages/content/appeals'
 
-type SectionKey = 'forum' | 'announcements' | 'boards' | 'reports' | 'comments' | 'appeals'
+type SectionKey = 'moderation' | 'forum' | 'announcements' | 'boards' | 'reports' | 'comments' | 'appeals'
 
 interface ContentSearch {
   section?: string
   appeal?: number
+  topic?: number
 }
 
 const SECTIONS: readonly AdminSectionItem<SectionKey>[] = [
+  { key: 'moderation', label: '人工核验' },
   { key: 'forum', label: '讨论巡检' },
   { key: 'announcements', label: '公告' },
   { key: 'boards', label: '分区' },
@@ -28,6 +31,7 @@ const SECTIONS: readonly AdminSectionItem<SectionKey>[] = [
 
 function isSectionKey(value: string | undefined): value is SectionKey {
   return (
+    value === 'moderation' ||
     value === 'forum' ||
     value === 'announcements' ||
     value === 'boards' ||
@@ -44,14 +48,18 @@ export const Route = createFileRoute('/admin/content')({
       Number.isInteger(Number(search.appeal)) && Number(search.appeal) > 0
         ? Number(search.appeal)
         : undefined,
+    topic:
+      Number.isInteger(Number(search.topic)) && Number(search.topic) > 0
+        ? Number(search.topic)
+        : undefined,
   }),
-  beforeLoad: () => requireAdminGuard(),
+  beforeLoad: () => requireEditorGuard(),
   component: AdminContentPage,
 })
 
 function AdminContentPage() {
   const navigate = useNavigate()
-  const { section: sectionParam, appeal } = Route.useSearch()
+  const { section: sectionParam, appeal, topic } = Route.useSearch()
   const [section, setSection] = useState<SectionKey>('forum')
 
   useEffect(() => {
@@ -96,6 +104,7 @@ function AdminContentPage() {
         </Link>
       </div>
       <AdminSectionTabs items={SECTIONS} active={section} onChange={changeSection} label="内容域子段" />
+      {section === 'moderation' ? <ForumModerationPage highlightTopicId={topic} /> : null}
       {section === 'forum' ? <ForumInspectionPage /> : null}
       {section === 'announcements' ? <AnnouncementsPage /> : null}
       {section === 'boards' ? <ForumBoardsPage /> : null}

@@ -63,7 +63,7 @@ function SearchPage() {
 
   return (
     <div className="mx-auto w-full max-w-[880px] space-y-6">
-      <PageHeader title="站内搜索" description="同一个词，同时找内容库的作品和讨论区的话题。" />
+      <PageHeader title="站内搜索" description="同一个词，同时找内容库的作品和主题论坛的主题帖。" />
 
       <form onSubmit={submit} className="relative" role="search">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -79,7 +79,7 @@ function SearchPage() {
       {!q ? (
         <EmptyState
           title="输入一个词，开始找"
-          description="作品按标题、作者、开头与标签匹配；话题按标题和正文匹配。"
+          description="作品按标题、作者、开头与标签匹配；主题帖按标题和正文匹配。"
         />
       ) : (
         <>
@@ -113,9 +113,9 @@ function SearchPage() {
             )}
           </section>
 
-          <section aria-label="话题结果" className="space-y-3">
+          <section aria-label="主题帖结果" className="space-y-3">
             <div className="flex items-baseline justify-between gap-2">
-              <h2 className="text-sm font-medium">话题</h2>
+              <h2 className="text-sm font-medium">主题帖</h2>
               <span className="text-xs text-muted-foreground">
                 {topicRows.length > 0 ? `命中 ${topicRows.length} 条` : '没有命中'}
               </span>
@@ -123,12 +123,12 @@ function SearchPage() {
             {topics.isPending ? (
               <Loading />
             ) : topics.isError ? (
-              <ErrorState message="话题结果没加载出来" onRetry={() => void topics.refetch()} />
+              <ErrorState message="主题帖结果没加载出来" onRetry={() => void topics.refetch()} />
             ) : topicRows.length === 0 ? (
               <p className="rounded-lg border border-dashed px-4 py-5 text-sm text-muted-foreground">
-                没有与「{q}」匹配的话题。可以换个说法，或
+                没有与「{q}」匹配的主题帖。可以换个说法，或
                 <Link to="/forum" className="mx-1 text-primary hover:underline">
-                  去讨论区看看
+                  去主题论坛看看
                 </Link>
                 。
               </p>
@@ -173,7 +173,7 @@ function SearchPage() {
                 <Link to="/catalog">去内容库</Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link to="/forum">去讨论区</Link>
+                <Link to="/forum">去主题论坛</Link>
               </Button>
             </div>
           )}

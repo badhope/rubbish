@@ -39,7 +39,7 @@ const TOPIC_CATEGORY_LABELS: Record<string, string> = {
 
 const STAT_ITEMS = [
   { key: 'works', label: '作品', icon: BookOpen },
-  { key: 'forum_topics', label: '话题', icon: MessageSquareText },
+  { key: 'forum_topics', label: '主题帖', icon: MessageSquareText },
   { key: 'followers', label: '关注者', icon: Users },
   { key: 'badges', label: '徽章', icon: Award },
 ] as const
@@ -267,7 +267,7 @@ export function PublicProfileView({
                 <MessageSquareText className="h-4 w-4" /> 最近说话
               </h2>
               {profile.topics.length === 0 ? (
-                <p className="text-sm text-muted-foreground">还没有在讨论区留下句子。</p>
+                <p className="text-sm text-muted-foreground">还没有在主题论坛留下句子。</p>
               ) : (
                 <ul className="space-y-2">
                   {profile.topics.map((topic) => (

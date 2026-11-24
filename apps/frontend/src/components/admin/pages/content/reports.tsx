@@ -104,7 +104,7 @@ export default function AdminReportsPage() {
     <div>
       <PageHeader
         title="举报处置"
-        description="统一查看话题、回应与评论举报；移除内容走软删除或下架，停用作者会立即让登录态失效。所有动作写入审计日志。"
+        description="统一查看主题帖、楼层互动与评论举报；移除内容走软删除或下架，停用作者会立即让登录态失效。所有动作写入审计日志。"
       />
 
       <Tabs
@@ -143,12 +143,12 @@ export default function AdminReportsPage() {
                   </Badge>
                   <Badge variant="secondary">
                     {row.target_type === 'reply'
-                      ? '回应'
+                      ? '楼层互动'
                       : row.target_type === 'comment'
                         ? '评论'
                         : row.target_type === 'submission'
                           ? '其他内容'
-                          : '话题'}
+                          : '主题帖'}
                   </Badge>
                   <span className="text-xs text-muted-foreground">
                     举报人：{row.reporter?.display_name || row.reporter?.username || '已注销'}
@@ -219,7 +219,7 @@ export default function AdminReportsPage() {
             <DialogDescription>
               {target?.action === 'suspend_author'
                 ? '会下架被举报内容，并停用作者账号（现有登录态立即失效）。请确认举报属实。'
-                : '会下架被举报内容；话题与回应软删，评论转为拒绝。'}
+                : '会下架被举报内容；主题帖与楼层互动软删，评论转为拒绝。'}
             </DialogDescription>
           </DialogHeader>
           <Textarea

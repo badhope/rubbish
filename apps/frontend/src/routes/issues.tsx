@@ -141,11 +141,11 @@ function CollectionsPage() {
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium">刚放上桌的作品，会先落进最新合集</p>
             <p className="mt-0.5 text-xs leading-5 text-muted-foreground">
-              只有一句话，不必等合集，直接去讨论区。
+              只有一句话，不必等合集，直接去主题论坛。
             </p>
           </div>
           <Button asChild variant="outline" size="sm">
-            <Link to="/forum">去讨论区</Link>
+            <Link to="/forum">去主题论坛</Link>
           </Button>
         </CardContent>
       </Card>

@@ -64,7 +64,7 @@ export function MeOverview({
           >
             <MessagesSquare className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <span>
-              <span className="block text-sm font-medium">去讨论区</span>
+              <span className="block text-sm font-medium">去主题论坛</span>
               <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
                 读帖、回复、收藏；先聊起来，再补记录。
               </span>
@@ -78,7 +78,7 @@ export function MeOverview({
             <span>
               <span className="block text-sm font-medium">写一篇</span>
               <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
-                可以先存草稿；短帖留给讨论区。
+                可以先存草稿；短帖留给主题论坛。
               </span>
             </span>
           </Link>

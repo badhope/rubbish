@@ -279,7 +279,7 @@ function SubmissionsPage() {
     <div>
       <PageHeader
         title="我的作品"
-        description="查看你发布的作品与进度；长文在这里发布，短帖直接去讨论区。"
+        description="查看你发布的作品与进度；长文在这里发布，短帖直接去主题论坛。"
         actions={
           <>
             <Button

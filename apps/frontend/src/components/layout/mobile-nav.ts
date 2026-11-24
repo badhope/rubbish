@@ -43,11 +43,11 @@ export interface MobileMoreItem {
 // 折叠菜单分组顺序
 export const MOBILE_MORE_GROUP_ORDER = ['我的空间', '工作台', '社区', '管理'] as const
 
-// 底部固定 5 Tab：首页 / 讨论区 / 写 / 内容库 / 我的。
+// 底部固定 5 Tab：首页 / 主题论坛 / 写 / 内容库 / 我的。
 // “写”是一级动作；合集与指南不再占底部席位，收进右上角“更多”，避免入口比动作还多。
 export const MOBILE_TABS: MobileTab[] = [
   { to: '/', label: '首页', icon: Home },
-  { to: '/forum', label: '讨论区', icon: MessagesSquare },
+  { to: '/forum', label: '主题论坛', icon: MessagesSquare },
   { to: '/submissions/new', label: '写', icon: PenLine },
   { to: '/catalog', label: '内容库', icon: BookOpen },
   { to: '/me', label: '我的', icon: User },

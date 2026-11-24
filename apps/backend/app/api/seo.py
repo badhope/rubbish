@@ -33,7 +33,7 @@ SITE_NAME = "Rubbish"
 SITE_TITLE = "Rubbish — 公开写作与讨论社区"
 DEFAULT_DESCRIPTION = (
     "Rubbish 是一张公开的桌面。有人拆开一个问题，有人留下一次失败，也有人把不可能写得一本正经。"
-    "长文在内容库，短帖在讨论区，登录后可读；这里不做学术评价，也不出具任何证明。"
+    "长文在内容库，短帖在主题论坛，登录后可读；这里不做学术评价，也不出具任何证明。"
 )
 
 PAGE_META: dict[str, tuple[str, str]] = {
@@ -43,7 +43,7 @@ PAGE_META: dict[str, tuple[str, str]] = {
         "长文、怪问题、小说与随笔。按合集慢慢读，或随手翻开一篇。",
     ),
     "forum": (
-        "讨论区 · 写法、复盘与组队",
+        "主题论坛 · 写法、复盘与组队",
         "写法、复盘、组队，以及写作之外的生活。登录即可发帖，不必攒经验。",
     ),
     "issues": (
@@ -166,7 +166,7 @@ async def ai_txt(request: Request) -> Response:
     body = f"""# Rubbish AI Agent Policy
 
 ## 可以做什么
-- 读取公开页面、内容库、社区帖子与 RSS，遵守 /robots.txt。
+- 读取公开页面、内容库、主题帖与 RSS，遵守 /robots.txt。
 - 引用时保留标题、作者、出处与原文链接。
 
 ## 不可以做什么
@@ -176,7 +176,7 @@ async def ai_txt(request: Request) -> Response:
 
 ## 公开入口
 - 首页：{root}/
-- 讨论区：{root}/forum
+- 主题论坛：{root}/forum
 - 内容库：{root}/catalog
 - 指南：{root}/guide
 - 关于：{root}/about
@@ -247,12 +247,12 @@ async def llms_txt(request: Request, db: AsyncSession = Depends(get_db)) -> Resp
     lines = [
         "# Rubbish",
         "",
-        "> Rubbish 是一个公开写作与讨论社区。帖子做讨论，内容库做长文。",
+        "> Rubbish 是一个公开写作与讨论社区。主题帖做讨论，内容库做长文。",
         "> 公开内容可读；管理端与个人数据需要授权。这里不做学术评价。",
         "",
         "## 核心入口",
         f"- [首页]({root}/)",
-        f"- [讨论区]({root}/forum)",
+        f"- [主题论坛]({root}/forum)",
         f"- [内容库]({root}/catalog)",
         f"- [怎么用]({root}/guide)",
         f"- [关于]({root}/about)",

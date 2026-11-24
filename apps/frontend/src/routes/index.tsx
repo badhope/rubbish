@@ -37,7 +37,7 @@ const PRIMARY_NAV = [
   ['/', '首页'],
   ['/catalog', '内容库'],
   ['/issues', '卷'],
-  ['/forum', '讨论区'],
+  ['/forum', '主题论坛'],
   ['/guide', '怎么用'],
   ['/me', '我的'],
 ] as const
@@ -74,7 +74,7 @@ function GuestCover() {
         <h1 className="mt-3 font-serif text-4xl leading-none tracking-tight sm:text-5xl">
           {overseas ? (
             <>
-              <span className="block">文章与讨论区</span>
+              <span className="block">文章与主题论坛</span>
               <span className="block">对境外读者开放</span>
             </>
           ) : (
@@ -83,7 +83,7 @@ function GuestCover() {
         </h1>
         <p className="mt-4 text-sm leading-7 text-muted-foreground">
           {overseas
-            ? '无需注册即可阅读文章和讨论区；写作、回复与账号功能需要邀请注册。'
+            ? '无需注册即可阅读文章和主题论坛；写作、回复与账号功能需要邀请注册。'
             : '登录后可以阅读、写作，并参与站内讨论。'}
         </p>
 
@@ -97,7 +97,7 @@ function GuestCover() {
             </Button>
             <Button asChild size="lg" variant="outline" className="h-11 w-full px-6">
               <Link to="/forum">
-                逛讨论区
+                逛主题论坛
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
@@ -228,10 +228,10 @@ function MemberHome() {
               Rubbish
             </h1>
             <p className="mt-5 max-w-xl font-serif text-xl leading-snug tracking-tight text-foreground sm:text-2xl">
-              长文在内容库，半句话在讨论区。
+              长文在内容库，半句话在主题论坛。
             </p>
             <p className="mx-auto mt-4 max-w-xl text-[15px] leading-7 text-muted-foreground">
-              读别人的路，也写自己的停顿。登录后可以阅读、写作，也能在讨论区说一句。
+              读别人的路，也写自己的停顿。登录后可以阅读、写作，也能在主题论坛说一句。
             </p>
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
               <Button asChild size="lg" className="h-11 px-5">
@@ -383,11 +383,11 @@ function MemberHome() {
           <div className="mx-auto w-full max-w-[1280px] px-5 py-10 sm:px-8 sm:py-14">
             <div className="mb-4 flex items-end justify-between gap-3">
               <div>
-                <p className="text-[10px] uppercase tracking-[0.28em] text-primary">讨论区</p>
+                <p className="text-[10px] uppercase tracking-[0.28em] text-primary">主题论坛</p>
                 <h2 className="mt-1 font-serif text-2xl tracking-tight">正在发生的讨论</h2>
               </div>
               <Link to="/forum" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary">
-                去讨论区 <ChevronRight className="h-4 w-4" />
+                去主题论坛 <ChevronRight className="h-4 w-4" />
               </Link>
             </div>
             {forumQ.isLoading ? (
@@ -413,7 +413,7 @@ function MemberHome() {
               </div>
             ) : (
               <p className="border-y py-8 text-sm text-muted-foreground">
-                讨论区还空着。你可以开第一个话题。
+                主题论坛还空着。你可以发第一个主题帖。
                 <Link to="/forum" search={{ compose: 1 }} className="ml-2 text-primary hover:underline">去说一句</Link>
               </p>
             )}
@@ -433,7 +433,7 @@ function MemberHome() {
               <div className="rounded-lg border border-dashed bg-background/40 p-4">
                 <p className="text-[10px] uppercase tracking-[0.28em] text-primary">只想说一句</p>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  短帖留在讨论区，长文去发布作品。登录就能说话，不必先攒经验。
+                  短帖留在主题论坛，长文去发布作品。登录就能说话，不必先攒经验。
                 </p>
                 <div className="mt-3 flex flex-wrap gap-4 text-sm">
                   <Link to="/forum" search={{ compose: 1 }} className="text-primary hover:underline">去说话</Link>
@@ -461,7 +461,7 @@ function MemberHome() {
             <ul className="space-y-1.5">
               <li><Link to="/catalog" className="hover:text-primary">内容库</Link></li>
               <li><Link to="/issues" className="hover:text-primary">卷</Link></li>
-              <li><Link to="/forum" className="hover:text-primary">讨论区</Link></li>
+              <li><Link to="/forum" className="hover:text-primary">主题论坛</Link></li>
               <li><Link to="/search" className="hover:text-primary">站内搜索</Link></li>
               <li><Link to="/tags" className="hover:text-primary">标签与归档</Link></li>
               <li><Link to="/guide" search={{ tab: 'start' }} className="hover:text-primary">怎么用</Link></li>

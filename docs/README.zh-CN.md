@@ -7,6 +7,10 @@
 | 文档 | 回答什么问题 |
 |---|---|
 | [POSITIONING.zh-CN.md](POSITIONING.zh-CN.md) | Rubbish 是什么、产品用哪些词、公开文案不写什么 |
+| [PROJECT_BASELINE.zh-CN.md](PROJECT_BASELINE.zh-CN.md) | 当前生产状态、已交付功能、待办、路线图、人工权责 |
+| [OPERATIONS_MANUAL.zh-CN.md](OPERATIONS_MANUAL.zh-CN.md) | 运营每天怎么处理核验队列、批量处置与异常升级 |
+| [AUTOMATION_RULES.zh-CN.md](AUTOMATION_RULES.zh-CN.md) | 规则分层、阈值与权重怎么调、覆盖矩阵、能力边界 |
+| [COMPETITOR_MATRIX.zh-CN.md](COMPETITOR_MATRIX.zh-CN.md) | 与 Discourse、Flarum、NodeBB 和通用社区的差异 |
 | [ARCHITECTURE.zh-CN.md](ARCHITECTURE.zh-CN.md) | 后端分层、租户、社区与档案数据、前端结构 |
 | [ENGINEERING.md](ENGINEERING.md) | 模块归属、版本号、发版门禁、生产结构与项目节奏 |
 | [PERFORMANCE.md](PERFORMANCE.md) | 传输预算、懒加载分包、缓存头、字体策略与接口上限 |

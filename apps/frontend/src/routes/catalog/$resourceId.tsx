@@ -408,7 +408,7 @@ function CatalogDetailPage() {
                 }}
                 className="mt-3 inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
               >
-                去讨论区回应 <ArrowRight className="h-4 w-4" />
+                去主题论坛回应 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           ) : null}

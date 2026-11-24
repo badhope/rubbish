@@ -20,7 +20,7 @@ function ForbiddenPage() {
             说话、回复、收藏对所有人开放。这一页属于站务或内容整理后台，需要相应角色才能进入。
           </p>
           <p className="max-w-sm text-xs text-muted-foreground">
-            如果你只是想说话，回讨论区即可；权限问题可以联系站务邮箱。
+            如果你只是想说话，回主题论坛即可；权限问题可以联系站务邮箱。
           </p>
           <div className="flex flex-wrap justify-center gap-2">
             <Button asChild variant="outline">
@@ -30,7 +30,7 @@ function ForbiddenPage() {
             </Button>
             <Button asChild>
               <Link to="/forum">
-                <MessagesSquare className="h-4 w-4" /> 去讨论区
+                <MessagesSquare className="h-4 w-4" /> 去主题论坛
               </Link>
             </Button>
           </div>

@@ -184,7 +184,7 @@ export function FunArticle({
           {fatal ? (
             <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/20">
               <CardContent className="py-8 text-center text-sm text-muted-foreground">
-                这篇的正文暂时打不开。可以稍后刷新，或者去讨论区催更。
+                这篇的正文暂时打不开。可以稍后刷新，或者去主题论坛催更。
               </CardContent>
             </Card>
           ) : (

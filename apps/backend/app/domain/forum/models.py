@@ -6,7 +6,7 @@ Two tables, both tenant-scoped with RLS:
 - ``forum_replies``  — 回帖（按时间正序展示）
 
 为什么是"论坛"而不是"评论"：comments 模块是读者对**已发表文章**的评论，
-依附于资源；论坛是**独立于文章的公共讨论区**——提建议、报 bug、聊选题、
+依附于资源；论坛是**独立于文章的公共主题论坛**——提建议、报 bug、聊选题、
 求合作，这些内容没有对应的 resource，塞进 comments 会污染文章页。
 
 删除策略：软删除（``deleted_at``）而不是硬删除。论坛的价值在于讨论
@@ -21,7 +21,7 @@ from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Te
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.time import utcnow
-from app.models import Base, TenantScopedMixin
+from app.models import Base, JSONBVariant, TenantScopedMixin
 
 
 class ForumBoard(Base, TenantScopedMixin):
@@ -88,6 +88,21 @@ class ForumTopic(Base, TenantScopedMixin):
     # 反冗余计数：列表页直接读，避免每次 COUNT(replies)
     reply_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     last_reply_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # 半自动化内容流转：规则引擎先判断，命中边界后进入人工核验。
+    # 存量主题迁移时统一回填为 published，不能让历史讨论突然消失。
+    moderation_status: Mapped[str] = mapped_column(
+        String(24), nullable=False, default="published", server_default="published", index=True
+    )
+    risk_score: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    # 规则命中明细：[{code,label,detail,weight}]，给运营看，不把内部规则粗暴暴露给普通用户。
+    moderation_signals: Mapped[list[dict] | None] = mapped_column(JSONBVariant, nullable=True)
+    manual_review_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    review_eta_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    reviewed_by: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False
     )
@@ -238,3 +253,66 @@ class ForumReport(Base, TenantScopedMixin):
         # 配合应用层"先查 open 记录"做幂等；DB 层再加一个普通索引供后台筛选。
         Index("ix_forum_reports_tenant_status", "tenant_id", "status", "created_at"),
     )
+
+
+class ForumModerationEvent(Base, TenantScopedMixin):
+    """人工干预审计：谁在什么时候把主题从什么状态改成什么状态。
+
+    不可变事件流，不覆盖历史；运营后台的回溯面板直接读这张表。
+    """
+
+    __tablename__ = "forum_moderation_events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    topic_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("forum_topics.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    actor_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    action: Mapped[str] = mapped_column(String(24), nullable=False)
+    from_status: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    to_status: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    meta: Mapped[dict | None] = mapped_column(JSONBVariant, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+
+    __table_args__ = (
+        Index(
+            "ix_forum_moderation_events_tenant_topic_created",
+            "tenant_id",
+            "topic_id",
+            "created_at",
+        ),
+    )
+
+
+class ForumModerationSetting(Base, TenantScopedMixin):
+    """租户级规则开关。单行配置，没有就使用代码默认值。"""
+
+    __tablename__ = "forum_moderation_settings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    auto_publish_enabled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default="true"
+    )
+    manual_threshold: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=40, server_default="40"
+    )
+    sla_minutes: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=30, server_default="30"
+    )
+    weights: Mapped[dict | None] = mapped_column(JSONBVariant, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
+    )
+
+    __table_args__ = (UniqueConstraint("tenant_id", name="uq_forum_moderation_settings_tenant"),)

@@ -133,7 +133,7 @@ export default function AdminForumBoardsPage() {
     <div>
       <PageHeader
         title="讨论分区"
-        description="树形结构：父分区汇总，子分区承载内容。排序值越小越靠前；有子分区或话题的分区不能直接删除。"
+        description="树形结构：父分区汇总，子分区承载内容。排序值越小越靠前；有子分区或主题帖的分区不能直接删除。"
         actions={
           <Button onClick={() => setEditing({ ...EMPTY_FORM })}>
             <Plus className="h-4 w-4" />
@@ -231,7 +231,7 @@ export default function AdminForumBoardsPage() {
           <DialogHeader>
             <DialogTitle>{editing?.id ? '编辑分区' : '新建分区'}</DialogTitle>
             <DialogDescription>
-              父分区只做汇总，话题发到最具体的子分区；slug 用于 URL，创建后尽量别改。
+              父分区只做汇总，主题帖发到最具体的子分区；slug 用于 URL，创建后尽量别改。
             </DialogDescription>
           </DialogHeader>
           {editing ? (
@@ -330,7 +330,7 @@ export default function AdminForumBoardsPage() {
           <DialogHeader>
             <DialogTitle>删除分区</DialogTitle>
             <DialogDescription>
-              只能删除没有子分区、没有话题的空分区。确认删除「{deleteTarget?.name}」？
+              只能删除没有子分区、没有主题帖的空分区。确认删除「{deleteTarget?.name}」？
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

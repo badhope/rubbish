@@ -36,7 +36,7 @@ export function OnboardingTour() {
   const steps = [
     {
       title: '先认一下六个入口',
-      body: '首页看全站，内容库放长文，卷顺着读，讨论区用来说话，怎么用有地图，我的放自己的东西。找不到就点「怎么用」。',
+      body: '首页看全站，内容库放长文，卷顺着读，主题论坛用来说话，怎么用有地图，我的放自己的东西。找不到就点「怎么用」。',
       to: '/guide',
       label: '打开怎么用',
     },
@@ -48,9 +48,9 @@ export function OnboardingTour() {
     },
     {
       title: isAuthenticated ? '想发东西，先分清长短' : '登录后即可发布',
-      body: '一两句话，去「讨论区」；完整长文，去「写一篇」。都能先存草稿，不申请资格，也不收费。',
+      body: '写主题帖，去「主题论坛」：正文会自动保存，分区可留空由系统归类；命中边界的主题帖会进入人工核验并显示预计时间。完整长文去「写一篇」。都不申请资格、不收费。',
       to: isAuthenticated ? '/forum' : '/login',
-      label: isAuthenticated ? '去讨论区' : '去登录',
+      label: isAuthenticated ? '去主题论坛' : '去登录',
     },
     {
       title: '边界先看清',

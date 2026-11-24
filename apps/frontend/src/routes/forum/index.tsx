@@ -33,6 +33,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import { FORUM_COPY } from '@/lib/forum-copy'
+import { ModerationBadge } from '@/components/forum/moderation-status'
 
 const ForumEditor = lazy(() =>
   import('@/components/forum/forum-editor').then((m) => ({ default: m.ForumEditor })),
@@ -61,6 +63,9 @@ interface ForumTopic {
   created_at: string
   last_reply_at: string | null
   paper_id: number | null
+  moderation_status?: string | null
+  risk_score?: number | null
+  review_eta_at?: string | null
   author: { id: number; username: string; display_name?: string | null; avatar_url?: string | null } | null
 }
 
@@ -261,10 +266,19 @@ function ForumListPage() {
     paper_id: paperId,
     is_fictional: false,
   })
+  const [draftSavedAt, setDraftSavedAt] = useState<Date | null>(null)
 
   useEffect(() => {
     if (!open) return
-    const timer = window.setTimeout(() => saveForumDraft(form), 400)
+    const hasText = form.title.trim().length > 0 || form.body.trim().length > 0
+    if (!hasText) {
+      setDraftSavedAt(null)
+      return
+    }
+    const timer = window.setTimeout(() => {
+      saveForumDraft(form)
+      setDraftSavedAt(new Date())
+    }, 400)
     return () => window.clearTimeout(timer)
   }, [form, open])
 
@@ -275,14 +289,8 @@ function ForumListPage() {
   const boardTree: BoardNode[] = boardsQ.data?.tree ?? []
   const allBoards = collectBoards(boardTree)
   const leafBoards = allBoards.filter((b) => b.children.length === 0)
-  const defaultBoardId = leafBoards.find((b) => b.slug === 'planning')?.id ?? leafBoards[0]?.id ?? null
 
-  // 版块树是异步加载的：从 ?compose=1 直接打开说话框时表单可能先于版块数据初始化。
-  // 加载完成后再补上默认版块，避免标题和正文都填好后“发布”仍不可用。
-  useEffect(() => {
-    if (!open || form.board_id !== null || defaultBoardId === null) return
-    setForm((prev) => (prev.board_id === null ? { ...prev, board_id: defaultBoardId } : prev))
-  }, [defaultBoardId, form.board_id, open])
+  // 不强制用户选分区：留空时由后端按标题/正文自动归类，降低发帖门槛。
   const normalizedCategory = LEGACY_SLUG[category] ?? category
   const activeBoard = normalizedCategory === 'all' ? null : allBoards.find((b) => b.slug === normalizedCategory)
 
@@ -306,10 +314,18 @@ function ForumListPage() {
   const createMut = useMutation({
     mutationFn: async () => (await api.post('/forum/topics', form)).data,
     onSuccess: (data: ForumTopic) => {
-      toast.success('已发出')
+      if (data.moderation_status === 'manual_review' || data.moderation_status === 'pending') {
+        const minutes = data.review_eta_at
+          ? Math.max(1, Math.round((new Date(data.review_eta_at).getTime() - Date.now()) / 60000))
+          : 30
+        toast.success(`主题帖已提交，进入运营人工核验，预计 ${minutes} 分钟内完成。`)
+      } else {
+        toast.success('主题帖已自动归类并公开。')
+      }
       void qc.invalidateQueries({ queryKey: ['forum'] })
       setOpen(false)
-      setForm({ title: '', body: '', board_id: defaultBoardId, paper_id: null, is_fictional: false })
+      setForm({ title: '', body: '', board_id: null, paper_id: null, is_fictional: false })
+      setDraftSavedAt(null)
       try {
         window.localStorage.removeItem(FORUM_DRAFT_KEY)
       } catch {
@@ -330,7 +346,6 @@ function ForumListPage() {
   const publishTopic = () => {
     if (
       createMut.isPending ||
-      !form.board_id ||
       form.title.trim().length < 2 ||
       form.body.trim().length < 2
     ) {
@@ -338,12 +353,6 @@ function ForumListPage() {
     }
     createMut.mutate()
   }
-
-  const currentBoardId = activeBoard
-    ? activeBoard.children.length > 0
-      ? collectBoards(activeBoard.children).find((b) => b.children.length === 0)?.id ?? activeBoard.id
-      : activeBoard.id
-    : defaultBoardId
 
   const openComposer = () => {
     if (!isAuthenticated) {
@@ -363,7 +372,7 @@ function ForumListPage() {
       body: paperId
         ? paperDraftBody(paperId)
         : usableDraft?.body ?? '',
-      board_id: storedBoardId ?? currentBoardId,
+      board_id: storedBoardId,
       paper_id: paperId,
       is_fictional: usableDraft?.is_fictional ?? false,
     })
@@ -401,8 +410,8 @@ function ForumListPage() {
   return (
     <div className="mx-auto w-full max-w-4xl space-y-4">
       <PageHeader
-        title="讨论区"
-        description="写法、复盘、组队，以及写作之外的生活。登录即可说话，不必攒经验。"
+        title="主题论坛"
+        description="写法、复盘、组队，以及写作之外的生活。登录即可发布主题帖，不必攒经验。"
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" asChild>
@@ -413,7 +422,7 @@ function ForumListPage() {
             </Button>
             <Button onClick={openComposer}>
               <Plus className="h-4 w-4" />
-              说一句
+              发布主题帖
             </Button>
           </div>
         }
@@ -426,7 +435,7 @@ function ForumListPage() {
             <p className="mt-1 font-serif text-base leading-snug">你最近一次推翻重写，是因为什么？</p>
           </div>
           <Button size="sm" variant="outline" onClick={openComposer}>
-            回应一下
+            参与楼层互动
           </Button>
         </div>
       ) : null}
@@ -450,7 +459,7 @@ function ForumListPage() {
               onClick={openComposer}
             >
               <Plus className="h-4 w-4" />
-              说一句
+              发布主题帖
             </Button>
           </CardContent>
         </Card>
@@ -469,7 +478,7 @@ function ForumListPage() {
             value={queryInput}
             onChange={(e) => setQueryInput(e.target.value)}
             placeholder="搜索标题或正文"
-            aria-label="搜索话题"
+            aria-label="搜索主题帖"
             className="h-8 pl-8 pr-8 text-xs"
           />
           {queryInput ? (
@@ -557,10 +566,10 @@ function ForumListPage() {
         <ErrorState message="加载社区失败" onRetry={() => listQ.refetch()} />
       ) : topics.length === 0 ? (
         <EmptyState
-          title={keyword ? '没有找到匹配的话题' : '桌边还空着'}
+          title={keyword ? '没有找到匹配的主题帖' : '桌边还空着'}
           description={
             keyword
-              ? '换个更短的关键词，或清除搜索看全部话题。'
+              ? '换个更短的关键词，或清除搜索看全部主题帖。'
               : '第一句话可以从你开始：问一个问题，或留一条建议。'
           }
           action={
@@ -586,7 +595,7 @@ function ForumListPage() {
               key={t.id}
               className={cn(
                 'flex items-start gap-3 px-4 py-4 transition-colors hover:bg-muted/20',
-                // 社区公告用左侧主色条突出：公告不是普通话题
+                // 社区公告用左侧主色条突出：公告不是普通主题帖
                 (t.category === 'notice' || t.category === 'announcements') && 'border-l-4 border-l-primary',
               )}
             >
@@ -635,9 +644,12 @@ function ForumListPage() {
                     {fmtRelative(t.last_reply_at ?? t.created_at)}
                   </p>
                 </div>
-                <div className="flex shrink-0 items-center gap-1 rounded-full bg-muted/60 px-2 py-1 text-xs text-muted-foreground">
-                  <MessageSquare className="h-3.5 w-3.5" />
-                  <span className="tabular-nums">{t.reply_count}</span>
+                <div className="flex shrink-0 flex-col items-end gap-1">
+                  <ModerationBadge status={t.moderation_status} />
+                  <div className="flex items-center gap-1 rounded-full bg-muted/60 px-2 py-1 text-xs text-muted-foreground">
+                    <MessageSquare className="h-3.5 w-3.5" />
+                    <span className="tabular-nums">{t.reply_count}</span>
+                  </div>
                 </div>
                 {isAuthenticated && (
                   <DropdownMenu>
@@ -687,8 +699,8 @@ function ForumListPage() {
         >
           <div className="flex items-center justify-between border-b px-4 py-3 sm:px-6">
             <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">新话题</p>
-              <DialogTitle className="mt-1 font-serif text-xl tracking-tight">说一句</DialogTitle>
+              <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">新主题帖</p>
+              <DialogTitle className="mt-1 font-serif text-xl tracking-tight">写一个新主题帖</DialogTitle>
             </div>
             <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="关闭说话">
               <X className="h-4 w-4" />
@@ -697,13 +709,21 @@ function ForumListPage() {
 
           <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6">
             <div className="mx-auto max-w-[780px] space-y-5 py-2">
+              <div className="grid grid-cols-3 gap-1.5 rounded-xl border bg-muted/25 p-2 text-[11px] text-muted-foreground">
+                {['1 写主题帖', '2 预览确认', '3 自动流转'].map((label, index) => (
+                  <div key={label} className="flex items-center gap-1.5 rounded-lg bg-background px-2 py-1.5">
+                    <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">{index + 1}</span>
+                    {label}
+                  </div>
+                ))}
+              </div>
               <input
                 ref={titleRef}
                 value={form.title}
                 onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
                 maxLength={200}
-                placeholder="标题：你想聊什么"
-                aria-label="话题标题"
+                placeholder="标题：这个主题帖想聊什么"
+                aria-label="主题帖标题"
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
                     event.preventDefault()
@@ -723,7 +743,7 @@ function ForumListPage() {
                     }}
                   >
                     <SelectTrigger className="h-8 w-full text-xs" aria-label="选择分区">
-                      <SelectValue placeholder="选择分区" />
+                      <SelectValue placeholder="可留空，系统会自动归类" />
                     </SelectTrigger>
                     <SelectContent>
                       {leafBoards.map((b) => (
@@ -739,12 +759,12 @@ function ForumListPage() {
                     onClick={() => setBoardPickerOpen(true)}
                     className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-colors hover:border-primary/40"
                   >
-                    <span className="text-muted-foreground">发到：</span>
+                    <span className="text-muted-foreground">分区：</span>
                     <span className="font-medium">{selectedBoard?.name ?? '选择分区'}</span>
-                    <span className="text-primary">修改</span>
+                    <span className="text-primary">{selectedBoard ? '修改' : '手动选择'}</span>
                   </button>
                 )}
-                <span className="text-[11px] text-muted-foreground">登录即可说话，不需要经验。</span>
+                <span className="text-[11px] text-muted-foreground">登录即可发布，不需要经验；不选分区时系统会自动归类。</span>
                 <label className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs text-muted-foreground">
                   <input
                     type="checkbox"
@@ -773,7 +793,8 @@ function ForumListPage() {
           <div className="border-t px-4 py-3 sm:px-6">
             <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
               <span className="text-[11px] text-muted-foreground">
-                草稿自动保存在本机 · Ctrl / ⌘ + Enter 发布 · 正文 {form.body.length} 字
+                {draftSavedAt ? `${FORUM_COPY.draftSaved} · ${draftSavedAt.toLocaleTimeString()}` : FORUM_COPY.draftSaved}
+                {' · '}Ctrl / ⌘ + Enter 发布 · 正文 {form.body.length} 字
               </span>
               <div className="flex items-center gap-2">
                 <Button variant="ghost" onClick={() => setOpen(false)}>
@@ -781,9 +802,9 @@ function ForumListPage() {
                 </Button>
                 <Button
                   onClick={publishTopic}
-                  disabled={createMut.isPending || !form.board_id || form.title.trim().length < 2 || form.body.trim().length < 2}
+                  disabled={createMut.isPending || form.title.trim().length < 2 || form.body.trim().length < 2}
                 >
-                  {createMut.isPending ? '发送中…' : '说一句'}
+                  {createMut.isPending ? '提交中…' : '发布主题帖'}
                 </Button>
               </div>
             </div>

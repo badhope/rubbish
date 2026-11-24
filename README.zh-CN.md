@@ -4,7 +4,7 @@
 
 # Rubbish
 
-**一个可以自己部署的公开写作与讨论社区：把问题写开，把过程留下，把话说明白。**
+**一个可以自己部署的公开写作与主题交流社区：把问题写开，把过程留下，把话说明白。**
 
 **[English](README.md) · 简体中文**
 
@@ -13,7 +13,7 @@
 
 </div>
 
-Rubbish 不挑格式。长文可以是扎实的调查，也可以是一篇小说、一篇随笔；短话可以是一句卡点，也可以是一场争论。写下的东西放进内容库，没想完的话留在讨论区，读的人可以接一句，也可以只看看。
+Rubbish 不挑格式。长文可以是扎实的调查，也可以是一篇小说、一篇随笔；短话可以是一句卡点，也可以是一场争论。写下的东西放进内容库，没想完的话留在主题论坛，读的人可以接一句，也可以只看看。
 
 整个项目是一个 FastAPI 服务、一个 React 前端和一份 PostgreSQL 数据库，一台小服务器就能跑起来。
 
@@ -55,6 +55,24 @@ npm run dev
 
 前端地址是 `http://localhost:5173`，API 地址是 `http://localhost:8000`。
 
+## 功能截图
+
+| 主题论坛 | 三步发布与草稿自动保存 |
+|---|---|
+| ![主题论坛](docs/screenshots/forum-list.png) | ![发布器](docs/screenshots/forum-composer.png) |
+| **人工核验队列** | **规则设置** |
+| ![核验队列](docs/screenshots/moderation-queue.png) | ![规则设置](docs/screenshots/moderation-rules.png) |
+
+主题详情页的运营快捷面板，可直达当前主题帖的核验记录：
+
+![运营快捷面板](docs/screenshots/operator-panel.png)
+
+移动端主题论坛，同一套数据与操作：
+
+![移动端主题论坛](docs/screenshots/forum-mobile.png)
+
+核验队列截图中使用了一条临时演示主题帖，截完即删除；其余为 1.19.46 生产界面。
+
 ## 目录
 
 | 路径 | 用途 |
@@ -68,7 +86,7 @@ npm run dev
 
 ## 作品正文
 
-当前服务器上的作品正文与作者姓名在 [`content/articles`](content/articles/README.md)：274 篇已发布、21 篇待处理、15 条重复记录。这里只放公开内容，不存放评分、互评意见、账号信息或服务器密钥。
+当前服务器上的作品正文与作者姓名在 [`content/articles`](content/articles/README.md)：263 篇已发布，正文、标题、分类、图源与文献说明已完成核查。这里只放公开内容，不存放评分、互评意见、账号信息或服务器密钥。
 
 ## 文档
 
@@ -79,6 +97,10 @@ npm run dev
 | 部署 | [DEPLOY.md](DEPLOY.md) | [DEPLOY.zh-CN.md](DEPLOY.zh-CN.md) |
 | 贡献 | [CONTRIBUTING.md](CONTRIBUTING.md) | [CONTRIBUTING.zh-CN.md](CONTRIBUTING.zh-CN.md) |
 | 安全 | [SECURITY.md](SECURITY.md) | [SECURITY.zh-CN.md](SECURITY.zh-CN.md) |
+| 项目基线 | — | [docs/PROJECT_BASELINE.zh-CN.md](docs/PROJECT_BASELINE.zh-CN.md) |
+| 人工运营手册 | — | [docs/OPERATIONS_MANUAL.zh-CN.md](docs/OPERATIONS_MANUAL.zh-CN.md) |
+| 自动化规则 | — | [docs/AUTOMATION_RULES.zh-CN.md](docs/AUTOMATION_RULES.zh-CN.md) |
+| 竞品矩阵 | — | [docs/COMPETITOR_MATRIX.zh-CN.md](docs/COMPETITOR_MATRIX.zh-CN.md) |
 
 ## 检查
 

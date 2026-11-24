@@ -1,4 +1,4 @@
-"""Forum module — 社区讨论区（发帖 / 回帖 / 版主操作）。"""
+"""Forum module — 社区主题论坛（发帖 / 回帖 / 版主操作）。"""
 
 from __future__ import annotations
 

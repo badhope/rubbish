@@ -11,7 +11,7 @@ from __future__ import annotations
 import os
 import re
 import unicodedata
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 # 高置信度引流/诈骗：命中即拦。避免单字“微信”“QQ”误伤正常讨论，
 # 必须和“加/扫/群/私聊”等动作词同现。
@@ -90,3 +90,201 @@ def rejection_detail(text: str) -> dict[str, object] | None:
 
 
 __all__ = ["ModerationHit", "rejection_detail", "scan_text"]
+
+
+# ---------------------------------------------------------------------------
+# 半自动化审核：确定性规则 + 人工兜底
+#
+# 这里只做“可解释的信号”，不假装是内容理解模型。硬命中继续由
+# rejection_detail 直接拦；软信号累计成风险分，达到阈值就进入人工队列。
+# 运营可以在后台调整阈值与权重，但规则本身仍由代码与配置共同约束。
+# ---------------------------------------------------------------------------
+
+SOFT_PATTERNS: tuple[tuple[str, str, str, int], ...] = (
+    (
+        "contact",
+        "疑似联系方式",
+        "正文包含邮箱、手机号、微信/QQ 等站外联系方式，需要运营确认是否适合公开。",
+        32,
+    ),
+    (
+        "external_link",
+        "站外链接",
+        "正文包含站外链接；社区允许引用，但集中出现时需要人工确认来源与安全性。",
+        14,
+    ),
+    (
+        "low_effort",
+        "信息量偏低",
+        "正文较短且没有图片/链接，可能缺少可讨论的上下文。",
+        22,
+    ),
+    (
+        "shouting",
+        "格式异常",
+        "正文大写字母或重复标点比例过高，可能影响阅读。",
+        10,
+    ),
+)
+
+_CONTACT_RE = re.compile(
+    r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"
+    r"|(?<!\d)1[3-9]\d{9}(?!\d)"
+    r"|(?:微信|wechat|vx|v信|qq|扣扣)\s*[:：]?\s*[A-Za-z0-9_-]{5,20}",
+    re.IGNORECASE,
+)
+_URL_RE = re.compile(r"https?://[^\s<>()]+", re.IGNORECASE)
+
+
+@dataclass(frozen=True)
+class ModerationSignal:
+    code: str
+    label: str
+    detail: str
+    weight: int
+
+
+@dataclass(frozen=True)
+class ModerationAssessment:
+    action: str  # auto_approved | manual_review | blocked
+    risk_score: int
+    signals: list[ModerationSignal] = field(default_factory=list)
+    reason: str = ""
+    eta_minutes: int = 0
+
+
+def _review_terms() -> list[str]:
+    raw = os.getenv("RUBBISH_MODERATION_REVIEW_TERMS", "")
+    return [term.strip() for term in raw.split(",") if term.strip()]
+
+
+def assess_text(
+    title: str,
+    body: str,
+    *,
+    manual_threshold: int = 40,
+    auto_publish_enabled: bool = True,
+    sla_minutes: int = 30,
+    weights: dict[str, int] | None = None,
+) -> ModerationAssessment:
+    """返回可解释的审核结论。
+
+    硬命中（广告/辱骂）直接 blocked；其余软信号累计风险分。
+    ``weights`` 允许后台覆盖单项权重，未知 key 忽略。
+    """
+    text = f"{title}\n{body}"
+    hard_hits = scan_text(text)
+    if hard_hits:
+        return ModerationAssessment(
+            action="blocked",
+            risk_score=100,
+            signals=[
+                ModerationSignal(
+                    code=f"hard_{hit.category}",
+                    label=hit.category,
+                    detail=hit.message,
+                    weight=100,
+                )
+                for hit in hard_hits
+            ],
+            reason=hard_hits[0].message,
+        )
+
+    if not auto_publish_enabled:
+        return ModerationAssessment(
+            action="manual_review",
+            risk_score=50,
+            signals=[
+                ModerationSignal(
+                    code="auto_publish_off",
+                    label="自动发布已关闭",
+                    detail="运营当前要求所有新主题帖先进入人工核验。",
+                    weight=50,
+                )
+            ],
+            reason="自动发布已关闭，全部新主题帖进入人工核验。",
+            eta_minutes=sla_minutes,
+        )
+
+    normalized = _normalize(body)
+    signals: list[ModerationSignal] = []
+    overrides = weights or {}
+
+    def add(code: str, label: str, detail: str, default_weight: int) -> None:
+        weight = int(overrides.get(code, default_weight))
+        if weight <= 0:
+            return
+        signals.append(ModerationSignal(code=code, label=label, detail=detail, weight=weight))
+
+    contact_matches = _CONTACT_RE.findall(text)
+    if contact_matches:
+        add(
+            "contact",
+            "疑似联系方式",
+            "正文包含邮箱、手机号、微信/QQ 等站外联系方式，需要运营确认是否适合公开。",
+            32,
+        )
+
+    link_count = len(_URL_RE.findall(text))
+    if link_count:
+        add(
+            "external_link",
+            "站外链接",
+            f"正文包含 {link_count} 个站外链接；社区允许引用，但集中出现时需要人工确认来源与安全性。",
+            14 + max(0, link_count - 1) * 4,
+        )
+
+    plain_len = len(re.sub(r"!\[[^\]]*\]\([^)]*\)|\s+", "", body))
+    if plain_len < 40 and "![" not in body and "http" not in body:
+        add(
+            "low_effort",
+            "信息量偏低",
+            "正文较短且没有图片/链接，可能缺少可讨论的上下文。",
+            22,
+        )
+
+    letters = [c for c in body if c.isalpha()]
+    if len(letters) >= 24 and sum(c.isupper() for c in letters) / len(letters) > 0.55:
+        add(
+            "shouting",
+            "格式异常",
+            "正文大写字母比例过高，可能影响阅读。",
+            10,
+        )
+
+    for term in _review_terms():
+        if term.lower() in normalized:
+            add(
+                "review_term",
+                "运营关注词",
+                f"命中运营配置的关注词「{term[:24]}」。",
+                24,
+            )
+
+    score = min(100, sum(item.weight for item in signals))
+    if score >= max(1, int(manual_threshold)):
+        reason = "、".join(item.label for item in signals) or "规则命中"
+        return ModerationAssessment(
+            action="manual_review",
+            risk_score=score,
+            signals=signals,
+            reason=f"命中{reason}，进入人工核验。",
+            eta_minutes=sla_minutes,
+        )
+    return ModerationAssessment(
+        action="auto_approved",
+        risk_score=score,
+        signals=signals,
+        reason="规则自动通过。",
+    )
+
+
+__all__ = [
+    "SOFT_PATTERNS",
+    "ModerationAssessment",
+    "ModerationHit",
+    "ModerationSignal",
+    "assess_text",
+    "rejection_detail",
+    "scan_text",
+]

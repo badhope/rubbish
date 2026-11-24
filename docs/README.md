@@ -7,6 +7,10 @@ Start with the document that matches what you are doing.
 | Document | What it answers |
 |---|---|
 | [POSITIONING.md](POSITIONING.md) | What Rubbish is, which words the product uses, and what the public copy avoids |
+| [PROJECT_BASELINE.zh-CN.md](PROJECT_BASELINE.zh-CN.md) | Current production state, shipped features, backlog, roadmap, operator roles (Chinese) |
+| [OPERATIONS_MANUAL.zh-CN.md](OPERATIONS_MANUAL.zh-CN.md) | Daily queue handling, batch decisions, escalation (Chinese) |
+| [AUTOMATION_RULES.zh-CN.md](AUTOMATION_RULES.zh-CN.md) | Rule layers, thresholds, coverage matrix, boundaries (Chinese) |
+| [COMPETITOR_MATRIX.zh-CN.md](COMPETITOR_MATRIX.zh-CN.md) | Differences from Discourse, Flarum, NodeBB and general communities (Chinese) |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Backend layers, tenancy, community and archive data, frontend layout |
 | [ENGINEERING.md](ENGINEERING.md) | Module ownership, versioning, release gate, production layout and project rhythm |
 | [PERFORMANCE.md](PERFORMANCE.md) | Transfer budget, lazy chunks, cache headers, font policy and API limits |

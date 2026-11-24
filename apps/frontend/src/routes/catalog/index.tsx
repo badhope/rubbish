@@ -414,7 +414,7 @@ function CatalogHub() {
     <div className="mx-auto w-full max-w-[1320px]">
       <PageHeader
         title="内容库"
-        description="长文、怪问题、小说与随笔都在这里。按卷慢慢读；想发短帖去讨论区，想写长文去发布作品。"
+        description="长文、怪问题、小说与随笔都在这里。按卷慢慢读；想发短帖去主题论坛，想写长文去发布作品。"
         actions={
           <Button asChild variant="outline">
             <Link to="/issues">按卷浏览</Link>

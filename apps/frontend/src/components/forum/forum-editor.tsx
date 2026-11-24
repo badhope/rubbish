@@ -136,7 +136,7 @@ export function ForumEditor({
         visibleDragbar={false}
         textareaProps={{
           placeholder,
-          'aria-label': ariaLabel ?? '话题正文',
+          'aria-label': ariaLabel ?? '主题帖正文',
           autoFocus,
         }}
         commands={[

@@ -23,7 +23,7 @@ It is one FastAPI service, one React app, and PostgreSQL. You can run the whole 
 - **Publish a piece.** A longer piece gets a stable page with a body, revision history, downloads, comments, and related work.
 - **Mark fiction as fiction.** Stories, jokes, and invented situations can carry a visible fiction label, so readers are not misled.
 - **Follow what matters.** Bookmarks, reading progress, author follows, notifications, and topic subscriptions work across devices.
-- **Keep moderation practical.** Reports, section management, announcements, audit logs, and a small admin area are built in.
+- **Keep moderation practical.** Reports, section management, announcements, audit logs, and a small admin area are built in. Topic posts go through an explainable rule pass first; borderline items land in a manual review queue with an SLA, audit trail and author notification.
 - **Run it yourself.** Docker Compose, automatic HTTPS through Caddy, Alembic migrations, and PostgreSQL row-level security are already wired up.
 
 ## Quick start
@@ -55,6 +55,24 @@ npm run dev
 
 The frontend runs on `http://localhost:5173`; the API runs on `http://localhost:8000`.
 
+## Product screenshots
+
+| Theme forum | Three-step composer with local autosave |
+|---|---|
+| ![Theme forum](docs/screenshots/forum-list.png) | ![Composer](docs/screenshots/forum-composer.png) |
+| **Manual review queue** | **Rule settings** |
+| ![Moderation queue](docs/screenshots/moderation-queue.png) | ![Rule settings](docs/screenshots/moderation-rules.png) |
+
+Operator quick panel on a topic detail, jumping straight to the review record for that topic:
+
+![Operator quick panel](docs/screenshots/operator-panel.png)
+
+Mobile theme forum, same data and actions:
+
+![Mobile theme forum](docs/screenshots/forum-mobile.png)
+
+The queue screenshot uses a temporary demo topic; it was deleted right after capture. The rest are live production UI at 1.19.46.
+
 ## Project layout
 
 | Path | Purpose |
@@ -68,7 +86,7 @@ The frontend runs on `http://localhost:5173`; the API runs on `http://localhost:
 
 ## Published work
 
-The current server texts and author names are in [`content/articles`](content/articles/README.md): 274 published entries, 21 pending, and 15 duplicate records. This is public work only. Scores, review notes, account details, and server secrets are not stored here.
+The current server texts and author names are in [`content/articles`](content/articles/README.md): 263 published entries, with bodies, titles, categories, image credits and source notes checked. This is public work only. Scores, review notes, account details, and server secrets are not stored here.
 
 ## Docs
 
@@ -79,6 +97,10 @@ The current server texts and author names are in [`content/articles`](content/ar
 | Deployment | [DEPLOY.md](DEPLOY.md) | [DEPLOY.zh-CN.md](DEPLOY.zh-CN.md) |
 | Contributing | [CONTRIBUTING.md](CONTRIBUTING.md) | [CONTRIBUTING.zh-CN.md](CONTRIBUTING.zh-CN.md) |
 | Security | [SECURITY.md](SECURITY.md) | [SECURITY.zh-CN.md](SECURITY.zh-CN.md) |
+| Project baseline | — | [docs/PROJECT_BASELINE.zh-CN.md](docs/PROJECT_BASELINE.zh-CN.md) |
+| Operations manual | — | [docs/OPERATIONS_MANUAL.zh-CN.md](docs/OPERATIONS_MANUAL.zh-CN.md) |
+| Moderation rules | — | [docs/AUTOMATION_RULES.zh-CN.md](docs/AUTOMATION_RULES.zh-CN.md) |
+| Competitor matrix | — | [docs/COMPETITOR_MATRIX.zh-CN.md](docs/COMPETITOR_MATRIX.zh-CN.md) |
 
 ## Checks
 

@@ -22,7 +22,7 @@ type PrefRow = { key: PrefKey; label: string; hint: string }
 
 const IN_APP_ROWS: PrefRow[] = [
   { key: 'in_app_comment', label: '记录评论', hint: '有人评论你发布的记录时，在站内通知你' },
-  { key: 'in_app_forum', label: '讨论回复', hint: '有人回应你的话题时，在站内通知你' },
+  { key: 'in_app_forum', label: '楼层互动', hint: '有人回应你的主题帖时，在站内通知你' },
   {
     key: 'in_app_review',
     label: '互评与核对',

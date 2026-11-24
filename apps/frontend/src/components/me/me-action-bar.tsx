@@ -17,7 +17,7 @@ export function MeActionBar({
       <div className="min-w-0">
         <p className="text-sm font-medium">写一点东西，或者去说话区坐会儿</p>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          长文可以先存草稿，短帖直接留在讨论区。
+          长文可以先存草稿，短帖直接留在主题论坛。
         </p>
       </div>
       <div className="flex w-full flex-wrap items-center gap-1.5 lg:w-auto lg:flex-nowrap">

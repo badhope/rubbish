@@ -61,7 +61,7 @@ export default function ForumInspectionPage() {
   const topicsQ = useQuery({
     queryKey: ['admin', 'forum-inspection', page, sort],
     queryFn: async () =>
-      (await api.get<TopicPage>('/forum/topics', { params: { page, page_size: 50, sort } })).data,
+      (await api.get<TopicPage>('/forum/topics', { params: { page, page_size: 50, sort, include_pending: true } })).data,
   })
 
   const reportsQ = useQuery({
@@ -97,15 +97,15 @@ export default function ForumInspectionPage() {
   return (
     <div>
       <PageHeader
-        title="讨论巡检"
-        description="按最近活跃或热度查看全站讨论，置顶、锁定、跳转处理举报。巡检只做日常维护，不替代举报处置。"
+        title="主题巡检"
+        description="按最近活跃或热度查看全站主题帖，置顶、锁定、跳转处理举报。巡检只做日常维护，不替代人工核验队列。"
       />
 
       <div className="mb-4 grid gap-2 sm:grid-cols-3">
         <Card>
           <CardContent className="flex items-center justify-between p-4">
             <div>
-              <p className="text-xs text-muted-foreground">全站话题</p>
+              <p className="text-xs text-muted-foreground">全站主题帖</p>
               <p className="mt-1 font-mono text-2xl font-semibold">{meta?.total ?? '—'}</p>
             </div>
             <ShieldCheck className="h-5 w-5 text-muted-foreground" />
@@ -156,11 +156,11 @@ export default function ForumInspectionPage() {
       {topicsQ.isLoading ? (
         <Loading />
       ) : topicsQ.isError ? (
-        <ErrorState message="讨论主题加载失败，可重试。" onRetry={() => topicsQ.refetch()} />
+        <ErrorState message="主题帖加载失败，可重试。" onRetry={() => topicsQ.refetch()} />
       ) : filtered.length === 0 ? (
         <EmptyState
-          title={query ? '没有匹配的主题' : '讨论区还没有主题'}
-          description={query ? '换一个话题试试。' : '用户发布文章或讨论后会出现在这里。'}
+          title={query ? '没有匹配的主题' : '主题论坛还没有主题帖'}
+          description={query ? '换一个主题帖试试。' : '用户发布主题帖后会出现在这里。'}
         />
       ) : (
         <div className="space-y-2">
@@ -182,7 +182,7 @@ export default function ForumInspectionPage() {
                     <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
                       <span>{row.board_path || row.board_name || '未分区'}</span>
                       <span>作者：{row.author?.display_name || row.author?.username || '已注销'}</span>
-                      <span>{row.reply_count} 回复</span>
+                      <span>{row.reply_count} 层互动</span>
                       <span>发布 {fmtTime(row.created_at)}</span>
                       <span>最后活跃 {fmtTime(row.last_reply_at)}</span>
                     </p>
