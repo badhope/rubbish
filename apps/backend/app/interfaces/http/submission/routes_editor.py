@@ -222,6 +222,29 @@ async def triage_submission(
     )
     await db.commit()
     await db.refresh(entry)
+    # 退回修改/补材料的邮件与站内通知成对：作者不看站内消息时也能收到
+    # 下一步要求。best-effort，失败不反转业务；发信池会按并发与熔断接管。
+    if body.decision in ("return_for_revision", "request_materials"):
+        try:
+            author = (
+                await db.execute(select(User).where(User.id == entry.submitted_by))
+            ).scalar_one_or_none()
+            if author is not None:
+                from app.domain.submission.review_reminders import send_decision_email
+
+                await send_decision_email(
+                    author,
+                    submission_title=entry.title,
+                    decision=(
+                        "triage_rework"
+                        if body.decision == "return_for_revision"
+                        else "triage_materials"
+                    ),
+                    note=note,
+                    submission_id=entry.id,
+                )
+        except Exception:
+            logger.warning("triage_email_dispatch_failed", submission_id=entry.id, exc_info=True)
     return _to_response(entry)
 
 
@@ -1488,8 +1511,13 @@ async def request_rework(
 
     # 作者可操作的待修改状态：能改内容、能上传修订稿、能显式重交。
     entry.status = "rework_requested"
-    entry.editor_note = body.note
     requirements_text = "\n".join(f"{i + 1}. {r}" for i, r in enumerate(body.requirements))
+    # 要求必须落到作者详情页，而不是只躺在通知里：通知被读掉或翻走之后，
+    # 作者仍需要能对着「修改作品」逐条核对。详情页展示 editor_note。
+    editor_note_parts = [f"修改要求：\n{requirements_text}"]
+    if body.note:
+        editor_note_parts.append(f"补充说明：\n{body.note}")
+    entry.editor_note = "\n\n".join(editor_note_parts)
 
     # 本轮互评任务立即作废：作品即将被作者改写，旧版本上的任务再留在
     # 互评台里，只会让人对着过期稿子写意见。已交的报告仍留在 review_reports
@@ -1568,6 +1596,23 @@ async def request_rework(
     )
     await db.commit()
     await db.refresh(entry)
+    # 退回作者修改的邮件：正文带逐条要求与补充说明，不能只在站内通知里。
+    try:
+        author = (
+            await db.execute(select(User).where(User.id == entry.submitted_by))
+        ).scalar_one_or_none()
+        if author is not None:
+            from app.domain.submission.review_reminders import send_decision_email
+
+            await send_decision_email(
+                author,
+                submission_title=entry.title,
+                decision="rework_requested",
+                note=entry.editor_note,
+                submission_id=entry.id,
+            )
+    except Exception:
+        logger.warning("rework_email_dispatch_failed", submission_id=entry.id, exc_info=True)
     return _to_response(entry)
 
 

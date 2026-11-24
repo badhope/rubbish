@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.19.53] — 2026-11-25
+
+### Fixed
+
+- 初筛队列退回/补材料提示不再暴露 `rework_requested`、`rejected` 等内部状态码；补材料成功的 toast 不再误报“已直接不通过”。
+- 退回修改的逐条要求写入作者详情 `editor_note`，不再只存在于会被读掉的站内通知里。
+- 初筛退回、要求补材料、D 级退回修改现在会同步发作者邮件；邮件走发信池，失败不反转业务。
+- 通知分类与深链补齐 `submission.triage_rework`、`submission.triage_materials`、`submission.triage_rejected` 与 `submission.rework_requested`。
+
 ## [1.19.52] — 2026-11-24
 
 ### 新增

@@ -16,8 +16,8 @@ from app.core.schemas import Authors, MessageResponse, PaginationMeta
 from app.core.tracks import Track, normalize_track
 
 # 完整 workflow 状态机：
-#   pending → under_review → (major_revision | minor_revision | accepted | rejected)
-#   major_revision / minor_revision → resubmitted → under_review（再分配互评成员）
+#   pending → under_review → (major_revision | minor_revision | rework_requested | accepted | rejected)
+#   major_revision / minor_revision / rework_requested → resubmitted / under_review（再分配互评成员）
 #   accepted → 自动物化 Resource 入 catalog（等价于旧 approved，保留向后兼容）
 # pending = 作者已提交、待编辑分配互评成员；accepted = 旧 approved 的同义词。
 # 旧测试用 pending/approved/rejected 路径仍走原 review 端点，保持兼容。
@@ -27,9 +27,9 @@ SubmissionStatus = Literal[
     "major_revision",
     "minor_revision",
     "resubmitted",
-    # 打回：评分 D 级时编辑发起的「补审/修改」状态（1.9.2 起）。
-    # 与 major_revision 的区别：后者是互评意见驱动的修回，前者是
-    # 质量评分不达标驱动的打回，互评成员与作者都要有动作。
+    # 退回修改：编辑对 D 级或不达标作品发起的显式退回。
+    # 与 major_revision 的区别：后者是互评意见驱动的小/大修，前者是
+    # 质量处置驱动的退回；本轮互评任务撤回，作者修改后必须显式重交。
     "rework_requested",
     "accepted",
     "rejected",

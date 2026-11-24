@@ -143,7 +143,7 @@ class Submission(Base, TenantScopedMixin):
 
     # Workflow fields。
     # status 兼容旧值 pending/approved/rejected，同时支持
-    # under_review/major_revision/minor_revision/resubmitted/accepted。
+    # pending/under_review/rework_requested/major_revision/minor_revision/resubmitted/accepted/rejected。
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="pending", index=True)
     # 赛道（serious / absurd）：历史字段，已下线（见 core/tracks.py），
     # 作者侧由 schema 归一为 serious；通过物化时原样带到

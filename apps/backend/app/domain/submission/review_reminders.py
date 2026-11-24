@@ -52,6 +52,9 @@ _DECISION_LABELS = {
     "approved": "通过",
     "minor_revision": "小改",
     "major_revision": "大改",
+    "rework_requested": "退回修改",
+    "triage_rework": "退回修改",
+    "triage_materials": "补充材料",
     "reject": "不通过",
     "rejected": "不通过",
 }

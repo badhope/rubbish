@@ -77,7 +77,9 @@ export function TriageQueue() {
           toast.success(
             dialog.action === "return_for_revision"
               ? "已退回修改"
-              : "已直接不通过",
+              : dialog.action === "request_materials"
+                ? "已要求补充材料"
+                : "已直接不通过",
           );
           setDialog(null);
         },
@@ -232,10 +234,10 @@ export function TriageQueue() {
             </DialogTitle>
             <DialogDescription>
               {dialog?.action === "return_for_revision"
-                ? "作品会进入 rework_requested（待修改），作者可修改并显式重新提交；请写清必须改什么。"
+                ? "作品会进入待修改，作者可修改并显式重新提交；请写清必须改什么。"
                 : dialog?.action === "request_materials"
                   ? "作品进入补材料状态；作者补齐后重新发布，会重新回到待处理队列。请逐项列明缺什么材料。"
-                  : "作品直接进入 rejected，不进入互评；请写清范围/格式/规范上的硬性原因。"}
+                  : "作品会直接进入不通过，不进入互评；请写清范围、格式或规范上的硬性原因。"}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">

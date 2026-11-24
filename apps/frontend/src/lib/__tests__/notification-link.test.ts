@@ -109,6 +109,31 @@ describe('notificationDestination', () => {
     })
   })
 
+  it('sends a rework request to the author work detail', () => {
+    expect(
+      notificationDestination(
+        note({ type: 'submission.rework_requested', related_type: 'submission', related_id: '351' }),
+      ),
+    ).toMatchObject({
+      to: '/submissions',
+      search: { submission: 351 },
+      label: '去修改',
+    })
+  })
+
+  it('sends triage rework and materials to the author work detail', () => {
+    expect(
+      notificationDestination(
+        note({ type: 'submission.triage_rework', related_type: 'submission', related_id: '352' }),
+      ),
+    ).toMatchObject({ to: '/submissions', search: { submission: 352 }, label: '去修改' })
+    expect(
+      notificationDestination(
+        note({ type: 'submission.triage_materials', related_type: 'submission', related_id: '353' }),
+      ),
+    ).toMatchObject({ to: '/submissions', search: { submission: 353 }, label: '去补材料' })
+  })
+
   it('sends a comment to the public work', () => {
     expect(
       notificationDestination(

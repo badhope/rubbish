@@ -605,8 +605,19 @@ function SubmissionsPage() {
               )}
               {detail.editor_note && (
                 <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3">
-                  <span className="text-muted-foreground">整理备注：</span>
-                  {detail.editor_note}
+                  {detail.status === 'rework_requested' ? (
+                    <>
+                      <div className="font-medium text-amber-900">修改要求与整理备注</div>
+                      <div className="mt-1 whitespace-pre-wrap text-xs leading-relaxed">
+                        {detail.editor_note}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-muted-foreground">整理备注：</span>
+                      {detail.editor_note}
+                    </>
+                  )}
                 </div>
               )}
               {/* 公开后物化出的目录条目：已公开对访客可见；暂存草稿则

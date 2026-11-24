@@ -305,14 +305,14 @@ def decision_notice(
     )
     text = (
         f"你好，{author}：\n\n"
-        f"你的作品《{paper_title}》走完了互评，结果是：{decision_label}。\n"
+        f"你的作品《{paper_title}》收到新的处理结果：{decision_label}。\n"
         + (f"\n处理意见：\n{note}\n" if note else "")
         + f"\n查看详情与后续操作：\n{link}\n"
     )
     html = _shell(
         f"作品有了新消息：{decision_label}",
         f"<p>你好，{escape(author)}：</p>"
-        f"<p>你的作品《{escape(paper_title)}》已完成互评，结果为 "
+        f"<p>你的作品《{escape(paper_title)}》收到新的处理结果："
         f"<strong>{escape(decision_label)}</strong>。</p>"
         + (f"<p>处理意见：</p>{note_html}" if note else "")
         + _button("查看作品详情", link),

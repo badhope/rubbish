@@ -55,7 +55,14 @@ _CATEGORY_TYPES: dict[str, tuple[str, ...]] = {
         "review.assignment_cancelled",
     ),
     "reminder": ("review.reminder",),
-    "decision": ("submission.decision", "submission.resubmitted", "submission.rework_requested"),
+    "decision": (
+        "submission.decision",
+        "submission.resubmitted",
+        "submission.rework_requested",
+        "submission.triage_rework",
+        "submission.triage_materials",
+        "submission.triage_rejected",
+    ),
     "claim": ("claim.created", "claim.decision"),
     # 新分组：通知页按工作流分开，不再全部倒进「全部」
     "review": (
@@ -65,7 +72,14 @@ _CATEGORY_TYPES: dict[str, tuple[str, ...]] = {
         "review.submitted",
         "review.assignment_cancelled",
     ),
-    "submission": ("submission.decision", "submission.resubmitted", "submission.rework_requested"),
+    "submission": (
+        "submission.decision",
+        "submission.resubmitted",
+        "submission.rework_requested",
+        "submission.triage_rework",
+        "submission.triage_materials",
+        "submission.triage_rejected",
+    ),
     "feedback": ("site.feedback",),
     "community": ("comment.new", "forum.reply"),
     "system": ("system", "gamification.role_application"),

@@ -133,6 +133,21 @@ export function notificationDestination(
       ? { to: '/submissions', search: { submission: id }, label: '去修改' }
       : { to: '/submissions', label: '我的作品' }
   }
+  if (type === 'submission.triage_rework') {
+    return id
+      ? { to: '/submissions', search: { submission: id }, label: '去修改' }
+      : { to: '/submissions', label: '我的作品' }
+  }
+  if (type === 'submission.triage_materials') {
+    return id
+      ? { to: '/submissions', search: { submission: id }, label: '去补材料' }
+      : { to: '/submissions', label: '我的作品' }
+  }
+  if (type === 'submission.triage_rejected') {
+    return id
+      ? { to: '/submissions', search: { submission: id }, label: '看结果' }
+      : { to: '/submissions', label: '我的作品' }
+  }
   if (type === 'review.assignment_cancelled') {
     return id
       ? { to: '/submissions', search: { submission: id }, label: '看作品' }
