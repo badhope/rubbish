@@ -34,6 +34,7 @@ from app.api.deps import (
     user_has_editor_access,
 )
 from app.core.db import get_db
+from app.core.rate_limit_store import get_rate_limiter_store
 from app.core.storage import get_storage
 from app.domain.review.models import ReviewAssignment
 from app.domain.submission._helpers import _try_delete_storage
@@ -124,56 +125,71 @@ _UPLOAD_DAILY_FILE_LIMIT = 20
 _UPLOAD_DAILY_BYTES_LIMIT = 250 * 1024 * 1024  # 250 MB / 自然日
 
 # 预览转换是纯 CPU/内存工作，不落库、不占上传配额；没有频控时一个登录用户
-# 可以反复提交 50 MB PDF 把工作线程和内存打满。单进程内按用户做滑动窗口，
-# 再加一个全局信号量限制同时转换数量。多进程部署时每个进程各自计数，
-# 真正的全局限流应放到网关；这里先挡住最直接的滥用。
+# 可以反复提交 50 MB PDF 把工作线程和内存打满。两个限制都走统一限流存储：
+# 生产配置 RUBBISH_REDIS_URL 后是跨进程共享的 Redis 桶，未配置时才退回进程
+# 内内存实现。转换并发另外用 Redis 租约限制为全站 2 路，租约 120 秒自动过期。
 _PREVIEW_WINDOW_SECONDS = 10 * 60
 _PREVIEW_MAX_PER_WINDOW = 8
-_PREVIEW_HITS: dict[int, list[float]] = {}
-_CONVERT_ACTIVE = 0
 _CONVERT_LIMIT = 2
+_CONVERT_LEASE_TTL_SECONDS = 120
 
 
-def _enforce_preview_rate(user_id: int) -> None:
-    now = time.monotonic()
-    hits = [ts for ts in _PREVIEW_HITS.get(user_id, []) if now - ts < _PREVIEW_WINDOW_SECONDS]
-    if len(hits) >= _PREVIEW_MAX_PER_WINDOW:
+async def _enforce_preview_rate(user_id: int, tenant_id: Any) -> None:
+    store = get_rate_limiter_store()
+    allowed, _depth = await store.hit_and_check(
+        bucket_key=f"preview:convert:{tenant_id}:{user_id}",
+        limit=_PREVIEW_MAX_PER_WINDOW,
+        window_seconds=_PREVIEW_WINDOW_SECONDS,
+    )
+    if not allowed:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="预览转换过于频繁，请稍后再试；已保存的稿件不受影响。",
         )
-    hits.append(now)
-    _PREVIEW_HITS[user_id] = hits
-    # 防止长期运行后字典无限增长：只保留仍在窗口内的用户。
-    if len(_PREVIEW_HITS) > 5000:
-        stale = [
-            uid
-            for uid, stamps in _PREVIEW_HITS.items()
-            if not stamps or now - stamps[-1] >= _PREVIEW_WINDOW_SECONDS
-        ]
-        for uid in stale:
-            _PREVIEW_HITS.pop(uid, None)
 
 
 async def _convert_preview_guarded(contents: bytes, filename: str) -> Any:
-    global _CONVERT_ACTIVE
     from app.domain.submission.manuscript import convert_manuscript_async
 
-    if _CONVERT_ACTIVE >= _CONVERT_LIMIT:
+    store = get_rate_limiter_store()
+    lease = await store.acquire_lease(
+        bucket_key="preview:convert:global",
+        limit=_CONVERT_LIMIT,
+        ttl_seconds=_CONVERT_LEASE_TTL_SECONDS,
+    )
+    if lease is None:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="转换队列繁忙，请稍后再试。",
         )
-    _CONVERT_ACTIVE += 1
     try:
         return await convert_manuscript_async(contents, filename)
     finally:
-        _CONVERT_ACTIVE -= 1
+        await store.release_lease(bucket_key="preview:convert:global", token=lease)
 
 
-async def _enforce_upload_quota(
-    db: AsyncSession, current_user: User, extra_bytes: int
-) -> None:
+async def _docx_to_pdf_guarded(contents: bytes) -> bytes:
+    """Render a source DOCX under the same global conversion lease."""
+    from app.domain.submission.export_docs import docx_to_pdf
+
+    store = get_rate_limiter_store()
+    lease = await store.acquire_lease(
+        bucket_key="preview:convert:global",
+        limit=_CONVERT_LIMIT,
+        ttl_seconds=_CONVERT_LEASE_TTL_SECONDS,
+    )
+    if lease is None:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="转换队列繁忙，请稍后再试。",
+        )
+    try:
+        return await asyncio.to_thread(docx_to_pdf, contents)
+    finally:
+        await store.release_lease(bucket_key="preview:convert:global", token=lease)
+
+
+async def _enforce_upload_quota(db: AsyncSession, current_user: User, extra_bytes: int) -> None:
     """在落盘前检查作者当天的上传次数与字节数。
 
     只统计成功落盘的上传审计（``submission.file_upload``），失败/被拒的
@@ -226,6 +242,7 @@ async def _enforce_upload_quota(
             ),
         )
 
+
 # 前端 accept 属性与错误文案共用这份扩展名清单（由 /capabilities 下发）。
 _ALLOWED_UPLOAD_EXTENSIONS = (
     ".docx .doc .pdf .odt .rtf .txt .md .tex .ps "
@@ -260,7 +277,9 @@ async def _read_upload_for_conversion(file: UploadFile) -> tuple[bytes, str, str
                 detail=f"File exceeds the {_MAX_UPLOAD_BYTES // (1024 * 1024)} MB limit.",
             )
     from app.domain.submission.fileformat import detect_format
+    from app.domain.submission.security import assert_bytes_safe
 
+    await assert_bytes_safe(contents, upload_name)
     detected = detect_format(contents, upload_name)
     return contents, upload_name, detected.actual
 
@@ -277,7 +296,7 @@ async def convert_submission_preview(
     管线，把 Markdown 返回给表单；正式提交时仍由上传端点再转换一次并落库，
     两次使用同一实现，不引入第二套解析口径。
     """
-    _enforce_preview_rate(current_user.id)
+    await _enforce_preview_rate(current_user.id, current_user.tenant_id)
     contents, original_filename, actual_format = await _read_upload_for_conversion(file)
     result = await _convert_preview_guarded(contents, original_filename)
     warnings: list[str] = []
@@ -339,14 +358,14 @@ def _prune_source_previews(now: float | None = None) -> None:
 
 async def _uploaded_file_to_pdf(file: UploadFile) -> bytes:
     """与 /source-preview 同一条转换口径：PDF 原样、DOCX 转 PDF。"""
-    from app.domain.submission.export_docs import docx_to_pdf
-
     contents, _original_filename, actual_format = await _read_upload_for_conversion(file)
     if actual_format == "pdf":
         return contents
     if actual_format == "docx":
         try:
-            return await asyncio.to_thread(docx_to_pdf, contents)
+            return await _docx_to_pdf_guarded(contents)
+        except HTTPException:
+            raise
         except Exception as exc:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -371,6 +390,7 @@ async def preview_uploaded_source_pages(
     """
     import pymupdf
 
+    await _enforce_preview_rate(current_user.id, current_user.tenant_id)
     pdf_bytes = await _uploaded_file_to_pdf(file)
     token = hashlib.sha256(b"srcprev:" + pdf_bytes).hexdigest()[:32]
     cache_path = _source_preview_dir() / f"{token}.pdf"
@@ -449,14 +469,15 @@ async def preview_uploaded_source(
     Markdown 是否漏段、错序或丢图。只接受 PDF / DOCX；老式 .doc 与 RTF
     返回明确错误，不静默换成别的格式。
     """
-    from app.domain.submission.export_docs import docx_to_pdf
-
+    await _enforce_preview_rate(current_user.id, current_user.tenant_id)
     contents, _original_filename, actual_format = await _read_upload_for_conversion(file)
     if actual_format == "pdf":
         pdf_bytes = contents
     elif actual_format == "docx":
         try:
-            pdf_bytes = await asyncio.to_thread(docx_to_pdf, contents)
+            pdf_bytes = await _docx_to_pdf_guarded(contents)
+        except HTTPException:
+            raise
         except Exception as exc:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -547,6 +568,21 @@ async def upload_submission_file(
             )
 
     await _enforce_upload_quota(db, current_user, len(contents))
+
+    from app.domain.submission.security import scan_fields, scan_upload_or_reject
+
+    scan = await scan_upload_or_reject(
+        db,
+        contents=contents,
+        filename=upload_name,
+        actor_id=current_user.id,
+        tenant_id=entry.tenant_id,
+        submission_id=entry.id,
+        kind="file",
+    )
+    for field, value in scan_fields(scan).items():
+        setattr(entry, field, value)
+    entry.file_scan_attempts = 1
 
     # 存储 key：{tenant_id}/{submission_id}/{uuid}{ext}
     # 用 uuid 防文件名碰撞 + 路径穿越；本地/S3 后端共用同一 key 形状，
@@ -689,6 +725,17 @@ async def upload_submission_cover(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
             detail="封面图不能超过 5MB",
         )
+    from app.domain.submission.security import scan_upload_or_reject
+
+    await scan_upload_or_reject(
+        db,
+        contents=contents,
+        filename=file.filename or "cover",
+        actor_id=current_user.id,
+        tenant_id=entry.tenant_id,
+        submission_id=entry.id,
+        kind="cover",
+    )
     ext = {"image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp"}[mime]
     key = f"{entry.tenant_id}/{entry.id}/cover-{uuid4().hex}{ext}"
     await get_storage().save(key, contents, content_type=mime)
@@ -1016,6 +1063,9 @@ async def create_submission_download_ticket(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have access to this submission file",
         )
+    from app.domain.submission.security import ensure_file_servable
+
+    ensure_file_servable(entry)
     ticket = _make_download_ticket(entry.id, current_user.id, file_format, str(entry.tenant_id))
     # 路径必须以 .pdf/.docx 结尾：微信内置浏览器按扩展名判断能否
     # 交给文件查看器/下载器；只靠 ?format=pdf 它经常当成网页不处理。
@@ -1129,6 +1179,10 @@ async def download_submission_file(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication required",
         )
+
+    from app.domain.submission.security import ensure_file_servable
+
+    ensure_file_servable(entry)
 
     # 作者/编辑持票可取回 Markdown 源文件（互评成员仍走匿名通道）。
     if file_format == "md" and (entry.file_path or entry.markdown_path):

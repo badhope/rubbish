@@ -89,8 +89,26 @@ class Settings(BaseSettings):
     db_startup_retries: int = Field(default=5, ge=0)
     db_startup_retry_delay: float = Field(default=2.0, ge=0.1)
 
-    # --- Redis (cache + rate limit, planned �?currently unused) ---
+    # --- Redis (shared rate-limit buckets across processes) ---
+    # Empty = in-process memory fallback. Production multi-worker should
+    # point this at a local Redis (redis://127.0.0.1:6379/0).
     redis_url: str = ""
+
+    # --- Upload security ---
+    # ClamAV-compatible scanner. Enabled in production; disabled in dev/test
+    # so a missing daemon does not break local uploads. When enabled, a scan
+    # transport failure rejects the upload instead of silently admitting an
+    # unscanned file.
+    virus_scan_enabled: bool = False
+    virus_scan_command: str = "clamdscan"
+    virus_scan_timeout_seconds: int = Field(default=30, ge=5, le=120)
+
+    # --- Publication digest ---
+    # Daily (not per-work) email for followers/subscribers. The in-app fan-out
+    # remains immediate; email is aggregated at the configured local hour.
+    publication_digest_enabled: bool = True
+    publication_digest_local_hour: int = Field(default=9, ge=0, le=23)
+    publication_digest_batch_size: int = Field(default=50, ge=1, le=200)
 
     # --- JWT / Auth ---
     secret_key: str = Field(default="")
@@ -498,7 +516,9 @@ class Settings(BaseSettings):
             region_path = (
                 Path(self.region_access_restricted_ip_list_path).expanduser()
                 if self.region_access_restricted_ip_list_path.strip()
-                else Path(__file__).resolve().parents[1] / "data" / "restricted_service_ip_ranges.txt"
+                else Path(__file__).resolve().parents[1]
+                / "data"
+                / "restricted_service_ip_ranges.txt"
             )
             if not region_path.is_file():
                 raise ValueError(

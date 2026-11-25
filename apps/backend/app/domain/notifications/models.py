@@ -26,17 +26,19 @@ PostgreSQL database").
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     Boolean,
+    Date,
     DateTime,
     ForeignKey,
     Index,
     Integer,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -151,4 +153,82 @@ class EmailDigestRecord(Base, TenantScopedMixin):
     )
 
 
-__all__ = ["EmailDigestRecord", "Notification"]
+class PublicationDigestItem(Base, TenantScopedMixin):
+    """A reader-eligible new work waiting for the next daily digest.
+
+    This is intentionally separate from ``Notification``: a reader can turn
+    off in-app publication cards and still keep the daily email digest.  If
+    the digest were rebuilt from notifications, that preference combination
+    would silently produce no email at all.
+    """
+
+    __tablename__ = "publication_digest_items"
+    __table_args__ = (
+        UniqueConstraint(
+            "tenant_id",
+            "user_id",
+            "resource_id",
+            name="uq_publication_digest_item_user_resource",
+        ),
+        Index("ix_publication_digest_items_user_pending", "user_id", "delivered_at"),
+        Index("ix_publication_digest_items_tenant_created", "tenant_id", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    resource_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("resources.id", ondelete="CASCADE"), nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    delivered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class PublicationDigestDelivery(Base, TenantScopedMixin):
+    """One user's daily publication-digest decision.
+
+    The digest is built from the independent publication-digest queue and
+    sent once per local calendar day.  The unique key is the idempotency
+    boundary: a scheduler retry, a redeploy, or a second worker must not send
+    the same reader a second copy of the same day's digest.
+    """
+
+    __tablename__ = "publication_digest_deliveries"
+    __table_args__ = (
+        UniqueConstraint(
+            "tenant_id",
+            "user_id",
+            "digest_date",
+            name="uq_publication_digest_user_date",
+        ),
+        Index("ix_publication_digest_user_id", "user_id"),
+        Index("ix_publication_digest_tenant_date", "tenant_id", "digest_date"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    digest_date: Mapped[date] = mapped_column(Date, nullable=False)
+    # queued (outbox owns delivery) / sent / skipped / error
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="queued")
+    item_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    email_record_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("email_digest_records.id", ondelete="SET NULL"), nullable=True
+    )
+    detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+__all__ = [
+    "EmailDigestRecord",
+    "Notification",
+    "PublicationDigestDelivery",
+    "PublicationDigestItem",
+]

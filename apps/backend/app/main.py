@@ -58,6 +58,7 @@ from app.core.rate_limit_store import close_rate_limiter_store
 from app.core.region_access import RegionAccessMiddleware
 from app.core.tenant import TenantContextMiddleware
 from app.domain.release.scheduler import start_release_scheduler, stop_release_scheduler
+from app.domain.submission.security import FileSecurityError
 from app.domain.workflow_scheduler import start_workflow_scheduler, stop_workflow_scheduler
 from app.middleware.csrf import CSRFMiddleware
 from app.middleware.metrics import HTTPMetricsMiddleware
@@ -266,6 +267,25 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
             **exc_headers,
             "Content-Type": "application/problem+json",
         },
+    )
+
+
+@app.exception_handler(FileSecurityError)
+async def file_security_exception_handler(request: Request, exc: FileSecurityError) -> JSONResponse:
+    from app.core.tenant import REQUEST_ID_CTX
+
+    request_id = REQUEST_ID_CTX.get()
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "status": exc.status_code,
+            "title": "File security",
+            "type": f"https://httpstatuses.org/http-{exc.status_code}",
+            "instance": str(request.url.path),
+            "detail": exc.detail,
+            "trace_id": request_id or "",
+        },
+        headers={"Content-Type": "application/problem+json"},
     )
 
 

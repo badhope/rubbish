@@ -373,3 +373,60 @@ def release_failure(
         + _button("打开合集编排", link),
     )
     return subject, text, html
+
+
+def publication_digest(
+    username: str,
+    items: list[dict[str, str]],
+    *,
+    window_label: str,
+    link: str,
+) -> tuple[str, str, str]:
+    """Daily reader digest for new works by followed authors/disciplines."""
+    count = len(items)
+    subject = f"{settings.site_name} 新作汇总 · {count} 篇"
+    lines = [f"你好，{username}：", "", f"{window_label}，你关注的作品有 {count} 篇更新：", ""]
+    for item in items:
+        lines.append(f"· {item['title']} — {item['meta']}")
+        lines.append(f"  {item['url']}")
+    lines += ["", "你可以在通知设置里关闭这类按日汇总邮件。", ""]
+    text = "\n".join(lines)
+    rows = "".join(
+        f'<li style="margin:0 0 12px;"><a href="{escape(item["url"])}" '
+        f'style="color:{INK};text-decoration:none;font-weight:600;">{escape(item["title"])}</a>'
+        f'<div style="font-size:12px;color:{MUTED};margin-top:2px;">{escape(item["meta"])}</div></li>'
+        for item in items
+    )
+    html = _shell(
+        f"新作汇总 · {count} 篇",
+        f"<p>你好，{escape(username)}：</p>"
+        f"<p>{escape(window_label)}，你关注的作品有以下更新：</p>"
+        f'<ul style="padding-left:18px;margin:0 0 14px;">{rows}</ul>'
+        + _button("查看全部新作", link),
+        footer_note="你可以在通知设置里关闭这类按日汇总邮件。",
+    )
+    return subject, text, html
+
+
+def upload_infected(
+    submission_title: str,
+    submission_id: int,
+    signature: str,
+    link: str,
+) -> tuple[str, str, str]:
+    subject = f"上传文件被安全引擎隔离：{submission_title[:80]}"
+    text = (
+        f"作品《{submission_title}》（#{submission_id}）的上传文件被 ClamAV 判定为恶意。\n\n"
+        f"特征：{signature}\n"
+        f"该文件已禁止下载，请要求作者重新上传干净版本，或在确认误报后由运维复核。\n"
+        f"处理入口：{link}\n"
+    )
+    html = _shell(
+        "上传文件被安全引擎隔离",
+        f"<p>作品《{escape(submission_title)}》（#{submission_id}）的上传文件被 "
+        f"ClamAV 判定为恶意。</p>"
+        f"<p>特征：<code>{escape(signature)}</code></p>"
+        f"<p>该文件已禁止下载。请要求作者重新上传干净版本；若确认是误报，"
+        f"由运维在数据库中复核后将扫描状态改回 clean。</p>" + _button("打开作品处理台", link),
+    )
+    return subject, text, html

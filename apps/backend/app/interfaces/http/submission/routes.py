@@ -780,6 +780,9 @@ async def download_submission_version(
     ).scalar_one_or_none()
     if row is None or not row.file_path:
         raise HTTPException(status_code=404, detail="该版本没有可下载的原件")
+    from app.domain.submission.security import ensure_file_servable
+
+    ensure_file_servable(row)
     try:
         data = await get_storage().load(row.file_path)
     except FileNotFoundError as exc:

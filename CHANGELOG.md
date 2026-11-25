@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.19.56] — 2026-11-25
+
+### 基础设施强化
+
+- **调度器选主**：新增 `core/leader_election.py`，release 与 workflow 各自用一条专用 PostgreSQL 连接持有 advisory lock；拿到锁的进程才执行任务，未拿到锁的进程保持存活并每 30 秒重新竞选。leader 连接断开后锁自动释放，另一进程接管；后台健康页对 follower 显示“等待选主”，不再误报任务未运行。
+- **全局限流**：新增 Redis 限流存储与租约接口。预览转换的每用户 8 次/10 分钟、全站同时 2 路转换现在走共享桶；Redis 不可用时退回进程内计数并在后台健康标 warn。生产启用 Redis 7.0.15，修复 jemalloc 动态库路径后 `redis-cli ping` 返回 PONG。
+- **发布邮件按日汇总**：新增 `publication_digest_items` / `publication_digest_deliveries` 队列表。关注者在作品发布时按 `email_release` 偏好入队，不依赖站内通知开关；每日本地 09:00 后由 `publication_digest` 工作流汇总，一人一天一封，最多 30 条/人、50 人/批。用户关闭邮件偏好时清空待发积压，SMTP 不可用时保留 outbox 重试。
+- **上传病毒扫描与隔离**：新增 ClamAV 扫描服务。新上传、封面、预览转换、原件预览在落盘或解析前扫描；infected 返回 422 且只记录特征与 SHA-256，扫描器不可用返回 503（fail closed）。新增 `file_scan_*` 字段与历史文件回填 job，每轮每租户最多 5 个 submission + 5 个 version；已被隔离的文件在作者下载、历史版本、公开原件下载、原件预览、下载票据签发处统一返回 451。
+- **迁移与健康**：新增迁移 `073_infra_hardening`，两张 digest 表启用 RLS，提交/版本表补扫描字段；后台健康新增“上传安全扫描”“全局限流”两项，扫描器用 `clamdscan --ping` 探测守护进程，不再只看客户端版本。
+
+### 校验
+
+- 新增 `tests/test_infra_11956.py`：SQLite 选主、内存租约、ClamAV 输出解析与守护进程健康、每日 digest 幂等，5 项通过。
+- 后端全量：927 passed / 3 skipped，417.74 秒；前端 typecheck、ESLint、build、Vitest 217 项全部通过。
+
 ## [1.19.55] — 2026-11-25
 
 ### 可靠性收口

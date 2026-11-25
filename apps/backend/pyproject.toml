@@ -1,6 +1,6 @@
 [project]
 name = "rubbish-backend"
-version = "1.19.55"
+version = "1.19.56"
 description = "Rubbish backend — modular multi-tenant academic platform base"
 # Python 版本锁定在 3.12 系列：与 .python-version、Dockerfile、CI 完全一致
 requires-python = ">=3.12,<3.13"
@@ -32,6 +32,8 @@ dependencies = [
     "webauthn==2.8.0",
     "defusedxml==0.7.1",
     "prometheus-client==0.26.0",
+    # 跨进程限流桶与转换租约；未配置 RUBBISH_REDIS_URL 时退回进程内实现。
+    "redis==8.2.0",
     "cryptography==50.0.0",
     # 传递依赖下限：uv.lock 里 botocore/requests 会带 urllib3，
     # 2.7.x 有 3 条 PYSEC 通告（PYSEC-2026-4175/4176/4177），锁到 2.8+。

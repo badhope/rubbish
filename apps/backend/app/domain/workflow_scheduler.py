@@ -23,12 +23,15 @@ from sqlalchemy import select
 
 from app.core.config import settings
 from app.core.db import async_session_factory
+from app.core.leader_election import ELECTION_RETRY_SECONDS, workflow_elector
 from app.core.logging import get_logger
 from app.core.tenant import TENANT_CONTEXT_VAR
 from app.core.time import utcnow
 from app.domain.forum.reminders import run_moderation_sla_reminders
 from app.domain.notifications.email_outbox import retry_due_emails
+from app.domain.release.digest import run_publication_digest
 from app.domain.submission.review_reminders import run_overdue_reminders, run_rework_reminders
+from app.domain.submission.security import run_file_scan_backfill
 from app.domain.submission.triage_reminders import run_triage_reminders
 from app.models import Tenant
 
@@ -50,8 +53,10 @@ _state: dict[str, Any] = {
 
 def workflow_scheduler_state() -> dict[str, Any]:
     """Read-only snapshot for the admin health page and tests."""
+    election = workflow_elector.state()
     return {
         **_state,
+        **election,
         "tick_seconds": TICK_SECONDS,
         "task_alive": _task is not None and not _task.done(),
     }
@@ -61,12 +66,15 @@ async def _run_job(name: str, tenant_id: Any, runner: Any) -> dict[str, int]:
     """Run one tenant-scoped job in its own session, rollback on failure."""
     async with async_session_factory() as job_db:
         try:
-            return await runner(job_db)
+            result = await runner(job_db)
+            # Jobs such as publication_digest and the scan backfill only
+            # flush their rows; without this commit the session closes and
+            # PostgreSQL rolls every scan result and digest marker back.
+            await job_db.commit()
+            return result
         except Exception:
             await job_db.rollback()
-            logger.warning(
-                "workflow_job_failed", job=name, tenant_id=str(tenant_id), exc_info=True
-            )
+            logger.warning("workflow_job_failed", job=name, tenant_id=str(tenant_id), exc_info=True)
             raise
 
 
@@ -78,13 +86,31 @@ async def run_workflow_once() -> dict[str, int]:
     errors: list[str] = []
     async with async_session_factory() as db:
         tenant_ids = list((await db.execute(select(Tenant.id))).scalars().all())
-    totals = {"triage": 0, "review": 0, "rework": 0, "moderation_sla": 0, "email_retry": 0}
+    totals = {
+        "triage": 0,
+        "review": 0,
+        "rework": 0,
+        "moderation_sla": 0,
+        "email_retry": 0,
+        "publication_digest": 0,
+        "virus_scan": 0,
+    }
     for tenant_id in tenant_ids:
         token = TENANT_CONTEXT_VAR.set(tenant_id)
         try:
             specs = [
-                ("triage", "triage", partial(run_triage_reminders, tenant_id=tenant_id), "reminded"),
-                ("review", "review", partial(run_overdue_reminders, tenant_id=tenant_id), "reminded"),
+                (
+                    "triage",
+                    "triage",
+                    partial(run_triage_reminders, tenant_id=tenant_id),
+                    "reminded",
+                ),
+                (
+                    "review",
+                    "review",
+                    partial(run_overdue_reminders, tenant_id=tenant_id),
+                    "reminded",
+                ),
                 ("rework", "rework", partial(run_rework_reminders, tenant_id=tenant_id), None),
                 (
                     "moderation_sla",
@@ -98,6 +124,18 @@ async def run_workflow_once() -> dict[str, int]:
                     partial(retry_due_emails, tenant_id=tenant_id),
                     "sent",
                 ),
+                (
+                    "publication_digest",
+                    "publication_digest",
+                    partial(run_publication_digest, tenant_id=tenant_id),
+                    None,
+                ),
+                (
+                    "virus_scan",
+                    "virus_scan",
+                    partial(run_file_scan_backfill, tenant_id=tenant_id),
+                    "scanned",
+                ),
             ]
             for name, key, runner, field in specs:
                 try:
@@ -106,6 +144,8 @@ async def run_workflow_once() -> dict[str, int]:
                         totals[key] += int(result.get("due_soon", 0)) + int(
                             result.get("overdue", 0)
                         )
+                    elif name == "publication_digest":
+                        totals[key] += int(result.get("sent", 0)) + int(result.get("queued", 0))
                     elif field is not None:
                         totals[key] += int(result.get(field, 0))
                 except Exception:
@@ -126,21 +166,31 @@ _task: asyncio.Task | None = None
 async def _loop() -> None:
     await asyncio.sleep(settings.scheduler_startup_delay_seconds)
     while True:
+        if not await workflow_elector.acquire():
+            await asyncio.sleep(ELECTION_RETRY_SECONDS)
+            continue
         try:
-            stats = await run_workflow_once()
-            logger.info("workflow_scheduler_done", **stats)
-        except asyncio.CancelledError:
-            raise
-        except Exception as exc:
-            _state["last_error"] = str(exc)[:500]
+            while await workflow_elector.heartbeat():
+                try:
+                    stats = await run_workflow_once()
+                    logger.info("workflow_scheduler_done", **stats)
+                except asyncio.CancelledError:
+                    raise
+                except Exception as exc:
+                    _state["last_error"] = str(exc)[:500]
+                    _state["running"] = False
+                    logger.warning("workflow_scheduler_failed", exc_info=True)
+                await asyncio.sleep(TICK_SECONDS)
+        finally:
+            await workflow_elector.release()
             _state["running"] = False
-            logger.warning("workflow_scheduler_failed", exc_info=True)
-        await asyncio.sleep(TICK_SECONDS)
 
 
 def start_workflow_scheduler() -> None:
     global _task
-    if settings.is_test or not settings.scheduler_enabled or _task is not None:
+    if settings.is_test or not settings.scheduler_enabled:
+        return
+    if _task is not None and not _task.done():
         return
     _state["started_at"] = utcnow()
     _task = asyncio.create_task(_loop(), name="rubbish-workflow-scheduler")
@@ -155,6 +205,7 @@ async def stop_workflow_scheduler() -> None:
     with suppress(asyncio.CancelledError):
         await _task
     _task = None
+    await workflow_elector.release()
     logger.info("workflow_scheduler_stopped")
 
 

@@ -840,6 +840,9 @@ async def download_resource_file(
             detail="This resource has no downloadable file",
         )
 
+    from app.domain.submission.security import ensure_file_servable
+
+    ensure_file_servable(submission)
     storage = get_storage()
     url = storage.presigned_url(submission.file_path)
     if url:
@@ -964,6 +967,9 @@ async def _load_resource_source_pdf(
             detail="This resource has no uploaded source file",
         )
 
+    from app.domain.submission.security import ensure_file_servable
+
+    ensure_file_servable(submission)
     storage = get_storage()
     try:
         data = await storage.load(submission.file_path)

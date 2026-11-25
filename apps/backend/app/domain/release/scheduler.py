@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.db import async_session_factory
+from app.core.leader_election import ELECTION_RETRY_SECONDS, release_elector
 from app.core.logging import get_logger
 from app.core.tenant import TENANT_CONTEXT_VAR
 from app.core.time import utcnow
@@ -48,8 +49,10 @@ _state: dict[str, Any] = {
 
 def release_scheduler_state() -> dict[str, Any]:
     """Read-only snapshot for the admin health page and tests."""
+    election = release_elector.state()
     return {
         **_state,
+        **election,
         "tick_seconds": TICK_SECONDS,
         "task_alive": _task is not None and not _task.done(),
     }
@@ -84,118 +87,118 @@ async def publish_due_manifests() -> dict[str, int]:
     for tenant_id in tenant_ids:
         token = TENANT_CONTEXT_VAR.set(tenant_id)
         async with async_session_factory() as session:
-          try:
-            due = await _due_manifests(session, tenant_id)
-            totals["tenants"] += 1
-            totals["due"] += len(due)
-            for manifest in due:
-                current = await check_issue(session, tenant_id, manifest.volume, manifest.issue)
-                if current["content_hash"] != manifest.content_hash:
-                    manifest.status = "superseded"
-                    manifest.payload = {
-                        **manifest.payload,
-                        "scheduler_failure": "content_changed",
-                        "scheduler_failed_at": utcnow().isoformat(),
-                    }
-                    session.add(
-                        AuditLog(
+            try:
+                due = await _due_manifests(session, tenant_id)
+                totals["tenants"] += 1
+                totals["due"] += len(due)
+                for manifest in due:
+                    current = await check_issue(session, tenant_id, manifest.volume, manifest.issue)
+                    if current["content_hash"] != manifest.content_hash:
+                        manifest.status = "superseded"
+                        manifest.payload = {
+                            **manifest.payload,
+                            "scheduler_failure": "content_changed",
+                            "scheduler_failed_at": utcnow().isoformat(),
+                        }
+                        session.add(
+                            AuditLog(
+                                tenant_id=tenant_id,
+                                actor_user_id=manifest.created_by,
+                                action="release.scheduled_failed",
+                                target_type="issue",
+                                target_id=f"{manifest.volume}/{manifest.issue}",
+                                payload={
+                                    "manifest_id": manifest.id,
+                                    "reason": "content_changed",
+                                    "manifest_hash": manifest.content_hash,
+                                    "current_hash": current["content_hash"],
+                                },
+                            )
+                        )
+                        await alert_release_failure(
+                            session,
                             tenant_id=tenant_id,
-                            actor_user_id=manifest.created_by,
-                            action="release.scheduled_failed",
-                            target_type="issue",
-                            target_id=f"{manifest.volume}/{manifest.issue}",
-                            payload={
-                                "manifest_id": manifest.id,
-                                "reason": "content_changed",
+                            manifest=manifest,
+                            reason="content_changed",
+                            detail={
                                 "manifest_hash": manifest.content_hash,
                                 "current_hash": current["content_hash"],
                             },
                         )
+                        totals["failed"] += 1
+                        continue
+                    if current["status"] != "ready":
+                        manifest.status = "superseded"
+                        manifest.payload = {
+                            **manifest.payload,
+                            "scheduler_failure": "gate_blocked",
+                            "scheduler_failed_at": utcnow().isoformat(),
+                        }
+                        session.add(
+                            AuditLog(
+                                tenant_id=tenant_id,
+                                actor_user_id=manifest.created_by,
+                                action="release.scheduled_failed",
+                                target_type="issue",
+                                target_id=f"{manifest.volume}/{manifest.issue}",
+                                payload={
+                                    "manifest_id": manifest.id,
+                                    "reason": "gate_blocked",
+                                    "errors": current["error_count"],
+                                },
+                            )
+                        )
+                        await alert_release_failure(
+                            session,
+                            tenant_id=tenant_id,
+                            manifest=manifest,
+                            reason="gate_blocked",
+                            detail={"errors": current["error_count"]},
+                        )
+                        totals["failed"] += 1
+                        continue
+                    manifest.status = "published"
+                    manifest.published_at = utcnow()
+                    resources = list(
+                        (
+                            await session.execute(
+                                select(Resource).where(
+                                    Resource.tenant_id == tenant_id,
+                                    Resource.volume == manifest.volume,
+                                    Resource.issue == manifest.issue,
+                                )
+                            )
+                        )
+                        .scalars()
+                        .all()
                     )
-                    await alert_release_failure(
+                    await notify_publication(
                         session,
                         tenant_id=tenant_id,
-                        manifest=manifest,
-                        reason="content_changed",
-                        detail={
-                            "manifest_hash": manifest.content_hash,
-                            "current_hash": current["content_hash"],
-                        },
+                        resources=resources,
+                        notify_authors=True,
+                        event_type="published",
                     )
-                    totals["failed"] += 1
-                    continue
-                if current["status"] != "ready":
-                    manifest.status = "superseded"
-                    manifest.payload = {
-                        **manifest.payload,
-                        "scheduler_failure": "gate_blocked",
-                        "scheduler_failed_at": utcnow().isoformat(),
-                    }
                     session.add(
                         AuditLog(
                             tenant_id=tenant_id,
                             actor_user_id=manifest.created_by,
-                            action="release.scheduled_failed",
+                            action="release.scheduled_publish",
                             target_type="issue",
                             target_id=f"{manifest.volume}/{manifest.issue}",
                             payload={
                                 "manifest_id": manifest.id,
-                                "reason": "gate_blocked",
-                                "errors": current["error_count"],
+                                "scheduled_for": manifest.scheduled_for.isoformat()
+                                if manifest.scheduled_for
+                                else None,
+                                "resources": manifest.resource_count,
                             },
                         )
                     )
-                    await alert_release_failure(
-                        session,
-                        tenant_id=tenant_id,
-                        manifest=manifest,
-                        reason="gate_blocked",
-                        detail={"errors": current["error_count"]},
-                    )
-                    totals["failed"] += 1
-                    continue
-                manifest.status = "published"
-                manifest.published_at = utcnow()
-                resources = list(
-                    (
-                        await session.execute(
-                            select(Resource).where(
-                                Resource.tenant_id == tenant_id,
-                                Resource.volume == manifest.volume,
-                                Resource.issue == manifest.issue,
-                            )
-                        )
-                    )
-                    .scalars()
-                    .all()
-                )
-                await notify_publication(
-                    session,
-                    tenant_id=tenant_id,
-                    resources=resources,
-                    notify_authors=True,
-                    event_type="published",
-                )
-                session.add(
-                    AuditLog(
-                        tenant_id=tenant_id,
-                        actor_user_id=manifest.created_by,
-                        action="release.scheduled_publish",
-                        target_type="issue",
-                        target_id=f"{manifest.volume}/{manifest.issue}",
-                        payload={
-                            "manifest_id": manifest.id,
-                            "scheduled_for": manifest.scheduled_for.isoformat()
-                            if manifest.scheduled_for
-                            else None,
-                            "resources": manifest.resource_count,
-                        },
-                    )
-                )
-                totals["published"] += 1
-            await session.commit()
-          finally:
-            TENANT_CONTEXT_VAR.reset(token)
+                    totals["published"] += 1
+                await session.commit()
+            finally:
+                TENANT_CONTEXT_VAR.reset(token)
     _state["last_stats"] = dict(totals)
     _state["last_success_at"] = utcnow()
     _state["runs"] = int(_state["runs"] or 0) + 1
@@ -207,17 +210,27 @@ async def publish_due_manifests() -> dict[str, int]:
 async def _loop() -> None:
     await asyncio.sleep(STARTUP_DELAY_SECONDS)
     while True:
+        if not await release_elector.acquire():
+            # Another process is the leader. Stay alive and poll; if that
+            # process dies its connection drops the lock and we take over.
+            await asyncio.sleep(ELECTION_RETRY_SECONDS)
+            continue
         try:
-            stats = await publish_due_manifests()
-            if stats["due"]:
-                logger.info("release_scheduler_done", **stats)
-        except asyncio.CancelledError:
-            raise
-        except Exception as exc:
-            _state["last_error"] = str(exc)[:500]
+            while await release_elector.heartbeat():
+                try:
+                    stats = await publish_due_manifests()
+                    if stats["due"]:
+                        logger.info("release_scheduler_done", **stats)
+                except asyncio.CancelledError:
+                    raise
+                except Exception as exc:
+                    _state["last_error"] = str(exc)[:500]
+                    _state["running"] = False
+                    logger.warning("release_scheduler_failed", exc_info=True)
+                await asyncio.sleep(TICK_SECONDS)
+        finally:
+            await release_elector.release()
             _state["running"] = False
-            logger.warning("release_scheduler_failed", exc_info=True)
-        await asyncio.sleep(TICK_SECONDS)
 
 
 def start_release_scheduler() -> None:
@@ -241,6 +254,7 @@ async def stop_release_scheduler() -> None:
     except asyncio.CancelledError:
         pass
     _task = None
+    await release_elector.release()
     logger.info("release_scheduler_stopped")
 
 

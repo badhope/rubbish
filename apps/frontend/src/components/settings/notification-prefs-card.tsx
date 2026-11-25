@@ -61,8 +61,8 @@ const EMAIL_ROWS: PrefRow[] = [
   },
   {
     key: 'email_release',
-    label: '发布失败邮件',
-    hint: '定时发布失败的告警邮件；默认开启',
+    label: '发布与作品汇总邮件',
+    hint: '发布失败告警，以及你关注作者/学科的每日新作汇总；默认开启',
   },
 ]
 

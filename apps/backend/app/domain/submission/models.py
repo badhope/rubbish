@@ -216,6 +216,18 @@ class Submission(Base, TenantScopedMixin):
     # 空 = 未上传，前端回退到按学科自动分配的默认封面。
     cover_image: Mapped[str | None] = mapped_column(String(500), nullable=True)
     file_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # 上传安全扫描：clean / infected / error / legacy / unscanned。
+    # 新上传必须 clean 才会写入 file_path；历史文件由调度器分批补扫。
+    # infected 时下载端点返回 451，不把恶意文件继续交给编辑/互评成员。
+    file_scan_status: Mapped[str | None] = mapped_column(String(20), nullable=True, index=True)
+    file_scan_engine: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    file_scan_signature: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    file_scan_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+    file_scan_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    file_scan_attempts: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
+    file_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
     # 在线阅读用 Markdown 作品（上传 PDF/Word 后服务端转换，见
     # manuscript.py）；可空 = 未转换或转换失败（needs_docx，见
     # ``{file_path}.needs_docx`` 侧car 存具体原因）。
@@ -284,6 +296,16 @@ class SubmissionVersion(Base, TenantScopedMixin):
     # 空 = 未上传，前端回退到按学科自动分配的默认封面。
     cover_image: Mapped[str | None] = mapped_column(String(500), nullable=True)
     file_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # 版本文件的安全扫描结果。版本文件不可变，但仍可能来自历史未扫描
+    # 上传；下载旧版本时按这里的状态拦截。
+    file_scan_status: Mapped[str | None] = mapped_column(String(20), nullable=True, index=True)
+    file_scan_engine: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    file_scan_signature: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    file_scan_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    file_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    file_scan_attempts: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
     # 作者附言：v1 恒空；重投版本可填「针对互评意见做了哪些修改」
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     # 版本正文快照。旧版本可能为空；新版本在重投时尽力读取 Markdown 正文，

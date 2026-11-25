@@ -1,8 +1,10 @@
 """Publication fan-out for author followers and discipline subscribers.
 
 Follow relationships already existed, but nothing ever fanned a new work out
-to them: following an author was a dead-end. This service is intentionally
-small and in-app only; email volume stays opt-in and can be layered on later.
+to them: following an author was a dead-end. This service keeps in-app cards
+immediate and queues an independent daily email digest for readers who opted
+into release email. The digest queue is not derived from in-app notifications,
+so muting publication cards does not silently suppress the email.
 """
 
 from __future__ import annotations
@@ -82,7 +84,7 @@ async def notify_publication(
                     db,
                     tenant_id=tenant_id,
                     user_id=int(author_id),
-                    type_=f"publication.{event_type}",
+                    type_=f"publication.author_{event_type}",
                     title=f"你的作品已{short}：{resource.title}",
                     body=(
                         f"《{resource.title}》已经{short}，读者可以在目录页看到它。"
@@ -99,7 +101,7 @@ async def notify_publication(
                 db,
                 tenant_id=tenant_id,
                 user_id=uid,
-                type_=f"publication.{event_type}",
+                type_=f"publication.follower_{event_type}",
                 title=f"{label}：{resource.title}",
                 body=f"你关注的作者/学科有新动态：{resource.title}",
                 related_type="resource",
@@ -109,6 +111,16 @@ async def notify_publication(
                 stats["skipped"] += 1
             else:
                 stats["followers"] += 1
+            # Email digest is independent of in-app preferences: a reader
+            # may mute publication cards but still want the daily email.
+            # Queue the work before delivery; the scheduler batches it.
+            if event_type == "published":
+                await notifications.queue_publication_digest(
+                    db,
+                    tenant_id=tenant_id,
+                    user_id=uid,
+                    resource_id=resource.id,
+                )
     return stats
 
 

@@ -26,7 +26,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.core.time import utcnow
-from app.domain.notifications.models import EmailDigestRecord, Notification
+from app.domain.notifications.models import (
+    EmailDigestRecord,
+    Notification,
+    PublicationDigestItem,
+)
 from app.models import User
 
 if TYPE_CHECKING:
@@ -79,6 +83,7 @@ _EMAIL_PREF_BY_EVENT = {
     "forum.moderation_sla": "email_forum",
     "appeal.decision": "email_submission",
     "release.scheduled_failed": "email_release",
+    "publication.daily": "email_release",
 }
 
 
@@ -260,4 +265,55 @@ async def record_email_digest(
     return record.status
 
 
-__all__ = ["DEFAULT_PREFS", "create", "merged_prefs", "record_email_digest", "wants"]
+async def queue_publication_digest(
+    db: AsyncSession,
+    *,
+    tenant_id: UUID,
+    user_id: int,
+    resource_id: int,
+) -> bool:
+    """Queue one new work for a reader's daily email digest.
+
+    Respects ``email_release`` here rather than at digest-send time so a
+    reader who turns the preference off does not accumulate a backlog that
+    would be mailed the moment they turn it back on.
+    """
+    owner = await _pref_owner(db, user_id)
+    if owner is None or not wants(owner, "email_release"):
+        return False
+    existing = (
+        await db.execute(
+            select(PublicationDigestItem).where(
+                PublicationDigestItem.tenant_id == tenant_id,
+                PublicationDigestItem.user_id == user_id,
+                PublicationDigestItem.resource_id == resource_id,
+            )
+        )
+    ).scalar_one_or_none()
+    if existing is not None:
+        # Re-publication should surface again if the previous digest was
+        # already delivered.
+        if existing.delivered_at is not None:
+            existing.delivered_at = None
+            existing.created_at = utcnow()
+            await db.flush()
+        return True
+    db.add(
+        PublicationDigestItem(
+            tenant_id=tenant_id,
+            user_id=user_id,
+            resource_id=resource_id,
+        )
+    )
+    await db.flush()
+    return True
+
+
+__all__ = [
+    "DEFAULT_PREFS",
+    "create",
+    "merged_prefs",
+    "queue_publication_digest",
+    "record_email_digest",
+    "wants",
+]

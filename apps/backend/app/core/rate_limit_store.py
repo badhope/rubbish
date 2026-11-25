@@ -61,6 +61,13 @@ class RateLimiterStore:
         """
         raise NotImplementedError
 
+    async def acquire_lease(self, *, bucket_key: str, limit: int, ttl_seconds: float) -> str | None:
+        """Reserve one of ``limit`` concurrent slots; return a release token."""
+        raise NotImplementedError
+
+    async def release_lease(self, *, bucket_key: str, token: str) -> None:
+        raise NotImplementedError
+
 
 class MemoryRateLimiterStore(RateLimiterStore):
     """In-process sliding window keyed by ``bucket_key``."""
@@ -77,6 +84,7 @@ class MemoryRateLimiterStore(RateLimiterStore):
     def __init__(self) -> None:
         # key -> sorted list of monotonic timestamps (oldest first)
         self._buckets: dict[str, list[float]] = defaultdict(list)
+        self._leases: dict[str, dict[str, float]] = defaultdict(dict)
         self._last_sweep: float = time.monotonic()
 
     async def hit_and_check(
@@ -109,6 +117,21 @@ class MemoryRateLimiterStore(RateLimiterStore):
         fresh.append(now)
         self._buckets[bucket_key] = fresh
         return (True, current_depth + 1)
+
+    async def acquire_lease(self, *, bucket_key: str, limit: int, ttl_seconds: float) -> str | None:
+        now = time.monotonic()
+        leases = self._leases[bucket_key]
+        for token, expiry in list(leases.items()):
+            if expiry <= now:
+                leases.pop(token, None)
+        if len(leases) >= limit:
+            return None
+        token = f"{now}:{time.monotonic_ns()}"
+        leases[token] = now + ttl_seconds
+        return token
+
+    async def release_lease(self, *, bucket_key: str, token: str) -> None:
+        self._leases.get(bucket_key, {}).pop(token, None)
 
     def _maybe_sweep(self, now: float) -> None:
         """At most every ``_SWEEP_INTERVAL_SECONDS``, delete buckets
@@ -179,6 +202,28 @@ class RedisRateLimiterStore(RateLimiterStore):
         -- TTL = window + 1s so an idle bucket is reclaimed by Redis
         redis.call('PEXPIRE', key, window_ms + 1000)
         return {allowed, depth}
+    """
+
+    _LEASE_LUA_SCRIPT = """
+        local key = KEYS[1]
+        local now_ms = tonumber(ARGV[1])
+        local ttl_ms = tonumber(ARGV[2])
+        local limit = tonumber(ARGV[3])
+        local token = ARGV[4]
+        redis.call('ZREMRANGEBYSCORE', key, '-inf', now_ms)
+        local depth = tonumber(redis.call('ZCARD', key))
+        if depth >= limit then
+            return 0
+        end
+        redis.call('ZADD', key, now_ms + ttl_ms, token)
+        redis.call('PEXPIRE', key, ttl_ms + 60000)
+        return 1
+    """
+
+    _LEASE_RELEASE_LUA_SCRIPT = """
+        local key = KEYS[1]
+        local token = ARGV[1]
+        return redis.call('ZREM', key, token)
     """
 
     def __init__(self, redis_url: str) -> None:
@@ -277,6 +322,60 @@ class RedisRateLimiterStore(RateLimiterStore):
         self._script_sha = await client.script_load(self._LUA_SCRIPT)
         return self._script_sha
 
+    async def acquire_lease(self, *, bucket_key: str, limit: int, ttl_seconds: float) -> str | None:
+        now = time.monotonic()
+        if self._redis_failed and now < self._redis_retry_at:
+            token = await self._memory_fallback.acquire_lease(
+                bucket_key=bucket_key, limit=limit, ttl_seconds=ttl_seconds
+            )
+            return f"mem:{token}" if token else None
+        try:
+            client = await self._get_client()
+            now_ms = int(time.time() * 1000)
+            ttl_ms = max(1, math.ceil(ttl_seconds * 1000))
+            token = f"{now_ms}:{id(self)}:{time.monotonic_ns()}"
+            allowed = await client.eval(
+                self._LEASE_LUA_SCRIPT,
+                1,
+                bucket_key,
+                now_ms,
+                ttl_ms,
+                limit,
+                token,
+            )
+            if not int(allowed):
+                return None
+            self._redis_failed = False
+            return token
+        except Exception as exc:
+            if not self._redis_failed:
+                logger.warning("rate_limit_lease_redis_unavailable", error=str(exc))
+            self._redis_failed = True
+            self._redis_retry_at = now + _REDIS_RECOVERY_COOLDOWN_SECONDS
+            token = await self._memory_fallback.acquire_lease(
+                bucket_key=bucket_key, limit=limit, ttl_seconds=ttl_seconds
+            )
+            return f"mem:{token}" if token else None
+
+    async def release_lease(self, *, bucket_key: str, token: str) -> None:
+        if token.startswith("mem:"):
+            await self._memory_fallback.release_lease(bucket_key=bucket_key, token=token[4:])
+            return
+        try:
+            client = await self._get_client()
+            await client.eval(self._LEASE_RELEASE_LUA_SCRIPT, 1, bucket_key, token)
+        except Exception:
+            # A leaked slot expires by TTL; never raise into the request path.
+            logger.debug("rate_limit_lease_release_failed", bucket_key=bucket_key)
+
+    async def ping(self) -> tuple[bool, str]:
+        try:
+            client = await self._get_client()
+            await client.ping()
+            return True, "Redis 共享桶"
+        except Exception as exc:
+            return False, f"Redis 不可达，已退回进程内计数：{str(exc)[:120]}"
+
     async def aclose(self) -> None:
         if self._client is not None:
             try:
@@ -316,6 +415,28 @@ def get_rate_limiter_store() -> RateLimiterStore:
     return _store
 
 
+async def rate_limiter_health() -> dict[str, object]:
+    """Health snapshot for the admin page; never raises."""
+    store = get_rate_limiter_store()
+    from app.core.config import settings
+
+    if isinstance(store, RedisRateLimiterStore):
+        ok, detail = await store.ping()
+        return {"backend": "redis", "ok": ok, "detail": detail}
+    return {
+        "backend": "memory",
+        # A single uvicorn process is fine with memory buckets. In production
+        # the memory backend is a degraded state: a second worker would count
+        # each request twice. Surface that instead of silently saying "ok".
+        "ok": settings.environment != "production",
+        "detail": (
+            "生产环境未配置 RUBBISH_REDIS_URL，限流仅在当前进程生效"
+            if settings.environment == "production"
+            else "进程内计数；多进程部署请配置 RUBBISH_REDIS_URL"
+        ),
+    }
+
+
 async def close_rate_limiter_store() -> None:
     """Release the Redis client (called from FastAPI lifespan teardown)."""
     global _store
@@ -330,4 +451,5 @@ __all__ = [
     "RedisRateLimiterStore",
     "close_rate_limiter_store",
     "get_rate_limiter_store",
+    "rate_limiter_health",
 ]

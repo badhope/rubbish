@@ -637,10 +637,7 @@ async def list_audit_logs(
         actors = await db.execute(
             select(User.id, User.username, User.display_name).where(User.id.in_(actor_ids))
         )
-        actor_names = {
-            row.id: (row.display_name or row.username)
-            for row in actors
-        }
+        actor_names = {row.id: (row.display_name or row.username) for row in actors}
     return [
         {
             "id": log.id,
@@ -711,11 +708,7 @@ async def email_status(
     ok, detail = await verify_smtp_connection()
     accounts = configured_accounts()
     sender = get_email_sender()
-    pool = (
-        sender.status_snapshot()
-        if hasattr(sender, "status_snapshot")
-        else []
-    )
+    pool = sender.status_snapshot() if hasattr(sender, "status_snapshot") else []
     return {
         "configured": smtp_configured(),
         "reachable": ok,
@@ -1362,6 +1355,26 @@ async def system_health(
                 "status": "fail",
                 "detail": "后台任务未运行",
             }
+        if not state.get("leader"):
+            # The workflow scheduler intentionally waits a few minutes before
+            # its first tick. Do not turn that startup grace into a red health
+            # check on every deploy; only warn after the window has passed.
+            started = state.get("started_at")
+            if started is not None:
+                startup_age = max((datetime.now(UTC) - started).total_seconds(), 0)
+                if startup_age < settings.scheduler_startup_delay_seconds + 30:
+                    return {
+                        "key": key,
+                        "label": label,
+                        "status": "ok",
+                        "detail": "已启动，等待首个调度窗口",
+                    }
+            return {
+                "key": key,
+                "label": label,
+                "status": "warn",
+                "detail": "等待选主：当前实例不是调度器主节点",
+            }
         last_success = state.get("last_success_at")
         if last_success is None:
             return {
@@ -1393,6 +1406,24 @@ async def system_health(
             "status": "ok",
             "detail": f"{age_seconds / 60:.1f} 分钟前成功 · {stats}",
         }
+
+    from app.core.antivirus import antivirus_health
+    from app.core.rate_limit_store import rate_limiter_health
+
+    limiter = await rate_limiter_health()
+    scanner = await antivirus_health()
+    virus_check = {
+        "key": "virus_scan",
+        "label": "上传安全扫描",
+        "status": scanner["status"],
+        "detail": str(scanner["detail"]),
+    }
+    rate_limit_check = {
+        "key": "rate_limit",
+        "label": "全局限流",
+        "status": "ok" if limiter["ok"] else "warn",
+        "detail": str(limiter["detail"]),
+    }
 
     scheduler_checks = [
         _scheduler_check(
@@ -1450,6 +1481,8 @@ async def system_health(
             if smtp_ok and settings.email_outbound_enabled
             else ("已配置但未启用" if smtp_ok else "未配置 SMTP，仅站内通知"),
         },
+        virus_check,
+        rate_limit_check,
         *scheduler_checks,
         {
             "key": "anomaly",
