@@ -21,7 +21,7 @@ import {
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import { uploadForumImage } from '@/lib/forum'
-import { extractError } from '@/lib/utils'
+import { extractError, formatDateTime } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
@@ -248,7 +248,7 @@ function ReplyCard({
                 </Badge>
               )}
               <span>·</span>
-              <span>{new Date(reply.created_at).toLocaleString('zh-CN')}</span>
+              <span>{formatDateTime(reply.created_at)}</span>
             </p>
           </div>
           {isAuthenticated && !own && (
@@ -566,7 +566,7 @@ function ForumTopicPage() {
               <img src={topic.author.avatar_url} alt="" className="h-5 w-5 rounded-full object-cover" />
             ) : null}
             {topic.author?.display_name || topic.author?.username || '已注销用户'} ·{' '}
-            {new Date(topic.created_at).toLocaleString('zh-CN')}
+            {formatDateTime(topic.created_at)}
           </p>
           {/* 话题正文按 Markdown 渲染；react-markdown 默认转义原始 HTML，XSS 面为零。 */}
           <div className="markdown-body text-sm leading-relaxed">

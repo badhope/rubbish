@@ -1210,10 +1210,19 @@ async def system_health(
     try:
         await db.execute(text("SELECT 1"))
         db_latency_ms = round((time.perf_counter() - started) * 1000, 1)
-        row = (
-            await db.execute(text("SELECT version_num FROM alembic_version"))
-        ).scalar_one_or_none()
-        db_revision = str(row) if row else None
+    except Exception:
+        db_latency_ms = None
+
+    # 迁移版本是独立检查：SQLite 演示库没有 alembic_version 表时，
+    # 不能把“迁移未知”误报成“数据库连接失败”。
+    if db_latency_ms is not None:
+        try:
+            row = (
+                await db.execute(text("SELECT version_num FROM alembic_version"))
+            ).scalar_one_or_none()
+            db_revision = str(row) if row else None
+        except Exception:
+            db_revision = None
         table_queries = {
             "users": "SELECT count(*) FROM users",
             "resources": "SELECT count(*) FROM resources",
@@ -1224,8 +1233,6 @@ async def system_health(
                 counts[label] = int((await db.execute(text(sql))).scalar_one())
             except Exception:
                 counts[label] = -1
-    except Exception:
-        db_latency_ms = None
 
     # 轻量反作弊信号：只做聚合，不记录 IP、不暴露账号明细。
     # 24h 新用户暴增或积分集中发放时健康页转为“需关注”，

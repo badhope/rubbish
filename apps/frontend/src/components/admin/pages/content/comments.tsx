@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Check, X } from 'lucide-react'
 import { toast } from 'sonner'
 
-import { extractError } from '@/lib/utils'
+import { extractError, formatDateTime } from '@/lib/utils'
 import {
   useAdminComments,
   useAdminCommentCounts,
@@ -129,7 +129,7 @@ export default function AdminCommentsPage() {
                   <span className="text-muted-foreground">评论于</span>
                   <span className="text-foreground">{row.resource_title ?? `#${row.resource_id}`}</span>
                   <span className="ml-auto text-muted-foreground">
-                    {new Date(row.created_at).toLocaleString()}
+                    {formatDateTime(row.created_at)}
                   </span>
                 </div>
                 <p className="whitespace-pre-wrap text-sm">{row.body}</p>

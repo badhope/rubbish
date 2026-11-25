@@ -118,6 +118,17 @@ const DECISION_OPTIONS: { value: EditorDecision; label: string; hint?: string }[
   { value: 'reject', label: '不通过' },
 ]
 
+const RECOMMENDATION_LABELS: Record<string, string> = {
+  accept: '通过',
+  minor_revision: '小改',
+  major_revision: '大改',
+  reject: '不通过',
+}
+
+function recommendationLabel(value: string): string {
+  return RECOMMENDATION_LABELS[value] ?? value
+}
+
 // 条目中文口径统一在 @/lib/review-dimensions，旧四维作为历史数据兜底。
 // 内容台状态 tab：全部 + 7 种 submission status
 type StatusTab = SubmissionStatus | 'all'
@@ -243,11 +254,23 @@ function PendingSubmissionsPage() {
   const page = search.page ?? 1
   // 'all' tab 不传 status，让后端返回全部状态
   const statusFilter = statusTab === 'all' ? undefined : statusTab
-  // 职权分离（与后端 require_chief_editor 同口径）：四元最终决定是
-  // 最终复核是内容整理/总协调的职权；分类整理只有初审、互评与推荐权。
+  // 职权分离（与后端 require_chief_editor 同口径）：最终通过 / 修改 / 不通过
+  // 是内容整理（L8）的职权；分类整理（L7）只有初审、互评与推荐权。
   const { isAdmin, user } = useAuth()
-  const isChief = isAdmin || (user?.roles ?? []).some((r) => ['editor', 'editor_in_chief'].includes(r))
-  const isSectionOnly = !isChief && (user?.roles ?? []).includes('section_editor')
+  const authRoles = user?.roles ?? []
+  // 与后端 require_chief_editor 对齐：只有 chief/deputy（新轴 editor_in_chief）
+  // 有最终裁决权；普通 editor / section_editor / board_editor 只能初审、分派、
+  // 推荐，不能做最终决定。
+  const isChief =
+    isAdmin ||
+    authRoles.some((r) =>
+      ['chief_editor', 'deputy_editor', 'editor_in_chief'].includes(r),
+    )
+  const isSectionOnly =
+    !isChief &&
+    authRoles.some((r) =>
+      ['editor', 'section_editor', 'board_editor'].includes(r),
+    )
 
   const { data: overview } = useSubmissionOverview()
   const { data, isLoading, isError, refetch } = useAllSubmissions(
@@ -356,7 +379,11 @@ function PendingSubmissionsPage() {
     <div>
       <PageHeader
         title="内容台"
-        description="分配互评成员、查看互评意见、做最终决定。支持按状态筛选全部提交。"
+        description={
+          isChief
+            ? '分配互评成员、查看互评意见、做最终决定。支持按状态筛选全部提交。'
+            : '分配互评成员、查看互评意见、提交裁决建议。支持按状态筛选全部提交。'
+        }
         actions={
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" asChild>
@@ -601,9 +628,9 @@ function PendingSubmissionsPage() {
                 {decisionReportsQ.data.map((r) => (
                   <div key={r.id} className="space-y-1.5">
                     <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant="outline">推荐：{r.recommendation}</Badge>
+                      <Badge variant="outline">推荐：{recommendationLabel(r.recommendation)}</Badge>
                       <span className="text-xs text-muted-foreground">
-                        {new Date(r.submitted_at).toLocaleString()}
+                        {formatDateTime(r.submitted_at)}
                       </span>
                     </div>
                     {reportDimensionEntries(r.scores).length > 0 && (
@@ -831,7 +858,7 @@ function PendingSubmissionsPage() {
       <ConfirmDialog
         open={rejectConfirm}
         title="确认不通过"
-        description="不通过后该发布将进入「已不通过」状态，作者不能继续修改或重新发布。确定要不通过吗？"
+        description="不通过后该投稿将进入「已不通过」状态，作者不能继续修改或重新投稿。确定要不通过吗？"
         confirmText="确认不通过"
         destructive
         onConfirm={() => {
@@ -990,7 +1017,7 @@ function SubmissionDetailBody({ sub }: { sub: SubmissionResponse }) {
                 <div className="min-w-0">
                   <span className="text-xs text-muted-foreground">
                     {v.version === 1 ? '初次提交' : '重新提交'} ·{' '}
-                    {new Date(v.created_at).toLocaleString()}
+                    {formatDateTime(v.created_at)}
                   </span>
                   {v.note && (
                     <p className="mt-0.5 whitespace-pre-wrap">
@@ -1004,7 +1031,7 @@ function SubmissionDetailBody({ sub }: { sub: SubmissionResponse }) {
         </div>
       )}
       <div className="text-xs text-muted-foreground">
-        提交于 {new Date(sub.submitted_at).toLocaleString()}
+        提交于 {formatDateTime(sub.submitted_at)}
       </div>
     </div>
   )
@@ -1356,16 +1383,16 @@ function AssignmentsDialog({
                 {assignmentStatusBadge(a.status)}
                 {reminderBadge(a.reminder_count, a.last_reminded_at)}
                 <span className="text-xs text-muted-foreground">
-                  邀于 {new Date(a.invited_at).toLocaleString()}
+                  邀于 {formatDateTime(a.invited_at)}
                 </span>
                 {a.due_date && (
                   <span className="text-xs text-muted-foreground">
-                    · 截止 {new Date(a.due_date).toLocaleString()}
+                    · 截止 {formatDateTime(a.due_date)}
                   </span>
                 )}
                 {a.completed_at && (
                   <span className="text-xs text-muted-foreground">
-                    · 完成 {new Date(a.completed_at).toLocaleString()}
+                    · 完成 {formatDateTime(a.completed_at)}
                   </span>
                 )}
                 <div className="ml-auto">
@@ -1554,9 +1581,9 @@ function ReportsDialog({
                   <Badge className="bg-emerald-500/15 text-emerald-700">
                     已完成
                   </Badge>
-                  <Badge variant="outline">推荐：{r.recommendation}</Badge>
+                  <Badge variant="outline">推荐：{recommendationLabel(r.recommendation)}</Badge>
                   <span className="text-xs text-muted-foreground">
-                    {new Date(r.submitted_at).toLocaleString()}
+                    {formatDateTime(r.submitted_at)}
                   </span>
                 </div>
                 <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">

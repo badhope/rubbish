@@ -15,9 +15,9 @@ import {
   useSubmitReview,
   useUploadReviewAttachment,
 } from '@/hooks/api/use-modules'
-import type { AssignmentStatus, ReviewSubmit } from '@/lib/types'
+import type { AssignmentStatus, ReviewSubmit, SubmissionStatus } from '@/lib/types'
 import { typeLabel } from '@/lib/resource-labels'
-import { cn, extractError } from '@/lib/utils'
+import { cn, extractError, formatDateTime } from '@/lib/utils'
 import { isSafeExternalUrl, safeHref } from '@/lib/url-safety'
 import { PageHeader } from '@/components/common/page-header'
 import { ReviewerConflictCard } from '@/components/review/reviewer-conflict-card'
@@ -120,6 +120,19 @@ const STATUS_TABS: { value: AssignmentStatus | 'all'; label: string }[] = [
   { value: 'completed', label: '已完成' },
   { value: 'cancelled', label: '已撤销' },
 ]
+
+const SUBMISSION_STATUS_LABELS: Record<SubmissionStatus, string> = {
+  pending: '待初筛',
+  under_review: '互评中',
+  major_revision: '待大改',
+  minor_revision: '待小改',
+  rework_requested: '待修改',
+  resubmitted: '修改版待复核',
+  accepted: '已录用',
+  approved: '已通过',
+  rejected: '已不通过',
+  withdrawn: '已撤稿',
+}
 
 function statusBadge(status: AssignmentStatus) {
   switch (status) {
@@ -451,12 +464,12 @@ export function ReviewAssignments() {
                         urgentAfterDays: 5,
                         urgentSuffix: ' · 请尽快',
                       })}
-                    <span>邀请于 {new Date(a.invited_at).toLocaleString()}</span>
+                    <span>邀请于 {formatDateTime(a.invited_at)}</span>
                     {a.due_date && (
-                      <span>· 截止 {new Date(a.due_date).toLocaleString()}</span>
+                      <span>· 截止 {formatDateTime(a.due_date)}</span>
                     )}
                     {a.completed_at && (
-                      <span>· 完成于 {new Date(a.completed_at).toLocaleString()}</span>
+                      <span>· 完成于 {formatDateTime(a.completed_at)}</span>
                     )}
                   </div>
                 </div>
@@ -815,9 +828,11 @@ function ReviewManuscriptPane({ assignmentId }: { assignmentId: number }) {
           </div>
         </div>
       )}
-      <div className="flex flex-wrap gap-2 border-t pt-3">
-        <SubmissionDownloadLinks submissionId={data.id} />
-      </div>
+      {data.file_path ? (
+        <div className="flex flex-wrap gap-2 border-t pt-3">
+          <SubmissionDownloadLinks submissionId={data.id} />
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -858,7 +873,10 @@ function SubmissionDetailDialog({
                 {data.subdiscipline && (
                   <Badge variant="outline">{data.subdiscipline}</Badge>
                 )}
-                <Badge variant="outline">状态：{data.status}</Badge>
+                <Badge variant="outline">
+                  状态：
+                  {SUBMISSION_STATUS_LABELS[data.status as SubmissionStatus] ?? data.status}
+                </Badge>
               </div>
             </div>
             <div>

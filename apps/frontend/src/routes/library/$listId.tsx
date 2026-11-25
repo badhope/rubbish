@@ -216,7 +216,7 @@ function LibraryListDetailPage() {
                   <TableHead>作者</TableHead>
                   <TableHead className="w-16">年份</TableHead>
                   <TableHead className="w-32">添加时间</TableHead>
-                  <TableHead className="w-20">操作</TableHead>
+                  {canEdit ? <TableHead className="w-20">操作</TableHead> : null}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -242,8 +242,8 @@ function LibraryListDetailPage() {
                     <TableCell className="text-muted-foreground">
                       {new Date(item.added_at).toLocaleDateString()}
                     </TableCell>
-                    <TableCell>
-                      {canEdit ? (
+                    {canEdit ? (
+                      <TableCell>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -252,8 +252,8 @@ function LibraryListDetailPage() {
                           <Trash2 className="h-4 w-4" />
                           移除
                         </Button>
-                      ) : null}
-                    </TableCell>
+                      </TableCell>
+                    ) : null}
                   </TableRow>
                 ))}
               </TableBody>

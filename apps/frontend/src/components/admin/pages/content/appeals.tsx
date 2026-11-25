@@ -4,7 +4,7 @@ import { Gavel } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAdminAppeals, useDecideAppeal } from '@/hooks/api/use-modules'
 import type { AppealItem, AppealKind, AppealStatus } from '@/lib/types'
-import { extractError } from '@/lib/utils'
+import { extractError, formatDateTime } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -228,13 +228,13 @@ export default function AppealsPage({
                   </Link>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  申请人 {item.username} · #{item.id} · {item.created_at ? new Date(item.created_at).toLocaleString() : '—'}
+                  申请人 {item.username} · #{item.id} · {formatDateTime(item.created_at)}
                 </p>
                 <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{item.reason}</p>
                 {item.editor_note ? (
                   <div className="mt-3 rounded-md border-l-2 border-primary/40 bg-muted/25 px-3 py-2 text-xs leading-relaxed">
                     <span className="font-medium">处理说明：</span>{item.editor_note}
-                    {item.decided_at ? <span className="ml-2 text-muted-foreground">{new Date(item.decided_at).toLocaleString()}</span> : null}
+                    {item.decided_at ? <span className="ml-2 text-muted-foreground">{formatDateTime(item.decided_at)}</span> : null}
                   </div>
                 ) : null}
               </div>

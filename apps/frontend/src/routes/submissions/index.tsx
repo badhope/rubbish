@@ -49,7 +49,7 @@ import type {
 import { displayTypeLabel } from '@/lib/resource-labels'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import { useCapabilities } from '@/hooks/use-capabilities'
-import { cn, extractError } from '@/lib/utils'
+import { cn, extractError, formatDateTime } from '@/lib/utils'
 import { normalizeAbstract } from '@/lib/abstract'
 import { PageHeader } from '@/components/common/page-header'
 import { Pagination } from '@/components/common/pagination'
@@ -140,14 +140,14 @@ function statusBadge(status: SubmissionStatus) {
 // 状态语义提示：第一次发布作品的作者最焦虑的是"这个状态是什么意思、我该做什么"。
 // 一句话讲清现状与下一步，展示在详情面板状态徽章下方。
 const STATUS_HINTS: Record<string, string> = {
-  pending: '内容整理会先做基础检查，通常 3–7 天更新；不用重复发布。',
+  pending: '内容整理会先做基础检查，通常 3–7 天更新；不用重复提交。',
   under_review: '互评进行中：互评成员正在看你的作品，意见会出现在详情里。',
   major_revision: '需要大幅修改：按意见改完后，在详情逐条回应，再更新一版。',
   minor_revision: '需要小幅修改：调整后更新一版，通常不用再走一轮互评。',
   rework_requested: '作品已退回修改：点「修改作品」按意见改完并保存，再点「重新提交修改稿」。重交后才会重新进入互评。',
-  resubmitted: '修改版已发布，等待内容整理复核；有未尽事项可在详情补充。',
+  resubmitted: '修改版已提交，等待内容整理复核；有未尽事项可在详情补充。',
   accepted: '已公开。作品进入内容库，登录后可读。',
-  rejected: '本次已不通过。可以按反馈修改后重新发布。',
+  rejected: '本次已不通过。可以按反馈修改后重新投稿。',
   withdrawn: '已由作者主动撤回；版本与互评历史仍保留在详情中。',
 }
 
@@ -943,7 +943,7 @@ function SubmissionsPage() {
                             <Badge variant="secondary">历史</Badge>
                           ) : null}
                           <span className="text-xs text-muted-foreground">
-                            {new Date(r.submitted_at).toLocaleString()}
+                            {formatDateTime(r.submitted_at)}
                           </span>
                         </div>
                         {r.comments_to_author ? (
@@ -986,7 +986,7 @@ function SubmissionsPage() {
                     <div className="mt-2 flex items-center justify-between gap-2">
                       <span className="text-xs text-muted-foreground">
                         {detail.author_response_at
-                          ? `上次保存 ${new Date(detail.author_response_at).toLocaleString()}`
+                          ? `上次保存 ${formatDateTime(detail.author_response_at)}`
                           : '尚未保存'}
                       </span>
                       <Button
@@ -1015,7 +1015,7 @@ function SubmissionsPage() {
                         <div className="min-w-0">
                           <div className="text-xs text-muted-foreground">
                             {v.version === 1 ? '首次发布' : '更新版本'} ·{' '}
-                            {new Date(v.created_at).toLocaleString()}
+                            {formatDateTime(v.created_at)}
                             {v.file_path ? ' · 含作品文件' : ''}
                           </div>
                           {v.file_path && (
@@ -1094,11 +1094,11 @@ function SubmissionsPage() {
                 </div>
               )}
               <div className="text-xs text-muted-foreground">
-                发布于 {new Date(detail.submitted_at).toLocaleString()}
+                提交于 {formatDateTime(detail.submitted_at)}
                 {detail.reviewed_at && (
                   <>
                     {' · 整理于 '}
-                    {new Date(detail.reviewed_at).toLocaleString()}
+                    {formatDateTime(detail.reviewed_at)}
                   </>
                 )}
               </div>
@@ -1263,7 +1263,7 @@ function SubmissionsPage() {
       <ConfirmDialog
         open={deleteId !== null}
         title="撤回作品"
-        description="确定撤回这件作品吗？撤回后需要重新发布。"
+        description="确定撤回这件作品吗？撤回后需要重新投稿。"
         confirmText="撤回"
         destructive
         onConfirm={onConfirmDelete}

@@ -147,6 +147,7 @@ async def test_get_list_owner(client: AsyncClient, test_user: dict) -> None:
     )
     assert response.status_code == 200
     assert response.json()["id"] == created["id"]
+    assert response.json()["is_owner"] is True
 
 
 async def test_get_private_list_other_user_403(client: AsyncClient, test_user: dict) -> None:
@@ -182,12 +183,14 @@ async def test_public_list_readable_by_other_user(client: AsyncClient, test_user
     )
     assert response.status_code == 200
     assert response.json()["visibility"] == "public"
+    assert response.json()["is_owner"] is False
 
 
 async def test_public_list_readable_by_anonymous(client: AsyncClient, test_user: dict) -> None:
     created = await _create_list(client, test_user, name="Anon Shared", visibility="public")
     response = await client.get(f"/api/reading-lists/{created['id']}")
     assert response.status_code == 200
+    assert response.json()["is_owner"] is False
 
 
 async def test_public_listing_exposes_only_public(client: AsyncClient, test_user: dict) -> None:

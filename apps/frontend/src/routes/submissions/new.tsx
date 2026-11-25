@@ -443,7 +443,7 @@ function computeGates(f: WizardForm): GateResult[] {
 const STEPS = [
   { id: 0, title: '基本信息', hint: '标题、开头、话题、方向' },
   { id: 1, title: '正文与署名', hint: '在线写或上传文件，署名与确认' },
-  { id: 2, title: '预览并发布', hint: '通读一遍，确认后发布' },
+  { id: 2, title: '预览并确认', hint: '通读一遍，确认后提交或保存' },
 ]
 
 const DRAFT_KEY = 'submission-wizard-draft-v1'
@@ -652,7 +652,7 @@ function SubmissionWizardPage() {
   const missing = gates.filter((g) => !g.ok)
   const missingCount = missing.length
 
-  // 发布前基础检查：阻断项必须先处理才能发布；提醒项只展示计数，不阻断。
+  // 提交前基础检查：阻断项必须先处理才能发布；提醒项只展示计数，不阻断。
   const issues = useMemo(() => checkManuscript(form.body), [form.body])
   const blockers = useMemo(
     () => issues.filter((issue) => issue.level === 'blocker'),
@@ -855,7 +855,7 @@ function SubmissionWizardPage() {
           // ignore
         }
         void deleteDraftMut.mutate()
-        toast.success('已发布，等待内容整理处理')
+        toast.success('已提交，等待内容整理处理')
       }
       // 回到列表页；列表会自动 invalidate，新提交出现在第一行
       void navigate({ to: '/submissions' })
@@ -865,7 +865,7 @@ function SubmissionWizardPage() {
       const code =
         typeof detail === 'object' && detail !== null ? detail.code : undefined
       if (code === 'rules_ack_required') {
-        toast.error('发布前需要先阅读并确认《写作与发布规范》', {
+        toast.error('提交前需要先阅读并确认《写作与发布规范》', {
           description: '正在为你打开确认页…',
           duration: 6000,
         })
@@ -873,7 +873,7 @@ function SubmissionWizardPage() {
         return
       }
       toast.error(
-        extractError(err, editId !== undefined ? '更新失败' : '发布失败'),
+        extractError(err, editId !== undefined ? '更新失败' : '提交失败'),
       )
     }
   }
@@ -932,7 +932,7 @@ function SubmissionWizardPage() {
             {editId !== undefined ? '修改作品' : '写一篇'}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            分三步：填基本信息、写正文与署名、预览发布。草稿会自动存在本机和登录账号里。
+            分三步：填基本信息、写正文与署名、预览确认。草稿会自动存在本机和登录账号里。
             <HelpTip
               className="ml-1"
               text="研究长文与荒诞写作可以申请互评；自由创作不套固定格式，只做发布前的基础校对。"
@@ -1138,12 +1138,12 @@ function SubmissionWizardPage() {
                         ? '保存中…'
                         : '保存修改'
                       : createMut.isPending
-                        ? '发布中…'
+                        ? '投稿中…'
                         : blockers.length > 0
                           ? `${blockers.length} 个阻断项待处理`
                           : missingCount > 0
                             ? `还差 ${missingCount} 项`
-                            : '发布'}
+                            : '投稿'}
                   </Button>
                 )}
               </div>
@@ -1359,7 +1359,7 @@ function StepBibliography({
             ))}
           </select>
           <p className="text-xs text-muted-foreground">
-            分类只做浏览分组，不改变作品类型；发布后进入内容库对应分类。
+            分类只做浏览分组，不改变作品类型；公开后进入内容库对应分类。
           </p>
         </div>
         <div className="space-y-2">
@@ -1400,7 +1400,7 @@ function StepBibliography({
           id="w-keywords"
           value={form.keywords}
           onChange={(e) => set('keywords', e.target.value)}
-          placeholder="例如：大语言模型, Agent, RAG；不填也能发布"
+          placeholder="例如：大语言模型, Agent, RAG；不填也能提交"
         />
       </div>
 
@@ -1614,7 +1614,7 @@ function StepUpload({
               <h3 className="text-sm font-semibold">在线正文（Markdown）</h3>
             </div>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              这里就是最终发布与 Word/PDF
+              这里就是最终投稿与 Word/PDF
               导出使用的正文。上方识别结果会自动填进来。
             </p>
           </div>
@@ -1866,7 +1866,7 @@ function StepAuthors({
       </details>
 
       <div className="space-y-3 rounded-lg border p-4">
-        <div className="text-sm font-medium">发布前确认</div>
+        <div className="text-sm font-medium">提交前确认</div>
         <DeclCheckbox
           checked={form.declOriginal}
           onChange={(v) => set('declOriginal', v)}
@@ -1902,7 +1902,7 @@ function StepAuthors({
 
 // 阻断项的改法指引：按检查码给出具体下一步，避免作者只看到“阻断”不知道怎么改。
 const BLOCKER_HINTS: Record<string, string> = {
-  empty: '先上传 Word / PDF，或在在线正文里写出内容，再发布。',
+  empty: '先上传 Word / PDF，或在在线正文里写出内容，再提交。',
   placeholder: '把 TODO、待补、XXX、Lorem ipsum 等占位标记删掉或替换成定稿内容。',
 }
 
@@ -1924,13 +1924,13 @@ function ManuscriptCheck({
     <div className="rounded-lg border p-4 text-sm">
       <div className="flex items-center gap-2 font-medium">
         <ListChecks className="h-4 w-4 text-primary" />
-        发布前基础检查
+        提交前基础检查
       </div>
       <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
         {blockerCount > 0
-          ? `发现 ${blockerCount} 个阻断项、${warningCount} 个提醒项；阻断项处理完才能发布，提醒项请自行确认。`
+          ? `发现 ${blockerCount} 个阻断项、${warningCount} 个提醒项；阻断项处理完才能提交，提醒项请自行确认。`
           : warningCount > 0
-            ? `发现 ${warningCount} 个提醒项，请确认是否需要调整；不阻断发布。`
+            ? `发现 ${warningCount} 个提醒项，请确认是否需要调整；不阻断提交。`
             : '未发现编号、引用序号或重复段落等明显问题。'}
       </p>
       {issues.length > 0 ? (
@@ -2009,9 +2009,9 @@ function StepReview({
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-lg font-semibold">预览并发布</h2>
+        <h2 className="text-lg font-semibold">预览并确认</h2>
         <p className="text-sm text-muted-foreground">
-          通读无误后点击下方「发布」。发布后内容整理会先做基础检查，不用重复发送。
+          通读无误后点击下方按钮完成。内容整理会先做基础检查，不用重复发送。
         </p>
       </div>
 

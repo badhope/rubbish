@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Megaphone, Pencil, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
-import { extractError } from '@/lib/utils'
+import { extractError, formatDateTime } from '@/lib/utils'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
@@ -192,8 +192,8 @@ export default function AnnouncementsAdminPage() {
                   </div>
                   <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{a.body}</p>
                   <p className="mt-1 text-[11px] text-muted-foreground">
-                    {new Date(a.starts_at).toLocaleString()}
-                    {a.ends_at ? ` → ${new Date(a.ends_at).toLocaleString()}` : '（长期）'}
+                    {formatDateTime(a.starts_at)}
+                    {a.ends_at ? ` → ${formatDateTime(a.ends_at)}` : '（长期）'}
                   </p>
                 </div>
                 <div className="flex shrink-0 gap-1">

@@ -14,7 +14,7 @@ interface StepDef {
 }
 
 const STEPS: StepDef[] = [
-  { key: 'submitted', label: '已发布', icon: FileText },
+  { key: 'submitted', label: '已提交', icon: FileText },
   { key: 'under_review', label: '互评中', icon: Search },
   { key: 'decision', label: '处理决定', icon: ThumbsUp },
   { key: 'published', label: '已公开', icon: BookOpen },
@@ -47,11 +47,7 @@ function resolveStep(status: SubmissionStatus): { current: number; rejected: boo
 
 function formatDate(d: Date | null): string {
   if (!d) return ''
-  return d.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
+  return d.toLocaleDateString('zh-CN')
 }
 
 export default function WorkflowTimeline({

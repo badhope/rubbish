@@ -142,6 +142,10 @@ function replacePatterns(source: string): string {
     .replace(/共\s*(\d+)\s*条/g, '$1 items')
     .replace(/共\s*(\d+)\s*人/g, '$1 people')
     .replace(/共\s*(\d+)\s*篇/g, '$1 pieces')
+    .replace(
+      /最近公开的\s*(\d+)\s*篇。先读一两篇，再决定往哪走。/g,
+      'The $1 most recently published pieces. Read one or two, then decide where to go.',
+    )
     // Request failures with a status code (built at runtime in lib/api.ts)
     .replace(/服务端返回\s*(\d+)，这次请求没有完成。/g, 'Server returned $1; this request did not complete.')
     .replace(/请求没有完成（HTTP\s*(\d+)）。/g, 'Request failed (HTTP $1).')

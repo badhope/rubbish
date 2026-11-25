@@ -117,6 +117,19 @@ async def _load_readable_list(db: AsyncSession, list_id: int, user: User | None)
     )
 
 
+def _detail_payload(rl: ReadingList, user: User | None) -> ReadingListDetailResponse:
+    """Serialize a list with an explicit owner flag.
+
+    ``model_validate`` alone cannot know who is reading; without this flag the
+    frontend defaults to owner and shows edit/remove controls on public lists
+    owned by someone else.
+    """
+    payload = ReadingListDetailResponse.model_validate(rl)
+    return payload.model_copy(
+        update={"is_owner": bool(user is not None and rl.user_id == user.id)}
+    )
+
+
 @router.get("", response_model=ReadingListListResponse)
 async def list_my_lists(
     page: int = Query(default=1, ge=1),
@@ -209,7 +222,7 @@ async def create_list(
     # Reload with items eager-loaded (a fresh list has none, but this
     # keeps the response shape consistent with other endpoints).
     rl = await _load_owned_list(db, rl.id, current_user)
-    return ReadingListDetailResponse.model_validate(rl)
+    return _detail_payload(rl, current_user)
 
 
 @router.get("/{list_id}", response_model=ReadingListDetailResponse)
@@ -221,7 +234,7 @@ async def get_list(
     """Get a single list with its items. Public lists are readable by anyone;
     private lists are owner-only (403 for other readers)."""
     rl = await _load_readable_list(db, list_id, current_user)
-    return ReadingListDetailResponse.model_validate(rl)
+    return _detail_payload(rl, current_user)
 
 
 @router.patch("/{list_id}", response_model=ReadingListDetailResponse)
@@ -245,7 +258,7 @@ async def update_list(
             detail="A list with this name already exists",
         ) from exc
     rl = await _load_owned_list(db, list_id, current_user)
-    return ReadingListDetailResponse.model_validate(rl)
+    return _detail_payload(rl, current_user)
 
 
 @router.delete("/{list_id}", response_model=MessageResponse)
@@ -327,7 +340,7 @@ async def add_item(
 
     # Reload to reflect the (possibly new) item set + eager-load resource.
     rl = await _load_owned_list(db, list_id, current_user)
-    return ReadingListDetailResponse.model_validate(rl)
+    return _detail_payload(rl, current_user)
 
 
 @router.delete(

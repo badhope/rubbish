@@ -103,6 +103,9 @@ class ReadingListDetailResponse(BaseModel):
     description: str | None
     visibility: Visibility = "private"
     items: list[ReadingListItemResponse]
+    # 公开列表人人可读，但只有归属者能改名/增删条目。前端据此隐藏编辑控件；
+    # 真正的写权限仍由后端 owner-only 查询强制。
+    is_owner: bool = False
     created_at: datetime
     updated_at: datetime
 

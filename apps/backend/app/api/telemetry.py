@@ -79,7 +79,12 @@ async def analytics_summary(
         )
     ).scalar_one()
     # 按自然日分桶；没有访问的日期补 0，前端才能画出连续的轴。
-    local_day = func.date(func.timezone("Asia/Shanghai", PageView.created_at)).label("day")
+    # SQLite（单机演示与本地/E2E 部署）没有 timezone() 函数，直接用
+    # date(..., '+8 hours') 做同样的中国时区切日；PostgreSQL 仍走 timezone()。
+    if db.get_bind().dialect.name == "sqlite":
+        local_day = func.date(PageView.created_at, "+8 hours").label("day")
+    else:
+        local_day = func.date(func.timezone("Asia/Shanghai", PageView.created_at)).label("day")
     daily_rows = (
         await db.execute(
             select(local_day, func.count(PageView.id).label("views"))

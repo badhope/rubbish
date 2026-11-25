@@ -461,7 +461,9 @@ function CatalogHub() {
           <div className="flex flex-wrap items-baseline justify-between gap-3">
             <div>
               <h2 className="font-serif text-2xl font-semibold tracking-tight">刚刚放上桌</h2>
-              <p className="mt-1 text-sm text-muted-foreground">最近公开的六篇。先读一两篇，再决定往哪走。</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {`最近公开的 ${latest.data.length} 篇。先读一两篇，再决定往哪走。`}
+              </p>
             </div>
             <Link to="/catalog" search={{ sort: 'latest' }} className="text-sm text-primary hover:underline">
               全部文字 →

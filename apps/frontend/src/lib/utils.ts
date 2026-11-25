@@ -36,7 +36,11 @@ export function safeInternalPath(
  */
 export function formatDateTime(iso: string | null | undefined, fallback = '—'): string {
   if (!iso) return fallback
-  const date = new Date(iso)
+  // SQLite 会把 timestamptz 读成不带时区的 ISO 字符串；浏览器默认按本地
+  // 时间解析，导致演示/单机部署的评论、认领等时间整体偏 8 小时。后端存的
+  // 是 UTC，缺时区时补 Z 再交给浏览器换算。
+  const hasTimezone = /Z$|[+-]\d{2}:\d{2}$/.test(iso)
+  const date = new Date(hasTimezone ? iso : `${iso}Z`)
   if (Number.isNaN(date.getTime())) return fallback
   return date.toLocaleString()
 }

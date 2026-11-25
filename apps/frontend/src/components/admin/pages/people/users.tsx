@@ -12,7 +12,7 @@ import {
 } from '@/hooks/api/use-modules'
 import { useAuth } from '@/hooks/use-auth'
 import type { AssignableRole, UserResponse } from '@/lib/types'
-import { extractError, inferTotalPagesFromFullPage } from '@/lib/utils'
+import { extractError, formatDateTime, inferTotalPagesFromFullPage } from '@/lib/utils'
 import { roleLabel } from '@/lib/role-labels'
 import { PageHeader } from '@/components/common/page-header'
 import { Pagination } from '@/components/common/pagination'
@@ -234,7 +234,7 @@ export default function AdminUsersPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {new Date(u.created_at).toLocaleString()}
+                      {formatDateTime(u.created_at)}
                     </TableCell>
                     <TableCell>
                       <DropdownMenu

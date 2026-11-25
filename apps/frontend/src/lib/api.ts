@@ -43,6 +43,16 @@ let refreshing: Promise<void> | null = null
 function reportApiProblem(error: AxiosError, title?: string): void {
   if (axios.isCancel(error) || error.code === 'ERR_CANCELED') return
   const status = error.response?.status
+  const rawUrl = error.config?.url ?? ''
+  // 文章页把 /manuscript 的 404/409 当作“没有在线正文”处理，会自己退化到
+  // PDF/下载视图；这里再弹全局诊断只会让正常缺省状态看起来像故障。
+  if (
+    (status === 404 || status === 409) &&
+    (/\/catalog\/[^/]+\/manuscript(?:\?|$)/.test(rawUrl) ||
+      /\/submissions\/[^/]+\/download-ticket(?:\?|$)/.test(rawUrl))
+  ) {
+    return
+  }
   const data = error.response?.data as { detail?: unknown } | undefined
   let message = ''
   if (typeof data?.detail === 'string') message = data.detail
@@ -57,7 +67,6 @@ function reportApiProblem(error: AxiosError, title?: string): void {
     else message = `请求没有完成（HTTP ${status}）。`
   }
   const method = (error.config?.method ?? 'get').toUpperCase()
-  const rawUrl = error.config?.url ?? ''
   const url = rawUrl.split('?')[0]
   const requestId =
     (error.response?.headers?.['x-request-id'] as string | undefined) ||
@@ -143,10 +152,18 @@ api.interceptors.response.use(
     }
 
     // If /auth/refresh itself returns 401, the refresh_token is also dead —
-    // clear auth state so the route guard bounces to /login.
+    // clear auth state so the route guard bounces to /login. 主动退出后仍可能有
+    // 在途请求带着旧 token 回来，此时 token 已清空，不再把“已退出”报成故障。
     if (original.url?.includes('/auth/refresh')) {
+      const hadSession = Boolean(useAuthStore.getState().token)
       useAuthStore.getState().logout()
-      reportApiProblem(error, '登录状态已失效')
+      if (hadSession) reportApiProblem(error, '登录状态已失效')
+      return Promise.reject(error)
+    }
+
+    // 已退出登录（或本来就没有会话）的页面不该为了后台请求再打一次 refresh，
+    // 否则登录页会收到一条并不属于用户的“登录状态已失效”诊断。
+    if (!useAuthStore.getState().token) {
       return Promise.reject(error)
     }
 
