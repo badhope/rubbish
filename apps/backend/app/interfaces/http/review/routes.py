@@ -1101,6 +1101,17 @@ async def review_matrix(
 ) -> dict[str, Any]:
     """互评矩阵：每位互评成员状态/推荐/截止/超期/冲突。"""
     tenant_id = require_tenant_id()
+    sub_row = (
+        await db.execute(
+            select(Submission.id, Submission.review_waived_at).where(
+                Submission.id == submission_id,
+                Submission.tenant_id == tenant_id,
+            )
+        )
+    ).first()
+    if sub_row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found")
+    review_waived = bool(sub_row[1])
     assignments = (
         (
             await db.execute(
@@ -1124,13 +1135,16 @@ async def review_matrix(
     rows = []
     recommendations = []
     for a in assignments:
-        status = a.status
+        display_status = a.status
         if a.due_date and a.status in ("pending", "accepted") and a.due_date < now:
-            status = "overdue"
+            display_status = "overdue"
         rec = None
         if a.report and (a.round or 1) == current_round:
             rec = a.report[0].recommendation if a.report else None
-            recommendations.append(rec)
+            # 矩阵行可以展示历史推荐，但闸门指标只认 completed：
+            # 退回/重投后 cancelled 的旧报告不能把矩阵显示成“可裁决”。
+            if a.status == "completed":
+                recommendations.append(rec)
         # reviewer username
         u = await db.get(User, a.reviewer_id)
         rows.append(
@@ -1138,10 +1152,10 @@ async def review_matrix(
                 "reviewer_id": a.reviewer_id,
                 "username": u.username if u else None,
                 "slot": a.slot,
-                "status": status,
+                "status": display_status,
                 "recommendation": rec,
                 "due_date": a.due_date.isoformat() if a.due_date else None,
-                "is_overdue": status == "overdue",
+                "is_overdue": display_status == "overdue",
                 "is_adjudicator": a.is_adjudicator,
                 "is_external": bool(getattr(a, "is_external", False)),
                 "external_affiliation": getattr(a, "external_affiliation", None),
@@ -1157,12 +1171,16 @@ async def review_matrix(
     major_count = sum(1 for rec in recommendations if rec == "major_revision")
     # 冲突：有通过推荐，同时有不通过/退回修改；或两份意见方向完全相反。
     conflict = accept_count > 0 and (reject_count > 0 or major_count > 0)
-    adjudicator_rows = [a for a in current if a.is_adjudicator]
+    adjudicator_rows = [
+        a
+        for a in current
+        if a.is_adjudicator and a.status in ("pending", "accepted", "completed")
+    ]
     adjudicator_accepted = any(
         a.status == "completed" and a.report and a.report[0].recommendation == "accept"
         for a in adjudicator_rows
     )
-    need_adjudication = bool(conflict and not adjudicator_accepted)
+    need_adjudication = bool(conflict and not adjudicator_accepted and not review_waived)
 
     return {
         "submission_id": submission_id,
@@ -1172,11 +1190,13 @@ async def review_matrix(
         "accept_count": accept_count,
         "reject_count": reject_count,
         "major_revision_count": major_count,
-        "can_decide": accept_count >= 1 and (not conflict or adjudicator_accepted),
+        "can_decide": review_waived
+        or (accept_count >= 1 and (not conflict or adjudicator_accepted)),
         "conflict": conflict,
         "need_adjudication": need_adjudication,
         "adjudicator_assigned": bool(adjudicator_rows),
         "adjudicator_accepted": adjudicator_accepted,
+        "review_waived": review_waived,
     }
 
 

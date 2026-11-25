@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.19.61] — 2026-11-25
+
+### 互评矩阵与免审口径（本地审计，未部署）
+
+- **矩阵不再被 cancelled 报告带偏**：`GET /api/review/submissions/{id}/matrix` 的闸门指标只汇总 `completed` 报告；退回/重投后旧报告仍在时，矩阵行可以继续展示历史推荐，但 `accept_count / conflict / can_decide` 不再把它算成本轮意见。
+- **矩阵补齐存在性校验**：未知投稿 ID 返回 404，不再返回一份“空矩阵”让编辑误以为作品没有互评。
+- **免审与闸门同口径**：矩阵与列表的 `can_decide` 都承认 `review_waived_at`，并新增 `review_waived` 字段；免审作品不会再显示“不能裁决”而实际 `/{id}/decision` 可以放行。
+- **列表统计补零值**：没有 completed 报告的投稿也会返回明确的互评统计对象，避免前端把“未计算”与“0 份”混在一起。
+- **裁决人 assigned 不再被报告 join 吞掉**：列表统计单独按当前轮全部有效指派查询 `is_adjudicator`，pending 裁决人也会显示已指派；已 `cancelled` 的裁决人不算 assigned，避免出现“显示有人裁决、实际闸门无人”。
+- **矩阵 404 的变量遮蔽修正**：给未知投稿补 404 时发现局部 `status` 覆盖全局 `status`，会在 404 分支触发 `UnboundLocalError`；矩阵行显示状态改用 `display_status`。
+
+### 校验
+
+- 定向回归 `tests/test_review_matrix_11961.py + test_review_visibility_11960.py` 为 `10 passed`；矩阵 cancelled 报告、未知投稿 404、免审 `can_decide`、pending 裁决人 assigned 与 cancelled 裁决人不 assigned、列表字段均有覆盖。
+- 后端全量 `941 passed / 3 skipped`（439.00s）；前端 `tsc -b --noEmit`、ESLint、`vite build` 通过，Vitest 沿用 1.19.60 的 `41 files / 223 passed`（本版前端只改类型与版本，无运行时变化）。本版无 schema 变更，不需要迁移。
+
 ## [1.19.60] — 2026-11-25
 
 ### 评审可见性收口（本地审计，未部署）

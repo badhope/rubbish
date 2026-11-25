@@ -703,11 +703,13 @@ export interface SubmissionResponse {
   quality_score?: number | null
   quality_grade?: string | null
   content_category?: "academic" | "fun" | "rant" | null
-  /** 编辑能否做最终决定（后端基于 reports_completed/conflict 计算） */
+  /** 编辑能否做最终决定（后端基于 reports_completed/conflict/免审留痕计算） */
   can_decide?: boolean
+  /** 是否已记录免审通过（review_waived_at） */
+  review_waived?: boolean
   /** 已完成的审稿报告数 */
   reports_completed?: number
-  /** 给出录用推荐的审稿人数（发表闸门要求 ≥2） */
+  /** 给出录用推荐的审稿人数（发表闸门要求 ≥1） */
   accept_recommendations?: number
   /** 给出拒稿推荐的审稿人数 */
   reject_recommendations?: number
@@ -840,6 +842,7 @@ export interface ReviewMatrixResponse {
   reject_count: number
   major_revision_count: number
   can_decide: boolean
+  review_waived: boolean
   conflict: boolean
   need_adjudication: boolean
   adjudicator_assigned: boolean

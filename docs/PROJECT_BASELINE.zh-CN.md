@@ -1,6 +1,6 @@
 # Rubbish 项目基线
 
-> 版本：1.19.60（本地修补；生产仍为 1.19.59）
+> 版本：1.19.61（本地修补；生产仍为 1.19.59）
 > 更新：2026-11-25  
 > 仓库：`/home/user/work/rubbish-src`，主分支 `main`  
 > 生产入口：`https://rubbish.argjiemi.cn`
@@ -52,13 +52,14 @@ Rubbish 是自托管的公开写作与主题交流社区。长文进入内容库
 - 基础设施迁移：`073_infra_hardening`（扫描字段、发布 digest 两张表与 RLS、索引）。
 - 公开评审迁移：`074_public_reviews`（`review_reports.is_anonymous`，默认 true 保留历史匿名）。
 - 1.19.60 本地审计修补（未部署）：作者时间线与报告接口不再在刊出前暴露审稿人姓名；作者报告不再下发评分；公开评审保留退回/重投历史轮次，并按最新已通过投稿绑定意见与作者回复；同一审稿人跨轮匿名序号稳定，署名审稿人不占匿名序号；撤回后公开评审统一 404；列表统计、裁决闸门、互评矩阵统一按“全部指派的最新轮”计算；候选池、单个/批量指派、第三方复核、接受邀请与提交报告统一同名/COI 校验。
+- 1.19.61 本地修补（未部署，叠加 1.19.60）：互评矩阵过滤 `cancelled` 报告，未知投稿返回 404，免审作品的 `can_decide` / `review_waived` 与 `/{id}/decision` 闸门同口径；列表统计补上免审留痕，`adjudicator_assigned` 改按当前轮有效指派独立聚合，pending 裁决人不丢、cancelled 裁决人不再算 assigned。
 - 调度器：release / workflow 各持一条 PostgreSQL advisory lock 选主；后台健康显示 leader、竞选次数与等待选主状态。
 - 限流：生产 Redis 7.0.15 共享桶；Redis 不可用时进程内计数兜底，健康页标 warn。
 - 上传安全：ClamAV 1.5.4，`clamdscan` 守护进程扫描；历史文件由 `virus_scan` job 每轮 5+5 回填，早期转档后已删除原件的记录标 `missing` 并停止重试，感染文件下载统一 451。
 - 发布邮件：`publication_digest` job 每日 09:00 后汇总，一人一天一封，独立于站内通知开关。
 - 下载：文章 PDF / Word / 原件统一经 axios blob 鉴权下载，避免浏览器直链不带 Bearer 被区域访问或 AuthWall 拦截；PDF 版式预览的页数与页图同样走鉴权请求。投稿文件与审稿附件的手机端/微信端原生直链带 `ticket` 参数，中间件只放行该签名下载路径，票据权限仍由端点复核。
 - 论坛回归：`tests/test_forum.py` 20 项、`tests/test_forum_moderation.py` 8 项、50 条批量压力回归 1 项；1.19.56 新增 `tests/test_infra_11956.py` 5 项。
-- 后端全量 `939 passed / 3 skipped`；前端 `tsc -b --noEmit`、ESLint、Vitest 223 项（41 文件）、`vite build` 通过。
+- 后端全量 `941 passed / 3 skipped`；前端 `tsc -b --noEmit`、ESLint、Vitest 223 项（41 文件，沿用 1.19.60 全量）、`vite build` 通过。
 
 ## 二、已交付功能清单
 

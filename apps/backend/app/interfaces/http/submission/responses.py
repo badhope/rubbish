@@ -105,6 +105,7 @@ def _to_response(
         accept_recommendations=stats.get("accept_recommendations", 0),
         reject_recommendations=stats.get("reject_recommendations", 0),
         can_decide=stats.get("can_decide", False),
+        review_waived=stats.get("review_waived", False),
         conflict=stats.get("conflict", False),
         adjudicator_assigned=stats.get("adjudicator_assigned", False),
         adjudicator_accepted=stats.get("adjudicator_accepted", False),
@@ -118,6 +119,17 @@ async def _review_stats_for_submissions(
     if not ids:
         return {}
     from app.domain.review.models import ReviewAssignment, ReviewReport
+
+    waived_rows = (
+        await db.execute(
+            select(Submission.id).where(
+                Submission.id.in_(ids),
+                Submission.tenant_id == tenant_id,
+                Submission.review_waived_at.is_not(None),
+            )
+        )
+    ).all()
+    waived_ids = {int(row[0]) for row in waived_rows}
 
     rows = (
         await db.execute(
@@ -159,10 +171,43 @@ async def _review_stats_for_submissions(
         int(submission_id): int(round_no or 1)
         for submission_id, round_no in round_rows
     }
+    adjudicator_rows = (
+        await db.execute(
+            select(
+                ReviewAssignment.submission_id,
+                ReviewAssignment.round,
+            ).where(
+                ReviewAssignment.submission_id.in_(ids),
+                ReviewAssignment.tenant_id == tenant_id,
+                ReviewAssignment.is_adjudicator.is_(True),
+                ReviewAssignment.status.in_(("pending", "accepted", "completed")),
+            )
+        )
+    ).all()
+    adjudicator_by_sub = {
+        int(submission_id)
+        for submission_id, round_no in adjudicator_rows
+        if int(round_no or 1) == current_round_by_sub.get(int(submission_id), 1)
+    }
     by_sub: dict[int, list[Any]] = {}
     for r in rows:
         by_sub.setdefault(r[0], []).append(r)
-    out: dict[int, dict[str, Any]] = {}
+    # 先给每个投稿放一份零值，免审通过的投稿即便没有 completed 报告，
+    # 列表也能显示 can_decide=true，与 /{id}/decision 的免审早退一致。
+    out: dict[int, dict[str, Any]] = {
+        int(sid): {
+            "reports_completed": 0,
+            "distinct_reviewers": 0,
+            "accept_recommendations": 0,
+            "reject_recommendations": 0,
+            "conflict": False,
+            "adjudicator_assigned": int(sid) in adjudicator_by_sub,
+            "adjudicator_accepted": False,
+            "can_decide": int(sid) in waived_ids,
+            "review_waived": int(sid) in waived_ids,
+        }
+        for sid in ids
+    }
     for sid, rs in by_sub.items():
         current_round = current_round_by_sub.get(int(sid), 1)
         cur = [x for x in rs if (x[2] or 1) == current_round and x[4] is not None]
@@ -172,15 +217,19 @@ async def _review_stats_for_submissions(
         adj_rows = [x for x in rs if (x[2] or 1) == current_round and x[3]]
         adj_accept = any(x[4] == "accept" for x in adj_rows)
         conflict = bool(accept_ids) and (reject > 0 or major > 0)
-        out[sid] = {
+        out[int(sid)] = {
             "reports_completed": len(cur),
             "distinct_reviewers": len({x[1] for x in cur}),
             "accept_recommendations": len(accept_ids),
             "reject_recommendations": reject,
             "conflict": conflict,
-            "adjudicator_assigned": bool(adj_rows),
+            "adjudicator_assigned": int(sid) in adjudicator_by_sub,
             "adjudicator_accepted": adj_accept,
-            "can_decide": len(accept_ids) >= 1 and (not conflict or adj_accept),
+            "can_decide": (
+                int(sid) in waived_ids
+                or (len(accept_ids) >= 1 and (not conflict or adj_accept))
+            ),
+            "review_waived": int(sid) in waived_ids,
         }
     return out
 

@@ -353,6 +353,7 @@ class SubmissionResponse(BaseModel):
     accept_recommendations: int = 0
     reject_recommendations: int = 0
     can_decide: bool = False
+    review_waived: bool = False
     conflict: bool = False
     adjudicator_assigned: bool = False
     adjudicator_accepted: bool = False
@@ -517,14 +518,13 @@ __all__ = [
     "ResubmitRequest",
     "ReviewerCandidate",
     "ReviewerCandidateListResponse",
+    "ReworkResponseUpdate",
     "SubmissionBatchCreate",
     "SubmissionBatchItemResult",
     "SubmissionBatchResponse",
     "SubmissionCreate",
     "SubmissionDecision",
     "SubmissionDraftPayload",
-    "ReworkResponseUpdate",
-    "WithdrawRequest",
     "SubmissionDraftResponse",
     "SubmissionDraftState",
     "SubmissionListResponse",
@@ -535,4 +535,5 @@ __all__ = [
     "SubmissionUpdate",
     "SubmissionVersionListResponse",
     "SubmissionVersionResponse",
+    "WithdrawRequest",
 ]
