@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.19.67] — 2026-11-26
+
+### 返修稿在“进度看板”入口补齐同一条决定链路
+
+- **看板卡片识别返修稿**：`/editor/workbench` 的每条记录补出 `latest_version`（批量取最大版本，避免逐条查版本表），v2+ 卡片显示“返修稿 vN”。
+- **看板决定弹层接上直接录用**：返修稿在 `under_review` 时显示“返修稿直接录用（vN）”，与内容台列表共用同一套 `accept_after_revision` 后端校验；跳过本轮互评闸门，但保留质量分 <40 硬门槛。
+- **看板补上破例录用**：低于 40 分时必须勾选“低于 40 分破例录用”并在“给作者的说明”写明理由，后端继续校验 `force_accept_d_grade` + `editor_note`。
+- **返修稿无新互评也能从看板进入复核**：`in_review` 栏的 v2+ `under_review` 卡片提供“核对返修稿并决定”，不再被“至少一份已完成意见”挡住；这是直接录用本来就允许的场景。
+- **核对材料共用组件**：新增 `RevisionEvidencePanel`，内容台列表与进度看板共用“作者回应 / 本版修改说明 / 按需版本 diff”，两个入口不再各写一套。
+- **看板按角色隐藏最终裁决**：进度看板此前对分类整理也显示“复核”按钮，点击后才被后端 `require_chief_editor` 403。现在用统一的 `canFinalDecision` 口径，只给 chief/deputy/editor_in_chief/管理员显示决定入口；分类整理保留指派、催审、看正文。
+- **内容台概览补返修稿计数**：`SubmissionOverview` 新增 `revision_count`，返修稿 tab 不再显示空白计数；后端计数与 `GET /submissions?status=revision` 使用同一组条件（v2+ 且 `under_review/resubmitted`）。
+
+### 校验
+
+- 后端定向回归 `tests/test_revision_direct_accept_11963.py`：`5 passed`（新增概览计数与看板 `latest_version` 两项）。
+- 前端新增 `revision.test.ts`：`3 passed`；`tsc -b --noEmit`、ESLint、`vite build` 通过。
+- 权限/审计/通知不新增旁路：看板仍走 `PATCH /submissions/{id}/decision`，由 `require_chief_editor` 与现有审计、作者通知统一处理。
+
+
 ## [1.19.66] — 2026-11-26
 
 ### 返修稿“直接录用”核对依据补全

@@ -452,6 +452,26 @@ async def submission_overview(
     ).all()
     resource_status = {str(code): int(count) for code, count in resource_status_rows}
 
+    # 返修稿数量必须和 revision 队列同一套条件：版本 v2+，且当前仍在
+    # under_review / resubmitted。不能只看 status，否则首次互评会被算进去。
+    revision_count = int(
+        (
+            await db.execute(
+                select(func.count(Submission.id)).where(
+                    Submission.tenant_id == tenant_id,
+                    Submission.status.in_(("under_review", "resubmitted")),
+                    Submission.id.in_(
+                        select(SubmissionVersion.submission_id).where(
+                            SubmissionVersion.tenant_id == tenant_id,
+                            SubmissionVersion.version > 1,
+                        )
+                    ),
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+
     return SubmissionOverview(
         total=total,
         status_counts=status_counts,
@@ -460,6 +480,7 @@ async def submission_overview(
         published=resource_status.get("published", 0),
         draft=resource_status.get("draft", 0),
         duplicate_accepted=max(accepted_count - accepted_resources, 0),
+        revision_count=revision_count,
     )
 
 

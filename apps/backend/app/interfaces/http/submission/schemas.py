@@ -388,6 +388,9 @@ class SubmissionOverview(BaseModel):
     published: int = 0
     draft: int = 0
     duplicate_accepted: int = 0
+    # 返修稿队列计数：与 GET /submissions?status=revision 使用同一口径
+    # （v2+ 且当前仍在 under_review / resubmitted），供内容台 tab 直接显示。
+    revision_count: int = 0
 
 
 class ReviewerCandidate(BaseModel):

@@ -156,3 +156,75 @@ async def test_revision_queue_uses_version_not_only_status(
     assert first.id not in ids
     revised_row = next(item for item in data if item["id"] == revised.id)
     assert revised_row["latest_version"] == 2
+
+
+@pytest.mark.asyncio
+async def test_overview_revision_count_matches_revision_queue(
+    client: AsyncClient, db_session: AsyncSession, admin_user: dict, test_user: dict
+) -> None:
+    """内容台概览的返修稿计数必须与 revision 队列完全一致。"""
+    tenant = await _default_tenant(db_session)
+    before = await client.get(
+        "/api/submissions/overview",
+        headers={"Authorization": f"Bearer {admin_user['token']}"},
+    )
+    assert before.status_code == 200, before.text
+    baseline = before.json()["revision_count"]
+
+    revised = await _make_submission(
+        db_session,
+        tenant,
+        test_user["user_id"],
+        title="概览计数的返修稿",
+        versions=2,
+    )
+    first = await _make_submission(
+        db_session,
+        tenant,
+        test_user["user_id"],
+        title="概览计数的首次投稿",
+        versions=1,
+    )
+    assert revised.id != first.id
+
+    after = await client.get(
+        "/api/submissions/overview",
+        headers={"Authorization": f"Bearer {admin_user['token']}"},
+    )
+    assert after.status_code == 200, after.text
+    assert after.json()["revision_count"] == baseline + 1
+
+    queue = await client.get(
+        "/api/submissions",
+        params={"status": "revision", "page_size": 100},
+        headers={"Authorization": f"Bearer {admin_user['token']}"},
+    )
+    assert queue.status_code == 200, queue.text
+    assert queue.json()["meta"]["total"] == after.json()["revision_count"]
+    assert revised.id in {item["id"] for item in queue.json()["data"]}
+    assert first.id not in {item["id"] for item in queue.json()["data"]}
+
+
+@pytest.mark.asyncio
+async def test_workbench_rows_expose_latest_version(
+    client: AsyncClient, db_session: AsyncSession, admin_user: dict, test_user: dict
+) -> None:
+    """进度看板卡片必须能看到 v2+，否则主编无法识别返修稿。"""
+    tenant = await _default_tenant(db_session)
+    revised = await _make_submission(
+        db_session,
+        tenant,
+        test_user["user_id"],
+        title="看板里的返修稿",
+        status="major_revision",
+        versions=2,
+    )
+
+    response = await client.get(
+        "/api/editor/workbench",
+        headers={"Authorization": f"Bearer {admin_user['token']}"},
+    )
+    assert response.status_code == 200, response.text
+    rows = response.json()["columns"]["rework"]["items"]
+    row = next(item for item in rows if item["submission_id"] == revised.id)
+    assert row["latest_version"] == 2

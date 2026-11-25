@@ -743,6 +743,7 @@ export interface SubmissionOverview {
   published: number
   draft: number
   duplicate_accepted: number
+  revision_count: number
 }
 
 /** 作者修改稿件：所有字段可选，只提交改动的部分 */

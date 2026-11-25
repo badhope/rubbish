@@ -2201,6 +2201,7 @@ export interface EditorColumnItem {
   status: string
   submitted_at: string
   current_round?: number
+  latest_version?: number
   editor_note?: string | null
   author_response?: string | null
   author_response_at?: string | null

@@ -40,7 +40,7 @@ from app.core.time import utcnow
 from app.domain.notifications import services as notifications
 from app.domain.notifications.models import EmailDigestRecord
 from app.domain.review.models import ReviewAssignment, ReviewReport
-from app.domain.submission.models import Submission
+from app.domain.submission.models import Submission, SubmissionVersion
 from app.interfaces.http.review.coi import (
     ensure_no_declared_conflict,
     name_matches_author,
@@ -52,6 +52,29 @@ router = APIRouter(tags=["workbench"])
 
 DECIDED_STATUSES = ("accepted", "approved", "rejected")
 ACTIVE_ASSIGNMENT_STATUSES = ("pending", "accepted")
+
+
+async def _latest_version_map(
+    db: AsyncSession, tenant_id: Any, ids: list[int]
+) -> dict[int, int]:
+    """批量取每篇投稿的最大版本号，避免工作台逐条查版本表。"""
+    if not ids:
+        return {}
+    rows = (
+        await db.execute(
+            select(SubmissionVersion.submission_id, func.max(SubmissionVersion.version))
+            .where(
+                SubmissionVersion.tenant_id == tenant_id,
+                SubmissionVersion.submission_id.in_(ids),
+            )
+            .group_by(SubmissionVersion.submission_id)
+        )
+    ).all()
+    return {
+        int(submission_id): int(version)
+        for submission_id, version in rows
+        if submission_id is not None and version is not None
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -316,6 +339,8 @@ async def editor_workbench(
         username = payload.get("reviewer_username") or f"#{row.actor_user_id}"
         interest_by_sub.setdefault(submission_id, []).append(username)
 
+    latest_versions: dict[int, int] = {}
+
     def _base_row(s: Submission) -> dict[str, Any]:
         # 只认当前轮：重投后旧轮 assignment 保留追溯，但绝不能继续出现在
         # 评审中或「未交」状态里，否则拒审/旧轮会把主编误导成还在审。
@@ -342,6 +367,7 @@ async def editor_workbench(
             "active_count": len(active),
             "completed_count": len(done),
             "declined_count": len(declined),
+            "latest_version": latest_versions.get(s.id, 1),
         }
 
     # 在途作品（非已决定）才需要展开 assignment 做归位；状态下推到 SQL，
@@ -367,6 +393,9 @@ async def editor_workbench(
         )
         .scalars()
         .all()
+    )
+    latest_versions.update(
+        await _latest_version_map(db, tenant_id, [s.id for s in submissions])
     )
 
     to_assign: list[dict[str, Any]] = []
@@ -460,6 +489,9 @@ async def editor_workbench(
         )
         .scalars()
         .all()
+    )
+    latest_versions.update(
+        await _latest_version_map(db, tenant_id, [s.id for s in decided_page])
     )
     decided = [_base_row(s) for s in decided_page]
 

@@ -18,6 +18,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useAuth } from '@/hooks/use-auth'
 import {
   useBatchAssign,
   useCancelAssignment,
@@ -42,7 +43,10 @@ import {
 } from '@/hooks/api/use-modules'
 import { REVIEW_DIMENSION_LABELS, reviewDimensionEntries } from '@/lib/review-dimensions'
 import { extractError } from '@/lib/utils'
+import { canDirectAcceptRevision, isRevisionSubmission } from '@/lib/revision'
+import { canFinalDecision } from '@/lib/editor-roles'
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
+import { RevisionEvidencePanel } from '@/components/editor/revision-evidence'
 import { MarkdownContent } from '@/components/common/markdown-content'
 import { PageHeader } from '@/components/common/page-header'
 import { HelpTip } from '@/components/common/help-tip'
@@ -87,6 +91,8 @@ const DIGEST_STATUS_LABEL: Record<string, string> = {
 }
 
 export function EditorPipeline() {
+  const { isAdmin, user } = useAuth()
+  const isChief = canFinalDecision(isAdmin, user?.roles)
   const { data, isLoading, isError, refetch } = useEditorWorkbench()
   const candidates = useReviewerCandidates(200)
   const disciplines = useDisciplines()
@@ -118,6 +124,17 @@ export function EditorPipeline() {
   // 免互评通过：只在选择「通过」时出现；理由会随 waive-review 写审计。
   const [waiveReview, setWaiveReview] = useState(false)
   const [waiveReason, setWaiveReason] = useState('')
+  // 返修稿直接录用 / 低于 40 分破例：与内容台列表的决定弹层共用同一套后端校验。
+  const [directAccept, setDirectAccept] = useState(false)
+  const [forceAccept, setForceAccept] = useState(false)
+  // 决定弹层里的当前稿详情：workbench 列表只带摘要，版本号/状态以详情为准。
+  const decisionSubQ = useSubmission(decidingId ?? 0)
+  const decisionTarget = decisionSubQ.data
+  const isRevision = isRevisionSubmission(decisionTarget?.latest_version)
+  const canDirectAccept = canDirectAcceptRevision(
+    decisionTarget?.status,
+    decisionTarget?.latest_version,
+  )
 
   // 邮件摘要状态条：展开查看投递记录
   const [digestOpen, setDigestOpen] = useState(false)
@@ -284,6 +301,14 @@ export function EditorPipeline() {
       toast.error('免互评理由至少 10 个字，会写入审计与作者通知')
       return
     }
+    if (decision === 'accept' && directAccept && !canDirectAccept) {
+      toast.error('当前稿件还不能直接录用：只有返修稿且状态为“互评中”才可用')
+      return
+    }
+    if (decision === 'accept' && forceAccept && !editorNote.trim()) {
+      toast.error('低于 40 分破例录用必须在给作者的说明里写明理由')
+      return
+    }
     try {
       if (decision === 'accept' && waiveReview) {
         await waiveMut.mutateAsync({
@@ -293,13 +318,22 @@ export function EditorPipeline() {
       }
       await decisionMut.mutateAsync({
         id: decidingId,
-        body: { decision, editor_note: editorNote || undefined },
+        body: {
+          decision,
+          editor_note: editorNote || undefined,
+          accept_after_revision:
+            decision === 'accept' && directAccept ? true : undefined,
+          force_accept_d_grade:
+            decision === 'accept' && forceAccept ? true : undefined,
+        },
       })
       toast.success('已记录内容整理决定')
       setDecidingId(null)
       setEditorNote('')
       setWaiveReview(false)
       setWaiveReason('')
+      setDirectAccept(false)
+      setForceAccept(false)
     } catch (err) {
       toast.error(extractError(err, '复核失败'))
     }
@@ -311,6 +345,8 @@ export function EditorPipeline() {
     setEditorNote('')
     setWaiveReview(false)
     setWaiveReason('')
+    setDirectAccept(false)
+    setForceAccept(false)
   }
 
   return (
@@ -343,6 +379,13 @@ export function EditorPipeline() {
           </>
         }
       />
+
+      {!isChief && (
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+          你以分类整理身份查看进度看板：可以初审、指派互评成员、催审并查看正文，
+          最终通过 / 修改 / 不通过由内容整理（L8）作出；本页不显示决定按钮。
+        </div>
+      )}
 
       {/* 批量指派条放在顶部：待指派列表可能很长，按钮不能沉到列表底部。 */}
       {columns && columns.to_assign.count > 0 && (
@@ -589,6 +632,14 @@ export function EditorPipeline() {
                                   {item.type ?? '未分类'} · 提交于{' '}
                                   {new Date(item.submitted_at).toLocaleDateString()}
                                 </p>
+                                {isRevisionSubmission(item.latest_version) && (
+                                  <Badge
+                                    variant="outline"
+                                    className="mt-1 border-violet-300 text-[10px] text-violet-700 dark:border-violet-800 dark:text-violet-300"
+                                  >
+                                    返修稿 v{item.latest_version}
+                                  </Badge>
+                                )}
                                 {(col.key === 'to_assign' || col.key === 'in_review') && (item.interest_count ?? 0) > 0 && (
                                   <div className="mt-1 rounded bg-emerald-50/70 px-2 py-1 text-[11px] text-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-300">
                                     有 {item.interest_count} 人申请互评
@@ -731,15 +782,22 @@ export function EditorPipeline() {
                               </div>
                             )}
 
-                            {col.key === 'in_review' && (item.completed_count ?? 0) >= 1 && (
-                              <Button
-                                size="sm"
-                                className="w-full"
-                                onClick={() => openDecide(item.submission_id)}
-                              >
-                                <Gavel className="h-3 w-3" /> 提前复核（已有 {item.completed_count} 份意见）
-                              </Button>
-                            )}
+                            {col.key === 'in_review' &&
+                              isChief &&
+                              ((item.completed_count ?? 0) >= 1 ||
+                                (isRevisionSubmission(item.latest_version) &&
+                                  item.status === 'under_review')) && (
+                                <Button
+                                  size="sm"
+                                  className="w-full"
+                                  onClick={() => openDecide(item.submission_id)}
+                                >
+                                  <Gavel className="h-3 w-3" />
+                                  {(item.completed_count ?? 0) >= 1
+                                    ? `提前复核（已有 ${item.completed_count} 份意见）`
+                                    : '核对返修稿并决定'}
+                                </Button>
+                              )}
 
                             {col.key === 'to_assign' && item.needs_reassign && (
                               <p className="rounded bg-amber-50 px-2 py-1 text-xs text-amber-700 dark:bg-amber-950/20">
@@ -775,13 +833,15 @@ export function EditorPipeline() {
                                 >
                                   <FileText className="h-3 w-3" /> 查看正文与互评意见
                                 </Button>
-                                <Button
-                                  size="sm"
-                                  className="mt-1 w-full"
-                                  onClick={() => openDecide(item.submission_id)}
-                                >
-                                  <Gavel className="h-3 w-3" /> 复核
-                                </Button>
+                                {isChief && (
+                                  <Button
+                                    size="sm"
+                                    className="mt-1 w-full"
+                                    onClick={() => openDecide(item.submission_id)}
+                                  >
+                                    <Gavel className="h-3 w-3" /> 复核
+                                  </Button>
+                                )}
                               </div>
                             )}
                           </CardContent>
@@ -929,21 +989,32 @@ export function EditorPipeline() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>内容整理复核</DialogTitle>
+            <DialogTitle>
+              内容整理复核
+              {isRevision && (
+                <Badge className="ml-2 align-middle bg-violet-500/15 text-violet-700">
+                  返修稿 v{decisionTarget?.latest_version}
+                </Badge>
+              )}
+            </DialogTitle>
             <DialogDescription>作品 #{decidingId}</DialogDescription>
           </DialogHeader>
           <div className="max-h-[40vh] space-y-3 overflow-y-auto pr-1">
+            {decisionTarget && <RevisionEvidencePanel submission={decisionTarget} />}
             {decidingId !== null && (
-              <>
-                <SubmissionAuthorResponsePanel submissionId={decidingId} />
-                <SubmissionReportsPanel submissionId={decidingId} />
-              </>
+              <SubmissionReportsPanel submissionId={decidingId} />
             )}
             <div className="space-y-1">
               <Label>决定</Label>
               <Select
                 value={decision}
-                onValueChange={(v) => setDecision(v as typeof decision)}
+                onValueChange={(v) => {
+                  setDecision(v as typeof decision)
+                  if (v !== 'accept') {
+                    setDirectAccept(false)
+                    setForceAccept(false)
+                  }
+                }}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -956,13 +1027,55 @@ export function EditorPipeline() {
                 </SelectContent>
               </Select>
             </div>
+            {decision === 'accept' && canDirectAccept && (
+              <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-violet-300 bg-violet-500/5 p-3 dark:border-violet-800">
+                <input
+                  type="checkbox"
+                  checked={directAccept}
+                  onChange={(e) => {
+                    setDirectAccept(e.target.checked)
+                    if (e.target.checked) setWaiveReview(false)
+                  }}
+                  className="mt-0.5 size-4 shrink-0 accent-violet-600"
+                />
+                <span className="space-y-1">
+                  <span className="block text-sm font-medium">
+                    返修稿直接录用（v{decisionTarget?.latest_version}）
+                  </span>
+                  <span className="block text-xs leading-relaxed text-muted-foreground">
+                    作者已按上一轮意见修回。勾选后跳过“本轮必须有通过意见”的互评闸门，
+                    直接进入录用；决定会写入作者可见备注和审计日志。首次投稿不能用这一项。
+                  </span>
+                </span>
+              </label>
+            )}
+            {decision === 'accept' && (
+              <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border/70 p-3">
+                <input
+                  type="checkbox"
+                  checked={forceAccept}
+                  onChange={(e) => setForceAccept(e.target.checked)}
+                  className="mt-0.5 size-4 shrink-0"
+                />
+                <span className="space-y-1">
+                  <span className="block text-sm font-medium">低于 40 分破例录用</span>
+                  <span className="block text-xs leading-relaxed text-muted-foreground">
+                    仅用于确有价值的稿子；必须在下方“给作者的说明”里写明理由。
+                    该操作会单独写入审计日志。
+                  </span>
+                </span>
+              </label>
+            )}
             {decision === 'accept' && (
               <div className="space-y-2 rounded-md border border-amber-300/60 bg-amber-50/60 p-3 dark:border-amber-800 dark:bg-amber-950/20">
                 <label className="flex cursor-pointer items-start gap-2 text-sm">
                   <input
                     type="checkbox"
                     checked={waiveReview}
-                    onChange={(e) => setWaiveReview(e.target.checked)}
+                    onChange={(e) => {
+                      setWaiveReview(e.target.checked)
+                      if (e.target.checked) setDirectAccept(false)
+                    }}
                     className="mt-0.5 size-4 accent-primary"
                   />
                   <span>
@@ -986,7 +1099,10 @@ export function EditorPipeline() {
               </div>
             )}
             <div className="space-y-1">
-              <Label htmlFor="editor-note">给作者的说明（可选）</Label>
+              <Label htmlFor="editor-note">
+                给作者的说明
+                {forceAccept ? '（破例录用必填）' : '（可选）'}
+              </Label>
               <Input
                 id="editor-note"
                 value={editorNote}
@@ -1149,25 +1265,6 @@ function SubmissionReportsPanel({ submissionId }: { submissionId: number }) {
           </ol>
         </div>
       ) : null}
-    </div>
-  )
-}
-
-function SubmissionAuthorResponsePanel({ submissionId }: { submissionId: number }) {
-  const { data } = useSubmission(submissionId)
-  const text = data?.author_response?.trim()
-  if (!text) return null
-  return (
-    <div className="rounded-md border border-primary/20 bg-primary/5 p-3 text-sm">
-      <div className="mb-2 flex flex-wrap items-center gap-2 font-medium">
-        <FileText className="h-4 w-4" /> 作者逐条回复互评成员
-        {data?.author_response_at && (
-          <span className="text-xs font-normal text-muted-foreground">
-            {new Date(data.author_response_at).toLocaleString()}
-          </span>
-        )}
-      </div>
-      <p className="whitespace-pre-wrap leading-relaxed">{text}</p>
     </div>
   )
 }
