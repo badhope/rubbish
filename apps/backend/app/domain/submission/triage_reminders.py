@@ -18,13 +18,13 @@ from app.core.config import settings
 from app.core.email_templates import triage_overdue_digest
 from app.core.logging import get_logger
 from app.domain.notifications import services as notifications
+from app.domain.submission.editor_recipients import editor_recipients
 from app.domain.submission.models import Submission
-from app.models import AuditLog, Role, User, UserRole
+from app.models import AuditLog, User
 
 logger = get_logger("rubbish.triage_reminders")
 
 TRIAGE_DUE_HOURS = 48
-_EDITOR_ROLES = ("editor", "editor_in_chief", "section_editor", "deputy_editor", "board_editor")
 
 
 def _aware(value: datetime | None) -> datetime | None:
@@ -34,42 +34,8 @@ def _aware(value: datetime | None) -> datetime | None:
 
 
 async def _editor_recipients(db: AsyncSession, tenant_id: Any) -> list[User]:
-    # 不在 SQL 层 DISTINCT：User 行含纯 json 列（历史库 notification_prefs），
-    # PostgreSQL 对 json 类型无等值运算符，SELECT DISTINCT 整行会直接报错；
-    # 多角色重复行由下方 by_id 字典在 Python 层去重。
-    rows = (
-        (
-            await db.execute(
-                select(User)
-                .join(UserRole, UserRole.user_id == User.id)
-                .join(Role, Role.id == UserRole.role_id)
-                .where(
-                    User.tenant_id == tenant_id,
-                    User.is_active.is_(True),
-                    UserRole.tenant_id == tenant_id,
-                    Role.tenant_id == tenant_id,
-                    Role.name.in_(_EDITOR_ROLES),
-                )
-            )
-        )
-        .scalars()
-        .all()
-    )
-    admins = (
-        (
-            await db.execute(
-                select(User).where(
-                    User.tenant_id == tenant_id,
-                    User.is_active.is_(True),
-                    User.is_admin.is_(True),
-                )
-            )
-        )
-        .scalars()
-        .all()
-    )
-    by_id = {user.id: user for user in [*rows, *admins]}
-    return list(by_id.values())
+    """Backward-compatible name; the shared lookup owns the role set."""
+    return await editor_recipients(db, tenant_id)
 
 
 async def run_triage_reminders(db: AsyncSession, *, tenant_id: Any) -> dict[str, int]:
@@ -147,7 +113,7 @@ async def run_triage_reminders(db: AsyncSession, *, tenant_id: Any) -> dict[str,
             items[:10],
             f"{base}/submissions/pending",
         )
-        await notifications.record_email_digest(
+        status = await notifications.record_email_digest(
             db,
             tenant_id=tenant_id,
             user_id=editor.id,
@@ -159,7 +125,8 @@ async def run_triage_reminders(db: AsyncSession, *, tenant_id: Any) -> dict[str,
             related_type="triage_queue",
             related_id=str(tenant_id),
         )
-        stats["emailed"] += 1
+        if status == "sent":
+            stats["emailed"] += 1
 
     await db.commit()
     return stats

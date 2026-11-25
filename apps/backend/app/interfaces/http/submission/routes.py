@@ -44,6 +44,9 @@ from app.domain.submission._helpers import (
     _snapshot_submission,
     _try_delete_storage,
 )
+from app.domain.submission.editor_recipients import (
+    editor_recipients as editor_recipients_for_tenant,
+)
 from app.domain.submission.models import Submission, SubmissionDraft, SubmissionVersion
 from app.domain.submission.similarity import check_against_site
 from app.interfaces.http.submission.responses import _get_or_404, _list_submissions, _to_response
@@ -51,6 +54,7 @@ from app.interfaces.http.submission.schemas import (
     AuthorResponseUpdate,
     MessageResponse,
     ResubmitRequest,
+    ReworkResponseUpdate,
     SubmissionBatchCreate,
     SubmissionBatchItemResult,
     SubmissionBatchResponse,
@@ -64,10 +68,9 @@ from app.interfaces.http.submission.schemas import (
     SubmissionUpdate,
     SubmissionVersionListResponse,
     SubmissionVersionResponse,
-    ReworkResponseUpdate,
     WithdrawRequest,
 )
-from app.models import AuditLog, Role, User, UserRole
+from app.models import AuditLog, User
 
 router = APIRouter(prefix="/submissions", tags=["submissions"])
 logger = logging.getLogger(__name__)
@@ -719,7 +722,7 @@ async def diff_submission_version(
         )
     )
     if len(body_diff) > 600:
-        body_diff = body_diff[:600] + ["… diff 过长，已截断"]
+        body_diff = [*body_diff[:600], "… diff 过长，已截断"]
     fields = (
         "title",
         "abstract",
@@ -894,28 +897,7 @@ async def author_withdraw(
             related_type="submission",
             related_id=str(entry.id),
         )
-    editors = (
-        (
-            await db.execute(
-                select(User).where(
-                    User.tenant_id == entry.tenant_id,
-                    User.is_active.is_(True),
-                    User.id.in_(
-                        select(UserRole.user_id)
-                        .join(Role, Role.id == UserRole.role_id)
-                        .where(
-                            UserRole.tenant_id == entry.tenant_id,
-                            Role.tenant_id == entry.tenant_id,
-                            Role.name.in_(("editor", "chief_editor")),
-                        )
-                    )
-                    | User.is_admin.is_(True),
-                )
-            )
-        )
-        .scalars()
-        .all()
-    )
+    editors = await editor_recipients_for_tenant(db, entry.tenant_id)
     for editor in editors:
         await notifications.create(
             db,
@@ -1015,7 +997,8 @@ async def author_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot respond to reviewers in status '{entry.status}'",
         )
-    from app.domain.review.models import ReviewAssignment as _RA, ReviewReport as _RR
+    from app.domain.review.models import ReviewAssignment as _RA
+    from app.domain.review.models import ReviewReport as _RR
 
     completed = (
         await db.execute(
@@ -1111,31 +1094,10 @@ async def author_resubmit(
     snapshot = await _snapshot_submission(db, entry, created_by=current_user.id, note=note)
     # commit 后 ORM 对象过期，异步会话下惰性刷新会炸；版本号在 commit 前取出
     version_no = snapshot.version
-    # 通知编辑：作者已重投（与状态变更同事务，遵循 S-3）。
-    # admin 在权限模型里视同 editor（deps._user_has_role 对 admin 直接放行），
-    # fan-out 必须与之对齐 —— 否则只有 admin 的小刊重投通知会石沉大海。
-    editor_ids = (
-        select(UserRole.user_id)
-        .join(Role, Role.id == UserRole.role_id)
-        .where(
-            UserRole.tenant_id == entry.tenant_id,
-            Role.tenant_id == entry.tenant_id,
-            Role.name == "editor",
-        )
-    )
-    editors = (
-        (
-            await db.execute(
-                select(User).where(
-                    User.tenant_id == entry.tenant_id,
-                    User.is_active.is_(True),
-                    (User.id.in_(editor_ids)) | (User.is_admin.is_(True)),
-                )
-            )
-        )
-        .scalars()
-        .all()
-    )
+    # 通知所有在岗编辑：作者已重投（与状态变更同事务，遵循 S-3）。
+    # 过去这里只查 ``editor``，分区整理 / 副主管 / 内容策展 / 总协调都收不到；
+    # 统一走 editor_recipients，并把 active admin 一起带上。
+    editors = await editor_recipients_for_tenant(db, entry.tenant_id)
     notify_body = f"Submission #{entry.id}（v{version_no}）已进入 under_review，请处理。"
     if note:
         notify_body += f"\n作者修改说明：{note}"

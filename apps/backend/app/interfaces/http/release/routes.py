@@ -402,14 +402,15 @@ async def publish_release(
 ) -> dict[str, Any]:
     """Publish or schedule an issue using a still-valid ready manifest."""
     tenant_id = require_tenant_id()
-    manifest = (
-        await db.execute(
-            select(ReleaseManifest).where(
-                ReleaseManifest.id == payload.manifest_id,
-                ReleaseManifest.tenant_id == tenant_id,
-            )
-        )
-    ).scalar_one_or_none()
+    manifest_stmt = select(ReleaseManifest).where(
+        ReleaseManifest.id == payload.manifest_id,
+        ReleaseManifest.tenant_id == tenant_id,
+    )
+    # 与 release scheduler 的 FOR UPDATE SKIP LOCKED 对齐：手动发布和定时发布
+    # 同时命中时，行锁保证只有一个执行者能把 ready 改成 published/scheduled。
+    if db.get_bind().dialect.name == "postgresql":
+        manifest_stmt = manifest_stmt.with_for_update()
+    manifest = (await db.execute(manifest_stmt)).scalar_one_or_none()
     if manifest is None:
         raise HTTPException(status_code=404, detail="Release manifest not found")
     if manifest.volume != payload.volume or manifest.issue != payload.issue:

@@ -55,6 +55,7 @@ DEFAULT_PREFS: dict[str, bool] = {
 _IN_APP_PREF_BY_TYPE = {
     "comment.new": "in_app_comment",
     "forum.reply": "in_app_forum",
+    "forum.moderation_sla": "in_app_forum",
 }
 _IN_APP_PREF_BY_PREFIX = {
     "review.": "in_app_review",
@@ -75,6 +76,7 @@ _EMAIL_PREF_BY_EVENT = {
     "triage_decision": "email_submission",
     "rework_reminder": "email_submission",
     "submission.triage_overdue": "email_submission",
+    "forum.moderation_sla": "email_forum",
     "appeal.decision": "email_submission",
     "release.scheduled_failed": "email_release",
 }
@@ -205,9 +207,10 @@ async def record_email_digest(
             return record.status
 
     # 开关关闭：记录为 skipped_disabled，不尝试发送。
-    # 通过邮件专用通道不受总闸影响，但仍要求有可用账号。
+    # 给一个可见的重试时间，运营重新打开总闸后由发件箱继续投递。
     if channel != "congrat" and not settings.email_review_digest_enabled:
         record.status = "skipped_disabled"
+        record.next_retry_at = utcnow() + timedelta(minutes=5)
         await db.flush()
         return record.status
 
@@ -215,9 +218,18 @@ async def record_email_digest(
 
     if channel == "congrat":
         if not configured_accounts():
+            record.next_retry_at = utcnow() + timedelta(minutes=5)
+            await db.flush()
             return record.status
     elif not smtp_configured():
         # 未配置 SMTP：保持 skipped_no_smtp，落库但不假装已发。
+        # 同时给调度器一个可见的重试时间，SMTP 恢复后不会永远卡在 skipped。
+        record.next_retry_at = utcnow() + timedelta(minutes=5)
+        await db.flush()
+        return record.status
+    if channel != "congrat" and not settings.email_review_digest_enabled:
+        record.next_retry_at = utcnow() + timedelta(minutes=5)
+        await db.flush()
         return record.status
 
     record.attempts = 1

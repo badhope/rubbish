@@ -15,6 +15,7 @@ import os
 import re
 import tempfile
 import time
+import zlib
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -23,7 +24,7 @@ from zoneinfo import ZoneInfo
 
 from fastapi import Depends, File, HTTPException, Query, Request, Response, UploadFile, status
 from fastapi.responses import RedirectResponse, StreamingResponse
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import (
@@ -122,6 +123,53 @@ _MAX_UPLOAD_BYTES = 50 * 1024 * 1024  # 50 MB
 _UPLOAD_DAILY_FILE_LIMIT = 20
 _UPLOAD_DAILY_BYTES_LIMIT = 250 * 1024 * 1024  # 250 MB / 自然日
 
+# 预览转换是纯 CPU/内存工作，不落库、不占上传配额；没有频控时一个登录用户
+# 可以反复提交 50 MB PDF 把工作线程和内存打满。单进程内按用户做滑动窗口，
+# 再加一个全局信号量限制同时转换数量。多进程部署时每个进程各自计数，
+# 真正的全局限流应放到网关；这里先挡住最直接的滥用。
+_PREVIEW_WINDOW_SECONDS = 10 * 60
+_PREVIEW_MAX_PER_WINDOW = 8
+_PREVIEW_HITS: dict[int, list[float]] = {}
+_CONVERT_ACTIVE = 0
+_CONVERT_LIMIT = 2
+
+
+def _enforce_preview_rate(user_id: int) -> None:
+    now = time.monotonic()
+    hits = [ts for ts in _PREVIEW_HITS.get(user_id, []) if now - ts < _PREVIEW_WINDOW_SECONDS]
+    if len(hits) >= _PREVIEW_MAX_PER_WINDOW:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="预览转换过于频繁，请稍后再试；已保存的稿件不受影响。",
+        )
+    hits.append(now)
+    _PREVIEW_HITS[user_id] = hits
+    # 防止长期运行后字典无限增长：只保留仍在窗口内的用户。
+    if len(_PREVIEW_HITS) > 5000:
+        stale = [
+            uid
+            for uid, stamps in _PREVIEW_HITS.items()
+            if not stamps or now - stamps[-1] >= _PREVIEW_WINDOW_SECONDS
+        ]
+        for uid in stale:
+            _PREVIEW_HITS.pop(uid, None)
+
+
+async def _convert_preview_guarded(contents: bytes, filename: str) -> Any:
+    global _CONVERT_ACTIVE
+    from app.domain.submission.manuscript import convert_manuscript_async
+
+    if _CONVERT_ACTIVE >= _CONVERT_LIMIT:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="转换队列繁忙，请稍后再试。",
+        )
+    _CONVERT_ACTIVE += 1
+    try:
+        return await convert_manuscript_async(contents, filename)
+    finally:
+        _CONVERT_ACTIVE -= 1
+
 
 async def _enforce_upload_quota(
     db: AsyncSession, current_user: User, extra_bytes: int
@@ -131,6 +179,17 @@ async def _enforce_upload_quota(
     只统计成功落盘的上传审计（``submission.file_upload``），失败/被拒的
     上传不占额度。按 Asia/Shanghai 自然日切分，和站内其他“今日”口径一致。
     """
+    # PostgreSQL 下按“租户+用户”取事务级 advisory lock：两个并发上传
+    # 同时读到 used=19 时，只能有一个先完成检查并落审计，另一个会看到 20。
+    # 锁随本次请求的事务提交/回滚释放；只串行化同一用户，不影响其他作者。
+    if db.get_bind().dialect.name == "postgresql":
+        await db.execute(
+            text("SELECT pg_advisory_xact_lock(:tenant_key, :user_key)"),
+            {
+                "tenant_key": zlib.crc32(str(current_user.tenant_id).encode()) & 0x7FFFFFFF,
+                "user_key": int(current_user.id),
+            },
+        )
     local_now = datetime.now(ZoneInfo("Asia/Shanghai"))
     day_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(UTC)
     rows = (
@@ -218,10 +277,9 @@ async def convert_submission_preview(
     管线，把 Markdown 返回给表单；正式提交时仍由上传端点再转换一次并落库，
     两次使用同一实现，不引入第二套解析口径。
     """
-    from app.domain.submission.manuscript import convert_manuscript_async
-
+    _enforce_preview_rate(current_user.id)
     contents, original_filename, actual_format = await _read_upload_for_conversion(file)
-    result = await convert_manuscript_async(contents, original_filename)
+    result = await _convert_preview_guarded(contents, original_filename)
     warnings: list[str] = []
     if result.extension_mismatch:
         warnings.append("扩展名与实际格式不一致（已按文件头识别）")

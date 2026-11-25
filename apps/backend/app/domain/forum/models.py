@@ -98,6 +98,10 @@ class ForumTopic(Base, TenantScopedMixin):
     moderation_signals: Mapped[list[dict] | None] = mapped_column(JSONBVariant, nullable=True)
     manual_review_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     review_eta_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # SLA 超时提醒只发一次；重新进入人工核验时由路由清零，避免重复轰炸。
+    sla_reminded_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     reviewed_by: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )

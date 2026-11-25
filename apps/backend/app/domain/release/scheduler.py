@@ -22,11 +22,11 @@ from app.core.db import async_session_factory
 from app.core.logging import get_logger
 from app.core.tenant import TENANT_CONTEXT_VAR
 from app.core.time import utcnow
+from app.domain.catalog.models import Resource
+from app.domain.follows.fanout import notify_publication
 from app.domain.release.alerts import alert_release_failure
 from app.domain.release.gate import check_issue
-from app.domain.follows.fanout import notify_publication
 from app.domain.release.models import ReleaseManifest
-from app.domain.catalog.models import Resource
 from app.models import AuditLog, Tenant
 
 logger = get_logger("rubbish.release_scheduler")
@@ -35,35 +35,56 @@ TICK_SECONDS = 30
 STARTUP_DELAY_SECONDS = 10
 _task: asyncio.Task[None] | None = None
 
+_state: dict[str, Any] = {
+    "started_at": None,
+    "last_run_at": None,
+    "last_success_at": None,
+    "last_error": None,
+    "last_stats": None,
+    "runs": 0,
+    "running": False,
+}
+
+
+def release_scheduler_state() -> dict[str, Any]:
+    """Read-only snapshot for the admin health page and tests."""
+    return {
+        **_state,
+        "tick_seconds": TICK_SECONDS,
+        "task_alive": _task is not None and not _task.done(),
+    }
+
 
 async def _due_manifests(session: AsyncSession, tenant_id: Any) -> list[ReleaseManifest]:
-    return list(
-        (
-            await session.execute(
-                select(ReleaseManifest)
-                .where(
-                    ReleaseManifest.tenant_id == tenant_id,
-                    ReleaseManifest.status == "scheduled",
-                    ReleaseManifest.scheduled_for.is_not(None),
-                    ReleaseManifest.scheduled_for <= utcnow(),
-                )
-                .order_by(ReleaseManifest.scheduled_for.asc())
-            )
+    stmt = (
+        select(ReleaseManifest)
+        .where(
+            ReleaseManifest.tenant_id == tenant_id,
+            ReleaseManifest.status == "scheduled",
+            ReleaseManifest.scheduled_for.is_not(None),
+            ReleaseManifest.scheduled_for <= utcnow(),
         )
-        .scalars()
-        .all()
+        .order_by(ReleaseManifest.scheduled_for.asc())
     )
+    # 多实例或“手动发布”同时命中同一 manifest 时，只让一个执行者拿到行锁；
+    # 另一个实例跳过该行，避免同一期重复发布、重复 fan-out 通知。
+    if session.get_bind().dialect.name == "postgresql":
+        stmt = stmt.with_for_update(skip_locked=True)
+    return list((await session.execute(stmt)).scalars().all())
 
 
 async def publish_due_manifests() -> dict[str, int]:
     """Publish every due, still-valid manifest.  Idempotent."""
+    _state["running"] = True
+    _state["last_run_at"] = utcnow()
     totals = {"due": 0, "published": 0, "failed": 0, "tenants": 0}
     async with async_session_factory() as tenant_session:
         tenant_ids = list((await tenant_session.execute(select(Tenant.id))).scalars().all())
 
     for tenant_id in tenant_ids:
-        TENANT_CONTEXT_VAR.set(tenant_id)
+        token = TENANT_CONTEXT_VAR.set(tenant_id)
         async with async_session_factory() as session:
+          try:
             due = await _due_manifests(session, tenant_id)
             totals["tenants"] += 1
             totals["due"] += len(due)
@@ -173,6 +194,13 @@ async def publish_due_manifests() -> dict[str, int]:
                 )
                 totals["published"] += 1
             await session.commit()
+          finally:
+            TENANT_CONTEXT_VAR.reset(token)
+    _state["last_stats"] = dict(totals)
+    _state["last_success_at"] = utcnow()
+    _state["runs"] = int(_state["runs"] or 0) + 1
+    _state["last_error"] = None
+    _state["running"] = False
     return totals
 
 
@@ -185,7 +213,9 @@ async def _loop() -> None:
                 logger.info("release_scheduler_done", **stats)
         except asyncio.CancelledError:
             raise
-        except Exception:
+        except Exception as exc:
+            _state["last_error"] = str(exc)[:500]
+            _state["running"] = False
             logger.warning("release_scheduler_failed", exc_info=True)
         await asyncio.sleep(TICK_SECONDS)
 
@@ -196,6 +226,7 @@ def start_release_scheduler() -> None:
         return
     if _task is not None and not _task.done():
         return
+    _state["started_at"] = utcnow()
     _task = asyncio.create_task(_loop(), name="rubbish-release-scheduler")
     logger.info("release_scheduler_started", tick_seconds=TICK_SECONDS)
 
@@ -215,6 +246,7 @@ async def stop_release_scheduler() -> None:
 
 __all__ = [
     "publish_due_manifests",
+    "release_scheduler_state",
     "start_release_scheduler",
     "stop_release_scheduler",
 ]

@@ -1329,6 +1329,80 @@ async def system_health(
         except Exception:
             backup_detail = "备份目录无法读取"
 
+    from app.domain.release.scheduler import (
+        TICK_SECONDS as RELEASE_TICK,
+    )
+    from app.domain.release.scheduler import release_scheduler_state
+    from app.domain.workflow_scheduler import (
+        TICK_SECONDS as WORKFLOW_TICK,
+    )
+    from app.domain.workflow_scheduler import workflow_scheduler_state
+
+    def _scheduler_check(
+        key: str, label: str, state: dict[str, Any], tick_seconds: int
+    ) -> dict[str, Any]:
+        if settings.is_test:
+            return {
+                "key": key,
+                "label": label,
+                "status": "ok",
+                "detail": "测试环境不启动后台调度器",
+            }
+        if not settings.scheduler_enabled:
+            return {
+                "key": key,
+                "label": label,
+                "status": "warn",
+                "detail": "调度器已被 RUBBISH_SCHEDULER_ENABLED 关闭",
+            }
+        if not state.get("task_alive"):
+            return {
+                "key": key,
+                "label": label,
+                "status": "fail",
+                "detail": "后台任务未运行",
+            }
+        last_success = state.get("last_success_at")
+        if last_success is None:
+            return {
+                "key": key,
+                "label": label,
+                "status": "ok",
+                "detail": "已启动，等待首轮",
+            }
+        age_seconds = max((datetime.now(UTC) - last_success).total_seconds(), 0)
+        stale_after = max(tick_seconds * 2, 10 * 60)
+        if state.get("last_error"):
+            return {
+                "key": key,
+                "label": label,
+                "status": "warn",
+                "detail": f"上轮有失败：{str(state['last_error'])[:120]}",
+            }
+        if age_seconds > stale_after:
+            return {
+                "key": key,
+                "label": label,
+                "status": "fail",
+                "detail": f"已 {age_seconds / 60:.0f} 分钟未成功运行",
+            }
+        stats = state.get("last_stats") or {}
+        return {
+            "key": key,
+            "label": label,
+            "status": "ok",
+            "detail": f"{age_seconds / 60:.1f} 分钟前成功 · {stats}",
+        }
+
+    scheduler_checks = [
+        _scheduler_check(
+            "release_scheduler", "定时发布调度器", release_scheduler_state(), RELEASE_TICK
+        ),
+        _scheduler_check(
+            "workflow_scheduler", "工作流调度器", workflow_scheduler_state(), WORKFLOW_TICK
+        ),
+    ]
+
     checks = [
         {
             "key": "backup",
@@ -1376,6 +1450,7 @@ async def system_health(
             if smtp_ok and settings.email_outbound_enabled
             else ("已配置但未启用" if smtp_ok else "未配置 SMTP，仅站内通知"),
         },
+        *scheduler_checks,
         {
             "key": "anomaly",
             "label": "异常频率（24h）",

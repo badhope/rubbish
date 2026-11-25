@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.19.55] — 2026-11-25
+
+### 可靠性收口
+
+- 邮件发件箱：`skipped_no_smtp` / `skipped_disabled` 不再永久卡住，配置恢复后按 5 分钟退避继续投递；SMTP 不可用不消耗重试次数，已 `sent` 的记录拒绝再次发送。
+- 工作流调度器：triage、逾期互评、修回、论坛 SLA、邮件重试五个 job 各用独立 session；单个 job 异常回滚，不再让一个 SQL 错误拖垮整轮。
+- 新增论坛人工核验 SLA 超时提醒：超过承诺核验时间仍未处置的主题给编辑发站内通知/可选邮件，每个核验周期只提醒一次（迁移 `072_forum_sla_reminder`）。
+- 统一编辑收件人：初筛提醒、发布失败告警、作者撤稿、作者重投都按同一套编辑角色（editor / editor_in_chief / section_editor / deputy_editor / board_editor / chief_editor）加在岗管理员分发，不再漏发分区整理、副主管、内容策展与总协调。
+- 定时发布与手动发布对 manifest 加行锁：多实例或双入口并发时只有一个执行者能发布，避免重复 fan-out。
+- 上传配额检查在 PostgreSQL 下按“租户+用户”加事务级 advisory lock，并发上传不再同时越过 20 次/250 MB 上限。
+- 预览转换增加每用户 8 次/10 分钟限流与同时 2 路转换上限，避免登录用户反复提交 50 MB 文件打满 CPU。
+- 后台系统健康新增“定时发布调度器 / 工作流调度器”检查：显示是否运行、最近成功时间、上轮错误与卡住状态。
+- 初筛“已发邮件”统计改为只计真实 `sent`，不再把 skipped 算成送达。
+
+### 校验
+
+- 新增 `tests/test_reliability_11955.py`：编辑角色全集、发件箱 skipped 重试不消耗次数、sent 拒绝重发、论坛 SLA 只提醒一次。
+- 后端全量：921 passed / 3 skipped（405.97s）；前端 typecheck、ESLint、build 通过。
+
 ## [1.19.54] — 2026-11-25
 
 ### 工作流闭环

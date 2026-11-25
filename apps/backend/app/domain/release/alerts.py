@@ -11,7 +11,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -19,11 +18,11 @@ from app.core.email_templates import release_failure
 from app.core.logging import get_logger
 from app.domain.notifications import services as notifications
 from app.domain.release.models import ReleaseManifest
-from app.models import Role, User, UserRole
+from app.domain.submission.editor_recipients import editor_recipients
+from app.models import User
 
 logger = get_logger("rubbish.release_alerts")
 
-_EDITOR_ROLES = ("editor", "editor_in_chief", "section_editor", "deputy_editor", "board_editor")
 _REASON_LABELS = {
     "content_changed": "内容哈希已变化，原定发布版本不再匹配",
     "gate_blocked": "发布闸门未通过（仍有错误或待办）",
@@ -31,49 +30,7 @@ _REASON_LABELS = {
 
 
 async def _recipients(db: AsyncSession, tenant_id: Any, creator_id: int | None) -> list[User]:
-    # 不在 SQL 层 DISTINCT：User 行含纯 json 列（历史库 notification_prefs），
-    # PostgreSQL 对 json 类型无等值运算符，SELECT DISTINCT 整行会直接报错；
-    # 多角色重复行由下方 by_id 字典在 Python 层去重。
-    rows = list(
-        (
-            await db.execute(
-                select(User)
-                .join(UserRole, UserRole.user_id == User.id)
-                .join(Role, Role.id == UserRole.role_id)
-                .where(
-                    User.tenant_id == tenant_id,
-                    User.is_active.is_(True),
-                    UserRole.tenant_id == tenant_id,
-                    Role.tenant_id == tenant_id,
-                    Role.name.in_(_EDITOR_ROLES),
-                )
-            )
-        )
-        .scalars()
-        .all()
-    )
-    admins = list(
-        (
-            await db.execute(
-                select(User).where(
-                    User.tenant_id == tenant_id,
-                    User.is_active.is_(True),
-                    User.is_admin.is_(True),
-                )
-            )
-        )
-        .scalars()
-        .all()
-    )
-    by_id = {user.id: user for user in [*rows, *admins]}
-    rows = list(by_id.values())
-    if creator_id is not None and all(user.id != creator_id for user in rows):
-        creator = (
-            await db.execute(select(User).where(User.id == creator_id, User.tenant_id == tenant_id))
-        ).scalar_one_or_none()
-        if creator is not None:
-            rows.append(creator)
-    return rows
+    return await editor_recipients(db, tenant_id, include_user_id=creator_id)
 
 
 async def alert_release_failure(

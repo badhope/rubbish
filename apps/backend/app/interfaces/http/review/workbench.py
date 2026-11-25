@@ -631,12 +631,14 @@ async def retry_email_digest_record(
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
     """Manual resend for a failed or SMTP-skipped email record."""
-    from app.domain.notifications.email_outbox import retry_record
+    from app.domain.notifications.email_outbox import EmailOutboxConflict, retry_record
 
     try:
         row = await retry_record(db, tenant_id=require_tenant_id(), record_id=record_id)
     except LookupError as exc:
         raise HTTPException(status_code=404, detail="邮件记录不存在") from exc
+    except EmailOutboxConflict as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     return {
         "id": row.id,
         "status": row.status,

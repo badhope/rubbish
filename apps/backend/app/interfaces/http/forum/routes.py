@@ -647,6 +647,7 @@ async def _apply_topic_decision(
         topic.published_at = None
         topic.manual_review_reason = note or "未通过站内规则核验"
     topic.review_eta_at = None
+    topic.sla_reminded_at = None
     topic.reviewed_by = actor.id
     topic.reviewed_at = now
     await _record_moderation_event(
@@ -1977,6 +1978,7 @@ async def edit_topic(
         topic.moderation_signals = [asdict(signal) for signal in assessment.signals]
         topic.manual_review_reason = assessment.reason
         topic.review_eta_at = utcnow() + timedelta(minutes=settings.sla_minutes)
+        topic.sla_reminded_at = None
         topic.published_at = None
         await _record_moderation_event(
             db,
