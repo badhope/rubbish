@@ -17,7 +17,7 @@
 ### 校验
 
 - 新增 `tests/test_reliability_11955.py`：编辑角色全集、发件箱 skipped 重试不消耗次数、sent 拒绝重发、论坛 SLA 只提醒一次。
-- 后端全量：921 passed / 3 skipped（405.97s）；前端 typecheck、ESLint、build 通过。
+- 后端全量：921 passed / 3 skipped（410.18s）；前端 typecheck、ESLint、build 通过。
 
 ## [1.19.54] — 2026-11-25
 
