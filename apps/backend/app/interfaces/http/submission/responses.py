@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import HTTPException, status
-from sqlalchemy import desc, select
+from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import paginate
@@ -128,19 +128,43 @@ async def _review_stats_for_submissions(
                 ReviewAssignment.is_adjudicator,
                 ReviewReport.recommendation,
             )
-            .join(ReviewReport, ReviewReport.assignment_id == ReviewAssignment.id, isouter=True)
+            .join(ReviewReport, ReviewReport.assignment_id == ReviewAssignment.id)
+            .where(
+                ReviewAssignment.submission_id.in_(ids),
+                ReviewAssignment.tenant_id == tenant_id,
+                # 与 /decision 的 _ensure_accept_gate 同口径：退回/重投后
+                # 旧轮 assignment 被置 cancelled，报告仍在但不能再算作本轮
+                # 完成数，否则列表会显示“可裁决”而裁决接口 409。
+                ReviewAssignment.status == "completed",
+            )
+        )
+    ).all()
+    # 当前轮必须按“全部指派”计算，而不是按“已有完成报告的轮次”。
+    # 如果第 2 轮已指派但还没交报告，列表不能退回用第 1 轮的通过报告
+    # 显示可裁决，否则又会和 /decision 的当前轮闸门错位。
+    round_rows = (
+        await db.execute(
+            select(
+                ReviewAssignment.submission_id,
+                func.max(ReviewAssignment.round),
+            )
             .where(
                 ReviewAssignment.submission_id.in_(ids),
                 ReviewAssignment.tenant_id == tenant_id,
             )
+            .group_by(ReviewAssignment.submission_id)
         )
     ).all()
+    current_round_by_sub = {
+        int(submission_id): int(round_no or 1)
+        for submission_id, round_no in round_rows
+    }
     by_sub: dict[int, list[Any]] = {}
     for r in rows:
         by_sub.setdefault(r[0], []).append(r)
     out: dict[int, dict[str, Any]] = {}
     for sid, rs in by_sub.items():
-        current_round = max((x[2] or 1) for x in rs)
+        current_round = current_round_by_sub.get(int(sid), 1)
         cur = [x for x in rs if (x[2] or 1) == current_round and x[4] is not None]
         accept_ids = {x[1] for x in cur if x[4] == "accept"}
         reject = sum(1 for x in cur if x[4] == "reject")
@@ -191,7 +215,7 @@ async def _list_submissions(
             )
         ).all()
         resource_status = {int(resource_id): str(status) for resource_id, status in resource_rows}
-    for response, entry in zip(responses, rows):
+    for response, entry in zip(responses, rows, strict=True):
         if entry.resource_id is not None:
             response.resource_publication_status = resource_status.get(int(entry.resource_id))
     return SubmissionListResponse(

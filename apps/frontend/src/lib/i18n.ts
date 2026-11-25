@@ -167,6 +167,9 @@ function replacePatterns(source: string): string {
     .replace(/第\s*(\d+)\s*页\s*\/\s*共\s*(\d+)\s*页/g, 'Page $1 of $2')
     .replace(/第\s*(\d+)\s*页/g, 'Page $1')
     .replace(/共\s*(\d+)\s*页/g, '$1 pages')
+    // Peer review rounds / anonymous labels
+    .replace(/^第\s*(\d+)\s*轮$/g, 'Round $1')
+    .replace(/^匿名审稿人\s*(\d+)$/g, 'Anonymous reviewer $1')
     // Status captions
     .replace(/(\d+)\s*项待补/g, '$1 to fix')
     .replace(/(\d+)\s*项未完成/g, '$1 unfinished')

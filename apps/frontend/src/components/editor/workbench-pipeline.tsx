@@ -689,7 +689,7 @@ export function EditorPipeline() {
                                 {item.author_response ? (
                                   <div className="rounded bg-muted/40 p-2 text-muted-foreground">
                                     <span className="font-medium text-foreground">作者修改说明：</span>
-                                    <span className="line-clamp-3 whitespace-pre-wrap">{item.author_response}</span>
+                                    <span className="line-clamp-3 whitespace-pre-wrap" data-i18n-skip>{item.author_response}</span>
                                   </div>
                                 ) : (
                                   <p className="text-muted-foreground">作者尚未提交修改说明。</p>
@@ -1076,7 +1076,7 @@ function SubmissionReportsPanel({ submissionId }: { submissionId: number }) {
             <span className="font-medium">
               互评成员 {r.reviewer_username ?? `#${r.reviewer_id ?? index + 1}`}
             </span>
-            <Badge variant="outline">第 {r.round ?? 1} 轮</Badge>
+            <Badge variant="outline">{`第 ${r.round ?? 1} 轮`}</Badge>
             {r.assignment_status === 'cancelled' ? (
               <Badge variant="secondary">历史</Badge>
             ) : null}
@@ -1093,13 +1093,13 @@ function SubmissionReportsPanel({ submissionId }: { submissionId: number }) {
           {r.comments_to_editor?.trim() ? (
             <div>
               <div className="text-xs text-muted-foreground">给内容整理的机密意见</div>
-              <p className="whitespace-pre-wrap leading-relaxed">{r.comments_to_editor}</p>
+              <p className="whitespace-pre-wrap leading-relaxed" data-i18n-skip>{r.comments_to_editor}</p>
             </div>
           ) : null}
           {r.comments_to_author?.trim() ? (
             <div className="mt-2">
               <div className="text-xs text-muted-foreground">给作者的意见</div>
-              <p className="whitespace-pre-wrap leading-relaxed">{r.comments_to_author}</p>
+              <p className="whitespace-pre-wrap leading-relaxed" data-i18n-skip>{r.comments_to_author}</p>
             </div>
           ) : null}
           {reviewDimensionEntries(r.scores).some(([, v]) => (v.suggestion ?? '').trim()) ? (
@@ -1190,7 +1190,7 @@ function SubmissionTimelinePanel({ submissionId }: { submissionId: number }) {
               <span className="text-muted-foreground">{new Date(e.at).toLocaleString()}</span>
               <span className="font-medium">{e.title}</span>
             </div>
-            {e.detail ? <p className="mt-0.5 text-muted-foreground">{e.detail}</p> : null}
+            {e.detail ? <p className="mt-0.5 text-muted-foreground" data-i18n-skip>{e.detail}</p> : null}
           </li>
         ))}
       </ol>
@@ -1241,7 +1241,7 @@ function EditorReportSearchDialog({
                   <Badge variant="outline">
                     {RECOMMENDATION_LABELS[item.recommendation] ?? item.recommendation}
                   </Badge>
-                  <Badge variant="secondary">第 {item.round} 轮</Badge>
+                  <Badge variant="secondary">{`第 ${item.round} 轮`}</Badge>
                   {item.score != null && <Badge variant="outline">总分 {item.score}</Badge>}
                   <span className="ml-auto text-xs text-muted-foreground">
                     {item.reviewer_username ?? `#${item.reviewer_id}`} ·{' '}
@@ -1250,12 +1250,12 @@ function EditorReportSearchDialog({
                 </div>
                 {item.comments_to_editor?.trim() && (
                   <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-xs text-muted-foreground">
-                    给内容整理：{item.comments_to_editor}
+                    给内容整理：<span data-i18n-skip>{item.comments_to_editor}</span>
                   </p>
                 )}
                 {item.comments_to_author?.trim() && (
                   <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-xs">
-                    给作者：{item.comments_to_author}
+                    给作者：<span data-i18n-skip>{item.comments_to_author}</span>
                   </p>
                 )}
                 <Button
@@ -1377,7 +1377,7 @@ function EditorManuscriptDialog({
                     </span>
                   )}
                 </div>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed">{data.author_response}</p>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed" data-i18n-skip>{data.author_response}</p>
               </div>
             ) : null}
             <SubmissionReportsPanel submissionId={data.id} />

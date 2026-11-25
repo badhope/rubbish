@@ -41,7 +41,11 @@ from app.domain.notifications import services as notifications
 from app.domain.notifications.models import EmailDigestRecord
 from app.domain.review.models import ReviewAssignment, ReviewReport
 from app.domain.submission.models import Submission
-from app.interfaces.http.review.coi import ensure_no_declared_conflict, name_matches_author
+from app.interfaces.http.review.coi import (
+    ensure_no_declared_conflict,
+    name_matches_author,
+    reviewer_conflict_matches,
+)
 from app.models import AuditLog, User
 
 router = APIRouter(tags=["workbench"])
@@ -789,6 +793,18 @@ async def batch_assign(
                     }
                 )
                 continue
+            # 批量指派必须与单个指派、冲突提示同口径：署名作者同名
+            # （疑似共同作者）不能被批量入口绕过。
+            if name_matches_author(reviewer, sub):
+                skipped.append(
+                    {
+                        "submission_id": item.submission_id,
+                        "reviewer_id": rid,
+                        "reason": "reviewer_name_conflict",
+                        "message": "与署名作者同名，可能是共同作者，请换一位。",
+                    }
+                )
+                continue
             try:
                 await ensure_no_declared_conflict(
                     db, tenant_id=tenant_id, reviewer_id=rid, submission=sub
@@ -941,7 +957,7 @@ async def check_conflicts(
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
     """指派前的利益冲突提示：作者/共同作者 → 黄色警告默认不选；
-    同单位无法从 User 字段判定（无 affiliation 列），退化为"该作者已有作品"提示。
+    同单位/年度声明命中时与指派端点同口径拦为硬警告。
     """
     tenant_id = require_tenant_id()
     sub = (
@@ -958,14 +974,23 @@ async def check_conflicts(
     out: list[dict[str, Any]] = []
     for rid in body.reviewer_ids:
         reviewer = (
-            await db.execute(select(User).where(User.id == rid, User.tenant_id == tenant_id))
+            await db.execute(
+                select(User).where(
+                    User.id == rid,
+                    User.tenant_id == tenant_id,
+                    User.is_active.is_(True),
+                )
+            )
         ).scalar_one_or_none()
         if reviewer is None:
-            out.append({"reviewer_id": rid, "exists": False, "warning": "用户不存在"})
+            out.append({"reviewer_id": rid, "exists": False, "warning": "用户不存在或已停用"})
             continue
 
         is_submitter = rid == sub.submitted_by
         name_match = name_matches_author(reviewer, sub)
+        conflict_matches, declaration = await reviewer_conflict_matches(
+            db, tenant_id=tenant_id, reviewer_id=rid, submission=sub
+        )
         own_count = (
             await db.execute(
                 select(func.count(Submission.id)).where(
@@ -977,17 +1002,23 @@ async def check_conflicts(
         own_count = int(own_count or 0)
 
         warnings: list[str] = []
+        hard_conflict = False
         if is_submitter:
             warnings.append("不能自己评自己：这位就是作品提交人")
+            hard_conflict = True
         if name_match:
-            warnings.append("和作者同名：可能是共同作者，也可能只是巧合，请人工看一眼")
+            warnings.append("和作者实名/显示名/账号名重合：可能是共同作者，请换一位")
+            hard_conflict = True
+        if conflict_matches:
+            warnings.append(f"系统检测到可核验利益冲突：{'、'.join(conflict_matches)}")
+            hard_conflict = True
         if own_count > 0:
             warnings.append(
                 f"这位已经有 {own_count} 篇作品。同单位或利益关系系统看不出来，需要你判断。"
             )
 
-        # 默认不选：命中作者/共同作者硬警告；仅"已有作品"黄警仍默选，由编辑人工决定。
-        default_selected = not (is_submitter or name_match)
+        # 默认不选：命中作者/共同作者/声明冲突硬警告；仅"已有作品"黄警仍默选。
+        default_selected = not hard_conflict
         out.append(
             {
                 "reviewer_id": rid,
@@ -995,6 +1026,9 @@ async def check_conflicts(
                 "exists": True,
                 "is_submitter": is_submitter,
                 "name_matches_author": name_match,
+                "conflict_matches": conflict_matches,
+                "coi_declared": declaration is not None,
+                "coi_year": declaration.year if declaration is not None else None,
                 "own_submission_count": own_count,
                 "warnings": warnings,
                 "warning": bool(warnings),

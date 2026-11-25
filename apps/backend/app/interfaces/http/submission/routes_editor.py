@@ -366,6 +366,8 @@ async def list_reviewer_candidates(
                 User.id,
                 User.username,
                 User.email,
+                User.display_name,
+                User.real_name,
                 User.affiliation,
                 User.department,
                 User.reviewer_tags,
@@ -471,9 +473,16 @@ async def list_reviewer_candidates(
         )
         if current is not None:
             candidate_user = SimpleNamespace(
+                username=getattr(row, "username", None),
+                display_name=getattr(row, "display_name", None),
+                real_name=getattr(row, "real_name", None),
                 affiliation=getattr(row, "affiliation", None),
                 department=getattr(row, "department", None),
             )
+            if row.id == current.submitted_by:
+                conflict_reasons = ["本人就是该作品提交人", *conflict_reasons]
+            if name_matches_author(candidate_user, current):
+                conflict_reasons = ["与署名作者同名", *conflict_reasons]
             conflict_reasons = [
                 *conflict_reasons,
                 *institution_matches(candidate_user, current),
@@ -491,7 +500,7 @@ async def list_reviewer_candidates(
                 reviewer_tags=list(getattr(row, "reviewer_tags", None) or []),
                 reviewer_disciplines=list(getattr(row, "reviewer_disciplines", None) or []),
                 coi_declared=declaration is not None,
-                coi_year=coi_year,
+                coi_year=declaration.year if declaration is not None else coi_year,
                 conflict=bool(conflict_reasons),
                 conflict_reasons=conflict_reasons,
             )
@@ -1006,7 +1015,8 @@ async def list_review_reports(
     """列出 submission 的所有互评报告。
 
     - 编辑（admin/editor）：看完整报告（含 editor-only comments）
-    - 作者：只看 comments_to_author；审稿人默认匿名，主动署名时才给显示名
+    - 作者：只看 comments_to_author；刊出前始终看不到审稿人姓名，
+      主动署名也只由公开评审端点在本刊出后下发
     - 互评成员自己：看自己的报告
     """
     entry = await _get_or_404(db, submission_id)
@@ -1072,20 +1082,22 @@ async def list_review_reports(
         if is_reviewer and not is_editor and not is_author:
             if reviewer_id != current_user.id:
                 continue
-        # 作者：剥离 editor-only comments；只有审稿人主动署名时才给显示名。
+        # 作者：剥离 editor-only comments 与评分/评分理由。评分是编辑侧
+        # 质量工具，评审表单也向审稿人承诺「作者只看到给作者的意见」。
         if is_author:
             out.append(
                 ReviewReportResponse(
                     id=r.id,
                     assignment_id=r.assignment_id,
                     recommendation=r.recommendation,
-                    scores=r.scores,
+                    scores={},
                     comments_to_editor=None,
                     comments_to_author=r.comments_to_author,
                     is_anonymous=r.is_anonymous,
-                    reviewer_display_name=(
-                        None if r.is_anonymous else (reviewer_display_name or reviewer_username)
-                    ),
+                    # 作者在刊出前始终不知道审稿人是谁；即使审稿人已选择
+                    # 署名，姓名也只由公开评审端点在本刊出后下发。这里返回
+                    # None，前端只显示“署名审稿人（刊出后公开）”。
+                    reviewer_display_name=None,
                     round=assignment_round or 1,
                     assignment_status=assignment_status,
                     submitted_at=r.submitted_at,
@@ -1121,20 +1133,19 @@ async def submission_timeline(
 ) -> dict:
     """文章全流程时间线：发布、版本、邀请/拒审、报告、作者回复、裁决。
 
-    编辑可看全部作品；作者只能看自己的作品。互评成员不在本端点暴露
-    其他互评成员的意见，避免绕过单盲。时间线用于主编追溯「从发布到
-    通过」的每一步，不替代审计日志。
+    编辑可看全部作品；作者只能看自己的作品。作者侧始终使用稳定匿名标签，
+    不暴露互评成员用户名；编辑侧保留实名用于追溯。时间线用于主编追溯
+    「从发布到通过」的每一步，不替代审计日志。
     """
     entry = await _get_or_404(db, submission_id)
     is_editor = current_user.is_admin or await user_has_role(db, current_user, ROLE_EDITOR)
     if not is_editor and entry.submitted_by != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
 
-    # 双盲下作者不得经由时间线反推互评成员身份（邀请/接受/报告事件都点名）。
-    # 编辑视图与单盲作者视图保持原样。函数级导入规避模块环。
-    from app.domain.review.blinding import get_review_mode
-
-    hide_reviewers = not is_editor and await get_review_mode(db, entry.tenant_id) == "double_blind"
+    # 作者侧一律不知道互评成员是谁，单盲默认也是这个口径；只有编辑看实名。
+    # 审稿人主动选择公开署名时，名字只出现在刊出后的文章评审区，不回填
+    # 到作者可见的时间线，避免刊出前就泄露身份。
+    hide_reviewers = not is_editor
 
     events: list[dict] = []
 
@@ -1179,7 +1190,7 @@ async def submission_timeline(
                     selectinload(ReviewAssignment.reviewer),
                     selectinload(ReviewAssignment.report),
                 )
-                .order_by(ReviewAssignment.invited_at)
+                .order_by(ReviewAssignment.invited_at, ReviewAssignment.id)
             )
         )
         .scalars()

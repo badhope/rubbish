@@ -2441,7 +2441,9 @@ async def get_resource_public_reviews(
 
     只下发 ``comments_to_author``、推荐结论和署名状态；``comments_to_editor``
     与评分明细保持内部。审稿人未主动署名时只显示稳定匿名序号，历史报告
-    （迁移前默认匿名）不会被动公开身份。
+    （迁移前默认匿名）不会被动公开身份。退回/重投留下的 cancelled 轮次
+    只要报告仍在就一并公开；同资源多投稿只绑定最新一条已通过记录，避免
+    把不同作者的意见与回复拼在一起。
     """
     tenant_id = require_tenant_id()
     resource = (
@@ -2465,24 +2467,41 @@ async def get_resource_public_reviews(
         if issue_status != "live":
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
 
+    # 撤回事件是文章页的硬下架语义：正文仍可读用于引用溯源，但评审区
+    # 已由前端隐藏。公开 API 必须与页面同口径，不能让直接调用绕过。
+    retraction_id = (
+        await db.execute(
+            select(ResourcePublicEvent.id)
+            .where(
+                ResourcePublicEvent.tenant_id == tenant_id,
+                ResourcePublicEvent.resource_id == resource_id,
+                ResourcePublicEvent.event_type == "retraction",
+            )
+            .limit(1)
+        )
+    ).scalar_one_or_none()
+    if retraction_id is not None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
+
     from app.domain.review.models import ReviewAssignment, ReviewReport
     from app.domain.submission.models import Submission
 
+    # 一部作品正常只有一条投稿记录；历史迁移/认领可能留下同资源多条。
+    # 公开页必须绑定其中一条，不能把不同作者的意见和回复拼在一起。
     submissions = (
         await db.execute(
             select(
+                Submission.id,
+                Submission.status,
                 Submission.author_response,
                 Submission.author_response_at,
-            )
-            .where(
+            ).where(
                 Submission.resource_id == resource_id,
                 Submission.tenant_id == tenant_id,
             )
-            .order_by(Submission.id.desc())
         )
     ).all()
-    author_response = next((row[0] for row in submissions if row[0]), None)
-    author_response_at = next((row[1] for row in submissions if row[0]), None)
+    submission_ids = [row[0] for row in submissions]
 
     rows = (
         await db.execute(
@@ -2490,6 +2509,7 @@ async def get_resource_public_reviews(
                 ReviewReport,
                 ReviewAssignment.round,
                 ReviewAssignment.reviewer_id,
+                ReviewAssignment.submission_id,
                 User.display_name,
                 User.username,
             )
@@ -2498,24 +2518,54 @@ async def get_resource_public_reviews(
             .where(
                 ReviewAssignment.tenant_id == tenant_id,
                 ReviewReport.tenant_id == tenant_id,
-                ReviewAssignment.submission_id.in_(
-                    select(Submission.id).where(
-                        Submission.resource_id == resource_id,
-                        Submission.tenant_id == tenant_id,
-                    )
-                ),
-                ReviewAssignment.status == "completed",
+                ReviewAssignment.submission_id.in_(submission_ids),
+                # 退回/重投会把上一轮 assignment 置 cancelled 但保留报告。
+                # 这些是真实发生过的评审轮次，公开页不能只留最后一轮。
+                ReviewAssignment.status.in_(("completed", "cancelled")),
             )
             .order_by(ReviewAssignment.round, ReviewReport.submitted_at, ReviewReport.id)
         )
     ).all()
 
+    reports_by_submission: dict[int, list[tuple[Any, ...]]] = {}
+    for row in rows:
+        reports_by_submission.setdefault(row[3], []).append(row)
+
+    # 取最新一条已通过记录；同资源多投稿时不能把旧作者的意见/回复
+    # 混到当前文章上。没有已通过记录才退到最新关联投稿。
+    primary = min(
+        submissions,
+        key=lambda row: (
+            0 if row[1] in ("accepted", "approved") else 1,
+            -row[0],
+        ),
+        default=None,
+    )
+    primary_id = primary[0] if primary else None
+    author_response = primary[2] if primary else None
+    author_response_at = primary[3] if primary else None
+
     reports: list[PublicReviewItem] = []
-    anonymous_index = 0
-    for report, round_no, _reviewer_id, display_name, username in rows:
+    anonymous_labels: dict[int, str] = {}
+    anonymous_reviewer_ids: list[int] = []
+    seen_anonymous: set[int] = set()
+    for report, _round_no, reviewer_id, _submission_id, _display_name, _username in (
+        reports_by_submission.get(primary_id, [])
+    ):
+        if report.is_anonymous and reviewer_id not in seen_anonymous:
+            seen_anonymous.add(reviewer_id)
+            anonymous_reviewer_ids.append(reviewer_id)
+    for reviewer_id in anonymous_reviewer_ids:
+        anonymous_labels[reviewer_id] = f"匿名审稿人 {len(anonymous_labels) + 1}"
+
+    for report, round_no, reviewer_id, _submission_id, display_name, username in (
+        reports_by_submission.get(primary_id, [])
+    ):
         if report.is_anonymous:
-            anonymous_index += 1
-            label = f"匿名审稿人 {anonymous_index}"
+            # 只给匿名报告编号，避免“署名审稿人”占掉 1 号后读者看到
+            # 一个没有 1 号的“匿名审稿人 2”。同一审稿成员跨轮仍保持
+            # 同一个匿名序号，不能因为交了两轮就被读者误读成两个人。
+            label = anonymous_labels[reviewer_id]
         else:
             label = display_name or username or "署名审稿人"
         reports.append(

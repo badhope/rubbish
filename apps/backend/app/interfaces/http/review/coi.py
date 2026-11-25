@@ -153,24 +153,38 @@ async def reviewer_institution_matches(
 
 
 async def declarations_for_reviewers(
-    db: AsyncSession, *, tenant_id: Any, reviewer_ids: list[int], year: int
+    db: AsyncSession, *, tenant_id: Any, reviewer_ids: list[int], year: int | None = None
 ) -> dict[int, ReviewerConflictDeclaration]:
+    """按人取最新一份声明。
+
+    指派闸门用的是 ``latest_declaration``（跨年最新），候选池如果只看
+    当年，就会出现“候选显示无冲突、点下去 409”。这里保持同一口径；
+    ``year`` 参数保留给调用方兼容，但不再用于过滤历史声明。
+    """
     if not reviewer_ids:
         return {}
     rows = (
         (
             await db.execute(
-                select(ReviewerConflictDeclaration).where(
+                select(ReviewerConflictDeclaration)
+                .where(
                     ReviewerConflictDeclaration.tenant_id == tenant_id,
                     ReviewerConflictDeclaration.user_id.in_(reviewer_ids),
-                    ReviewerConflictDeclaration.year == year,
+                )
+                .order_by(
+                    ReviewerConflictDeclaration.user_id,
+                    desc(ReviewerConflictDeclaration.year),
+                    desc(ReviewerConflictDeclaration.id),
                 )
             )
         )
         .scalars()
         .all()
     )
-    return {row.user_id: row for row in rows}
+    latest: dict[int, ReviewerConflictDeclaration] = {}
+    for row in rows:
+        latest.setdefault(row.user_id, row)
+    return latest
 
 
 async def latest_declaration(
@@ -183,31 +197,67 @@ async def latest_declaration(
     if year is not None:
         stmt = stmt.where(ReviewerConflictDeclaration.year == year)
     return (
-        (await db.execute(stmt.order_by(desc(ReviewerConflictDeclaration.year)))).scalars().first()
+        (
+            await db.execute(
+                stmt.order_by(
+                    desc(ReviewerConflictDeclaration.year),
+                    desc(ReviewerConflictDeclaration.id),
+                )
+            )
+        )
+        .scalars()
+        .first()
     )
 
 
 def name_matches_author(reviewer: User, submission: Submission) -> bool:
-    """互评成员用户名与作品署名作者同名（忽略大小写/首尾空白）。
+    """互评成员实名/显示名/用户名与作品署名作者重合。
 
-    与主编工作台冲突提示同一口径；指派端点服务端强制，直调 API 不能
-    绕过前端禁选。
+    之前的实现只比 ``username``：作者写的是真名，账号名却是拼音或网名，
+    同作者的另一个账号就能被正常派成互评人。这里把三个展示名都纳入，
+    并去掉空格/标点后精确比对，避免把 "Li" 误命中 "Lily" 这样的子串。
     """
-    author_names = {(n or "").strip().lower() for n in (submission.authors or []) if n}
-    return bool(reviewer.username) and reviewer.username.strip().lower() in author_names
+    author_names: set[str] = set()
+    for item in submission.authors or []:
+        if not isinstance(item, str):
+            continue
+        for part in re.split(r"[,，、;；/|]+", item):
+            normalized = _norm(part)
+            if len(normalized) >= 2:
+                author_names.add(normalized)
+    reviewer_names = {
+        _norm(value)
+        for value in (reviewer.username, reviewer.display_name, reviewer.real_name)
+        if value and len(_norm(value)) >= 2
+    }
+    return bool(author_names & reviewer_names)
+
+
+async def reviewer_conflict_matches(
+    db: AsyncSession, *, tenant_id: Any, reviewer_id: int, submission: Submission
+) -> tuple[list[str], ReviewerConflictDeclaration | None]:
+    """返回可核验冲突项与命中的声明。
+
+    指派端点和候选/批量冲突提示共用这一条判定，避免前端显示“无冲突”
+    而真正指派时 409，或者候选池按当年声明、指派按历史最新声明。
+    """
+    declaration = await latest_declaration(db, tenant_id=tenant_id, user_id=reviewer_id)
+    declared_matches = declaration_matches(declaration, submission) if declaration else []
+    institution_match_list = await reviewer_institution_matches(
+        db, tenant_id=tenant_id, reviewer_id=reviewer_id, submission=submission
+    )
+    return [*declared_matches, *institution_match_list], declaration
 
 
 async def ensure_no_declared_conflict(
     db: AsyncSession, *, tenant_id: Any, reviewer_id: int, submission: Submission
 ) -> None:
-    declaration = await latest_declaration(db, tenant_id=tenant_id, user_id=reviewer_id)
-    declared_matches = declaration_matches(declaration, submission) if declaration else []
-    institution_matches_list = await reviewer_institution_matches(
+    matches, declaration = await reviewer_conflict_matches(
         db, tenant_id=tenant_id, reviewer_id=reviewer_id, submission=submission
     )
-    matches = [*declared_matches, *institution_matches_list]
     if not matches:
         return
+    declared_matches = declaration_matches(declaration, submission) if declaration else []
     code = "reviewer_declared_conflict" if declared_matches else "reviewer_institution_conflict"
     raise HTTPException(
         status_code=status.HTTP_409_CONFLICT,

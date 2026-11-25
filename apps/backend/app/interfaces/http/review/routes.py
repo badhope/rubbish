@@ -569,6 +569,16 @@ async def accept_assignment(
             reviewer_id=current_user.id,
             submission=a.submission,
         )
+        # 历史遗留的同名指派也不能在“接受邀请”这一关放行；否则旧数据
+        # 可以绕过新的共同作者校验。
+        if name_matches_author(current_user, a.submission):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "code": "reviewer_name_conflict",
+                    "message": "你与作品署名作者同名，不能接受这次互评邀请；请联系编辑改派。",
+                },
+            )
     if a.status != "pending":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -703,6 +713,14 @@ async def submit_review_report(
     a = await _get_assignment_for_reviewer(db, assignment_id, current_user.id)
     if a.submission is None or a.submission.submitted_by == current_user.id:
         raise HTTPException(status_code=403, detail="Cannot review own submission")
+    if a.submission is not None and name_matches_author(current_user, a.submission):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "reviewer_name_conflict",
+                "message": "你与作品署名作者同名，不能提交这份互评意见；请联系编辑改派。",
+            },
+        )
     if a.status != "accepted":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -1209,6 +1227,18 @@ async def assign_adjudicator(
         or await user_has_role(db, reviewer, ROLE_SENIOR_REVIEWER)
     ):
         raise HTTPException(status_code=422, detail="Assigned user is not a reviewer")
+    # 第三方复核人同样不能是署名共同作者；否则冲突裁决会被作者本人
+    # 或共同作者影响。
+    if name_matches_author(reviewer, sub):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "reviewer_name_conflict",
+                "message": (
+                    f"互评成员 {reviewer.username} 与作者同名：可能是共同作者，请换一位。"
+                ),
+            },
+        )
 
     assignments = (
         (

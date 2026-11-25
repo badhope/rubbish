@@ -45,6 +45,9 @@ function formatReviewTime(value: string) {
 export function PublicReviewCard({ resourceId, enabled }: { resourceId: number; enabled: boolean }) {
   const reviewsQ = usePublicReviews(resourceId, enabled)
   const data = reviewsQ.data
+  // 撤回/转草稿后 enabled 会变 false，但 React Query 里的旧数据仍会保留。
+  // 必须在渲染层先挡住，不能只靠 query 的 enabled 开关。
+  if (!enabled) return null
   if (!data) return null
   if (data.reports.length === 0 && !data.author_response) return null
 
@@ -65,11 +68,16 @@ export function PublicReviewCard({ resourceId, enabled }: { resourceId: number; 
           return (
             <article key={report.id} className="rounded-lg border bg-muted/[0.18] p-3">
               <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
-                <Badge variant="outline">第 {report.round} 轮</Badge>
+                <Badge variant="outline">{`第 ${report.round} 轮`}</Badge>
                 <Badge variant="outline" className={cn('border', meta.className)}>
                   {meta.label}
                 </Badge>
-                <span className="text-xs text-muted-foreground">{report.reviewer_label}</span>
+                <span
+                  className="text-xs text-muted-foreground"
+                  data-i18n-skip={report.reviewer_anonymous ? undefined : true}
+                >
+                  {report.reviewer_label}
+                </span>
                 <span className="ml-auto text-[11px] tabular-nums text-muted-foreground">
                   {formatReviewTime(report.submitted_at)}
                 </span>

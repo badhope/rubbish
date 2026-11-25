@@ -22,7 +22,6 @@ import {
   XCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { reviewDimensionEntries } from '@/lib/review-dimensions'
 import { getAuthState } from '@/lib/auth'
 import {
   downloadSubmissionFile,
@@ -917,14 +916,14 @@ function SubmissionsPage() {
                   ) : null}
                 </div>
               ) : null}
-              {/* 互评意见：作者可见 comments_to_author；审稿人默认匿名，可主动署名 */}
+              {/* 互评意见：作者可见 comments_to_author；刊出前不显示审稿人姓名，署名只在刊出后公开 */}
               {reportsQ.data && reportsQ.data.length > 0 && (
                 <div className="rounded-md border p-3">
                   <div className="mb-2 flex items-center gap-2">
                     <FileText className="h-4 w-4" />
                     <span className="font-medium">互评意见</span>
                     <span className="text-xs text-muted-foreground">
-                      （默认匿名，审稿人可主动署名）
+                      （默认匿名；主动署名只在文章刊出后公开）
                     </span>
                   </div>
                   <div className="space-y-2">
@@ -934,9 +933,9 @@ function SubmissionsPage() {
                         className="rounded bg-muted/50 p-2 text-sm"
                       >
                         <div className="mb-1 flex flex-wrap items-center gap-2">
-                          <Badge variant="outline">第 {r.round ?? 1} 轮</Badge>
-                          {r.is_anonymous === false && r.reviewer_display_name ? (
-                            <Badge variant="secondary">署名：{r.reviewer_display_name}</Badge>
+                          <Badge variant="outline">{`第 ${r.round ?? 1} 轮`}</Badge>
+                          {r.is_anonymous === false ? (
+                            <Badge variant="secondary">署名审稿人（刊出后公开）</Badge>
                           ) : (
                             <Badge variant="outline">匿名审稿人</Badge>
                           )}
@@ -948,25 +947,13 @@ function SubmissionsPage() {
                           </span>
                         </div>
                         {r.comments_to_author ? (
-                          <p className="whitespace-pre-wrap">
+                          <p className="whitespace-pre-wrap" data-i18n-skip>
                             {r.comments_to_author}
                           </p>
                         ) : (
                           <p className="text-xs italic text-muted-foreground">
                             互评成员未留下意见
                           </p>
-                        )}
-                        {reviewDimensionEntries(r.scores).some(([, v]) =>
-                          (v.suggestion ?? '').trim(),
-                        ) && (
-                          <div className="mt-2 space-y-0.5 border-t pt-1.5 text-xs">
-                            <div className="font-medium text-muted-foreground">补充意见</div>
-                            {reviewDimensionEntries(r.scores)
-                              .filter(([, v]) => (v.suggestion ?? '').trim())
-                              .map(([k, v]) => (
-                                <p key={k}>· {v.suggestion}</p>
-                              ))}
-                          </div>
                         )}
                       </div>
                     ))}

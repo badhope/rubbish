@@ -6,11 +6,12 @@ import { api } from '@/lib/api'
 
 vi.mock('@/lib/api', () => ({ api: { get: vi.fn() } }))
 
-function renderCard() {
+function renderCard(enabled = true, cachedData?: Record<string, unknown>) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  if (cachedData) client.setQueryData(['catalog', 'reviews', 316], cachedData)
   return render(
     <QueryClientProvider client={client}>
-      <PublicReviewCard resourceId={316} enabled />
+      <PublicReviewCard resourceId={316} enabled={enabled} />
     </QueryClientProvider>,
   )
 }
@@ -52,5 +53,26 @@ describe('PublicReviewCard', () => {
     expect(screen.getByText('公开意见：建议补充限制条件。')).toBeInTheDocument()
     expect(screen.getByText('作者回复：已补充限制条件。')).toBeInTheDocument()
     expect(screen.queryByText(/编辑机密/)).toBeNull()
+  })
+
+  it('撤回或转草稿后即使缓存里还有旧数据也不渲染', () => {
+    renderCard(false, {
+      resource_id: 316,
+      reports: [
+        {
+          id: 1,
+          round: 1,
+          recommendation: 'accept',
+          comments_to_author: '缓存里的旧意见',
+          reviewer_anonymous: true,
+          reviewer_label: '匿名审稿人 1',
+          submitted_at: '2026-11-24T11:45:53Z',
+        },
+      ],
+      author_response: null,
+      author_response_at: null,
+    })
+    expect(screen.queryByText('同行评审记录')).toBeNull()
+    expect(screen.queryByText('缓存里的旧意见')).toBeNull()
   })
 })

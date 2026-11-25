@@ -30,6 +30,17 @@ async def test_restricted_region_blocks_anonymous_but_overseas_can_read(
     )
     assert forum.status_code == 200
 
+    # 公开评审是已刊文章的一部分，海外匿名必须能读到；不存在的资源应
+    # 停在业务 404，而不是地区 403/登录墙 401。
+    review_overseas = await client.get(
+        "/api/catalog/999999/reviews", headers={"x-forwarded-for": "8.8.8.8"}
+    )
+    assert review_overseas.status_code == 404, review_overseas.text[:160]
+    review_restricted = await client.get(
+        "/api/catalog/999999/reviews", headers={"x-forwarded-for": "1.0.1.1"}
+    )
+    assert review_restricted.status_code == 403
+
     # Reads are open; publishing is still a write and must be authenticated.
     write = await client.post(
         "/api/forum/topics",

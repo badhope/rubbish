@@ -1,6 +1,6 @@
 # Rubbish 项目基线
 
-> 版本：1.19.59
+> 版本：1.19.60（本地修补；生产仍为 1.19.59）
 > 更新：2026-11-25  
 > 仓库：`/home/user/work/rubbish-src`，主分支 `main`  
 > 生产入口：`https://rubbish.argjiemi.cn`
@@ -51,13 +51,14 @@ Rubbish 是自托管的公开写作与主题交流社区。长文进入内容库
 - 论坛审核迁移：`070_forum_moderation_pipeline`。
 - 基础设施迁移：`073_infra_hardening`（扫描字段、发布 digest 两张表与 RLS、索引）。
 - 公开评审迁移：`074_public_reviews`（`review_reports.is_anonymous`，默认 true 保留历史匿名）。
+- 1.19.60 本地审计修补（未部署）：作者时间线与报告接口不再在刊出前暴露审稿人姓名；作者报告不再下发评分；公开评审保留退回/重投历史轮次，并按最新已通过投稿绑定意见与作者回复；同一审稿人跨轮匿名序号稳定，署名审稿人不占匿名序号；撤回后公开评审统一 404；列表统计、裁决闸门、互评矩阵统一按“全部指派的最新轮”计算；候选池、单个/批量指派、第三方复核、接受邀请与提交报告统一同名/COI 校验。
 - 调度器：release / workflow 各持一条 PostgreSQL advisory lock 选主；后台健康显示 leader、竞选次数与等待选主状态。
 - 限流：生产 Redis 7.0.15 共享桶；Redis 不可用时进程内计数兜底，健康页标 warn。
 - 上传安全：ClamAV 1.5.4，`clamdscan` 守护进程扫描；历史文件由 `virus_scan` job 每轮 5+5 回填，早期转档后已删除原件的记录标 `missing` 并停止重试，感染文件下载统一 451。
 - 发布邮件：`publication_digest` job 每日 09:00 后汇总，一人一天一封，独立于站内通知开关。
 - 下载：文章 PDF / Word / 原件统一经 axios blob 鉴权下载，避免浏览器直链不带 Bearer 被区域访问或 AuthWall 拦截；PDF 版式预览的页数与页图同样走鉴权请求。投稿文件与审稿附件的手机端/微信端原生直链带 `ticket` 参数，中间件只放行该签名下载路径，票据权限仍由端点复核。
 - 论坛回归：`tests/test_forum.py` 20 项、`tests/test_forum_moderation.py` 8 项、50 条批量压力回归 1 项；1.19.56 新增 `tests/test_infra_11956.py` 5 项。
-- 前端：`tsc -b --noEmit`、ESLint、Vitest 219 项、`vite build` 通过。
+- 后端全量 `939 passed / 3 skipped`；前端 `tsc -b --noEmit`、ESLint、Vitest 223 项（41 文件）、`vite build` 通过。
 
 ## 二、已交付功能清单
 
@@ -71,6 +72,8 @@ Rubbish 是自托管的公开写作与主题交流社区。长文进入内容库
 ### 投稿与审稿
 
 - 作者四步发布向导、服务端草稿、版本快照与版本历史。
+- 公开评审记录：文章页展示每轮「给作者的意见」、推荐结论、作者回复与匿名/署名状态；给编辑的内部意见与评分明细不公开。审稿人默认匿名，只有主动取消匿名后，显示名才在文章刊出后公开；刊出前作者始终看不到审稿人姓名。
+- 单人评审闸门：至少 1 名互评成员给出通过推荐即可支持公开；意见冲突（通过 vs 不通过/退回修改）仍须第三方复核。`review_waived_at` 免审留痕为明确例外。
 - 编辑内容台按 `pending / under_review / major_revision / minor_revision / rework_requested / resubmitted` 分页签；「待修改」可查作者是否仍在改。
 - 编辑「退回作者修改」：作品进入 `rework_requested`，只通知作者逐条要求；本轮互评任务立即撤回并通知相关互评成员。作者可改内容、换文件、显式重交；重交后进入 `under_review`，旧一轮指派作废并重新分派。
 - 作者端「待修改」卡片、页签与按钮闭环：修改作品 → 保存 → 重新提交修改稿，未保存直接重交会明确提示会与上一版相同。

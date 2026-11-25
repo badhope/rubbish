@@ -960,6 +960,20 @@ export const TEXT_EN: Record<string, string> = {
   "正在检查": 'Checking',
   "通过": 'Approve',
   "不通过": 'Reject',
+  "同行评审记录": 'Peer review record',
+  "审稿意见与作者回复随文章公开。审稿人可自行选择匿名或署名；给编辑的内部意见与评分明细不公开。":
+    'Review comments and author responses are published with the article. Reviewers choose whether to stay anonymous or sign their name; comments to the editor and score details remain private.',
+  "作者回复": 'Author response',
+  "该轮未留下公开意见。": 'No public comments in this round.',
+  "互评成员未留下意见": 'The reviewer left no comments.',
+  "历史": 'History',
+  "署名审稿人": 'Named reviewer',
+  "匿名审稿人": 'Anonymous reviewer',
+  "署名审稿人（刊出后公开）": 'Named reviewer (shown after publication)',
+  "（默认匿名；主动署名只在文章刊出后公开）":
+    '(Anonymous by default; a signature is shown only after publication)',
+  "默认匿名：刊出前作者与读者都只看到「匿名审稿人」；只有取消下方匿名勾选，文章刊出后才会公开你的显示名。「给作者的意见」会原文展示，请只写可以公开的评语。":
+    'Anonymous by default: before publication, both the author and readers see only “Anonymous reviewer”. Clear the anonymity box below and your display name will be shown after publication. Comments to the author are published verbatim, so write only what can be made public.',
   "打回": 'Send back',
   "确认不通过": 'Confirm rejection',
   "确认打回": 'Confirm send-back',
