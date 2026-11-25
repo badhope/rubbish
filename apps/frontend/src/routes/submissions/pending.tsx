@@ -327,6 +327,10 @@ function PendingSubmissionsPage() {
   const decisionMatrixQ = useReviewMatrix(decisionTarget?.id ?? 0)
   // v2+ = 作者已经返修重投过；只有这种稿子才允许“返修后直接录用”。
   const isRevision = (decisionTarget?.latest_version ?? 1) > 1
+  // 补材料重投会落到 resubmitted（先回基础检查），还没重新进入互评复核；
+  // 这种稿子可以显示为返修稿，但不能用“跳过本轮互评”的直接录用开关。
+  const canDirectAccept =
+    isRevision && decisionTarget?.status === 'under_review'
   // 直接录用前必须让主编看到作者自己写的修回说明，而不是只凭一个版本号。
   const decisionVersionsQ = useSubmissionVersions(decisionTarget?.id ?? 0)
   const latestRevisionNote =
@@ -361,7 +365,10 @@ function PendingSubmissionsPage() {
 
   const doDecision = async (target: SubmissionResponse) => {
     const matrix = decisionMatrixQ.data
-    const directAccept = decisionForm.decision === 'accept' && decisionForm.accept_after_revision
+    const directAccept =
+      decisionForm.decision === 'accept' &&
+      decisionForm.accept_after_revision &&
+      canDirectAccept
     if (decisionForm.decision === 'accept' && !directAccept) {
       if (!matrix) {
         toast.error('互评进度还没读完，请稍等再试。')
@@ -771,7 +778,7 @@ function PendingSubmissionsPage() {
                 </div>
                 {decisionMatrixQ.data.accept_count < 1 && (
                   <p className="mt-2 text-xs text-amber-700">
-                    {isRevision
+                    {canDirectAccept
                       ? '本轮还没有新的通过推荐。作者已返修，主编核对修改后可勾选下方“返修稿直接录用”；否则继续等待互评或指定第三方复核。'
                       : '公开需要至少 1 名互评成员给出通过推荐。可继续等待意见，或确认作者已修回后再看；意见冲突时先指定第三方复核人。'}
                   </p>
@@ -809,7 +816,7 @@ function PendingSubmissionsPage() {
                 </SelectContent>
               </Select>
             </div>
-            {decisionForm.decision === 'accept' && isRevision && (
+            {decisionForm.decision === 'accept' && canDirectAccept && (
               <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-violet-300 bg-violet-500/5 p-3 dark:border-violet-800">
                 <input
                   type="checkbox"
