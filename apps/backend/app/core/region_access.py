@@ -76,6 +76,7 @@ _PUBLIC_MEDIA_PATTERNS = (
 _OVERSEAS_PATTERNS = (
     re.compile(r"^/api/catalog/\d+$"),
     re.compile(r"^/api/catalog/\d+/history$"),
+    re.compile(r"^/api/catalog/\d+/reviews$"),
     re.compile(r"^/api/catalog/\d+/img/[\w.-]+$"),
     re.compile(r"^/api/forum/topics/\d+$"),
     re.compile(r"^/api/forum/topics/\d+/replies$"),

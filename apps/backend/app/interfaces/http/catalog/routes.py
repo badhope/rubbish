@@ -61,6 +61,8 @@ from app.interfaces.http.catalog.ontology_routes import router as ontology_route
 from app.interfaces.http.catalog.schemas import (
     FacetBucket,
     IssueSummary,
+    PublicReviewItem,
+    PublicReviewResponse,
     ResourceCreate,
     ResourceFacets,
     ResourceHistoryResponse,
@@ -2428,6 +2430,112 @@ async def get_resource(
         # 互评/编辑端；普通读者不下发 breakdown / quartile。
         response.quality_breakdown = None
     return response
+
+
+@router.get("/{resource_id}/reviews", response_model=PublicReviewResponse)
+async def get_resource_public_reviews(
+    resource_id: int,
+    db: AsyncSession = Depends(get_db),
+) -> PublicReviewResponse:
+    """公开评审：已刊出文章的审稿意见与作者回复。
+
+    只下发 ``comments_to_author``、推荐结论和署名状态；``comments_to_editor``
+    与评分明细保持内部。审稿人未主动署名时只显示稳定匿名序号，历史报告
+    （迁移前默认匿名）不会被动公开身份。
+    """
+    tenant_id = require_tenant_id()
+    resource = (
+        await db.execute(
+            select(Resource).where(
+                Resource.id == resource_id,
+                Resource.tenant_id == tenant_id,
+            )
+        )
+    ).scalar_one_or_none()
+    if not is_public(resource):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
+    if resource.issue_id is not None:
+        issue_status = (
+            await db.execute(
+                select(Issue.status).where(
+                    Issue.id == resource.issue_id, Issue.tenant_id == tenant_id
+                )
+            )
+        ).scalar_one_or_none()
+        if issue_status != "live":
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resource not found")
+
+    from app.domain.review.models import ReviewAssignment, ReviewReport
+    from app.domain.submission.models import Submission
+
+    submissions = (
+        await db.execute(
+            select(
+                Submission.author_response,
+                Submission.author_response_at,
+            )
+            .where(
+                Submission.resource_id == resource_id,
+                Submission.tenant_id == tenant_id,
+            )
+            .order_by(Submission.id.desc())
+        )
+    ).all()
+    author_response = next((row[0] for row in submissions if row[0]), None)
+    author_response_at = next((row[1] for row in submissions if row[0]), None)
+
+    rows = (
+        await db.execute(
+            select(
+                ReviewReport,
+                ReviewAssignment.round,
+                ReviewAssignment.reviewer_id,
+                User.display_name,
+                User.username,
+            )
+            .join(ReviewAssignment, ReviewReport.assignment_id == ReviewAssignment.id)
+            .join(User, User.id == ReviewAssignment.reviewer_id)
+            .where(
+                ReviewAssignment.tenant_id == tenant_id,
+                ReviewReport.tenant_id == tenant_id,
+                ReviewAssignment.submission_id.in_(
+                    select(Submission.id).where(
+                        Submission.resource_id == resource_id,
+                        Submission.tenant_id == tenant_id,
+                    )
+                ),
+                ReviewAssignment.status == "completed",
+            )
+            .order_by(ReviewAssignment.round, ReviewReport.submitted_at, ReviewReport.id)
+        )
+    ).all()
+
+    reports: list[PublicReviewItem] = []
+    anonymous_index = 0
+    for report, round_no, _reviewer_id, display_name, username in rows:
+        if report.is_anonymous:
+            anonymous_index += 1
+            label = f"匿名审稿人 {anonymous_index}"
+        else:
+            label = display_name or username or "署名审稿人"
+        reports.append(
+            PublicReviewItem(
+                id=report.id,
+                round=round_no or 1,
+                recommendation=report.recommendation,
+                comments_to_author=report.comments_to_author,
+                reviewer_anonymous=report.is_anonymous,
+                reviewer_label=label,
+                submitted_at=report.submitted_at,
+            )
+        )
+
+    return PublicReviewResponse(
+        resource_id=resource_id,
+        reports=reports,
+        author_response=author_response,
+        author_response_at=author_response_at,
+    )
 
 
 @router.post("", response_model=ResourceResponse, status_code=status.HTTP_201_CREATED)

@@ -856,6 +856,8 @@ export interface ReviewSubmit {
   scores: Record<string, unknown>
   comments_to_editor?: string | null
   comments_to_author?: string | null
+  /** 默认匿名；false 时文章页公开审稿人显示名。 */
+  is_anonymous?: boolean
   special_issue?: boolean
   special_issue_reason?: string | null
 }
@@ -874,6 +876,9 @@ export interface ReviewReportResponse {
   scores: Record<string, unknown>
   comments_to_editor?: string | null
   comments_to_author?: string | null
+  /** 公开署名选择与展示名；作者/公开接口按此裁剪。 */
+  is_anonymous?: boolean
+  reviewer_display_name?: string | null
   /** 审稿人身份：编辑可见，作者/审稿人接口会裁剪为 undefined */
   reviewer_id?: number | null
   reviewer_username?: string | null
@@ -1492,6 +1497,24 @@ export interface ResourceHistory {
   events: ResourcePublicEvent[]
   versions: { version: number; note: string | null; created_at: string }[]
   retracted: boolean
+}
+
+/** 文章页公开评审：只含作者可见评论与推荐结论。 */
+export interface PublicReviewItem {
+  id: number
+  round: number
+  recommendation: Recommendation
+  comments_to_author: string | null
+  reviewer_anonymous: boolean
+  reviewer_label: string
+  submitted_at: string
+}
+
+export interface PublicReviewResponse {
+  resource_id: number
+  reports: PublicReviewItem[]
+  author_response: string | null
+  author_response_at: string | null
 }
 
 // --- Role applications (reviewer / senior reviewer) ---

@@ -215,6 +215,7 @@ export function ReviewAssignments() {
     // 旧草稿没有 suggestion 字段：补齐默认值，避免 value.suggestion.trim() 崩。
     setReviewForm({
       ...loaded,
+      is_anonymous: loaded.is_anonymous ?? true,
       dimensions: mergeDimensionReviews(loaded.track, loaded.dimensions),
     })
     draftAppliedRef.current = reviewTargetId
@@ -269,6 +270,7 @@ export function ReviewAssignments() {
       },
       comments_to_editor: reviewForm.comments_to_editor || undefined,
       comments_to_author: reviewForm.comments_to_author || undefined,
+      is_anonymous: reviewForm.is_anonymous,
       special_issue: reviewForm.special_issue || undefined,
       special_issue_reason: reviewForm.special_issue
         ? reviewForm.special_issue_reason || '互评成员确认篇幅例外'
@@ -839,7 +841,7 @@ function SubmissionDetailDialog({
         <DialogHeader>
           <DialogTitle>作品详情</DialogTitle>
           <DialogDescription>
-            完整作品元数据；单盲模式下您的身份对作者保密。
+            完整作品元数据；审稿默认匿名，提交时可自行决定是否公开署名。
           </DialogDescription>
         </DialogHeader>
         {isLoading ? (

@@ -58,6 +58,7 @@ import {
 import { ManuscriptView, type TocEntry } from '@/components/common/manuscript-view'
 import PdfImagePreview from '@/components/pdf-image-preview'
 import { ArticleEngagement } from '@/components/catalog/article-engagement'
+import { PublicReviewCard } from '@/components/catalog/public-review'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
@@ -680,6 +681,10 @@ function CatalogDetailPage() {
           )}
 
           <DeclarationsCard data={data} />
+          <PublicReviewCard
+            resourceId={id}
+            enabled={data.publication_status === 'published' && !historyQ.data?.retracted}
+          />
           {historyQ.isLoading ? (
             <Card aria-hidden>
               <CardHeader>

@@ -539,10 +539,10 @@ async def list_submissions(
 
 
 async def _ensure_accept_gate(db: AsyncSession, entry: Submission) -> None:
-    """通过闸门：免审留痕，或当前轮 ≥2 名不同互评成员给出通过推荐。
+    """通过闸门：免审留痕，或当前轮 ≥1 名互评成员给出通过推荐。
 
-    ``/decision`` 与遗留 ``/review`` 别名共用此闸门，确保任何通过路径
-    都不能绕过同行评审。意见冲突（通过 vs 不通过/退回修改）须先经第三方裁决。
+    一位完成互评的成员即可支持公开；是否有多位审稿人取决于实际分派，
+    不再是硬性门槛。意见冲突（通过 vs 不通过/退回修改）仍须先经第三方裁决。
     不满足时抛 ``HTTPException(409)``；已 waive-review 的作品直接放行。
     """
     if entry.review_waived_at:
@@ -577,16 +577,16 @@ async def _ensure_accept_gate(db: AsyncSession, entry: Submission) -> None:
     adjudicator_accept = any(rec == "accept" and bool(adj) for _rid, adj, rec in rows)
     completed_reviews = len(rows)
 
-    if len(accept_ids) < 2:
+    if len(accept_ids) < 1:
         _code = "no_completed_reviews" if completed_reviews == 0 else "insufficient_accept_reviews"
         _message = (
             "该作品尚无已完成的互评意见，不能直接通过。"
             "请先分配互评成员并等待意见返回；如确需免互评通过，请先调用 waive-review 记录理由。"
             if completed_reviews == 0
             else (
-                f"公开需要至少 2 名不同互评成员给出通过推荐，当前只有 "
-                f"{len(accept_ids)} 名（已完成报告 {completed_reviews} 份）。"
-                "请继续互评，或在意见冲突时指定第三方复核人。"
+                "公开需要至少 1 名互评成员给出通过推荐，当前还没有通过推荐。"
+                f"（已完成报告 {completed_reviews} 份，结论可能是大改/不通过或尚未填写。）"
+                "如意见冲突，请先指定第三方复核人。"
             )
         )
         raise HTTPException(
@@ -628,7 +628,7 @@ async def review_submission(
 
     历史上此端点允许 admin 零互评直接 approved，绕过整个评审环节。
     现与 ``/decision`` 共用 ``_ensure_accept_gate``：approved 必须满足
-    ≥2 名通过互评成员或已 waive-review。新代码请用 ``PATCH /{id}/decision``。
+    ≥1 名通过互评成员或已 waive-review。新代码请用 ``PATCH /{id}/decision``。
     Terminal: once reviewed, a submission cannot be re-reviewed.
     """
     entry = await _get_or_404(db, submission_id, lock=True)
@@ -1006,12 +1006,12 @@ async def list_review_reports(
     """列出 submission 的所有互评报告。
 
     - 编辑（admin/editor）：看完整报告（含 editor-only comments）
-    - 作者：只看 comments_to_author（单盲：不暴露互评成员身份）
+    - 作者：只看 comments_to_author；审稿人默认匿名，主动署名时才给显示名
     - 互评成员自己：看自己的报告
     """
     entry = await _get_or_404(db, submission_id)
-    # 单盲：编辑（admin 或有 editor 角色）看完整报告；
-    # 作者只看 comments_to_author；被指派互评成员可看自己评审的作品报告
+    # 编辑（admin 或有 editor 角色）看完整报告；
+    # 作者只看 comments_to_author + 署名选择；被指派互评成员可看自己评审的作品报告
     # （含自己写的 editor-only comments）。无上述身份者 403。
     is_editor = current_user.is_admin or await user_has_role(db, current_user, ROLE_EDITOR)
     is_author = entry.submitted_by == current_user.id
@@ -1039,6 +1039,7 @@ async def list_review_reports(
                 ReviewReport,
                 ReviewAssignment.reviewer_id,
                 User.username,
+                User.display_name,
                 ReviewAssignment.round,
                 ReviewAssignment.status,
             )
@@ -1056,7 +1057,14 @@ async def list_review_reports(
     ).all()
 
     out: list[ReviewReportResponse] = []
-    for r, reviewer_id, reviewer_username, assignment_round, assignment_status in rows:
+    for (
+        r,
+        reviewer_id,
+        reviewer_username,
+        reviewer_display_name,
+        assignment_round,
+        assignment_status,
+    ) in rows:
         # 互评成员（非编辑非作者）：只能看**自己**那一份报告。
         # 修复前的代码让任何有 assignment 的人落进 else 分支，把该作品全部
         # 已完成报告的 comments_to_editor（编辑机密）原样返回——甚至包括
@@ -1064,7 +1072,7 @@ async def list_review_reports(
         if is_reviewer and not is_editor and not is_author:
             if reviewer_id != current_user.id:
                 continue
-        # 作者：剥离 editor-only comments
+        # 作者：剥离 editor-only comments；只有审稿人主动署名时才给显示名。
         if is_author:
             out.append(
                 ReviewReportResponse(
@@ -1074,6 +1082,10 @@ async def list_review_reports(
                     scores=r.scores,
                     comments_to_editor=None,
                     comments_to_author=r.comments_to_author,
+                    is_anonymous=r.is_anonymous,
+                    reviewer_display_name=(
+                        None if r.is_anonymous else (reviewer_display_name or reviewer_username)
+                    ),
                     round=assignment_round or 1,
                     assignment_status=assignment_status,
                     submitted_at=r.submitted_at,
@@ -1088,9 +1100,11 @@ async def list_review_reports(
                     scores=r.scores,
                     comments_to_editor=r.comments_to_editor,
                     comments_to_author=r.comments_to_author,
+                    is_anonymous=r.is_anonymous,
                     attachments=r.attachments or [],
                     reviewer_id=reviewer_id,
                     reviewer_username=reviewer_username,
+                    reviewer_display_name=reviewer_display_name,
                     round=assignment_round or 1,
                     assignment_status=assignment_status,
                     submitted_at=r.submitted_at,
@@ -1265,10 +1279,10 @@ async def editor_decision(
     elif decision == "rejected":
         decision = "reject"
 
-    # 通过闸门（与遗留 /review 别名共用 _ensure_accept_gate）：至少 2 名
-    # 不同互评成员提交"通过"推荐才允许 accept；只有 1 份、或通过 vs 不通过/退回修改
-    # 冲突时须先经第三方裁决。desk accept 是需明确声明的例外——先走
-    # POST /{id}/waive-review 记录理由与审计，再裁决。详见 helper docstring。
+    # 通过闸门（与遗留 /review 别名共用 _ensure_accept_gate）：至少 1 名
+    # 互评成员提交"通过"推荐即可 accept；多位审稿人不是硬性要求。若通过
+    # 与不通过/退回修改冲突，仍须先经第三方裁决。desk accept 是需明确声明
+    # 的例外——先走 POST /{id}/waive-review 记录理由与审计，再裁决。
     if decision == "accept":
         await _ensure_accept_gate(db, entry)
 

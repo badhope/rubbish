@@ -218,7 +218,7 @@ const EMPTY_DECISION: DecisionFormState = {
   arbitration_note: '',
 }
 
-// 决策按钮只按作品状态开关；真正的“≥2 位互评成员通过”闸门由矩阵弹窗
+// 决策按钮只按作品状态开关；真正的“≥1 位互评成员通过 / 冲突须复核”闸门由矩阵弹窗
 // 展示、由后端复核端点强制。此前用列表里的 reports_completed 判断，
 // 但该字段后端从未返回，按钮永远是灰的——内容整理根本点不开决定。
 function canOpenDecision(s: SubmissionResponse): boolean {
@@ -318,9 +318,9 @@ function PendingSubmissionsPage() {
         toast.error('互评进度还没读完，请稍等再试。')
         return
       }
-      if (matrix.accept_count < 2) {
+      if (matrix.accept_count < 1) {
         toast.error(
-          `公开需要至少 2 名互评成员给出通过推荐，当前 ${matrix.accept_count}/2。`,
+          `公开需要至少 1 名互评成员给出通过推荐，当前还没有通过推荐。`,
         )
         return
       }
@@ -656,12 +656,12 @@ function PendingSubmissionsPage() {
                   </Badge>
                   <Badge
                     className={
-                      decisionMatrixQ.data.accept_count >= 2
+                      decisionMatrixQ.data.accept_count >= 1
                         ? 'bg-emerald-500/15 text-emerald-700'
                         : 'bg-amber-500/15 text-amber-700'
                     }
                   >
-                    通过推荐 {decisionMatrixQ.data.accept_count}/2
+                    通过推荐 {decisionMatrixQ.data.accept_count} 份
                   </Badge>
                   {decisionMatrixQ.data.conflict && (
                     <Badge className="bg-amber-500/15 text-amber-700">
@@ -674,9 +674,9 @@ function PendingSubmissionsPage() {
                     </Badge>
                   )}
                 </div>
-                {decisionMatrixQ.data.accept_count < 2 && (
+                {decisionMatrixQ.data.accept_count < 1 && (
                   <p className="mt-2 text-xs text-amber-700">
-                    公开前需要至少 2 名不同互评成员给出通过推荐。可继续互评，或在意见冲突时指定第三方复核人。
+                    公开需要至少 1 名互评成员给出通过推荐。可继续等待意见，或确认作者已修回后再看；意见冲突时先指定第三方复核人。
                   </p>
                 )}
               </div>
@@ -1308,12 +1308,12 @@ function AssignmentsDialog({
                   </Badge>
                   <Badge
                     className={
-                      matrixQ.data.accept_count >= 2
+                      matrixQ.data.accept_count >= 1
                         ? 'bg-emerald-500/15 text-emerald-700'
                         : 'bg-amber-500/15 text-amber-700'
                     }
                   >
-                    通过推荐 {matrixQ.data.accept_count}/2
+                    通过推荐 {matrixQ.data.accept_count} 份
                   </Badge>
                   {matrixQ.data.conflict && (
                     <Badge className="bg-amber-500/15 text-amber-700">意见冲突</Badge>
@@ -1457,7 +1457,7 @@ function AdjudicateDialog({
         </DialogHeader>
         <div className="space-y-3">
           <p className="text-xs text-muted-foreground">
-            当前已有 {matrix.distinct_reviewers} 位互评成员提交意见，通过推荐 {matrix.accept_count}/2。
+            当前已有 {matrix.distinct_reviewers} 位互评成员提交意见，通过推荐 {matrix.accept_count} 份。
             复核人不能是本篇已参与互评的成员，也不能是作者。
           </p>
           <div className="max-h-[35vh] space-y-1 overflow-y-auto">

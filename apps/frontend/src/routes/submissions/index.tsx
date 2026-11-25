@@ -917,14 +917,14 @@ function SubmissionsPage() {
                   ) : null}
                 </div>
               ) : null}
-              {/* 互评意见（单盲：作者只可见 comments_to_author，互评成员身份保密） */}
+              {/* 互评意见：作者可见 comments_to_author；审稿人默认匿名，可主动署名 */}
               {reportsQ.data && reportsQ.data.length > 0 && (
                 <div className="rounded-md border p-3">
                   <div className="mb-2 flex items-center gap-2">
                     <FileText className="h-4 w-4" />
                     <span className="font-medium">互评意见</span>
                     <span className="text-xs text-muted-foreground">
-                      （互评成员身份不公开）
+                      （默认匿名，审稿人可主动署名）
                     </span>
                   </div>
                   <div className="space-y-2">
@@ -935,6 +935,11 @@ function SubmissionsPage() {
                       >
                         <div className="mb-1 flex flex-wrap items-center gap-2">
                           <Badge variant="outline">第 {r.round ?? 1} 轮</Badge>
+                          {r.is_anonymous === false && r.reviewer_display_name ? (
+                            <Badge variant="secondary">署名：{r.reviewer_display_name}</Badge>
+                          ) : (
+                            <Badge variant="outline">匿名审稿人</Badge>
+                          )}
                           {r.assignment_status === 'cancelled' ? (
                             <Badge variant="secondary">历史</Badge>
                           ) : null}
@@ -979,7 +984,7 @@ function SubmissionsPage() {
                       <FileText className="h-4 w-4" />
                       <span className="font-medium">回复互评</span>
                       <span className="text-xs text-muted-foreground">
-                        逐条回应互评意见，随作品保存给内容整理查看
+                        逐条回应互评意见；保存后随文章公开，读者会在评审区看到
                       </span>
                     </div>
                     <Textarea

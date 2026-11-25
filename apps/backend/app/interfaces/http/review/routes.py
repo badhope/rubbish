@@ -681,6 +681,7 @@ def _report_response(report: ReviewReport) -> ReviewReportResponse:
         scores=report.scores,
         comments_to_editor=report.comments_to_editor,
         comments_to_author=report.comments_to_author,
+        is_anonymous=report.is_anonymous,
         attachments=report.attachments or [],
         submitted_at=report.submitted_at,
     )
@@ -727,6 +728,7 @@ async def submit_review_report(
         scores=normalized_scores,
         comments_to_editor=body.comments_to_editor,
         comments_to_author=body.comments_to_author,
+        is_anonymous=body.is_anonymous,
     )
     db.add(report)
     # 特别篇许可：互评成员在提交报告时可显式打标。只授予 true；撤标由编辑部
@@ -1152,7 +1154,7 @@ async def review_matrix(
         "accept_count": accept_count,
         "reject_count": reject_count,
         "major_revision_count": major_count,
-        "can_decide": accept_count >= 2 and (not conflict or adjudicator_accepted),
+        "can_decide": accept_count >= 1 and (not conflict or adjudicator_accepted),
         "conflict": conflict,
         "need_adjudication": need_adjudication,
         "adjudicator_assigned": bool(adjudicator_rows),

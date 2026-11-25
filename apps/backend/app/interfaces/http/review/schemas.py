@@ -68,6 +68,8 @@ class ReviewSubmit(BaseModel):
     scores: dict[str, Any] = Field(default_factory=dict)
     comments_to_editor: str | None = Field(default=None, max_length=20000)
     comments_to_author: str | None = Field(default=None, max_length=20000)
+    # 公开评审署名选择：默认匿名；false 时文章页展示审稿人显示名。
+    is_anonymous: bool = True
     # 互评端「特别篇」特许标记：普通作品不得超篇幅上限；勾选即视为
     # 互评成员建议/确认特许，落库到资源并显示显式标签。理由单独留痕。
     special_issue: bool = False
@@ -82,11 +84,14 @@ class ReviewReportResponse(BaseModel):
     recommendation: Recommendation
     scores: dict[str, Any]
     comments_to_editor: str | None = None
-    # 单盲模式：作者只看作者评论 + 推荐，看不到互评成员身份 + editor-only 评论
+    # 作者/读者只看作者评论 + 推荐，看不到 editor-only 评论
     comments_to_author: str | None = None
-    # 互评成员身份：仅编辑可见（单盲对作者隐藏，接口按调用者裁剪）。
+    # 公开评审署名选择；历史报告默认匿名。
+    is_anonymous: bool = True
+    # 互评成员身份：编辑可见；作者只有在审稿人主动署名时才看到显示名。
     reviewer_id: int | None = None
     reviewer_username: str | None = None
+    reviewer_display_name: str | None = None
     # 互评附件元数据：filename / path / content_type / size。
     attachments: list[dict[str, Any]] = Field(default_factory=list)
     # 第几轮互评。退回/重投后旧报告仍保留，编辑按轮次分组查看。

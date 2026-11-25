@@ -47,6 +47,7 @@ export interface ReviewFormValue {
   dimensions: DimensionReviews
   comments_to_editor: string
   comments_to_author: string
+  is_anonymous: boolean
   special_issue: boolean
   special_issue_reason: string
 }
@@ -89,6 +90,7 @@ export const EMPTY_REVIEW_FORM: ReviewFormValue = {
   dimensions: emptyDimensionReviews('academic'),
   comments_to_editor: '',
   comments_to_author: '',
+  is_anonymous: true,
   special_issue: false,
   special_issue_reason: '',
 }
@@ -238,7 +240,7 @@ export function ReviewReportFields({
           <li>有没有伦理、引用真实性或数据可信度的硬伤？</li>
         </ul>
         <p className="mt-1.5 text-[11px] text-sky-800/80 dark:text-sky-200/70">
-          单盲：作者看不到你的身份；但「给作者的意见」会原文展示，请只写可以公开的评语。
+          默认匿名：作者与读者只看到「匿名审稿人」；只有取消下方匿名勾选才公开你的显示名。「给作者的意见」会原文展示，请只写可以公开的评语。
         </p>
       </div>
 
@@ -353,6 +355,26 @@ export function ReviewReportFields({
         minRecommended={200}
         disabled={disabled}
       />
+
+      <div className="rounded-lg border bg-muted/20 p-3">
+        <label className="flex cursor-pointer items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            className="mt-1 h-4 w-4 accent-primary"
+            checked={value.is_anonymous}
+            onChange={(e) => onChange({ ...value, is_anonymous: e.target.checked })}
+            disabled={disabled}
+          />
+          <span>
+            <strong>匿名公开这条审稿意见（默认）</strong>
+            <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">
+              文章刊出后，「给作者的意见」与推荐结论会在文章页公开。保持勾选时只显示
+              「匿名审稿人 N」；取消勾选则同时展示你的显示名。给编辑的内部意见与评分明细
+              永不公开。
+            </span>
+          </span>
+        </label>
+      </div>
 
       <ReviewFieldDivider />
 

@@ -11,9 +11,9 @@ Tables:
   comments to author. One report per assignment (1:1).
 
 Tenant-scoped with RLS, mirroring the catalog/submission strategy.
-Single-blind by default: reviewer identity visible to editors but not
-to authors. (Double-blind is a future tenant setting; for now we keep
-the data model identity-bearing to keep the MVP simple.)
+Reviewer identity is hidden by default; a reviewer may opt in to public
+attribution when submitting. Named reports are shown on the published
+article page alongside the author's response.
 """
 
 from __future__ import annotations
@@ -162,8 +162,11 @@ class ReviewReport(Base, TenantScopedMixin):
     ``scores``: structured JSON of per-criterion scores (e.g. originality,
     methodology, clarity, significance, each on 1-5 scale).
     ``comments_to_editor``: confidential comments visible to editor only.
-    ``comments_to_author``: comments visible to author (single-blind:
-    author sees these but not reviewer identity).
+    ``comments_to_author``: comments visible to author, and after publication
+    also shown on the public article page.
+    ``is_anonymous``: reviewer's choice for public display. Defaults to true
+    so historical reports (written under the old single-blind assumption) are
+    never named publicly without consent.
     """
 
     __tablename__ = "review_reports"
@@ -180,6 +183,11 @@ class ReviewReport(Base, TenantScopedMixin):
     scores: Mapped[dict[str, Any]] = mapped_column(JSONBVariant, nullable=False, default=dict)
     comments_to_editor: Mapped[str | None] = mapped_column(Text, nullable=True)
     comments_to_author: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # 公开评审时的署名选择：true=匿名（默认，兼容旧单盲数据），
+    # false=文章页展示审稿人显示名。
+    is_anonymous: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default="true"
+    )
     # 互评报告附件（主要是带批注的 PDF/Word/图片）。存元数据数组而不是
     # 单列：一个互评成员可能同时交“批注版 PDF + 补充数据表”。
     attachments: Mapped[list[dict[str, Any]]] = mapped_column(

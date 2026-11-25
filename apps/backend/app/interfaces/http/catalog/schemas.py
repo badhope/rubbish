@@ -563,6 +563,26 @@ class ResourceHistoryResponse(BaseModel):
     retracted: bool = False
 
 
+class PublicReviewItem(BaseModel):
+    """一条公开的审稿意见：只含作者可见评论、推荐结论与署名状态。"""
+
+    id: int
+    round: int = 1
+    recommendation: str
+    comments_to_author: str | None = None
+    reviewer_anonymous: bool = True
+    # 匿名时由后端生成稳定序号（匿名审稿人 1/2…）；署名时是显示名。
+    reviewer_label: str
+    submitted_at: datetime
+
+
+class PublicReviewResponse(BaseModel):
+    resource_id: int
+    reports: list[PublicReviewItem] = Field(default_factory=list)
+    author_response: str | None = None
+    author_response_at: datetime | None = None
+
+
 __all__ = [
     "AuthorMeta",
     "EssayGenre",
@@ -570,6 +590,8 @@ __all__ = [
     "IssueSummary",
     "JournalMetrics",
     "PaginationMeta",
+    "PublicReviewItem",
+    "PublicReviewResponse",
     "PublicationStatus",
     "ResourceBase",
     "ResourceCreate",

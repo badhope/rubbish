@@ -165,45 +165,40 @@ async def register_reviewer(
 async def complete_one_review(
     client: AsyncClient, admin: dict, submission_id: int, *, reviewer_name: str = "reviewer"
 ) -> None:
-    """Drive a submission through one full review so it becomes decidable.
+    """Drive a submission through one review report so it becomes decidable.
 
-    通过现在要求至少一份已完成的互评意见（见
-    ``routes_editor.decide_submission`` 的 no_completed_reviews 分支）。
-    此前测试都用"发布→直接 accept"两步走，靠的正是那个缺陷；现在需要
-    真正走一遍分配→接受→提交报告。
+    公开闸门现在只要求至少 1 名互评成员给出通过推荐；helper 默认只跑
+    一份意见。需要多人场景的测试用 ``complete_two_reviews`` 追加第二位。
 
     互评成员按 ``reviewer_name`` 区分，避免同一测试里多次调用撞
     (submission_id, reviewer_id) 唯一约束。
     """
-    # 发表闸门要求至少 2 名不同互评成员给出 accept；helper 名字保留历史，
-    # 但实际跑满两份独立意见，避免测试继续依赖“单人通过”的旧漏洞。
-    for i in range(2):
-        reviewer = await register_reviewer(
-            client,
-            admin,
-            f"{reviewer_name}_{submission_id}_{i}",
-            f"{reviewer_name}{submission_id}_{i}@example.com",
-        )
-        assign = await client.post(
-            f"/api/submissions/{submission_id}/assignments",
-            json={"reviewer_id": reviewer["user_id"]},
-            headers={"Authorization": f"Bearer {admin['token']}"},
-        )
-        assign.raise_for_status()
-        assignment_id = assign.json()["id"]
-        hdr = {"Authorization": f"Bearer {reviewer['token']}"}
-        accept = await client.post(f"/api/review/assignments/{assignment_id}/accept", headers=hdr)
-        accept.raise_for_status()
-        report = await client.post(
-            f"/api/review/assignments/{assignment_id}/submit",
-            json={
-                "recommendation": "accept",
-                "scores": review_scores(88),
-                "comments_to_author": "Sound work, ready for publication.",
-            },
-            headers=hdr,
-        )
-        report.raise_for_status()
+    reviewer = await register_reviewer(
+        client,
+        admin,
+        f"{reviewer_name}_{submission_id}",
+        f"{reviewer_name}{submission_id}@example.com",
+    )
+    assign = await client.post(
+        f"/api/submissions/{submission_id}/assignments",
+        json={"reviewer_id": reviewer["user_id"]},
+        headers={"Authorization": f"Bearer {admin['token']}"},
+    )
+    assign.raise_for_status()
+    assignment_id = assign.json()["id"]
+    hdr = {"Authorization": f"Bearer {reviewer['token']}"}
+    accept = await client.post(f"/api/review/assignments/{assignment_id}/accept", headers=hdr)
+    accept.raise_for_status()
+    report = await client.post(
+        f"/api/review/assignments/{assignment_id}/submit",
+        json={
+            "recommendation": "accept",
+            "scores": review_scores(88),
+            "comments_to_author": "Sound work, ready for publication.",
+        },
+        headers=hdr,
+    )
+    report.raise_for_status()
 
 
 async def register_user(
@@ -382,6 +377,6 @@ async def fake_email_sender() -> AsyncGenerator[FakeEmailSender, None]:
 
 
 async def complete_two_reviews(client: AsyncClient, admin: dict, submission_id: int) -> None:
-    """两位不同互评成员都给出通过意见：发表闸门的正常路径。"""
+    """两位不同互评成员都给出通过意见：多人分派的正常路径（非硬门槛）。"""
     await complete_one_review(client, admin, submission_id, reviewer_name="reviewer_a")
     await complete_one_review(client, admin, submission_id, reviewer_name="reviewer_b")

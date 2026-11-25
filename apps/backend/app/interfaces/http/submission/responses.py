@@ -156,7 +156,7 @@ async def _review_stats_for_submissions(
             "conflict": conflict,
             "adjudicator_assigned": bool(adj_rows),
             "adjudicator_accepted": adj_accept,
-            "can_decide": len(accept_ids) >= 2 and (not conflict or adj_accept),
+            "can_decide": len(accept_ids) >= 1 and (not conflict or adj_accept),
         }
     return out
 

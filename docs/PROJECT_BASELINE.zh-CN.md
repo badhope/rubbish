@@ -1,6 +1,6 @@
 # Rubbish 项目基线
 
-> 版本：1.19.58
+> 版本：1.19.59
 > 更新：2026-11-25  
 > 仓库：`/home/user/work/rubbish-src`，主分支 `main`  
 > 生产入口：`https://rubbish.argjiemi.cn`
@@ -17,10 +17,10 @@ Rubbish 是自托管的公开写作与主题交流社区。长文进入内容库
 
 | 项目 | 状态 |
 |---|---|
-| 服务 | `rubbish-app.service`，监听 `127.0.0.1:8080`；健康接口确认 `1.19.58` |
+| 服务 | `rubbish-app.service`，监听 `127.0.0.1:8080`；健康接口确认 `1.19.59` |
 | 应用目录 | `/opt/rubbish-app` |
 | 静态目录 | `/opt/rubbish-app/static` |
-| 数据库 | Docker 容器 `rubbish-db-1`，库名 `rubbish`；迁移已到 `073_infra_hardening`（1.19.56 调度器选主、全局限流、发布 digest、上传病毒扫描） |
+| 数据库 | Docker 容器 `rubbish-db-1`，库名 `rubbish`；迁移已到 `074_public_reviews`（1.19.59 公开评审署名列；前置 `073_infra_hardening`） |
 | 访问策略 | 中国大陆及港澳台匿名只看封面；海外匿名只读文章与主题论坛；写操作需登录 |
 | 注册 | 邮箱验证码 + 读者群邀请码 |
 | 内容 | 263 篇已公开作品，正文、标题、分类、图源与文献说明已完成四轮机器核查 |
@@ -50,6 +50,7 @@ Rubbish 是自托管的公开写作与主题交流社区。长文进入内容库
 - 前端：React、TypeScript、TanStack Router、Vite。
 - 论坛审核迁移：`070_forum_moderation_pipeline`。
 - 基础设施迁移：`073_infra_hardening`（扫描字段、发布 digest 两张表与 RLS、索引）。
+- 公开评审迁移：`074_public_reviews`（`review_reports.is_anonymous`，默认 true 保留历史匿名）。
 - 调度器：release / workflow 各持一条 PostgreSQL advisory lock 选主；后台健康显示 leader、竞选次数与等待选主状态。
 - 限流：生产 Redis 7.0.15 共享桶；Redis 不可用时进程内计数兜底，健康页标 warn。
 - 上传安全：ClamAV 1.5.4，`clamdscan` 守护进程扫描；历史文件由 `virus_scan` job 每轮 5+5 回填，早期转档后已删除原件的记录标 `missing` 并停止重试，感染文件下载统一 451。
@@ -112,7 +113,7 @@ Rubbish 是自托管的公开写作与主题交流社区。长文进入内容库
 ### P0：上线与稳定性
 
 - [x] 生产执行 `070_forum_moderation_pipeline`，保留迁移前数据库备份与回滚路径。
-- [x] 部署后端与前端静态资源，健康接口确认版本 `1.19.58`。
+- [x] 部署后端与前端静态资源，健康接口确认版本 `1.19.59`。
 - [x] 生产验收：自动公开、人工队列、批量处置、作者通知、作者编辑重审、前台状态提示、运营快捷面板。
 - [ ] 生产压力与故障演练：规则引擎吞吐、连续提交、批量处置、数据库锁与进程重启恢复。
 

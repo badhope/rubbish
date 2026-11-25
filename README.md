@@ -88,7 +88,7 @@ Mobile theme forum, same data and actions:
 
 ![Mobile theme forum](docs/screenshots/forum-mobile.png)
 
-The queue screenshot uses a temporary demo topic; it was deleted right after capture. The rest are live production UI at 1.19.58.
+The queue screenshot uses a temporary demo topic; it was deleted right after capture. The rest are live production UI from the current release.
 
 ## Project layout
 

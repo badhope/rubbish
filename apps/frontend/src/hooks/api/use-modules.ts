@@ -30,6 +30,7 @@ import type {
   ParseRequest,
   ParseResponse,
   PublicExpertiseResponse,
+  PublicReviewResponse,
   ReleaseIssueSummary,
   ReleaseManifest,
   QualityRubric,
@@ -187,6 +188,15 @@ export function useResource(id: number) {
     // 阅读/下载/收藏计数由服务端实时累计：文章页停留时每 60 秒轻量刷新，
     // 不要求用户手动刷新页面才能看到最新数字。
     refetchInterval: 60_000,
+  })
+}
+
+export function usePublicReviews(id: number, enabled = true) {
+  return useQuery<PublicReviewResponse>({
+    queryKey: ['catalog', 'reviews', id],
+    queryFn: async () => (await api.get<PublicReviewResponse>(`/catalog/${id}/reviews`)).data,
+    enabled: id > 0 && enabled,
+    staleTime: 60_000,
   })
 }
 
@@ -1174,7 +1184,7 @@ export async function downloadSubmissionVersion(
   }
 }
 
-// 审稿报告列表（单盲：作者只看 comments_to_author）
+// 审稿报告列表（作者只看 comments_to_author + 审稿人署名选择）
 export function useSubmissionReports(id: number) {
   return useQuery<ReviewReportResponse[]>({
     queryKey: keys.submission.reports(id),

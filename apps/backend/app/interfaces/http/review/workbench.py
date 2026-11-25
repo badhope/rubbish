@@ -392,14 +392,14 @@ async def editor_workbench(
             bucket["is_overdue"] = has_overdue
             # 拒审/撤销后没有任何在途互评成员：必须回到「待指派」，并明确
             # 告诉主编是改派还是补派，而不是继续挂在「评审中/未交」。
-            if not active and len(distinct_done) < 2:
+            if not active and len(distinct_done) < 1:
                 bucket["needs_reassign"] = True
                 bucket["reassign_reason"] = (
                     "互评成员拒绝了，换一位" if declined else "还没人接，补一位"
                 )
                 to_assign.append(bucket)
                 continue
-            if len(distinct_done) >= 2:
+            if len(distinct_done) >= 1:
                 recs = [
                     {
                         "reviewer_id": a.reviewer_id,
