@@ -34,6 +34,7 @@ import {
   useUpdateResource,
 } from '@/hooks/api/use-modules'
 import { api } from '@/lib/api'
+import { downloadCatalogArtifact } from '@/lib/catalog-download'
 import type {
   AuthorDetail,
   ResourceHistory,
@@ -344,11 +345,20 @@ function CatalogDetailPage() {
                     <span className="truncate">PDF 版式预览</span>
                   </Button>
                   {isAuthenticated && (
-                    <Button asChild variant="outline" size="sm" className="min-w-0">
-                      <a href={`/api/catalog/${id}/export?format=pdf&v=27`} download>
-                        <FileDown className="h-4 w-4 shrink-0" />
-                        <span className="truncate">下载 PDF</span>
-                      </a>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="min-w-0"
+                      onClick={() => {
+                        void downloadCatalogArtifact({
+                          resourceId: id,
+                          format: 'pdf',
+                          title: data.title,
+                        })
+                      }}
+                    >
+                      <FileDown className="h-4 w-4 shrink-0" />
+                      <span className="truncate">下载 PDF</span>
                     </Button>
                   )}
                 </div>
@@ -418,7 +428,7 @@ function CatalogDetailPage() {
 
           {/* 正文：ManuscriptView 内联渲染，window 原生滚动 */}
           {manuscriptError ? (
-            <ScannedPdfFallback resourceId={id} hasFile={Boolean(data.has_file)} />
+            <ScannedPdfFallback resourceId={id} hasFile={Boolean(data.has_file)} title={data.title} />
           ) : (
             <ManuscriptView
               resourceId={id}
@@ -560,19 +570,37 @@ function CatalogDetailPage() {
                 <CardTitle className="text-sm">下载</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button asChild variant="outline" size="sm" className="w-full">
-                  <a href={`/api/catalog/${id}/export?format=docx&v=27`} download>
-                    <FileDown className="h-4 w-4" />
-                    Word 文档（.docx）
-                  </a>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => {
+                    void downloadCatalogArtifact({
+                      resourceId: id,
+                      format: 'docx',
+                      title: data.title,
+                    })
+                  }}
+                >
+                  <FileDown className="h-4 w-4" />
+                  Word 文档（.docx）
                 </Button>
                 {isPaperTrack && (
                   <>
-                    <Button asChild variant="outline" size="sm" className="w-full">
-                      <a href={`/api/catalog/${id}/export?format=pdf&v=27`} download>
-                        <FileDown className="h-4 w-4" />
-                        排版 PDF
-                      </a>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => {
+                        void downloadCatalogArtifact({
+                          resourceId: id,
+                          format: 'pdf',
+                          title: data.title,
+                        })
+                      }}
+                    >
+                      <FileDown className="h-4 w-4" />
+                      排版 PDF
                     </Button>
                     <Button
                       variant="outline"
@@ -749,6 +777,7 @@ function CatalogDetailPage() {
       {isMobile && (
         <MobileDetailActions
           resourceId={id}
+          title={data.title}
           isAdmin={isAdmin}
           hasFile={Boolean(data.has_file)}
           externalUrl={data.external_url}
@@ -926,7 +955,15 @@ function PublicEventDialog({
 }
 
 // 扫描版 PDF 兜底卡：manuscript 409/needs_docx 时显示，禁止 pdf.js 回退。
-function ScannedPdfFallback({ resourceId, hasFile }: { resourceId: number; hasFile: boolean }) {
+function ScannedPdfFallback({
+  resourceId,
+  hasFile,
+  title,
+}: {
+  resourceId: number
+  hasFile: boolean
+  title?: string
+}) {
   return (
     <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/20">
       <CardContent className="py-6 text-center">
@@ -935,11 +972,20 @@ function ScannedPdfFallback({ resourceId, hasFile }: { resourceId: number; hasFi
           暂不支持在线阅读，可下载原件，或联系作者补 Word 版。
         </p>
         {hasFile && (
-          <Button asChild variant="outline" size="sm" className="mt-3">
-            <a href={`/api/catalog/${resourceId}/file`} download>
-              <Download className="h-4 w-4" />
-              下载原件
-            </a>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-3"
+            onClick={() => {
+              void downloadCatalogArtifact({
+                resourceId,
+                format: 'original',
+                title,
+              })
+            }}
+          >
+            <Download className="h-4 w-4" />
+            下载原件
           </Button>
         )}
       </CardContent>
@@ -1327,6 +1373,7 @@ function FoldCard({
 // 移动端底部固定操作栏：下载 / 收藏 / 更多，高 ≤56px。
 function MobileDetailActions({
   resourceId,
+  title,
   isAdmin,
   hasFile,
   externalUrl,
@@ -1337,6 +1384,7 @@ function MobileDetailActions({
   onShare,
 }: {
   resourceId: number
+  title?: string
   isAdmin: boolean
   hasFile: boolean
   externalUrl?: string | null
@@ -1351,11 +1399,21 @@ function MobileDetailActions({
     <>
       <div className="fixed inset-x-0 bottom-0 z-40 flex h-14 items-center gap-2 border-t bg-background/95 px-3 backdrop-blur">
         {hasFile && (
-          <Button asChild variant="ghost" size="sm" className="flex-1 gap-1">
-            <a href={`/api/catalog/${resourceId}/export?format=docx&v=27`} download aria-label="下载 Word">
-              <FileDown className="h-4 w-4" />
-              下载
-            </a>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex-1 gap-1"
+            aria-label="下载 Word"
+            onClick={() => {
+              void downloadCatalogArtifact({
+                resourceId,
+                format: 'docx',
+                title,
+              })
+            }}
+          >
+            <FileDown className="h-4 w-4" />
+            下载
           </Button>
         )}
         <Button

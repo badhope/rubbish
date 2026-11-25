@@ -17,6 +17,8 @@ export interface PagedPdfPreviewProps {
   ariaLabel?: string;
   /** 有值时显示“打开/下载 PDF”。 */
   downloadUrl?: string;
+  /** 有值时显示可调用鉴权下载的按钮；优先于 downloadUrl。 */
+  onDownload?: () => void;
   downloadLabel?: string;
   retryLabel?: string;
   errorPrefix?: string;
@@ -38,6 +40,7 @@ export default function PagedPdfPreview({
   altPrefix,
   ariaLabel,
   downloadUrl,
+  onDownload,
   downloadLabel = "直接打开 / 下载 PDF",
   retryLabel = "重新加载本页",
   errorPrefix = "预览加载失败",
@@ -191,7 +194,15 @@ export default function PagedPdfPreview({
             >
               {retryLabel}
             </button>
-            {downloadUrl ? (
+            {onDownload ? (
+              <button
+                type="button"
+                onClick={onDownload}
+                className="text-sm text-primary underline"
+              >
+                {downloadLabel}
+              </button>
+            ) : downloadUrl ? (
               <a
                 href={downloadUrl}
                 target="_blank"
@@ -296,7 +307,15 @@ export default function PagedPdfPreview({
               <Maximize className="h-3.5 w-3.5" />
             </button>
           </div>
-          {downloadUrl ? (
+          {onDownload ? (
+            <button
+              type="button"
+              onClick={onDownload}
+              className="text-xs text-primary underline underline-offset-2"
+            >
+              {downloadLabel}
+            </button>
+          ) : downloadUrl ? (
             <a
               href={downloadUrl}
               target="_blank"

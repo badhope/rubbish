@@ -1,6 +1,6 @@
 # Rubbish 项目基线
 
-> 版本：1.19.56
+> 版本：1.19.57
 > 更新：2026-11-25  
 > 仓库：`/home/user/work/rubbish-src`，主分支 `main`  
 > 生产入口：`https://rubbish.argjiemi.cn`
@@ -17,7 +17,7 @@ Rubbish 是自托管的公开写作与主题交流社区。长文进入内容库
 
 | 项目 | 状态 |
 |---|---|
-| 服务 | `rubbish-app.service`，监听 `127.0.0.1:8080`；健康接口确认 `1.19.56` |
+| 服务 | `rubbish-app.service`，监听 `127.0.0.1:8080`；健康接口确认 `1.19.57` |
 | 应用目录 | `/opt/rubbish-app` |
 | 静态目录 | `/opt/rubbish-app/static` |
 | 数据库 | Docker 容器 `rubbish-db-1`，库名 `rubbish`；迁移已到 `073_infra_hardening`（1.19.56 调度器选主、全局限流、发布 digest、上传病毒扫描） |
@@ -54,8 +54,9 @@ Rubbish 是自托管的公开写作与主题交流社区。长文进入内容库
 - 限流：生产 Redis 7.0.15 共享桶；Redis 不可用时进程内计数兜底，健康页标 warn。
 - 上传安全：ClamAV 1.5.4，`clamdscan` 守护进程扫描；历史文件由 `virus_scan` job 每轮 5+5 回填，早期转档后已删除原件的记录标 `missing` 并停止重试，感染文件下载统一 451。
 - 发布邮件：`publication_digest` job 每日 09:00 后汇总，一人一天一封，独立于站内通知开关。
+- 下载：文章 PDF / Word / 原件统一经 axios blob 鉴权下载，避免浏览器直链不带 Bearer 被区域访问或 AuthWall 拦截；PDF 版式预览的页数与页图同样走鉴权请求。
 - 论坛回归：`tests/test_forum.py` 20 项、`tests/test_forum_moderation.py` 8 项、50 条批量压力回归 1 项；1.19.56 新增 `tests/test_infra_11956.py` 5 项。
-- 前端：`tsc -b --noEmit`、ESLint、Vitest 217 项、`vite build` 通过。
+- 前端：`tsc -b --noEmit`、ESLint、Vitest 219 项、`vite build` 通过。
 
 ## 二、已交付功能清单
 
@@ -111,7 +112,7 @@ Rubbish 是自托管的公开写作与主题交流社区。长文进入内容库
 ### P0：上线与稳定性
 
 - [x] 生产执行 `070_forum_moderation_pipeline`，保留迁移前数据库备份与回滚路径。
-- [x] 部署后端与前端静态资源，健康接口确认版本 `1.19.56`。
+- [x] 部署后端与前端静态资源，健康接口确认版本 `1.19.57`。
 - [x] 生产验收：自动公开、人工队列、批量处置、作者通知、作者编辑重审、前台状态提示、运营快捷面板。
 - [ ] 生产压力与故障演练：规则引擎吞吐、连续提交、批量处置、数据库锁与进程重启恢复。
 

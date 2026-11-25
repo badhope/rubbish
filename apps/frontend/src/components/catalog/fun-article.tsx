@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { ResourceResponse } from '@/lib/types'
+import { downloadCatalogArtifact } from '@/lib/catalog-download'
 import { essayGenreMeta } from '@/lib/essay-genres'
 import { formatAuthors } from '@/lib/utils'
 import { ManuscriptView } from '@/components/common/manuscript-view'
@@ -104,17 +105,37 @@ export function FunArticle({
             </Button>
             {data.has_markdown ? (
               <>
-                <Button asChild variant="ghost" size="sm" className="h-8 shrink-0 gap-1 px-2 text-muted-foreground">
-                  <a href={`/api/catalog/${data.id}/export?format=pdf&v=27`} download aria-label="下载自由创作 PDF">
-                    <FileDown className="h-4 w-4" />
-                    PDF
-                  </a>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 shrink-0 gap-1 px-2 text-muted-foreground"
+                  aria-label="下载自由创作 PDF"
+                  onClick={() => {
+                    void downloadCatalogArtifact({
+                      resourceId: data.id,
+                      format: 'pdf',
+                      title: data.title,
+                    })
+                  }}
+                >
+                  <FileDown className="h-4 w-4" />
+                  PDF
                 </Button>
-                <Button asChild variant="ghost" size="sm" className="h-8 shrink-0 gap-1 px-2 text-muted-foreground">
-                  <a href={`/api/catalog/${data.id}/export?format=docx&v=27`} download aria-label="下载自由创作 Word">
-                    <FileDown className="h-4 w-4" />
-                    Word
-                  </a>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 shrink-0 gap-1 px-2 text-muted-foreground"
+                  aria-label="下载自由创作 Word"
+                  onClick={() => {
+                    void downloadCatalogArtifact({
+                      resourceId: data.id,
+                      format: 'docx',
+                      title: data.title,
+                    })
+                  }}
+                >
+                  <FileDown className="h-4 w-4" />
+                  Word
                 </Button>
                 <Button
                   variant="ghost"

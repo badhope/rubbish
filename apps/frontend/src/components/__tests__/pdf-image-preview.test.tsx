@@ -2,15 +2,32 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import PdfImagePreview from '@/components/pdf-image-preview'
 
-const fetchMock = vi.fn()
+const getMock = vi.fn()
+
+vi.mock('@/lib/api', () => ({
+  api: { get: (...args: unknown[]) => getMock(...args) },
+}))
+
+vi.mock('@/lib/catalog-download', () => ({
+  downloadCatalogArtifact: vi.fn(),
+}))
+
+function formatOf(call: unknown[]): unknown {
+  return (call[1] as { params?: { format?: string } } | undefined)?.params?.format
+}
 
 beforeEach(() => {
-  fetchMock.mockReset()
-  fetchMock.mockResolvedValue({
-    ok: true,
-    json: async () => ({ pages: 3 }),
-  })
-  vi.stubGlobal('fetch', fetchMock)
+  getMock.mockReset()
+  getMock.mockImplementation(
+    (_url: string, config?: { params?: { format?: string } }) => {
+      if (config?.params?.format === 'info') {
+        return Promise.resolve({ data: { pages: 3 } })
+      }
+      return Promise.resolve({
+        data: new Blob(['image'], { type: 'image/png' }),
+      })
+    },
+  )
 })
 
 describe('PdfImagePreview', () => {
@@ -35,11 +52,18 @@ describe('PdfImagePreview', () => {
 
   it('fetches page count once per resource, not on every page turn', async () => {
     render(<PdfImagePreview resourceId={91} version="21" />)
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+    await waitFor(() =>
+      expect(screen.getByText('1 / 3 页')).toBeInTheDocument(),
+    )
+    expect(
+      getMock.mock.calls.filter((call) => formatOf(call) === 'info'),
+    ).toHaveLength(1)
 
     fireEvent.click(screen.getByText('下一页'))
     fireEvent.click(screen.getByText('下一页'))
-    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(
+      getMock.mock.calls.filter((call) => formatOf(call) === 'info'),
+    ).toHaveLength(1)
     await waitFor(() =>
       expect(screen.getByAltText('PDF 第 3 页')).toBeInTheDocument(),
     )
@@ -50,15 +74,22 @@ describe('PdfImagePreview', () => {
     await waitFor(() =>
       expect(screen.getByText('1 / 3 页')).toBeInTheDocument(),
     )
+    await waitFor(() =>
+      expect(screen.getByAltText('PDF 第 1 页')).toBeInTheDocument(),
+    )
     fireEvent.error(screen.getByAltText('PDF 第 1 页'))
     expect(screen.getByText('重新加载本页')).toBeInTheDocument()
 
     fireEvent.click(screen.getByText('重新加载本页'))
     await waitFor(() =>
-      expect(screen.getByAltText('PDF 第 1 页')).toHaveAttribute(
-        'src',
-        '/api/catalog/91/export?format=png&v=21&page=1&retry=1',
-      ),
+      expect(getMock).toHaveBeenLastCalledWith('/catalog/91/export', {
+        params: { format: 'png', v: '21', page: 1, retry: 1 },
+        responseType: 'blob',
+        timeout: 120_000,
+      }),
+    )
+    await waitFor(() =>
+      expect(screen.getByAltText('PDF 第 1 页')).toBeInTheDocument(),
     )
   })
 })

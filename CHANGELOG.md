@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.19.57] — 2026-11-25
+
+### 文章下载修复
+
+- **根因**：文章页的 PDF / Word / 原件下载原先是普通 `<a href="/api/catalog/{id}/export">` 直链。浏览器导航不会携带 `Authorization`，受限地区匿名请求先被 `RegionAccessMiddleware` 拦成 `403 region_restricted`，登录用户也会被 `AuthWallMiddleware` 按无 token 拒绝为 `401 authentication_required`。反馈 1987 里的 `resion restricted` 即此。
+- 新增 `lib/catalog-download.ts`：统一经 axios 的 `responseType: 'blob'` 取回导出件 / 原件，再交给 `downloadBlob()` 落盘，自动复用 Bearer token 与 401 刷新链路。
+- 文章详情页、自由创作页、扫描版原件入口、移动端底栏的 PDF / Word 下载全部改用上述鉴权下载；PDF 版式预览的页数查询与单页 PNG 也改走 axios，避免裸 `<img src>` / 裸 `fetch` 不带 token 导致整块预览空白。
+- 回归：前端 Vitest 新增下载助手 2 项、更新 PDF 预览 4 项；typecheck、ESLint、build 全绿。
+
 ## [1.19.56] — 2026-11-25
 
 ### 基础设施强化
