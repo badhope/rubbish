@@ -32,6 +32,7 @@ import {
   useSubmissionOverview,
   useSubmissionReports,
   useSubmissionVersions,
+  useSubmissionVersionDiff,
   useReviewMatrix,
   useReviewerCandidates,
   usePutAuthors,
@@ -337,6 +338,14 @@ function PendingSubmissionsPage() {
     decisionVersionsQ.data?.find(
       (v) => v.version === decisionTarget?.latest_version,
     )?.note ?? ''
+  // 实际改动只在主编主动展开时拉取，避免每次打开决定弹层都多打一次
+  // 版本 diff；这样“核对返修版本”不必再离开弹层去详情页。
+  const [revisionDiffOpen, setRevisionDiffOpen] = useState(false)
+  const decisionDiffQ = useSubmissionVersionDiff(
+    decisionTarget?.id ?? 0,
+    isRevision ? (decisionTarget?.latest_version ?? 0) : 0,
+    isRevision && revisionDiffOpen,
+  )
 
   const updateSearch = (patch: Partial<PendingSearch>) => {
     void navigate({
@@ -581,6 +590,7 @@ function PendingSubmissionsPage() {
                         onClick={() => {
                           setDecisionTarget(s)
                           setDecisionForm(EMPTY_DECISION)
+                          setRevisionDiffOpen(false)
                         }}
                         disabled={decisionMut.isPending || !canOpenDecision(s)}
                         title={decisionDisabledReason(s)}
@@ -662,7 +672,12 @@ function PendingSubmissionsPage() {
       {/* 做决定 Dialog */}
       <Dialog
         open={!!decisionTarget}
-        onOpenChange={(o) => !o && setDecisionTarget(null)}
+        onOpenChange={(o) => {
+          if (!o) {
+            setDecisionTarget(null)
+            setRevisionDiffOpen(false)
+          }
+        }}
       >
         <DialogContent>
           <DialogHeader>
@@ -677,20 +692,113 @@ function PendingSubmissionsPage() {
           </DialogHeader>
           <div className="space-y-3">
             {isRevision && (
-              <div className="space-y-1 rounded-md border border-violet-200 bg-violet-500/5 p-3 dark:border-violet-900">
-                <div className="text-xs font-medium text-violet-700 dark:text-violet-300">
-                  作者修回说明（v{decisionTarget?.latest_version}）
+              <div className="space-y-2 rounded-md border border-violet-200 bg-violet-500/5 p-3 dark:border-violet-900">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="text-xs font-medium text-violet-700 dark:text-violet-300">
+                    作者修回材料（v{decisionTarget?.latest_version}）
+                  </div>
+                  {(decisionTarget?.latest_version ?? 1) > 1 && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-2 text-[11px]"
+                      onClick={() => setRevisionDiffOpen((v) => !v)}
+                    >
+                      {revisionDiffOpen ? '收起实际改动' : '查看实际改动'}
+                    </Button>
+                  )}
                 </div>
+                {decisionTarget?.author_response && (
+                  <div className="space-y-1">
+                    <div className="text-[11px] font-medium text-muted-foreground">
+                      对上一轮意见的回应
+                      {decisionTarget.author_response_at
+                        ? ` · ${formatDateTime(decisionTarget.author_response_at)}`
+                        : ''}
+                    </div>
+                    <p className="max-h-36 overflow-y-auto whitespace-pre-wrap rounded bg-background/70 p-2 text-xs leading-relaxed">
+                      {decisionTarget.author_response}
+                    </p>
+                  </div>
+                )}
                 {decisionVersionsQ.isLoading ? (
                   <p className="text-xs text-muted-foreground">正在读取版本历史…</p>
                 ) : latestRevisionNote ? (
-                  <p className="whitespace-pre-wrap text-xs leading-relaxed">
-                    {latestRevisionNote}
-                  </p>
+                  <div className="space-y-1">
+                    <div className="text-[11px] font-medium text-muted-foreground">
+                      本版修改说明
+                    </div>
+                    <p className="max-h-36 overflow-y-auto whitespace-pre-wrap rounded bg-background/70 p-2 text-xs leading-relaxed">
+                      {latestRevisionNote}
+                    </p>
+                  </div>
                 ) : (
                   <p className="text-xs text-muted-foreground">
-                    作者没有填写修回说明。请先在「详情 → 版本历史」核对实际改动，再决定是否直接录用。
+                    本版没有填写修改说明。
+                    {!decisionTarget?.author_response
+                      ? '请展开“实际改动”核对后再决定是否直接录用。'
+                      : ''}
                   </p>
+                )}
+                {!decisionTarget?.author_response && latestRevisionNote && (
+                  <p className="text-[11px] text-muted-foreground">
+                    作者没有单独填写对上一轮意见的回应，以上为版本修改说明。
+                  </p>
+                )}
+                {revisionDiffOpen && (
+                  <div className="space-y-2 rounded border bg-background/80 p-2">
+                    {decisionDiffQ.isLoading ? (
+                      <p className="text-xs text-muted-foreground">正在读取版本对比…</p>
+                    ) : decisionDiffQ.isError ? (
+                      <p className="text-xs text-destructive">版本对比读取失败，可去详情版本历史核对</p>
+                    ) : decisionDiffQ.data ? (
+                      <>
+                        {decisionDiffQ.data.field_changes.length > 0 && (
+                          <div className="space-y-1">
+                            <div className="text-[11px] font-medium">题录字段变化</div>
+                            {decisionDiffQ.data.field_changes.map((change) => (
+                              <div
+                                key={change.field}
+                                className="rounded bg-muted/50 px-2 py-1 text-[11px]"
+                              >
+                                <span className="font-medium">{change.field}</span>：{' '}
+                                <span className="text-muted-foreground line-through">
+                                  {String(change.before ?? '—').slice(0, 80)}
+                                </span>{' '}
+                                → {String(change.after ?? '—').slice(0, 80)}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <div className="space-y-1">
+                          <div className="text-[11px] font-medium">正文差异</div>
+                          {decisionDiffQ.data.body_diff.length > 0 ? (
+                            <pre className="max-h-56 overflow-auto rounded border bg-muted/40 p-2 text-[11px] leading-relaxed">
+                              {decisionDiffQ.data.body_diff.map((line, index) => (
+                                <div
+                                  key={`${index}-${line.slice(0, 12)}`}
+                                  className={
+                                    line.startsWith('+')
+                                      ? 'text-emerald-700'
+                                      : line.startsWith('-')
+                                        ? 'text-destructive'
+                                        : 'text-muted-foreground'
+                                  }
+                                >
+                                  {line || ' '}
+                                </div>
+                              ))}
+                            </pre>
+                          ) : (
+                            <p className="text-[11px] text-muted-foreground">
+                              这一版没有可比对的正文快照。
+                            </p>
+                          )}
+                        </div>
+                      </>
+                    ) : null}
+                  </div>
                 )}
               </div>
             )}
