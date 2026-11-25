@@ -48,7 +48,6 @@ from app.core.time import utcnow
 from app.domain.catalog.engagement import compute_engagement
 from app.domain.catalog.genre import classify_essay_genre
 from app.domain.catalog.journal import sync_resource_issue
-from app.domain.follows.fanout import notify_publication
 from app.domain.catalog.models import (
     Appeal,
     AuthorClaim,
@@ -57,6 +56,7 @@ from app.domain.catalog.models import (
     ResourcePublicEvent,
 )
 from app.domain.catalog.visibility import as_aware, is_public, public_conditions
+from app.domain.follows.fanout import notify_publication
 from app.interfaces.http.catalog.ontology_routes import router as ontology_router
 from app.interfaces.http.catalog.schemas import (
     FacetBucket,
@@ -75,7 +75,7 @@ from app.interfaces.http.catalog.schemas import (
     VolumeSummary,
     VolumeSummaryList,
 )
-from app.models import AuditLog, Role, User, UserRole
+from app.models import AuditLog, User
 
 logger = get_logger("rubbish.catalog")
 
@@ -2746,29 +2746,9 @@ async def _notify_editors(
 ) -> None:
     """给本租户全部活跃编辑（含 admin）发一条通知（随调用方事务提交）。"""
     from app.domain.notifications import services as notifications
+    from app.domain.submission.editor_recipients import editor_recipients
 
-    editor_ids = (
-        select(UserRole.user_id)
-        .join(Role, Role.id == UserRole.role_id)
-        .where(
-            UserRole.tenant_id == tenant_id,
-            Role.tenant_id == tenant_id,
-            Role.name == "editor",
-        )
-    )
-    editors = (
-        (
-            await db.execute(
-                select(User).where(
-                    User.tenant_id == tenant_id,
-                    User.is_active.is_(True),
-                    (User.id.in_(editor_ids)) | (User.is_admin.is_(True)),
-                )
-            )
-        )
-        .scalars()
-        .all()
-    )
+    editors = await editor_recipients(db, tenant_id)
     for editor in editors:
         await notifications.create(
             db,

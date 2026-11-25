@@ -388,25 +388,17 @@ async def express_review_interest(
             payload={"reviewer_username": current_user.username},
         )
     )
-    # 让主编在站内通知里直接看到互评意愿，而不是只留在审计日志。
-    editor_ids = (
-        (
-            await db.execute(
-                select(User.id).where(
-                    User.tenant_id == tenant_id,
-                    User.role == "editor_in_chief",
-                    User.is_active.is_(True),
-                )
-            )
-        )
-        .scalars()
-        .all()
-    )
-    for editor_id in editor_ids:
+    # 让编辑组在站内通知里直接看到互评意愿，而不是只留在审计日志。
+    # 过去按 User.role 单列查主编，分区整理/副主管/内容策展都收不到；
+    # 统一走共享编辑收件人，和初筛、撤稿、重投保持同一套角色。
+    from app.domain.submission.editor_recipients import editor_recipients
+
+    editors = await editor_recipients(db, tenant_id)
+    for editor in editors:
         await notifications.create(
             db,
             tenant_id=tenant_id,
-            user_id=editor_id,
+            user_id=editor.id,
             type_="review.interest",
             title=f"互评申请：{sub.title}",
             body=f"{current_user.username} 想参与作品 #{submission_id} 的互评。去内容台看看要不要分给他。",
