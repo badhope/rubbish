@@ -38,6 +38,12 @@ ENV PATH=/opt/venv/bin:$PATH \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
+# Runtime dependencies for document export: LibreOffice converts the branded
+# DOCX to PDF, and Noto CJK fonts keep Chinese text from rendering as tofu.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends fonts-noto-cjk fonts-wqy-zenhei poppler-utils libreoffice-writer \
+    && rm -rf /var/lib/apt/lists/*
+
 # Non-root user; uid 1000 matches the host user on most dev machines so
 # mounted volumes aren't chowned to root.
 RUN useradd --create-home --uid 1000 --shell /bin/sh app

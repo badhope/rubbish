@@ -67,6 +67,23 @@ PUBLIC_API_PATTERNS = (
     re.compile(r"^/api/catalog/\d+/img/[\w.-]+$"),
 )
 
+# 签名下载链接由移动端/微信内置浏览器直接打开，浏览器不会带 Bearer。
+# 只放行带 ticket 参数的提交文件下载路径；票据签名、过期时间与权限仍由
+# 端点自身的 _verify_download_ticket / _can_access_submission_file 校验。
+_SIGNED_DOWNLOAD_PATH = re.compile(
+    r"^/api/submissions/\d+/files(?:/[^/]+)?$"
+)
+
+
+def is_signed_download_request(request: Request) -> bool:
+    """是否为一张带签名的提交文件下载请求。"""
+    if request.method not in {"GET", "HEAD"}:
+        return False
+    if not request.query_params.get("ticket"):
+        return False
+    return bool(_SIGNED_DOWNLOAD_PATH.match(request.url.path))
+
+
 
 def _bearer_token(request: Request) -> str | None:
     header = request.headers.get("authorization", "")
@@ -99,7 +116,12 @@ class AuthWallMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
         # CORS preflight must pass; non-API paths (SPA shell, static files) are
         # handled by the frontend route guard.
-        if request.method == "OPTIONS" or not path.startswith("/api/") or is_public_api_path(path):
+        if (
+            request.method == "OPTIONS"
+            or not path.startswith("/api/")
+            or is_public_api_path(path)
+            or is_signed_download_request(request)
+        ):
             return await call_next(request)
 
         token = _bearer_token(request)

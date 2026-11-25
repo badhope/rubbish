@@ -24,6 +24,16 @@ def _app() -> FastAPI:
     async def capabilities():
         return {"registration_open": True}
 
+    @app.get("/api/submissions/{submission_id}/files")
+    async def submission_file(submission_id: int, ticket: str | None = None):
+        return {"submission_id": submission_id, "ticket": ticket}
+
+    @app.get("/api/submissions/{submission_id}/files/{filename}")
+    async def submission_file_named(
+        submission_id: int, filename: str, ticket: str | None = None
+    ):
+        return {"submission_id": submission_id, "filename": filename, "ticket": ticket}
+
     return app
 
 
@@ -61,3 +71,20 @@ def test_auth_wall_off_keeps_local_and_public_mode(monkeypatch):
     monkeypatch.setattr(settings, "auth_wall_enabled", False, raising=False)
     client = TestClient(_app())
     assert client.get("/api/private").status_code == 200
+
+
+def test_auth_wall_allows_only_get_requests_with_signed_download_ticket(monkeypatch):
+    """移动端/微信下载靠签名直链，浏览器不能带 Bearer；票据本身由端点校验。"""
+    monkeypatch.setattr(settings, "auth_wall_enabled", True, raising=False)
+    client = TestClient(_app())
+
+    assert (
+        client.get("/api/submissions/7/files?ticket=signed").json()["ticket"]
+        == "signed"
+    )
+    assert (
+        client.get("/api/submissions/7/files/7.pdf?ticket=signed").json()["filename"]
+        == "7.pdf"
+    )
+    assert client.get("/api/submissions/7/files").status_code == 401
+    assert client.post("/api/submissions/7/files?ticket=signed").status_code == 401

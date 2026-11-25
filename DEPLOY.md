@@ -23,6 +23,8 @@ Do not re-add redirects for `/review` or `/editor/*`: those are live workbench r
 
 A frontend-only release replaces `/opt/rubbish-app/static` and does not need a restart. A backend release copies the changed `app/` files and restarts the service. Always keep the previous static directory and the previous file next to the new one.
 
+This host must have `libreoffice-writer`, `fonts-noto-cjk`, and `poppler-utils`: Word→PDF downloads use `soffice`, and without it the file endpoint returns 500. Admin system health checks `soffice`; `document_export` reports fail when it is missing.
+
 ```bash
 # on the build machine
 cd apps/frontend && npm run build

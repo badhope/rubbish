@@ -1424,6 +1424,13 @@ async def system_health(
         "status": "ok" if limiter["ok"] else "warn",
         "detail": str(limiter["detail"]),
     }
+    soffice_path = shutil.which("soffice")
+    document_export_check = {
+        "key": "document_export",
+        "label": "文档转换",
+        "status": "ok" if soffice_path else "fail",
+        "detail": "LibreOffice 可用" if soffice_path else "缺少 soffice，Word→PDF 下载会失败",
+    }
 
     scheduler_checks = [
         _scheduler_check(
@@ -1483,6 +1490,7 @@ async def system_health(
         },
         virus_check,
         rate_limit_check,
+        document_export_check,
         *scheduler_checks,
         {
             "key": "anomaly",

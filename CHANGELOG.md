@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.19.58] — 2026-11-25
+
+### 签名下载链路修复
+
+- **根因**：投稿文件、审稿附件的手机端/微信端下载使用 `download-ticket` 换取的签名直链，浏览器直接打开不会携带 `Authorization`。`RegionAccessMiddleware` 先对大陆/港澳台匿名请求返回 `403 region_restricted`，即使绕过地区限制，`AuthWallMiddleware` 也会返回 `401 authentication_required`；而端点本身已用 HMAC 票据校验权限，票据从未真正被兑换。
+- 新增 `is_signed_download_request()`：仅对 `GET/HEAD /api/submissions/{id}/files`（含带扩展名的变体）且带非空 `ticket` 参数的请求放行两道中间件；票据签名、过期、租户、用户状态与访问权限仍由下载端点逐项复核，没有放开无票匿名下载。
+- **生产同时发现 `soffice` 缺失**：投稿文件与审稿附件的 Word→PDF 转换依赖 LibreOffice headless；生产宿主机未安装 `libreoffice-writer`，PDF 下载返回 500 `FileNotFoundError: soffice`，Word 下载正常。已安装 `libreoffice-writer 24.2.7`，并在后台系统健康新增 `document_export` 检查，缺失时直接 fail；两个 Dockerfile 与部署文档补上该依赖，避免下次重装环境再漏。
+- 修复后，桌面端审稿附件、手机端/微信端投稿文件的原生签名直链都能到达文件端点，PDF 与 Word 均返回 200；文章 PDF / Word 仍走 1.19.57 的 axios blob 鉴权下载。
+- 回归：`test_auth_wall.py` 与 `test_region_access.py` 新增签名票据案例；后端全量 `929 passed / 3 skipped`，健康与内容库针对性 46 项通过。
+
 ## [1.19.57] — 2026-11-25
 
 ### 文章下载修复

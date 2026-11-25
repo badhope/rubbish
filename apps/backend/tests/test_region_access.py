@@ -77,3 +77,27 @@ async def test_public_image_capability_urls_bypass_region_and_auth_walls(
     )
     assert article_image.status_code in {404, 422}
     assert article_image.status_code not in {401, 403}
+
+
+async def test_signed_submission_download_bypasses_region_and_auth_walls(
+    client: AsyncClient, monkeypatch
+) -> None:
+    """微信/手机直接打开签名链接时不会带 Bearer，票据端点必须能穿过两道墙。
+
+    不存在的投稿应返回 404；返回 region_restricted 或 authentication_required
+    都说明请求在到达票据校验前就被拦住了。
+    """
+    monkeypatch.setattr(settings, "region_access_enabled", True)
+    monkeypatch.setattr(settings, "trusted_proxies_count", 1)
+    monkeypatch.setattr(settings, "auth_wall_enabled", True)
+
+    path = "/api/submissions/999999/files/999999.pdf"
+    blocked = await client.get(path, headers={"x-forwarded-for": "1.0.1.1"})
+    assert blocked.status_code == 403
+    assert blocked.json()["detail"] == "region_restricted"
+
+    signed = await client.get(
+        f"{path}?inline=true&ticket=bogus",
+        headers={"x-forwarded-for": "1.0.1.1"},
+    )
+    assert signed.status_code == 404, signed.text[:160]

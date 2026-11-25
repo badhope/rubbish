@@ -27,7 +27,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
-from app.core.auth_wall import is_public_api_path
+from app.core.auth_wall import is_public_api_path, is_signed_download_request
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.core.mainland_gate import client_ip
@@ -170,6 +170,7 @@ class RegionAccessMiddleware(BaseHTTPMiddleware):
             or _has_bearer(request)
             or is_public_api_path(path)
             or is_public_media_path(path)
+            or is_signed_download_request(request)
         ):
             # A stale/expired bearer must reach AuthWall so the SPA gets a
             # 401 and can try its refresh cookie. Invalid tokens cannot read

@@ -23,6 +23,8 @@
 
 只发前端时替换 `/opt/rubbish-app/static`，不必重启服务。发后端时复制改动的 `app/` 文件并重启服务。替换前必须保留上一份静态目录和上一份后端文件。
 
+这台机器必须安装 `libreoffice-writer`、`fonts-noto-cjk`、`poppler-utils`：Word→PDF 下载依赖 `soffice`，缺它时文件端点会返回 500。后台“系统健康”会检查 `soffice`；缺失时 `document_export` 直接报 fail。
+
 ```bash
 # 构建机
 cd apps/frontend && npm run build
