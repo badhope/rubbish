@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.19.63] — 2026-11-26
+
+### 返修稿直接录用（内容台闭环）
+
+- **主编可直接录用返修稿**：`PATCH /api/submissions/{id}/decision` 新增 `accept_after_revision`。仅当稿件已有 v2+ 版本且当前状态为 `under_review` 时生效，跳过“本轮必须有通过意见”的互评闸门；首次投稿、待初筛或补材料重投的稿件传该参数会被 400 拒绝。
+- **不绕过质量硬门槛**：低于 40 分仍默认不能通过；主编确需破例时须显式传 `force_accept_d_grade` 并在 `editor_note` 写明理由，后端会校验，决定与理由一并进入审计。
+- **返修稿专用队列**：内容台新增 `status=revision` 过滤，以 `submission_versions.version > 1` 识别返修稿，不再依赖容易与首次互评混淆的 `under_review` 状态；列表返回 `latest_version`，卡片显示「返修稿 vN」。
+- **决定弹层补齐上下文**：主编在弹层内直接看到该作者最新一版的修回说明，再决定是否直接录用；同时展示「返修稿直接录用」与「低于 40 分破例」两个显式开关。
+- **审计与通知**：直接录用会在作者可见备注写入固定标记，审计记录 `accept_after_revision`、`force_accept_d_grade` 与 `latest_version`，作者通知文案区分「通过（返修后直接录用）」。
+
+### 校验
+
+- 新增 `tests/test_revision_direct_accept_11963.py`：覆盖返修稿直接录用与审计、首次投稿拒绝、`status=revision` 队列与 `latest_version` 返回。
+- 后端全量 `946 passed / 3 skipped`（453.99s）；前端全量 `42 files / 226 tests passed`（825.93s，`--maxWorkers=2` 避免资源争抢超时）。
+- 前端 `tsc -b --noEmit`、ESLint 对改动文件、`vite build` 通过；入口 `assets/index-svBg3pgN.js`，415326 bytes。本版无 schema 变更，不需要迁移。
+
+
 ## [1.19.61] — 2026-11-25
 
 ### 互评矩阵与免审口径（本地审计，未部署）

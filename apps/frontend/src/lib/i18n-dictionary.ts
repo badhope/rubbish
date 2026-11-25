@@ -230,6 +230,7 @@ export const TEXT_EN: Record<string, string> = {
   "待处理": 'Pending',
   "待回应": 'Awaiting reply',
   "待分配": 'Unassigned',
+  "返修稿": 'Revised',
   "待大改": 'Major revision',
   "待小改": 'Minor revision',
   "未保存": 'Unsaved',

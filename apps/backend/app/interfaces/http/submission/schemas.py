@@ -185,12 +185,18 @@ class SubmissionDecision(BaseModel):
     # draft（暂存草稿——发布前整理阶段，之后由 admin PATCH /catalog/{id} 发布）。
     # 指定现有 resource_id 时不改动该条目的发布状态。
     publication_status: Literal["published", "draft"] = "published"
-    # D 级（<60 分）默认不能通过：必须先打回互评成员补审或要求作者修改。
+    # 质量分低于 40 默认不能通过：必须先打回互评成员补审或要求作者修改。
     # 确需破例时置 true，且必须在 editor_note 里写明理由——破例本身要
-    # 可追溯，否则"D 级硬发"会变成常规操作。
+    # 可追溯，否则“硬发不合格稿”会变成常规操作。
     force_accept_d_grade: bool = False
     # 仲裁人第三方意见或编辑的冲突裁决理由；会并入 editor_note 留痕。
     arbitration_note: str | None = Field(default=None, max_length=5000)
+    # 返修稿直接录用（仅 accept 有效）：作者至少重投过一次（版本号 ≥2）时，
+    # 主编可在核对修改说明后跳过“本轮必须有通过意见”的互评闸门。该动作
+    # 仍受质量分硬门槛约束（低于 40 需另传 force_accept_d_grade 并写明理由），
+    # 并把直接录用写入 editor_note 与审计日志。非返修稿传 true 会被拒绝，
+    # 不能用它绕过首次投稿的同行评审。
+    accept_after_revision: bool = False
 
 
 class AnonymizedFileUpdate(BaseModel):
@@ -305,6 +311,10 @@ class SubmissionResponse(BaseModel):
     coi_statement: str | None = None
     data_availability: str | None = None
     status: SubmissionStatus
+    # 版本号：v1 = 首次投稿；v2+ = 作者至少返修重投过一次。内容台据此
+    # 展示「返修稿」标识并允许主编选择返修后直接录用。列表批量计算；
+    # 单条详情未带统计时回退 1，不虚报返修。
+    latest_version: int = 1
     admin_note: str | None = None
     editor_note: str | None = None
     # 结构化修改要求与作者逐条回应；旧数据为空时前端回退 editor_note。

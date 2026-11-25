@@ -603,6 +603,10 @@ export interface SubmissionDecision {
   publication_status?: 'published' | 'draft'
   /** 审稿意见冲突时的裁决理由（冲突时必填） */
   arbitration_note?: string | null
+  /** 返修稿（v2+）由主编直接录用：跳过本轮“必须有通过意见”的闸门 */
+  accept_after_revision?: boolean
+  /** 质量分低于 40 时仍破例录用；必须在 editor_note 写明理由 */
+  force_accept_d_grade?: boolean
 }
 
 /** 结构报告单项（上传文件端点返回） */
@@ -656,6 +660,8 @@ export interface SubmissionResponse {
   coi_statement?: string | null
   data_availability?: string | null
   status: SubmissionStatus
+  /** 版本号：v1 首次投稿，v2+ 表示作者已返修重投 */
+  latest_version?: number
   admin_note?: string | null
   editor_note?: string | null
   /** 退回修改的结构化要求；旧数据为空时回退 editor_note */

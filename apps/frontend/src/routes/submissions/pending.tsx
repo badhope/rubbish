@@ -130,16 +130,16 @@ function recommendationLabel(value: string): string {
 }
 
 // 条目中文口径统一在 @/lib/review-dimensions，旧四维作为历史数据兜底。
-// 内容台状态 tab：全部 + 7 种 submission status
-type StatusTab = SubmissionStatus | 'all'
+// 内容台状态 tab：全部 + 各 submission status + 返修稿（版本口径）
+type StatusTab = SubmissionStatus | 'all' | 'revision'
 const STATUS_TABS: { value: StatusTab; label: string }[] = [
   { value: 'all', label: '全部' },
   { value: 'pending', label: '待分配' },
   { value: 'under_review', label: '互评中' },
+  { value: 'revision', label: '返修稿' },
   { value: 'major_revision', label: '大改' },
   { value: 'minor_revision', label: '小改' },
   { value: 'rework_requested', label: '待修改' },
-  { value: 'resubmitted', label: '修改版' },
   { value: 'accepted', label: '已通过' },
   { value: 'rejected', label: '已不通过' },
 ]
@@ -152,11 +152,22 @@ interface PendingSearch {
   submission?: number
 }
 
-function statusBadge(status: string, resourcePublicationStatus?: string | null) {
+function statusBadge(
+  status: string,
+  resourcePublicationStatus?: string | null,
+  latestVersion?: number,
+) {
   switch (status) {
     case 'pending':
       return <Badge variant="secondary">待分配</Badge>
     case 'under_review':
+      if ((latestVersion ?? 1) > 1) {
+        return (
+          <Badge className="bg-violet-500/15 text-violet-700">
+            返修稿 v{latestVersion}
+          </Badge>
+        )
+      }
       return <Badge className="bg-primary/15 text-primary">互评中</Badge>
     case 'major_revision':
       return <Badge className="bg-amber-500/15 text-amber-700">大改</Badge>
@@ -221,12 +232,18 @@ interface DecisionFormState {
   editor_note: string
   /** 互评意见冲突时必填的复核理由 */
   arbitration_note: string
+  /** 返修稿由主编直接录用，跳过本轮“必须有通过意见”的闸门 */
+  accept_after_revision: boolean
+  /** 质量分低于 40 时仍破例录用；必须填写备注理由 */
+  force_accept_d_grade: boolean
 }
 
 const EMPTY_DECISION: DecisionFormState = {
   decision: 'minor_revision',
   editor_note: '',
   arbitration_note: '',
+  accept_after_revision: false,
+  force_accept_d_grade: false,
 }
 
 // 决策按钮只按作品状态开关；真正的“≥1 位互评成员通过 / 冲突须复核”闸门由矩阵弹窗
@@ -308,6 +325,14 @@ function PendingSubmissionsPage() {
   // 做决定时内嵌互评报告概要：推荐 + 评分 + 内容整理保密意见，内容整理不必另开弹窗
   const decisionReportsQ = useSubmissionReports(decisionTarget?.id ?? 0)
   const decisionMatrixQ = useReviewMatrix(decisionTarget?.id ?? 0)
+  // v2+ = 作者已经返修重投过；只有这种稿子才允许“返修后直接录用”。
+  const isRevision = (decisionTarget?.latest_version ?? 1) > 1
+  // 直接录用前必须让主编看到作者自己写的修回说明，而不是只凭一个版本号。
+  const decisionVersionsQ = useSubmissionVersions(decisionTarget?.id ?? 0)
+  const latestRevisionNote =
+    decisionVersionsQ.data?.find(
+      (v) => v.version === decisionTarget?.latest_version,
+    )?.note ?? ''
 
   const updateSearch = (patch: Partial<PendingSearch>) => {
     void navigate({
@@ -336,7 +361,8 @@ function PendingSubmissionsPage() {
 
   const doDecision = async (target: SubmissionResponse) => {
     const matrix = decisionMatrixQ.data
-    if (decisionForm.decision === 'accept') {
+    const directAccept = decisionForm.decision === 'accept' && decisionForm.accept_after_revision
+    if (decisionForm.decision === 'accept' && !directAccept) {
       if (!matrix) {
         toast.error('互评进度还没读完，请稍等再试。')
         return
@@ -352,9 +378,18 @@ function PendingSubmissionsPage() {
         return
       }
     }
-    // 冲突时必须填复核理由
-    if (matrix?.conflict && !decisionForm.arbitration_note.trim()) {
+    // 冲突时必须填复核理由；返修稿直接录用本身就是主编复核动作，
+    // 不强制填冲突理由，但会在 editor_note 里自动留痕。
+    if (!directAccept && matrix?.conflict && !decisionForm.arbitration_note.trim()) {
       toast.error('互评意见冲突：请填写复核理由')
+      return
+    }
+    if (
+      decisionForm.decision === 'accept' &&
+      decisionForm.force_accept_d_grade &&
+      !decisionForm.editor_note.trim()
+    ) {
+      toast.error('低于 40 分破例录用必须在内容整理备注里写明理由')
       return
     }
     try {
@@ -365,6 +400,12 @@ function PendingSubmissionsPage() {
           editor_note: decisionForm.editor_note || undefined,
           arbitration_note:
             target.conflict ? decisionForm.arbitration_note : undefined,
+          accept_after_revision: directAccept || undefined,
+          force_accept_d_grade:
+            decisionForm.decision === 'accept' &&
+            decisionForm.force_accept_d_grade
+              ? true
+              : undefined,
         },
       })
       toast.success('决定已记录')
@@ -444,7 +485,9 @@ function PendingSubmissionsPage() {
                 ? overview.total
                 : t.value === 'accepted'
                   ? overview.accepted_resources
-                  : (overview.status_counts[t.value] ?? 0)
+                  : t.value === 'revision'
+                    ? null
+                    : (overview.status_counts[t.value] ?? 0)
             return (
               <TabsTrigger key={t.value} value={t.value}>
                 {t.label}
@@ -471,7 +514,7 @@ function PendingSubmissionsPage() {
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="font-medium">{s.title}</h3>
-                    {statusBadge(s.status, s.resource_publication_status)}
+                    {statusBadge(s.status, s.resource_publication_status, s.latest_version)}
                     {['pending', 'under_review', 'resubmitted'].includes(s.status) &&
                       waitingChip(s.submitted_at)}
                     {s.status === 'accepted' &&
@@ -616,9 +659,34 @@ function PendingSubmissionsPage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>做决定 — {decisionTarget?.title}</DialogTitle>
+            <DialogTitle>
+              做决定 — {decisionTarget?.title}
+              {isRevision && (
+                <Badge className="ml-2 align-middle bg-violet-500/15 text-violet-700">
+                  返修稿 v{decisionTarget?.latest_version}
+                </Badge>
+              )}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
+            {isRevision && (
+              <div className="space-y-1 rounded-md border border-violet-200 bg-violet-500/5 p-3 dark:border-violet-900">
+                <div className="text-xs font-medium text-violet-700 dark:text-violet-300">
+                  作者修回说明（v{decisionTarget?.latest_version}）
+                </div>
+                {decisionVersionsQ.isLoading ? (
+                  <p className="text-xs text-muted-foreground">正在读取版本历史…</p>
+                ) : latestRevisionNote ? (
+                  <p className="whitespace-pre-wrap text-xs leading-relaxed">
+                    {latestRevisionNote}
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    作者没有填写修回说明。请先在「详情 → 版本历史」核对实际改动，再决定是否直接录用。
+                  </p>
+                )}
+              </div>
+            )}
             {/* 互评报告概要：有报告时直接展示，帮助内容整理在同一个弹窗里完成决定 */}
             {decisionReportsQ.data && decisionReportsQ.data.length > 0 && (
               <div className="space-y-2 rounded-md border bg-muted/30 p-3 text-sm">
@@ -703,7 +771,9 @@ function PendingSubmissionsPage() {
                 </div>
                 {decisionMatrixQ.data.accept_count < 1 && (
                   <p className="mt-2 text-xs text-amber-700">
-                    公开需要至少 1 名互评成员给出通过推荐。可继续等待意见，或确认作者已修回后再看；意见冲突时先指定第三方复核人。
+                    {isRevision
+                      ? '本轮还没有新的通过推荐。作者已返修，主编核对修改后可勾选下方“返修稿直接录用”；否则继续等待互评或指定第三方复核。'
+                      : '公开需要至少 1 名互评成员给出通过推荐。可继续等待意见，或确认作者已修回后再看；意见冲突时先指定第三方复核人。'}
                   </p>
                 )}
               </div>
@@ -716,6 +786,9 @@ function PendingSubmissionsPage() {
                   setDecisionForm((prev) => ({
                     ...prev,
                     decision: v as EditorDecision,
+                    // 离开“通过”时清掉直接录用与破例开关，避免状态串到别的决定
+                    accept_after_revision: false,
+                    force_accept_d_grade: false,
                   }))
                 }
               >
@@ -736,6 +809,52 @@ function PendingSubmissionsPage() {
                 </SelectContent>
               </Select>
             </div>
+            {decisionForm.decision === 'accept' && isRevision && (
+              <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-violet-300 bg-violet-500/5 p-3 dark:border-violet-800">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-violet-600"
+                  checked={decisionForm.accept_after_revision}
+                  onChange={(e) =>
+                    setDecisionForm((prev) => ({
+                      ...prev,
+                      accept_after_revision: e.target.checked,
+                    }))
+                  }
+                />
+                <span className="space-y-1">
+                  <span className="block text-sm font-medium">
+                    返修稿直接录用（v{decisionTarget?.latest_version}）
+                  </span>
+                  <span className="block text-xs leading-relaxed text-muted-foreground">
+                    作者已按上一轮意见修回。勾选后跳过“本轮必须有通过意见”的互评闸门，直接进入录用；决定会写入作者可见备注和审计日志。首次投稿不能用这一项。
+                  </span>
+                </span>
+              </label>
+            )}
+            {decisionForm.decision === 'accept' && (
+              <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border/70 p-3">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 shrink-0"
+                  checked={decisionForm.force_accept_d_grade}
+                  onChange={(e) =>
+                    setDecisionForm((prev) => ({
+                      ...prev,
+                      force_accept_d_grade: e.target.checked,
+                    }))
+                  }
+                />
+                <span className="space-y-1">
+                  <span className="block text-sm font-medium">
+                    如质量分低于 40，仍破例录用
+                  </span>
+                  <span className="block text-xs leading-relaxed text-muted-foreground">
+                    正常规则下低于 40 分不能通过。勾选后本次录用会按破例处理，必须在下方备注里写明理由，否则后端会拒绝。
+                  </span>
+                </span>
+              </label>
+            )}
             <div className="space-y-2">
               <Label htmlFor="editor_note">内容整理备注（作者可见）</Label>
               <Textarea
@@ -751,7 +870,7 @@ function PendingSubmissionsPage() {
                 rows={4}
               />
             </div>
-            {decisionMatrixQ.data?.conflict && (
+            {decisionMatrixQ.data?.conflict && !decisionForm.accept_after_revision && (
               <div className="space-y-2 rounded-md border border-amber-300 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950">
                 <Label htmlFor="arbitration_note" className="text-amber-800 dark:text-amber-200">
                   互评意见冲突，需填写复核理由（必填）

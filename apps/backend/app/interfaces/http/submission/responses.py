@@ -16,7 +16,7 @@ from app.core.db import paginate
 from app.core.tenant import require_tenant_id
 from app.core.tracks import normalize_track
 from app.domain.catalog.models import Resource
-from app.domain.submission.models import Submission
+from app.domain.submission.models import Submission, SubmissionVersion
 from app.interfaces.http.submission.schemas import SubmissionListResponse, SubmissionResponse
 
 
@@ -75,6 +75,7 @@ def _to_response(
         coi_statement=getattr(entry, "coi_statement", None),
         data_availability=getattr(entry, "data_availability", None),
         status=entry.status,
+        latest_version=int(stats.get("latest_version", 1) or 1),
         admin_note=entry.admin_note,
         editor_note=entry.editor_note,
         rework_requirements=getattr(entry, "rework_requirements", None) or [],
@@ -189,6 +190,21 @@ async def _review_stats_for_submissions(
         for submission_id, round_no in adjudicator_rows
         if int(round_no or 1) == current_round_by_sub.get(int(submission_id), 1)
     }
+    # 返修稿识别：作者每重投一次追加一个版本。只取最大版本号，不把
+    # 旧版本行数当成“返修次数”误报（并发重投可能曾经撞号重试）。
+    version_rows = (
+        await db.execute(
+            select(SubmissionVersion.submission_id, func.max(SubmissionVersion.version)).where(
+                SubmissionVersion.submission_id.in_(ids),
+                SubmissionVersion.tenant_id == tenant_id,
+            )
+        )
+    ).all()
+    latest_version_by_sub = {
+        int(submission_id): int(version_no)
+        for submission_id, version_no in version_rows
+        if submission_id is not None and version_no is not None
+    }
     by_sub: dict[int, list[Any]] = {}
     for r in rows:
         by_sub.setdefault(r[0], []).append(r)
@@ -205,6 +221,7 @@ async def _review_stats_for_submissions(
             "adjudicator_accepted": False,
             "can_decide": int(sid) in waived_ids,
             "review_waived": int(sid) in waived_ids,
+            "latest_version": latest_version_by_sub.get(int(sid), 1),
         }
         for sid in ids
     }
@@ -230,6 +247,7 @@ async def _review_stats_for_submissions(
                 or (len(accept_ids) >= 1 and (not conflict or adj_accept))
             ),
             "review_waived": int(sid) in waived_ids,
+            "latest_version": latest_version_by_sub.get(int(sid), 1),
         }
     return out
 

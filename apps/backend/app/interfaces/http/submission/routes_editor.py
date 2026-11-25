@@ -515,7 +515,7 @@ async def list_submissions(
     status_filter: str = Query(
         default=None,
         alias="status",
-        pattern=r"^(pending|under_review|major_revision|minor_revision|resubmitted|rework_requested|accepted|approved|rejected|withdrawn)$",
+        pattern=r"^(pending|under_review|major_revision|minor_revision|resubmitted|rework_requested|accepted|approved|rejected|withdrawn|revision)$",
     ),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
@@ -525,7 +525,20 @@ async def list_submissions(
     """List all submissions in the tenant (editor+)."""
     tenant_id = require_tenant_id()
     query = select(Submission).where(Submission.tenant_id == tenant_id)
-    if status_filter is not None:
+    if status_filter == "revision":
+        # 返修稿专用队列：作者重投后状态会回到 under_review（补材料才是
+        # resubmitted），单看 status 无法把“返修后待复核”从首次互评里分出来。
+        # 以版本号 v2+ 为准，只列当前仍在编辑手上的返修稿。
+        query = query.where(
+            Submission.status.in_(("under_review", "resubmitted")),
+            Submission.id.in_(
+                select(SubmissionVersion.submission_id).where(
+                    SubmissionVersion.tenant_id == tenant_id,
+                    SubmissionVersion.version > 1,
+                )
+            ),
+        )
+    elif status_filter is not None:
         query = query.where(Submission.status == status_filter)
     if status_filter in ("accepted", "approved"):
         # 内容台的“已通过”只展示每部作品最近一次通过记录；历史重复提交
@@ -1290,11 +1303,48 @@ async def editor_decision(
     elif decision == "rejected":
         decision = "reject"
 
+    direct_accept_after_revision = False
+    if body.force_accept_d_grade and decision != "accept":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="force_accept_d_grade 只能用于录用决定",
+        )
+    latest_version = int(
+        (
+            await db.execute(
+                select(func.max(SubmissionVersion.version)).where(
+                    SubmissionVersion.submission_id == entry.id,
+                    SubmissionVersion.tenant_id == entry.tenant_id,
+                )
+            )
+        ).scalar()
+        or 1
+    )
+    if body.accept_after_revision:
+        if decision != "accept":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="accept_after_revision 只能用于录用决定",
+            )
+        if latest_version < 2:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="只有作者返修后重投的稿件才能使用“返修稿直接录用”",
+            )
+        if entry.status != "under_review":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="返修稿直接录用只适用于作者已重投、进入互评复核的稿件",
+            )
+        direct_accept_after_revision = True
+
     # 通过闸门（与遗留 /review 别名共用 _ensure_accept_gate）：至少 1 名
     # 互评成员提交"通过"推荐即可 accept；多位审稿人不是硬性要求。若通过
     # 与不通过/退回修改冲突，仍须先经第三方裁决。desk accept 是需明确声明
     # 的例外——先走 POST /{id}/waive-review 记录理由与审计，再裁决。
-    if decision == "accept":
+    # 返修稿直接录用是另一种有明确前置条件的例外：稿件至少有一轮返修
+    # 版本（v2+），由主编核对修改说明后放行；不能用它绕过首次投稿的互评。
+    if decision == "accept" and not direct_accept_after_revision:
         await _ensure_accept_gate(db, entry)
 
     now = utcnow()
@@ -1303,6 +1353,16 @@ async def editor_decision(
         _editor_note = (
             _editor_note + "\n\n【冲突复核理由】" + body.arbitration_note.strip()
         ).strip()
+    if body.force_accept_d_grade and not (body.editor_note or "").strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="低于 40 分破例录用必须填写 editor_note 说明理由",
+        )
+    if direct_accept_after_revision:
+        _editor_note = (
+            "【返修后直接录用】主编核对返修版本后直接录用，本轮不再要求新增互评通过意见。"
+            + (f"\n{_editor_note}" if _editor_note else "")
+        )
     entry.editor_note = _editor_note or None
     entry.reviewed_by = current_user.id
     entry.reviewed_at = now
@@ -1458,7 +1518,7 @@ async def editor_decision(
     # 通知作者。通过时 related 指向物化出的公开目录条目而非 submission，
     # 作者点通知即可直达自己已发表的文章（目录详情页对访客也公开）。
     decision_labels = {
-        "accept": "通过",
+        "accept": "通过（返修后直接录用）" if direct_accept_after_revision else "通过",
         "reject": "没有通过",
         "minor_revision": "小改",
         "major_revision": "大改",
@@ -1491,6 +1551,9 @@ async def editor_decision(
                 "resource_id": entry.resource_id,
                 "editor_note_present": bool(entry.editor_note),
                 "arbitration_note_present": bool(body.arbitration_note),
+                "accept_after_revision": direct_accept_after_revision,
+                "force_accept_d_grade": bool(body.force_accept_d_grade),
+                "latest_version": latest_version,
             },
         )
     )
@@ -1522,7 +1585,7 @@ async def editor_decision(
             )
     except Exception:
         logger.warning("decision_email_dispatch_failed", submission_id=entry.id, exc_info=True)
-    return _to_response(entry)
+    return _to_response(entry, {"latest_version": latest_version})
 
 
 @router.post(
