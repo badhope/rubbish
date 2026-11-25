@@ -194,10 +194,14 @@ async def _review_stats_for_submissions(
     # 旧版本行数当成“返修次数”误报（并发重投可能曾经撞号重试）。
     version_rows = (
         await db.execute(
-            select(SubmissionVersion.submission_id, func.max(SubmissionVersion.version)).where(
+            select(SubmissionVersion.submission_id, func.max(SubmissionVersion.version))
+            .where(
                 SubmissionVersion.submission_id.in_(ids),
                 SubmissionVersion.tenant_id == tenant_id,
             )
+            # PostgreSQL 不会像 SQLite 那样容忍“选了分组键却不写 GROUP BY”。
+            # 生产列表一次查多条投稿，漏掉分组会直接 500；SQLite 测试发现不了。
+            .group_by(SubmissionVersion.submission_id)
         )
     ).all()
     latest_version_by_sub = {

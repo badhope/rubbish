@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.19.64] — 2026-11-26
+
+### 生产热修：内容台列表 PostgreSQL 500
+
+- **根因**：1.19.63 的返修稿版本统计使用 `SELECT submission_id, max(version)`，SQLite 允许省略 `GROUP BY`，但生产 PostgreSQL 直接报 `GroupingError`，导致内容台列表（以及任何调用 `_review_stats_for_submissions` 的队列）500。
+- **修复**：显式增加 `GROUP BY submission_versions.submission_id`。统计语义不变，仍只取每篇稿件最大版本号；不改表结构、不需要迁移。
+- **教训**：后端全量测试默认跑 SQLite，无法覆盖 PostgreSQL 的严格分组语义；本版热修后补做生产真实查询与接口验证。
+
+### 校验
+
+- 定向回归 `tests/test_revision_direct_accept_11963.py` 为 `3 passed`。
+- 1.19.64 后端全量 `946 passed / 3 skipped`（431.73s）；本版只改后端统计查询与版本号，前端 1.19.63 的 `42 files / 226 tests passed` 与构建结果继续适用。
+- 生产 PostgreSQL 真实执行修复后的统计查询与 `list_submissions(status_filter="revision")`：返回 2 条返修稿（355 / 353），`latest_version=2`，无 `GroupingError`；服务启动与日志无异常。
+
+
 ## [1.19.63] — 2026-11-26
 
 ### 返修稿直接录用（内容台闭环）
