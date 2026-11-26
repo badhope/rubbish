@@ -239,6 +239,39 @@ export async function ensureAdminReviewerRole(page: Page): Promise<void> {
 }
 
 /**
+ * 以管理员身份给指定账号授予/撤销一个历史角色（写入 user_roles）。
+ * 用于角色权限矩阵：同一个真实账号逐级升权，验证每一档只多开对应接口。
+ */
+export async function setUserRole(
+  page: Page,
+  username: string,
+  role: string,
+  enabled = true,
+): Promise<void> {
+  const raw = await page.evaluate(() => sessionStorage.getItem('rubbish-auth'))
+  if (!raw) throw new Error('管理员未登录，无法读取 token')
+  const token = JSON.parse(raw)?.state?.token as string
+  if (!token) throw new Error('sessionStorage 中没有 access token')
+  const headers = { Authorization: `Bearer ${token}` }
+  const apiBase = new URL('/api', page.url()).toString()
+  const usersResp = await page.request.get(
+    `${apiBase}/admin/users?limit=50&q=${encodeURIComponent(username)}`,
+    { headers },
+  )
+  if (!usersResp.ok()) throw new Error(`查询用户 ${username} 失败: ${usersResp.status()}`)
+  const users = await usersResp.json()
+  const target = users.find((u: { username: string }) => u.username === username)
+  if (!target) throw new Error(`未找到用户 ${username}`)
+  const url = `${apiBase}/admin/users/${target.id}/roles${enabled ? '' : `/${role}`}`
+  const resp = enabled
+    ? await page.request.post(url, { headers, data: { role } })
+    : await page.request.delete(url, { headers })
+  if (!resp.ok()) {
+    throw new Error(`${enabled ? '授予' : '撤销'}角色 ${role} 失败: ${resp.status()}`)
+  }
+}
+
+/**
  * 打开「新建投稿」四步表单。1.9.0 起它是独立页面 /submissions/new，
  * 不再是列表页上的 dialog；旧套件的 dialog 断言全部失效。
  */
@@ -246,9 +279,9 @@ export async function openSubmissionForm(page: Page): Promise<void> {
   // 每个 context 都可能是复用过的：清掉上一轮留下的投稿草稿，
   // 否则异步草稿恢复会覆盖本用例刚填的题录字段。
   await page.evaluate(() => localStorage.removeItem('submission-wizard-draft-v1'))
-  await page.getByRole('button', { name: /新建提交/ }).click()
+  await page.getByRole('button', { name: /写新的一篇/ }).click()
   await expect(page).toHaveURL(/\/submissions\/new/, { timeout: 10_000 })
-  await expect(page.getByRole('heading', { name: '新建投稿' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '写一篇' })).toBeVisible()
 }
 
 /**
@@ -265,13 +298,12 @@ export async function fillSubmissionWizard(
     downloadUrl?: string
   },
 ): Promise<void> {
-  await expect(page.getByRole('heading', { name: '新建投稿' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '写一篇' })).toBeVisible()
   await page.getByLabel(/^标题/).fill(input.title)
-  await page.getByLabel(/^学科/).fill(input.discipline)
-  await page.getByLabel(/^摘要/).fill(input.abstract)
-  await page.getByLabel(/^关键词/).fill('E2E, 测试')
-  await page.getByLabel(/^中图分类号/).fill('TP391')
-  await page.getByRole('main').getByRole('button', { name: '下一步' }).click()
+  await page.getByLabel(/^话题 \*/).fill(input.discipline)
+  await page.getByLabel(/^开头/).fill(input.abstract)
+  await page.getByLabel('话题（选填，逗号分隔）').fill('E2E, 测试')
+    await page.getByRole('main').getByRole('button', { name: '下一步' }).click()
 
   if (input.downloadUrl) {
     await page.evaluate(() => {
@@ -291,8 +323,8 @@ export async function fillSubmissionWizard(
     .fill(`# 1 引言\n\nE2E 正文。\n\n## 参考文献\n\n[1] Rubbish E2E. 2026.`)
   await page.getByRole('main').getByRole('button', { name: '下一步' }).click()
 
-  await page.getByLabel(/作者（逗号分隔/).fill(input.authors)
-  for (const label of ['原创性声明', '保密与合规声明', '版权与许可确认']) {
+  await page.getByLabel(/署名（逗号分隔/).fill(input.authors)
+  for (const label of ['原创性声明', '隐私与合规确认', '发布授权', '发布规范确认']) {
     await page.getByLabel(label).check()
   }
   await page.getByRole('main').getByRole('button', { name: '下一步' }).click()

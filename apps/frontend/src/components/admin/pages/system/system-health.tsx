@@ -26,6 +26,9 @@ type SecurityStatus = {
   region_access_enabled?: boolean
   registration_invite_required?: boolean
   registration_email_code_required?: boolean
+  require_2fa_for_admin?: boolean
+  admin_total?: number
+  admin_without_2fa?: number
 }
 
 type EmailStatus = {
@@ -301,6 +304,21 @@ export default function SystemHealthPage() {
                       地区策略：{security.region_access_enabled ? '大陆/港澳台匿名只看封面，海外匿名只读文章与论坛' : '未启用'}；
                       注册：{security.registration_invite_required ? '仅邀请码' : '未设邀请码'}，
                       {security.registration_email_code_required ? '需邮箱验证码' : '不需邮箱验证码'}。
+                    </p>
+                    <p className={security.admin_without_2fa && security.admin_without_2fa > 0 ? 'text-amber-700' : 'text-muted-foreground'}>
+                      管理员 2FA：{security.require_2fa_for_admin ? '已强制' : '未强制'}；
+                      {security.admin_total === -1
+                        ? '统计失败'
+                        : `${security.admin_total ?? 0} 个管理员，${security.admin_without_2fa ?? 0} 个未绑定`}
+                      {(security.admin_without_2fa ?? 0) > 0 ? (
+                        <>
+                          。先到{' '}
+                          <a className="underline underline-offset-2" href="/me?tab=settings&section=security">
+                            个人设置
+                          </a>{' '}
+                          绑定，全部绑完再打开强制开关，避免把管理员锁在后台外。
+                        </>
+                      ) : null}
                     </p>
                   </>
                 ) : (

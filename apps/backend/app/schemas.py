@@ -573,6 +573,8 @@ class HealthResponse(BaseModel):
 class HealthReadyResponse(BaseModel):
     status: Literal["ok", "error"]
     database: Literal["connected", "unavailable"]
+    rate_limit: Literal["redis", "memory"] = "memory"
+    rate_limit_ok: bool = True
 
 
 # --- Tenant ---

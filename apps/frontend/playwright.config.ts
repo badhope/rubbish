@@ -25,25 +25,35 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   use: {
     baseURL: FRONTEND_URL,
+    locale: 'zh-CN',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     // video 关闭：录制需要 ffmpeg，沙箱不一定有；trace + screenshot 已足够定位失败。
     video: 'off',
-    // 用 Playwright 自带 chromium（npm install 后已下载）；
-    // 沙箱无系统 Chrome，故不指定 channel。
-    // 离线/受限环境可用 PLAYWRIGHT_CHROMIUM_EXECUTABLE 指向已缓存的
-    // chrome.exe，省掉一次 ~190MB 的联网下载；CI 不设该变量，走自带构建。
-    launchOptions: {
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-      ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
-        ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE }
-        : {}),
-    },
+    // Chromium 的 no-sandbox 参数只挂在 chromium project 上；
+    // Firefox/WebKit 不接受 --no-sandbox，不能放进全局 use。
   },
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        locale: 'zh-CN',
+        launchOptions: {
+          args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+          ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
+            ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE }
+            : {}),
+        },
+      },
+    },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'], locale: 'zh-CN' },
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'], locale: 'zh-CN' },
     },
   ],
   webServer: [

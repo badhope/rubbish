@@ -81,6 +81,7 @@ ROLE_LABELS = {
 @router.get("/security/status")
 async def security_status(
     _admin: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
 ) -> dict[str, object]:
     """Report the JWT signing key state for the running process.
 
@@ -95,6 +96,26 @@ async def security_status(
 
     keys = _active_secret_keys()
     current = _signing_key()
+    admin_total = 0
+    admin_without_2fa = 0
+    try:
+        admin_total = int(
+            (await db.execute(text("SELECT count(*) FROM users WHERE is_admin = true"))).scalar_one()
+        )
+        admin_without_2fa = int(
+            (
+                await db.execute(
+                    text(
+                        "SELECT count(*) FROM users "
+                        "WHERE is_admin = true AND totp_enabled_at IS NULL"
+                    )
+                )
+            ).scalar_one()
+        )
+    except Exception:
+        # 统计失败不影响密钥状态；页面会显示未知而不是误报为零。
+        admin_total = -1
+        admin_without_2fa = -1
     return {
         "signing_key_count": len(keys),
         "previous_key_count": max(0, len(keys) - 1),
@@ -113,6 +134,9 @@ async def security_status(
         "region_access_enabled": settings.region_access_enabled,
         "registration_invite_required": bool(settings.registration_invite_code.strip()),
         "registration_email_code_required": settings.registration_email_code_required,
+        "require_2fa_for_admin": settings.require_2fa_for_admin,
+        "admin_total": admin_total,
+        "admin_without_2fa": admin_without_2fa,
     }
 
 

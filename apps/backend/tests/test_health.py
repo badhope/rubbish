@@ -18,7 +18,12 @@ async def test_readiness_reports_db_connected(client: AsyncClient) -> None:
     response = await client.get("/api/health/ready")
     assert response.status_code == 200
     body = response.json()
-    assert body == {"status": "ok", "database": "connected"}
+    assert body == {
+        "status": "ok",
+        "database": "connected",
+        "rate_limit": "memory",
+        "rate_limit_ok": True,
+    }
 
 
 async def test_root_returns_app_metadata(client: AsyncClient) -> None:

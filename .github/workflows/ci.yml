@@ -128,9 +128,11 @@ jobs:
         run: npm ci --registry=https://registry.npmjs.org
       - name: Install backend dependencies
         run: cd ../backend && uv sync --group dev --frozen
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
-      - name: Run smoke suite
+      - name: Install Playwright browsers
+        # 配置里有 chromium/firefox/webkit 三个 project；只装 chromium
+        # 会让 npx playwright test 在另外两个 project 上直接报浏览器缺失。
+        run: npx playwright install --with-deps chromium firefox webkit
+      - name: Run browser suite
         run: npx playwright test
       - name: Upload failure traces
         if: ${{ failure() }}

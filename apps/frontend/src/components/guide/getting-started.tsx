@@ -164,7 +164,7 @@ export function GettingStarted() {
           Rubbish 是公开写作与讨论社区，不做学术评价，也不出具职称、学分、学历或公开证明。站内编号只用来定位，
           虚构内容要标注；不碰真人隐私、违法内容和他人版权。
           完整规则见
-          <Link to="/guide" search={{ tab: 'policies' }} className="mx-1 text-primary hover:underline">
+          <Link to="/guide" search={{ tab: 'policies' }} className="mx-1 text-primary underline underline-offset-2 hover:underline">
             边界与处理
           </Link>
           。

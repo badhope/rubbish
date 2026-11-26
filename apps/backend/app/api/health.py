@@ -25,7 +25,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app import __version__
 from app.core.db import get_db
 from app.core.logging import get_logger
-from app.core.rate_limit_store import get_rate_limiter_store
+from app.core.rate_limit_store import get_rate_limiter_store, rate_limiter_health
 from app.schemas import HealthReadyResponse, HealthResponse
 
 logger = get_logger("rubbish.health")
@@ -58,7 +58,13 @@ async def readiness_root(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             content={"status": "error", "database": "unavailable"},
         )
-    return HealthReadyResponse(status="ok", database="connected")
+    limiter = await rate_limiter_health()
+    return HealthReadyResponse(
+        status="ok",
+        database="connected",
+        rate_limit="redis" if limiter["backend"] == "redis" else "memory",
+        rate_limit_ok=bool(limiter["ok"]),
+    )
 
 
 # Legacy endpoints at /api/health/* 鈥? preserved for the existing test

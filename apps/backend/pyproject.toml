@@ -1,6 +1,6 @@
 [project]
 name = "rubbish-backend"
-version = "1.20.4"
+version = "1.20.5"
 description = "Rubbish backend — modular multi-tenant academic platform base"
 # Python 版本锁定在 3.12 系列：与 .python-version、Dockerfile、CI 完全一致
 requires-python = ">=3.12,<3.13"
@@ -84,7 +84,7 @@ dev = [
     "pip-audit==2.10.1",
     "pip-licenses==5.5.5",
     "bandit[toml]==1.9.4",
-    "fakeredis[lua]==2.37.0",
+    "fakeredis[lua]==2.41.0",
 ]
 
 [build-system]
@@ -92,7 +92,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [[tool.uv.index]]
-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+url = "https://pypi.org/simple"
 default = true
 
 [tool.hatch.build.targets.wheel]

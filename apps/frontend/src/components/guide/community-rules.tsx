@@ -150,7 +150,7 @@ export function CommunityRules() {
         <RevealSection as="p" className="border-t pt-6 text-xs leading-relaxed text-muted-foreground">
           公约更新会在本页与站内公告同步注明日期；规则变更提前 14 天公示。
           完整隐私条款见
-          <a href="/privacy" className="mx-1 text-primary hover:underline">
+          <a href="/privacy" className="mx-1 text-primary underline underline-offset-2 hover:underline">
             隐私政策
           </a>
           。

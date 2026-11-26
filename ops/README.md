@@ -7,7 +7,7 @@
 | `site-health.sh` | 每 5 分钟 | HTTP、HTML `no-cache`（3 次重试，避免发版窗口假告警）、API、stats、备份≤36h、磁盘≤85%、三容器 |
 | `site-refresh.sh` | 每日 04:10 | 首页/论文/副刊/sitemap/RSS/API + 最新 5 篇预热 |
 | `db-backup.sh` | 每日 03:20 | PostgreSQL 逻辑 dump + uploads 打包，先写 `.partial` 并 `gzip -t` 校验后落盘；DB 留 30 份 / uploads 留 10 份 |
-| `backup-verify.sh` | 每周日 04:30 | 解压校验、临时库恢复、resources 行数核对 |
+| `backup-verify.sh` | 每周日 04:30 | 解压校验、临时库恢复、resources/users 行数核对；生产安装在 `/usr/local/sbin/rubbish-backup-verify.sh`，临时库用完即删 |
 | `deploy.sh` | 手动/CI | **仅 Docker 参考栈**：构建、容器内旧静态备份、替换、重启、健康检查、预热、失败回滚。当前公网是 systemd + Nginx，见 `docs/ENGINEERING.md` |
 | `offsite-backup.sh` | 每日 04:50 | **只备份数据**（DB + uploads），不备份代码/镜像；无远端时明确 SKIP，配置 `RCLONE_REMOTE` 后自动生效 |
 | `content-export.sh` | 手动 | A 方案公开内容快照：只导已发表内容，命中邮箱/内部标识即失败，不产出半成品 |
@@ -16,7 +16,13 @@
 | `drop-garbage-tables.sh` | 手动（服务器） | **默认 dry-run**；清点 19 张垃圾表，排除 2 回滚点，逐表 `pg_dump -t` 归档后 DROP（P1 #16） |
 | `inspect-review-scores.sh` | 手动（服务器） | **只读**探查 review_scores 的 tenant_id 来源，决定 RLS 处置路径（P1 #13） |
 
-日志：`/home/ubuntu/rubbish-health.log`、`rubbish-refresh.log`、`rubbish-backup-verify.log`。
+日志：`/var/log/rubbish-health.log`、`/var/log/rubbish-refresh.log`、`/var/log/rubbish-backup-verify.log`（生产备份日志 `/var/log/rubbish-backup.log`）。
+
+## 生产备份现状
+
+- 每日 03:00：`/etc/cron.d/rubbish-backup` 以 root 执行 `/usr/local/sbin/rubbish-backup.sh`，产出 `db-*.sql.gz`、`uploads-*.tar.gz`、`config-*.tar.gz` 到 `/www/backups/rubbish`。
+- 每周日 04:30：同一 cron 文件执行 `/usr/local/sbin/rubbish-backup-verify.sh`，在临时库恢复最新 dump，核对 `resources` 与 `users` 行数后 DROP，不碰业务库。
+- 恢复演练日志：`/var/log/rubbish-backup-verify.log`。
 
 ## 异地备份启用方式
 

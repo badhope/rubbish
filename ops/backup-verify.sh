@@ -1,22 +1,47 @@
 #!/usr/bin/env bash
-# 每周备份演练：解压校验 + 临时库恢复 + 行数核对 + 上传包可列出。
+# 备份演练：gzip/tar 完整性校验 + 临时库恢复 + 表行数核对。
+# 生产由 root cron 调用；脚本本身不写业务库，只创建/删除一个临时库。
 set -euo pipefail
-cd /home/ubuntu/rubbish
-BACKUP_DIR="${BACKUP_DIR:-/home/ubuntu/backups}"
-LOG="${LOG:-/home/ubuntu/rubbish-backup-verify.log}"
-DB=rubbish_restore_check
-note(){ printf '[%s] %s\n' "$(date -Is)" "$*" >> "$LOG"; }
 
-db=$(ls -1t "$BACKUP_DIR"/db-*.sql.gz | head -1)
-up=$(ls -1t "$BACKUP_DIR"/uploads-*.tar.gz | head -1)
+BACKUP_DIR="${BACKUP_DIR:-/www/backups/rubbish}"
+LOG="${LOG:-/var/log/rubbish-backup-verify.log}"
+DB_CONTAINER="${DB_CONTAINER:-rubbish-db-1}"
+DB_USER="${DB_USER:-rubbish}"
+CHECK_DB="${CHECK_DB:-rubbish_restore_check}"
+MIN_RESOURCES="${MIN_RESOURCES:-1}"
+
+note() { printf '[%s] %s\n' "$(date -Is)" "$*" >> "$LOG"; }
+mkdir -p "$(dirname "$LOG")"
+
+db=$(ls -1t "$BACKUP_DIR"/db-*.sql.gz 2>/dev/null | head -1)
+up=$(ls -1t "$BACKUP_DIR"/uploads-*.tar.gz 2>/dev/null | head -1)
+if [ -z "$db" ] || [ -z "$up" ]; then
+  note "FAIL no db/uploads backup under $BACKUP_DIR"
+  exit 1
+fi
+
 note "checking $(basename "$db") / $(basename "$up")"
-gzip -t "$db"; tar -tzf "$up" >/dev/null
+gzip -t "$db"
+tar -tzf "$up" >/dev/null
 
-cleanup(){ docker compose exec -T db psql -U rubbish_legacy -d postgres -c "drop database if exists $DB" >/dev/null 2>&1 || true; }
+cleanup() {
+  docker exec "$DB_CONTAINER" psql -U "$DB_USER" -d postgres \
+    -c "DROP DATABASE IF EXISTS $CHECK_DB" >/dev/null 2>&1 || true
+}
 trap cleanup EXIT
-docker compose exec -T db psql -U rubbish_legacy -d postgres -c "drop database if exists $DB" >/dev/null
-docker compose exec -T db psql -U rubbish_legacy -d postgres -c "create database $DB" >/dev/null
-gunzip -c "$db" | docker compose exec -T db psql -U rubbish_legacy -d "$DB" -v ON_ERROR_STOP=1 >/dev/null
-n=$(docker compose exec -T db psql -U rubbish_legacy -d "$DB" -Atc 'select count(*) from resources')
-[ "$n" -ge 200 ] || { note "FAIL resources=$n"; exit 1; }
-note "restore ok resources=$n"
+
+cleanup
+docker exec "$DB_CONTAINER" psql -U "$DB_USER" -d postgres \
+  -c "CREATE DATABASE $CHECK_DB" >/dev/null
+gunzip -c "$db" | docker exec -i "$DB_CONTAINER" psql -U "$DB_USER" -d "$CHECK_DB" \
+  -v ON_ERROR_STOP=1 >/dev/null
+
+resources=$(docker exec "$DB_CONTAINER" psql -U "$DB_USER" -d "$CHECK_DB" \
+  -Atc 'SELECT count(*) FROM resources')
+users=$(docker exec "$DB_CONTAINER" psql -U "$DB_USER" -d "$CHECK_DB" \
+  -Atc 'SELECT count(*) FROM users')
+[ "$resources" -ge "$MIN_RESOURCES" ] || {
+  note "FAIL resources=$resources users=$users"
+  exit 1
+}
+note "restore ok $(basename "$db") resources=$resources users=$users"

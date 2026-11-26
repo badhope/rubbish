@@ -23,8 +23,8 @@ from app.api.deps import (
 )
 from app.core.db import get_db
 from app.domain.catalog.models import PageView, Resource
-from app.domain.submission.models import Submission
 from app.domain.gamification.activity import activity_snapshot
+from app.domain.submission.models import Submission
 from app.models import User
 
 router = APIRouter(prefix="/me", tags=["me"])

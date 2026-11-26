@@ -40,8 +40,10 @@ export function RevealSection({
       id={id}
       className={className}
       style={style}
-      initial={{ opacity: 0.3, y }}
-      animate={revealed ? { opacity: 1, y: 0 } : { opacity: 0.3, y }}
+      // 只做位移，不做透明度入场：0.3 的初始透明度会让正文在动画期间
+      // 低于 WCAG AA 对比度，Firefox/WebKit 的审计会直接判 serious。
+      initial={{ opacity: 1, y }}
+      animate={revealed ? { opacity: 1, y: 0 } : { opacity: 1, y }}
       transition={{ duration, delay, ease: 'easeOut' }}
     >
       {children}

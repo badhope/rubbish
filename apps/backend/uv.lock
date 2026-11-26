@@ -526,15 +526,15 @@ wheels = [
 
 [[package]]
 name = "fakeredis"
-version = "2.37.0"
+version = "2.41.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "redis" },
     { name = "sortedcontainers" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/cb/34/73256495885f68b125b6a95f6a8448e103adf34825746ab8905db52183a0/fakeredis-2.37.0.tar.gz", hash = "sha256:7461f124dcba04a80691d72270b3d1d5cd100ef14dc068c76db825940f3ed799", size = 236339, upload-time = "2026-07-22T20:04:53.753Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8e/74/1d78df11d3c168a7fe4e11315e77b762c1f89b8ddeaeb0f0486c55fd64cd/fakeredis-2.41.0.tar.gz", hash = "sha256:a10d97197e6c6e9e98affc10abba9fb0efa9bc5671bbc425dca7f47063c2c577", size = 351444, upload-time = "2026-11-23T14:47:49.136Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/76/e2/964e6ef372770dd7c32f9738b50ff4924f1d3cccd665b568680e4bcb0167/fakeredis-2.37.0-py3-none-any.whl", hash = "sha256:657a2a695a1123be0c13f98db409371497bd94c29d260dd76a9fc7ce1a633745", size = 151526, upload-time = "2026-07-22T20:04:51.979Z" },
+    { url = "https://files.pythonhosted.org/packages/3a/47/1a20be7813c4f079b478d9d2c54fcfc4178062a3acd028dd289cdced3904/fakeredis-2.41.0-py3-none-any.whl", hash = "sha256:9a2bb58889e8bf646b991324ac4d226a3ae74a3bdde7b6e533c7072c853f236e", size = 211330, upload-time = "2026-11-23T14:47:47.667Z" },
 ]
 
 [package.optional-dependencies]
@@ -1699,7 +1699,7 @@ wheels = [
 
 [[package]]
 name = "rubbish-backend"
-version = "1.20.4"
+version = "1.20.5"
 source = { editable = "." }
 dependencies = [
     { name = "alembic" },
@@ -1808,7 +1808,7 @@ dev = [
     { name = "aiosqlite", specifier = "==0.22.1" },
     { name = "asgi-lifespan", specifier = "==2.1.0" },
     { name = "bandit", extras = ["toml"], specifier = "==1.9.4" },
-    { name = "fakeredis", extras = ["lua"], specifier = "==2.37.0" },
+    { name = "fakeredis", extras = ["lua"], specifier = "==2.41.0" },
     { name = "mypy", specifier = "==1.20.2" },
     { name = "pip-audit", specifier = "==2.10.1" },
     { name = "pip-licenses", specifier = "==5.5.5" },

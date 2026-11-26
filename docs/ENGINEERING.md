@@ -74,7 +74,7 @@ The Compose stack in `docker-compose.yml` remains the reproducible reference for
 ## Project rhythm
 
 - **Weekly**: triage reports, claims and comments; check `site-health.sh`; review the slowest public route in the performance budget.
-- **Monthly**: dependency updates in one PR, then the full CI gate; check backup restore, not only backup creation.
+- **Monthly**: dependency updates in one PR, then the full CI gate. Backup restore is no longer manual-only: the weekly `rubbish-backup-verify.sh` drill restores the latest dump into a throwaway database and checks row counts.
 - **Quarterly**: module boundary review against `docs/ARCHITECTURE.md`; delete a route or module that has no owner, no tests and no user path. Growth is not a success metric by itself.
 - **Before adding a feature**: name the one user action it serves and the one screen it changes. If it needs a new settings page, a new permission and a new background job, split it or defer it.
 

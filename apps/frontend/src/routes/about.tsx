@@ -141,12 +141,12 @@ function AboutPage() {
               { icon: Building2, label: '运营', value: 'Rubbish 团队' },
               { icon: ShieldCheck, label: '标识', value: '站内编号只用来定位' },
             ].map(({ icon: Icon, label, value }) => (
-              <div key={label} className="flex items-start gap-3 border-t pt-3">
-                <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <div>
-                  <dt className="text-xs text-muted-foreground">{label}</dt>
-                  <dd className="mt-0.5 text-sm">{value}</dd>
-                </div>
+              <div key={label} className="border-t pt-3">
+                <dt className="flex items-start gap-3 text-xs text-muted-foreground">
+                  <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <span>{label}</span>
+                </dt>
+                <dd className="mt-0.5 pl-7 text-sm">{value}</dd>
               </div>
             ))}
           </dl>
@@ -169,11 +169,11 @@ function AboutPage() {
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             版权、隐私、举报与申诉请发邮件到{' '}
-            <a href="mailto:info@rubbishasci.cn" className="text-primary hover:underline">
+            <a href="mailto:info@rubbishasci.cn" className="text-primary underline underline-offset-2 hover:underline">
               info@rubbishasci.cn
             </a>
             。社区规则见{' '}
-            <Link to="/guide" search={{ tab: 'policies' }} className="text-primary hover:underline">
+            <Link to="/guide" search={{ tab: 'policies' }} className="text-primary underline underline-offset-2 hover:underline">
               边界与处理
             </Link>。
           </p>

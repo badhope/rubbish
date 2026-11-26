@@ -16,6 +16,8 @@ interface HealthBody {
 interface ReadyBody {
   status: string
   database: 'connected' | 'unavailable'
+  rate_limit?: 'redis' | 'memory'
+  rate_limit_ok?: boolean
 }
 
 function ProbeRow({
@@ -49,6 +51,8 @@ function ProbeRow({
 function StatusPage() {
   const [service, setService] = useState<ProbeState>('unknown')
   const [database, setDatabase] = useState<ProbeState>('unknown')
+  const [rateLimit, setRateLimit] = useState<ProbeState>('unknown')
+  const [rateLimitBackend, setRateLimitBackend] = useState<'redis' | 'memory' | null>(null)
   const [version, setVersion] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -71,6 +75,12 @@ function StatusPage() {
     } else {
       setDatabase('fail')
     }
+    if (readyRes.status === 'fulfilled') {
+      setRateLimitBackend(readyRes.value.data.rate_limit ?? 'memory')
+      setRateLimit(readyRes.value.data.rate_limit_ok === false ? 'fail' : 'ok')
+    } else {
+      setRateLimit('fail')
+    }
     setLoading(false)
   }, [])
 
@@ -79,7 +89,11 @@ function StatusPage() {
   }, [load])
 
   const overall: ProbeState =
-    service === 'fail' || database === 'fail' ? 'fail' : service === 'ok' && database === 'ok' ? 'ok' : 'unknown'
+    service === 'fail' || database === 'fail' || rateLimit === 'fail'
+      ? 'fail'
+      : service === 'ok' && database === 'ok' && rateLimit === 'ok'
+        ? 'ok'
+        : 'unknown'
 
   return (
     <div className="mx-auto w-full max-w-2xl space-y-6">
@@ -139,12 +153,27 @@ function StatusPage() {
             }
             state={database}
           />
+          <ProbeRow
+            label="限流存储"
+            detail={
+              rateLimit === 'ok'
+                ? rateLimitBackend === 'redis'
+                  ? 'Redis 共享桶正常，多进程部署也能统一计数。'
+                  : '进程内计数；单进程可用，重启后计数清零。'
+                : rateLimit === 'fail'
+                  ? rateLimitBackend === 'memory'
+                    ? 'Redis 不可达，已退回进程内计数；多进程会重复计数。'
+                    : '限流存储不可用，登录与接口保护可能失效。'
+                  : '等待检查结果。'
+            }
+            state={rateLimit}
+          />
         </CardContent>
       </Card>
 
       <p className="text-xs leading-relaxed text-muted-foreground">
         页面打不开时可以先刷新一次。持续异常，可在
-        <Link to="/forum" search={{ view: 'feedback' }} className="mx-1 text-primary hover:underline">
+        <Link to="/forum" search={{ view: 'feedback' }} className="mx-1 text-primary underline underline-offset-2 hover:underline">
           反馈墙
         </Link>{' '}
         留言，或写信到 info@rubbishasci.cn。

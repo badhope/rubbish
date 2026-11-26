@@ -551,7 +551,7 @@ export function AppShell() {
                     type="button"
                     onClick={() => setOpenGroup(isOpen ? '' : group.name)}
                     aria-expanded={isOpen}
-                    className="nav-group-label mb-1 mt-2 flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-[10px] font-medium uppercase tracking-widest text-sidebar-foreground/45 transition-colors hover:text-sidebar-foreground/80"
+                    className="nav-group-label mb-1 mt-2 flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-[10px] font-medium uppercase tracking-widest text-sidebar-foreground/75 transition-colors hover:text-sidebar-foreground/80"
                   >
                     <span>{groupLabel(group.name, lang)}</span>
                     <ChevronDown
@@ -602,7 +602,7 @@ export function AppShell() {
                 </Avatar>
                 <div className="min-w-0">
                   <p className="truncate text-xs font-medium">{displayName}</p>
-                  <p className="truncate text-[10px] text-sidebar-foreground/55">
+                  <p className="truncate text-[10px] text-sidebar-foreground/75">
                     {primaryRoleLabel(user.roles ?? [], isAdmin)}
                   </p>
                 </div>

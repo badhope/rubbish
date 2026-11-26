@@ -55,9 +55,13 @@ async def test_admin_2fa_default_off_allows_access(
     assert settings.require_2fa_for_admin is False
     token = admin_user["token"]
     r = await client.get("/api/admin/security/status", headers={"Authorization": f"Bearer {token}"})
-    # 200 or 404 is acceptable depending on what /admin/security/status does
-    # without 2FA enforced; the point is "not 403 from this middleware".
-    assert r.status_code != 403 or "two-factor" not in r.text.lower()
+    assert r.status_code == 200
+    body = r.json()
+    # 覆盖统计必须来自真实用户表，而不是写死 0：
+    # 当前测试库只有 admin 一个管理员，且没有绑定 TOTP。
+    assert body["require_2fa_for_admin"] is False
+    assert body["admin_total"] >= 1
+    assert body["admin_without_2fa"] >= 1
 
 
 @pytest.mark.asyncio

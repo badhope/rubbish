@@ -354,7 +354,7 @@ function MemberHome() {
           ) : (
             <div className="border-y py-8 text-sm text-muted-foreground">
               精选正在整理。
-              <Link to="/catalog" className="ml-2 text-primary hover:underline">直接去内容库</Link>
+              <Link to="/catalog" className="ml-2 text-primary underline underline-offset-2 hover:underline">直接去内容库</Link>
             </div>
           )}
 
@@ -433,7 +433,7 @@ function MemberHome() {
             ) : (
               <p className="border-y py-8 text-sm text-muted-foreground">
                 主题论坛还空着。你可以发第一个主题帖。
-                <Link to="/forum" search={{ compose: 1 }} className="ml-2 text-primary hover:underline">去说一句</Link>
+                <Link to="/forum" search={{ compose: 1 }} className="ml-2 text-primary underline underline-offset-2 hover:underline">去说一句</Link>
               </p>
             )}
 
@@ -455,7 +455,7 @@ function MemberHome() {
                   短帖留在主题论坛，长文去发布作品。登录就能说话，不必先攒经验。
                 </p>
                 <div className="mt-3 flex flex-wrap gap-4 text-sm">
-                  <Link to="/forum" search={{ compose: 1 }} className="text-primary hover:underline">去说话</Link>
+                  <Link to="/forum" search={{ compose: 1 }} className="text-primary underline underline-offset-2 hover:underline">去说话</Link>
                   <Link to="/submissions/new" className="text-muted-foreground hover:text-primary">写长文</Link>
                 </div>
               </div>
