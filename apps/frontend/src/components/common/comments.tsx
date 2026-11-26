@@ -21,6 +21,7 @@ import {
 } from '@/hooks/api/use-comments'
 import { useAuth } from '@/hooks/use-auth'
 import { formatDateTime } from '@/lib/utils'
+import { ConfirmDialog } from '@/components/common/confirm-dialog'
 
 // 超过 160 字的评论默认折叠，展开/收起切换。
 function LongText({ text }: { text: string }) {
@@ -56,6 +57,7 @@ export function Comments({ resourceId, title }: { resourceId: number; title?: st
   const [page, setPage] = useState(1)
   const [draft, setDraft] = useState('')
   const [reporting, setReporting] = useState<{ id: number; body: string } | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; author: string } | null>(null)
   const [reportLoading, setReportLoading] = useState(false)
   const { data, isLoading, isError, refetch } = useComments(resourceId, page)
   const createMut = useCreateComment(resourceId)
@@ -81,7 +83,10 @@ export function Comments({ resourceId, title }: { resourceId: number; title?: st
     }
   }
 
-  const onDelete = async (id: number) => {
+  const onDelete = async () => {
+    if (!deleteTarget) return
+    const id = deleteTarget.id
+    setDeleteTarget(null)
     try {
       await deleteMut.mutateAsync(id)
       toast.success('已删除')
@@ -210,7 +215,7 @@ export function Comments({ resourceId, title }: { resourceId: number; title?: st
                       ) : null}
                       {(mine || user?.is_admin) && (
                         <button
-                          onClick={() => onDelete(c.id)}
+                          onClick={() => setDeleteTarget({ id: c.id, author: c.author_name })}
                           disabled={deleteMut.isPending}
                           aria-label="删除评论"
                           className="text-muted-foreground transition-colors hover:text-destructive"
@@ -283,6 +288,20 @@ export function Comments({ resourceId, title }: { resourceId: number; title?: st
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="删除这条评论？"
+        description={
+          deleteTarget
+            ? `评论会从作品页立即移除，且不能恢复。作者：${deleteTarget.author}。`
+            : undefined
+        }
+        confirmText="删除评论"
+        destructive
+        onConfirm={() => void onDelete()}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      />
     </Card>
   )
 }

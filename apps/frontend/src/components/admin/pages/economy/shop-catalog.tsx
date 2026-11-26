@@ -26,6 +26,7 @@ import { extractError } from '@/lib/utils'
 import { uploadMediaImage } from '@/lib/media'
 import { Gift, Pencil, Plus, Power, Upload } from 'lucide-react'
 import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/common/confirm-dialog'
 
 type ItemForm = {
   name: string
@@ -96,6 +97,7 @@ export function ShopCatalogCard() {
   const createItem = useCreateShopItem()
   const updateItem = useUpdateShopItem()
   const [editor, setEditor] = useState<{ item: AdminShopItem | null } | null>(null)
+  const [toggleTarget, setToggleTarget] = useState<AdminShopItem | null>(null)
   const [form, setForm] = useState<ItemForm>(EMPTY_FORM)
   const [coverUploading, setCoverUploading] = useState(false)
   const coverInputRef = useRef<HTMLInputElement>(null)
@@ -181,8 +183,6 @@ export function ShopCatalogCard() {
   }
 
   const toggleActive = async (item: AdminShopItem) => {
-    const action = item.is_active ? '下架' : '重新上架'
-    if (!window.confirm(`确认${action}「${item.name}」？`)) return
     try {
       await updateItem.mutateAsync({ id: item.id, is_active: !item.is_active })
       toast.success(item.is_active ? '已下架' : '已重新上架')
@@ -270,7 +270,7 @@ export function ShopCatalogCard() {
                       size="sm"
                       variant="ghost"
                       disabled={updateItem.isPending}
-                      onClick={() => void toggleActive(item)}
+                      onClick={() => setToggleTarget(item)}
                     >
                       <Power className="h-3.5 w-3.5" /> {item.is_active ? '下架' : '上架'}
                     </Button>
@@ -441,6 +441,27 @@ export function ShopCatalogCard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={toggleTarget !== null}
+        title={toggleTarget?.is_active ? '确认下架这件货品？' : '确认重新上架？'}
+        description={
+          toggleTarget
+            ? toggleTarget.is_active
+              ? `「${toggleTarget.name}」下架后，会员会立即看不到它；已兑换的订单不受影响。`
+              : `「${toggleTarget.name}」会重新出现在经验兑换区。`
+            : undefined
+        }
+        confirmText={toggleTarget?.is_active ? '下架' : '重新上架'}
+        destructive={Boolean(toggleTarget?.is_active)}
+        onConfirm={() => {
+          const target = toggleTarget
+          if (!target) return
+          setToggleTarget(null)
+          void toggleActive(target)
+        }}
+        onOpenChange={(open) => !open && setToggleTarget(null)}
+      />
     </>
   )
 }

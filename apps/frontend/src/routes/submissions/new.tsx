@@ -22,6 +22,7 @@ import {
 import { toast } from 'sonner'
 import { getAuthState } from '@/lib/auth'
 import { HelpTip } from '@/components/common/help-tip'
+import { ConfirmDialog } from '@/components/common/confirm-dialog'
 import { useCapabilities } from '@/hooks/use-capabilities'
 import { useMediaQuery } from '@/hooks/use-media-query'
 import {
@@ -647,6 +648,7 @@ function SubmissionWizardPage() {
 
   const convertMut = useConvertSubmissionPreview()
   const [converting, setConverting] = useState(false)
+  const [pendingReplace, setPendingReplace] = useState<{ markdown: string; warnings: string[] } | null>(null)
 
   const gates = useMemo(() => computeGates(form), [form])
   const missing = gates.filter((g) => !g.ok)
@@ -706,6 +708,16 @@ function SubmissionWizardPage() {
   // 未 visited 的步骤自动放行——用户可以从左侧步骤条直接跳。
   const canProceed = stepGateState[step].failedCount === 0
 
+  const applyConvertedMarkdown = (markdown: string, warnings: string[]) => {
+    set('body', markdown)
+    const meta = extractMarkdownMeta(markdown)
+    if (!form.title.trim() && meta.title) set('title', meta.title)
+    if (!form.abstract.trim() && meta.abstract) set('abstract', meta.abstract)
+    if (!form.keywords.trim() && meta.keywords) set('keywords', meta.keywords)
+    if (warnings.length > 0) toast.warning(warnings.join('；'))
+    toast.success(`已识别 ${markdown.replace(/\s/g, '').length} 字，正文已填入编辑器`)
+  }
+
   const onPickFile = (f: File) => {
     if (f.size > maxUploadBytes) {
       toast.error(
@@ -730,25 +742,11 @@ function SubmissionWizardPage() {
           )
           return
         }
-        if (
-          form.body.trim() &&
-          !window.confirm('当前正文已有内容，是否用识别结果替换？')
-        ) {
-          toast.info('已保留当前正文；文件仍会随作品上传')
+        if (form.body.trim()) {
+          setPendingReplace({ markdown: result.markdown, warnings: result.warnings })
           return
         }
-        set('body', result.markdown)
-        const meta = extractMarkdownMeta(result.markdown)
-        if (!form.title.trim() && meta.title) set('title', meta.title)
-        if (!form.abstract.trim() && meta.abstract)
-          set('abstract', meta.abstract)
-        if (!form.keywords.trim() && meta.keywords)
-          set('keywords', meta.keywords)
-        if (result.warnings.length > 0)
-          toast.warning(result.warnings.join('；'))
-        toast.success(
-          `已识别 ${result.markdown.replace(/\s/g, '').length} 字，正文已填入编辑器`,
-        )
+        applyConvertedMarkdown(result.markdown, result.warnings)
       } catch (err) {
         toast.error(
           extractError(
@@ -1196,6 +1194,22 @@ function SubmissionWizardPage() {
           />
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={pendingReplace !== null}
+        title="用识别结果替换当前正文？"
+        description="当前编辑器里已有正文。替换后原内容会被覆盖，但文件仍会随作品上传；如需保留，请先复制或保存草稿。"
+        confirmText="替换正文"
+        cancelText="保留当前正文"
+        destructive
+        onConfirm={() => {
+          const next = pendingReplace
+          if (!next) return
+          setPendingReplace(null)
+          applyConvertedMarkdown(next.markdown, next.warnings)
+        }}
+        onOpenChange={(open) => !open && setPendingReplace(null)}
+      />
     </div>
   )
 }

@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { EmojiStickerPicker } from '@/components/common/emoji-sticker-picker'
+import { ConfirmDialog } from '@/components/common/confirm-dialog'
 import {
   Dialog,
   DialogContent,
@@ -295,6 +296,7 @@ export function MarkdownEditor({
   const [versionsOpen, setVersionsOpen] = useState(false)
   const [snapshots, setSnapshots] = useState<EditorSnapshot[]>([])
   const [compareId, setCompareId] = useState<string | null>(null)
+  const [restoreTarget, setRestoreTarget] = useState<EditorSnapshot | null>(null)
   const history = useRef({ past: [] as string[], future: [] as string[] })
   const lastValue = useRef(value)
   const applyingHistory = useRef(false)
@@ -480,15 +482,10 @@ export function MarkdownEditor({
     }
   }
 
-  const restoreVersion = (snapshot: EditorSnapshot) => {
-    if (
-      !window.confirm(
-        '恢复会替换当前正文，仍可用 Ctrl+Z 撤销。确定恢复这个版本吗？',
-      )
-    ) {
-      return
-    }
-    commit(snapshot.content)
+  const restoreVersion = () => {
+    if (!restoreTarget) return
+    commit(restoreTarget.content)
+    setRestoreTarget(null)
     setVersionsOpen(false)
     setCompareId(null)
     toast.success('已恢复版本，可用 Ctrl+Z 撤销')
@@ -1075,7 +1072,7 @@ export function MarkdownEditor({
                   </Button>
                   <Button
                     type="button"
-                    onClick={() => restoreVersion(compareSnapshot)}
+                    onClick={() => setRestoreTarget(compareSnapshot)}
                   >
                     恢复此版本
                   </Button>
@@ -1125,7 +1122,7 @@ export function MarkdownEditor({
                             variant="ghost"
                             size="sm"
                             className="h-7 text-xs"
-                            onClick={() => restoreVersion(snapshot)}
+                            onClick={() => setRestoreTarget(snapshot)}
                           >
                             恢复
                           </Button>
@@ -1149,6 +1146,15 @@ export function MarkdownEditor({
           </DialogContent>
         </Dialog>
       )}
+
+      <ConfirmDialog
+        open={restoreTarget !== null}
+        title="恢复这个版本？"
+        description="当前正文会被替换；恢复后仍可用 Ctrl+Z 撤销，但未保存的改动可能被覆盖。"
+        confirmText="恢复"
+        onConfirm={restoreVersion}
+        onOpenChange={(open) => !open && setRestoreTarget(null)}
+      />
     </div>
   )
 }

@@ -14,6 +14,7 @@ import {
   type CreateApiTokenResponse,
 } from '@/hooks/api/use-ai-access'
 import { extractError, formatDateTime, cn } from '@/lib/utils'
+import { ConfirmDialog } from '@/components/common/confirm-dialog'
 
 const ROLE_LABEL: Record<string, string> = {
   user: '作者',
@@ -121,6 +122,7 @@ function TokenRow({
   saving: boolean
 }) {
   const [editing, setEditing] = useState(false)
+  const [revokeOpen, setRevokeOpen] = useState(false)
   const [selected, setSelected] = useState<string[]>(token.scopes)
 
   useEffect(() => {
@@ -160,11 +162,7 @@ function TokenRow({
               variant="ghost"
               className="text-destructive hover:text-destructive"
               disabled={saving}
-              onClick={() => {
-                if (window.confirm(`撤销 Token「${token.name}」？使用它的 MCP 客户端会立刻失效。`)) {
-                  onRevoke(token.id)
-                }
-              }}
+              onClick={() => setRevokeOpen(true)}
             >
               <Trash2 className="h-3.5 w-3.5" />
               撤销
@@ -216,6 +214,19 @@ function TokenRow({
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={revokeOpen}
+        title="撤销这个 Token？"
+        description={`「${token.name}」撤销后，使用它的 MCP 客户端会立刻失效，且不能恢复。`}
+        confirmText="撤销 Token"
+        destructive
+        onConfirm={() => {
+          setRevokeOpen(false)
+          onRevoke(token.id)
+        }}
+        onOpenChange={setRevokeOpen}
+      />
     </div>
   )
 }

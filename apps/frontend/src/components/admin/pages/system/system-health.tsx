@@ -3,6 +3,7 @@ import { Activity, AlertTriangle, CheckCircle2, KeyRound, Mail, RefreshCw, XCirc
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import { PageHeader } from '@/components/common/page-header'
+import { ConfirmDialog } from '@/components/common/confirm-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -71,6 +72,7 @@ export default function SystemHealthPage() {
   const [security, setSecurity] = useState<SecurityStatus | null>(null)
   const [email, setEmail] = useState<EmailStatus | null>(null)
   const [opsBusy, setOpsBusy] = useState(false)
+  const [reloadOpen, setReloadOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [securityLoading, setSecurityLoading] = useState(true)
   const [emailLoading, setEmailLoading] = useState(true)
@@ -113,7 +115,6 @@ export default function SystemHealthPage() {
   }
 
   async function reloadSecurity() {
-    if (!window.confirm('确认重新读取 Rubbish 安全配置？正在签发的令牌仍按旧密钥校验。')) return
     setOpsBusy(true)
     try {
       await api.post('/admin/security/reload')
@@ -305,7 +306,7 @@ export default function SystemHealthPage() {
                 ) : (
                   <p className="text-muted-foreground">安全状态读取失败，可重试。</p>
                 )}
-                <Button variant="outline" size="sm" onClick={reloadSecurity} disabled={opsBusy || securityLoading}>
+                <Button variant="outline" size="sm" onClick={() => setReloadOpen(true)} disabled={opsBusy || securityLoading}>
                   <RefreshCw className="mr-1.5 h-4 w-4" />
                   重载安全配置
                 </Button>
@@ -360,6 +361,18 @@ export default function SystemHealthPage() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={reloadOpen}
+        title="重新读取安全配置？"
+        description="会重新加载 Rubbish 的签名密钥与访问策略；正在签发的令牌仍按旧密钥校验。"
+        confirmText="重新读取"
+        onConfirm={() => {
+          setReloadOpen(false)
+          void reloadSecurity()
+        }}
+        onOpenChange={setReloadOpen}
+      />
     </div>
   )
 }

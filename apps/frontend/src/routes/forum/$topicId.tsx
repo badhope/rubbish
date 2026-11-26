@@ -386,6 +386,7 @@ function ForumTopicPage() {
   const [editFictional, setEditFictional] = useState(false)
   const [editBoardId, setEditBoardId] = useState<number | null>(null)
   const [shareOpen, setShareOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
   const boardsQ = useQuery({
     queryKey: ['forum', 'boards'],
     queryFn: async () => (await api.get('/forum/boards')).data,
@@ -621,9 +622,7 @@ function ForumTopicPage() {
                     size="sm"
                     variant="ghost"
                     className="h-7 gap-1 px-2 text-[11px] text-destructive"
-                    onClick={() => {
-                      if (window.confirm('确定删除这个主题帖？')) deleteMut.mutate()
-                    }}
+                    onClick={() => setDeleteOpen(true)}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                     删除
@@ -865,6 +864,19 @@ function ForumTopicPage() {
           setPendingReport(null)
         }}
         onOpenChange={(open) => !open && setPendingReport(null)}
+      />
+
+      <ConfirmDialog
+        open={deleteOpen}
+        title="删除这个主题帖？"
+        description="删除后主题帖与回复将不再公开，此操作不可恢复。"
+        confirmText="删除"
+        destructive
+        onConfirm={() => {
+          setDeleteOpen(false)
+          deleteMut.mutate()
+        }}
+        onOpenChange={setDeleteOpen}
       />
       {canOperate ? <OperatorQuickPanel topicId={topic.id} pending={statusPending} /> : null}
     </div>

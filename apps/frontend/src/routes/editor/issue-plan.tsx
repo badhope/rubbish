@@ -24,6 +24,8 @@ import {
 import type { ReleaseCheck, ReleaseManifest } from '@/lib/types'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
+import { ConfirmDialog } from '@/components/common/confirm-dialog'
+import { ReasonDialog } from '@/components/common/reason-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -105,6 +107,8 @@ function IssuePlanPage() {
   const [scheduleAt, setScheduleAt] = useState('')
   const [approvalNote, setApprovalNote] = useState('')
   const [notice, setNotice] = useState<string | null>(null)
+  const [rollbackTarget, setRollbackTarget] = useState<ReleaseManifest | null>(null)
+  const [publishOpen, setPublishOpen] = useState(false)
 
   useEffect(() => {
     if (!volumeParam) return
@@ -176,23 +180,17 @@ function IssuePlanPage() {
     }
   }
 
-  const doRollback = async (target: ReleaseManifest) => {
-    const reason = window.prompt(
-      `回滚到 Manifest #${target.id} 会恢复这一组当时的发布时间线。请输入原因（至少 3 个字）：`,
-      '恢复上一版发布时间线',
-    )
-    if (reason === null) return
-    if (reason.trim().length < 3) {
-      setNotice('回滚原因至少 3 个字。')
-      return
-    }
+  const doRollback = async (reason: string) => {
+    const target = rollbackTarget
+    if (!target) return
+    setRollbackTarget(null)
     setNotice(null)
     try {
       const manifest = await rollback.mutateAsync({
         volume,
         issue,
         manifestId: target.id,
-        reason: reason.trim(),
+        reason,
       })
       setChecked(manifest)
       setNotice(`已回滚到 Manifest #${target.id}，恢复 ${manifest.restored ?? 0} 篇的发布时间线。`)
@@ -203,6 +201,7 @@ function IssuePlanPage() {
 
   const doPublish = async () => {
     if (!latest) return
+    setPublishOpen(false)
     setNotice(null)
     try {
       const manifest = await publish.mutateAsync({
@@ -433,7 +432,7 @@ function IssuePlanPage() {
                       />
                     </div>
                     <Button
-                      onClick={() => void doPublish()}
+                      onClick={() => setPublishOpen(true)}
                       disabled={latest.status !== 'ready' || !latest.approved_at || publish.isPending}
                     >
                       {scheduleAt ? <Clock3 className="mr-1.5 h-4 w-4" /> : <Rocket className="mr-1.5 h-4 w-4" />}
@@ -559,7 +558,7 @@ function IssuePlanPage() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => void doRollback(item)}
+                                  onClick={() => setRollbackTarget(item)}
                                   disabled={rollback.isPending}
                                 >
                                   <RotateCcw className="mr-1 h-3.5 w-3.5" />
@@ -581,6 +580,36 @@ function IssuePlanPage() {
         </>
       )}
 
+      <ConfirmDialog
+        open={publishOpen}
+        title={scheduleAt ? '确认排期发布？' : '确认立即发布？'}
+        description={
+          scheduleAt
+            ? `合集 ${volume} / ${issue} 会在 ${new Date(scheduleAt).toLocaleString('zh-CN', { hour12: false })} 自动发布，届时公开页生效。`
+            : `合集 ${volume} / ${issue} 会立即发布，公开页马上生效。发布前仍会再次核对内容哈希。`
+        }
+        confirmText={scheduleAt ? '排期发布' : '立即发布'}
+        onConfirm={() => void doPublish()}
+        onOpenChange={setPublishOpen}
+      />
+
+      <ReasonDialog
+        open={rollbackTarget !== null}
+        title="回滚发布时间线"
+        description={
+          rollbackTarget
+            ? `将恢复到 Manifest #${rollbackTarget.id} 当时的发布时间线；内容与当前公开页可能不同。`
+            : undefined
+        }
+        label="回滚原因"
+        placeholder="例如：发现目录页配置错误，恢复到上一版"
+        defaultValue="恢复上一版发布时间线"
+        minLength={3}
+        confirmText="确认回滚"
+        pending={rollback.isPending}
+        onConfirm={(reason) => void doRollback(reason)}
+        onOpenChange={(open) => !open && setRollbackTarget(null)}
+      />
     </div>
   )
 }

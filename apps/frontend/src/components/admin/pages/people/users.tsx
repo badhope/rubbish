@@ -15,6 +15,7 @@ import type { AssignableRole, UserResponse } from '@/lib/types'
 import { extractError, formatDateTime, inferTotalPagesFromFullPage } from '@/lib/utils'
 import { roleLabel } from '@/lib/role-labels'
 import { PageHeader } from '@/components/common/page-header'
+import { ConfirmDialog } from '@/components/common/confirm-dialog'
 import { Pagination } from '@/components/common/pagination'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
 import { Badge } from '@/components/ui/badge'
@@ -83,6 +84,10 @@ export default function AdminUsersPage() {
   // 常落在菜单卸载之后，Playwright 判定元素 detached 反复重试（E2E 稳定
   // 复现）。菜单改为动作完成后再关，键盘用户也不会在请求途中失去焦点。
   const [openUserId, setOpenUserId] = useState<number | null>(null)
+  const [pendingUserAction, setPendingUserAction] = useState<{
+    user: UserResponse
+    action: 'active' | 'admin'
+  } | null>(null)
   // 300ms 防抖：输入每个字母都打一次 /admin/users 会造成请求风暴，
   // 且乱序返回可能让列表"倒退"。防抖后 keystroke 只更新输入框值。
   const [debouncedQuery, setDebouncedQuery] = useState('')
@@ -121,6 +126,15 @@ export default function AdminUsersPage() {
       toast.success(u.is_active ? '已禁用' : '已启用')
     } catch (err) {
       toast.error(extractError(err, '没能更改账号状态，可再试一次'))
+    }
+  }
+
+  const onToggleAdmin = async (u: UserResponse) => {
+    try {
+      await setAdminMut.mutateAsync({ userId: u.id, isAdmin: !u.is_admin })
+      toast.success(u.is_admin ? '已取消管理员' : '已设为平台管理员')
+    } catch (err) {
+      toast.error(extractError(err, '没能更改管理员状态，可再试一次'))
     }
   }
 
@@ -251,7 +265,8 @@ export default function AdminUsersPage() {
                           <DropdownMenuItem
                             onSelect={(e) => {
                               e.preventDefault()
-                              void onToggleActive(u).finally(() => setOpenUserId(null))
+                              setPendingUserAction({ user: u, action: 'active' })
+                              setOpenUserId(null)
                             }}
                             disabled={setActiveMut.isPending}
                           >
@@ -259,16 +274,10 @@ export default function AdminUsersPage() {
                           </DropdownMenuItem>
                           {/* 平台管理员提权：此前只能改数据库，界面上无路可走 */}
                           <DropdownMenuItem
-                            onSelect={async (e) => {
+                            onSelect={(e) => {
                               e.preventDefault()
-                              try {
-                                await setAdminMut.mutateAsync({ userId: u.id, isAdmin: !u.is_admin })
-                                toast.success(u.is_admin ? '已取消管理员' : '已设为平台管理员')
-                              } catch (err) {
-                                toast.error(extractError(err, '没能更改管理员状态，可再试一次'))
-                              } finally {
-                                setOpenUserId(null)
-                              }
+                              setPendingUserAction({ user: u, action: 'admin' })
+                              setOpenUserId(null)
                             }}
                             disabled={setAdminMut.isPending}
                             className={u.is_admin ? 'text-destructive' : ''}
@@ -494,6 +503,41 @@ export default function AdminUsersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={pendingUserAction !== null}
+        title={
+          pendingUserAction?.action === 'admin'
+            ? pendingUserAction.user.is_admin
+              ? '取消这个账号的平台管理员权限？'
+              : '设为平台管理员？'
+            : pendingUserAction?.user.is_active
+              ? '禁用这个账号？'
+              : '启用这个账号？'
+        }
+        description={
+          pendingUserAction
+            ? pendingUserAction.action === 'admin'
+              ? `账号「${pendingUserAction.user.username}」的平台管理员权限会立即${pendingUserAction.user.is_admin ? '取消' : '生效'}。`
+              : pendingUserAction.user.is_active
+                ? `账号「${pendingUserAction.user.username}」禁用后将无法登录和提交内容。`
+                : `账号「${pendingUserAction.user.username}」会恢复登录和提交权限。`
+            : undefined
+        }
+        confirmText={pendingUserAction?.action === 'admin' ? (pendingUserAction.user.is_admin ? '取消管理员' : '设为管理员') : pendingUserAction?.user.is_active ? '禁用账号' : '启用账号'}
+        destructive={Boolean(
+          (pendingUserAction?.action === 'admin' && pendingUserAction.user.is_admin) ||
+            (pendingUserAction?.action === 'active' && pendingUserAction.user.is_active),
+        )}
+        onConfirm={() => {
+          const target = pendingUserAction
+          if (!target) return
+          setPendingUserAction(null)
+          if (target.action === 'admin') void onToggleAdmin(target.user)
+          else void onToggleActive(target.user)
+        }}
+        onOpenChange={(open) => !open && setPendingUserAction(null)}
+      />
     </div>
   )
 }

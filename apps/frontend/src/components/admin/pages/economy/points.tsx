@@ -10,11 +10,12 @@ import {
   useAdminShopPurchases,
   useDecideShopPurchase,
 } from '@/hooks/api/use-shop'
-import type { ShopPurchaseStatus } from '@/hooks/api/use-shop'
+import type { AdminShopPurchase, ShopPurchaseStatus } from '@/hooks/api/use-shop'
 import { extractError } from '@/lib/utils'
 import { ShopCatalogCard } from '@/components/admin/pages/economy/shop-catalog'
 import { PageHeader } from '@/components/common/page-header'
 import { Loading } from '@/components/common/state'
+import { ConfirmDialog } from '@/components/common/confirm-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -40,6 +41,10 @@ export default function AdminPointsPage() {
   const [purchaseStatus, setPurchaseStatus] = useState<ShopPurchaseStatus>('paid')
   const purchases = useAdminShopPurchases(purchaseStatus)
   const decidePurchase = useDecideShopPurchase()
+  const [decisionTarget, setDecisionTarget] = useState<{
+    purchase: AdminShopPurchase
+    status: 'fulfilled' | 'rejected'
+  } | null>(null)
   // 旧互评、发布与处理决定和零额度回复不再占界面；只保留社区当前四类动作。
   const currentReasons = new Set(['checkin.daily', 'checkin.weekly_bonus', 'forum.topic', 'claim.approve'])
   const rules = config.data?.rules.filter((rule) => currentReasons.has(rule.reason)) ?? []
@@ -185,16 +190,7 @@ export default function AdminPointsPage() {
                         size="sm"
                         variant="outline"
                         disabled={decidePurchase.isPending}
-                        onClick={() => {
-                          if (!window.confirm(`确认已为「${purchase.item_name}」完成履约？`)) return
-                          decidePurchase.mutate(
-                            { id: purchase.id, status: 'fulfilled', note: '内容整理已标记处理' },
-                            {
-                              onSuccess: () => toast.success('已标记完成'),
-                              onError: (err) => toast.error(extractError(err, '没能完成履约，可再试一次')),
-                            },
-                          )
-                        }}
+                        onClick={() => setDecisionTarget({ purchase, status: 'fulfilled' })}
                       >
                         <Check className="h-3.5 w-3.5" /> 完成
                       </Button>
@@ -202,21 +198,7 @@ export default function AdminPointsPage() {
                         size="sm"
                         variant="outline"
                         disabled={decidePurchase.isPending}
-                        onClick={() => {
-                          if (
-                            !window.confirm(
-                              `驳回「${purchase.item_name}」并退回 ${purchase.price_coin} 经验？`,
-                            )
-                          )
-                            return
-                          decidePurchase.mutate(
-                            { id: purchase.id, status: 'rejected', note: '内容整理驳回，经验已退回' },
-                            {
-                              onSuccess: () => toast.success('已驳回并退回经验'),
-                              onError: (err) => toast.error(extractError(err, '没能驳回并退回经验，可再试一次')),
-                            },
-                          )
-                        }}
+                        onClick={() => setDecisionTarget({ purchase, status: 'rejected' })}
                       >
                         <X className="h-3.5 w-3.5" /> 驳回
                       </Button>
@@ -268,6 +250,43 @@ export default function AdminPointsPage() {
           </CardContent>
         </Card>
       ) : null}
+
+      <ConfirmDialog
+        open={decisionTarget !== null}
+        title={decisionTarget?.status === 'fulfilled' ? '确认完成履约？' : '确认驳回并退回经验？'}
+        description={
+          decisionTarget
+            ? decisionTarget.status === 'fulfilled'
+              ? `为「${decisionTarget.purchase.item_name}」标记完成，订单会进入已完成列表。`
+              : `驳回「${decisionTarget.purchase.item_name}」，并退回 ${decisionTarget.purchase.price_coin} 经验。`
+            : undefined
+        }
+        confirmText={decisionTarget?.status === 'fulfilled' ? '标记完成' : '驳回并退回'}
+        destructive={decisionTarget?.status === 'rejected'}
+        onConfirm={() => {
+          const target = decisionTarget
+          if (!target) return
+          setDecisionTarget(null)
+          decidePurchase.mutate(
+            {
+              id: target.purchase.id,
+              status: target.status,
+              note: target.status === 'fulfilled' ? '内容整理已标记处理' : '内容整理驳回，经验已退回',
+            },
+            {
+              onSuccess: () => toast.success(target.status === 'fulfilled' ? '已标记完成' : '已驳回并退回经验'),
+              onError: (err) =>
+                toast.error(
+                  extractError(
+                    err,
+                    target.status === 'fulfilled' ? '没能完成履约，可再试一次' : '没能驳回并退回经验，可再试一次',
+                  ),
+                ),
+            },
+          )
+        }}
+        onOpenChange={(open) => !open && setDecisionTarget(null)}
+      />
     </div>
   )
 }
