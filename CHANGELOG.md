@@ -15,8 +15,9 @@
 ### 校验
 
 - 新增 `tests/test_mcp_ai_access.py`：登录墙 `rbk_`/`X-API-Key` 放行、作用域过滤、伪造编辑作用域被真实角色拦截、投稿 v1 正文快照与幂等重放、基础检查防陈旧、陈旧裁决拒绝等 `9 passed`。
-- 后端定向：架构分层、登录墙、退回修改、投稿概览、互评矩阵、编辑今日 `19 passed`。
-- 前端 `tsc -b --noEmit`、ESLint、`vite build` 通过。
+- 后端全量：`958 passed, 3 skipped`；定向覆盖架构分层、登录墙、地区门、退回修改、投稿概览、互评矩阵、编辑今日。
+- 前端 `tsc -b --noEmit`、ESLint、`vite build` 通过；Vitest 全量 `44 files / 232 tests passed`。
+- 生产 1.20.0：`/api/health` 200；公网 HTTPS MCP `initialize`、`tools/list`（20 个工具）、`get_context`、`preflight_submission` 均通过，测试 Token 已撤销。
 
 
 ## [1.19.69] — 2026-11-26
