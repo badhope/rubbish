@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.19.68] — 2026-11-26
+
+### 热修：详情接口丢失 `latest_version`，看板直接录用开关不出现
+
+- **根因**：1.19.67 的进度看板决定弹层通过 `GET /submissions/{id}` 取当前稿详情；该详情接口一直调用 `_to_response(entry)`，没有传版本统计，`latest_version` 默认回落到 1。于是 v2 返修稿在看板里被当成首次投稿，作者回应、版本说明和“直接录用”开关全部不显示。
+- **修复**：详情接口单独查询 `submission_versions` 的最大版本，传给 `_to_response`；内容台列表、详情、看板现在都返回同一版本号。该查询按稿件 + 租户过滤，不改变权限或状态。
+- **测试**：新增 `test_submission_detail_exposes_latest_version`；返修直接录用测试文件 `6 passed`。
+
+### 校验
+
+- 后端定向回归 `tests/test_revision_direct_accept_11963.py`：`6 passed`。
+- 前端 `tsc -b --noEmit`、ESLint、`vite build` 通过；相关前端测试 `6 passed`。
+
+
 ## [1.19.67] — 2026-11-26
 
 ### 返修稿在“进度看板”入口补齐同一条决定链路

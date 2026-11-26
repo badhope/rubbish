@@ -228,3 +228,25 @@ async def test_workbench_rows_expose_latest_version(
     rows = response.json()["columns"]["rework"]["items"]
     row = next(item for item in rows if item["submission_id"] == revised.id)
     assert row["latest_version"] == 2
+
+
+@pytest.mark.asyncio
+async def test_submission_detail_exposes_latest_version(
+    client: AsyncClient, db_session: AsyncSession, admin_user: dict, test_user: dict
+) -> None:
+    """看板决定弹层用详情接口，详情必须返回 v2+，否则直接录用开关永远不出现。"""
+    tenant = await _default_tenant(db_session)
+    revised = await _make_submission(
+        db_session,
+        tenant,
+        test_user["user_id"],
+        title="详情里的返修稿",
+        versions=2,
+    )
+
+    response = await client.get(
+        f"/api/submissions/{revised.id}",
+        headers={"Authorization": f"Bearer {admin_user['token']}"},
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["latest_version"] == 2

@@ -501,7 +501,21 @@ async def get_submission(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied",
         )
-    response = _to_response(entry)
+    # 详情也必须带最大版本号。内容台列表/看板靠它识别 v2+ 返修稿；
+    # 此前详情走默认 latest_version=1，导致看板打开决定弹层后看不到
+    # “直接录用”开关，后端能力被前端误判成首次投稿。
+    latest_version = int(
+        (
+            await db.execute(
+                select(func.max(SubmissionVersion.version)).where(
+                    SubmissionVersion.submission_id == entry.id,
+                    SubmissionVersion.tenant_id == entry.tenant_id,
+                )
+            )
+        ).scalar_one()
+        or 1
+    )
+    response = _to_response(entry, {"latest_version": latest_version})
     if entry.resource_id is not None:
         # 发布状态随详情下发：前端据此区分「已发表」与「发布前预览」。
         from app.domain.catalog.models import Resource
