@@ -10,6 +10,7 @@ vi.mock('@/lib/api', () => ({
 
 vi.mock('@/lib/catalog-download', () => ({
   downloadCatalogArtifact: vi.fn(),
+  downloadCatalogArtifactWithFeedback: vi.fn(),
 }))
 
 function formatOf(call: unknown[]): unknown {

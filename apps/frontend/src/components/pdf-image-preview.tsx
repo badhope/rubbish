@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from '@/lib/api'
-import { downloadCatalogArtifact } from '@/lib/catalog-download'
+import { downloadCatalogArtifactWithFeedback } from '@/lib/catalog-download'
 import PagedPdfPreview from '@/components/common/paged-pdf-preview'
 
 interface PdfImagePreviewProps {
@@ -100,7 +100,7 @@ export default function PdfImagePreview({
       loadPage={loadPage}
       downloadLabel="下载 PDF"
       onDownload={() => {
-        void downloadCatalogArtifact({
+        void downloadCatalogArtifactWithFeedback({
           resourceId,
           format: 'pdf',
         })

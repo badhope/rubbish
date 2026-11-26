@@ -34,7 +34,7 @@ import {
   useUpdateResource,
 } from '@/hooks/api/use-modules'
 import { api } from '@/lib/api'
-import { downloadCatalogArtifact } from '@/lib/catalog-download'
+import { downloadCatalogArtifactWithFeedback } from '@/lib/catalog-download'
 import type {
   AuthorDetail,
   ResourceHistory,
@@ -351,7 +351,7 @@ function CatalogDetailPage() {
                       size="sm"
                       className="min-w-0"
                       onClick={() => {
-                        void downloadCatalogArtifact({
+                        void downloadCatalogArtifactWithFeedback({
                           resourceId: id,
                           format: 'pdf',
                           title: data.title,
@@ -576,7 +576,7 @@ function CatalogDetailPage() {
                   size="sm"
                   className="w-full"
                   onClick={() => {
-                    void downloadCatalogArtifact({
+                    void downloadCatalogArtifactWithFeedback({
                       resourceId: id,
                       format: 'docx',
                       title: data.title,
@@ -593,7 +593,7 @@ function CatalogDetailPage() {
                       size="sm"
                       className="w-full"
                       onClick={() => {
-                        void downloadCatalogArtifact({
+                        void downloadCatalogArtifactWithFeedback({
                           resourceId: id,
                           format: 'pdf',
                           title: data.title,
@@ -784,6 +784,7 @@ function CatalogDetailPage() {
           resourceId={id}
           title={data.title}
           isAdmin={isAdmin}
+          isAuthenticated={isAuthenticated}
           hasFile={Boolean(data.has_file)}
           externalUrl={data.external_url}
           saved={saved}
@@ -982,7 +983,7 @@ function ScannedPdfFallback({
             size="sm"
             className="mt-3"
             onClick={() => {
-              void downloadCatalogArtifact({
+              void downloadCatalogArtifactWithFeedback({
                 resourceId,
                 format: 'original',
                 title,
@@ -1380,6 +1381,7 @@ function MobileDetailActions({
   resourceId,
   title,
   isAdmin,
+  isAuthenticated,
   hasFile,
   externalUrl,
   saved,
@@ -1391,6 +1393,7 @@ function MobileDetailActions({
   resourceId: number
   title?: string
   isAdmin: boolean
+  isAuthenticated: boolean
   hasFile: boolean
   externalUrl?: string | null
   saved: boolean
@@ -1403,14 +1406,14 @@ function MobileDetailActions({
   return (
     <>
       <div className="fixed inset-x-0 bottom-0 z-40 flex h-14 items-center gap-2 border-t bg-background/95 px-3 backdrop-blur">
-        {hasFile && (
+        {hasFile && isAuthenticated && (
           <Button
             variant="ghost"
             size="sm"
             className="flex-1 gap-1"
             aria-label="下载 Word"
             onClick={() => {
-              void downloadCatalogArtifact({
+              void downloadCatalogArtifactWithFeedback({
                 resourceId,
                 format: 'docx',
                 title,
@@ -1419,6 +1422,14 @@ function MobileDetailActions({
           >
             <FileDown className="h-4 w-4" />
             下载
+          </Button>
+        )}
+        {hasFile && !isAuthenticated && (
+          <Button variant="ghost" size="sm" className="flex-1 gap-1" asChild>
+            <Link to="/login" search={{ redirect: `/catalog/${resourceId}` }}>
+              <FileDown className="h-4 w-4" />
+              登录下载
+            </Link>
           </Button>
         )}
         <Button

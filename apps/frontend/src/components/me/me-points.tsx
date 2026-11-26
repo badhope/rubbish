@@ -44,7 +44,7 @@ export function MePoints() {
   const onCheckin = async () => {
     try {
       const result = await checkin.mutateAsync()
-      if (result.checked_in_today) toast.success('签到成功，经验已到账')
+      if (result.checked_in_today) toast.success('签到成功，可用经验已到账')
       else toast.info('今天已经签到过了')
     } catch (err) {
       toast.error(extractError(err, '签到失败'))
@@ -68,17 +68,17 @@ export function MePoints() {
       <section>
         <SectionTitle
           kicker="BALANCE"
-          title="经验"
-          hint="经验只记录社区贡献：无现金价值，不能充值或转让；可以在下面的经验兑换区兑换站内虚拟权益。日常收入有上限，不鼓励刷量。"
+          title="可用经验"
+          hint="可消费经验：签到、阅读、发帖与互评后到账，用来兑换站内虚拟权益；无现金价值，不能充值或转让。它与等级页的累计活跃经验分账——那边只升级，这边才扣余额。"
         />
         <div className="grid gap-4 border-y py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
           <div>
             <p className="font-serif text-4xl leading-none tracking-tight text-primary">
               {formatCoins(wallet.data?.balance)}
-              <span className="ml-2 font-sans text-sm font-normal text-muted-foreground">经验</span>
+              <span className="ml-2 font-sans text-sm font-normal text-muted-foreground">可用经验</span>
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
-              累计获得 {formatCoins(wallet.data?.total_earned)} 经验
+              累计获得 {formatCoins(wallet.data?.total_earned)} 可用经验
             </p>
             <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
               <span>今日收入上限 {wallet.data?.daily_earn_cap ?? 5} 经验</span>

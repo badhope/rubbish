@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { ArrowUpRight, Coins, ExternalLink, Gauge, Pencil } from 'lucide-react'
 import type { MeProfile } from '@/hooks/api/use-modules'
 import type { UserResponse } from '@/lib/types'
+import { useWallet } from '@/hooks/api/use-currency'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -18,13 +19,35 @@ const ROLE_STYLE: Record<string, string> = {
 export function MeIdentityHeader({
   profile,
   account,
+  compact = false,
 }: {
   profile: MeProfile
   account?: UserResponse
+  compact?: boolean
 }) {
   const displayName = account?.display_name || account?.username || profile.username
   const initials = displayName.slice(0, 2).toUpperCase()
-  const xp = profile.activity.xp ?? 0
+  const wallet = useWallet()
+
+  if (compact) {
+    return (
+      <section className="flex min-w-0 items-center gap-3 border-b py-4">
+        <Avatar className="h-10 w-10 shrink-0 border bg-muted/30">
+          <AvatarImage src={account?.avatar_url ?? undefined} alt="" />
+          <AvatarFallback className="font-serif text-sm">{initials}</AvatarFallback>
+        </Avatar>
+        <div className="min-w-0">
+          <p className="editorial-kicker text-[10px] tracking-[0.24em] text-muted-foreground">
+            我的空间
+          </p>
+          <p className="truncate font-serif text-lg leading-tight">{displayName}</p>
+        </div>
+        <span className="ml-auto hidden font-mono text-[11px] text-muted-foreground sm:inline">
+          @{profile.username}
+        </span>
+      </section>
+    )
+  }
 
   return (
     <section className="border-b pb-7 sm:pb-9">
@@ -60,7 +83,7 @@ export function MeIdentityHeader({
               >
                 <Gauge className="h-3.5 w-3.5" />
                 档位 {profile.activity.level}
-                <span className="font-mono text-[10px]">{profile.activity.xp} 经验</span>
+                <span className="text-[10px] text-muted-foreground/70">成长记录</span>
               </Link>
             </div>
             {account?.affiliation ? (
@@ -75,7 +98,7 @@ export function MeIdentityHeader({
               </div>
               <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
                 {profile.activity.next_threshold
-                  ? `还差 ${profile.activity.to_next} 经验到下一档`
+                  ? `还差 ${profile.activity.to_next} 到下一档`
                   : '已满档'}
               </span>
             </div>
@@ -86,17 +109,17 @@ export function MeIdentityHeader({
           <Link
             to="/me"
             search={{ tab: 'points' }}
-            className="desk-stat group flex min-w-[132px] items-center gap-3 border px-3 py-2.5 transition-colors hover:border-primary/40"
+            className="desk-stat group flex min-w-[142px] items-center gap-3 border px-3 py-2.5 transition-colors hover:border-primary/40"
           >
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
               <Coins className="h-4 w-4" />
             </span>
             <span className="min-w-0">
               <span className="block text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                经验
+                可用经验
               </span>
               <span className="block font-mono text-lg font-semibold leading-tight text-primary">
-                {xp.toLocaleString('zh-CN')}
+                {wallet.data ? wallet.data.balance.toLocaleString('zh-CN') : '—'}
               </span>
             </span>
             <ArrowUpRight className="ml-auto h-3.5 w-3.5 text-muted-foreground transition-colors group-hover:text-primary" />

@@ -81,6 +81,16 @@ async def test_me_profile_separates_identity_from_activity(
     assert body["activity"]["xp"] == 0
     assert any("站点设置" in item for item in body["permissions"])
     assert any("接收互评邀请" in item for item in body["permissions"])
+    # 个人中心的创作进度只算本人投稿，必须有独立字段；编辑的全站总览另走
+    # /submissions/overview，不能被前端误当成“我的作品”。
+    assert set(body["work_stats"]) == {
+        "total",
+        "draft",
+        "under_review",
+        "revision",
+        "published",
+    }
+    assert all(isinstance(value, int) for value in body["work_stats"].values())
 
     member = await client.get("/api/me/profile", headers=auth_headers(test_user))
     assert member.status_code == 200
@@ -105,3 +115,21 @@ async def test_me_profile_separates_identity_from_activity(
     assert any("阅读与下载" in item for item in editor_body["permissions"])
     assert any("接收互评邀请" in item for item in editor_body["permissions"])
     assert any("作出通过" in item for item in editor_body["permissions"])
+
+
+async def test_me_profile_counts_wizard_draft(
+    client: AsyncClient, test_user: dict
+) -> None:
+    """发文向导草稿存在独立表，不能被个人中心漏算成 0。"""
+    saved = await client.put(
+        "/api/submissions/draft",
+        json={"payload": {"title": "半篇稿子"}, "body": "先写到这里。"},
+        headers=auth_headers(test_user),
+    )
+    assert saved.status_code == 200
+
+    profile = await client.get("/api/me/profile", headers=auth_headers(test_user))
+    assert profile.status_code == 200
+    stats = profile.json()["work_stats"]
+    assert stats["draft"] == 1
+    assert stats["total"] >= 1

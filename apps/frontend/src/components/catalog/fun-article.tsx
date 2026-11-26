@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { ResourceResponse } from '@/lib/types'
-import { downloadCatalogArtifact } from '@/lib/catalog-download'
+import { downloadCatalogArtifactWithFeedback } from '@/lib/catalog-download'
 import { essayGenreMeta } from '@/lib/essay-genres'
 import { formatAuthors } from '@/lib/utils'
 import { ManuscriptView } from '@/components/common/manuscript-view'
@@ -111,7 +111,7 @@ export function FunArticle({
                   className="h-8 shrink-0 gap-1 px-2 text-muted-foreground"
                   aria-label="下载自由创作 PDF"
                   onClick={() => {
-                    void downloadCatalogArtifact({
+                    void downloadCatalogArtifactWithFeedback({
                       resourceId: data.id,
                       format: 'pdf',
                       title: data.title,
@@ -127,7 +127,7 @@ export function FunArticle({
                   className="h-8 shrink-0 gap-1 px-2 text-muted-foreground"
                   aria-label="下载自由创作 Word"
                   onClick={() => {
-                    void downloadCatalogArtifact({
+                    void downloadCatalogArtifactWithFeedback({
                       resourceId: data.id,
                       format: 'docx',
                       title: data.title,

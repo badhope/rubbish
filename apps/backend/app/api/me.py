@@ -24,7 +24,7 @@ from app.api.deps import (
 from app.core.db import get_db
 from app.domain.catalog.models import PageView, Resource
 from app.domain.gamification.activity import activity_snapshot
-from app.domain.submission.models import Submission
+from app.domain.submission.models import Submission, SubmissionDraft
 from app.models import User
 
 router = APIRouter(prefix="/me", tags=["me"])
@@ -84,7 +84,11 @@ async def my_profile(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, object]:
-    """当前身份组、逐层权限清单、全站活跃等级。"""
+    """当前身份组、逐层权限清单、全站活跃等级、本人作品状态。
+
+    ``work_stats`` 只统计当前用户自己的投稿；编辑看到的全站总览仍走
+    ``/submissions/overview``，两者不能混用。
+    """
     permission_role = await effective_permission_role(db, current_user)
     group = _PERMISSION_GROUPS[permission_role]
 
@@ -92,6 +96,52 @@ async def my_profile(
     for role in ("user", "reviewer", "editor", "editor_in_chief"):
         if PERMISSION_RANK[role] <= PERMISSION_RANK[permission_role]:
             perms.extend(_PERMISSIONS[role])
+
+    rows = (
+        await db.execute(
+            select(Submission.status, func.count(Submission.id))
+            .where(
+                Submission.tenant_id == require_tenant_id(),
+                Submission.submitted_by == current_user.id,
+            )
+            .group_by(Submission.status)
+        )
+    ).all()
+    status_counts = {str(status): int(count) for status, count in rows}
+    under_review = sum(
+        status_counts.get(status, 0)
+        for status in ("pending", "under_review", "resubmitted")
+    )
+    revision = sum(
+        status_counts.get(status, 0)
+        for status in ("major_revision", "minor_revision", "rework_requested")
+    )
+    published = int(
+        (
+            await db.execute(
+                select(func.count(func.distinct(Submission.resource_id))).where(
+                    Submission.tenant_id == require_tenant_id(),
+                    Submission.submitted_by == current_user.id,
+                    Submission.resource_id.is_not(None),
+                    Submission.status.in_(("accepted", "approved")),
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+    # 发文向导的草稿在 ``submission_drafts`` 里，是独立表，不是
+    # Submission.status='draft'；只查 submissions 会永远显示 0。
+    draft = int(
+        (
+            await db.execute(
+                select(func.count(SubmissionDraft.id)).where(
+                    SubmissionDraft.tenant_id == require_tenant_id(),
+                    SubmissionDraft.user_id == current_user.id,
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
 
     return {
         "user_id": current_user.id,
@@ -103,6 +153,13 @@ async def my_profile(
         "permissions": perms,
         "activity": activity_snapshot(current_user.xp or 0),
         "rules_accepted": current_user.rules_ack_version is not None,
+        "work_stats": {
+            "total": sum(status_counts.values()) + draft,
+            "draft": draft,
+            "under_review": under_review,
+            "revision": revision,
+            "published": published,
+        },
     }
 
 

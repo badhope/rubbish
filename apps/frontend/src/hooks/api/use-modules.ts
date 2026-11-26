@@ -1997,6 +1997,14 @@ export interface MePermissionGroup {
   rank: number
 }
 
+export interface MeWorkStats {
+  total: number
+  draft: number
+  under_review: number
+  revision: number
+  published: number
+}
+
 export interface MeProfile {
   user_id: number
   username: string
@@ -2007,6 +2015,7 @@ export interface MeProfile {
   permissions: string[]
   activity: MeActivity
   rules_accepted: boolean
+  work_stats?: MeWorkStats
 }
 
 export function useMeProfile() {

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { Download, FileJson2, ShieldAlert, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/lib/auth'
@@ -38,6 +38,13 @@ export function AccountDataCard({ username }: { username: string }) {
             <p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted-foreground">
               下载一份 JSON：账号资料、作品与互评、阅读记录、书单、评论、讨论、申诉、认领、关注、活跃值与通知。
               密码哈希、两步验证密钥和通行密钥材料属于凭据，不会写进导出文件。
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              处理规则与保留期限见
+              <Link to="/privacy" className="mx-1 text-primary underline underline-offset-2">
+                隐私政策
+              </Link>
+              。
             </p>
           </div>
         </div>

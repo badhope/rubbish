@@ -76,31 +76,35 @@ function MePage() {
 
   const requestedTab = search.tab ?? 'overview'
   const activeTab: MeTabKey = requestedTab
+  const isOverview = activeTab === 'overview'
 
   const onTabChange = (tab: MeTabKey) => {
     void navigate({ to: '/me', search: { tab }, replace: true })
   }
 
-  // 一级分区：继续写（我的作品/草稿/通知入口）、继续读（收藏与最近阅读）、设置。
-  // 经验（points）保留路由分支兼容旧链接，入口收进「参与记录」独立页，不在此平铺。
+  // 一级分区：继续写、继续读、经验、设置。
+  // 经验是完整的一级页（可签到、兑换、查记录），不是只能从头部卡片钻进去的隐藏路由。
   const tabs = [
     { key: 'overview' as const, label: '继续写' },
     { key: 'library' as const, label: '继续读' },
+    { key: 'points' as const, label: '经验' },
     { key: 'settings' as const, label: '设置' },
   ]
 
   return (
     <div className="mx-auto w-full max-w-[1120px]">
-      <MeIdentityHeader profile={data} account={account.data} />
+      <MeIdentityHeader profile={data} account={account.data} compact={!isOverview} />
 
-      <MeActionBar
-        unreadCount={unread.data?.unread}
-        onOpenNotifications={() => setNotificationsOpen(true)}
-      />
+      {isOverview ? (
+        <MeActionBar
+          unreadCount={unread.data?.unread}
+          onOpenNotifications={() => setNotificationsOpen(true)}
+        />
+      ) : null}
 
-      {data.permission_role !== 'user' ? (
+      {isOverview && data.permission_role !== 'user' ? (
         <section className="flex flex-wrap items-center gap-3 border-b py-3" aria-label="工作台入口">
-          <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">工作台</p>
+          <p className="hidden text-[11px] uppercase tracking-[0.24em] text-muted-foreground sm:block">工作台</p>
           {['reviewer', 'editor', 'editor_in_chief'].includes(data.permission_role) ? (
             <Link
               to="/review"
@@ -138,6 +142,8 @@ function MePage() {
           <MeOverview
             onOpenNotifications={() => setNotificationsOpen(true)}
             highlightAppealId={search.appeal}
+            workStats={data.work_stats}
+            username={data.username}
           />
         ) : null}
         {activeTab === 'library' ? <MeLibrary section={search.section} /> : null}

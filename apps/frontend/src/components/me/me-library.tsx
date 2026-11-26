@@ -44,23 +44,23 @@ interface ListFormState {
 
 function LibrarySectionNav({ active }: { active: 'library' | 'history' | 'following' | 'recommendations' }) {
   return (
-    <div className="flex flex-wrap gap-2 border-b pb-3">
-      <Button variant={active === 'library' ? 'default' : 'outline'} size="sm" asChild>
+    <div className="grid grid-cols-2 gap-2 border-b pb-3 sm:flex sm:flex-wrap">
+      <Button variant={active === 'library' ? 'default' : 'outline'} size="sm" className="w-full sm:w-auto" asChild>
         <Link to="/me" search={{ tab: 'library' }}>
           阅读列表
         </Link>
       </Button>
-      <Button variant={active === 'history' ? 'default' : 'outline'} size="sm" asChild>
+      <Button variant={active === 'history' ? 'default' : 'outline'} size="sm" className="w-full sm:w-auto" asChild>
         <Link to="/me" search={{ tab: 'library', section: 'history' }}>
           最近阅读
         </Link>
       </Button>
-      <Button variant={active === 'following' ? 'default' : 'outline'} size="sm" asChild>
+      <Button variant={active === 'following' ? 'default' : 'outline'} size="sm" className="w-full sm:w-auto" asChild>
         <Link to="/me" search={{ tab: 'library', section: 'following' }}>
           关注与订阅
         </Link>
       </Button>
-      <Button variant={active === 'recommendations' ? 'default' : 'outline'} size="sm" asChild>
+      <Button variant={active === 'recommendations' ? 'default' : 'outline'} size="sm" className="w-full sm:w-auto" asChild>
         <Link to="/me" search={{ tab: 'library', section: 'recommendations' }}>
           为你推荐
         </Link>
@@ -240,10 +240,22 @@ export function MeLibrary({ section }: { section?: string }) {
       </section>
 
       <section>
-        <div className="flex flex-wrap items-end justify-between gap-3 border-b pb-4">
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">FOLLOWING</p>
-            <h2 className="mt-1 font-serif text-xl tracking-tight">关注与订阅</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b py-4">
+          <div className="flex items-center gap-3">
+            <Users className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                FOLLOWING
+              </p>
+              <p className="mt-0.5 text-sm">
+                关注与订阅
+                <span className="ml-2 text-xs text-muted-foreground">
+                  {authors.isLoading ? '加载中…' : `${authors.data?.data.length ?? 0} 位作者`}
+                  {' · '}
+                  {disciplines.isLoading ? '加载中…' : `${disciplines.data?.data.length ?? 0} 个话题`}
+                </span>
+              </p>
+            </div>
           </div>
           <Button variant="ghost" size="sm" asChild>
             <Link to="/me" search={{ tab: 'library', section: 'following' }}>
@@ -252,39 +264,6 @@ export function MeLibrary({ section }: { section?: string }) {
             </Link>
           </Button>
         </div>
-
-        {authors.isLoading ? <Loading /> : null}
-        {!authors.isLoading && (authors.data?.data.length ?? 0) > 0 ? (
-          <div className="flex flex-wrap gap-x-5 gap-y-2 border-b py-4 text-sm">
-            {authors.data?.data.map((item) => (
-              <Link
-                key={item.author_name}
-                to="/u/$username"
-                params={{ username: item.author_name }}
-                className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-primary"
-              >
-                <Users className="h-3.5 w-3.5" />
-                {item.author_name}
-              </Link>
-            ))}
-          </div>
-        ) : null}
-        {!authors.isLoading && (authors.data?.data.length ?? 0) === 0 ? (
-          <p className="border-b py-4 text-sm text-muted-foreground">还没有关注作者。</p>
-        ) : null}
-
-        {!disciplines.isLoading && (disciplines.data?.data.length ?? 0) > 0 ? (
-          <div className="flex flex-wrap gap-2 py-4">
-            {disciplines.data?.data.map((discipline) => (
-              <span key={discipline} className="border bg-muted/25 px-2 py-1 text-xs text-muted-foreground">
-                {discipline}
-              </span>
-            ))}
-          </div>
-        ) : null}
-        {!disciplines.isLoading && (disciplines.data?.data.length ?? 0) === 0 ? (
-          <p className="py-4 text-sm text-muted-foreground">还没有订阅话题。</p>
-        ) : null}
       </section>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>

@@ -15,9 +15,9 @@ export function MeActionBar({
       className="flex flex-wrap items-center justify-between gap-3 border-b py-4"
     >
       <div className="min-w-0">
-        <p className="text-sm font-medium">写一点东西，或者去说话区坐会儿</p>
+        <p className="text-sm font-medium">今天写点什么？</p>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          长文可以先存草稿，短帖直接留在主题论坛。
+          长篇存草稿，短帖去主题论坛；进度都收在「我的作品」。
         </p>
       </div>
       <div className="flex w-full flex-wrap items-center gap-1.5 lg:w-auto lg:flex-nowrap">
@@ -29,14 +29,6 @@ export function MeActionBar({
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
           ) : null}
-        </Button>
-        <Button variant="ghost" size="sm" asChild>
-          <Link to="/forum" search={{ compose: 1 }}>
-            去说话
-          </Link>
-        </Button>
-        <Button variant="ghost" size="sm" asChild>
-          <Link to="/levels">参与记录</Link>
         </Button>
         <Button variant="ghost" size="sm" asChild>
           <Link to="/submissions">我的作品</Link>
