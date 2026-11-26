@@ -31,6 +31,7 @@ The interface switches between Chinese (source) and English (a hand-written edit
 - **Follow what matters.** Bookmarks, reading progress, author follows, notifications, and topic subscriptions work across devices.
 - **Keep moderation practical.** Reports, section management, announcements, audit logs, and a small admin area are built in. Topic posts go through an explainable rule pass first; borderline items land in a manual review queue with an SLA, audit trail and author notification.
 - **Read it in Chinese or English.** The interface has a visible language switch and a shareable `?lang=en` link. English is a hand-written editorial layer, not a machine pass; author-written titles and bodies stay in their original language.
+- **Bring your own AI.** Personal API tokens let an MCP client submit, revise, review and make editorial decisions through the same role gates and audit trail as the web UI; see [`tools/rubbish-mcp`](tools/rubbish-mcp/README.md).
 - **Run it yourself.** Docker Compose, automatic HTTPS through Caddy, Alembic migrations, and PostgreSQL row-level security are already wired up.
 
 ## Quick start
