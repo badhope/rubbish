@@ -88,6 +88,11 @@ export default function AdminUsersPage() {
     user: UserResponse
     action: 'active' | 'admin'
   } | null>(null)
+  const [pendingRoleAction, setPendingRoleAction] = useState<{
+    user: UserResponse
+    role: AssignableRole
+    has: boolean
+  } | null>(null)
   // 300ms 防抖：输入每个字母都打一次 /admin/users 会造成请求风暴，
   // 且乱序返回可能让列表"倒退"。防抖后 keystroke 只更新输入框值。
   const [debouncedQuery, setDebouncedQuery] = useState('')
@@ -138,9 +143,12 @@ export default function AdminUsersPage() {
     }
   }
 
-  // 点击角色 checkbox：已分配→撤销，未分配→分配
-  const onToggleRole = async (u: UserResponse, role: AssignableRole) => {
-    const has = (u.roles ?? []).includes(role)
+  // 角色勾选先进入确认弹窗，确认后才撤销/分配。
+  const onToggleRole = async (
+    u: UserResponse,
+    role: AssignableRole,
+    has: boolean,
+  ) => {
     try {
       if (has) {
         await revokeRoleMut.mutateAsync({ userId: u.id, role })
@@ -312,7 +320,8 @@ export default function AdminUsersPage() {
                                 disabled={pending}
                                 onSelect={(e) => {
                                   e.preventDefault()
-                                  void onToggleRole(u, role).finally(() => setOpenUserId(null))
+                                  setPendingRoleAction({ user: u, role, has: checked })
+                                  setOpenUserId(null)
                                 }}
                               >
                                 {roleLabel(role)}
@@ -537,6 +546,31 @@ export default function AdminUsersPage() {
           else void onToggleActive(target.user)
         }}
         onOpenChange={(open) => !open && setPendingUserAction(null)}
+      />
+
+      <ConfirmDialog
+        open={pendingRoleAction !== null}
+        title={
+          pendingRoleAction?.has
+            ? `撤销「${roleLabel(pendingRoleAction.role)}」角色？`
+            : `分配「${pendingRoleAction ? roleLabel(pendingRoleAction.role) : ''}」角色？`
+        }
+        description={
+          pendingRoleAction
+            ? pendingRoleAction.has
+              ? `账号「${pendingRoleAction.user.username}」会立即失去「${roleLabel(pendingRoleAction.role)}」的角色权限。`
+              : `账号「${pendingRoleAction.user.username}」会立即获得「${roleLabel(pendingRoleAction.role)}」的角色权限。`
+            : undefined
+        }
+        confirmText={pendingRoleAction?.has ? '撤销角色' : '分配角色'}
+        destructive={Boolean(pendingRoleAction?.has)}
+        onConfirm={() => {
+          const target = pendingRoleAction
+          if (!target) return
+          setPendingRoleAction(null)
+          void onToggleRole(target.user, target.role, target.has)
+        }}
+        onOpenChange={(open) => !open && setPendingRoleAction(null)}
       />
     </div>
   )
