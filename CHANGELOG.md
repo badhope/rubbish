@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.20.0] — 2026-11-26
+
+### MCP 回来了：从“投稿小工具”恢复成完整工作流
+
+- **根因**：`fdb3f18` 清理旧学术 API 时把 `/api/ai` 路由、`ApiToken` 模型和前端 AI 设置卡一起删了，但 041 迁移建好的 `api_tokens` 表、`submissions.source/client_ref` 仍在。现有 stdio MCP 还在打不存在的 `/api/ai/submissions`，登录墙又把 `rbk_` Token 当无效 JWT 拒掉，所以“客户端在、链路全断”。
+- **恢复**：按 041 原表结构恢复 `ApiToken`；`/api/ai` 挂回主应用；登录墙只对 `/api/ai/*`、`/api/mcp` 放行 `rbk_` 前缀，Token 的哈希、过期、撤销、租户、作用域、角色仍由路由逐项校验。旧 Token 继续可用，写作用域自动隐含读。
+- **远程 MCP**：新增 `/api/mcp` JSON-RPC 2.0 入口，支持 `initialize` / `tools/list` / `tools/call` / `ping`，`Authorization: Bearer rbk_...` 或 `X-API-Key` 均可；区域层也放行 `X-API-Key`，否则大陆 IP 的本地 stdio 会先被地区门挡掉。
+- **工作流工具**：作者侧有规范确认、投稿干跑、投稿、题录修改、正文保存、修回重投、逐条回应、撤稿、时间线与互评意见；互评侧有任务读取、接受/拒绝、五维报告；编辑侧有四栏工作台、基础检查队列、候选人、分派、时间线、报告与终审。
+- **严格闸门**：Token 作用域不能超过真实角色，每次工具调用还会再验一次角色；投稿必须 `confirm` + `idempotency_key` + 正文/文件/外链，且先确认规范版本；正文在 v1 快照前落盘；互评报告每维强制理由与正文证据；基础检查与分派也要带 `expected_status` 与 `expected_latest_version`；终审另需显式 `publication_status`，返修直接录用和低于 40 分破例仍走原有硬门槛。
+- **前端**：设置页新增“AI 接入”子页，可创建/调整/撤销 Token，明文只显示一次，按角色展示可用作用域，并给出远程 MCP 配置。
+- **stdio**：`tools/rubbish-mcp/server.py` 改为代理 `/api/ai/tools` 与 `/api/ai/tools/call`，工具清单不再与后端 schema 漂移。
+
+### 校验
+
+- 新增 `tests/test_mcp_ai_access.py`：登录墙 `rbk_`/`X-API-Key` 放行、作用域过滤、伪造编辑作用域被真实角色拦截、投稿 v1 正文快照与幂等重放、基础检查防陈旧、陈旧裁决拒绝等 `9 passed`。
+- 后端定向：架构分层、登录墙、退回修改、投稿概览、互评矩阵、编辑今日 `19 passed`。
+- 前端 `tsc -b --noEmit`、ESLint、`vite build` 通过。
+
+
 ## [1.19.69] — 2026-11-26
 
 ### 待指派栏补返修稿决定入口

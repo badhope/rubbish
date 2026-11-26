@@ -74,6 +74,11 @@ _SIGNED_DOWNLOAD_PATH = re.compile(
     r"^/api/submissions/\d+/files(?:/[^/]+)?$"
 )
 
+# Personal MCP tokens are opaque `rbk_...` secrets, not JWT. They may only
+# enter the two prefixes whose routers validate them; every other path still
+# requires a session JWT, so a leaked MCP token cannot browse the site.
+_API_TOKEN_PATH = re.compile(r"^/api/(?:ai|mcp)(?:/|$)")
+
 
 def is_signed_download_request(request: Request) -> bool:
     """是否为一张带签名的提交文件下载请求。"""
@@ -91,6 +96,12 @@ def _bearer_token(request: Request) -> str | None:
         return None
     token = header[7:].strip()
     return token or None
+
+
+def _api_key(request: Request) -> str | None:
+    """The stdio MCP bridge sends X-API-Key instead of Authorization."""
+    value = request.headers.get("x-api-key", "").strip()
+    return value or None
 
 
 def is_public_api_path(path: str) -> bool:
@@ -126,6 +137,14 @@ class AuthWallMiddleware(BaseHTTPMiddleware):
 
         token = _bearer_token(request)
         if token is not None and decode_access_token(token) is not None:
+            return await call_next(request)
+        # `rbk_` tokens are deliberately opaque; let the AI/MCP router verify
+        # hash, expiry, revocation, tenant and scope. The wall must not decode
+        # them as JWT or every MCP request dies here before reaching the route.
+        if token is not None and token.startswith("rbk_") and _API_TOKEN_PATH.match(path):
+            return await call_next(request)
+        api_key = _api_key(request)
+        if api_key is not None and api_key.startswith("rbk_") and _API_TOKEN_PATH.match(path):
             return await call_next(request)
 
         return JSONResponse(

@@ -7,6 +7,7 @@ import { NotificationPrefsCard } from '@/components/settings/notification-prefs-
 import { TwoFactorSection } from '@/components/settings/two-factor-section'
 import { ChangePasswordCard } from '@/components/settings/change-password-card'
 import { AccountDataCard } from '@/components/settings/account-data-card'
+import { AiAccessCard } from '@/components/settings/ai-access-card'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -15,6 +16,7 @@ const SUB_TABS = [
   { key: 'profile', label: '资料' },
   { key: 'security', label: '安全' },
   { key: 'notifications', label: '通知' },
+  { key: 'ai', label: 'AI 接入' },
 ] as const
 
 type SettingsSubTab = (typeof SUB_TABS)[number]['key']
@@ -109,6 +111,7 @@ export function MeSettings({ username, initialSection }: { username: string; ini
           </div>
         ) : null}
         {tab === 'notifications' ? <NotificationPrefsCard /> : null}
+        {tab === 'ai' ? <AiAccessCard /> : null}
       </div>
     </section>
   )

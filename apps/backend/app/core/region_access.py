@@ -148,6 +148,11 @@ def _valid_bearer(request: Request) -> bool:
     return bool(token) and decode_access_token(token) is not None
 
 
+def _has_api_key(request: Request) -> bool:
+    """stdio MCP uses X-API-Key; let the AI/MCP wall validate the hash."""
+    return bool(request.headers.get("x-api-key", "").strip())
+
+
 def _should_set_cookie(path: str) -> bool:
     if path.startswith("/api/"):
         return False
@@ -169,6 +174,7 @@ class RegionAccessMiddleware(BaseHTTPMiddleware):
         if (
             _valid_bearer(request)
             or _has_bearer(request)
+            or _has_api_key(request)
             or is_public_api_path(path)
             or is_public_media_path(path)
             or is_signed_download_request(request)

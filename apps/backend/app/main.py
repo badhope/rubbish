@@ -382,6 +382,15 @@ app.include_router(admin.router, prefix="/api")
 app.include_router(tenant_hosts.router, prefix="/api")
 app.include_router(modules.router, prefix="/api")
 
+# Personal API tokens + MCP gateway (author / reviewer / editorial workflows).
+# These routers authenticate `rbk_...` tokens themselves; the login wall
+# below lets only that prefix through the two MCP-capable prefixes.
+from app.interfaces.http.ai.routes import mcp_router  # noqa: E402
+from app.interfaces.http.ai.routes import router as ai_router  # noqa: E402
+
+app.include_router(ai_router, prefix="/api")
+app.include_router(mcp_router, prefix="/api")
+
 from app.api import telemetry  # noqa: E402
 
 app.include_router(telemetry.router, prefix="/api")

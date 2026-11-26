@@ -201,6 +201,8 @@ async def _create_submission_record(
     db: AsyncSession,
     current_user: User,
     body: SubmissionCreate,
+    *,
+    body_markdown: str | None = None,
 ) -> Submission:
     """Validate and stage one submission; caller owns the transaction.
 
@@ -262,6 +264,18 @@ async def _create_submission_record(
     )
     db.add(submission)
     await db.flush()  # 拿到 submission.id 供 v1 快照引用
+    # AI/MCP 可以直接提交在线正文。正文必须在 v1 快照之前落盘，否则
+    # “最初提交的正文”会从版本历史里消失，后续 diff 也失去了起点。
+    if body_markdown:
+        from uuid import uuid4
+
+        rel_path = f"{submission.tenant_id}/{submission.id}/{uuid4().hex}.md"
+        await get_storage().save(
+            rel_path,
+            body_markdown.encode("utf-8"),
+            content_type="text/markdown",
+        )
+        submission.markdown_path = rel_path
     # v1 快照：保证「最初提交了什么」永远可查（版本历史从创建开始）
     await _snapshot_submission(db, submission, created_by=current_user.id)
     from app.domain.gamification import service as gamification
