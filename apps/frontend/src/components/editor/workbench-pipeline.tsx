@@ -815,6 +815,19 @@ export function EditorPipeline() {
                                 <UserPlus className="h-3 w-3" /> {item.needs_reassign ? '改派 / 补派互评成员' : '指派互评成员'}
                               </Button>
                             )}
+                            {col.key === 'to_assign' &&
+                              isChief &&
+                              isRevisionSubmission(item.latest_version) &&
+                              item.status === 'under_review' && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="w-full"
+                                  onClick={() => openDecide(item.submission_id)}
+                                >
+                                  <Gavel className="h-3 w-3" /> 核对返修稿并决定
+                                </Button>
+                              )}
 
                             {col.key === 'to_decide' && item.recommendations && (
                               <div className="space-y-1 border-t pt-2 text-xs">
