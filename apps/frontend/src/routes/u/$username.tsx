@@ -22,7 +22,7 @@ function PublicProfilePage() {
 
   if (profile.isLoading) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center text-muted-foreground">
+      <div className="flex min-h-[50dvh] items-center justify-center text-muted-foreground">
         <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 正在加载主页…
       </div>
     )

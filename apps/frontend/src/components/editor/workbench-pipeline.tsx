@@ -1012,7 +1012,7 @@ export function EditorPipeline() {
             </DialogTitle>
             <DialogDescription>作品 #{decidingId}</DialogDescription>
           </DialogHeader>
-          <div className="max-h-[40vh] space-y-3 overflow-y-auto pr-1">
+          <div className="max-h-[40dvh] space-y-3 overflow-y-auto pr-1">
             {decisionTarget && <RevisionEvidencePanel submission={decisionTarget} />}
             {decidingId !== null && (
               <SubmissionReportsPanel submissionId={decidingId} />
@@ -1342,7 +1342,7 @@ function EditorReportSearchDialog({
         ) : !data || data.items.length === 0 ? (
           <EmptyState title="没有匹配的互评意见" description="换一个标题话题或互评成员用户名。" />
         ) : (
-          <div className="max-h-[60vh] space-y-2 overflow-y-auto pr-1">
+          <div className="max-h-[60dvh] space-y-2 overflow-y-auto pr-1">
             <p className="text-xs text-muted-foreground">命中 {data.count} 条</p>
             {data.items.map((item) => (
               <div key={item.report_id} className="rounded-md border p-3 text-sm">
@@ -1418,7 +1418,7 @@ function EditorManuscriptDialog({
         ) : subQ.isError ? (
           <ErrorState message="加载作品失败" onRetry={() => subQ.refetch()} />
         ) : !data ? null : (
-          <div className="max-h-[72vh] space-y-4 overflow-y-auto pr-1 text-sm">
+          <div className="max-h-[72dvh] space-y-4 overflow-y-auto pr-1 text-sm">
             <div>
               <h3 className="text-base font-semibold leading-snug">{data.title}</h3>
               <div className="mt-1 flex flex-wrap gap-1">

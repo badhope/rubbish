@@ -1165,7 +1165,7 @@ function SubmissionsPage() {
       </Dialog>
 
       <Dialog open={diffVersion !== null} onOpenChange={(o) => !o && setDiffVersion(null)}>
-        <DialogContent className="max-h-[70vh] overflow-y-auto sm:max-w-3xl">
+        <DialogContent className="max-h-[70dvh] overflow-y-auto sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle>
               版本对比 v{diffQ.data?.from_version ?? Math.max(1, (diffVersion ?? 1) - 1)} → v
@@ -1197,7 +1197,7 @@ function SubmissionsPage() {
               <div>
                 <div className="mb-1 font-medium">正文差异</div>
                 {diffQ.data.body_diff.length > 0 ? (
-                  <pre className="max-h-[45vh] overflow-auto rounded-md border bg-muted/40 p-3 text-xs leading-relaxed">
+                  <pre className="max-h-[45dvh] overflow-auto rounded-md border bg-muted/40 p-3 text-xs leading-relaxed">
                     {diffQ.data.body_diff.map((line, index) => (
                       <div
                         key={`${index}-${line.slice(0, 12)}`}

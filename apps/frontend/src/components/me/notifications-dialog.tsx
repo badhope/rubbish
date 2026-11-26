@@ -107,7 +107,7 @@ export function NotificationsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[70vh] max-w-xl flex-col gap-0 overflow-hidden rounded-xl p-0 shadow-2xl">
+      <DialogContent className="flex max-h-[70dvh] max-w-xl flex-col gap-0 overflow-hidden rounded-xl p-0 shadow-2xl">
         <DialogHeader className="shrink-0 border-b px-5 py-4">
           <div className="flex flex-wrap items-start justify-between gap-3 pr-6">
             <div>

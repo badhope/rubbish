@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
  */
 export function NotFoundPage() {
   return (
-    <div className="mx-auto flex min-h-[60vh] max-w-lg items-center justify-center px-4">
+    <div className="mx-auto flex min-h-[60dvh] max-w-lg items-center justify-center px-4">
       <div className="state-panel flex flex-col items-center gap-4 text-center">
         <span className="state-icon">
           <Compass className="h-8 w-8" />

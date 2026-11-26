@@ -42,7 +42,7 @@ export function BottomSheet({
         onClick={onClose}
         className="absolute inset-0 h-full w-full bg-black/50"
       />
-      <div className="absolute inset-x-0 bottom-0 max-h-[80vh] overflow-y-auto rounded-t-2xl border-t bg-background p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl">
+      <div className="absolute inset-x-0 bottom-0 max-h-[80dvh] overflow-y-auto rounded-t-2xl border-t bg-background p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl">
         {title && (
           <div className="mb-3 flex items-center justify-between border-b pb-2">
             <p className="text-sm font-medium">{title}</p>

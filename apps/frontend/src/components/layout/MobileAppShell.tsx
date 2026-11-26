@@ -241,7 +241,7 @@ export function MobileAppShell() {
                 <span className="text-xs font-medium">功能</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="max-h-[70vh] w-56 overflow-y-auto">
+            <DropdownMenuContent align="end" className="max-h-[70dvh] w-56 overflow-y-auto">
               {isAuthenticated && user ? (
                 <>
                   <div className="flex items-center gap-2 px-2 py-1.5">

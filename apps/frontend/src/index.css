@@ -426,6 +426,10 @@
     /* 桌面端才预留滚动条槽；移动端预留会让左右留白不对称 */
     scrollbar-gutter: stable;
   }
+  /* 外部链接的文字就是 URL，允许在任意位置断行，避免撑破卡片或弹窗 */
+  a[href^="http"] {
+    overflow-wrap: anywhere;
+  }
   /* 长单词 / 长 URL / 中文混排统一切断，避免把容器撑破 */
   p,
   li,
@@ -624,7 +628,7 @@ h4 {
 .md-lightbox img {
   display: block;
   max-width: 94vw;
-  max-height: 90vh;
+  max-height: 90dvh;
   width: auto;
   height: auto;
   border-radius: 0.5rem;

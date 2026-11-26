@@ -185,7 +185,7 @@ export function ReviewAttachmentLinks({
         open={Boolean(preview)}
         onOpenChange={(open) => !open && setPreview(null)}
       >
-        <DialogContent className="flex h-[86vh] w-[min(96vw,72rem)] max-w-none flex-col gap-3 overflow-hidden">
+        <DialogContent className="flex h-[86dvh] w-[min(96vw,72rem)] max-w-none flex-col gap-3 overflow-hidden">
           <DialogHeader>
             <DialogTitle className="truncate text-sm">
               附件预览 · {preview?.filename ?? ""}

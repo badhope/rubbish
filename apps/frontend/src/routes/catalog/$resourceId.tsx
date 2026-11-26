@@ -538,7 +538,7 @@ function CatalogDetailPage() {
                     ))}
                   </div>
                 ) : (
-                  <ul className="max-h-[55vh] space-y-0.5 overflow-y-auto border-l border-border">
+                  <ul className="max-h-[55dvh] space-y-0.5 overflow-y-auto border-l border-border">
                     {toc.map((t) => (
                       <li key={t.id}>
                         <button
@@ -619,7 +619,7 @@ function CatalogDetailPage() {
           )}
 
           <Dialog open={pdfPreviewOpen} onOpenChange={setPdfPreviewOpen}>
-            <DialogContent className="flex h-[100dvh] max-h-[100dvh] w-screen max-w-none flex-col overflow-hidden rounded-none p-0 sm:h-[86vh] sm:max-h-[86vh] sm:w-full sm:max-w-5xl sm:rounded-lg">
+            <DialogContent className="flex h-[100dvh] max-h-[100dvh] w-screen max-w-none flex-col overflow-hidden rounded-none p-0 sm:h-[86dvh] sm:max-h-[86dvh] sm:w-full sm:max-w-5xl sm:rounded-lg">
               <DialogHeader className="border-b px-4 py-3">
                 <DialogTitle className="text-sm">PDF 版式预览 · 与下载件同源</DialogTitle>
               </DialogHeader>
@@ -1159,7 +1159,7 @@ function EditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>编辑资源</DialogTitle>
         </DialogHeader>

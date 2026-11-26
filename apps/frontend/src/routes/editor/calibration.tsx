@@ -135,6 +135,9 @@ function CalibrationPage() {
             偏移 = 本人总分 − 同稿其他互评成员均分。偏严/偏宽阈值 ±8 分，波动大为平均绝对偏移 ≥15 分；
             少于 2 份互评只标“样本不足”，不据此评价互评成员。
           </div>
+          <p className="mb-1 flex items-center justify-end gap-1 text-[11px] text-muted-foreground lg:hidden">
+            <span aria-hidden>⇠</span> 左右滑动查看全部列 <span aria-hidden>⇢</span>
+          </p>
           <Card>
             <CardContent className="overflow-x-auto p-0">
               <table className="w-full min-w-[720px] text-sm">

@@ -549,8 +549,8 @@ function PendingSubmissionsPage() {
                   {s.authors.join(', ')}
                 </p>
                 <p className="line-clamp-2 text-sm">{s.abstract}</p>
-                {/* 小屏双列网格：按钮不再挤成一行小字，触控目标 44px 级 */}
-                <div className="flex flex-wrap items-center gap-2 max-sm:grid max-sm:grid-cols-2 max-sm:[&>button]:min-h-10">
+                {/* 小屏双列网格；超窄屏改单列，避免“改派 / 查看分配”被按钮内宽裁掉 */}
+                <div className="flex flex-wrap items-center gap-2 max-sm:grid max-sm:grid-cols-2 max-[359px]:grid-cols-1! max-sm:[&>button]:min-h-10">
                   <Button variant="outline" size="sm" onClick={() => setDetail(s)}>
                     <Eye className="h-4 w-4" /> 详情
                   </Button>
@@ -1017,7 +1017,7 @@ function SubmissionDetailBody({ sub }: { sub: SubmissionResponse }) {
   }
 
   return (
-    <div className="space-y-3 text-sm">
+    <div className="min-w-0 space-y-3 break-words text-sm">
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="outline">{typeLabel(sub.type)}</Badge>
         <span className="text-muted-foreground">{sub.discipline}</span>
@@ -1082,13 +1082,13 @@ function SubmissionDetailBody({ sub }: { sub: SubmissionResponse }) {
         <p className="mt-1 whitespace-pre-wrap">{sub.preview}</p>
       </div>
       {sub.download_url && (
-        <div>
+        <div className="break-all">
           <span className="text-muted-foreground">下载：</span>
           {sub.download_url}
         </div>
       )}
       {sub.external_url && (
-        <div>
+        <div className="break-all">
           <span className="text-muted-foreground">外部链接：</span>
           {sub.external_url}
         </div>
@@ -1259,7 +1259,7 @@ function AssignReviewerDialog({
               只看自选「{submission.discipline}」方向的互评成员
             </label>
           )}
-          <div className="max-h-[40vh] space-y-1 overflow-y-auto">
+          <div className="max-h-[40dvh] space-y-1 overflow-y-auto">
             {isLoading ? (
               <Loading />
             ) : candidates.length === 0 ? (
@@ -1597,7 +1597,7 @@ function AdjudicateDialog({
             当前已有 {matrix.distinct_reviewers} 位互评成员提交意见，通过推荐 {matrix.accept_count} 份。
             复核人不能是本篇已参与互评的成员，也不能是作者。
           </p>
-          <div className="max-h-[35vh] space-y-1 overflow-y-auto">
+          <div className="max-h-[35dvh] space-y-1 overflow-y-auto">
             {isLoading ? (
               <Loading />
             ) : candidates.length === 0 ? (

@@ -325,7 +325,7 @@ export function ManuscriptView({
       <div className="flex-1 bg-background">
         <div className="mx-auto flex max-w-6xl items-start px-3.5 py-6 sm:px-5 sm:py-8">
           <div className="flex min-w-0 flex-1 flex-col" aria-busy="true" aria-label="正文加载中">
-            <div className="min-h-[60vh] space-y-3 pt-2">
+            <div className="min-h-[60dvh] space-y-3 pt-2">
               {Array.from({ length: 12 }).map((_, i) => (
                 <div
                   key={i}

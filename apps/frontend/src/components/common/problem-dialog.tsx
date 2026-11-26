@@ -124,7 +124,7 @@ export function ProblemDialogHost() {
           </div>
         </DialogHeader>
 
-        <div className="max-h-[56vh] overflow-y-auto px-5 py-4">
+        <div className="max-h-[56dvh] overflow-y-auto px-5 py-4">
           <p className="break-words text-sm leading-relaxed">{problem?.message}</p>
 
           {problem?.cause ? (

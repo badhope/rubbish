@@ -401,7 +401,7 @@ export function ReviewReportFields({
       </div>
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="h-[100dvh] max-h-[100dvh] w-screen max-w-none overflow-y-auto rounded-none p-4 sm:h-auto sm:max-h-[86vh] sm:w-auto sm:max-w-2xl sm:rounded-lg sm:p-6">
+        <DialogContent className="h-[100dvh] max-h-[100dvh] w-screen max-w-none overflow-y-auto rounded-none p-4 sm:h-auto sm:max-h-[86dvh] sm:w-auto sm:max-w-2xl sm:rounded-lg sm:p-6">
           <DialogHeader>
             <DialogTitle>互评意见预览</DialogTitle>
             <DialogDescription>

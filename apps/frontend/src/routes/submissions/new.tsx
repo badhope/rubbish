@@ -1155,7 +1155,7 @@ function SubmissionWizardPage() {
         {showSidePreview && !proofOpen ? (
         <aside aria-labelledby="proof-side-title" className="min-w-0">
           <h2 id="proof-side-title" className="sr-only">排版预览</h2>
-          <div className="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-lg border bg-card p-3">
+          <div className="sticky top-20 max-h-[calc(100dvh-6rem)] overflow-y-auto rounded-lg border bg-card p-3">
             <PaperProof
               title={form.title}
               authors={parseListField(form.authors)}
@@ -1176,7 +1176,7 @@ function SubmissionWizardPage() {
       </div>
 
       <Dialog open={proofOpen} onOpenChange={setProofOpen}>
-        <DialogContent className="max-h-[90vh] w-[min(96vw,56rem)] overflow-y-auto p-0 sm:max-w-4xl">
+        <DialogContent className="max-h-[90dvh] w-[min(96vw,56rem)] overflow-y-auto p-0 sm:max-w-4xl">
           <DialogHeader className="sr-only">
             <DialogTitle>文章排版预览</DialogTitle>
           </DialogHeader>
@@ -1692,7 +1692,7 @@ function StepUpload({
       </details>
 
       <Dialog open={sourcePreviewOpen} onOpenChange={setSourcePreviewOpen}>
-        <DialogContent className="flex h-[100dvh] max-h-[100dvh] w-screen max-w-none flex-col overflow-hidden rounded-none p-0 sm:h-[86vh] sm:max-h-[86vh] sm:w-full sm:max-w-5xl sm:rounded-lg">
+        <DialogContent className="flex h-[100dvh] max-h-[100dvh] w-screen max-w-none flex-col overflow-hidden rounded-none p-0 sm:h-[86dvh] sm:max-h-[86dvh] sm:w-full sm:max-w-5xl sm:rounded-lg">
           <DialogHeader className="border-b px-4 py-3">
             <DialogTitle className="text-sm">
               原件预览 · {form.file?.name ?? ''}

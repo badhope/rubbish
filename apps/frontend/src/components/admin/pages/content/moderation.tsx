@@ -770,7 +770,7 @@ export default function ForumModerationPage({ highlightTopicId }: { highlightTop
           {historyQ.isLoading ? <Loading /> : historyQ.isError ? (
             <ErrorState message="处理记录加载失败" onRetry={() => historyQ.refetch()} />
           ) : (
-            <div className="max-h-[60vh] space-y-3 overflow-y-auto">
+            <div className="max-h-[60dvh] space-y-3 overflow-y-auto">
               {(historyQ.data ?? []).map((event) => (
                 <div key={event.id} className="rounded-lg border px-3 py-2 text-xs">
                   <div className="flex flex-wrap items-center gap-2">

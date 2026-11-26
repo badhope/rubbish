@@ -288,7 +288,7 @@ export function ShopCatalogCard() {
           if (!open) setEditor(null)
         }}
       >
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
+        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>{editing ? '编辑货品' : '新增货品'}</DialogTitle>
             <DialogDescription>

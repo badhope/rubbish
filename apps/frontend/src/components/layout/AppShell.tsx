@@ -680,7 +680,7 @@ export function AppShell() {
         </main>
       </div>
       {cmdOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 pt-[18vh]" onClick={() => setCmdOpen(false)}>
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 pt-[18dvh]" onClick={() => setCmdOpen(false)}>
           <form onSubmit={submitCmd} className="w-full max-w-xl overflow-hidden rounded-xl border bg-background shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 border-b px-4 py-3">
               <Search className="h-4 w-4 text-muted-foreground" />

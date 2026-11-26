@@ -1003,7 +1003,7 @@ export function MarkdownEditor({
           </div>
           {tab === 'split' && (
             <div
-              className="max-h-[70vh] overflow-auto border-t px-4 py-3 lg:border-t-0"
+              className="max-h-[70dvh] overflow-auto border-t px-4 py-3 lg:border-t-0"
               style={{ minHeight }}
               data-testid="md-split-preview"
             >
@@ -1040,7 +1040,7 @@ export function MarkdownEditor({
                   </span>
                 </div>
                 <div
-                  className="max-h-[55vh] overflow-auto rounded-md border bg-muted/20 p-2 font-mono text-xs leading-5"
+                  className="max-h-[55dvh] overflow-auto rounded-md border bg-muted/20 p-2 font-mono text-xs leading-5"
                   data-testid="md-version-diff"
                 >
                   {compareDiff.map((row, index) => (

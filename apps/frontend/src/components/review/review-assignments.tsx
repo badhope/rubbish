@@ -544,7 +544,7 @@ export function ReviewAssignments() {
         open={reviewTargetId !== null}
         onOpenChange={(o) => !o && setReviewTargetId(null)}
       >
-        <DialogContent className="h-[100dvh] max-h-[100dvh] w-screen max-w-none overflow-hidden rounded-none p-0 sm:h-[96vh] sm:max-h-[96vh] sm:w-[96vw] sm:max-w-[96vw] sm:rounded-lg">
+        <DialogContent className="h-[100dvh] max-h-[100dvh] w-screen max-w-none overflow-hidden rounded-none p-0 sm:h-[96dvh] sm:max-h-[96dvh] sm:w-[96vw] sm:max-w-[96vw] sm:rounded-lg">
           <div className="flex h-full min-h-0 flex-col">
             <DialogHeader className="shrink-0 border-b px-5 py-4">
               <DialogTitle>互评工作台</DialogTitle>
@@ -804,7 +804,7 @@ function ReviewManuscriptPane({ assignmentId }: { assignmentId: number }) {
           <div className="mb-1 text-xs text-muted-foreground">
             正文（双盲稿已自动隐藏作者姓名与邮箱）
           </div>
-          <div className="max-h-[55vh] overflow-y-auto rounded-md border bg-muted/20 p-3">
+          <div className="max-h-[55dvh] overflow-y-auto rounded-md border bg-muted/20 p-3">
             <MarkdownContent text={stripManuscriptFrontMatter(data.manuscript_body)} className="text-sm leading-relaxed" />
           </div>
         </div>
@@ -864,7 +864,7 @@ function SubmissionDetailDialog({
         ) : isError ? (
           <ErrorState message={extractError(error, '加载作品失败')} />
         ) : !data ? null : (
-          <div className="space-y-4 pr-1 text-sm">
+          <div className="min-w-0 space-y-4 break-words pr-1 text-sm">
             <div>
               <h3 className="text-base font-semibold">{data.title}</h3>
               <div className="mt-1 flex flex-wrap gap-1">
@@ -895,7 +895,7 @@ function SubmissionDetailDialog({
                 <div className="mb-1 text-xs text-muted-foreground">
             正文（双盲稿已自动隐藏作者姓名与邮箱）
           </div>
-                <div className="max-h-[55vh] overflow-y-auto rounded-md border bg-muted/20 p-3">
+                <div className="max-h-[55dvh] overflow-y-auto rounded-md border bg-muted/20 p-3">
                   <MarkdownContent text={stripManuscriptFrontMatter(data.manuscript_body)} className="text-sm leading-relaxed" />
                 </div>
               </div>
@@ -921,7 +921,7 @@ function SubmissionDetailDialog({
                 </div>
               </div>
             )}
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+            <div className="grid grid-cols-1 gap-x-4 gap-y-2 text-xs sm:grid-cols-2">
               {data.year && (
                 <div>
                   <span className="text-muted-foreground">年份：</span>
@@ -954,7 +954,7 @@ function SubmissionDetailDialog({
                         : '该链接协议不安全，已禁用'
                     }
                     aria-disabled={!isSafeExternalUrl(data.external_url)}
-                    className="text-primary hover:underline"
+                    className="break-all text-primary hover:underline"
                   >
                     {data.external_url}
                   </a>
@@ -974,7 +974,7 @@ function SubmissionDetailDialog({
                         : '该链接协议不安全，已禁用'
                     }
                     aria-disabled={!isSafeExternalUrl(data.download_url)}
-                    className="text-primary hover:underline"
+                    className="break-all text-primary hover:underline"
                   >
                     {data.download_url}
                   </a>

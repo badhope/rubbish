@@ -159,7 +159,7 @@ export default function PagedPdfPreview({
       aria-label={ariaLabel ?? `${altPrefix}预览`}
       className={`flex h-full flex-col outline-none focus-visible:ring-2 focus-visible:ring-ring ${className}`}
     >
-      <div className="relative flex min-h-[40vh] flex-1 items-start justify-center overflow-auto rounded-md border bg-muted/30 p-2">
+      <div className="relative flex min-h-[40dvh] flex-1 items-start justify-center overflow-auto rounded-md border bg-muted/30 p-2">
         {currentUrl && !error ? (
           <img
             ref={imgRef}

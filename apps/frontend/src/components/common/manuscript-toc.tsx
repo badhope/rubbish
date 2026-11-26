@@ -52,7 +52,7 @@ export function TocDrawer({
         onClick={onClose}
         className="absolute inset-0 bg-black/40"
       />
-      <div className="absolute inset-x-0 bottom-0 max-h-[70vh] overflow-y-auto rounded-t-2xl bg-background p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl">
+      <div className="absolute inset-x-0 bottom-0 max-h-[70dvh] overflow-y-auto rounded-t-2xl bg-background p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl">
         <div className="mb-3 flex items-center justify-between">
           <p className="flex items-center gap-1.5 text-sm font-medium">
             <ListTree className="h-4 w-4" />
@@ -106,7 +106,7 @@ export function TocSidebar({
         <ListTree className="h-3.5 w-3.5" />
         目录
       </p>
-      <ul className="mt-2 max-h-[70vh] space-y-0.5 overflow-y-auto border-l border-border pr-2 text-sm">
+      <ul className="mt-2 max-h-[70dvh] space-y-0.5 overflow-y-auto border-l border-border pr-2 text-sm">
         {toc.map((item) => (
           <li key={item.id}>
             <button
