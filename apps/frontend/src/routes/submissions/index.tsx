@@ -141,7 +141,7 @@ function statusBadge(status: SubmissionStatus) {
 // 一句话讲清现状与下一步，展示在详情面板状态徽章下方。
 const STATUS_HINTS: Record<string, string> = {
   pending: '内容整理会先做基础检查，通常 3–7 天更新；不用重复提交。',
-  under_review: '互评进行中：互评成员正在看你的作品，意见会出现在详情里。',
+  under_review: '互评进行中：互评意见提交后会出现在这里。',
   major_revision: '需要大幅修改：按意见改完后，在详情逐条回应，再更新一版。',
   minor_revision: '需要小幅修改：调整后更新一版，通常不用再走一轮互评。',
   rework_requested: '作品已退回修改：点「修改作品」按意见改完并保存，再点「重新提交修改稿」。重交后才会重新进入互评。',
@@ -538,11 +538,11 @@ function SubmissionsPage() {
       {/* 详情 Dialog */}
       <Dialog open={!!detail} onOpenChange={(o) => !o && closeDetail()}>
         <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{detail?.title}</DialogTitle>
+          <DialogHeader className="pr-8">
+            <DialogTitle className="break-words">{detail?.title}</DialogTitle>
           </DialogHeader>
           {detail && (
-            <div className="space-y-3 text-sm">
+            <div className="min-w-0 space-y-3 break-words text-sm">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline">{detail.type}</Badge>
                 {statusBadge(detail.status)}
@@ -742,13 +742,13 @@ function SubmissionsPage() {
                 <p className="mt-1 whitespace-pre-wrap">{detail.preview}</p>
               </div>
               {detail.download_url && (
-                <div>
+                <div className="break-all">
                   <span className="text-muted-foreground">下载：</span>
                   {detail.download_url}
                 </div>
               )}
               {detail.external_url && (
-                <div>
+                <div className="break-all">
                   <span className="text-muted-foreground">外部链接：</span>
                   {detail.external_url}
                 </div>
