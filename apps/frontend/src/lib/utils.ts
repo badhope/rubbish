@@ -53,6 +53,7 @@ const BACKEND_ERROR_ZH: Record<string, string> = {
   'User account is disabled': '账号已被停用，请联系社区管理员',
   'Invalid or expired two-factor session; log in again': '验证会话已过期，请重新登录',
   'Invalid or expired refresh token': '登录状态已过期，请重新登录',
+  'Invalid refresh token': '登录状态已过期，请重新登录',
   'Not authenticated': '请先登录',
   'Insufficient permissions': '没有权限执行此操作',
   'Resource not found': '内容不存在或已被删除',

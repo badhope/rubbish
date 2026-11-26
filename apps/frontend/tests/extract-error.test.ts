@@ -26,6 +26,17 @@ describe('extractError', () => {
     expect(extractError(err, '默认')).toBe('默认')
   })
 
+  it('后端刷新令牌原文不直接弹给用户', () => {
+    const err = new AxiosError('Request failed', AxiosError.ERR_BAD_REQUEST, undefined, undefined, {
+      data: { detail: 'Invalid refresh token' },
+      status: 401,
+      statusText: 'Unauthorized',
+      headers: {},
+      config: { headers: new AxiosHeaders() } as InternalAxiosRequestConfig,
+    } as AxiosResponse)
+    expect(extractError(err, '默认')).toBe('登录状态已过期，请重新登录')
+  })
+
   it('非 AxiosError 直接返回 fallback', () => {
     expect(extractError(new Error('boom'), '默认')).toBe('默认')
     expect(extractError('字符串错误', '默认')).toBe('默认')

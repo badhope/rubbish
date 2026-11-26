@@ -1,6 +1,7 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from './auth'
 import { describeHttpCause, emitProblem } from './problem'
+import { translateBackendError } from './utils'
 
 // In production, fall back to same-origin /api when VITE_API_URL is not
 // injected (avoids shipping a hard-coded localhost URL in the bundle).
@@ -55,7 +56,7 @@ function reportApiProblem(error: AxiosError, title?: string): void {
   }
   const data = error.response?.data as { detail?: unknown } | undefined
   let message = ''
-  if (typeof data?.detail === 'string') message = data.detail
+  if (typeof data?.detail === 'string') message = translateBackendError(data.detail)
   else if (data?.detail && typeof data.detail === 'object') {
     const detail = data.detail as { message?: unknown }
     if (typeof detail.message === 'string') message = detail.message
