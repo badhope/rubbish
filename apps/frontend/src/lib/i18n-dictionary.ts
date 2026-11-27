@@ -116,7 +116,7 @@ export const BRAND_EN: Record<string, string> = {
   "关于 Rubbish": 'About Rubbish',
   "这里有什么": 'What is here',
   "怎么用": 'How it works',
-  '第一次来、准备写、想说话，或者先弄清边界；四条线，按需要走。':
+  '第一次来，想写，想说话，或者先看边界。四条路，挑一条先走。':
     'New here, ready to write, wanting to speak, or checking the edges first — four paths, take the one you need.',
   "先走一遍": 'Take the tour',
   "这里有什么，从哪进": 'What is here and where to enter',

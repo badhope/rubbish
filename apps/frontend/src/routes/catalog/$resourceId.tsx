@@ -21,6 +21,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
+import axios from 'axios'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/use-auth'
 import { useIsMobile } from '@/hooks/use-is-mobile'
@@ -87,7 +88,7 @@ import { ConfirmDialog } from '@/components/common/confirm-dialog'
 import { FunArticle } from '@/components/catalog/fun-article'
 import { MetaItem } from '@/components/common/meta-item'
 import { ShareDialog } from '@/components/common/share-dialog'
-import { ErrorState, LoadingSkeleton } from '@/components/common/state'
+import { EmptyState, ErrorState, LoadingSkeleton } from '@/components/common/state'
 
 // 详情页向访客开放（后端 GET /catalog/{id} 本就是公开接口）。
 // v5：点开即正文——标题/作者/标签后直接渲染 Markdown 正文，不再跳 /reader。
@@ -98,26 +99,34 @@ export const Route = createFileRoute('/catalog/$resourceId')({
 function CatalogDetailPage() {
   const { resourceId } = Route.useParams()
   const id = Number(resourceId)
+  // 先确认正文本身能不能打开，再决定要不要发可选请求。
+  // 文章被删除或旧链接失效时，history / claim-status 的 404 不该再触发
+  // 全局诊断弹窗：页面只报一次「这篇内容不在了」就够了。
+  const resourceQ = useResource(id)
+  const { data, isLoading, isError, refetch } = resourceQ
+  const resourceReady = !isLoading && !isError && Boolean(data)
   const forumQ = useQuery({
     queryKey: ['forum', 'paper-count', id],
     queryFn: async () => (await api.get('/forum/topics', { params: { paper_id: id, page_size: 1 } })).data,
-    enabled: Number.isFinite(id) && id > 0,
+    enabled: resourceReady,
   })
   const discussCount: number = forumQ.data?.meta?.total ?? 0
   const { isAdmin, isAuthenticated, user } = useAuth()
   const historyQ = useQuery<ResourceHistory>({
     queryKey: ['catalog', 'history', id],
     queryFn: async () => (await api.get(`/catalog/${id}/history`)).data,
-    enabled: Number.isFinite(id) && id > 0,
+    enabled: resourceReady,
   })
-  const claimStatus = useClaimStatus(Number.isFinite(id) && id > 0 ? id : null, isAuthenticated)
+  const claimStatus = useClaimStatus(
+    Number.isFinite(id) && id > 0 ? id : null,
+    isAuthenticated && resourceReady,
+  )
   const navigate = useNavigate()
   const location = useLocation()
   // 收藏关系以服务端为准：当前用户任一合集收录了这篇，按钮才显示已收藏。
   const savedQ = useMyLibraryItemIds(isAuthenticated)
   const saved = savedQ.data?.has(id) ?? false
 
-  const { data, isLoading, isError, refetch } = useResource(id)
   const recordView = useRecordView()
   const updateMut = useUpdateResource()
   const deleteMut = useDeleteResource()
@@ -126,10 +135,10 @@ function CatalogDetailPage() {
   const viewRecordedRef = useRef<number | null>(null)
   const recordViewRef = useRef(recordView)
   useEffect(() => {
-    if (!isAuthenticated || viewRecordedRef.current === id) return
+    if (!isAuthenticated || !resourceReady || viewRecordedRef.current === id) return
     viewRecordedRef.current = id
     void recordViewRef.current.mutateAsync(id).catch(() => {})
-  }, [id, isAuthenticated])
+  }, [id, isAuthenticated, resourceReady])
 
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -171,9 +180,25 @@ function CatalogDetailPage() {
 
   if (isLoading) return <LoadingSkeleton rows={6} />
   if (isError || !data) {
+    const status = axios.isAxiosError(resourceQ.error)
+      ? resourceQ.error.response?.status
+      : undefined
+    if (status === 404 || !Number.isFinite(id) || id <= 0) {
+      return (
+        <EmptyState
+          title="这篇内容不在了"
+          description="它可能已被作者删除，或者旧链接少了一截。内容库还在，换一篇接着读。"
+          action={
+            <Button asChild>
+              <Link to="/catalog">回内容库</Link>
+            </Button>
+          }
+        />
+      )
+    }
     return (
       <ErrorState
-        message="加载资源失败"
+        message="这篇内容暂时打不开"
         onRetry={() => refetch()}
       />
     )

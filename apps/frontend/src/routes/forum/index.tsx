@@ -344,6 +344,21 @@ function ForumListPage() {
   // 不强制用户选分区：留空时由后端按标题/正文自动归类，降低发帖门槛。
   const normalizedCategory = LEGACY_SLUG[category] ?? category
   const activeBoard = normalizedCategory === 'all' ? null : allBoards.find((b) => b.slug === normalizedCategory)
+  // 子版选中时，父版块页签仍要保持高亮；否则用户会以为自己离开了招生分区。
+  const boardWithin = (slug: string, rootSlug: string): boolean => {
+    let board = allBoards.find((b) => b.slug === slug)
+    while (board) {
+      if (board.slug === rootSlug) return true
+      const parentId = board.parent_id
+      if (!parentId) break
+      board = allBoards.find((b) => b.id === parentId)
+    }
+    return false
+  }
+  const admissionsRoot = allBoards.find((b) => b.slug === 'admissions')
+  const admissionsRecruit = allBoards.find((b) => b.slug === 'admissions-recruit')
+  const admissionsSeek = allBoards.find((b) => b.slug === 'admissions-seek')
+  const inAdmissions = boardWithin(normalizedCategory, 'admissions')
 
   const listQ = useQuery({
     queryKey: ['forum', 'topics', category, page, sort, keyword],
@@ -520,7 +535,7 @@ function ForumListPage() {
     <div className="mx-auto w-full max-w-6xl space-y-4">
       <PageHeader
         title="主题论坛"
-        description="写法、复盘、组队、招生与找导师，以及写作之外的生活。登录即可发布主题帖，不必攒经验。"
+        description="写法、复盘、组队、招生与找导师，也有写作之外的生活。登录就能发主题帖，不必先攒经验。"
         descriptionClassName="hidden sm:block"
         actions={
           <div className="flex flex-wrap items-center gap-2">
@@ -689,11 +704,11 @@ function ForumListPage() {
                 <button
                   key={root.slug}
                   type="button"
-                  aria-pressed={normalizedCategory === root.slug}
+                  aria-pressed={boardWithin(normalizedCategory, root.slug)}
                   onClick={() => updateSearch({ category: root.slug, page: 1 })}
                   className={cn(
                     'shrink-0 rounded-full border px-3 py-1.5 text-[11px] transition-colors',
-                    normalizedCategory === root.slug
+                    boardWithin(normalizedCategory, root.slug)
                       ? 'border-primary/30 bg-primary/10 text-primary'
                       : 'bg-muted/30 text-muted-foreground hover:text-foreground',
                   )}
@@ -711,7 +726,7 @@ function ForumListPage() {
               ) : null}
             </div>
 
-            {activeBoard?.slug === 'admissions' ? (
+            {inAdmissions ? (
               <div className="border-b bg-sky-500/[0.04] px-4 py-4 sm:px-5">
                 <div className="flex items-start gap-3">
                   <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-500/10 text-sky-700 dark:text-sky-300">
@@ -728,7 +743,35 @@ function ForumListPage() {
                     </p>
                   </div>
                 </div>
-                <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                  <span className="mr-1 text-[11px] text-muted-foreground">按子版看</span>
+                  {[
+                    { slug: 'admissions', label: '全部', count: admissionsRoot?.total_topics ?? 0 },
+                    { slug: 'admissions-recruit', label: '导师招生', count: admissionsRecruit?.total_topics ?? 0 },
+                    { slug: 'admissions-seek', label: '学生找导师', count: admissionsSeek?.total_topics ?? 0 },
+                  ].map((item) => {
+                    const active = normalizedCategory === item.slug
+                    return (
+                      <button
+                        key={item.slug}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => updateSearch({ category: item.slug, page: 1 })}
+                        className={cn(
+                          'inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 text-xs transition-colors',
+                          active
+                            ? 'border-sky-500/45 bg-sky-500/15 font-medium text-sky-800 dark:text-sky-200'
+                            : 'border-sky-500/15 bg-background/60 text-muted-foreground hover:border-sky-500/35 hover:text-foreground',
+                        )}
+                      >
+                        {item.label}
+                        <span className="tabular-nums opacity-60">{item.count}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
                   <button
                     type="button"
                     onClick={() => openAdmissionsComposer('recruit')}

@@ -155,7 +155,7 @@ function ExplorePage() {
     <div className="mx-auto w-full max-w-[1180px] space-y-8">
       <PageHeader
         title="发现"
-        description="从热读、讨论和作者三条路走进站内。这里不是算法推荐，是站里正在发生的事。"
+        description="站内热读、正在讨论、活跃作者，三条路都开在下面。顺序跟着阅读和回应走，算法不替这里拿主意。"
       />
 
       <section className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-4">
@@ -247,7 +247,7 @@ function ExplorePage() {
       ) : (
         <div className="space-y-10">
           <section>
-            <SectionTitle eyebrow="ATTENTION, NOT EDITORIAL" title="站内热读" note="按阅读、下载、收藏的站内注意力排序；没有数据时退回收最新。" />
+            <SectionTitle eyebrow="ATTENTION, NOT EDITORIAL" title="站内热读" note="阅读、下载、收藏加在一起算；数据不够时，退回最新。" />
             {topResources.length ? (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {topResources.map((resource) => <ResourceCard key={resource.id} resource={resource} />)}
@@ -259,7 +259,7 @@ function ExplorePage() {
 
           <div className="grid gap-8 lg:grid-cols-[1.25fr_0.75fr]">
             <section>
-              <SectionTitle eyebrow="LIVE THREADS" title="正在讨论" note="回应数和赞同/有帮助共同排序，不按发帖时间压人。" />
+              <SectionTitle eyebrow="LIVE THREADS" title="正在讨论" note="回应多、赞同多的靠前；刚开的帖，去「最新」看。" />
               <div className="rounded-xl border bg-card px-4">
                 {topTopics.length ? topTopics.map((topic) => <TopicRow key={topic.id} topic={topic} />) : (
                   <p className="py-8 text-sm text-muted-foreground">还没有公开讨论。去主题论坛起一个话头。</p>
@@ -269,7 +269,7 @@ function ExplorePage() {
 
             <div className="space-y-8">
               <section>
-                <SectionTitle eyebrow="PEOPLE AT THE TABLE" title="活跃作者" note="按已公开作品数和站内注意力排，不按粉丝数。" />
+                <SectionTitle eyebrow="PEOPLE AT THE TABLE" title="活跃作者" note="看已公开作品和站内阅读；粉丝数不参与。" />
                 <div className="space-y-1">
                   {topAuthors.length ? topAuthors.map((author, index) => (
                     <Link

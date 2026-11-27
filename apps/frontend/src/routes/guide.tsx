@@ -39,7 +39,7 @@ function GuidePage() {
       <div className="mx-auto w-full max-w-[1100px]">
         <PageHeader
           title="怎么用"
-          description="第一次来、准备写、想说话，或者先弄清边界；四条线，按需要走。"
+          description="第一次来，想写，想说话，或者先看边界。四条路，挑一条先走。"
         />
       </div>
       <div className="mx-auto mb-6 flex w-full max-w-[1100px] flex-wrap border-t">

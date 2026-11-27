@@ -264,7 +264,7 @@ function SearchPage() {
     <div className="mx-auto w-full max-w-[960px] space-y-6">
       <PageHeader
         title="检索"
-        description="作品、主题帖、成员与标签，一次查清；每一类都给出来源和数量。"
+        description="作品、帖子、成员、标签，分成四类摆开。先看哪一类，再往下翻。"
       />
 
       <form onSubmit={submit} className="relative" role="search">

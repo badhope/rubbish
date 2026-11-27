@@ -54,7 +54,7 @@ function LevelsPage() {
     <div className="mx-auto max-w-4xl space-y-7">
       <PageHeader
         title="参与记录"
-        description="这里记的是脚印，不是头衔。说话、回应、写一篇、参与互评、签到，都会留下经验。它不换权限；所有人从第一档开始。"
+        description="这里记脚印，不记头衔。说话、回应、写一篇、参与互评、签到，都会留下经验。经验不换权限，所有人从第一档开始。"
       />
 
       {isAuthenticated ? (

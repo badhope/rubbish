@@ -6,6 +6,7 @@ import {
   ChevronRight,
   LogIn,
   PenLine,
+  ShieldCheck,
 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { useAuth } from '@/hooks/use-auth'
@@ -15,6 +16,7 @@ import { readAccessRegion } from '@/lib/access'
 import { navLabel, useLang } from '@/lib/i18n'
 import { AnnouncementChip, AnnouncementDialog, useAnnouncementPortal } from '@/components/common/announcement-dialog'
 import { AppearanceMenu } from '@/components/appearance-menu'
+import { PublicAboutMenu } from '@/components/layout/public-about-menu'
 import { LanguageButton } from '@/components/language-button'
 import { ArticleCover } from '@/components/common/article-cover'
 import { BrandMark } from '@/components/common/brand-mark'
@@ -221,6 +223,15 @@ function MemberHome() {
             </span>
             <LanguageButton />
             <AppearanceMenu />
+            <PublicAboutMenu />
+            <Link
+              to="/privacy"
+              aria-label="隐私政策"
+              title="隐私政策"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground md:hidden"
+            >
+              <ShieldCheck className="h-4 w-4" />
+            </Link>
             <Button asChild size="sm" className="hidden sm:inline-flex">
               <Link to="/submissions/new">
                 <PenLine className="h-3.5 w-3.5" />

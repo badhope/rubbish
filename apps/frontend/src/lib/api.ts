@@ -46,9 +46,21 @@ function reportApiProblem(error: AxiosError, title?: string): void {
   const status = error.response?.status
   const rawUrl = error.config?.url ?? ''
   // 文章页把 /manuscript 的 404/409 当作“没有在线正文”处理，会自己退化到
-  // PDF/下载视图；这里再弹全局诊断只会让正常缺省状态看起来像故障。
+  // PDF/下载视图；正文 404 后，history / claim-status / 阅读记录也不该再
+  // 弹全局诊断。这些请求失败属于“内容不在了”的正常退化，页面自己会说明。
+  if (status === 404 && /\/catalog\/\d+(?:\?|$)/.test(rawUrl)) {
+    return
+  }
   if (
-    (status === 404 || status === 409) &&
+    status === 404 &&
+    (/\/catalog\/[^/]+\/manuscript(?:\?|$)/.test(rawUrl) ||
+      /\/catalog\/[^/]+\/claim-status(?:\?|$)/.test(rawUrl) ||
+      /\/reader\/history\/[^/]+(?:\?|$)/.test(rawUrl))
+  ) {
+    return
+  }
+  if (
+    status === 409 &&
     (/\/catalog\/[^/]+\/manuscript(?:\?|$)/.test(rawUrl) ||
       /\/submissions\/[^/]+\/download-ticket(?:\?|$)/.test(rawUrl))
   ) {

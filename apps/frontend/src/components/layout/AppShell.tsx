@@ -15,6 +15,7 @@ import {
   Kanban,
   Menu,
   Search,
+  ShieldCheck,
   Sparkles,
   Tags,
   User,
@@ -49,6 +50,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { AppearanceMenu } from '@/components/appearance-menu'
+import { PublicAboutMenu } from '@/components/layout/public-about-menu'
 import { LanguageButton } from '@/components/language-button'
 import { CookieBanner } from '@/components/common/cookie-banner'
 import { PageViewTracker } from '@/components/common/page-view-tracker'
@@ -87,6 +89,7 @@ const NAV: NavItem[] = [
   { to: '/tags', label: '标签与归档', icon: Tags, group: '关于' },
   { to: '/status', label: '站点状态', icon: Activity, group: '关于' },
   { to: '/accessibility', label: '可访问性', icon: Accessibility, group: '关于' },
+  { to: '/privacy', label: '隐私政策', icon: ShieldCheck, group: '关于' },
   { to: '/admin', label: '站务管理', icon: Gavel, auth: true, adminOnly: true, group: '站点管理' },
 ]
 
@@ -126,6 +129,7 @@ function resolvePublicNavPath(pathname: string): string | undefined {
   if (pathname === '/issues') return '/issues'
   if (pathname === '/guide') return '/guide'
   if (pathname === '/about') return '/about'
+  if (pathname === '/privacy') return '/privacy'
   if (
     ['/catalog'].some(
       (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
@@ -458,6 +462,7 @@ export function AppShell() {
               )}
               <LanguageButton />
               <AppearanceMenu />
+              <PublicAboutMenu />
               {isAuthenticated && (
                 <Button asChild size="sm" className="hidden sm:inline-flex">
                   <Link to="/submissions/new">

@@ -14,6 +14,7 @@ import {
   MessagesSquare,
   MessageSquareText,
   PenLine,
+  ShieldCheck,
   Tags,
   type LucideIcon,
   User,
@@ -84,6 +85,7 @@ export const MOBILE_MORE: MobileMoreItem[] = [
   { to: '/tags', label: '标签与归档', icon: Tags, group: '社区' },
   { to: '/status', label: '站点状态', icon: Activity, group: '社区' },
   { to: '/accessibility', label: '可访问性', icon: Accessibility, group: '社区' },
+  { to: '/privacy', label: '隐私政策', icon: ShieldCheck, group: '社区' },
   { to: '/forum', search: { view: 'feedback' }, label: '反馈与建议', icon: MessageSquareText, group: '社区' },
   { to: '/admin', label: '站务管理', icon: Gavel, auth: true, adminOnly: true, group: '管理' },
 ]

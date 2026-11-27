@@ -29,8 +29,13 @@ from app.core.db import async_session_factory
 from app.core.logging import get_logger
 from app.core.security import hash_password
 from app.core.tenant import TENANT_CONTEXT_VAR
-from app.domain.forum.defaults import BOARD_TREE
-from app.domain.forum.models import ForumBoard
+from app.core.time import utcnow
+from app.domain.forum.defaults import (
+    ADMISSIONS_GUIDE_BODY,
+    ADMISSIONS_GUIDE_TITLE,
+    BOARD_TREE,
+)
+from app.domain.forum.models import ForumBoard, ForumTopic
 from app.models import Role, Tenant, User, UserRole
 
 logger = get_logger("rubbish.bootstrap")
@@ -64,11 +69,11 @@ async def _ensure_bootstrap_tenant(session: AsyncSession) -> Tenant:
     return tenant
 
 
-async def _ensure_admin_user(session: AsyncSession, tenant: Tenant) -> None:
-    """Create the initial admin user under ``tenant`` if absent.
+async def _ensure_admin_user(session: AsyncSession, tenant: Tenant) -> User:
+    """Return the initial admin user under ``tenant``, creating it if absent.
 
     Idempotent: if an admin with ``settings.admin_username`` already
-    exists under this tenant, do nothing. Password rotations are NOT
+    exists under this tenant, return it. Password rotations are NOT
     applied here — see module docstring.
     """
     username = settings.admin_username
@@ -80,7 +85,7 @@ async def _ensure_admin_user(session: AsyncSession, tenant: Tenant) -> None:
     )
     existing = result.scalar_one_or_none()
     if existing is not None:
-        return
+        return existing
     user = User(
         tenant_id=tenant.id,
         email=settings.admin_email,
@@ -93,12 +98,14 @@ async def _ensure_admin_user(session: AsyncSession, tenant: Tenant) -> None:
     )
     session.add(user)
     await session.commit()
+    await session.refresh(user)
     logger.info(
         "bootstrap_admin_created",
         user_id=user.id,
         username=username,
         tenant_id=str(tenant.id),
     )
+    return user
 
 
 async def _ensure_default_forum_boards(session: AsyncSession, tenant: Tenant) -> None:
@@ -147,6 +154,62 @@ async def _ensure_default_forum_boards(session: AsyncSession, tenant: Tenant) ->
         )
 
 
+async def _ensure_admissions_guide(
+    session: AsyncSession, tenant: Tenant, admin: User
+) -> None:
+    """Seed the admissions guide once, keyed by its fixed title.
+
+    Production already has topic #33. The title check keeps startup from
+    creating a second copy after the first deploy; operators may edit the
+    body afterwards without it being overwritten.
+    """
+    board = (
+        await session.execute(
+            select(ForumBoard).where(
+                ForumBoard.tenant_id == tenant.id,
+                ForumBoard.slug == "admissions",
+            )
+        )
+    ).scalar_one_or_none()
+    if board is None:
+        logger.warning("admissions_guide_board_missing", tenant_id=str(tenant.id))
+        return
+
+    existing = (
+        await session.execute(
+            select(ForumTopic).where(
+                ForumTopic.tenant_id == tenant.id,
+                ForumTopic.title == ADMISSIONS_GUIDE_TITLE,
+            )
+        )
+    ).scalar_one_or_none()
+    if existing is not None:
+        return
+
+    now = utcnow()
+    session.add(
+        ForumTopic(
+            tenant_id=tenant.id,
+            author_id=admin.id,
+            title=ADMISSIONS_GUIDE_TITLE,
+            body=ADMISSIONS_GUIDE_BODY,
+            board_id=int(board.id),
+            category="admissions",
+            moderation_status="published",
+            is_pinned=True,
+            published_at=now,
+            created_at=now,
+        )
+    )
+    await session.commit()
+    logger.info(
+        "admissions_guide_seeded",
+        tenant_id=str(tenant.id),
+        board_id=int(board.id),
+        author_id=admin.id,
+    )
+
+
 async def run_bootstrap() -> None:
     """Ensure the bootstrap tenant and initial admin user exist.
 
@@ -171,13 +234,14 @@ async def run_bootstrap() -> None:
 
     TENANT_CONTEXT_VAR.set(tenant.id)
     async with async_session_factory() as session:
-        await _ensure_admin_user(session, tenant)
+        admin = await _ensure_admin_user(session, tenant)
         # Create the reviewer + editor roles the review workflow needs; the
         # admin is then granted both so operators can self-test the
         # reviewer/editor flows directly.
         await _ensure_review_roles(session, tenant)
         await _ensure_admin_roles(session, tenant)
         await _ensure_default_forum_boards(session, tenant)
+        await _ensure_admissions_guide(session, tenant, admin)
 
 
 async def _ensure_review_roles(session: AsyncSession, tenant: Tenant) -> None:
