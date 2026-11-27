@@ -1,7 +1,23 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { createFileRoute, Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Clock3, Flame, Flag, Lock, Megaphone, MessageSquare, Pin, Plus, Search, X } from 'lucide-react'
+import {
+  Bell,
+  ChevronRight,
+  CircleHelp,
+  Clock3,
+  Flame,
+  Flag,
+  Lock,
+  Megaphone,
+  MessageSquare,
+  Pin,
+  Plus,
+  Search,
+  ThumbsUp,
+  TrendingUp,
+  X,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import { uploadForumImage } from '@/lib/forum'
@@ -67,6 +83,9 @@ interface ForumTopic {
   risk_score?: number | null
   review_eta_at?: string | null
   author: { id: number; username: string; display_name?: string | null; avatar_url?: string | null } | null
+  reactions?: Record<string, number>
+  viewer_reactions?: string[]
+  viewer_following?: boolean
 }
 
 interface BoardNode {
@@ -182,6 +201,7 @@ function plainExcerpt(text: string): string {
 }
 
 const FORUM_DRAFT_KEY = 'rubbish:forum-draft:v1'
+const WEEKLY_PROMPT = '你最近一次推翻重写，是因为什么？'
 
 interface ForumDraft {
   title: string
@@ -221,6 +241,8 @@ function saveForumDraft(draft: ForumDraft) {
   }
 }
 
+type ForumSort = 'latest' | 'hot' | 'unanswered' | 'following'
+
 function ForumListPage() {
   const navigate = useNavigate()
   const qc = useQueryClient()
@@ -239,7 +261,14 @@ function ForumListPage() {
   const view = search.view === 'feedback' ? 'feedback' : 'list'
   const category = search.category ?? 'all'
   const page = search.page ?? 1
-  const sort = search.sort === 'hot' ? 'hot' : 'latest'
+  const sort: ForumSort =
+    search.sort === 'latest'
+      ? 'latest'
+      : search.sort === 'unanswered'
+        ? 'unanswered'
+        : search.sort === 'following'
+          ? 'following'
+          : 'hot'
   const keyword = search.q ?? ''
   const [queryInput, setQueryInput] = useState(keyword)
 
@@ -257,7 +286,7 @@ function ForumListPage() {
 
   const [open, setOpen] = useState(false)
   const [boardPickerOpen, setBoardPickerOpen] = useState(false)
-  const titleRef = useRef<HTMLInputElement>(null)
+  const titleRef = useRef<HTMLTextAreaElement>(null)
   const bodyRef = useRef<HTMLTextAreaElement>(null)
   const [form, setForm] = useState({
     title: paperId ? `讨论：${(paperTitle || `作品 #${paperId}`).slice(0, 170)}` : '',
@@ -311,6 +340,19 @@ function ForumListPage() {
       ).data,
   })
 
+  const hotQ = useQuery({
+    queryKey: ['forum', 'topics', 'sidebar', 'hot'],
+    queryFn: async () =>
+      (await api.get('/forum/topics', { params: { sort: 'hot', page_size: 5 } })).data,
+  })
+  const unansweredQ = useQuery({
+    queryKey: ['forum', 'topics', 'sidebar', 'unanswered'],
+    queryFn: async () =>
+      (await api.get('/forum/topics', { params: { sort: 'unanswered', page_size: 4 } })).data,
+  })
+  const hotTopics: ForumTopic[] = hotQ.data?.data ?? []
+  const unansweredTopics: ForumTopic[] = unansweredQ.data?.data ?? []
+
   const createMut = useMutation({
     mutationFn: async () => (await api.post('/forum/topics', form)).data,
     onSuccess: (data: ForumTopic) => {
@@ -354,7 +396,7 @@ function ForumListPage() {
     createMut.mutate()
   }
 
-  const openComposer = () => {
+  const openComposer = (seed?: { title?: string; body?: string }) => {
     if (!isAuthenticated) {
       void navigate({ to: '/login', search: { redirect: '/forum' } })
       return
@@ -366,12 +408,14 @@ function ForumListPage() {
         ? usableDraft.board_id
         : null
     setForm({
-      title: paperId
-        ? `讨论：${(paperTitle || `作品 #${paperId}`).slice(0, 170)}`
-        : usableDraft?.title ?? '',
-      body: paperId
-        ? paperDraftBody(paperId)
-        : usableDraft?.body ?? '',
+      title:
+        seed?.title ??
+        (paperId
+          ? `讨论：${(paperTitle || `作品 #${paperId}`).slice(0, 170)}`
+          : usableDraft?.title ?? ''),
+      body:
+        seed?.body ??
+        (paperId ? paperDraftBody(paperId) : usableDraft?.body ?? ''),
       board_id: storedBoardId,
       paper_id: paperId,
       is_fictional: usableDraft?.is_fictional ?? false,
@@ -399,6 +443,17 @@ function ForumListPage() {
   const topics: ForumTopic[] = listQ.data?.data ?? []
   const meta = listQ.data?.meta
 
+  useEffect(() => {
+    if (!open) return
+    const id = window.requestAnimationFrame(() => {
+      const el = titleRef.current
+      if (!el) return
+      el.style.height = 'auto'
+      el.style.height = `${Math.max(36, el.scrollHeight)}px`
+    })
+    return () => window.cancelAnimationFrame(id)
+  }, [open, form.title])
+
   if (view === 'feedback') {
     return (
       <Suspense fallback={<Loading />}>
@@ -408,19 +463,20 @@ function ForumListPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-4">
+    <div className="mx-auto w-full max-w-6xl space-y-4">
       <PageHeader
         title="主题论坛"
         description="写法、复盘、组队，以及写作之外的生活。登录即可发布主题帖，不必攒经验。"
+        descriptionClassName="hidden sm:block"
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" asChild>
               <Link to="/forum" search={{ view: 'feedback' }}>
                 <MessageSquare className="h-4 w-4" />
                 反馈墙
               </Link>
             </Button>
-            <Button onClick={openComposer}>
+            <Button onClick={() => openComposer()}>
               <Plus className="h-4 w-4" />
               发布主题帖
             </Button>
@@ -429,14 +485,40 @@ function ForumListPage() {
       />
 
       {!activeBoard && !keyword ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-l-2 border-primary/50 bg-muted/25 px-4 py-3">
-          <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-primary">这周写什么</p>
-            <p className="mt-1 font-serif text-base leading-snug">你最近一次推翻重写，是因为什么？</p>
+        <div className="overflow-hidden rounded-xl border bg-muted/20 px-4 py-3 sm:px-5 sm:py-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.18em] text-primary">
+                <CircleHelp className="h-3.5 w-3.5" />
+                本周话题
+              </p>
+              <p className="mt-1 font-serif text-[15px] leading-snug tracking-tight sm:mt-1.5 sm:text-lg">
+                <span className="sm:hidden">
+                  你最近一次推翻重写，
+                  <br />
+                  是因为什么？
+                </span>
+                <span className="hidden sm:inline">{WEEKLY_PROMPT}</span>
+              </p>
+              <p className="mt-1 hidden text-xs text-muted-foreground sm:block">
+                不必写成完整文章，一段真实的卡点就够了。
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 shrink-0 self-start px-3 text-xs sm:h-9 sm:px-3.5 sm:text-sm"
+              onClick={() =>
+                openComposer({
+                  title: WEEKLY_PROMPT,
+                  body: '我的回答：\n\n',
+                })
+              }
+            >
+              写下你的回答
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Button>
           </div>
-          <Button size="sm" variant="outline" onClick={openComposer}>
-            参与楼层互动
-          </Button>
         </div>
       ) : null}
 
@@ -454,10 +536,7 @@ function ForumListPage() {
               </Link>
               发起讨论。
             </span>
-            <Button
-              size="sm"
-              onClick={openComposer}
-            >
+            <Button size="sm" onClick={() => openComposer()}>
               <Plus className="h-4 w-4" />
               发布主题帖
             </Button>
@@ -465,228 +544,453 @@ function ForumListPage() {
         </Card>
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-2 border-y py-2.5">
-        <form
-          className="relative w-full sm:w-[230px]"
-          onSubmit={(e) => {
-            e.preventDefault()
-            updateSearch({ q: queryInput.trim() || undefined, page: 1 })
-          }}
-        >
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={queryInput}
-            onChange={(e) => setQueryInput(e.target.value)}
-            placeholder="搜索标题或正文"
-            aria-label="搜索主题帖"
-            className="h-8 pl-8 pr-8 text-xs"
-          />
-          {queryInput ? (
-            <button
-              type="button"
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
-              onClick={() => {
-                setQueryInput('')
-                updateSearch({ q: undefined, page: 1 })
-              }}
-              aria-label="清除搜索"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          ) : null}
-        </form>
-        <div className="flex w-full flex-wrap items-center gap-1 pb-0.5 sm:w-auto sm:flex-1 sm:flex-nowrap sm:overflow-x-auto">
-          <button
-            type="button"
-            aria-pressed={!activeBoard}
-            onClick={() => updateSearch({ category: undefined, page: 1 })}
-            className={cn(
-              'shrink-0 rounded-full border px-3 py-1 text-[11px] transition-colors',
-              !activeBoard
-                ? 'border-primary/30 bg-primary/10 text-primary'
-                : 'bg-muted/30 text-muted-foreground hover:text-foreground',
-            )}
-          >
-            全部
-          </button>
-          {boardTree.map((root) => (
-            <button
-              key={root.slug}
-              type="button"
-              aria-pressed={normalizedCategory === root.slug}
-              onClick={() => updateSearch({ category: root.slug, page: 1 })}
-              className={cn(
-                'shrink-0 rounded-full border px-3 py-1 text-[11px] transition-colors',
-                normalizedCategory === root.slug
-                  ? 'border-primary/30 bg-primary/10 text-primary'
-                  : 'bg-muted/30 text-muted-foreground hover:text-foreground',
-              )}
-            >
-              {root.name}
-              {root.total_topics > 0 ? (
-                <span className="ml-1 tabular-nums opacity-60">{root.total_topics}</span>
-              ) : null}
-            </button>
-          ))}
-        </div>
-
-        <div className="ml-auto flex items-center gap-0.5 rounded-full border bg-muted/40 p-0.5">
-          <button
-            type="button"
-            onClick={() => updateSearch({ sort: 'latest', page: 1 })}
-            className={cn(
-              'flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] transition-colors',
-              sort === 'latest'
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            <Clock3 className="h-3 w-3" />
-            最新
-          </button>
-          <button
-            type="button"
-            onClick={() => updateSearch({ sort: 'hot', page: 1 })}
-            className={cn(
-              'flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] transition-colors',
-              sort === 'hot'
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            <Flame className="h-3 w-3" />
-            热度
-          </button>
-        </div>
-      </div>
-
-      {listQ.isLoading ? (
-        <Loading />
-      ) : listQ.isError ? (
-        <ErrorState message="加载社区失败" onRetry={() => listQ.refetch()} />
-      ) : topics.length === 0 ? (
-        <EmptyState
-          title={keyword ? '没有找到匹配的主题帖' : '桌边还空着'}
-          description={
-            keyword
-              ? '换个更短的关键词，或清除搜索看全部主题帖。'
-              : '第一句话可以从你开始：问一个问题，或留一条建议。'
-          }
-          action={
-            keyword ? (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => updateSearch({ q: undefined, page: 1 })}
+      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <main className="min-w-0 space-y-3">
+          <div className="rounded-xl border bg-card/70">
+            <div className="flex flex-col gap-2 border-b px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <div
+                role="tablist"
+                aria-label="主题帖排序"
+                className="order-2 flex items-center gap-1 overflow-x-auto sm:order-1"
               >
-                清除搜索
-              </Button>
-            ) : (
-              <Button size="sm" onClick={openComposer}>
-                写下第一句
-              </Button>
-            )
-          }
-        />
-      ) : (
-        <div className="divide-y overflow-hidden rounded-lg border bg-card">
-          {topics.map((t) => (
-            <div
-              key={t.id}
-              className={cn(
-                'flex items-start gap-3 px-4 py-4 transition-colors hover:bg-muted/20',
-                // 社区公告用左侧主色条突出：公告不是普通主题帖
-                (t.category === 'notice' || t.category === 'announcements') && 'border-l-4 border-l-primary',
-              )}
-            >
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {t.is_pinned && (
-                      <Badge className="gap-1 bg-primary/15 text-primary">
-                        <Pin className="h-3 w-3" />
-                        置顶
-                      </Badge>
-                    )}
-                    {(t.category === 'notice' || t.category === 'announcements') ? (
-                      <Badge className="gap-1 border border-transparent bg-primary text-primary-foreground">
-                        <Megaphone className="h-3 w-3" />
-                        社区公告
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className={CATEGORY_STYLE[t.category]}>
-                        {t.board_name ?? CATEGORY_LABEL[t.category] ?? t.category}
-                      </Badge>
-                    )}
-                    {t.is_fictional ? (
-                      <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-800">
-                        虚构
-                      </Badge>
-                    ) : null}
-                    {t.is_locked && (
-                      <Badge variant="secondary" className="gap-1">
-                        <Lock className="h-3 w-3" />
-                        已锁定
-                      </Badge>
-                    )}
-                    <Link
-                      to="/forum/$topicId"
-                      params={{ topicId: String(t.id) }}
-                      className="text-[15px] font-semibold leading-6 hover:text-primary hover:underline"
+                {[
+                  { key: 'hot' as const, label: '热议', icon: Flame },
+                  { key: 'latest' as const, label: '最新', icon: Clock3 },
+                  { key: 'unanswered' as const, label: '待回应', icon: CircleHelp },
+                  { key: 'following' as const, label: '关注', icon: Bell },
+                ].map(({ key, label, icon: Icon }) => {
+                  const active = sort === key
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      onClick={() => {
+                        if (key === 'following' && !isAuthenticated) {
+                          void navigate({ to: '/login', search: { redirect: '/forum?sort=following' } })
+                          return
+                        }
+                        updateSearch({ sort: key, page: 1 })
+                      }}
+                      className={cn(
+                        'inline-flex min-h-8 shrink-0 items-center gap-1 rounded-full px-2.5 text-xs transition-colors',
+                        active
+                          ? 'bg-primary/10 font-medium text-primary'
+                          : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+                      )}
                     >
-                      {t.title}
-                    </Link>
-                  </div>
-                  <p className="mt-1 line-clamp-2 text-[13px] leading-6 text-muted-foreground">
-                    {plainExcerpt(t.body)}
-                  </p>
-                  <p className="mt-1.5 text-[11px] text-muted-foreground">
-                    {t.author?.display_name || t.author?.username || '已注销用户'} · 最后活跃{' '}
-                    {fmtRelative(t.last_reply_at ?? t.created_at)}
-                  </p>
-                </div>
-                <div className="flex shrink-0 flex-col items-end gap-1">
-                  <ModerationBadge status={t.moderation_status} />
-                  <div className="flex items-center gap-1 rounded-full bg-muted/60 px-2 py-1 text-xs text-muted-foreground">
-                    <MessageSquare className="h-3.5 w-3.5" />
-                    <span className="tabular-nums">{t.reply_count}</span>
-                  </div>
-                </div>
-                {isAuthenticated && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-muted-foreground"
-                        aria-label="举报"
-                      >
-                        <Flag className="h-3.5 w-3.5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {['垃圾广告', '不友善内容', '违法违规', '其他'].map((reason) => (
-                        <DropdownMenuItem
-                          key={reason}
-                          onClick={() => reportMut.mutate({ topic_id: t.id, reason })}
-                        >
-                          {reason}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
+                      <Icon className="h-3.5 w-3.5" />
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
+              <form
+                className="relative order-1 w-full sm:order-2 sm:w-[220px]"
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  updateSearch({ q: queryInput.trim() || undefined, page: 1 })
+                }}
+              >
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={queryInput}
+                  onChange={(e) => setQueryInput(e.target.value)}
+                  placeholder="搜索标题或正文"
+                  aria-label="搜索主题帖"
+                  className="h-8 pl-8 pr-8 text-xs"
+                />
+                {queryInput ? (
+                  <button
+                    type="button"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
+                    onClick={() => {
+                      setQueryInput('')
+                      updateSearch({ q: undefined, page: 1 })
+                    }}
+                    aria-label="清除搜索"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                ) : null}
+              </form>
             </div>
-          ))}
-        </div>
-      )}
 
-      {meta && meta.total_pages > 1 && (
-        <Pagination
-          page={meta.page}
-          totalPages={meta.total_pages}
-          onPageChange={(p) => updateSearch({ page: p })}
-        />
-      )}
+            <div className="flex items-center gap-1.5 overflow-x-auto px-3 py-2">
+              <button
+                type="button"
+                aria-pressed={!activeBoard}
+                onClick={() => updateSearch({ category: undefined, page: 1 })}
+                className={cn(
+                  'shrink-0 rounded-full border px-3 py-1.5 text-[11px] transition-colors',
+                  !activeBoard
+                    ? 'border-primary/30 bg-primary/10 text-primary'
+                    : 'bg-muted/30 text-muted-foreground hover:text-foreground',
+                )}
+              >
+                全部
+              </button>
+              {boardTree.map((root) => (
+                <button
+                  key={root.slug}
+                  type="button"
+                  aria-pressed={normalizedCategory === root.slug}
+                  onClick={() => updateSearch({ category: root.slug, page: 1 })}
+                  className={cn(
+                    'shrink-0 rounded-full border px-3 py-1.5 text-[11px] transition-colors',
+                    normalizedCategory === root.slug
+                      ? 'border-primary/30 bg-primary/10 text-primary'
+                      : 'bg-muted/30 text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  {root.name}
+                  {root.total_topics > 0 ? (
+                    <span className="ml-1 tabular-nums opacity-60">{root.total_topics}</span>
+                  ) : null}
+                </button>
+              ))}
+              {meta ? (
+                <span className="ml-auto shrink-0 pl-2 text-[11px] tabular-nums text-muted-foreground">
+                  {meta.total} 帖
+                </span>
+              ) : null}
+            </div>
+          </div>
+
+          {listQ.isLoading ? (
+            <Loading />
+          ) : listQ.isError ? (
+            <ErrorState message="加载社区失败" onRetry={() => listQ.refetch()} />
+          ) : topics.length === 0 ? (
+            <EmptyState
+              title={
+                sort === 'following'
+                  ? isAuthenticated
+                    ? '还没有关注主题帖'
+                    : '登录后查看关注的帖子'
+                  : sort === 'unanswered'
+                    ? '每个问题都有人接了话'
+                    : keyword
+                      ? '没有找到匹配的主题帖'
+                      : '桌边还空着'
+              }
+              description={
+                sort === 'following'
+                  ? isAuthenticated
+                    ? '在主题帖底部点“关注”，有新回应时会出现在这里。'
+                    : '关注一条帖子，后续回应不会错过。'
+                  : sort === 'unanswered'
+                    ? '去最新一页看看，也可以自己起一个话头。'
+                    : keyword
+                      ? '换个更短的关键词，或清除搜索看全部主题帖。'
+                      : '第一句话可以从你开始：问一个问题，或留一条建议。'
+              }
+              action={
+                sort === 'following' && !isAuthenticated ? (
+                  <Button
+                    size="sm"
+                    onClick={() => void navigate({ to: '/login', search: { redirect: '/forum?sort=following' } })}
+                  >
+                    去登录
+                  </Button>
+                ) : sort === 'following' || sort === 'unanswered' || keyword ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => updateSearch({ q: undefined, sort: 'latest', page: 1 })}
+                  >
+                    看最新主题帖
+                  </Button>
+                ) : (
+                  <Button size="sm" onClick={() => openComposer()}>
+                    写下第一句
+                  </Button>
+                )
+              }
+            />
+          ) : (
+            <div className="divide-y overflow-hidden rounded-xl border bg-card">
+              {topics.map((t) => {
+                const authorName = t.author?.display_name || t.author?.username || '已注销用户'
+                const agreed = t.reactions?.agree ?? 0
+                const showModeration =
+                  t.moderation_status &&
+                  !['published', 'approved', 'auto_approved'].includes(t.moderation_status)
+                return (
+                  <article
+                    key={t.id}
+                    className={cn(
+                      'group flex gap-3 px-4 py-4 transition-colors hover:bg-muted/20 sm:gap-4 sm:px-5',
+                      (t.category === 'notice' || t.category === 'announcements') &&
+                        'border-l-4 border-l-primary',
+                    )}
+                  >
+                    {t.author ? (
+                      <Link
+                        to="/u/$username"
+                        params={{ username: t.author.username }}
+                        className="mt-0.5 shrink-0"
+                        aria-label={`查看 ${authorName} 的主页`}
+                      >
+                        {t.author.avatar_url ? (
+                          <img
+                            src={t.author.avatar_url}
+                            alt=""
+                            className="h-9 w-9 rounded-full border object-cover sm:h-10 sm:w-10"
+                          />
+                        ) : (
+                          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary sm:h-10 sm:w-10">
+                            {authorName.slice(0, 1)}
+                          </span>
+                        )}
+                      </Link>
+                    ) : (
+                      <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-sm text-muted-foreground sm:h-10 sm:w-10">
+                        ?
+                      </span>
+                    )}
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {t.is_pinned && (
+                          <Badge className="h-5 gap-1 bg-primary/15 px-1.5 text-[10px] text-primary">
+                            <Pin className="h-3 w-3" />
+                            置顶
+                          </Badge>
+                        )}
+                        {t.category === 'notice' || t.category === 'announcements' ? (
+                          <Badge className="h-5 gap-1 border border-transparent bg-primary px-1.5 text-[10px] text-primary-foreground">
+                            <Megaphone className="h-3 w-3" />
+                            社区公告
+                          </Badge>
+                        ) : (
+                          <Badge
+                            variant="outline"
+                            className={cn('h-5 px-1.5 text-[10px]', CATEGORY_STYLE[t.category])}
+                          >
+                            {t.board_name ?? CATEGORY_LABEL[t.category] ?? t.category}
+                          </Badge>
+                        )}
+                        {t.is_fictional ? (
+                          <Badge
+                            variant="outline"
+                            className="h-5 border-amber-300 bg-amber-50 px-1.5 text-[10px] text-amber-800"
+                          >
+                            虚构
+                          </Badge>
+                        ) : null}
+                        {t.is_locked && (
+                          <Badge variant="secondary" className="h-5 gap-1 px-1.5 text-[10px]">
+                            <Lock className="h-3 w-3" />
+                            已锁定
+                          </Badge>
+                        )}
+                        {t.viewer_following ? (
+                          <span className="inline-flex items-center gap-0.5 text-[10px] text-primary">
+                            <Bell className="h-3 w-3" />
+                            关注中
+                          </span>
+                        ) : null}
+                        {showModeration ? <ModerationBadge status={t.moderation_status} /> : null}
+                      </div>
+
+                      <Link
+                        to="/forum/$topicId"
+                        params={{ topicId: String(t.id) }}
+                        className="mt-1 block text-[16px] font-semibold leading-6 tracking-tight hover:text-primary sm:text-[17px]"
+                      >
+                        {t.title}
+                      </Link>
+                      <p className="mt-1 line-clamp-2 text-[13px] leading-6 text-muted-foreground">
+                        {plainExcerpt(t.body)}
+                      </p>
+                      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
+                        {t.author ? (
+                          <Link
+                            to="/u/$username"
+                            params={{ username: t.author.username }}
+                            className="font-medium text-foreground/80 hover:text-primary"
+                          >
+                            {authorName}
+                          </Link>
+                        ) : (
+                          <span>{authorName}</span>
+                        )}
+                        <span aria-hidden>·</span>
+                        <span>最后活跃 {fmtRelative(t.last_reply_at ?? t.created_at)}</span>
+                        <span className="ml-auto flex items-center gap-3 tabular-nums">
+                          <span className="inline-flex items-center gap-1">
+                            <MessageSquare className="h-3.5 w-3.5" />
+                            {t.reply_count}
+                          </span>
+                          {agreed > 0 ? (
+                            <span className="inline-flex items-center gap-1">
+                              <ThumbsUp className="h-3.5 w-3.5" />
+                              {agreed}
+                            </span>
+                          ) : null}
+                        </span>
+                        {isAuthenticated && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 shrink-0 text-muted-foreground opacity-70 hover:opacity-100"
+                                aria-label={`举报 ${t.title}`}
+                              >
+                                <Flag className="h-3.5 w-3.5" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {['垃圾广告', '不友善内容', '违法违规', '其他'].map((reason) => (
+                                <DropdownMenuItem
+                                  key={reason}
+                                  onClick={() => reportMut.mutate({ topic_id: t.id, reason })}
+                                >
+                                  {reason}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                )
+              })}
+            </div>
+          )}
+
+          {meta && meta.total_pages > 1 && (
+            <Pagination
+              page={meta.page}
+              totalPages={meta.total_pages}
+              onPageChange={(p) => updateSearch({ page: p })}
+            />
+          )}
+        </main>
+
+        <aside className="hidden space-y-4 lg:sticky lg:top-20 lg:block">
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+                  <TrendingUp className="h-4 w-4 text-primary" />
+                  社区热榜
+                </h2>
+                <Link
+                  to="/forum"
+                  search={{ sort: 'hot' }}
+                  className="text-[11px] text-muted-foreground hover:text-primary"
+                >
+                  全部
+                </Link>
+              </div>
+              {hotQ.isLoading ? (
+                <p className="py-8 text-center text-xs text-muted-foreground">正在排榜…</p>
+              ) : hotQ.isError ? (
+                <p className="py-8 text-center text-xs text-muted-foreground">热榜暂时没排出来。</p>
+              ) : hotTopics.length === 0 ? (
+                <p className="py-8 text-center text-xs text-muted-foreground">还没有足够的热度。</p>
+              ) : (
+                <ol className="mt-2 divide-y">
+                  {hotTopics.map((t, index) => (
+                    <li key={t.id}>
+                      <Link
+                        to="/forum/$topicId"
+                        params={{ topicId: String(t.id) }}
+                        className="flex gap-2.5 py-2.5 transition-colors hover:text-primary"
+                      >
+                        <span
+                          className={cn(
+                            'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded text-[11px] font-semibold tabular-nums',
+                            index === 0
+                              ? 'bg-primary text-primary-foreground'
+                              : index < 3
+                                ? 'bg-primary/10 text-primary'
+                                : 'bg-muted text-muted-foreground',
+                          )}
+                        >
+                          {index + 1}
+                        </span>
+                        <span className="min-w-0">
+                          <span className="line-clamp-2 text-[13px] font-medium leading-5">{t.title}</span>
+                          <span className="mt-1 block text-[10px] text-muted-foreground">
+                            {t.board_name ?? CATEGORY_LABEL[t.category] ?? '主题帖'} · {t.reply_count} 回应
+                          </span>
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="flex items-center gap-1.5 text-sm font-semibold">
+                  <CircleHelp className="h-4 w-4 text-primary" />
+                  等你来答
+                </h2>
+                <Link
+                  to="/forum"
+                  search={{ sort: 'unanswered' }}
+                  className="text-[11px] text-muted-foreground hover:text-primary"
+                >
+                  更多
+                </Link>
+              </div>
+              {unansweredQ.isLoading ? (
+                <p className="py-8 text-center text-xs text-muted-foreground">正在找没人接的话…</p>
+              ) : unansweredQ.isError ? (
+                <p className="py-8 text-center text-xs text-muted-foreground">暂时没找到。</p>
+              ) : unansweredTopics.length === 0 ? (
+                <p className="py-8 text-center text-xs leading-5 text-muted-foreground">
+                  今天的帖子都有人接了话。
+                  <br />
+                  去最新一页翻翻？
+                </p>
+              ) : (
+                <ul className="mt-1 divide-y">
+                  {unansweredTopics.map((t) => (
+                    <li key={t.id}>
+                      <Link
+                        to="/forum/$topicId"
+                        params={{ topicId: String(t.id) }}
+                        className="group block py-2.5"
+                      >
+                        <p className="line-clamp-2 text-[13px] font-medium leading-5 group-hover:text-primary">
+                          {t.title}
+                        </p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">
+                          {t.author?.display_name || t.author?.username || '已注销用户'} · 还没有回应
+                        </p>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <Button variant="ghost" size="sm" className="mt-2 w-full justify-between" asChild>
+                <Link to="/forum" search={{ sort: 'unanswered' }}>
+                  查看所有待回应
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <div className="rounded-xl border border-dashed bg-muted/15 px-4 py-4 text-xs leading-6 text-muted-foreground">
+            <p className="font-medium text-foreground">桌边规矩</p>
+            <p>先读再问；不同意，就具体说哪里不同意。</p>
+            <p>虚构写作请勾“虚构内容”，别让读者拿它当事实。</p>
+            <p>站务、bug 与建议，走反馈墙更快。</p>
+          </div>
+        </aside>
+      </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
@@ -717,11 +1021,17 @@ function ForumListPage() {
                   </div>
                 ))}
               </div>
-              <input
+              <textarea
                 ref={titleRef}
                 value={form.title}
                 onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
+                onInput={(event) => {
+                  const el = event.currentTarget
+                  el.style.height = 'auto'
+                  el.style.height = `${Math.max(36, el.scrollHeight)}px`
+                }}
                 maxLength={200}
+                rows={1}
                 placeholder="标题：这个主题帖想聊什么"
                 aria-label="主题帖标题"
                 onKeyDown={(event) => {
@@ -730,7 +1040,7 @@ function ForumListPage() {
                     bodyRef.current?.focus()
                   }
                 }}
-                className="w-full border-0 bg-transparent p-0 font-serif text-2xl leading-tight tracking-tight outline-none placeholder:text-muted-foreground/70"
+                className="min-h-9 w-full resize-none overflow-hidden border-0 bg-transparent p-0 font-serif text-2xl leading-tight tracking-tight outline-none placeholder:text-muted-foreground/70"
               />
 
               <div className="flex flex-wrap items-center gap-2">

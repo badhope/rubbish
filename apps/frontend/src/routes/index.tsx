@@ -250,7 +250,7 @@ function MemberHome() {
               长文在内容库，半句话在主题论坛。
             </p>
             <p className="mx-auto mt-4 max-w-xl text-[15px] leading-7 text-muted-foreground">
-              读别人的路，也写自己的停顿。登录后可以阅读、写作，也能在主题论坛说一句。
+              读别人的路，也写自己的停顿。去内容库翻一篇，或到主题论坛说一句。
             </p>
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
               <Button asChild size="lg" className="h-11 px-5">

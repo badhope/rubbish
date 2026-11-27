@@ -33,14 +33,14 @@ export function MeSettings({ username, initialSection }: { username: string; ini
 
   return (
     <section>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-3">
-        <div>
+      <div className="flex items-start justify-between gap-3 border-b pb-3">
+        <div className="min-w-0">
           <h2 className="font-serif text-lg tracking-tight">账号设置</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
             资料、安全、通知与 AI 接入；留空不会覆盖已有内容。
           </p>
         </div>
-        <Button variant="ghost" size="sm" asChild>
+        <Button variant="ghost" size="sm" asChild className="shrink-0">
           <Link to="/u/$username" params={{ username }}>
             <ExternalLink className="h-3.5 w-3.5" />
             公开主页

@@ -5,6 +5,8 @@ Admin user management (list/create/delete) lives in ``app.api.admin``.
 
 from __future__ import annotations
 
+import re
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy import func, or_, select
@@ -451,6 +453,10 @@ async def get_public_profile(
                 "category": topic.category,
                 "reply_count": topic.reply_count,
                 "created_at": topic.created_at.isoformat(),
+                "last_activity_at": (topic.last_reply_at or topic.created_at).isoformat(),
+                "excerpt": re.sub(r"\s+", " ", re.sub(r"[#>*_`\[\]]", "", topic.body)).strip()[
+                    :120
+                ],
             }
             for topic in topics
         ],

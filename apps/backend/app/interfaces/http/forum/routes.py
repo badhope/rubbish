@@ -232,6 +232,7 @@ class TopicOut(BaseModel):
     author: AuthorBrief | None = None
     reactions: dict[str, int] = Field(default_factory=dict)
     viewer_reactions: list[str] = Field(default_factory=list)
+    viewer_following: bool = False
 
 
 class TopicListOut(BaseModel):
@@ -411,6 +412,7 @@ def _topic_out(
     reactions: dict[str, int] | None = None,
     viewer_reactions: list[str] | None = None,
     boards: dict[int, ForumBoard] | None = None,
+    viewer_following: bool = False,
 ) -> TopicOut:
     board = boards.get(t.board_id) if boards and t.board_id else None
     return TopicOut(
@@ -438,6 +440,7 @@ def _topic_out(
         author=authors.get(t.author_id),
         reactions=reactions or {k: 0 for k in REACTION_KINDS},
         viewer_reactions=viewer_reactions or [],
+        viewer_following=viewer_following,
     )
 
 
@@ -725,12 +728,12 @@ async def list_topics(
     q: str | None = Query(
         default=None, min_length=1, max_length=80, description="标题或正文关键词"
     ),
-    sort: Literal["latest", "hot"] = Query(default="latest"),
+    sort: Literal["latest", "hot", "unanswered", "following"] = Query(default="latest"),
     include_pending: bool = Query(default=False, description="运营端包含待人工核验主题"),
     current_user: User | None = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db),
 ) -> TopicListOut:
-    """主题帖列表：置顶优先。latest 按最近活跃，hot 按回复数再按活跃。"""
+    """主题帖列表：置顶优先。latest 按最近活跃，hot 按回复数，unanswered 只看零回应，following 只看当前用户关注的主题帖。"""
     tenant_id = require_tenant_id()
     all_boards = (
         (
@@ -794,6 +797,32 @@ async def list_topics(
         if selected_slugs:
             clauses.append(ForumTopic.category.in_(selected_slugs))
         stmt = stmt.where(or_(*clauses))
+    if sort == "unanswered":
+        stmt = stmt.where(ForumTopic.reply_count == 0)
+    elif sort == "following":
+        if current_user is None:
+            return TopicListOut(
+                data=[],
+                meta={
+                    "total": 0,
+                    "page": page,
+                    "page_size": page_size,
+                    "total_pages": 0,
+                },
+            )
+        followed_ids = (
+            (
+                await db.execute(
+                    select(ForumTopicFollow.topic_id).where(
+                        ForumTopicFollow.tenant_id == tenant_id,
+                        ForumTopicFollow.user_id == current_user.id,
+                    )
+                )
+            )
+            .scalars()
+            .all()
+        )
+        stmt = stmt.where(ForumTopic.id.in_(followed_ids))
     if paper_id is not None:
         stmt = stmt.where(ForumTopic.paper_id == paper_id)
     if q and q.strip():
@@ -821,12 +850,49 @@ async def list_topics(
                 desc(func.coalesce(ForumTopic.last_reply_at, ForumTopic.created_at)),
                 ForumTopic.id.desc(),
             )
+            if sort in ("latest", "following")
+            else (
+                desc(ForumTopic.is_pinned),
+                ForumTopic.created_at.desc(),
+                ForumTopic.id.desc(),
+            )
         ),
     )
     authors = await _author_map(db, {r.author_id for r in rows})
     boards = {b.id: b for b in all_boards}
+    reaction_counts, viewer_reactions = await _reaction_summary(
+        db,
+        target_type="topic",
+        target_ids=[r.id for r in rows],
+        viewer_id=current_user.id if current_user else None,
+    )
+    followed_topic_ids: set[int] = set()
+    if current_user is not None and rows:
+        followed_topic_ids = set(
+            (
+                await db.execute(
+                    select(ForumTopicFollow.topic_id).where(
+                        ForumTopicFollow.tenant_id == tenant_id,
+                        ForumTopicFollow.user_id == current_user.id,
+                        ForumTopicFollow.topic_id.in_([r.id for r in rows]),
+                    )
+                )
+            )
+            .scalars()
+            .all()
+        )
     return TopicListOut(
-        data=[_topic_out(r, authors, boards=boards) for r in rows],
+        data=[
+            _topic_out(
+                r,
+                authors,
+                reactions=reaction_counts.get(r.id),
+                viewer_reactions=viewer_reactions.get(r.id),
+                boards=boards,
+                viewer_following=r.id in followed_topic_ids,
+            )
+            for r in rows
+        ],
         meta={
             "total": meta.total,
             "page": meta.page,
@@ -1492,7 +1558,9 @@ async def moderation_feedback(
     signal_code = payload.signal_code
     if signal_code is None:
         signals = topic.moderation_signals or []
-        signal_code = str(signals[0].get("code")) if signals and isinstance(signals[0], dict) else None
+        signal_code = (
+            str(signals[0].get("code")) if signals and isinstance(signals[0], dict) else None
+        )
     db.add(
         ForumModerationEvent(
             tenant_id=tenant_id,
@@ -1569,7 +1637,11 @@ async def moderation_insights(
             code = (event.meta or {}).get("signal_code")
             if not code:
                 signals = signals_by_topic.get(event.topic_id, [])
-                code = signals[0].get("code") if signals and isinstance(signals[0], dict) else "unknown"
+                code = (
+                    signals[0].get("code")
+                    if signals and isinstance(signals[0], dict)
+                    else "unknown"
+                )
             code = str(code or "unknown")
             row = by_signal.setdefault(code, {"hits": 0, "false_positive": 0})
             if event.action == "feedback":
@@ -1586,14 +1658,20 @@ async def moderation_insights(
         "days": days,
         "decisions": decisions,
         "feedback": feedback,
-        "false_positive_rate": round(
-            feedback.get("false_positive", 0) / total_decisions * 100, 1
-        )
+        "false_positive_rate": round(feedback.get("false_positive", 0) / total_decisions * 100, 1)
         if total_decisions
         else 0.0,
         "signals": [
-            {"code": code, **row, "false_positive_rate": round(row["false_positive"] / row["hits"] * 100, 1) if row["hits"] else 0.0}
-            for code, row in sorted(by_signal.items(), key=lambda item: item[1]["hits"], reverse=True)
+            {
+                "code": code,
+                **row,
+                "false_positive_rate": round(row["false_positive"] / row["hits"] * 100, 1)
+                if row["hits"]
+                else 0.0,
+            }
+            for code, row in sorted(
+                by_signal.items(), key=lambda item: item[1]["hits"], reverse=True
+            )
         ],
         "daily": [{"date": day, **row} for day, row in sorted(daily.items())],
     }

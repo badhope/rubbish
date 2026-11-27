@@ -54,7 +54,7 @@ function PublicProfilePage() {
         await follow.mutateAsync(followName)
       }
       await qc.invalidateQueries({ queryKey: ['public-profile', username] })
-      toast.success(data.following ? '已取消关注' : '已关注，新作品会出现在关注流')
+      toast.success(data.following ? '已取消关注' : '已关注，有新作品会通知你')
     } catch (err) {
       toast.error(extractError(err, '关注失败'))
     }
@@ -65,31 +65,22 @@ function PublicProfilePage() {
       profile={data}
       actions={
         data.is_owner ? (
-          <Button asChild size="sm" variant="outline">
-            <Link to="/me">编辑我的主页</Link>
+          <Button asChild size="sm" variant="outline" className="bg-background/85 shadow-sm backdrop-blur">
+            <Link to="/me" search={{ tab: 'settings', section: 'profile' }}>
+              编辑我的主页
+            </Link>
           </Button>
         ) : (
-          <div className="flex items-center gap-2">
-            {data.works.length > 0 ? (
-              <Button asChild size="sm">
-                <Link
-                  to="/catalog/$resourceId"
-                  params={{ resourceId: String(data.works[0].id) }}
-                >
-                  <span data-i18n-allow>读他的一篇</span>
-                </Link>
-              </Button>
-            ) : null}
-            <Button
-              size="sm"
-              variant={data.following ? 'outline' : 'default'}
-              onClick={() => void toggle()}
-              disabled={follow.isPending || unfollow.isPending}
-            >
-              {data.following ? <UserMinus className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
-              {data.following ? '已关注' : '关注'}
-            </Button>
-          </div>
+          <Button
+            size="sm"
+            variant={data.following ? 'outline' : 'default'}
+            onClick={() => void toggle()}
+            disabled={follow.isPending || unfollow.isPending}
+            className={data.following ? 'bg-background/85 shadow-sm backdrop-blur' : 'shadow-sm'}
+          >
+            {data.following ? <UserMinus className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}
+            {data.following ? '已关注' : '关注'}
+          </Button>
         )
       }
     />

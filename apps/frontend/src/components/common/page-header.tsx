@@ -8,6 +8,8 @@ interface Props {
   size?: 'default' | 'cover'
   /** 页面内再分一层时用 2，避免同一页出现两个 h1。 */
   headingLevel?: 1 | 2
+  /** 副文案的额外样式；窄屏需要收紧时用。 */
+  descriptionClassName?: string
 }
 
 // 页面标题区，所有列表/详情页统一头部
@@ -18,6 +20,7 @@ export function PageHeader({
   actions,
   size = 'default',
   headingLevel = 1,
+  descriptionClassName,
 }: Props) {
   const titleClass =
     size === 'cover'
@@ -47,11 +50,11 @@ export function PageHeader({
         {titleNode}
         {description && (
           <p
-            className={
+            className={`${
               size === 'cover'
                 ? 'mx-auto mt-2 max-w-3xl text-[15px] leading-7 text-muted-foreground sm:text-base sm:leading-8'
                 : 'mt-1 text-sm text-muted-foreground'
-            }
+            }${descriptionClassName ? ` ${descriptionClassName}` : ''}`}
           >
             {description}
           </p>

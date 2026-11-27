@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
@@ -498,6 +498,16 @@ function ForumTopicPage() {
     )
   }
 
+  useEffect(() => {
+    if (!composerOpen) return
+    const timers = [120, 450, 900, 1500].map((delay) =>
+      window.setTimeout(() => {
+        window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'auto' })
+      }, delay),
+    )
+    return () => timers.forEach((timer) => window.clearTimeout(timer))
+  }, [composerOpen])
+
   if (topicQ.isLoading) return <Loading />
   if (topicQ.isError || !topicQ.data) {
     return <ErrorState message="主题帖不存在或已被删除" onRetry={() => topicQ.refetch()} />
@@ -562,15 +572,30 @@ function ForumTopicPage() {
             )}
           </div>
           <h1 className="min-w-0 break-words text-xl font-semibold leading-snug">{topic.title}</h1>
-          <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            {topic.author?.avatar_url ? (
-              <img src={topic.author.avatar_url} alt="" className="h-5 w-5 rounded-full object-cover" />
-            ) : null}
-            {topic.author?.display_name || topic.author?.username || '已注销用户'} ·{' '}
-            {formatDateTime(topic.created_at)}
+          <p className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+            {topic.author ? (
+              <Link
+                to="/u/$username"
+                params={{ username: topic.author.username }}
+                className="inline-flex items-center gap-1.5 font-medium text-foreground/80 hover:text-primary"
+              >
+                {topic.author.avatar_url ? (
+                  <img src={topic.author.avatar_url} alt="" className="h-6 w-6 rounded-full object-cover" />
+                ) : (
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
+                    {(topic.author.display_name || topic.author.username).slice(0, 1)}
+                  </span>
+                )}
+                {topic.author.display_name || topic.author.username}
+              </Link>
+            ) : (
+              <span>已注销用户</span>
+            )}
+            <span aria-hidden>·</span>
+            <span>发布于 {formatDateTime(topic.created_at)}</span>
           </p>
           {/* 话题正文按 Markdown 渲染；react-markdown 默认转义原始 HTML，XSS 面为零。 */}
-          <div className="markdown-body text-sm leading-relaxed">
+          <div className="forum-topic-body markdown-body text-sm leading-relaxed">
             <MarkdownContent text={topic.body} />
           </div>
 
@@ -591,6 +616,18 @@ function ForumTopicPage() {
               <Share2 className="h-3.5 w-3.5" />
               分享
             </Button>
+            {isAuthenticated && !topic.is_locked && !statusPending ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="h-7 gap-1 rounded-full px-2 text-[11px] text-muted-foreground"
+                onClick={() => setComposerOpen(true)}
+              >
+                <MessageSquare className="h-3.5 w-3.5" />
+                写回应
+              </Button>
+            ) : null}
             {isAuthenticated && (
               <Button
                 type="button"
@@ -716,7 +753,7 @@ function ForumTopicPage() {
           这个主题帖已锁定，不再接受新的楼层互动。
         </p>
       ) : replyTo ? null : (
-        <Card>
+        <Card id="topic-reply-composer" className="scroll-mt-24">
           <CardContent className="space-y-2 py-4">
             {isAuthenticated ? (
               composerOpen ? (

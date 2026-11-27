@@ -479,3 +479,97 @@ async def test_parent_board_slug_filters_descendant_topics(
         listing = await client.get(f"/api/forum/topics?{param}")
         assert listing.status_code == 200, listing.text
         assert listing.json()["meta"]["total"] == 1
+
+
+@pytest.mark.asyncio
+async def test_list_unanswered_filters_out_replied_topics(
+    client: AsyncClient, test_user: dict
+) -> None:
+    """待回应只留零回复帖子；有人接话后从列表消失。"""
+    unanswered = (
+        await client.post(
+            "/api/forum/topics",
+            json={"title": "还没人接的问题", "body": "正文"},
+            headers=auth_headers(test_user),
+        )
+    ).json()
+    replied = (
+        await client.post(
+            "/api/forum/topics",
+            json={"title": "已经有人接的问题", "body": "正文"},
+            headers=auth_headers(test_user),
+        )
+    ).json()
+    await client.post(
+        f"/api/forum/topics/{replied['id']}/replies",
+        json={"body": "接一句"},
+        headers=auth_headers(test_user),
+    )
+
+    listing = await client.get("/api/forum/topics", params={"sort": "unanswered"})
+    assert listing.status_code == 200
+    assert [row["id"] for row in listing.json()["data"]] == [unanswered["id"]]
+
+
+@pytest.mark.asyncio
+async def test_following_feed_only_returns_watched_topics(
+    client: AsyncClient, test_user: dict
+) -> None:
+    """关注流只返回本人点过关注的帖子，并带 viewer_following 标记。"""
+    watched = (
+        await client.post(
+            "/api/forum/topics",
+            json={"title": "关注的帖子", "body": "正文"},
+            headers=auth_headers(test_user),
+        )
+    ).json()
+    ignored = (
+        await client.post(
+            "/api/forum/topics",
+            json={"title": "没关注的帖子", "body": "正文"},
+            headers=auth_headers(test_user),
+        )
+    ).json()
+    follow = await client.post(
+        f"/api/forum/topics/{watched['id']}/follow",
+        headers=auth_headers(test_user),
+    )
+    assert follow.status_code == 200, follow.text
+
+    listing = await client.get(
+        "/api/forum/topics",
+        params={"sort": "following"},
+        headers=auth_headers(test_user),
+    )
+    assert listing.status_code == 200
+    rows = listing.json()["data"]
+    assert [row["id"] for row in rows] == [watched["id"]]
+    assert rows[0]["viewer_following"] is True
+    assert ignored["id"] not in [row["id"] for row in rows]
+
+    anonymous = await client.get("/api/forum/topics", params={"sort": "following"})
+    assert anonymous.status_code == 200
+    assert anonymous.json()["data"] == []
+
+
+@pytest.mark.asyncio
+async def test_list_includes_reaction_counts(client: AsyncClient, test_user: dict) -> None:
+    """列表卡片需要赞同数，否则每条帖子都要点进详情才知道反响。"""
+    topic = (
+        await client.post(
+            "/api/forum/topics",
+            json={"title": "值得赞同的帖子", "body": "正文"},
+            headers=auth_headers(test_user),
+        )
+    ).json()
+    reaction = await client.post(
+        "/api/forum/reactions/toggle",
+        json={"target_type": "topic", "target_id": topic["id"], "kind": "agree"},
+        headers=auth_headers(test_user),
+    )
+    assert reaction.status_code == 200, reaction.text
+
+    listing = await client.get("/api/forum/topics", headers=auth_headers(test_user))
+    row = next(item for item in listing.json()["data"] if item["id"] == topic["id"])
+    assert row["reactions"]["agree"] == 1
+    assert "agree" in row["viewer_reactions"]

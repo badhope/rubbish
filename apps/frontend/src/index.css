@@ -538,6 +538,8 @@ h4 {
   text-justify: inter-ideograph;
 }
 .markdown-body p:last-child { margin-bottom: 0; }
+/* 论坛正文左对齐：两端对齐遇到 URL、英文术语会把汉字间距拉得很开。 */
+.forum-topic-body p { text-align: left; text-justify: auto; }
 .markdown-body p:has(> img:only-child) {
   margin: 1.8em 0 0.35em;
   /* 只让图片自己居中；段内若还有文字，仍按正文左对齐并保留首行缩进。

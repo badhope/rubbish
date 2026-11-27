@@ -37,6 +37,8 @@ export interface PublicProfileTopic {
   category: string
   reply_count: number
   created_at: string
+  last_activity_at?: string
+  excerpt?: string
 }
 
 export interface PublicProfileBadge {
