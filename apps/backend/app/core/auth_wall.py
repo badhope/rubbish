@@ -41,6 +41,7 @@ PUBLIC_API_PATHS = frozenset(
         "/api/capabilities",
         "/api/health",
         "/api/health/ready",
+        "/api/explore/overview",
         "/api/privacy",
         "/api/telemetry/pageview",
     }
@@ -70,9 +71,7 @@ PUBLIC_API_PATTERNS = (
 # 签名下载链接由移动端/微信内置浏览器直接打开，浏览器不会带 Bearer。
 # 只放行带 ticket 参数的提交文件下载路径；票据签名、过期时间与权限仍由
 # 端点自身的 _verify_download_ticket / _can_access_submission_file 校验。
-_SIGNED_DOWNLOAD_PATH = re.compile(
-    r"^/api/submissions/\d+/files(?:/[^/]+)?$"
-)
+_SIGNED_DOWNLOAD_PATH = re.compile(r"^/api/submissions/\d+/files(?:/[^/]+)?$")
 
 # Personal MCP tokens are opaque `rbk_...` secrets, not JWT. They may only
 # enter the two prefixes whose routers validate them; every other path still
@@ -87,7 +86,6 @@ def is_signed_download_request(request: Request) -> bool:
     if not request.query_params.get("ticket"):
         return False
     return bool(_SIGNED_DOWNLOAD_PATH.match(request.url.path))
-
 
 
 def _bearer_token(request: Request) -> str | None:

@@ -1,5 +1,6 @@
 export const ME_TABS = [
   { key: 'overview', label: '概览' },
+  { key: 'creator', label: '创作' },
   { key: 'library', label: '收藏' },
   { key: 'points', label: '经验' },
   { key: 'settings', label: '设置' },

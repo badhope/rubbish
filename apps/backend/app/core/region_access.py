@@ -39,9 +39,7 @@ REGION_COOKIE_NAME = "rubbish_region"
 RESTRICTED = "restricted"
 OVERSEAS = "overseas"
 
-_DEFAULT_IP_LIST = (
-    Path(__file__).resolve().parents[1] / "data" / "restricted_service_ip_ranges.txt"
-)
+_DEFAULT_IP_LIST = Path(__file__).resolve().parents[1] / "data" / "restricted_service_ip_ranges.txt"
 
 # Safe read-only endpoints for overseas guests. Everything here is published
 # material; account, moderation, review, admin and write paths are absent.
@@ -54,6 +52,7 @@ _OVERSEAS_EXACT = frozenset(
         "/api/catalog/facets",
         "/api/catalog/editorial",
         "/api/catalog/updates",
+        "/api/explore/overview",
         "/api/catalog/disciplines",
         "/api/disciplines",
         "/api/forum/topics",

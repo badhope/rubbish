@@ -35,6 +35,7 @@ import {
 import { MeFollows } from './me-follows'
 import { MeReadingHistory } from './me-reading-history'
 import { MeRecommendations } from './me-recommendations'
+import { MeBookmarks } from './me-bookmarks'
 import { shortDate } from './format'
 
 interface ListFormState {
@@ -42,12 +43,17 @@ interface ListFormState {
   description: string
 }
 
-function LibrarySectionNav({ active }: { active: 'library' | 'history' | 'following' | 'recommendations' }) {
+function LibrarySectionNav({ active }: { active: 'library' | 'bookmarks' | 'history' | 'following' | 'recommendations' }) {
   return (
     <div className="grid grid-cols-2 gap-2 border-b pb-3 sm:flex sm:flex-wrap">
       <Button variant={active === 'library' ? 'default' : 'outline'} size="sm" className="w-full sm:w-auto" asChild>
         <Link to="/me" search={{ tab: 'library' }}>
           阅读列表
+        </Link>
+      </Button>
+      <Button variant={active === 'bookmarks' ? 'default' : 'outline'} size="sm" className="w-full sm:w-auto" asChild>
+        <Link to="/me" search={{ tab: 'library', section: 'bookmarks' }}>
+          帖子收藏
         </Link>
       </Button>
       <Button variant={active === 'history' ? 'default' : 'outline'} size="sm" className="w-full sm:w-auto" asChild>
@@ -70,6 +76,7 @@ function LibrarySectionNav({ active }: { active: 'library' | 'history' | 'follow
 }
 
 export function MeLibrary({ section }: { section?: string }) {
+  const isBookmarks = section === 'bookmarks'
   const isHistory = section === 'history'
   const isFollowing = section === 'following'
   const isRecommendations = section === 'recommendations'
@@ -85,6 +92,15 @@ export function MeLibrary({ section }: { section?: string }) {
   const [editTarget, setEditTarget] = useState<ReadingListResponse | null>(null)
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [form, setForm] = useState<ListFormState>({ name: '', description: '' })
+
+  if (isBookmarks) {
+    return (
+      <div className="space-y-5">
+        <LibrarySectionNav active="bookmarks" />
+        <MeBookmarks />
+      </div>
+    )
+  }
 
   if (isHistory) {
     return (

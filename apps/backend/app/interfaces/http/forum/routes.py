@@ -22,7 +22,7 @@ from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile, status
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import desc, func, or_, select
+from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import (
@@ -990,6 +990,89 @@ async def board_stats(db: AsyncSession = Depends(get_db)) -> dict[str, object]:
         return nodes
 
     return {"data": flat, "tree": build(None), "total": len(flat)}
+
+
+@router.get("/topics/bookmarks", response_model=TopicListOut)
+async def list_bookmarked_topics(
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=50),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> TopicListOut:
+    """当前用户收藏的主题帖，按收藏时间倒序。
+
+    The bookmark action lives in the same reaction table as agree/helpful;
+    this is its read side. It deliberately does not return replies, only the
+    topic card a reader needs to decide whether to reopen it.
+    """
+    tenant_id = require_tenant_id()
+    stmt = (
+        select(ForumTopic)
+        .join(
+            ForumReaction,
+            and_(
+                ForumReaction.tenant_id == tenant_id,
+                ForumReaction.target_id == ForumTopic.id,
+                ForumReaction.target_type == "topic",
+                ForumReaction.kind == "bookmark",
+                ForumReaction.user_id == current_user.id,
+            ),
+        )
+        .where(
+            ForumTopic.tenant_id == tenant_id,
+            ForumTopic.deleted_at.is_(None),
+            _visible_clause(),
+        )
+    )
+    rows, meta = await paginate(
+        db,
+        stmt,
+        page=page,
+        page_size=page_size,
+        order_by=[ForumReaction.created_at.desc(), ForumTopic.id.desc()],
+    )
+    authors = await _author_map(db, {row.author_id for row in rows})
+    boards = await _board_index(db, tenant_id)
+    reaction_counts, viewer_reactions = await _reaction_summary(
+        db,
+        target_type="topic",
+        target_ids=[row.id for row in rows],
+        viewer_id=current_user.id,
+    )
+    followed_ids: set[int] = set()
+    if rows:
+        followed_ids = set(
+            (
+                await db.execute(
+                    select(ForumTopicFollow.topic_id).where(
+                        ForumTopicFollow.tenant_id == tenant_id,
+                        ForumTopicFollow.user_id == current_user.id,
+                        ForumTopicFollow.topic_id.in_([row.id for row in rows]),
+                    )
+                )
+            )
+            .scalars()
+            .all()
+        )
+    return TopicListOut(
+        data=[
+            _topic_out(
+                row,
+                authors,
+                reactions=reaction_counts.get(row.id),
+                viewer_reactions=viewer_reactions.get(row.id),
+                boards=boards,
+                viewer_following=row.id in followed_ids,
+            )
+            for row in rows
+        ],
+        meta={
+            "total": meta.total,
+            "page": meta.page,
+            "page_size": meta.page_size,
+            "total_pages": meta.total_pages,
+        },
+    )
 
 
 @router.get("/topics/{topic_id}", response_model=TopicOut)

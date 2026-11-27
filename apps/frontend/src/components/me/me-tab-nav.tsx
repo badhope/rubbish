@@ -19,7 +19,7 @@ export function MeTabNav({
   return (
     <nav
       aria-label="我的功能"
-      className="-mx-1 flex flex-wrap gap-1 border-b px-1"
+      className="-mx-1 flex gap-1 overflow-x-auto border-b px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {tabs.map((tab) => {
         const selected = tab.key === active
@@ -31,7 +31,7 @@ export function MeTabNav({
             data-active={selected ? 'true' : 'false'}
             onClick={() => onChange(tab.key)}
             className={cn(
-              'relative inline-flex min-h-[44px] shrink-0 items-center gap-1.5 px-3 text-sm transition-colors sm:px-4',
+              'relative inline-flex min-h-[44px] shrink-0 items-center gap-1.5 whitespace-nowrap px-3 text-sm transition-colors sm:px-4',
               selected
                 ? 'font-medium text-foreground'
                 : 'text-muted-foreground hover:text-foreground',

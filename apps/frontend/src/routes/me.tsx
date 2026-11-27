@@ -13,6 +13,7 @@ import { MeActionBar } from '@/components/me/me-action-bar'
 import { MeTabNav } from '@/components/me/me-tab-nav'
 import { MeOverview } from '@/components/me/me-overview'
 import { MeLibrary } from '@/components/me/me-library'
+import { MeCreator } from '@/components/me/me-creator'
 import { MePoints } from '@/components/me/me-points'
 import { MeSettings } from '@/components/me/me-settings'
 import { NotificationsDialog } from '@/components/me/notifications-dialog'
@@ -86,6 +87,7 @@ function MePage() {
   // 经验是完整的一级页（可签到、兑换、查记录），不是只能从头部卡片钻进去的隐藏路由。
   const tabs = [
     { key: 'overview' as const, label: '继续写' },
+    { key: 'creator' as const, label: '创作' },
     { key: 'library' as const, label: '继续读' },
     { key: 'points' as const, label: '经验' },
     { key: 'settings' as const, label: '设置' },
@@ -146,6 +148,7 @@ function MePage() {
             username={data.username}
           />
         ) : null}
+        {activeTab === 'creator' ? <MeCreator /> : null}
         {activeTab === 'library' ? <MeLibrary section={search.section} /> : null}
         {activeTab === 'points' ? <MePoints /> : null}
         {activeTab === 'settings' ? <MeSettings username={data.username} initialSection={search.section} /> : null}

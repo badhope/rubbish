@@ -109,8 +109,7 @@ async def my_profile(
     ).all()
     status_counts = {str(status): int(count) for status, count in rows}
     under_review = sum(
-        status_counts.get(status, 0)
-        for status in ("pending", "under_review", "resubmitted")
+        status_counts.get(status, 0) for status in ("pending", "under_review", "resubmitted")
     )
     revision = sum(
         status_counts.get(status, 0)
@@ -195,7 +194,9 @@ async def resource_author_analytics(
             .limit(1)
         )
     ).scalar_one_or_none()
-    if submission is None or (submission.submitted_by != current_user.id and not current_user.is_admin):
+    if submission is None or (
+        submission.submitted_by != current_user.id and not current_user.is_admin
+    ):
         raise HTTPException(status_code=403, detail="只有作者本人可以查看作品数据")
 
     local_now = datetime.now(ZoneInfo("Asia/Shanghai"))
@@ -211,9 +212,7 @@ async def resource_author_analytics(
         PageView.created_at >= since,
         PageView.path.in_(paths),
     )
-    total = (
-        await db.execute(select(func.count()).select_from(base.subquery()))
-    ).scalar_one()
+    total = (await db.execute(select(func.count()).select_from(base.subquery()))).scalar_one()
     local_day = func.date(func.timezone("Asia/Shanghai", PageView.created_at)).label("day")
     rows = (
         await db.execute(
@@ -256,4 +255,161 @@ async def resource_author_analytics(
         "downloads": int(resource.download_count or 0),
         "daily": daily,
         "referrers": [{"referrer": r or "direct", "views": int(c)} for r, c in refs],
+    }
+
+
+@router.get("/creator")
+async def creator_overview(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, object]:
+    """Aggregate creator numbers across all published works.
+
+    Per-work analytics already lives at ``/me/resources/{id}/analytics``.
+    This endpoint answers the question a creator asks before opening any one
+    work: "is anyone reading me, and what are they saying?" It only exposes
+    aggregate attention, never reader identity.
+    """
+    from app.domain.catalog.engagement import load_raw_engagement
+    from app.domain.comments.models import Comment
+    from app.domain.follows.models import AuthorFollow
+    from app.domain.forum.models import ForumReply, ForumTopic
+
+    tenant_id = require_tenant_id()
+    now = datetime.now(UTC)
+    rows = (
+        await db.execute(
+            select(Submission, Resource)
+            .join(Resource, Submission.resource_id == Resource.id)
+            .where(
+                Submission.tenant_id == tenant_id,
+                Submission.submitted_by == current_user.id,
+                Submission.status.in_(("accepted", "approved")),
+                Resource.tenant_id == tenant_id,
+                Resource.publication_status == "published",
+                (Resource.publish_at.is_(None)) | (Resource.publish_at <= now),
+            )
+            .order_by(Resource.publish_at.desc(), Resource.id.desc())
+        )
+    ).all()
+    resources = [resource for _submission, resource in rows]
+    raw = await load_raw_engagement(db, [resource.id for resource in resources], tenant_id)
+    comment_rows = []
+    if resources:
+        comment_rows = (
+            await db.execute(
+                select(Comment.resource_id, func.count(Comment.id))
+                .where(
+                    Comment.tenant_id == tenant_id,
+                    Comment.resource_id.in_([resource.id for resource in resources]),
+                    Comment.status != "rejected",
+                )
+                .group_by(Comment.resource_id)
+            )
+        ).all()
+    comments_by_resource = {int(rid): int(count) for rid, count in comment_rows}
+
+    author_names = [
+        name
+        for name in (current_user.display_name, current_user.real_name, current_user.username)
+        if name
+    ]
+    followers = 0
+    if author_names:
+        followers = int(
+            (
+                await db.execute(
+                    select(func.count(AuthorFollow.id)).where(
+                        AuthorFollow.tenant_id == tenant_id,
+                        AuthorFollow.author_name.in_(author_names),
+                    )
+                )
+            ).scalar_one()
+            or 0
+        )
+    forum_topics = int(
+        (
+            await db.execute(
+                select(func.count(ForumTopic.id)).where(
+                    ForumTopic.tenant_id == tenant_id,
+                    ForumTopic.author_id == current_user.id,
+                    ForumTopic.deleted_at.is_(None),
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+    forum_replies = int(
+        (
+            await db.execute(
+                select(func.count(ForumReply.id)).where(
+                    ForumReply.tenant_id == tenant_id,
+                    ForumReply.author_id == current_user.id,
+                    ForumReply.deleted_at.is_(None),
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+
+    works = []
+    for resource in resources:
+        reads, downloads, saves = raw.get(resource.id, (0, 0, 0))
+        works.append(
+            {
+                "id": resource.id,
+                "title": resource.short_title or resource.title,
+                "full_title": resource.title,
+                "cover_image": resource.cover_image,
+                "discipline": resource.discipline,
+                "published_at": (resource.publish_at or resource.created_at).isoformat(),
+                "reads": reads,
+                "downloads": downloads,
+                "saves": saves,
+                "comments": comments_by_resource.get(resource.id, 0),
+            }
+        )
+
+    recent_comments = []
+    if resources:
+        recent_comments = [
+            {
+                "id": comment.id,
+                "resource_id": resource.id,
+                "resource_title": resource.short_title or resource.title,
+                "body": comment.body[:160],
+                "created_at": comment.created_at.isoformat(),
+                "author_username": author.username,
+                "author_display_name": author.display_name,
+            }
+            for comment, resource, author in (
+                await db.execute(
+                    select(Comment, Resource, User)
+                    .join(Resource, Comment.resource_id == Resource.id)
+                    .join(User, Comment.user_id == User.id)
+                    .where(
+                        Comment.tenant_id == tenant_id,
+                        Comment.resource_id.in_([r.id for r in resources]),
+                        Comment.status != "rejected",
+                    )
+                    .order_by(Comment.created_at.desc())
+                    .limit(6)
+                )
+            ).all()
+        ]
+
+    totals = {
+        "reads": sum(item["reads"] for item in works),
+        "downloads": sum(item["downloads"] for item in works),
+        "saves": sum(item["saves"] for item in works),
+        "comments": sum(item["comments"] for item in works),
+    }
+    return {
+        "published": len(resources),
+        "followers": followers,
+        "forum_topics": forum_topics,
+        "forum_replies": forum_replies,
+        "totals": totals,
+        "works": works[:10],
+        "recent_comments": recent_comments,
     }

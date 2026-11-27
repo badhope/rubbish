@@ -14,6 +14,7 @@ import { Route as R403RouteImport } from './routes/403'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AccessibilityRouteImport } from './routes/accessibility'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as GuideRouteImport } from './routes/guide'
 import { Route as IssuesRouteImport } from './routes/issues'
@@ -70,6 +71,11 @@ const AccessibilityRoute = AccessibilityRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExploreRoute = ExploreRouteImport.update({
+  id: '/explore',
+  path: '/explore',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -239,6 +245,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/accessibility': typeof AccessibilityRoute
   '/admin': typeof AdminRouteWithChildren
+  '/explore': typeof ExploreRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/guide': typeof GuideRoute
   '/issues': typeof IssuesRoute
@@ -277,6 +284,7 @@ export interface FileRoutesByTo {
   '/403': typeof R403Route
   '/about': typeof AboutRoute
   '/accessibility': typeof AccessibilityRoute
+  '/explore': typeof ExploreRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/guide': typeof GuideRoute
   '/issues': typeof IssuesRoute
@@ -317,6 +325,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/accessibility': typeof AccessibilityRoute
   '/admin': typeof AdminRouteWithChildren
+  '/explore': typeof ExploreRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/guide': typeof GuideRoute
   '/issues': typeof IssuesRoute
@@ -358,6 +367,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/accessibility'
     | '/admin'
+    | '/explore'
     | '/forgot-password'
     | '/guide'
     | '/issues'
@@ -396,6 +406,7 @@ export interface FileRouteTypes {
     | '/403'
     | '/about'
     | '/accessibility'
+    | '/explore'
     | '/forgot-password'
     | '/guide'
     | '/issues'
@@ -435,6 +446,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/accessibility'
     | '/admin'
+    | '/explore'
     | '/forgot-password'
     | '/guide'
     | '/issues'
@@ -475,6 +487,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AccessibilityRoute: typeof AccessibilityRoute
   AdminRoute: typeof AdminRouteWithChildren
+  ExploreRoute: typeof ExploreRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   GuideRoute: typeof GuideRoute
   IssuesRoute: typeof IssuesRoute
@@ -539,6 +552,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explore': {
+      id: '/explore'
+      path: '/explore'
+      fullPath: '/explore'
+      preLoaderRoute: typeof ExploreRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -792,6 +812,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AccessibilityRoute: AccessibilityRoute,
   AdminRoute: AdminRouteWithChildren,
+  ExploreRoute: ExploreRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   GuideRoute: GuideRoute,
   IssuesRoute: IssuesRoute,

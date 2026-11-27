@@ -3,6 +3,7 @@ import { createFileRoute, Link, useNavigate, useSearch } from '@tanstack/react-r
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Bell,
+  Bookmark,
   ChevronRight,
   CircleHelp,
   Clock3,
@@ -383,6 +384,22 @@ function ForumListPage() {
       (await api.post('/forum/reports', target)).data,
     onSuccess: () => toast.success('已举报，站务会尽快处理'),
     onError: (err) => toast.error(extractError(err, '举报失败')),
+  })
+
+  const bookmarkMut = useMutation({
+    mutationFn: async (topicId: number) =>
+      (
+        await api.post('/forum/reactions/toggle', {
+          target_type: 'topic',
+          target_id: topicId,
+          kind: 'bookmark',
+        })
+      ).data as { active: boolean },
+    onSuccess: (data) => {
+      toast.success(data.active ? '已收藏，可在「我的 · 收藏」里回看' : '已取消收藏')
+      void qc.invalidateQueries({ queryKey: ['forum'] })
+    },
+    onError: (err) => toast.error(extractError(err, '收藏失败')),
   })
 
   const publishTopic = () => {
@@ -831,6 +848,21 @@ function ForumListPage() {
                             </span>
                           ) : null}
                         </span>
+                        {isAuthenticated && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={cn(
+                              'h-6 w-6 shrink-0 text-muted-foreground opacity-70 hover:opacity-100',
+                              t.viewer_reactions?.includes('bookmark') && 'text-primary opacity-100',
+                            )}
+                            aria-label={t.viewer_reactions?.includes('bookmark') ? `取消收藏 ${t.title}` : `收藏 ${t.title}`}
+                            onClick={() => bookmarkMut.mutate(t.id)}
+                            disabled={bookmarkMut.isPending}
+                          >
+                            <Bookmark className={cn('h-3.5 w-3.5', t.viewer_reactions?.includes('bookmark') && 'fill-current')} />
+                          </Button>
+                        )}
                         {isAuthenticated && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>

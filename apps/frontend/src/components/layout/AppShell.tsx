@@ -15,6 +15,7 @@ import {
   Kanban,
   Menu,
   Search,
+  Sparkles,
   Tags,
   User,
   Award,
@@ -57,6 +58,7 @@ import { primaryRoleLabel } from '@/lib/role-labels'
 const NAV: NavItem[] = [
   // 一级入口只留六个：看得懂、找得到、点得进。
   { to: '/', label: '首页', icon: Home, group: '一级入口' },
+  { to: '/explore', label: '发现', icon: Sparkles, group: '一级入口' },
   { to: '/catalog', label: '内容库', icon: BookOpen, group: '一级入口' },
   { to: '/issues', label: '卷', icon: Layers3, group: '一级入口' },
   { to: '/forum', label: '主题论坛', icon: MessagesSquare, group: '一级入口' },
@@ -90,7 +92,7 @@ const NAV: NavItem[] = [
 
 const PUBLIC_NAV = NAV.filter((item) => item.group === '一级入口')
 const GUEST_READ_NAV = PUBLIC_NAV.filter((item) =>
-  ['/catalog', '/forum', '/tags'].includes(item.to),
+  ['/explore', '/catalog', '/forum', '/tags'].includes(item.to),
 )
 
 // 公开页与工作台的分界：站务、互评指派、内容台、待整理列表保留业务左栏；
@@ -120,6 +122,7 @@ function matchesNavSearch(
 
 function resolvePublicNavPath(pathname: string): string | undefined {
   if (pathname === '/') return '/'
+  if (pathname === '/explore') return '/explore'
   if (pathname === '/issues') return '/issues'
   if (pathname === '/guide') return '/guide'
   if (pathname === '/about') return '/about'
@@ -418,7 +421,7 @@ export function AppShell() {
             </Link>
 
             {(isAuthenticated || overseasGuest) && (
-              <nav className="hidden items-center gap-3 text-sm md:flex" aria-label="主导航">
+              <nav className="hidden shrink-0 items-center gap-2.5 whitespace-nowrap text-sm md:flex" aria-label="主导航">
                 {(isAuthenticated ? PUBLIC_NAV : GUEST_READ_NAV).map((item) => {
                 const active = publicActive === item.to
                 return (
@@ -427,7 +430,7 @@ export function AppShell() {
                     to={item.to}
                     data-active={active ? 'true' : 'false'}
                     className={cn(
-                      'link-underline transition-colors hover:text-foreground',
+                      'link-underline shrink-0 whitespace-nowrap transition-colors hover:text-foreground',
                       active ? 'font-medium text-foreground' : 'text-muted-foreground',
                     )}
                   >

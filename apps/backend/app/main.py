@@ -170,6 +170,7 @@ _SPA_ROUTE_PREFIXES = frozenset(
         "auth",
         "catalog",
         "editor",
+        "explore",
         "forgot-password",
         "issues",
         "levels",
@@ -381,6 +382,11 @@ app.include_router(me.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
 app.include_router(tenant_hosts.router, prefix="/api")
 app.include_router(modules.router, prefix="/api")
+
+# Discovery projection (catalog + forum + follows); read-only, no new tables.
+from app.interfaces.http.explore.routes import router as explore_router  # noqa: E402
+
+app.include_router(explore_router, prefix="/api")
 
 # Personal API tokens + MCP gateway (author / reviewer / editorial workflows).
 # These routers authenticate `rbk_...` tokens themselves; the login wall
