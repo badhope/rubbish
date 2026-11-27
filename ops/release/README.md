@@ -13,7 +13,7 @@
 | `promote.sh` | D9 | 原子切换静态根（symlink 改链或 mv 整目录），切换前后校验入口齐全与 health，切换后 reload 服务；10 分钟预算 |
 | `rollback.sh` | 回滚 | 优先 symlink 回切，其次 `static.prev` 还原 + reload；数据库只打印人工恢复路径，不自动恢复 |
 | `prune-old.sh` | D9 后期 | 清点旧静态目录、旧入口 chunk、旧品牌资产、旧模板、旧 canary 入口；默认 dry-run，`--apply` 删 SAFE 清单；护栏保护 `/opt/backups` |
-| `verify-site.sh` | 发布后 | 健康版本、入口引用可达性、站内断链抽查、旧资产 / 旧术语残留、CSP 与安全头、favicon / manifest / robots / sitemap / OG 可访问性 |
+| `verify-site.sh` | 发布后 | 健康版本、入口引用可达性、站内断链抽查、旧资产 / 旧术语残留、CSP 与安全头、favicon / manifest / robots / OG 可访问性，sitemap 404 按登录墙预期跳过 |
 | `lib/release-common.sh` | — | 公共默认路径、日志、dry-run / SSH 引导、时间预算、探针与摘要工具函数 |
 
 ## 两种执行方式

@@ -12,6 +12,7 @@ from typing import Any, Literal
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from app.core.lists import normalize_string_list
 from app.core.schemas import Authors, MessageResponse, PaginationMeta
 from app.core.tracks import Track, normalize_track
 
@@ -113,6 +114,13 @@ class SubmissionCreate(BaseModel):
     def _clean_author_affiliations(cls, values: list[str] | None) -> list[str]:
         return _normalize_affiliations(values) or []
 
+    @field_validator("tags", "keywords", mode="before")
+    @classmethod
+    def _normalize_keyword_lists(cls, values: object) -> list[str] | None:
+        # Accept both a real list and a legated "a；b；c" string.  The frontend
+        # now splits Chinese punctuation too, but the API remains the contract.
+        return normalize_string_list(values, max_items=50)
+
     @field_validator("track", mode="before")
     @classmethod
     def _normalize_track(cls, v: object) -> object:
@@ -122,10 +130,28 @@ class SubmissionCreate(BaseModel):
         return normalize_track(v) if isinstance(v, str) else v
 
     @model_validator(mode="after")
-    def _fill_preview_from_abstract(self) -> SubmissionCreate:
-        if not self.preview:
-            # 留空时用 abstract 前 500 字作 preview；不超过 5000 字限制
-            self.preview = (self.abstract or "")[:500]
+    def _fill_preview_and_tags(self) -> SubmissionCreate:
+        # A one-line note ("please put this in academic") is a routing
+        # instruction, not a card summary.  Treat anything under 40 chars as
+        # absent and derive the preview from the abstract instead.
+        preview = (self.preview or "").strip()
+        if len(preview) < 40:
+            self.preview = (self.abstract or "").strip()[:500]
+        else:
+            self.preview = preview[:500]
+
+        # Every accepted work must be discoverable.  The submission form has
+        # no tag editor, so use the taxonomy the author already chose as the
+        # baseline shelf: discipline first, then subdiscipline when present.
+        if not self.tags:
+            tags: list[str] = []
+            seen: set[str] = set()
+            for value in (self.discipline, self.subdiscipline):
+                text = (value or "").strip()
+                if text and text.casefold() not in seen:
+                    seen.add(text.casefold())
+                    tags.append(text)
+            self.tags = tags
         return self
 
 

@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core import search as fulltext
 from app.core.config import get_settings
+from app.core.lists import normalize_string_list
 from app.core.tracks import canonicalize_track_category, normalize_track
 from app.domain.catalog import cover_defaults
 from app.domain.catalog.genre import classify_essay_genre
@@ -76,6 +77,26 @@ async def _materialize_resource_from_submission(
     # 公开端点 /api/catalog/{id}/file 的 download_url——只有进入公开目录的
     # 资源才能读到文件，未公开的发布仍然只走鉴权端点。
     settings = get_settings()
+
+    # Old submissions could store a whole semicolon-delimited keyword line as
+    # one tag, or no tag at all (the author form had no tag editor).  Keep the
+    # materialised row discoverable even when the source predates the schema
+    # validation: split the line first, then fall back to the taxonomy shelf.
+    tags = normalize_string_list(submission.tags, max_items=50) or []
+    if not tags:
+        tags = (
+            normalize_string_list(
+                [submission.discipline, submission.subdiscipline], max_items=50
+            )
+            or []
+        )
+    keywords = normalize_string_list(submission.keywords, max_items=50) or None
+
+    preview = (submission.preview or "").strip()
+    if len(preview) < 40:
+        # A routing note is not a summary.  Reuse the abstract excerpt.
+        preview = (submission.abstract or "").strip()[:500]
+
     resource = ResourceORM(
         tenant_id=submission.tenant_id,
         publication_status=publication_status,
@@ -97,9 +118,9 @@ async def _materialize_resource_from_submission(
         subdiscipline=submission.subdiscipline,
         article_section=getattr(submission, "article_section", None),
         issue_part=getattr(submission, "issue_part", None),
-        tags=submission.tags,
+        tags=tags,
         abstract=submission.abstract,
-        preview=submission.preview,
+        preview=preview,
         # download_url 在 flush 拿到 id 后回填（见下方），此处先留空。
         download_url=submission.download_url,
         external_url=submission.external_url,
@@ -113,7 +134,7 @@ async def _materialize_resource_from_submission(
         # 物化时把 submission 的 keywords 带过去，与 catalog.Resource 对齐。
         # jel_codes 不在此物化——catalog.Resource 没有该列（功能未落地），
         # 此处不声称不存在的字段对齐。
-        keywords=submission.keywords or None,
+        keywords=keywords,
         # 中图分类号（P0）：随作品一并带到目录。
         clc_code=getattr(submission, "clc_code", None),
         clc_label=getattr(submission, "clc_label", None),

@@ -1,54 +1,80 @@
 #!/usr/bin/env bash
-# 每日备份：PostgreSQL 逻辑 dump + uploads 卷打包，带保留策略与失败即报。
-# 替代原先 /home/ubuntu/backup.sh（发版时被清掉导致 cron 静默失败）。
+# Daily backup for the current production shape:
+#   PostgreSQL container rubbish-db-1 + host uploads + config files.
+# The application runs as deploy and must be able to read the archives; this
+# script keeps the directory 0750 root:deploy and files 0640 so admin
+# /system/health does not report a false "backup unreadable" warning.
+#
+# Manual/reference script only. Production cron still calls the installed
+# /usr/local/sbin/rubbish-backup.sh; keep the two in sync when changing paths.
 set -euo pipefail
-BACKUP_DIR="${BACKUP_DIR:-/home/ubuntu/backups}"
-LOG="${LOG:-/home/ubuntu/rubbish-backup.log}"
+
+BACKUP_DIR="${BACKUP_DIR:-/www/backups/rubbish}"
+LOG="${LOG:-/var/log/rubbish-backup.log}"
 DB_CONTAINER="${DB_CONTAINER:-rubbish-db-1}"
-DB_USER="${DB_USER:-rubbish_legacy}"
+DB_USER="${DB_USER:-rubbish}"
 DB_NAME="${DB_NAME:-rubbish}"
-UPLOADS_VOLUME="${UPLOADS_VOLUME:-rubbish_uploads}"
-KEEP_DB="${KEEP_DB:-30}"   # 保留最近 30 份数据库 dump
-KEEP_UP="${KEEP_UP:-10}"    # 保留最近 10 份 uploads 归档
-TS="$(date +%Y-%m-%d_%H%M)"
+UPLOADS_DIR="${UPLOADS_DIR:-/www/wwwroot/rubbish.argjiemi.cn/uploads}"
+CONFIG_DIR="${CONFIG_DIR:-/www/wwwroot/rubbish.argjiemi.cn}"
+BACKUP_GROUP="${BACKUP_GROUP:-deploy}"
+KEEP_DAYS="${KEEP_DAYS:-30}"
+TS="$(date +%Y%m%d-%H%M)"
 
-note(){ printf '[%s] %s\n' "$(date -Is)" "$*" >> "$LOG"; }
-mkdir -p "$BACKUP_DIR"
+mkdir -p "$(dirname "$LOG")"
+note() { printf '[%s] %s\n' "$(date -Is)" "$*" >>"$LOG"; }
+install -d -o root -g "$BACKUP_GROUP" -m 0750 "$BACKUP_DIR" 2>/dev/null \
+  || { mkdir -p "$BACKUP_DIR"; chgrp "$BACKUP_GROUP" "$BACKUP_DIR" 2>/dev/null || true; chmod 0750 "$BACKUP_DIR"; }
 
-# 1) 数据库（不带 --clean：恢复目标是空库，带 clean 会在 DROP POLICY 处断掉）：先写临时文件、校验 gzip 完整性，通过后才改名落盘（避免半截文件被当成有效备份）
+DOCKER="docker"
+docker info >/dev/null 2>&1 || DOCKER="sudo -n docker"
+
+# 1) DB dump: write a .partial, validate gzip, then rename.
 db_file="$BACKUP_DIR/db-$TS.sql.gz"
 db_tmp="$BACKUP_DIR/.db-$TS.partial.gz"
 rm -f "$db_tmp"
-if docker exec "$DB_CONTAINER" pg_dump -U "$DB_USER" -d "$DB_NAME" --no-owner \
-     | gzip -6 > "$db_tmp" && gzip -t "$db_tmp" 2>/dev/null; then
-  size=$(du -h "$db_tmp" | cut -f1)
+if $DOCKER exec "$DB_CONTAINER" pg_dump -U "$DB_USER" -d "$DB_NAME" --no-owner \
+     | gzip -6 >"$db_tmp" && gzip -t "$db_tmp" 2>/dev/null; then
+  chgrp "$BACKUP_GROUP" "$db_tmp" 2>/dev/null || true
+  chmod 0640 "$db_tmp"
   mv "$db_tmp" "$db_file"
-  note "db ok $(basename "$db_file") $size"
+  note "db ok $(basename "$db_file") $(du -h "$db_file" | cut -f1)"
 else
   rm -f "$db_tmp"
   note "FAIL db dump ($DB_CONTAINER/$DB_USER/$DB_NAME)"
   exit 1
 fi
 
-# 2) uploads：用宿主 uid 运行，归档文件属主不会被写成 root
+# 2) uploads from the host path used by systemd, not a Docker volume.
 up_file="$BACKUP_DIR/uploads-$TS.tar.gz"
-up_tmp=".uploads-$TS.partial.tar.gz"
-if docker run --rm \
-     --user "$(id -u):$(id -g)" \
-     -v "$UPLOADS_VOLUME":/data:ro \
-     -v "$BACKUP_DIR":/backup \
-     alpine tar czf "/backup/$up_tmp" -C /data . >>"$LOG" 2>&1; then
-  size=$(du -h "$BACKUP_DIR/$up_tmp" | cut -f1)
-  mv "$BACKUP_DIR/$up_tmp" "$up_file"
-  note "uploads ok $(basename "$up_file") $size"
+up_tmp="$BACKUP_DIR/.uploads-$TS.partial.tar.gz"
+if tar czf "$up_tmp" -C "$UPLOADS_DIR" . >>"$LOG" 2>&1; then
+  chgrp "$BACKUP_GROUP" "$up_tmp" 2>/dev/null || true
+  chmod 0640 "$up_tmp"
+  mv "$up_tmp" "$up_file"
+  note "uploads ok $(basename "$up_file") $(du -h "$up_file" | cut -f1)"
 else
-  rm -f "$BACKUP_DIR/$up_tmp"
-  note "FAIL uploads archive ($UPLOADS_VOLUME)"
+  rm -f "$up_tmp"
+  note "FAIL uploads archive ($UPLOADS_DIR)"
   exit 1
 fi
 
-# 3) 保留策略：只清本脚本命名规范的备份，别的文件一概不碰
-ls -1t "$BACKUP_DIR"/db-2*.sql.gz 2>/dev/null | tail -n +$((KEEP_DB + 1)) | xargs -r rm -f
-ls -1t "$BACKUP_DIR"/uploads-2*.tar.gz 2>/dev/null | tail -n +$((KEEP_UP + 1)) | xargs -r rm -f
+# 3) Config archive: enough to rebuild the service, no secrets copied elsewhere.
+cfg_file="$BACKUP_DIR/config-$TS.tar.gz"
+cfg_tmp="$BACKUP_DIR/.config-$TS.partial.tar.gz"
+if tar czf "$cfg_tmp" -C "$CONFIG_DIR" .env docker-compose.yml docker-compose.bt.yml >>"$LOG" 2>&1; then
+  chgrp "$BACKUP_GROUP" "$cfg_tmp" 2>/dev/null || true
+  chmod 0640 "$cfg_tmp"
+  mv "$cfg_tmp" "$cfg_file"
+  note "config ok $(basename "$cfg_file")"
+else
+  rm -f "$cfg_tmp"
+  note "FAIL config archive ($CONFIG_DIR)"
+  exit 1
+fi
 
-note "done db=$(basename "$db_file") up=$(basename "$up_file") disk=$(df -P / | awk 'NR==2{print $5}')"
+# 4) Retention: only archives this script names; never touch other files.
+find "$BACKUP_DIR" -maxdepth 1 -type f \
+  \( -name 'db-*.sql.gz' -o -name 'uploads-*.tar.gz' -o -name 'config-*.tar.gz' \) \
+  -mtime +"$KEEP_DAYS" -delete
+
+note "done db=$(basename "$db_file") up=$(basename "$up_file") cfg=$(basename "$cfg_file") disk=$(df -P / | awk 'NR==2{print $5}')"

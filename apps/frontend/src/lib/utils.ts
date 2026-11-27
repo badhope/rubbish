@@ -95,11 +95,21 @@ export function extractError(err: unknown, fallback: string): string {
 // Parse a comma-separated list field (authors / tags / keywords / jel_codes)
 // into a trimmed, empty-filtered string array. Replaces the repeated inline
 // `.split(',').map(s => s.trim()).filter(Boolean)` pattern across the app.
+// Authors paste from Word/WPS, so ASCII and full-width separators (Chinese
+// comma, semicolon, enumeration comma) all count. Duplicates are dropped so
+// the same term cannot become both a tag and a duplicate facet.
 export function parseListField(s: string): string[] {
+  const unique = new Set<string>()
   return s
-    .split(',')
+    .split(/[,，;；、]/)
     .map((x) => x.trim())
-    .filter(Boolean)
+    .filter((x) => {
+      if (!x) return false
+      const key = x.toLocaleLowerCase()
+      if (unique.has(key)) return false
+      unique.add(key)
+      return true
+    })
 }
 
 // 作者名展示统一入口：

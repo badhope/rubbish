@@ -1350,6 +1350,8 @@ async def system_health(
                     f"DB {db_files[-1].name}（{db_age:.1f}h） · "
                     f"uploads {upload_files[-1].name}（{up_age:.1f}h）"
                 )
+        except PermissionError:
+            backup_detail = "备份目录存在，但当前应用用户无读取权限"
         except Exception:
             backup_detail = "备份目录无法读取"
 
@@ -1463,6 +1465,35 @@ async def system_health(
         "detail": "LibreOffice 可用" if soffice_path else "缺少 soffice，Word→PDF 下载会失败",
     }
 
+    # External cron is the only layer that can catch a dead site while the
+    # process is still up. Its heartbeat is the log mtime written every five
+    # minutes; an old file means the job is installed but not actually running.
+    automation_log = os.environ.get("RUBBISH_HEALTH_LOG", "/var/log/rubbish-health.log")
+    if settings.is_test:
+        automation_check = {
+            "key": "automation",
+            "label": "站点巡检",
+            "status": "ok",
+            "detail": "测试环境不检查外部 cron",
+        }
+    elif not os.path.exists(automation_log):  # noqa: ASYNC240 - one stat, not a blocking read
+        automation_check = {
+            "key": "automation",
+            "label": "站点巡检",
+            "status": "warn",
+            "detail": "未发现 /var/log/rubbish-health.log，外部 cron 可能未安装",
+        }
+    else:
+        age_minutes = max((time.time() - os.path.getmtime(automation_log)) / 60, 0)  # noqa: ASYNC240
+        automation_check = {
+            "key": "automation",
+            "label": "站点巡检",
+            "status": "ok" if age_minutes <= 15 else "warn",
+            "detail": f"最近心跳 {age_minutes:.1f} 分钟前"
+            if age_minutes <= 15
+            else f"日志已 {age_minutes:.0f} 分钟未更新，检查 cron",
+        }
+
     scheduler_checks = [
         _scheduler_check(
             "release_scheduler", "定时发布调度器", release_scheduler_state(), RELEASE_TICK
@@ -1479,6 +1510,7 @@ async def system_health(
             "status": backup_status,
             "detail": backup_detail,
         },
+        automation_check,
         {
             "key": "database",
             "label": "数据库",

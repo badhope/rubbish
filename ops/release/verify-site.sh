@@ -184,7 +184,7 @@ check_header "permissions-policy" "geolocation" "Permissions-Policy 存在"
 
 # ---- 6) favicon / manifest / robots / sitemap / OG -------------------------
 section "SEO 与可访问性"
-seo_paths="/favicon.ico /favicon.svg /manifest.webmanifest /robots.txt /sitemap.xml /apple-touch-icon.png"
+seo_paths="/favicon.ico /favicon.svg /manifest.webmanifest /robots.txt /apple-touch-icon.png"
 for p in $seo_paths; do
   code=$(http_code "$BASE_URL$p")
   if [ "$code" = "200" ]; then
@@ -193,6 +193,15 @@ for p in $seo_paths; do
     v_fail "$p -> $code"
   fi
 done
+# 登录墙版本故意不提供 sitemap：404 是预期，不是故障。
+code=$(http_code "$BASE_URL/sitemap.xml")
+if [ "$code" = "404" ]; then
+  v_skip "/sitemap.xml -> 404（登录墙版本预期）"
+elif [ "$code" = "200" ]; then
+  v_ok "/sitemap.xml -> 200"
+else
+  v_fail "/sitemap.xml -> $code"
+fi
 # OG 图：从首页 meta 提取 og:image，校验可达
 og_img=$(sed -n -E 's/.*property="og:image"[[:space:]]+content="([^"]+)".*/\1/p' "$home_html" | head -1)
 [ -z "$og_img" ] && og_img=$(sed -n -E 's/.*content="([^"]+)"[[:space:]]+property="og:image".*/\1/p' "$home_html" | head -1)

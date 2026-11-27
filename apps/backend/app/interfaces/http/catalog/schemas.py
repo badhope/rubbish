@@ -19,6 +19,7 @@ from pydantic import (
     model_validator,
 )
 
+from app.core.lists import normalize_string_list
 from app.core.schemas import Authors, PaginationMeta
 from app.core.tracks import (
     Track,
@@ -181,6 +182,11 @@ class ResourceBase(BaseModel):
             return None
         return normalize_track(v) if isinstance(v, str) else v
 
+    @field_validator("tags", "keywords", mode="before")
+    @classmethod
+    def _normalize_keyword_lists(cls, values: object) -> list[str] | None:
+        return normalize_string_list(values, max_items=50)
+
     # Optional parallel list of author enrichment objects. Must have the same length as ``authors`` (when set), or be empty/null.
     authors_meta: list[AuthorMeta] | None = Field(default=None, max_length=200)
 
@@ -306,6 +312,14 @@ class ResourceUpdate(BaseModel):
         if v is None:
             return None
         return normalize_track(v) if isinstance(v, str) else v
+
+    @field_validator("tags", "keywords", mode="before")
+    @classmethod
+    def _normalize_keyword_lists(cls, values: object) -> list[str] | None:
+        # None means "leave unchanged"; a bare "a；b" string is still accepted
+        # so the admin repair path and external scripts cannot reintroduce the
+        # single-string tag row this release is cleaning up.
+        return normalize_string_list(values, max_items=50)
 
 
 class AuthorDetail(BaseModel):
