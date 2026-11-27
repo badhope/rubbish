@@ -30,7 +30,6 @@ import {
   useMyLibraryItemIds,
   useRecordView,
   useResource,
-  useResources,
   useUpdateResource,
 } from '@/hooks/api/use-modules'
 import { api } from '@/lib/api'
@@ -59,6 +58,7 @@ import { ManuscriptView, type TocEntry } from '@/components/common/manuscript-vi
 import PdfImagePreview from '@/components/pdf-image-preview'
 import { ArticleEngagement } from '@/components/catalog/article-engagement'
 import { PublicReviewCard } from '@/components/catalog/public-review'
+import { RelatedReading } from '@/components/catalog/related-reading'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
@@ -510,7 +510,7 @@ function CatalogDetailPage() {
               </CardContent>
             </FoldCard>
 
-            <RelatedResources resourceId={id} discipline={data.discipline} />
+            <RelatedReading resourceId={id} />
           </div>
         </div>
 
@@ -1558,73 +1558,3 @@ function AuthorRow({ detail, fallbackNames }: { detail: AuthorDetail[] | null; f
   ) : null
 }
 
-// 相关记录
-function RelatedResources({
-  resourceId,
-  discipline,
-}: {
-  resourceId: number
-  discipline?: string | null
-}) {
-  const sameDiscipline = useResources({
-    page: 1,
-    page_size: 8,
-    discipline: discipline ?? undefined,
-  })
-  const fallback = useResources({ page: 1, page_size: 8 })
-  const pending = sameDiscipline.isLoading || fallback.isLoading
-  const same = sameDiscipline.data?.data ?? []
-  const fb = fallback.data?.data ?? []
-  const pool = same.filter((r) => r.id !== resourceId).length >= 1 ? same : fb
-  const items = pool.filter((r) => r.id !== resourceId).slice(0, 4)
-  if (pending) {
-    return (
-      <Card aria-hidden>
-        <CardHeader>
-          <CardTitle className="text-base">相关记录</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="space-y-1.5 border-b pb-2 last:border-0">
-              <div className="skeleton-shimmer h-3.5 rounded w-4/5" />
-              <div className="skeleton-shimmer h-3 rounded w-1/3" />
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-    )
-  }
-  if (items.length === 0) return null
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">相关记录</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {items.map((r) => (
-          <Link
-            key={r.id}
-            to="/catalog/$resourceId"
-            params={{ resourceId: String(r.id) }}
-            className="group block rounded-md border-b pb-2 last:border-0 last:pb-0"
-          >
-            <p className="line-clamp-2 text-sm font-medium leading-snug transition-colors group-hover:text-primary">
-              {r.short_title?.trim() || r.title}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {(() => {
-                const clean = sanitizeAuthors(r.authors)
-                return (
-                  <>
-                    {clean.slice(0, 2).join('、')}
-                    {clean.length > 2 ? ' 等' : ''} · {r.year}
-                  </>
-                )
-              })()}
-            </p>
-          </Link>
-        ))}
-      </CardContent>
-    </Card>
-  )
-}

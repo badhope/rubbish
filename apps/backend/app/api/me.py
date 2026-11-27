@@ -162,6 +162,61 @@ async def my_profile(
     }
 
 
+async def _pageview_series(
+    db: AsyncSession,
+    tenant_id: object,
+    paths: list[str],
+    days: int,
+) -> tuple[datetime, int, list[dict[str, object]]]:
+    """One natural-day series for one path set, in Asia/Shanghai.
+
+    Both the single-work analytics page and the creator overview need the
+    same buckets. Keeping this in one place means the numbers on the two
+    screens cannot drift apart.
+    """
+    local_now = datetime.now(ZoneInfo("Asia/Shanghai"))
+    start_local = (local_now - timedelta(days=days - 1)).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
+    since = start_local.astimezone(UTC)
+    if not paths:
+        daily_empty = [
+            {"date": (start_local.date() + timedelta(days=offset)).isoformat(), "views": 0}
+            for offset in range(days)
+        ]
+        return since, 0, daily_empty
+    # PostgreSQL has IANA timezone support; SQLite (tests/local) does not.
+    # Both expressions must land on the same Asia/Shanghai natural day, or the
+    # chart silently shifts by eight hours depending on the backend.
+    dialect = db.get_bind().dialect.name
+    if dialect == "postgresql":
+        local_day = func.date(func.timezone("Asia/Shanghai", PageView.created_at)).label("day")
+    else:
+        local_day = func.date(func.datetime(PageView.created_at, "+8 hours")).label("day")
+    rows = (
+        await db.execute(
+            select(local_day, func.count(PageView.id).label("views"))
+            .where(
+                PageView.tenant_id == tenant_id,
+                PageView.created_at >= since,
+                PageView.path.in_(paths),
+            )
+            .group_by(local_day)
+            .order_by(local_day)
+        )
+    ).all()
+    daily_map = {str(day): int(views) for day, views in rows}
+    total = sum(daily_map.values())
+    daily = [
+        {
+            "date": (start_local.date() + timedelta(days=offset)).isoformat(),
+            "views": daily_map.get((start_local.date() + timedelta(days=offset)).isoformat(), 0),
+        }
+        for offset in range(days)
+    ]
+    return since, int(total), daily
+
+
 @router.get("/resources/{resource_id}/analytics")
 async def resource_author_analytics(
     resource_id: int,
@@ -199,41 +254,10 @@ async def resource_author_analytics(
     ):
         raise HTTPException(status_code=403, detail="只有作者本人可以查看作品数据")
 
-    local_now = datetime.now(ZoneInfo("Asia/Shanghai"))
-    start_local = (local_now - timedelta(days=days - 1)).replace(
-        hour=0, minute=0, second=0, microsecond=0
-    )
-    since = start_local.astimezone(UTC)
     paths = [f"/catalog/{resource.id}"]
     if resource.slug:
         paths.append(f"/catalog/{resource.slug}")
-    base = select(PageView).where(
-        PageView.tenant_id == tenant_id,
-        PageView.created_at >= since,
-        PageView.path.in_(paths),
-    )
-    total = (await db.execute(select(func.count()).select_from(base.subquery()))).scalar_one()
-    local_day = func.date(func.timezone("Asia/Shanghai", PageView.created_at)).label("day")
-    rows = (
-        await db.execute(
-            select(local_day, func.count(PageView.id).label("views"))
-            .where(
-                PageView.tenant_id == tenant_id,
-                PageView.created_at >= since,
-                PageView.path.in_(paths),
-            )
-            .group_by(local_day)
-            .order_by(local_day)
-        )
-    ).all()
-    daily_map = {str(day): int(views) for day, views in rows}
-    daily = [
-        {
-            "date": (start_local.date() + timedelta(days=offset)).isoformat(),
-            "views": daily_map.get((start_local.date() + timedelta(days=offset)).isoformat(), 0),
-        }
-        for offset in range(days)
-    ]
+    since, total, daily = await _pageview_series(db, tenant_id, paths, days)
     refs = (
         await db.execute(
             select(func.coalesce(PageView.referrer, ""), func.count(PageView.id))
@@ -294,6 +318,13 @@ async def creator_overview(
     ).all()
     resources = [resource for _submission, resource in rows]
     raw = await load_raw_engagement(db, [resource.id for resource in resources], tenant_id)
+
+    paths: list[str] = []
+    for resource in resources:
+        paths.append(f"/catalog/{resource.id}")
+        if resource.slug:
+            paths.append(f"/catalog/{resource.slug}")
+    _since, page_views_30d, daily_views = await _pageview_series(db, tenant_id, paths, 30)
     comment_rows = []
     if resources:
         comment_rows = (
@@ -410,6 +441,11 @@ async def creator_overview(
         "forum_topics": forum_topics,
         "forum_replies": forum_replies,
         "totals": totals,
+        "page_views": {
+            "days": 30,
+            "total": int(page_views_30d),
+            "daily": daily_views,
+        },
         "works": works[:10],
         "recent_comments": recent_comments,
     }

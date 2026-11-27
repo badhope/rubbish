@@ -15,10 +15,15 @@ export interface ExploreResourceCard {
   type: string
   discipline: string
   year: number
+  content_category?: string | null
+  content_track?: string | null
+  content_genre?: string | null
+  track?: string | null
   cover_image?: string | null
   cover_theme?: string | null
   author_name: string
   author_username?: string | null
+  excerpt?: string
   reads: number
   downloads: number
   saves: number

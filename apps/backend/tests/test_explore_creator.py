@@ -48,6 +48,9 @@ async def test_creator_overview_requires_login_and_returns_zeroes(
     body = r.json()
     assert body["published"] == 0
     assert body["totals"] == {"reads": 0, "downloads": 0, "saves": 0, "comments": 0}
+    assert body["page_views"]["days"] == 30
+    assert body["page_views"]["total"] == 0
+    assert len(body["page_views"]["daily"]) == 30
     assert body["works"] == []
     assert body["recent_comments"] == []
 

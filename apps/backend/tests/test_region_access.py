@@ -30,6 +30,16 @@ async def test_restricted_region_blocks_anonymous_but_overseas_can_read(
     )
     assert forum.status_code == 200
 
+    search = await client.get(
+        "/api/search", params={"q": "测试"}, headers={"x-forwarded-for": "8.8.8.8"}
+    )
+    assert search.status_code == 200, search.text
+
+    related = await client.get(
+        "/api/catalog/999999/related", headers={"x-forwarded-for": "8.8.8.8"}
+    )
+    assert related.status_code == 404, related.text[:160]
+
     # 公开评审是已刊文章的一部分，海外匿名必须能读到；不存在的资源应
     # 停在业务 404，而不是地区 403/登录墙 401。
     review_overseas = await client.get(

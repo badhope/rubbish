@@ -20,6 +20,51 @@ function ago(value: string): string {
   return `${Math.floor(hours / 24)} 天前`
 }
 
+function PageViewTrend({
+  daily,
+  total,
+}: {
+  daily: Array<{ date: string; views: number }>
+  total: number
+}) {
+  const max = Math.max(1, ...daily.map((d) => d.views))
+  const peak = daily.length > 0 ? daily.reduce((best, d) => (d.views > best.views ? d : best), daily[0]) : null
+  return (
+    <section>
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b pb-3">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">TRAFFIC</p>
+          <h2 className="mt-1 font-serif text-xl tracking-tight">近 30 天页面访问</h2>
+        </div>
+        <div className="text-right">
+          <p className="font-serif text-2xl tabular-nums">{count(total)}</p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">
+            {peak && peak.views > 0 ? `单日最高 ${peak.views} 次 · ${peak.date.slice(5).replace('-', '/')}` : '还没有访问记录'}
+          </p>
+        </div>
+      </div>
+      <div
+        className="mt-4 flex h-20 items-end gap-[2px] rounded-lg border bg-muted/20 px-2 py-2"
+        aria-label={`近 30 天页面访问趋势，共 ${total} 次`}
+      >
+        {daily.map((day) => (
+          <div
+            key={day.date}
+            className={`min-w-0 flex-1 rounded-t-[2px] ${day.views > 0 ? 'bg-primary/70' : 'bg-border'}`}
+            style={{ height: day.views > 0 ? `${Math.max(6, (day.views / max) * 100)}%` : '2px' }}
+            title={`${day.date}：${day.views} 次`}
+          />
+        ))}
+      </div>
+      <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
+        <span>{daily[0]?.date.slice(5).replace('-', '/')}</span>
+        <span>页面打开次数，匿名访客也计入；不记录身份</span>
+        <span>{daily[daily.length - 1]?.date.slice(5).replace('-', '/')}</span>
+      </div>
+    </section>
+  )
+}
+
 export function MeCreator() {
   const query = useCreatorOverview()
   if (query.isLoading) return <Loading />
@@ -73,6 +118,8 @@ export function MeCreator() {
           <span className="rounded-full border bg-card px-3 py-1">{data.forum_topics} 主题帖 · {data.forum_replies} 回应</span>
         </div>
       </section>
+
+      <PageViewTrend daily={data.page_views?.daily ?? []} total={data.page_views?.total ?? 0} />
 
       <section>
         <div className="flex items-end justify-between gap-3 border-b pb-3">

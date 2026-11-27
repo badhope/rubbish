@@ -25,7 +25,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from fastapi.responses import Response
 from pydantic import BaseModel, Field, field_validator
-from sqlalchemy import String, and_, case, cast, desc, func, or_, select, update
+from sqlalchemy import String, Text, and_, case, cast, desc, func, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -2345,6 +2345,134 @@ async def list_editorial(
             total_pages=1 if rows else 0,
         ),
     )
+
+
+class RelatedResourceCard(BaseModel):
+    id: int
+    title: str
+    short_title: str | None = None
+    type: str
+    discipline: str
+    year: int
+    cover_image: str | None = None
+    author_name: str
+    reason: str
+
+
+class RelatedResourceResponse(BaseModel):
+    data: list[RelatedResourceCard]
+
+
+@router.get("/{resource_id}/related", response_model=RelatedResourceResponse)
+async def related_resources(
+    resource_id: int,
+    limit: int = Query(default=4, ge=1, le=8),
+    db: AsyncSession = Depends(get_db),
+    _viewer: User | None = Depends(get_current_user_optional),
+) -> RelatedResourceResponse:
+    """A small, explainable reading trail after the article.
+
+    No collaborative-filtering theatre: candidates share a tag, an author or
+    a discipline with the current piece, and every card states which of those
+    it matched. A reader can reject the reason, not just the recommendation.
+    """
+    tenant_id = require_tenant_id()
+    target = (
+        await db.execute(
+            select(Resource).where(
+                Resource.id == resource_id,
+                Resource.tenant_id == tenant_id,
+                *public_conditions(),
+            )
+        )
+    ).scalar_one_or_none()
+    if target is None:
+        raise HTTPException(status_code=404, detail="作品不存在或尚未公开")
+
+    target_tags = [str(tag) for tag in (target.tags or []) if str(tag).strip()]
+    clauses = [Resource.discipline == target.discipline]
+    if target.owner_id is not None:
+        clauses.append(Resource.owner_id == target.owner_id)
+    if target.authors:
+        clauses.append(cast(Resource.authors, Text).ilike(f'%"{target.authors[0]}"%'))
+    for tag in target_tags[:4]:
+        clauses.append(cast(Resource.tags, Text).ilike(f'%"{tag}"%'))
+
+    rows = (
+        await db.execute(
+            select(Resource)
+            .where(
+                Resource.tenant_id == tenant_id,
+                Resource.id != target.id,
+                *public_conditions(),
+                or_(*clauses),
+            )
+            .order_by(Resource.publish_at.desc(), Resource.id.desc())
+            .limit(120)
+        )
+    ).scalars().all()
+    if not rows:
+        return RelatedResourceResponse(data=[])
+
+    owner_ids = {row.owner_id for row in rows if row.owner_id}
+    if target.owner_id:
+        owner_ids.add(target.owner_id)
+    owners = (
+        (
+            await db.execute(
+                select(User).where(User.tenant_id == tenant_id, User.id.in_(owner_ids))
+            )
+        ).scalars().all()
+        if owner_ids
+        else []
+    )
+    owner_map = {row.id: row for row in owners}
+
+    ranked: list[tuple[float, Resource, str]] = []
+    for row in rows:
+        shared = [tag for tag in target_tags if tag in (row.tags or [])]
+        same_owner = target.owner_id is not None and row.owner_id == target.owner_id
+        same_author = bool(
+            target.authors and row.authors and target.authors[0] == row.authors[0]
+        )
+        score = len(shared) * 3.0
+        if same_owner or same_author:
+            score += 4.0
+        if row.discipline == target.discipline:
+            score += 1.5
+        if score <= 0:
+            continue
+        if same_owner or same_author:
+            reason = "同一个作者"
+        elif shared:
+            reason = f"同标签 · {shared[0]}"
+        else:
+            reason = "同一方向"
+        ranked.append((score, row, reason))
+
+    ranked.sort(key=lambda item: (item[0], item[1].publish_at or item[1].created_at), reverse=True)
+    cards: list[RelatedResourceCard] = []
+    for _score, row, reason in ranked[:limit]:
+        owner = owner_map.get(row.owner_id) if row.owner_id else None
+        author_name = (
+            (owner.display_name or owner.username)
+            if owner
+            else ((row.authors or ["佚名"])[0])
+        )
+        cards.append(
+            RelatedResourceCard(
+                id=row.id,
+                title=row.title,
+                short_title=row.short_title,
+                type=row.type,
+                discipline=row.discipline,
+                year=row.year,
+                cover_image=row.cover_image,
+                author_name=author_name,
+                reason=reason,
+            )
+        )
+    return RelatedResourceResponse(data=cards)
 
 
 @router.get("/{resource_id}", response_model=ResourceResponse)

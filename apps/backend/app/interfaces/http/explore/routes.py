@@ -47,10 +47,15 @@ class ExploreResourceCard(BaseModel):
     type: str
     discipline: str
     year: int
+    content_category: str | None = None
+    content_track: str | None = None
+    content_genre: str | None = None
+    track: str | None = None
     cover_image: str | None = None
     cover_theme: str | None = None
     author_name: str
     author_username: str | None = None
+    excerpt: str = ""
     reads: int = 0
     downloads: int = 0
     saves: int = 0
@@ -142,6 +147,10 @@ async def _resource_cards(
                 type=row.type,
                 discipline=row.discipline,
                 year=row.year,
+                content_category=row.content_category,
+                content_track=row.content_track,
+                content_genre=row.content_genre,
+                track=row.track,
                 cover_image=row.cover_image,
                 cover_theme=row.cover_theme,
                 author_name=(
@@ -150,6 +159,7 @@ async def _resource_cards(
                     else ((row.authors or ["佚名"])[0])
                 ),
                 author_username=owner.username if owner else None,
+                excerpt=_plain_excerpt(row.editor_note or row.preview or row.abstract, 110),
                 reads=reads,
                 downloads=downloads,
                 saves=saves,

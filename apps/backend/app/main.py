@@ -388,6 +388,11 @@ from app.interfaces.http.explore.routes import router as explore_router  # noqa:
 
 app.include_router(explore_router, prefix="/api")
 
+# Unified public search across works, threads, members and tags.
+from app.interfaces.http.search.routes import router as search_router  # noqa: E402
+
+app.include_router(search_router, prefix="/api")
+
 # Personal API tokens + MCP gateway (author / reviewer / editorial workflows).
 # These routers authenticate `rbk_...` tokens themselves; the login wall
 # below lets only that prefix through the two MCP-capable prefixes.

@@ -35,6 +35,11 @@ export interface CreatorOverview {
     saves: number
     comments: number
   }
+  page_views: {
+    days: number
+    total: number
+    daily: Array<{ date: string; views: number }>
+  }
   works: CreatorWork[]
   recent_comments: CreatorComment[]
 }

@@ -42,6 +42,7 @@ PUBLIC_API_PATHS = frozenset(
         "/api/health",
         "/api/health/ready",
         "/api/explore/overview",
+        "/api/search",
         "/api/privacy",
         "/api/telemetry/pageview",
     }
