@@ -12,7 +12,8 @@ with these deliberate design choices:
   change — it does not go through an HTTP call to the catalog module).
 - Notifications ARE wired: assignment / decision handlers call
   ``notifications.services.create()`` in the same transaction. Follower
-  fan-out (notifying the *author's* followers) is not implemented.
+  fan-out is handled after materialization by ``app.domain.follows.fanout``
+  so a published work also reaches the author's followers.
 """
 
 from __future__ import annotations

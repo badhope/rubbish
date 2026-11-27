@@ -47,6 +47,8 @@ from app.core.images import (
 from app.core.moderation import SOFT_PATTERNS, assess_text, rejection_detail
 from app.core.storage import get_storage
 from app.core.time import utcnow
+from app.domain.catalog.models import Resource
+from app.domain.catalog.visibility import public_conditions
 from app.domain.forum.models import (
     ForumBoard,
     ForumModerationEvent,
@@ -57,6 +59,7 @@ from app.domain.forum.models import (
     ForumTopic,
     ForumTopicFollow,
 )
+from app.domain.forum.related import find_related
 from app.models import AuditLog, User
 
 router = APIRouter(prefix="/forum", tags=["forum"])
@@ -247,6 +250,38 @@ class TopicOut(BaseModel):
 class TopicListOut(BaseModel):
     data: list[TopicOut]
     meta: dict[str, object]
+
+
+class LinkedWorkOut(BaseModel):
+    """A public catalog record attached to a topic or recommended beside it."""
+
+    id: int
+    title: str
+    short_title: str | None = None
+    preview: str
+    type: str
+    discipline: str
+    year: int
+    authors: list[str] = Field(default_factory=list)
+    reason: str | None = None
+
+
+class RelatedTopicOut(BaseModel):
+    id: int
+    title: str
+    board_name: str | None = None
+    board_path: str | None = None
+    reply_count: int
+    last_reply_at: datetime | None = None
+    reason: str
+
+
+class TopicRelatedOut(BaseModel):
+    """Linked work plus two independent discovery lists."""
+
+    paper: LinkedWorkOut | None = None
+    topics: list[RelatedTopicOut] = Field(default_factory=list)
+    works: list[LinkedWorkOut] = Field(default_factory=list)
 
 
 class ModerationSignalOut(BaseModel):
@@ -1127,6 +1162,88 @@ async def get_topic(
     return _topic_out(topic, authors, counts.get(topic.id), viewers.get(topic.id), boards)
 
 
+@router.get("/topics/{topic_id}/related", response_model=TopicRelatedOut)
+async def get_topic_related(
+    topic_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User | None = Depends(get_current_user_optional),
+) -> TopicRelatedOut:
+    """关联作品、同一作品的其它讨论，以及相近主题与延伸阅读。
+
+    公开可读；待核验主题只对作者/版主开放，规则与详情页一致，避免关联
+    接口成为未过审帖子的侧门。
+    """
+    tenant_id = require_tenant_id()
+    topic = (
+        await db.execute(
+            select(ForumTopic).where(
+                ForumTopic.id == topic_id,
+                ForumTopic.tenant_id == tenant_id,
+                ForumTopic.deleted_at.is_(None),
+            )
+        )
+    ).scalar_one_or_none()
+    if topic is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="主题帖不存在")
+    visible = topic.moderation_status in VISIBLE_STATUS or topic.moderation_status is None
+    if not visible and not (
+        current_user is not None
+        and (current_user.id == topic.author_id or await _is_moderator(db, current_user))
+    ):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="主题帖不存在")
+
+    paper, related_topics, related_works = await find_related(
+        db, tenant_id=tenant_id, topic=topic
+    )
+    boards = await _board_index(db, tenant_id)
+    return TopicRelatedOut(
+        paper=(
+            LinkedWorkOut(
+                id=paper.id,
+                title=paper.title,
+                short_title=paper.short_title,
+                preview=paper.preview,
+                type=paper.type,
+                discipline=paper.discipline,
+                year=paper.year,
+                authors=paper.authors or [],
+            )
+            if paper is not None
+            else None
+        ),
+        topics=[
+            RelatedTopicOut(
+                id=row.id,
+                title=row.title,
+                board_name=(
+                    boards[row.board_id].name if row.board_id and row.board_id in boards else None
+                ),
+                board_path=_board_path(
+                    boards.get(row.board_id) if row.board_id else None, boards
+                ),
+                reply_count=row.reply_count,
+                last_reply_at=row.last_reply_at,
+                reason=reason,
+            )
+            for row, reason in related_topics
+        ],
+        works=[
+            LinkedWorkOut(
+                id=work.id,
+                title=work.title,
+                short_title=work.short_title,
+                preview=work.preview,
+                type=work.type,
+                discipline=work.discipline,
+                year=work.year,
+                authors=work.authors or [],
+                reason=reason,
+            )
+            for work, reason in related_works
+        ],
+    )
+
+
 @router.get("/topics/{topic_id}/replies", response_model=list[ReplyOut])
 async def list_replies(
     topic_id: int,
@@ -1228,6 +1345,22 @@ async def create_topic(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail={"code": "content_blocked", "message": assessment.reason},
         )
+    linked_paper_id = payload.paper_id
+    if linked_paper_id is not None:
+        linked = (
+            await db.execute(
+                select(Resource.id).where(
+                    Resource.id == linked_paper_id,
+                    Resource.tenant_id == tenant_id,
+                    *public_conditions(),
+                )
+            )
+        ).scalar_one_or_none()
+        if linked is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="关联作品不存在或尚未公开",
+            )
     review_status = "manual_review" if assessment.action == "manual_review" else "published"
     now = utcnow()
     topic = ForumTopic(
@@ -1238,7 +1371,7 @@ async def create_topic(
         category=category,
         is_fictional=payload.is_fictional,
         board_id=board.id if board is not None else None,
-        paper_id=payload.paper_id,
+        paper_id=linked_paper_id,
         moderation_status=review_status,
         risk_score=assessment.risk_score,
         moderation_signals=[asdict(signal) for signal in assessment.signals],
@@ -1472,6 +1605,9 @@ class TopicEditRequest(BaseModel):
     body: str | None = Field(default=None, min_length=2, max_length=20000)
     board_id: int | None = Field(default=None, ge=1)
     is_fictional: bool | None = None
+    # 作者可以在不改正文的情况下补挂/更换关联作品；clear_paper 与 paper_id 互斥。
+    paper_id: int | None = Field(default=None, ge=1)
+    clear_paper: bool = False
 
 
 class ModerateRequest(BaseModel):
@@ -2112,8 +2248,15 @@ async def edit_topic(
         and payload.body is None
         and payload.board_id is None
         and payload.is_fictional is None
+        and payload.paper_id is None
+        and not payload.clear_paper
     ):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="没有要修改的内容")
+    if payload.paper_id is not None and payload.clear_paper:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="关联作品与清除关联不能同时提交",
+        )
 
     new_title = payload.title.strip() if payload.title is not None else topic.title
     new_body = payload.body.strip() if payload.body is not None else topic.body
@@ -2133,10 +2276,33 @@ async def edit_topic(
         new_board_id = board.id
         new_category = board.slug
 
+    # Resolve the linkage before mutating the row: a rejected paper must not
+    # leave a half-applied topic in the session.
+    new_paper_id = topic.paper_id
+    if payload.clear_paper:
+        new_paper_id = None
+    elif payload.paper_id is not None:
+        paper = (
+            await db.execute(
+                select(Resource).where(
+                    Resource.id == payload.paper_id,
+                    Resource.tenant_id == tenant_id,
+                    *public_conditions(),
+                )
+            )
+        ).scalar_one_or_none()
+        if paper is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="关联作品不存在或尚未公开",
+            )
+        new_paper_id = paper.id
+
     topic.title = new_title
     topic.body = new_body
     topic.board_id = new_board_id
     topic.category = new_category
+    topic.paper_id = new_paper_id
     if payload.is_fictional is not None:
         topic.is_fictional = payload.is_fictional
     # 已公开或需修改的主题再次改正文时，重新进入人工核验，避免先通过再改成广告。
@@ -2176,7 +2342,7 @@ async def edit_topic(
             action="forum.edit",
             target_type="forum_topic",
             target_id=str(topic.id),
-            payload={"title": topic.title, "board_id": topic.board_id},
+            payload={"title": topic.title, "board_id": topic.board_id, "paper_id": topic.paper_id},
         )
     )
     await db.commit()

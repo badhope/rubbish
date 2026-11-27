@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from '@tanstack/react-router'
-import { ArrowRight, BookMarked, Library, MoreVertical, Pencil, Plus, Trash2, Users } from 'lucide-react'
+import { ArrowRight, BookMarked, Globe2, Library, Lock, MoreVertical, Pencil, Plus, Trash2, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   useCreateReadingList,
@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Pagination } from '@/components/common/pagination'
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
+import { VisibilityChoice } from '@/components/common/visibility-choice'
 import { ErrorState, Loading } from '@/components/common/state'
 import {
   Dialog,
@@ -41,6 +42,7 @@ import { shortDate } from './format'
 interface ListFormState {
   name: string
   description: string
+  visibility: 'public' | 'private'
 }
 
 function LibrarySectionNav({ active }: { active: 'library' | 'bookmarks' | 'history' | 'following' | 'recommendations' }) {
@@ -91,7 +93,11 @@ export function MeLibrary({ section }: { section?: string }) {
   const [createOpen, setCreateOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<ReadingListResponse | null>(null)
   const [deleteId, setDeleteId] = useState<number | null>(null)
-  const [form, setForm] = useState<ListFormState>({ name: '', description: '' })
+  const [form, setForm] = useState<ListFormState>({
+    name: '',
+    description: '',
+    visibility: 'private',
+  })
 
   if (isBookmarks) {
     return (
@@ -135,20 +141,28 @@ export function MeLibrary({ section }: { section?: string }) {
   const rows = lists.data?.data ?? []
 
   const openCreate = () => {
-    setForm({ name: '', description: '' })
+    setForm({ name: '', description: '', visibility: 'private' })
     setCreateOpen(true)
   }
 
   const openEdit = (list: ReadingListResponse) => {
     setEditTarget(list)
-    setForm({ name: list.name, description: list.description ?? '' })
+    setForm({
+      name: list.name,
+      description: list.description ?? '',
+      visibility: list.visibility === 'public' ? 'public' : 'private',
+    })
   }
 
   const onCreate = async (event: FormEvent) => {
     event.preventDefault()
     try {
-      await createMut.mutateAsync({ name: form.name, description: form.description || null })
-      toast.success('已创建')
+      await createMut.mutateAsync({
+        name: form.name,
+        description: form.description || null,
+        visibility: form.visibility,
+      })
+      toast.success(form.visibility === 'public' ? '已创建并公开' : '已创建')
       setCreateOpen(false)
       setPage(1)
     } catch (error) {
@@ -159,7 +173,11 @@ export function MeLibrary({ section }: { section?: string }) {
   const onEdit = async (event: FormEvent) => {
     event.preventDefault()
     if (!editTarget) return
-    const body: ReadingListUpdate = { name: form.name, description: form.description || null }
+    const body: ReadingListUpdate = {
+      name: form.name,
+      description: form.description || null,
+      visibility: form.visibility,
+    }
     try {
       await updateMut.mutateAsync({ id: editTarget.id, body })
       toast.success('已更新')
@@ -189,12 +207,22 @@ export function MeLibrary({ section }: { section?: string }) {
           <div>
             <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">LIBRARY</p>
             <h2 className="mt-1 font-serif text-xl tracking-tight">阅读列表</h2>
-            <p className="mt-1 text-xs text-muted-foreground">共 {lists.data?.meta.total ?? 0} 个列表 · 可新建、编辑和删除</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              共 {lists.data?.meta.total ?? 0} 个列表 · 可新建、编辑和删除；公开后别人也能连读
+            </p>
           </div>
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="h-3.5 w-3.5" />
-            新建列表
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" variant="ghost" asChild>
+              <Link to="/library">
+                <Globe2 className="h-3.5 w-3.5" />
+                公开列表
+              </Link>
+            </Button>
+            <Button size="sm" onClick={openCreate}>
+              <Plus className="h-3.5 w-3.5" />
+              新建列表
+            </Button>
+          </div>
         </div>
 
         {rows.length === 0 ? (
@@ -219,9 +247,23 @@ export function MeLibrary({ section }: { section?: string }) {
                   <BookMarked className="h-4 w-4 shrink-0 text-muted-foreground" />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium">{list.name}</span>
-                    <span className="mt-0.5 block text-[11px] text-muted-foreground">
-                      {list.item_count} 篇 · 更新于 {shortDate(list.updated_at)}
-                      {list.description ? ` · ${list.description}` : ''}
+                    <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                      {list.visibility === 'public' ? (
+                        <span className="inline-flex items-center gap-1 text-primary">
+                          <Globe2 className="h-3 w-3" />
+                          公开
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1">
+                          <Lock className="h-3 w-3" />
+                          私有
+                        </span>
+                      )}
+                      <span aria-hidden>·</span>
+                      <span>{list.item_count} 篇</span>
+                      <span aria-hidden>·</span>
+                      <span>更新于 {shortDate(list.updated_at)}</span>
+                      {list.description ? <span className="truncate">· {list.description}</span> : null}
                     </span>
                   </span>
                   <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary" />
@@ -307,6 +349,11 @@ export function MeLibrary({ section }: { section?: string }) {
                 placeholder="这个列表用于…"
               />
             </div>
+            <VisibilityChoice
+              idPrefix="me-list-create"
+              value={form.visibility}
+              onChange={(visibility) => setForm({ ...form, visibility })}
+            />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
                 取消
@@ -342,6 +389,11 @@ export function MeLibrary({ section }: { section?: string }) {
                 onChange={(event) => setForm({ ...form, description: event.target.value })}
               />
             </div>
+            <VisibilityChoice
+              idPrefix="me-list-edit"
+              value={form.visibility}
+              onChange={(visibility) => setForm({ ...form, visibility })}
+            />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setEditTarget(null)}>
                 取消

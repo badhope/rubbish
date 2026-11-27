@@ -34,14 +34,16 @@ from app.api.deps import get_current_user, get_current_user_optional
 from app.api.levels import require_reader
 from app.core.db import get_db, paginate
 from app.core.tenant import get_current_tenant_id
+from app.core.time import utcnow
 from app.domain.catalog.models import Resource
-from app.domain.catalog.visibility import public_conditions
+from app.domain.catalog.visibility import is_public, public_conditions
 from app.domain.library.models import ReadingList, ReadingListItem
 from app.interfaces.http.library.schemas import (
     MessageResponse,
     ReadingListCreate,
     ReadingListDetailResponse,
     ReadingListItemCreate,
+    ReadingListItemResponse,
     ReadingListListResponse,
     ReadingListResponse,
     ReadingListUpdate,
@@ -117,17 +119,74 @@ async def _load_readable_list(db: AsyncSession, list_id: int, user: User | None)
     )
 
 
-def _detail_payload(rl: ReadingList, user: User | None) -> ReadingListDetailResponse:
-    """Serialize a list with an explicit owner flag.
+async def _owner_map(
+    db: AsyncSession, user_ids: set[int]
+) -> dict[int, tuple[str, str | None]]:
+    """Batch-resolve list owners so the public index does not do N+1 queries."""
+    if not user_ids:
+        return {}
+    rows = (
+        await db.execute(
+            select(User.id, User.username, User.display_name).where(User.id.in_(user_ids))
+        )
+    ).all()
+    return {int(row[0]): (row[1], row[2]) for row in rows}
+
+
+def _with_owner(
+    payload: ReadingListResponse | ReadingListDetailResponse,
+    rl: ReadingList,
+    owners: dict[int, tuple[str, str | None]] | None,
+) -> ReadingListResponse | ReadingListDetailResponse:
+    username, display_name = (owners or {}).get(
+        rl.user_id, (None, None)
+    )
+    if username is None:
+        return payload
+    return payload.model_copy(
+        update={"owner_username": username, "owner_display_name": display_name}
+    )
+
+
+def _visible_items(rl: ReadingList) -> list[ReadingListItemResponse]:
+    """Only public catalog records may appear in a list shown to other readers."""
+    return [
+        ReadingListItemResponse.model_validate(item)
+        for item in rl.items
+        if is_public(item.resource)
+    ]
+
+
+def _list_payload(
+    rl: ReadingList,
+    owners: dict[int, tuple[str, str | None]] | None,
+    *,
+    public_view: bool,
+) -> ReadingListResponse:
+    payload = ReadingListResponse.model_validate(rl)
+    if public_view:
+        payload = payload.model_copy(update={"items": _visible_items(rl)})
+    return _with_owner(payload, rl, owners)
+
+
+def _detail_payload(
+    rl: ReadingList,
+    user: User | None,
+    owners: dict[int, tuple[str, str | None]] | None = None,
+) -> ReadingListDetailResponse:
+    """Serialize a list with an explicit owner flag and public-only items.
 
     ``model_validate`` alone cannot know who is reading; without this flag the
     frontend defaults to owner and shows edit/remove controls on public lists
-    owned by someone else.
+    owned by someone else. More importantly, a public list must not disclose
+    the titles of resources that are still draft or scheduled.
     """
     payload = ReadingListDetailResponse.model_validate(rl)
-    return payload.model_copy(
-        update={"is_owner": bool(user is not None and rl.user_id == user.id)}
-    )
+    is_owner = bool(user is not None and rl.user_id == user.id)
+    if not is_owner:
+        payload = payload.model_copy(update={"items": _visible_items(rl)})
+    payload = payload.model_copy(update={"is_owner": is_owner})
+    return _with_owner(payload, rl, owners)
 
 
 @router.get("", response_model=ReadingListListResponse)
@@ -152,10 +211,11 @@ async def list_my_lists(
         base,
         page=page,
         page_size=page_size,
-        order_by=(desc(ReadingList.created_at), ReadingList.id.asc()),
+        order_by=(desc(ReadingList.updated_at), ReadingList.id.asc()),
     )
+    owners = await _owner_map(db, {rl.user_id for rl in rows})
     return ReadingListListResponse(
-        data=[ReadingListResponse.model_validate(r) for r in rows],
+        data=[_list_payload(rl, owners, public_view=False) for rl in rows],
         meta=meta,
     )
 
@@ -166,21 +226,26 @@ async def list_public_lists(
     page_size: int = Query(default=DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE),
     db: AsyncSession = Depends(get_db),
 ) -> ReadingListListResponse:
-    """List public reading lists, newest first. Anonymous-friendly."""
+    """List public reading lists, newest first. Anonymous-friendly.
+
+    Item counts and previews are filtered to publicly visible catalog records:
+    a public list is a storefront, not a side channel for scheduled drafts.
+    """
     tenant_id = get_current_tenant_id()
     base = select(ReadingList).where(ReadingList.visibility == "public")
     if tenant_id is not None:
         base = base.where(ReadingList.tenant_id == tenant_id)
-    base = base.options(selectinload(ReadingList.items))
+    base = base.options(selectinload(ReadingList.items).selectinload(ReadingListItem.resource))
     rows, meta = await paginate(
         db,
         base,
         page=page,
         page_size=page_size,
-        order_by=(desc(ReadingList.created_at), ReadingList.id.asc()),
+        order_by=(desc(ReadingList.updated_at), ReadingList.id.asc()),
     )
+    owners = await _owner_map(db, {rl.user_id for rl in rows})
     return ReadingListListResponse(
-        data=[ReadingListResponse.model_validate(r) for r in rows],
+        data=[_list_payload(rl, owners, public_view=True) for rl in rows],
         meta=meta,
     )
 
@@ -234,7 +299,8 @@ async def get_list(
     """Get a single list with its items. Public lists are readable by anyone;
     private lists are owner-only (403 for other readers)."""
     rl = await _load_readable_list(db, list_id, current_user)
-    return _detail_payload(rl, current_user)
+    owners = await _owner_map(db, {rl.user_id})
+    return _detail_payload(rl, current_user, owners)
 
 
 @router.patch("/{list_id}", response_model=ReadingListDetailResponse)
@@ -244,10 +310,14 @@ async def update_list(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ReadingListDetailResponse:
-    """Update a list's name/description. Owner-only."""
+    """Update a list's name/description/visibility. Owner-only."""
     rl = await _load_owned_list(db, list_id, current_user)
     update_data = payload.model_dump(exclude_unset=True)
     for field, value in update_data.items():
+        # description 允许清空成 null；name/visibility 是 NOT NULL，显式传
+        # null 时忽略而不是把半条坏数据写进库。
+        if value is None and field != "description":
+            continue
         setattr(rl, field, value)
     try:
         await db.commit()
@@ -325,6 +395,9 @@ async def add_item(
         )
     ).scalar_one_or_none()
     if existing is None:
+        # The list is a product, not an immutable table: adding an item is
+        # activity, so public sorting and "更新于" must move with it.
+        rl.updated_at = utcnow()
         db.add(
             ReadingListItem(
                 tenant_id=current_user.tenant_id,
@@ -366,5 +439,6 @@ async def remove_item(
         )
     ).scalar_one_or_none()
     if item is not None:
+        rl.updated_at = utcnow()
         await db.delete(item)
         await db.commit()

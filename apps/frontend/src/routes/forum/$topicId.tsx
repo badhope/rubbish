@@ -23,6 +23,7 @@ import { api } from '@/lib/api'
 import { uploadForumImage } from '@/lib/forum'
 import { extractError, formatDateTime } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
+import { useResources } from '@/hooks/api/use-modules'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
 import { ShareDialog } from '@/components/common/share-dialog'
@@ -41,6 +42,7 @@ import {
 import { cn } from '@/lib/utils'
 import { MODERATION_STATUS_LABEL } from '@/lib/forum-copy'
 import { ModerationNotice } from '@/components/forum/moderation-status'
+import { TopicRelated, type TopicLinkedWork } from '@/components/forum/topic-related'
 import { OperatorQuickPanel } from '@/components/forum/operator-quick-panel'
 
 const ForumEditor = lazy(() =>
@@ -65,6 +67,7 @@ interface ForumTopic {
   board_path: string | null
   is_pinned: boolean
   is_locked: boolean
+  paper_id?: number | null
   reply_count: number
   created_at: string
   last_reply_at: string | null
@@ -388,6 +391,11 @@ function ForumTopicPage() {
   const [editBody, setEditBody] = useState('')
   const [editFictional, setEditFictional] = useState(false)
   const [editBoardId, setEditBoardId] = useState<number | null>(null)
+  const [editPaperId, setEditPaperId] = useState<number | null>(null)
+  const [editPaperTitle, setEditPaperTitle] = useState('')
+  const [editPaperTouched, setEditPaperTouched] = useState(false)
+  const [paperEditing, setPaperEditing] = useState(false)
+  const [paperQuery, setPaperQuery] = useState('')
   const [shareOpen, setShareOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const boardsQ = useQuery({
@@ -395,6 +403,15 @@ function ForumTopicPage() {
     queryFn: async () => (await api.get('/forum/boards')).data,
     enabled: editOpen,
   })
+  const relatedQ = useQuery<{ paper: TopicLinkedWork | null }>({
+    queryKey: ['forum', 'topic', id, 'related'],
+    queryFn: async () => (await api.get(`/forum/topics/${id}/related`)).data,
+    enabled: id > 0,
+  })
+  const paperResults = useResources(
+    { q: paperQuery.trim() || undefined, page_size: 5 },
+    editOpen && paperEditing && paperQuery.trim().length >= 2,
+  )
   const editBoards = useMemo(
     () => flattenBoards((boardsQ.data?.tree ?? []) as BoardNode[]),
     [boardsQ.data],
@@ -406,6 +423,11 @@ function ForumTopicPage() {
     setEditBody(topicQ.data.body)
     setEditFictional(topicQ.data.is_fictional)
     setEditBoardId(topicQ.data.board_id)
+    setEditPaperId(topicQ.data.paper_id ?? null)
+    setEditPaperTitle(relatedQ.data?.paper?.title ?? '')
+    setEditPaperTouched(false)
+    setPaperEditing(!topicQ.data.paper_id)
+    setPaperQuery('')
     setEditOpen(true)
   }
 
@@ -417,6 +439,11 @@ function ForumTopicPage() {
           body: editBody.trim(),
           board_id: editBoardId,
           is_fictional: editFictional,
+          ...(editPaperTouched
+            ? editPaperId
+              ? { paper_id: editPaperId }
+              : { clear_paper: true }
+            : {}),
         })
       ).data,
     onSuccess: () => {
@@ -698,6 +725,8 @@ function ForumTopicPage() {
         </CardContent>
       </Card>
 
+      <TopicRelated topicId={topic.id} />
+
       <div className="space-y-2">
         <p className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
           <MessageSquare className="h-4 w-4" />
@@ -855,6 +884,113 @@ function ForumTopicPage() {
               这是虚构内容
             </label>
             </div>
+
+            <div className="rounded-lg border bg-muted/15 p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-xs font-medium">关联作品（可选）</p>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                    读者会在详情页看到作品卡片；只能关联已公开的作品。
+                  </p>
+                </div>
+                {editPaperId !== null && !paperEditing ? (
+                  <div className="flex items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-[11px]"
+                      onClick={() => {
+                        setPaperEditing(true)
+                        setPaperQuery('')
+                      }}
+                    >
+                      更换
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-[11px] text-destructive"
+                      onClick={() => {
+                        setEditPaperId(null)
+                        setEditPaperTitle('')
+                        setEditPaperTouched(true)
+                        setPaperEditing(false)
+                      }}
+                    >
+                      取消关联
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
+
+              {editPaperId !== null && !paperEditing ? (
+                <div className="mt-2 rounded-md border bg-card px-3 py-2">
+                  <p className="line-clamp-2 text-sm font-medium">
+                    {editPaperTitle || `已关联作品 #${editPaperId}`}
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-2 space-y-2">
+                  <Input
+                    value={paperQuery}
+                    onChange={(event) => setPaperQuery(event.target.value)}
+                    placeholder="输入作品标题关键词（至少 2 个字）"
+                    aria-label="搜索要关联的作品"
+                  />
+                  {paperQuery.trim().length >= 2 ? (
+                    paperResults.isLoading ? (
+                      <p className="text-[11px] text-muted-foreground">搜索中…</p>
+                    ) : paperResults.data?.data.length ? (
+                      <div className="max-h-56 space-y-1 overflow-y-auto rounded-md border bg-card p-1">
+                        {paperResults.data.data.map((resource) => (
+                          <button
+                            key={resource.id}
+                            type="button"
+                            className="flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-muted/50"
+                            onClick={() => {
+                              setEditPaperId(resource.id)
+                              setEditPaperTitle(resource.short_title?.trim() || resource.title)
+                              setEditPaperTouched(true)
+                              setPaperEditing(false)
+                              setPaperQuery('')
+                            }}
+                          >
+                            <span className="min-w-0 flex-1">
+                              <span className="line-clamp-2 block text-sm font-medium">
+                                {resource.short_title?.trim() || resource.title}
+                              </span>
+                              <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                                {resource.discipline} · {resource.year}
+                                {resource.authors?.length ? ` · ${resource.authors.join('、')}` : ''}
+                              </span>
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-muted-foreground">没有匹配的公开作品。</p>
+                    )
+                  ) : null}
+                  {editPaperId !== null && paperEditing ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-0 text-[11px] text-muted-foreground"
+                      onClick={() => {
+                        setPaperEditing(false)
+                        setPaperQuery('')
+                      }}
+                    >
+                      取消更换，保留原关联
+                    </Button>
+                  ) : null}
+                </div>
+              )}
+            </div>
+
             <Suspense
               fallback={
                 <div className="rounded-md border border-dashed px-3 py-6 text-sm text-muted-foreground">
@@ -874,7 +1010,7 @@ function ForumTopicPage() {
           </div>
           <div className="flex items-center justify-between border-t px-4 py-3 sm:px-6">
             <span className="text-[11px] text-muted-foreground">
-              正文 {editBody.length} 字 · 保存后立即对外可见
+              正文 {editBody.length} 字 · 标题或正文改动会重新进入人工核验
             </span>
             <Button
               onClick={() => editMut.mutate()}

@@ -494,6 +494,7 @@ function MemberHome() {
               <li><Link to="/forum" className="hover:text-primary">主题论坛</Link></li>
               <li><Link to="/search" className="hover:text-primary">站内搜索</Link></li>
               <li><Link to="/tags" className="hover:text-primary">标签与归档</Link></li>
+              <li><Link to="/library" className="hover:text-primary">公开阅读列表</Link></li>
               <li><Link to="/guide" search={{ tab: 'start' }} className="hover:text-primary">怎么用</Link></li>
             </ul>
           </div>

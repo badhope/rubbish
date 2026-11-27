@@ -21,6 +21,7 @@ import {
   User,
   Award,
   FileText,
+  Globe2,
   Layers3,
   MessagesSquare,
   PenLine,
@@ -86,6 +87,7 @@ const NAV: NavItem[] = [
     group: '工作台',
   },
   { to: '/about', label: '关于此处', icon: Building2, group: '关于' },
+  { to: '/library', label: '公开列表', icon: Globe2, group: '关于' },
   { to: '/tags', label: '标签与归档', icon: Tags, group: '关于' },
   { to: '/status', label: '站点状态', icon: Activity, group: '关于' },
   { to: '/accessibility', label: '可访问性', icon: Accessibility, group: '关于' },
@@ -141,8 +143,9 @@ function resolvePublicNavPath(pathname: string): string | undefined {
     return '/submissions'
   }
   if (pathname === '/forum' || pathname.startsWith('/forum/')) return '/forum'
+  if (pathname === '/library' || pathname.startsWith('/library/')) return '/library'
   if (
-    ['/me', '/library', '/claim'].some(
+    ['/me', '/claim'].some(
       (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
     )
   ) {

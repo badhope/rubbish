@@ -118,6 +118,7 @@ export const keys = {
   },
   library: {
     list: (page = 1) => ['library', 'list', page] as const,
+    public: (page = 1) => ['library', 'public', page] as const,
     detail: (id: number) => ['library', 'detail', id] as const,
   },
   notifications: {
@@ -1365,6 +1366,16 @@ export function useReadingLists(page = 1, pageSize = 20) {
     queryKey: keys.library.list(page),
     queryFn: async () =>
       (await api.get<ReadingListListResponse>('/reading-lists', {
+        params: { page, page_size: pageSize },
+      })).data,
+  })
+}
+
+export function usePublicReadingLists(page = 1, pageSize = 12) {
+  return useQuery<ReadingListListResponse>({
+    queryKey: keys.library.public(page),
+    queryFn: async () =>
+      (await api.get<ReadingListListResponse>('/reading-lists/public', {
         params: { page, page_size: pageSize },
       })).data,
   })

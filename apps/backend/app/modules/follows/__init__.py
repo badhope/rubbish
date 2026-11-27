@@ -15,11 +15,10 @@ Design choices:
   table that does not exist yet.
 - No rate limiting of its own; the shared RateLimitMiddleware
   covers these endpoints.
-- Scope: follow / subscribe + listings only. Fanning a *new resource*
-  out to followers is not implemented — submissions notify the editor
-  and reviewers (``notifications.services.create``), not followers.
-  If follower fan-out is wanted later it belongs in the approval path,
-  not this module.
+- Follower fan-out lives in ``app.domain.follows.fanout`` and is called
+  from the approval/publication paths (catalog publish, release scheduler,
+  release routes). This module owns the relationships and listings; the
+  catalog/submission modules own the event that triggers delivery.
 """
 
 from __future__ import annotations

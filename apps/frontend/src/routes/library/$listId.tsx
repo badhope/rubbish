@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createFileRoute, Link, useLocation, useNavigate } from '@tanstack/react-router'
-import { ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Globe2, Lock, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { getAuthState } from '@/lib/auth'
 import {
@@ -15,6 +15,7 @@ import { typeLabel } from '@/lib/resource-labels'
 import { extractError } from '@/lib/utils'
 import { PageHeader } from '@/components/common/page-header'
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
+import { VisibilityChoice } from '@/components/common/visibility-choice'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -52,12 +53,17 @@ function LibraryListDetailPage() {
   const auth = getAuthState()
 
   const { data, isLoading, isError, error, refetch } = useReadingList(id)
+  const errorStatus = (error as { response?: { status?: number } } | null)?.response?.status
   const updateMut = useUpdateReadingList()
   const removeMut = useRemoveReadingListItem()
   const addMut = useAddReadingListItem()
 
   const [editOpen, setEditOpen] = useState(false)
-  const [form, setForm] = useState({ name: '', description: '' })
+  const [form, setForm] = useState<{
+    name: string
+    description: string
+    visibility: 'public' | 'private'
+  }>({ name: '', description: '', visibility: 'private' })
   const [removeResourceId, setRemoveResourceId] = useState<number | null>(null)
   const [addOpen, setAddOpen] = useState(false)
 
@@ -70,7 +76,7 @@ function LibraryListDetailPage() {
     }
   }, [isPrivate, navigate, location.pathname])
 
-  // 未授权（401/403）：后端暂未透出公开态时，游客访问私有列表会落到这里，同样带回跳。
+  // 未授权（401/403）：私有列表或跨租户列表会落到这里，同样带回跳。
   useEffect(() => {
     if (isError && !auth.isAuthenticated) {
       const status = (error as { response?: { status?: number } } | null)?.response?.status
@@ -80,12 +86,16 @@ function LibraryListDetailPage() {
     }
   }, [isError, error, auth.isAuthenticated, navigate, location.pathname])
 
-  // 仅本人可编辑；后端未透出归属字段时默认按本人处理（旧行为）。
+  // 宣传口径以服务端 is_owner 为准；旧接口缺字段时按本人处理，避免隐藏编辑入口。
   const canEdit = data?.is_owner !== false
 
   const openEdit = () => {
     if (!data) return
-    setForm({ name: data.name, description: data.description ?? '' })
+    setForm({
+      name: data.name,
+      description: data.description ?? '',
+      visibility: data.visibility === 'public' ? 'public' : 'private',
+    })
     setEditOpen(true)
   }
 
@@ -94,6 +104,7 @@ function LibraryListDetailPage() {
     const body: ReadingListUpdate = {
       name: form.name,
       description: form.description || null,
+      visibility: form.visibility,
     }
     try {
       await updateMut.mutateAsync({ id, body })
@@ -118,6 +129,30 @@ function LibraryListDetailPage() {
 
   if (isLoading) return <Loading />
   if (isError || !data) {
+    // 未登录访问私有列表：交给上面的 effect 跳登录，先别再闪一次错误面板。
+    if (errorStatus === 403 && !auth.isAuthenticated) return <Loading />
+    if (errorStatus === 403 || errorStatus === 404) {
+      return (
+        <div className="mx-auto max-w-2xl py-10">
+          <EmptyState
+            title={errorStatus === 403 ? '这是别人的私有列表' : '列表不存在'}
+            description={
+              errorStatus === 403
+                ? '只有整理者本人能读私有列表。公开列表可以在「公开阅读列表」里找。'
+                : '链接可能已经失效，或者列表已被整理者删除。'
+            }
+            action={
+              <Button variant="outline" asChild>
+                <Link to="/library">
+                  <Globe2 className="h-4 w-4" />
+                  浏览公开列表
+                </Link>
+              </Button>
+            }
+          />
+        </div>
+      )
+    }
     return (
       <ErrorState
         message="加载列表失败"
@@ -128,13 +163,44 @@ function LibraryListDetailPage() {
 
   return (
     <div>
-      <Link
-        to="/me" search={{ tab: 'library' }}
-        className="mb-4 inline-flex items-center text-sm text-muted-foreground hover:text-primary"
-      >
-        <ChevronLeft className="mr-1 h-4 w-4" />
-        返回列表
-      </Link>
+      {canEdit ? (
+        <Link
+          to="/me"
+          search={{ tab: 'library' }}
+          className="mb-4 inline-flex items-center text-sm text-muted-foreground hover:text-primary"
+        >
+          <ChevronLeft className="mr-1 h-4 w-4" />
+          返回我的收藏
+        </Link>
+      ) : (
+        <Link
+          to="/library"
+          className="mb-4 inline-flex items-center text-sm text-muted-foreground hover:text-primary"
+        >
+          <ChevronLeft className="mr-1 h-4 w-4" />
+          返回公开列表
+        </Link>
+      )}
+
+      <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <Badge variant="outline" className={data.visibility === 'public' ? 'gap-1 border-primary/25 text-primary' : 'gap-1'}>
+          {data.visibility === 'public' ? <Globe2 className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
+          {data.visibility === 'public' ? '公开列表' : '私有列表'}
+        </Badge>
+        {data.owner_username ? (
+          <span>
+            由{' '}
+            <Link
+              to="/u/$username"
+              params={{ username: data.owner_username }}
+              className="text-foreground/80 hover:text-primary"
+            >
+              {data.owner_display_name || data.owner_username}
+            </Link>
+            {' '}整理
+          </span>
+        ) : null}
+      </div>
 
       <PageHeader
         title={data.name}
@@ -157,8 +223,19 @@ function LibraryListDetailPage() {
 
       {data.items.length === 0 ? (
         <EmptyState
-          title="列表为空"
-          description="点上方“添加作品”，收录第一条内容。"
+          title={canEdit ? '列表为空' : '暂时没有可读的作品'}
+          description={
+            canEdit
+              ? '点上方“添加作品”，收录第一条内容。'
+              : '整理者还没有把已公开的作品放进这组列表，过一阵再来。'
+          }
+          action={
+            canEdit ? null : (
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/library">先看别的公开列表</Link>
+              </Button>
+            )
+          }
         />
       ) : null}
 
@@ -286,6 +363,11 @@ function LibraryListDetailPage() {
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
               />
             </div>
+            <VisibilityChoice
+              idPrefix="library-detail-edit"
+              value={form.visibility}
+              onChange={(visibility) => setForm({ ...form, visibility })}
+            />
             <DialogFooter>
               <Button
                 type="button"

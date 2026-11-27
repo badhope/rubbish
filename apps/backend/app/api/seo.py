@@ -120,7 +120,6 @@ CRAWLER_RULES = [
     "Disallow: /dashboard",
     "Disallow: /me",
     "Disallow: /notifications",
-    "Disallow: /library",
 ]
 
 # 明确允许主流检索与 AI 爬虫抓公开内容；管理端仍统一禁止。
@@ -177,6 +176,7 @@ async def ai_txt(request: Request) -> Response:
 ## 公开入口
 - 首页：{root}/
 - 主题论坛：{root}/forum
+- 公开阅读列表：{root}/library
 - 内容库：{root}/catalog
 - 指南：{root}/guide
 - 关于：{root}/about
@@ -204,6 +204,7 @@ async def sitemap(request: Request, db: AsyncSession = Depends(get_db)) -> Respo
         (f"{root}/issues", "weekly", "0.7", None),
         (f"{root}/levels", "monthly", "0.5", None),
         (f"{root}/forum", "daily", "0.8", None),
+        (f"{root}/library", "daily", "0.7", None),
         (f"{root}/guide", "monthly", "0.6", None),
         (f"{root}/about", "monthly", "0.6", None),
         (f"{root}/privacy", "yearly", "0.3", None),
@@ -253,6 +254,7 @@ async def llms_txt(request: Request, db: AsyncSession = Depends(get_db)) -> Resp
         "## 核心入口",
         f"- [首页]({root}/)",
         f"- [主题论坛]({root}/forum)",
+        f"- [公开阅读列表]({root}/library)",
         f"- [内容库]({root}/catalog)",
         f"- [怎么用]({root}/guide)",
         f"- [关于]({root}/about)",
@@ -274,7 +276,7 @@ async def llms_txt(request: Request, db: AsyncSession = Depends(get_db)) -> Resp
         [
             "",
             "## 抓取边界",
-            "- 只抓公开页面；/admin、/me、/notifications、/library 禁止。",
+            "- 只抓公开页面；/admin、/me、/notifications 禁止；/library 只含公开列表，可以读。",
             "- 本站没有机器发布 API；发帖与回复需要用户手动操作。",
             f"- Sitemap: {root}/sitemap.xml",
             "",

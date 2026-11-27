@@ -74,7 +74,7 @@ class ReadingListItemResponse(BaseModel):
 
 
 class ReadingListResponse(BaseModel):
-    """List view — without items, with item_count."""
+    """List view — without full items, with count and public preview."""
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -84,6 +84,9 @@ class ReadingListResponse(BaseModel):
     visibility: Visibility = "private"
     # Loaded to compute item_count but excluded from the JSON output.
     items: list[ReadingListItemResponse] = Field(exclude=True, default_factory=list)
+    # 公开索引页需要知道“是谁整理的”；旧客户端不依赖这两个字段。
+    owner_username: str | None = None
+    owner_display_name: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -91,6 +94,12 @@ class ReadingListResponse(BaseModel):
     @property
     def item_count(self) -> int:
         return len(self.items)
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def preview_items(self) -> list[ResourceRef]:
+        """Three public titles for the index card; never leak unpublished works."""
+        return [ResourceRef.model_validate(item.resource) for item in self.items[:3]]
 
 
 class ReadingListDetailResponse(BaseModel):
@@ -106,6 +115,8 @@ class ReadingListDetailResponse(BaseModel):
     # 公开列表人人可读，但只有归属者能改名/增删条目。前端据此隐藏编辑控件；
     # 真正的写权限仍由后端 owner-only 查询强制。
     is_owner: bool = False
+    owner_username: str | None = None
+    owner_display_name: str | None = None
     created_at: datetime
     updated_at: datetime
 

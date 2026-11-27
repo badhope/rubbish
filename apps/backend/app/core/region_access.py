@@ -62,6 +62,7 @@ _OVERSEAS_EXACT = frozenset(
         "/api/comments",
         "/api/announcements",
         "/api/announcements/",
+        "/api/reading-lists/public",
     }
 )
 # 图片能力 URL：文件名是 128 位随机串，img 标签不会带 Authorization，
@@ -81,6 +82,8 @@ _OVERSEAS_PATTERNS = (
     re.compile(r"^/api/catalog/\d+/img/[\w.-]+$"),
     re.compile(r"^/api/forum/topics/\d+$"),
     re.compile(r"^/api/forum/topics/\d+/replies$"),
+    re.compile(r"^/api/forum/topics/\d+/related$"),
+    re.compile(r"^/api/reading-lists/\d+$"),
     re.compile(r"^/api/forum/images/[\w.-]+$"),
     re.compile(r"^/api/media/images/[\w.-]+$"),
     re.compile(r"^/api/users/[^/]+/public$"),

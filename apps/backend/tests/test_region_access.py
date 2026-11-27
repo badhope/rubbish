@@ -126,6 +126,40 @@ async def test_public_image_capability_urls_bypass_region_and_auth_walls(
     assert article_image.status_code not in {401, 403}
 
 
+async def test_overseas_guest_can_read_public_lists_and_topic_relations(
+    client: AsyncClient, monkeypatch
+) -> None:
+    """公开阅读列表和主题关联是公开读面，不能只对登录用户开放。
+
+    2026-11-28 的真实回归：接口本身是 anonymous-friendly，但地区/登录墙
+    没把新路径算进海外只读白名单，海外匿名访问得到 401，等于公开面没上线。
+    """
+    monkeypatch.setattr(settings, "region_access_enabled", True)
+    monkeypatch.setattr(settings, "trusted_proxies_count", 1)
+    monkeypatch.setattr(settings, "auth_wall_enabled", True)
+
+    public_list = await client.get(
+        "/api/reading-lists/public", headers={"x-forwarded-for": "8.8.8.8"}
+    )
+    assert public_list.status_code == 200, public_list.text[:160]
+
+    missing_list = await client.get(
+        "/api/reading-lists/999999", headers={"x-forwarded-for": "8.8.8.8"}
+    )
+    assert missing_list.status_code == 404, missing_list.text[:160]
+
+    missing_topic = await client.get(
+        "/api/forum/topics/999999/related", headers={"x-forwarded-for": "8.8.8.8"}
+    )
+    assert missing_topic.status_code == 404, missing_topic.text[:160]
+
+    restricted = await client.get(
+        "/api/reading-lists/public", headers={"x-forwarded-for": "1.0.1.1"}
+    )
+    assert restricted.status_code == 403
+    assert restricted.json()["detail"] == "region_restricted"
+
+
 async def test_signed_submission_download_bypasses_region_and_auth_walls(
     client: AsyncClient, monkeypatch
 ) -> None:

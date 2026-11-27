@@ -40,6 +40,7 @@ import { Route as EditorCalibrationRouteImport } from './routes/editor/calibrati
 import { Route as EditorIssuePlanRouteImport } from './routes/editor/issue-plan'
 import { Route as ForumIndexRouteImport } from './routes/forum/index'
 import { Route as ForumTopicIdRouteImport } from './routes/forum/$topicId'
+import { Route as LibraryIndexRouteImport } from './routes/library/index'
 import { Route as LibraryListIdRouteImport } from './routes/library/$listId'
 import { Route as ReviewIndexRouteImport } from './routes/review/index'
 import { Route as SubmissionsIndexRouteImport } from './routes/submissions/index'
@@ -203,6 +204,11 @@ const ForumTopicIdRoute = ForumTopicIdRouteImport.update({
   path: '/forum/$topicId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LibraryIndexRoute = LibraryIndexRouteImport.update({
+  id: '/library/',
+  path: '/library/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LibraryListIdRoute = LibraryListIdRouteImport.update({
   id: '/library/$listId',
   path: '/library/$listId',
@@ -275,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/catalog/': typeof CatalogIndexRoute
   '/forum/': typeof ForumIndexRoute
+  '/library/': typeof LibraryIndexRoute
   '/review/': typeof ReviewIndexRoute
   '/submissions/': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
@@ -314,6 +321,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/catalog': typeof CatalogIndexRoute
   '/forum': typeof ForumIndexRoute
+  '/library': typeof LibraryIndexRoute
   '/review': typeof ReviewIndexRoute
   '/submissions': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
@@ -355,6 +363,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/catalog/': typeof CatalogIndexRoute
   '/forum/': typeof ForumIndexRoute
+  '/library/': typeof LibraryIndexRoute
   '/review/': typeof ReviewIndexRoute
   '/submissions/': typeof SubmissionsIndexRoute
   '/auth/oidc/callback': typeof AuthOidcCallbackRoute
@@ -397,6 +406,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/catalog/'
     | '/forum/'
+    | '/library/'
     | '/review/'
     | '/submissions/'
     | '/auth/oidc/callback'
@@ -436,6 +446,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/catalog'
     | '/forum'
+    | '/library'
     | '/review'
     | '/submissions'
     | '/auth/oidc/callback'
@@ -476,6 +487,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/catalog/'
     | '/forum/'
+    | '/library/'
     | '/review/'
     | '/submissions/'
     | '/auth/oidc/callback'
@@ -512,6 +524,7 @@ export interface RootRouteChildren {
   UUsernameRoute: typeof UUsernameRoute
   CatalogIndexRoute: typeof CatalogIndexRoute
   ForumIndexRoute: typeof ForumIndexRoute
+  LibraryIndexRoute: typeof LibraryIndexRoute
   ReviewIndexRoute: typeof ReviewIndexRoute
   SubmissionsIndexRoute: typeof SubmissionsIndexRoute
   AuthOidcCallbackRoute: typeof AuthOidcCallbackRoute
@@ -736,6 +749,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForumTopicIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/library/': {
+      id: '/library/'
+      path: '/library'
+      fullPath: '/library/'
+      preLoaderRoute: typeof LibraryIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/library/$listId': {
       id: '/library/$listId'
       path: '/library/$listId'
@@ -837,6 +857,7 @@ const rootRouteChildren: RootRouteChildren = {
   UUsernameRoute: UUsernameRoute,
   CatalogIndexRoute: CatalogIndexRoute,
   ForumIndexRoute: ForumIndexRoute,
+  LibraryIndexRoute: LibraryIndexRoute,
   ReviewIndexRoute: ReviewIndexRoute,
   SubmissionsIndexRoute: SubmissionsIndexRoute,
   AuthOidcCallbackRoute: AuthOidcCallbackRoute,

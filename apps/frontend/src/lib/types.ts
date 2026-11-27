@@ -942,6 +942,8 @@ export interface EditorReportSearchResponse {
 export interface ReadingListCreate {
   name: string
   description?: string | null
+  /** 缺省 private；显式 public 才对其他读者开放。 */
+  visibility?: 'public' | 'private'
 }
 
 export type ReadingListUpdate = Partial<ReadingListCreate>
@@ -970,6 +972,11 @@ export interface ReadingListResponse {
   name: string
   description?: string | null
   item_count: number
+  visibility?: 'public' | 'private'
+  owner_username?: string | null
+  owner_display_name?: string | null
+  /** 公开索引卡上的前三篇（后端已过滤未公开作品）。 */
+  preview_items?: ResourceRef[]
   created_at: string
   updated_at: string
 }
@@ -986,6 +993,7 @@ export interface ReadingListDetailResponse {
   visibility?: 'public' | 'private'
   is_owner?: boolean
   owner_username?: string | null
+  owner_display_name?: string | null
 }
 
 export interface ReadingListListResponse {
