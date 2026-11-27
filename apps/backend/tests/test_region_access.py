@@ -50,6 +50,32 @@ async def test_restricted_region_blocks_anonymous_but_overseas_can_read(
     assert write.status_code == 401
 
 
+async def test_restricted_region_valid_bearer_reaches_download_route(
+    client: AsyncClient, test_user: dict, monkeypatch
+) -> None:
+    """登录下载必须穿过地区闸门。
+
+    2026-11-24 的真实反馈：文章页的 PDF/Word 下载返回
+    ``{"detail":"region_restricted"}``。根因不是下载权限，而是旧按钮用
+    ``<a href="/api/catalog/...">`` 直链，浏览器导航不带 Authorization，
+    地区中间件把已登录读者当匿名请求拦掉。这里钉住后端边界：只要请求
+    带有效 Bearer，就必须到达业务路由（不存在的资源返回 404，而不是
+    403 region_restricted）。
+    """
+    monkeypatch.setattr(settings, "region_access_enabled", True)
+    monkeypatch.setattr(settings, "trusted_proxies_count", 1)
+    monkeypatch.setattr(settings, "auth_wall_enabled", True)
+
+    response = await client.get(
+        "/api/catalog/999999/file",
+        headers={
+            "x-forwarded-for": "1.0.1.1",
+            "authorization": f"Bearer {test_user['token']}",
+        },
+    )
+    assert response.status_code == 404, response.text[:200]
+
+
 async def test_region_cookie_is_set_on_html_response(client: AsyncClient, monkeypatch) -> None:
     monkeypatch.setattr(settings, "region_access_enabled", True)
     monkeypatch.setattr(settings, "trusted_proxies_count", 1)
