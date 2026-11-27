@@ -573,3 +573,14 @@ async def test_list_includes_reaction_counts(client: AsyncClient, test_user: dic
     row = next(item for item in listing.json()["data"] if item["id"] == topic["id"])
     assert row["reactions"]["agree"] == 1
     assert "agree" in row["viewer_reactions"]
+
+
+def test_admissions_auto_board_terms_do_not_fall_into_collab() -> None:
+    """招生与找导师在没选版块时也能落到对应子版，不被“招募”抢走。"""
+    from app.interfaces.http.forum.routes import _auto_board_slug
+
+    assert _auto_board_slug("招收两名遥感方向博士生", "2027 年秋季入学，提供资助。") == (
+        "admissions-recruit"
+    )
+    assert _auto_board_slug("寻找遥感方向导师", "附自荐信与作品链接。") == "admissions-seek"
+    assert _auto_board_slug("组队做城市热岛调查", "缺一名会 GIS 的同伴。") == "collab"

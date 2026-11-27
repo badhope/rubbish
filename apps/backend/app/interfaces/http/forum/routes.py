@@ -115,6 +115,9 @@ ForumCategory = Literal[
     "discussion",
     "records",
     "collab",
+    "admissions",
+    "admissions-recruit",
+    "admissions-seek",
     "life",
     "site",
     # 兼容旧客户端/旧帖
@@ -137,6 +140,9 @@ CATEGORY_LABELS: dict[str, str] = {
     "discussion": "写作讨论",
     "records": "记录与复盘",
     "collab": "组队招募",
+    "admissions": "招生与导师",
+    "admissions-recruit": "导师招生",
+    "admissions-seek": "学生找导师",
     "life": "创作生活",
     "site": "站务与反馈",
     # 旧分类仍可读，但不再作为新帖入口
@@ -160,6 +166,9 @@ CATEGORY_BOARD: dict[str, tuple[str, ...]] = {
     "discussion": ("discussion",),
     "records": ("records",),
     "collab": ("collab",),
+    "admissions": ("admissions",),
+    "admissions-recruit": ("admissions-recruit",),
+    "admissions-seek": ("admissions-seek",),
     "life": ("life",),
     "site": ("site",),
     # 旧客户端按旧分类发帖时，回退到新版块
@@ -584,6 +593,14 @@ def _auto_board_slug(title: str, body: str) -> str:
     修改，运营也可以在人工核验时调整。
     """
     text = f"{title}\n{body}".lower()
+    # 招生/找导师优先于“招募”，避免把导师名额误归到组队版。
+    if any(term in text for term in ("找导师", "求导师", "寻导师", "套磁", "自荐信")):
+        return "admissions-seek"
+    if any(
+        term in text
+        for term in ("招生", "招硕士", "招博士", "招收", "博士后", "研究助理", "推免", "保研")
+    ):
+        return "admissions-recruit"
     if any(term in text for term in ("组队", "招募", "找队友", "合作", "一起做", "缺人")):
         return "collab"
     if any(term in text for term in ("bug", "报错", "建议", "反馈", "打不开", "无法", "站务")):

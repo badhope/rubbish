@@ -99,6 +99,9 @@ const CATEGORY_LABEL: Record<string, string> = {
   discussion: '写作讨论',
   records: '记录与复盘',
   collab: '组队招募',
+  admissions: '招生与导师',
+  'admissions-recruit': '导师招生',
+  'admissions-seek': '学生找导师',
   life: '创作生活',
   site: '站务与反馈',
   // 旧话题兜底

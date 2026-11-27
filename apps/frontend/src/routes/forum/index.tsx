@@ -9,12 +9,14 @@ import {
   Clock3,
   Flame,
   Flag,
+  GraduationCap,
   Lock,
   Megaphone,
   MessageSquare,
   Pin,
   Plus,
   Search,
+  ShieldCheck,
   ThumbsUp,
   TrendingUp,
   X,
@@ -134,6 +136,9 @@ const CATEGORY_STYLE: Record<string, string> = {
   discussion: 'border-primary/25 bg-primary/10 text-primary',
   records: 'bg-muted text-foreground border-border',
   collab: 'border-amber-500/25 bg-amber-500/10 text-amber-800 dark:text-amber-300',
+  admissions: 'border-sky-500/25 bg-sky-500/10 text-sky-800 dark:text-sky-300',
+  'admissions-recruit': 'border-sky-500/25 bg-sky-500/10 text-sky-800 dark:text-sky-300',
+  'admissions-seek': 'border-sky-500/25 bg-sky-500/10 text-sky-800 dark:text-sky-300',
   life: 'bg-muted text-foreground border-border',
   site: 'border-primary/25 bg-primary/10 text-primary',
   // 旧话题未回填前的兜底
@@ -157,6 +162,9 @@ const CATEGORY_LABEL: Record<string, string> = {
   discussion: '写作讨论',
   records: '记录与复盘',
   collab: '组队招募',
+  admissions: '招生与导师',
+  'admissions-recruit': '导师招生',
+  'admissions-seek': '学生找导师',
   life: '创作生活',
   site: '站务与反馈',
   // 旧话题未回填前的兜底
@@ -203,6 +211,19 @@ function plainExcerpt(text: string): string {
 
 const FORUM_DRAFT_KEY = 'rubbish:forum-draft:v1'
 const WEEKLY_PROMPT = '你最近一次推翻重写，是因为什么？'
+const ADMISSIONS_RECRUIT_BODY = `单位 / 城市：
+研究方向：
+名额与层次（硕士 / 博士 / 博士后 / 研究助理）：
+开始时间：
+要求（背景、技能、语言）：
+支持（资助、远程、联合培养）：
+申请方式与截止时间：`
+const ADMISSIONS_SEEK_BODY = `方向：
+教育背景：
+技能与作品（论文 / 代码 / 项目链接）：
+可开始时间：
+希望的合作方式（全日制 / 联合培养 / 远程）：
+联系方式：`
 
 interface ForumDraft {
   title: string
@@ -413,7 +434,11 @@ function ForumListPage() {
     createMut.mutate()
   }
 
-  const openComposer = (seed?: { title?: string; body?: string }) => {
+  const openComposer = (seed?: {
+    title?: string
+    body?: string
+    boardId?: number | null
+  }) => {
     if (!isAuthenticated) {
       void navigate({ to: '/login', search: { redirect: '/forum' } })
       return
@@ -433,12 +458,24 @@ function ForumListPage() {
       body:
         seed?.body ??
         (paperId ? paperDraftBody(paperId) : usableDraft?.body ?? ''),
-      board_id: storedBoardId,
+      board_id: seed?.boardId ?? storedBoardId,
       paper_id: paperId,
       is_fictional: usableDraft?.is_fictional ?? false,
     })
     setBoardPickerOpen(false)
     setOpen(true)
+  }
+
+  const openAdmissionsComposer = (track: 'recruit' | 'seek') => {
+    const board =
+      track === 'recruit'
+        ? leafBoards.find((b) => b.slug === 'admissions-recruit')
+        : leafBoards.find((b) => b.slug === 'admissions-seek')
+    openComposer({
+      title: track === 'recruit' ? '[招生] 方向 + 层次' : '[找导师] 方向 + 自我介绍',
+      body: track === 'recruit' ? ADMISSIONS_RECRUIT_BODY : ADMISSIONS_SEEK_BODY,
+      boardId: board?.id ?? null,
+    })
   }
 
   useEffect(() => {
@@ -483,7 +520,7 @@ function ForumListPage() {
     <div className="mx-auto w-full max-w-6xl space-y-4">
       <PageHeader
         title="主题论坛"
-        description="写法、复盘、组队，以及写作之外的生活。登录即可发布主题帖，不必攒经验。"
+        description="写法、复盘、组队、招生与找导师，以及写作之外的生活。登录即可发布主题帖，不必攒经验。"
         descriptionClassName="hidden sm:block"
         actions={
           <div className="flex flex-wrap items-center gap-2">
@@ -673,6 +710,74 @@ function ForumListPage() {
                 </span>
               ) : null}
             </div>
+
+            {activeBoard?.slug === 'admissions' ? (
+              <div className="border-b bg-sky-500/[0.04] px-4 py-4 sm:px-5">
+                <div className="flex items-start gap-3">
+                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-500/10 text-sky-700 dark:text-sky-300">
+                    <GraduationCap className="h-4.5 w-4.5" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-700 dark:text-sky-300">
+                      Admissions
+                    </p>
+                    <h2 className="mt-0.5 font-serif text-lg tracking-tight">招生与导师</h2>
+                    <p className="mt-1 max-w-2xl text-xs leading-6 text-muted-foreground">
+                      导师发布名额，学生发出自荐。两个子版各自成流：招生帖写清层次、方向、时间与支持；
+                      自荐帖写清背景、技能、可开始时间。站方只提供场地，不做中介，也不为任何名额背书。
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => openAdmissionsComposer('recruit')}
+                    className="group flex items-center justify-between gap-3 rounded-lg border border-sky-500/20 bg-background/70 px-3 py-2.5 text-left transition-colors hover:border-sky-500/45 hover:bg-background"
+                  >
+                    <span className="flex min-w-0 items-center gap-2">
+                      <GraduationCap className="h-4 w-4 shrink-0 text-sky-700 dark:text-sky-300" />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-medium">我是导师，发布招生</span>
+                        <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                          硕士 / 博士 / 博士后 / 研究助理
+                        </span>
+                      </span>
+                    </span>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50 group-hover:text-sky-700" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openAdmissionsComposer('seek')}
+                    className="group flex items-center justify-between gap-3 rounded-lg border border-sky-500/20 bg-background/70 px-3 py-2.5 text-left transition-colors hover:border-sky-500/45 hover:bg-background"
+                  >
+                    <span className="flex min-w-0 items-center gap-2">
+                      <Search className="h-4 w-4 shrink-0 text-sky-700 dark:text-sky-300" />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-medium">我是学生，发布自荐</span>
+                        <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                          方向、材料、可开始时间
+                        </span>
+                      </span>
+                    </span>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50 group-hover:text-sky-700" />
+                  </button>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] leading-5 text-muted-foreground">
+                  <span className="inline-flex items-center gap-1">
+                    <ShieldCheck className="h-3.5 w-3.5 text-sky-700 dark:text-sky-300" />
+                    公开帖别写手机号、身份证和住址；先读栏目说明，再发。
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => updateSearch({ category: 'admissions', q: '栏目说明', page: 1 })}
+                    className="font-medium text-sky-700 hover:underline dark:text-sky-300"
+                  >
+                    读栏目说明
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
           </div>
 
           {listQ.isLoading ? (

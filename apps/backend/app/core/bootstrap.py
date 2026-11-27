@@ -21,7 +21,7 @@ Idempotency:
 
 from __future__ import annotations
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -102,21 +102,31 @@ async def _ensure_admin_user(session: AsyncSession, tenant: Tenant) -> None:
 
 
 async def _ensure_default_forum_boards(session: AsyncSession, tenant: Tenant) -> None:
-    """Seed the community board tree once per tenant.
+    """Ensure every shipped board exists, without touching operator edits.
 
-    Idempotent: an existing tree is left untouched. Migration 060 handles
-    existing production tenants; this covers fresh installs and new tenants.
+    Early versions seeded only when the tenant had no boards at all, which
+    meant a new room added later never reached an existing community. This
+    version inserts missing slugs one by one; existing names, descriptions
+    and sort orders are left alone so admins can keep their own structure.
     """
-    count = await session.scalar(
-        select(func.count()).select_from(ForumBoard).where(ForumBoard.tenant_id == tenant.id)
+    rows = (
+        (
+            await session.execute(
+                select(ForumBoard).where(ForumBoard.tenant_id == tenant.id)
+            )
+        )
+        .scalars()
+        .all()
     )
-    if count:
-        return
-    ids: dict[str, int] = {}
+    existing: dict[str, int] = {b.slug: int(b.id) for b in rows}
+    created = 0
     for slug, parent_slug, name, description, sort_order in BOARD_TREE:
+        if slug in existing:
+            continue
+        parent_id = existing.get(parent_slug) if parent_slug else None
         board = ForumBoard(
             tenant_id=tenant.id,
-            parent_id=ids.get(parent_slug) if parent_slug else None,
+            parent_id=parent_id,
             slug=slug,
             name=name,
             description=description,
@@ -125,9 +135,16 @@ async def _ensure_default_forum_boards(session: AsyncSession, tenant: Tenant) ->
         )
         session.add(board)
         await session.flush()
-        ids[slug] = board.id
-    await session.commit()
-    logger.info("default_forum_boards_created", tenant_id=str(tenant.id), count=len(ids))
+        existing[slug] = int(board.id)
+        created += 1
+    if created:
+        await session.commit()
+        logger.info(
+            "default_forum_boards_ensured",
+            tenant_id=str(tenant.id),
+            created=created,
+            total=len(existing),
+        )
 
 
 async def run_bootstrap() -> None:
