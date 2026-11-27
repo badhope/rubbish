@@ -80,6 +80,26 @@ describe('ManuscriptView', () => {
   expect(container.querySelector('script')).toBeNull()
  })
 
+ it('渲染 pandoc 转出的多行 aligned 公式与编号', async () => {
+  const md = [
+    '## 1 引言',
+    '',
+    '正文。',
+    '',
+    '$$',
+    '\\begin{aligned}',
+    'K &= (\\gamma - 1) m_{0} c^{2} \\\\',
+    '  &= \\frac{1}{2} m_{0} v^{2}',
+    '\\end{aligned}',
+    '\\tag{3.5}',
+    '$$',
+    '',
+  ].join('\n')
+  const { container } = renderView(md)
+  expect(await screen.findByText('正文。')).toBeInTheDocument()
+  expect(container.querySelector('.katex-display')).toBeTruthy()
+  expect(container.textContent).toContain('3.5')
+ })
  it('渲染前剥离 Word 转换残留的 HTML 注释', async () => {
   renderView('# 标题\n\n<!-- Start of picture text -->\n\n正文第一段。\n\n<!--\n多行注释\n也应被剥掉\n-->\n\n正文第二段。')
   expect(await screen.findByText('正文第一段。')).toBeInTheDocument()

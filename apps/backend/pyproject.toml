@@ -1,6 +1,6 @@
 [project]
 name = "rubbish-backend"
-version = "1.20.6"
+version = "1.20.7"
 description = "Rubbish backend — modular multi-tenant academic platform base"
 # Python 版本锁定在 3.12 系列：与 .python-version、Dockerfile、CI 完全一致
 requires-python = ">=3.12,<3.13"
@@ -43,6 +43,9 @@ dependencies = [
     "pymupdf>=1.25",
     "pymupdf4llm>=0.0.20",
     "mammoth>=1.9",
+    # Word OMML 公式转 LaTeX；mammoth 会静默丢公式。binary 包自带 pandoc，
+    # 生产机无需再装系统 pandoc（体积约 155MB，仅在转换进程加载）。
+    "pypandoc-binary==1.17",
     "markdownify>=0.14",
     # 直接 import：export_docs 使用 markdown-it-py 做正文 HTML 渲染；
     # 之前只靠 markdownify 的传递依赖，显式锁定避免上游换实现后断链。

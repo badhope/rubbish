@@ -28,6 +28,7 @@ import math
 import os
 import re
 import tempfile
+import zipfile
 from collections import Counter
 from dataclasses import dataclass
 from io import BytesIO
@@ -251,8 +252,122 @@ def _pdf_quality_gate(text: str) -> tuple[bool, str | None]:
     return True, None
 
 
-def _docx_to_markdown(contents: bytes) -> str | None:
-    """docx → Markdown（mammoth 语义 HTML + markdownify + 段落重组）。"""
+_DOCX_IMAGE_MIME = {
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+    ".svg": "image/svg+xml",
+}
+
+
+def _docx_has_math(contents: bytes) -> bool:
+    """Word 公式在 OOXML 里是 ``m:oMath``；mammoth 会把整段公式静默丢弃。"""
+    try:
+        with zipfile.ZipFile(BytesIO(contents)) as archive:
+            document = archive.read("word/document.xml").decode("utf-8", "ignore")
+    except Exception:
+        return False
+    return "<m:oMath" in document
+
+
+def _inline_docx_images(md: str, media_dir: Path) -> str:
+    """把 pandoc 抽出的图片换回 data URI，并去掉 pandoc 的尺寸属性。
+
+    阅读端只接受 Markdown 图片语法；pandoc 会在路径后追加
+    ``{width=... height=...}``，react-markdown 会把它当正文显示。临时目录
+    在函数返回后删除，所以路径必须在 ``with`` 结束前内联。
+    """
+    pattern = re.compile(r"!\[([^\]]*)\]\(([^)\s]+)(?:\{[^}]*\})?\)")
+
+    def replace(match: re.Match[str]) -> str:
+        alt, raw_path = match.group(1), match.group(2)
+        path = Path(raw_path)
+        if not path.is_absolute():
+            path = media_dir / raw_path
+        if not path.is_file():
+            return match.group(0)
+        mime = _DOCX_IMAGE_MIME.get(path.suffix.lower())
+        if not mime:
+            logger.warning("docx_image_format_unsupported suffix=%s", path.suffix)
+            return f"*[图片未转换：{alt or path.name}]*"
+        b64 = base64.b64encode(path.read_bytes()).decode("ascii")
+        return f"![{alt}](data:{mime};base64,{b64})"
+
+    return pattern.sub(replace, md)
+
+
+_PANDOC_DISPLAY_MATH = re.compile(
+    r"^\$([\s\S]*?)\$(?:[ \t]*(\([A-Za-z0-9.\-]+\)))?$"
+)
+
+_PANDOC_CITATION_LINK = re.compile(r"\[\\\[([0-9][0-9, ]*)\\\]\]\(#_Ref[^)]*\)")
+_PANDOC_CITATION_MARK = re.compile(r"\\\[([0-9][0-9, ]*)\\\]")
+_PANDOC_REF_ANCHOR = re.compile(r"\[\]\{#_Ref[^}]*\}")
+
+
+def _clean_pandoc_reference_artifacts(md: str) -> str:
+    """pandoc 把 Word 交叉引用转成 ``#_Ref`` 锚点，阅读端不认这套扩展。
+
+    Word 的编号引用会变成 ``[\\[1\\]](#_Ref...)``，参考文献条目则带
+    ``[]{#_Ref... .anchor}``；两者在 GFM 里都不是合法写法。这里只清理
+    pandoc 生成的引用锚点，不动正文里的普通方括号。
+    """
+    md = _PANDOC_REF_ANCHOR.sub("", md)
+    md = _PANDOC_CITATION_LINK.sub(r"[\1]", md)
+    md = _PANDOC_CITATION_MARK.sub(r"[\1]", md)
+    return md
+
+
+def _promote_pandoc_display_math(md: str) -> str:
+    """pandoc 把独立成段的 DisplayMath 输出成单 ``$`` 包裹的块。
+
+    remark-math 只把 ``$$`` 识别为块级公式；单 ``$`` 跨行会被当成行内
+    公式，公式里的换行和 ``aligned`` 环境会直接坏掉。独立段落一律还原为
+    ``$$``，Word 的 ``(3.5)`` 编号收进 ``\tag``，渲染时右对齐。
+    """
+    blocks: list[str] = []
+    for block in md.split("\n\n"):
+        stripped = block.strip()
+        match = _PANDOC_DISPLAY_MATH.fullmatch(stripped)
+        if not match:
+            blocks.append(block)
+            continue
+        body, number = match.group(1).strip(), match.group(2)
+        if number:
+            body = f"{body}\n\\tag{{{number[1:-1]}}}"
+        blocks.append(f"$$\n{body}\n$$")
+    return "\n\n".join(blocks)
+
+
+def _docx_to_markdown_pandoc(contents: bytes) -> str | None:
+    """pandoc 把 OMML 公式转成 LaTeX，交给前端 KaTeX 渲染。"""
+    import pypandoc
+
+    with tempfile.TemporaryDirectory(prefix="rubbish-docx-") as tmp:
+        root = Path(tmp)
+        source = root / "source.docx"
+        source.write_bytes(contents)
+        media = root / "media"
+        media.mkdir()
+        md = pypandoc.convert_file(
+            source.as_posix(),
+            "markdown",
+            format="docx",
+            extra_args=[
+                "--wrap=none",
+                "--markdown-headings=atx",
+                f"--extract-media={media.as_posix()}",
+            ],
+        )
+        md = _inline_docx_images(md, media)
+        md = _clean_pandoc_reference_artifacts(md)
+        return _promote_pandoc_display_math(md).strip() or None
+
+
+def _docx_to_markdown_mammoth(contents: bytes) -> str | None:
+    """旧路径：mammoth 语义 HTML + markdownify（不含公式）。"""
     import mammoth
     from markdownify import markdownify
 
@@ -263,6 +378,24 @@ def _docx_to_markdown(contents: bytes) -> str | None:
     md = markdownify(html, heading_style="ATX").strip()
     # docx 的段落通常带空行，但混排文档仍会产生碎行——统一重组一次。
     return reflow_paragraphs(md) or None
+
+
+def _docx_to_markdown(contents: bytes) -> str | None:
+    """docx → Markdown：有公式走 pandoc，无公式保持 mammoth 旧路径。
+
+    为什么按文档分流：pandoc 能保留 OMML 公式，但对复杂图版/字体样式的
+    还原与旧路径不同；无公式的旧稿继续走已验证的 mammoth，避免全量重转
+    带来新的版式回归。pandoc 失败时也退回 mammoth，上传不能因此失败。
+    """
+    if _docx_has_math(contents):
+        try:
+            md = _docx_to_markdown_pandoc(contents)
+            if md:
+                return md
+            logger.warning("docx_pandoc_empty_fallback_mammoth")
+        except Exception:
+            logger.warning("docx_pandoc_failed_fallback_mammoth", exc_info=True)
+    return _docx_to_markdown_mammoth(contents)
 
 
 def _normalize_markdown(md: str) -> str:
