@@ -3,12 +3,14 @@ import { Link } from '@tanstack/react-router'
 import { Gavel } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAdminAppeals, useDecideAppeal } from '@/hooks/api/use-modules'
+import { useAdminPreflight } from '@/hooks/use-admin-preflight'
 import type { AppealItem, AppealKind, AppealStatus } from '@/lib/types'
 import { extractError, formatDateTime } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { EmptyState } from '@/components/common/state'
+import { PreflightResults } from '@/components/admin/preflight-results'
 import {
   Dialog,
   DialogContent,
@@ -54,6 +56,7 @@ function DecisionDialog({
   onClose: () => void
 }) {
   const decide = useDecideAppeal()
+  const preflight = useAdminPreflight()
   const [note, setNote] = useState('')
   const [error, setError] = useState('')
   const withdraw = target.kind === 'withdraw' && decision === 'accepted'
@@ -65,6 +68,19 @@ function DecisionDialog({
       return
     }
     try {
+      const check = await preflight.run('appeal_decision', {
+        appeal_id: target.id,
+        status: decision,
+        editor_note: note.trim(),
+      })
+      if (!check) {
+        setError(preflight.error || '检查没有完成，可再试一次。')
+        return
+      }
+      if (check.status === 'fail') {
+        setError(check.summary)
+        return
+      }
       await decide.mutateAsync({
         appealId: target.id,
         status: decision,
@@ -108,6 +124,8 @@ function DecisionDialog({
           />
           <p className="text-right text-[11px] text-muted-foreground">{note.trim().length}/20 字起</p>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
+          {preflight.error ? <p className="text-sm text-destructive">{preflight.error}</p> : null}
+          <PreflightResults result={preflight.result} />
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>取消</Button>

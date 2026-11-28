@@ -5,8 +5,10 @@ import { toast } from 'sonner'
 
 import { api } from '@/lib/api'
 import { extractError } from '@/lib/utils'
+import { preflightFailureSummary, useAdminPreflight } from '@/hooks/use-admin-preflight'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
+import { PreflightResults } from '@/components/admin/preflight-results'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -60,6 +62,8 @@ function fmtTime(iso: string): string {
 
 export default function AdminReportsPage() {
   const qc = useQueryClient()
+  const preflight = useAdminPreflight()
+  const quickPreflight = useAdminPreflight()
   const [tab, setTab] = useState<ReportStatus>('open')
   const [target, setTarget] = useState<{ row: ForumReportRow; action: ReportAction } | null>(null)
   const [note, setNote] = useState('')
@@ -171,13 +175,23 @@ export default function AdminReportsPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() =>
-                        handleMut.mutate({
+                      onClick={async () => {
+                        const check = await quickPreflight.run('report_disposition', {
                           id: row.id,
-                          source: row.source,
+                          source: row.source ?? 'forum',
                           action: 'dismiss',
+                          note: '',
                         })
-                      }
+                        if (!check) {
+                          toast.error(quickPreflight.error || '检查没有完成，可再试一次。')
+                          return
+                        }
+                        if (check.status === 'fail') {
+                          toast.info(preflightFailureSummary(check))
+                          return
+                        }
+                        handleMut.mutate({ id: row.id, source: row.source, action: 'dismiss' })
+                      }}
                       disabled={handleMut.isPending}
                     >
                       <Check className="h-3.5 w-3.5" />
@@ -186,9 +200,10 @@ export default function AdminReportsPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() =>
+                      onClick={() => {
+                        preflight.reset()
                         setTarget({ row, action: 'remove_content' })
-                      }
+                      }}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                       移除内容
@@ -196,7 +211,10 @@ export default function AdminReportsPage() {
                     <Button
                       size="sm"
                       variant="destructive"
-                      onClick={() => setTarget({ row, action: 'suspend_author' })}
+                      onClick={() => {
+                        preflight.reset()
+                        setTarget({ row, action: 'suspend_author' })
+                      }}
                     >
                       <Ban className="h-3.5 w-3.5" />
                       停用作者
@@ -228,21 +246,30 @@ export default function AdminReportsPage() {
             onChange={(e) => setNote(e.target.value)}
             rows={3}
           />
+          {preflight.error ? <p className="text-sm text-destructive">{preflight.error}</p> : null}
+          <PreflightResults result={preflight.result} />
           <DialogFooter>
             <Button variant="outline" onClick={() => setTarget(null)}>
               取消
             </Button>
             <Button
               variant={target?.action === 'suspend_author' ? 'destructive' : 'default'}
-              onClick={() =>
-                target &&
+              onClick={async () => {
+                if (!target) return
+                const check = await preflight.run('report_disposition', {
+                  id: target.row.id,
+                  source: target.row.source ?? 'forum',
+                  action: target.action,
+                  note: note.trim(),
+                })
+                if (!check || check.status === 'fail') return
                 handleMut.mutate({
                   id: target.row.id,
                   source: target.row.source,
                   action: target.action,
                   note: note.trim() || undefined,
                 })
-              }
+              }}
               disabled={handleMut.isPending}
             >
               {handleMut.isPending ? '处理中…' : '确认'}

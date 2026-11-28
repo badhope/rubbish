@@ -3,6 +3,7 @@ import { Check, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { extractError, formatDateTime } from '@/lib/utils'
+import { preflightFailureSummary, useAdminPreflight } from '@/hooks/use-admin-preflight'
 import {
   useAdminComments,
   useAdminCommentCounts,
@@ -13,6 +14,7 @@ import {
 import { PageHeader } from '@/components/common/page-header'
 import { Pagination } from '@/components/common/pagination'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
+import { PreflightResults } from '@/components/admin/preflight-results'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -53,9 +55,24 @@ export default function AdminCommentsPage() {
   const { data, isLoading, isError, refetch } = useAdminComments(tab, page)
   const { data: counts } = useAdminCommentCounts()
   const moderateMut = useModerateComment()
+  const rejectPreflight = useAdminPreflight()
+  const quickPreflight = useAdminPreflight()
 
   async function onApprove(row: AdminCommentRow) {
     try {
+      const check = await quickPreflight.run('comment_moderation', {
+        comment_id: row.id,
+        action: 'approve',
+        note: '',
+      })
+      if (!check) {
+        toast.error(quickPreflight.error || '检查没有完成，可再试一次。')
+        return
+      }
+      if (check.status === 'fail') {
+        toast.info(preflightFailureSummary(check))
+        return
+      }
       await moderateMut.mutateAsync({ commentId: row.id, action: 'approve' })
       toast.success('已通过：评论保留在前台')
     } catch (err) {
@@ -66,6 +83,16 @@ export default function AdminCommentsPage() {
   async function onConfirmReject() {
     if (!rejectTarget) return
     try {
+      const check = await rejectPreflight.run('comment_moderation', {
+        comment_id: rejectTarget.id,
+        action: 'reject',
+        note: rejectNote.trim(),
+      })
+      if (!check) {
+        toast.error(rejectPreflight.error || '检查没有完成，可再试一次。')
+        return
+      }
+      if (check.status === 'fail') return
       await moderateMut.mutateAsync({
         commentId: rejectTarget.id,
         action: 'reject',
@@ -204,6 +231,8 @@ export default function AdminCommentsPage() {
               onChange={(e) => setRejectNote(e.target.value)}
               placeholder="例：含推广链接 / 人身攻击 / 与主题无关"
             />
+            {rejectPreflight.error ? <p className="text-sm text-destructive">{rejectPreflight.error}</p> : null}
+            <PreflightResults result={rejectPreflight.result} />
           </div>
           <DialogFooter>
             <Button

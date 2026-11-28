@@ -445,9 +445,13 @@ logger.info("module_router_mounted", module="workbench", prefix="/api")
 
 # --- 评论审核后台（/api/admin/comments）：comments 模块的 admin 子路由，
 #     不经过模块 registry（registry 每模块只挂一个 router），这里显式挂载。
+from app.interfaces.http.admin_preflight.routes import (  # noqa: E402
+    router as admin_preflight_router,
+)
 from app.interfaces.http.comments.admin_routes import router as comments_admin_router  # noqa: E402
 
 app.include_router(comments_admin_router, prefix="/api")
+app.include_router(admin_preflight_router, prefix="/api")
 logger.info("module_router_mounted", module="comments_admin", prefix="/api/admin/comments")
 
 

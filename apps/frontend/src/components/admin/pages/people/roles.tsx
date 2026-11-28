@@ -5,8 +5,10 @@ import { ArrowUpRight, CheckCircle2, ChevronLeft, ChevronRight, Clock3, UserRoun
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import { useDisciplines, usePublicExpertise } from '@/hooks/api/use-modules'
+import { useAdminPreflight } from '@/hooks/use-admin-preflight'
 import { extractError } from '@/lib/utils'
 import type { AdminRoleApplications, RoleApplicationItem } from '@/lib/types'
+import { PreflightResults } from '@/components/admin/preflight-results'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState, LoadingSkeleton } from '@/components/common/state'
 import { Badge } from '@/components/ui/badge'
@@ -65,6 +67,7 @@ export default function RolesPage({
   } | null>(null)
   const [note, setNote] = useState('')
   const qc = useQueryClient()
+  const preflight = useAdminPreflight()
   const focused = Boolean(highlightApplicationId)
 
   // 通知深链按 id 定向取一条，避免目标排在 100 条之后时整页找不到。
@@ -331,6 +334,7 @@ export default function RolesPage({
                       onClick={() => {
                         setTarget({ item, decision: 'approve' })
                         setNote('')
+                        preflight.reset()
                       }}
                     >
                       <CheckCircle2 className="h-4 w-4" />
@@ -342,6 +346,7 @@ export default function RolesPage({
                       onClick={() => {
                         setTarget({ item, decision: 'reject' })
                         setNote('')
+                        preflight.reset()
                       }}
                     >
                       <XCircle className="h-4 w-4" />
@@ -399,7 +404,7 @@ export default function RolesPage({
                 : '建议写一句原因，申请人会在通知里看到。'}
             </DialogDescription>
           </DialogHeader>
-          <div>
+          <div className="space-y-3">
             <Textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
@@ -408,6 +413,8 @@ export default function RolesPage({
               placeholder={target?.decision === 'approve' ? '可选：欢迎或说明接下来做什么' : '例：互评说明太笼统，请补充具体方向后再申请。'}
             />
             <p className="mt-1 text-right text-xs text-muted-foreground">{note.length} / 500</p>
+            {preflight.error ? <p className="text-sm text-destructive">{preflight.error}</p> : null}
+            <PreflightResults result={preflight.result} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setTarget(null)} disabled={decide.isPending}>
@@ -416,8 +423,15 @@ export default function RolesPage({
             <Button
               variant={target?.decision === 'reject' ? 'destructive' : 'default'}
               disabled={decide.isPending || (target?.decision === 'reject' && note.trim().length === 0)}
-              onClick={() => {
+              onClick={async () => {
                 if (!target) return
+                const check = await preflight.run('role_application', {
+                  application_id: target.item.id,
+                  decision: target.decision,
+                  note: note.trim(),
+                })
+                if (!check) return
+                if (check.status === 'fail') return
                 decide.mutate({ id: target.item.id, decision: target.decision, note: note.trim() })
               }}
             >

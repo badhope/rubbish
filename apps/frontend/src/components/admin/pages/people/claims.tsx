@@ -2,10 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { useAdminClaims, useDecideClaim, useAssignOwner } from '@/hooks/api/use-modules'
+import { preflightFailureSummary, useAdminPreflight } from '@/hooks/use-admin-preflight'
 import type { AdminClaimEntry } from '@/lib/types'
 import { extractError, formatDateTime } from '@/lib/utils'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
+import { PreflightResults } from '@/components/admin/preflight-results'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -49,6 +51,9 @@ export default function ClaimsAdminPage({ highlightClaimId }: { highlightClaimId
   const [statusFilter, setStatusFilter] = useState<'pending' | 'approved' | 'rejected'>('pending')
   const decideMut = useDecideClaim()
   const assignMut = useAssignOwner()
+  const decidePreflight = useAdminPreflight()
+  const assignPreflight = useAdminPreflight()
+  const quickPreflight = useAdminPreflight()
 
   const [rejectTarget, setRejectTarget] = useState<AdminClaimEntry | null>(null)
   const [rejectNote, setRejectNote] = useState('')
@@ -77,6 +82,16 @@ export default function ClaimsAdminPage({ highlightClaimId }: { highlightClaimId
   const onReject = async () => {
     if (!rejectTarget) return
     try {
+      const check = await decidePreflight.run('claim_decision', {
+        claim_id: rejectTarget.id,
+        action: 'reject',
+        note: rejectNote.trim(),
+      })
+      if (!check) {
+        toast.error(decidePreflight.error || '检查没有完成，可再试一次。')
+        return
+      }
+      if (check.status === 'fail') return
       await decideMut.mutateAsync({
         claimId: rejectTarget.id,
         body: { approve: false, note: rejectNote.trim() || undefined },
@@ -91,6 +106,19 @@ export default function ClaimsAdminPage({ highlightClaimId }: { highlightClaimId
 
   const onApprove = async (row: AdminClaimEntry) => {
     try {
+      const check = await quickPreflight.run('claim_decision', {
+        claim_id: row.id,
+        action: 'approve',
+        note: '',
+      })
+      if (!check) {
+        toast.error(quickPreflight.error || '检查没有完成，可再试一次。')
+        return
+      }
+      if (check.status === 'fail') {
+        toast.info(preflightFailureSummary(check))
+        return
+      }
       await decideMut.mutateAsync({
         claimId: row.id,
         body: { approve: true, author_position: row.author_position },
@@ -105,10 +133,20 @@ export default function ClaimsAdminPage({ highlightClaimId }: { highlightClaimId
     if (!assignTarget) return
     const uid = Number(assignUserId.trim())
     if (!uid || Number.isNaN(uid)) {
-      toast.error('请填写正确的用户 ID')
+      toast.info('请填写正确的用户 ID')
       return
     }
     try {
+      const check = await assignPreflight.run('claim_assign', {
+        resource_id: assignTarget.resource_id,
+        user_id: uid,
+        author_position: assignPosition,
+      })
+      if (!check) {
+        toast.error(assignPreflight.error || '检查没有完成，可再试一次。')
+        return
+      }
+      if (check.status === 'fail') return
       await assignMut.mutateAsync({
         resourceId: assignTarget.resource_id,
         body: { user_id: uid, author_position: assignPosition },
@@ -184,6 +222,7 @@ export default function ClaimsAdminPage({ highlightClaimId }: { highlightClaimId
                         variant="outline"
                         disabled={decideMut.isPending}
                         onClick={() => {
+                          decidePreflight.reset()
                           setRejectTarget(row)
                           setRejectNote('')
                         }}
@@ -195,6 +234,7 @@ export default function ClaimsAdminPage({ highlightClaimId }: { highlightClaimId
                         variant="ghost"
                         disabled={assignMut.isPending}
                         onClick={() => {
+                          assignPreflight.reset()
                           setAssignTarget(row)
                           setAssignPosition(row.author_position || 1)
                           setAssignUserId('')
@@ -253,6 +293,8 @@ export default function ClaimsAdminPage({ highlightClaimId }: { highlightClaimId
               onChange={(e) => setRejectNote(e.target.value)}
               placeholder="例：未能确认您与该文章的作者关系，请补充证明材料后重新申请。"
             />
+            {decidePreflight.error ? <p className="text-sm text-destructive">{decidePreflight.error}</p> : null}
+            <PreflightResults result={decidePreflight.result} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => { setRejectTarget(null); setRejectNote('') }}>
@@ -307,6 +349,8 @@ export default function ClaimsAdminPage({ highlightClaimId }: { highlightClaimId
                 onChange={(e) => setAssignPosition(Number(e.target.value))}
               />
             </div>
+            {assignPreflight.error ? <p className="text-sm text-destructive">{assignPreflight.error}</p> : null}
+            <PreflightResults result={assignPreflight.result} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAssignTarget(null)}>取消</Button>

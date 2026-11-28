@@ -58,11 +58,11 @@ export default function AuditLogsPage() {
 
   const apply = () => {
     if (draft.start && draft.end && draft.start > draft.end) {
-      toast.error('开始日期不能晚于结束日期')
+      toast.info('开始日期不能晚于结束日期')
       return
     }
     if (draft.actor.trim() && (!Number.isInteger(Number(draft.actor)) || Number(draft.actor) <= 0)) {
-      toast.error('操作者 ID 需为正整数')
+      toast.info('操作者 ID 需为正整数')
       return
     }
     setApplied(toFilters(draft))

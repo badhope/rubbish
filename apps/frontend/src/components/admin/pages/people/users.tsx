@@ -12,12 +12,14 @@ import {
   useUpdateUserAreas,
 } from '@/hooks/api/use-modules'
 import { useAuth } from '@/hooks/use-auth'
+import { preflightFailureSummary, useAdminPreflight } from '@/hooks/use-admin-preflight'
 import type { AssignableRole, UserResponse } from '@/lib/types'
 import { extractError, formatDateTime, inferTotalPagesFromFullPage } from '@/lib/utils'
 import { roleLabel } from '@/lib/role-labels'
 import { DisciplinePicker } from '@/components/settings/discipline-picker'
 import { PageHeader } from '@/components/common/page-header'
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
+import { PreflightResults } from '@/components/admin/preflight-results'
 import { Pagination } from '@/components/common/pagination'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
 import { Badge } from '@/components/ui/badge'
@@ -125,6 +127,10 @@ export default function AdminUsersPage() {
   const [areasTags, setAreasTags] = useState('')
   const [areasError, setAreasError] = useState('')
   const { user, isAdmin } = useAuth()
+  const createPreflight = useAdminPreflight()
+  const grantPreflight = useAdminPreflight()
+  const areasPreflight = useAdminPreflight()
+  const quickPreflight = useAdminPreflight()
 
   // 后端返回裸数组无 meta，totalPages 用「当前页是否满页」推断（与审计日志页共用）。
   const totalPages = inferTotalPagesFromFullPage(data ?? [], PAGE_SIZE, page)
@@ -135,6 +141,15 @@ export default function AdminUsersPage() {
 
   const onToggleActive = async (u: UserResponse) => {
     try {
+      const check = await quickPreflight.run('member_active', { user_id: u.id, is_active: !u.is_active })
+      if (!check) {
+        toast.error(quickPreflight.error || '检查没有完成，可再试一次。')
+        return
+      }
+      if (check.status === 'fail') {
+        toast.info(preflightFailureSummary(check))
+        return
+      }
       await setActiveMut.mutateAsync({ userId: u.id, isActive: !u.is_active })
       toast.success(u.is_active ? '已禁用' : '已启用')
     } catch (err) {
@@ -144,6 +159,15 @@ export default function AdminUsersPage() {
 
   const onToggleAdmin = async (u: UserResponse) => {
     try {
+      const check = await quickPreflight.run('member_admin', { user_id: u.id, is_admin: !u.is_admin })
+      if (!check) {
+        toast.error(quickPreflight.error || '检查没有完成，可再试一次。')
+        return
+      }
+      if (check.status === 'fail') {
+        toast.info(preflightFailureSummary(check))
+        return
+      }
       await setAdminMut.mutateAsync({ userId: u.id, isAdmin: !u.is_admin })
       toast.success(u.is_admin ? '已取消管理员' : '已设为平台管理员')
     } catch (err) {
@@ -158,6 +182,19 @@ export default function AdminUsersPage() {
     has: boolean,
   ) => {
     try {
+      const check = await quickPreflight.run('member_role', {
+        user_id: u.id,
+        role,
+        action: has ? 'revoke' : 'assign',
+      })
+      if (!check) {
+        toast.error(quickPreflight.error || '检查没有完成，可再试一次。')
+        return
+      }
+      if (check.status === 'fail') {
+        toast.info(preflightFailureSummary(check))
+        return
+      }
       if (has) {
         await revokeRoleMut.mutateAsync({ userId: u.id, role })
         toast.success(`已撤销 ${roleLabel(role)} 角色`)
@@ -176,6 +213,7 @@ export default function AdminUsersPage() {
     setAreasReviewer(u.reviewer_disciplines ?? [])
     setAreasTags((u.reviewer_tags ?? []).join('、'))
     setAreasError('')
+    areasPreflight.reset()
     setOpenUserId(null)
   }
 
@@ -187,7 +225,7 @@ export default function AdminUsersPage() {
         actions={
           <div className="flex items-center gap-2">
             {data ? <Badge variant="secondary">本页 {data.length} 人</Badge> : null}
-            <Button size="sm" onClick={() => setCreateOpen(true)}>
+            <Button size="sm" onClick={() => { createPreflight.reset(); setCreateOpen(true) }}>
               <Plus className="mr-1 h-4 w-4" />
               新增成员
             </Button>
@@ -340,6 +378,7 @@ export default function AdminUsersPage() {
                               setGrantPoints('100')
                               setGrantNote('')
                               setGrantError('')
+                              grantPreflight.reset()
                               setOpenUserId(null)
                             }}
                           >
@@ -443,6 +482,8 @@ export default function AdminUsersPage() {
               />
             </div>
             {createError && <p className="text-sm text-destructive">{createError}</p>}
+            {createPreflight.error ? <p className="text-sm text-destructive">{createPreflight.error}</p> : null}
+            <PreflightResults result={createPreflight.result} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateOpen(false)}>
@@ -457,6 +498,20 @@ export default function AdminUsersPage() {
                   return
                 }
                 try {
+                  const check = await createPreflight.run('member_create', {
+                    email: createForm.email.trim(),
+                    username: createForm.username.trim(),
+                    role: createForm.role,
+                    note: createForm.note.trim(),
+                  })
+                  if (!check) {
+                    setCreateError(createPreflight.error || '检查没有完成，可再试一次。')
+                    return
+                  }
+                  if (check.status === 'fail') {
+                    setCreateError(check.summary)
+                    return
+                  }
                   const res = await createUserMut.mutateAsync({
                     email: createForm.email.trim(),
                     username: createForm.username.trim(),
@@ -519,6 +574,8 @@ export default function AdminUsersPage() {
               <p className="text-right text-xs text-muted-foreground">{grantNote.length}/200</p>
             </div>
             {grantError && <p className="text-sm text-destructive">{grantError}</p>}
+            {grantPreflight.error ? <p className="text-sm text-destructive">{grantPreflight.error}</p> : null}
+            <PreflightResults result={grantPreflight.result} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setGrantTarget(null)}>取消</Button>
@@ -538,6 +595,19 @@ export default function AdminUsersPage() {
                   return
                 }
                 try {
+                  const check = await grantPreflight.run('member_xp', {
+                    user_id: grantTarget.id,
+                    points,
+                    note,
+                  })
+                  if (!check) {
+                    setGrantError(grantPreflight.error || '检查没有完成，可再试一次。')
+                    return
+                  }
+                  if (check.status === 'fail') {
+                    setGrantError(check.summary)
+                    return
+                  }
                   await grantXpMut.mutateAsync({ userId: grantTarget.id, points, note })
                   toast.success(`已给 ${grantTarget.username} 发放 ${points} 经验`)
                   setGrantTarget(null)
@@ -596,6 +666,8 @@ export default function AdminUsersPage() {
               </p>
             </div>
             {areasError ? <p className="text-sm text-destructive">{areasError}</p> : null}
+            {areasPreflight.error ? <p className="text-sm text-destructive">{areasPreflight.error}</p> : null}
+            <PreflightResults result={areasPreflight.result} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAreasTarget(null)}>
@@ -607,6 +679,24 @@ export default function AdminUsersPage() {
                 if (!areasTarget) return
                 setAreasError('')
                 try {
+                  const check = await areasPreflight.run('member_areas', {
+                    user_id: areasTarget.id,
+                    subject_disciplines: areasSubjects,
+                    reviewer_disciplines: areasReviewer,
+                    reviewer_tags: areasTags
+                      .split(/[,，;；、\n]/)
+                      .map((tag) => tag.trim())
+                      .filter(Boolean)
+                      .slice(0, 20),
+                  })
+                  if (!check) {
+                    setAreasError(areasPreflight.error || '检查没有完成，可再试一次。')
+                    return
+                  }
+                  if (check.status === 'fail') {
+                    setAreasError(check.summary)
+                    return
+                  }
                   await updateAreasMut.mutateAsync({
                     userId: areasTarget.id,
                     subject_disciplines: areasSubjects,

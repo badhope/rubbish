@@ -23,10 +23,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { useAdminShopItems, useCreateShopItem, useUpdateShopItem } from '@/hooks/api/use-shop'
 import type { AdminShopItem } from '@/hooks/api/use-shop'
 import { extractError } from '@/lib/utils'
+import { preflightFailureSummary, useAdminPreflight } from '@/hooks/use-admin-preflight'
 import { uploadMediaImage } from '@/lib/media'
 import { Gift, Pencil, Plus, Power, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
+import { PreflightResults } from '@/components/admin/preflight-results'
 
 type ItemForm = {
   name: string
@@ -96,6 +98,8 @@ export function ShopCatalogCard() {
   const items = useAdminShopItems()
   const createItem = useCreateShopItem()
   const updateItem = useUpdateShopItem()
+  const preflight = useAdminPreflight()
+  const quickPreflight = useAdminPreflight()
   const [editor, setEditor] = useState<{ item: AdminShopItem | null } | null>(null)
   const [toggleTarget, setToggleTarget] = useState<AdminShopItem | null>(null)
   const [catalogView, setCatalogView] = useState<'active' | 'archived'>('active')
@@ -121,11 +125,13 @@ export function ShopCatalogCard() {
   }
 
   const openCreate = () => {
+    preflight.reset()
     setForm(EMPTY_FORM)
     setEditor({ item: null })
   }
 
   const openEdit = (item: AdminShopItem) => {
+    preflight.reset()
     setForm(toForm(item))
     setEditor({ item })
   }
@@ -133,7 +139,7 @@ export function ShopCatalogCard() {
   const save = async () => {
     const error = validate(form)
     if (error) {
-      toast.error(error)
+      toast.info(error)
       return
     }
     const payload = {
@@ -147,6 +153,15 @@ export function ShopCatalogCard() {
       sort_order: Number(form.sort_order.trim() || 0),
     }
     try {
+      const check = await preflight.run('shop_item', {
+        ...(editing ? { item_id: editing.id } : {}),
+        ...payload,
+      })
+      if (!check) {
+        toast.error(preflight.error || '检查没有完成，可再试一次。')
+        return
+      }
+      if (check.status === 'fail') return
       if (editing) {
         await updateItem.mutateAsync({
           id: editing.id,
@@ -167,11 +182,11 @@ export function ShopCatalogCard() {
   const uploadCover = async (file: File | undefined) => {
     if (!file) return
     if (!['image/png', 'image/jpeg', 'image/gif', 'image/webp'].includes(file.type)) {
-      toast.error('只支持 PNG / JPEG / GIF / WebP 图片')
+      toast.info('只支持 PNG / JPEG / GIF / WebP 图片')
       return
     }
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('封面不能超过 5MB')
+      toast.info('封面不能超过 5MB')
       return
     }
     setCoverUploading(true)
@@ -188,6 +203,25 @@ export function ShopCatalogCard() {
 
   const toggleActive = async (item: AdminShopItem) => {
     try {
+      const check = await quickPreflight.run('shop_item', {
+        item_id: item.id,
+        name: item.name,
+        description: item.description,
+        price_coin: item.price_coin,
+        stock: item.stock,
+        effect: item.effect,
+        cover_url: item.cover_url ?? '',
+        sort_order: item.sort_order,
+        is_active: !item.is_active,
+      })
+      if (!check) {
+        toast.error(quickPreflight.error || '检查没有完成，可再试一次。')
+        return
+      }
+      if (check.status === 'fail') {
+        toast.info(preflightFailureSummary(check))
+        return
+      }
       await updateItem.mutateAsync({ id: item.id, is_active: !item.is_active })
       toast.success(item.is_active ? '已下架' : '已重新上架')
     } catch (err) {
@@ -455,6 +489,8 @@ export function ShopCatalogCard() {
                 </div>
               ) : null}
             </div>
+            {preflight.error ? <p className="text-sm text-destructive">{preflight.error}</p> : null}
+            <PreflightResults result={preflight.result} />
             <label className="flex cursor-pointer items-center gap-2 text-sm">
               <input
                 type="checkbox"

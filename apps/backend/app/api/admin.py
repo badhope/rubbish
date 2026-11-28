@@ -35,7 +35,6 @@ from app.core.email_templates import account_created
 from app.core.key_rotation import _active_secret_keys, _signing_key, reload_settings
 from app.core.logging import get_logger
 from app.core.security import hash_password
-from app.domain.review.blinding import get_review_mode, set_review_mode
 from app.core.site_settings import (
     generate_registration_invite_code,
     get_access_policy,
@@ -46,6 +45,7 @@ from app.core.site_settings import (
     set_site_flag,
     set_site_text,
 )
+from app.domain.review.blinding import get_review_mode, set_review_mode
 from app.models import AuditLog, Role, User, UserRole
 from app.schemas import (
     AdminUserAreasUpdate,
@@ -153,9 +153,7 @@ async def security_status(
         "mainland_gate_enabled": get_access_policy().mainland_gate_enabled,
         "region_access_enabled": get_access_policy().region_access_enabled,
         "registration_invite_required": get_access_policy().registration_invite_required,
-        "registration_email_code_required": (
-            get_access_policy().registration_email_code_required
-        ),
+        "registration_email_code_required": (get_access_policy().registration_email_code_required),
         "require_2fa_for_admin": settings.require_2fa_for_admin,
         "admin_total": admin_total,
         "admin_without_2fa": admin_without_2fa,
@@ -964,9 +962,7 @@ async def export_monthly_ops_report(
     )
 
 
-async def _site_settings_payload(
-    db: AsyncSession, tenant_id: UUID
-) -> SiteSettingsResponse:
+async def _site_settings_payload(db: AsyncSession, tenant_id: UUID) -> SiteSettingsResponse:
     flags = await get_all_site_flags(db, tenant_id)
     texts = await get_site_texts(db, tenant_id)
     return SiteSettingsResponse(**flags, **texts)
@@ -1062,7 +1058,10 @@ async def check_site_settings(
             "fail",
             "邀请码开关已打开，但当前没有可用邀请码；保存后新用户无法注册。",
         )
-    elif not merged["registration_email_code_required"] and not merged["captcha_required_for_registration"]:
+    elif (
+        not merged["registration_email_code_required"]
+        and not merged["captcha_required_for_registration"]
+    ):
         add(
             "registration",
             "注册链路",
@@ -1162,7 +1161,9 @@ async def update_site_settings(
     for key, value in flag_updates.items():
         await set_site_flag(db, tenant_id, key, value)
     if "registration_invite_code" in updates:
-        updates["registration_invite_code"] = str(updates["registration_invite_code"]).strip().upper()
+        updates["registration_invite_code"] = (
+            str(updates["registration_invite_code"]).strip().upper()
+        )
         await set_site_text(
             db, tenant_id, "registration_invite_code", updates["registration_invite_code"]
         )

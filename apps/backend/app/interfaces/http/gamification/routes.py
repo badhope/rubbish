@@ -15,6 +15,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import (
+    PERMISSION_RANK,
+    effective_permission_role,
     get_current_user,
     require_chief_editor,
     require_tenant_id,
@@ -51,9 +53,13 @@ async def require_shop_manager(
     """积分后台专用：站务组，或被单独授予 shop_manager 的账号。"""
     if current_user.is_admin:
         return current_user
-    if await user_has_role(db, current_user, "editor_in_chief") or await user_has_role(
-        db, current_user, "shop_manager"
+    # 五层轴以 users.role 为准；只查 user_roles 会把“只设了角色档位”的主编挡在外面。
+    if (
+        PERMISSION_RANK[await effective_permission_role(db, current_user)]
+        >= PERMISSION_RANK["editor_in_chief"]
     ):
+        return current_user
+    if await user_has_role(db, current_user, "shop_manager"):
         return current_user
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,

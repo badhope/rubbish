@@ -17,6 +17,7 @@ import { toast } from 'sonner'
 
 import { api } from '@/lib/api'
 import { extractError } from '@/lib/utils'
+import { preflightFailureSummary, useAdminPreflight } from '@/hooks/use-admin-preflight'
 import { plainTextPreview } from '@/lib/text-preview'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
@@ -56,6 +57,7 @@ function fmtTime(iso: string | null): string {
 
 export default function ForumInspectionPage() {
   const qc = useQueryClient()
+  const preflight = useAdminPreflight()
   const [page, setPage] = useState(1)
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<'latest' | 'hot'>('latest')
@@ -95,6 +97,19 @@ export default function ForumInspectionPage() {
         .some((value) => String(value).toLowerCase().includes(needle)),
     )
   }, [query, rows])
+
+  async function toggleTopic(row: TopicRow, patch: { is_pinned?: boolean; is_locked?: boolean }) {
+    const check = await preflight.run('forum_topic', { topic_id: row.id, ...patch })
+    if (!check) {
+      toast.error(preflight.error || '检查没有完成，可再试一次。')
+      return
+    }
+    if (check.status === 'fail') {
+      toast.info(preflightFailureSummary(check))
+      return
+    }
+    moderate.mutate({ id: row.id, ...patch })
+  }
 
   return (
     <div>
@@ -205,7 +220,7 @@ export default function ForumInspectionPage() {
                       size="sm"
                       variant="outline"
                       disabled={moderate.isPending}
-                      onClick={() => moderate.mutate({ id: row.id, is_pinned: !row.is_pinned })}
+                      onClick={() => void toggleTopic(row, { is_pinned: !row.is_pinned })}
                     >
                       {row.is_pinned ? <PinOff className="h-3.5 w-3.5" /> : <Pin className="h-3.5 w-3.5" />}
                       {row.is_pinned ? '取消置顶' : '置顶'}
@@ -214,7 +229,7 @@ export default function ForumInspectionPage() {
                       size="sm"
                       variant="outline"
                       disabled={moderate.isPending}
-                      onClick={() => moderate.mutate({ id: row.id, is_locked: !row.is_locked })}
+                      onClick={() => void toggleTopic(row, { is_locked: !row.is_locked })}
                     >
                       {row.is_locked ? <LockOpen className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
                       {row.is_locked ? '解锁' : '锁定'}

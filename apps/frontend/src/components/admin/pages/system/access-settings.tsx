@@ -308,8 +308,9 @@ export default function AccessSettingsPage() {
       const result = await check.mutateAsync(patch)
       setChecks(result)
       if (!quiet) {
-        if (result.status === 'fail') toast.error(result.summary)
-        else if (result.status === 'warn') toast.warning(result.summary)
+        if (result.status === 'fail') {
+          // 自检卡就在页面上，不再用全局提示重复一遍。
+        } else if (result.status === 'warn') toast.info(result.summary)
         else toast.success(result.summary)
       }
       return result
@@ -327,7 +328,7 @@ export default function AccessSettingsPage() {
     const result = await runCheck(patch, true)
     if (!result || result.status === 'fail') {
       setChecks(result)
-      toast.warning(result?.summary ?? '自检没有通过，设置未保存')
+      toast.info(result?.summary ?? '自检没有通过，设置未保存')
       return
     }
     setBusyKey(key)
@@ -364,7 +365,7 @@ export default function AccessSettingsPage() {
     const result = await runCheck({ registration_invite_code: normalized }, true)
     if (!result || result.status === 'fail') {
       setChecks(result)
-      toast.warning(result?.summary ?? '自检没有通过，邀请码未保存')
+      toast.info(result?.summary ?? '自检没有通过，邀请码未保存')
       return
     }
     setBusyKey('registration_invite_code')
@@ -429,7 +430,7 @@ export default function AccessSettingsPage() {
       await navigator.clipboard.writeText(inviteCode)
       toast.success('已复制到剪贴板')
     } catch {
-      toast.error('复制失败，请手动选中')
+      toast.info('复制失败，请手动选中')
     }
   }
 

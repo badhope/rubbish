@@ -12,10 +12,12 @@ import {
 } from '@/hooks/api/use-shop'
 import type { AdminShopPurchase, ShopPurchaseStatus } from '@/hooks/api/use-shop'
 import { extractError } from '@/lib/utils'
+import { useAdminPreflight } from '@/hooks/use-admin-preflight'
 import { ShopCatalogCard } from '@/components/admin/pages/economy/shop-catalog'
 import { PageHeader } from '@/components/common/page-header'
 import { Loading } from '@/components/common/state'
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
+import { PreflightResults } from '@/components/admin/preflight-results'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -41,6 +43,9 @@ export default function AdminPointsPage() {
   const [purchaseStatus, setPurchaseStatus] = useState<ShopPurchaseStatus>('paid')
   const purchases = useAdminShopPurchases(purchaseStatus)
   const decidePurchase = useDecideShopPurchase()
+  const policyPreflight = useAdminPreflight()
+  const rulePreflight = useAdminPreflight()
+  const [rulePreflightReason, setRulePreflightReason] = useState('')
   const [decisionTarget, setDecisionTarget] = useState<{
     purchase: AdminShopPurchase
     status: 'fulfilled' | 'rejected'
@@ -64,6 +69,12 @@ export default function AdminPointsPage() {
 
   const savePolicy = async () => {
     try {
+      const check = await policyPreflight.run('coin_policy', policy)
+      if (!check) {
+        toast.error(policyPreflight.error || '检查没有完成，可再试一次。')
+        return
+      }
+      if (check.status === 'fail') return
       await updatePolicy.mutateAsync(policy)
       toast.success('发放口径已保存')
     } catch (err) {
@@ -75,6 +86,13 @@ export default function AdminPointsPage() {
     const value = ruleEdits[reason]
     if (!value) return
     try {
+      setRulePreflightReason(reason)
+      const check = await rulePreflight.run('coin_rule', { reason, ...value })
+      if (!check) {
+        toast.error(rulePreflight.error || '检查没有完成，可再试一次。')
+        return
+      }
+      if (check.status === 'fail') return
       await updateRule.mutateAsync({ reason, ...value })
       toast.success('发放规则已保存')
     } catch (err) {
@@ -119,9 +137,13 @@ export default function AdminPointsPage() {
                 本月已发 {config.data.monthly_issued} 经验。
                 超过月度上限后所有发放自动暂停。
               </p>
-              <Button size="sm" onClick={() => void savePolicy()} disabled={updatePolicy.isPending}>
-                <Save className="h-4 w-4" /> 保存发放口径
-              </Button>
+              <div className="space-y-2">
+                {policyPreflight.error ? <p className="text-sm text-destructive">{policyPreflight.error}</p> : null}
+                <PreflightResults result={policyPreflight.result} />
+                <Button size="sm" onClick={() => void savePolicy()} disabled={updatePolicy.isPending}>
+                  <Save className="h-4 w-4" /> 保存发放口径
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -244,6 +266,12 @@ export default function AdminPointsPage() {
                       保存
                     </Button>
                   </div>
+                  {rulePreflightReason === rule.reason && (rulePreflight.result || rulePreflight.error) ? (
+                    <div className="sm:col-span-4">
+                      {rulePreflight.error ? <p className="text-sm text-destructive">{rulePreflight.error}</p> : null}
+                      <PreflightResults result={rulePreflight.result} />
+                    </div>
+                  ) : null}
                 </div>
               )
             })}
