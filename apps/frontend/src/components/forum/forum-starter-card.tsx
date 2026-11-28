@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { ArrowRight, BookOpen, CheckCircle2, Circle, MessageSquare, PenLine, Sparkles, UserRound } from 'lucide-react'
+import { ArrowRight, BookOpen, CheckCircle2, ChevronDown, Circle, MessageSquare, PenLine, Sparkles, UserRound } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { useIsMobile } from '@/hooks/use-is-mobile'
 import { cn, extractError } from '@/lib/utils'
 import {
   useAcknowledgeCommunity,
@@ -21,6 +23,8 @@ export function ForumStarterCard() {
   const starter = useForumStarter()
   const acknowledge = useAcknowledgeCommunity()
   const claim = useClaimForumStarter()
+  const isMobile = useIsMobile()
+  const [expanded, setExpanded] = useState(false)
 
   if (starter.isLoading || starter.isError || !starter.data) return null
   const data = starter.data
@@ -67,6 +71,16 @@ export function ForumStarterCard() {
         </div>
       </div>
 
+      {isMobile && !expanded ? (
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          className="flex w-full items-center justify-between px-4 py-3 text-left text-xs text-muted-foreground sm:px-5"
+        >
+          <span>查看四项任务</span>
+          <ChevronDown className="h-3.5 w-3.5" />
+        </button>
+      ) : (
       <div className="grid divide-y sm:grid-cols-2 sm:divide-x sm:divide-y-0">
         {data.tasks.map((task) => {
           const Icon = TASK_ICON[task.key] ?? Circle
@@ -149,8 +163,9 @@ export function ForumStarterCard() {
           )
         })}
       </div>
+      )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t bg-muted/20 px-4 py-3 sm:px-5">
+      <div className={cn('flex flex-wrap items-center justify-between gap-3 border-t bg-muted/20 px-4 py-3 sm:px-5', isMobile && !expanded && 'hidden')}>
         <p className="text-[11px] text-muted-foreground">
           {data.all_done ? '四项都齐了，可以领取。' : '不急着一次做完，先挑一项顺手的。'}
         </p>

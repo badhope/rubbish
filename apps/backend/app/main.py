@@ -179,6 +179,7 @@ _SPA_ROUTE_PREFIXES = frozenset(
         "library",
         "me",
         "login",
+        "more",
         "notifications",
         "privacy",
         "profile",

@@ -8,7 +8,7 @@ import { useIsMobile } from '@/hooks/use-is-mobile'
 import { useAuth } from '@/hooks/use-auth'
 import { useAuthStore, type AuthUser } from '@/lib/auth'
 import { isOverseasReadPath, readAccessRegion } from '@/lib/access'
-import { api } from '@/lib/api'
+import { api, bootstrapSession } from '@/lib/api'
 import { Toaster } from '@/components/ui/sonner'
 import { NotFoundPage } from '@/components/common/not-found-page'
 import { FeedbackLauncher } from '@/components/common/feedback-launcher'
@@ -44,10 +44,18 @@ function isSessionRejected(error: unknown): boolean {
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async ({ context, location }) => {
-    // 刷新页面后 token 还在但 user 为 null：拉一次 /auth/me 回填 store，
-    // 否则 admin 路由守卫会误判跳 /login，AppShell 用户菜单也会消失
-    const { token, user } = useAuthStore.getState()
-    if (token && !user) {
+    // access_token 只在 sessionStorage；标签页被回收/手机 WebView 重建后
+    // 它没了，但 HttpOnly refresh cookie 还在。先尝试恢复一次，再判断访客，
+    // 否则老用户冷启动会被直接送回首页，看起来像“做着做着身份掉了”。
+    let { token } = useAuthStore.getState()
+    let restored = false
+    if (!token) {
+      restored = await bootstrapSession()
+      token = useAuthStore.getState().token
+    }
+    // 刷新后 user 只有基础字段；冷启动恢复后补一次 /auth/me，把资料和角色填全。
+    const { user } = useAuthStore.getState()
+    if (token && (!user || restored)) {
       try {
         const res = await context.queryClient.fetchQuery<UserResponse>({
           queryKey: ['auth', 'me'],

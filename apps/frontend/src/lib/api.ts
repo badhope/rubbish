@@ -129,16 +129,45 @@ async function refreshOnce(): Promise<void> {
         {},
         { withCredentials: true, timeout: 5_000, headers: csrfHeaders() }, // shorter timeout for refresh
       )
+      const current = useAuthStore.getState().user
       useAuthStore.getState().setAuth(data.access_token, {
+        ...(current ?? {}),
         id: data.user_id,
         username: data.username,
         is_admin: data.is_admin,
+        // TokenResponse 一直带 roles；旧代码把它丢了，刷新后依赖角色的
+        // 导航（互评/编辑工作台）会突然消失，看起来像“身份掉了”。
+        roles: data.roles ?? current?.roles ?? [],
       })
     } finally {
       refreshing = null
     }
   })()
   return refreshing
+}
+
+let bootstrapAttempted = false
+
+/**
+ * 冷启动恢复会话：access_token 在 sessionStorage，标签页被系统回收或
+ * 手机 WebView 重建后 token 会消失，但 7 天 refresh cookie 还在。
+ * 旧逻辑只在“有 token 但没 user”时拉 /auth/me，冷启动没有 token 就直接
+ * 当访客，用户会莫名其妙被送回首页。这里只在首次无 token 时试一次 refresh。
+ */
+export async function bootstrapSession(): Promise<boolean> {
+  const store = useAuthStore.getState()
+  if (store.token) return true
+  if (bootstrapAttempted) return false
+  bootstrapAttempted = true
+  try {
+    await refreshOnce()
+    return Boolean(useAuthStore.getState().token)
+  } catch {
+    // 匿名访客没有 refresh cookie，401 是正常结果；网络错误也只让本次冷启动
+    // 先按访客走。不要在这里 logout()：那会广播到其他标签页，把本来正常
+    // 的会话一起清掉。
+    return false
+  }
 }
 
 api.interceptors.response.use(

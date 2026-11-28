@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import {
   ArrowRight,
@@ -132,6 +132,7 @@ function ExplorePage() {
   const disciplines = useDisciplines()
   const tab: ExploreTab = search.tab === 'following' ? 'following' : 'discover'
   const following = useFollowingFeed(tab === 'following' && isAuthenticated)
+  const [showAllFields, setShowAllFields] = useState(false)
 
   const stats = overview.data?.stats
   const topResources = overview.data?.top_resources ?? []
@@ -167,12 +168,12 @@ function ExplorePage() {
           { label: '成员', value: stats?.members ?? 0, Icon: Users },
           { label: '标签', value: stats?.tags ?? 0, Icon: Sparkles },
         ].map(({ label, value, Icon }) => (
-          <div key={label} className="bg-card p-4">
-            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+          <div key={label} className="bg-card p-3 sm:p-4">
+            <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-[0.14em] text-muted-foreground sm:text-[10px] sm:tracking-[0.18em]">
               <Icon className="h-3.5 w-3.5" />
               {label}
             </div>
-            <p className="mt-2 font-serif text-2xl tabular-nums">{String(value)}</p>
+            <p className="mt-1.5 font-serif text-xl tabular-nums sm:mt-2 sm:text-2xl">{String(value)}</p>
           </div>
         ))}
       </section>
@@ -189,18 +190,31 @@ function ExplorePage() {
             </p>
           </div>
           <div className="mt-3 flex flex-wrap gap-1.5">
-            {(disciplines.data ?? []).map((discipline) => (
+            {(disciplines.data ?? []).map((discipline, index) => (
               <Link
                 key={discipline.slug}
                 to="/fields/$slug"
                 params={{ slug: discipline.slug }}
-                className="inline-flex items-center gap-1 rounded-full border bg-background px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                className={cn(
+                  'inline-flex items-center gap-1 rounded-full border bg-background px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary',
+                  index >= 6 && !showAllFields ? 'hidden sm:inline-flex' : '',
+                )}
               >
                 {discipline.name}
                 <ArrowRight className="h-3 w-3" />
               </Link>
             ))}
           </div>
+          {(disciplines.data ?? []).length > 6 ? (
+            <button
+              type="button"
+              onClick={() => setShowAllFields((value) => !value)}
+              className="mt-3 inline-flex min-h-9 items-center gap-1 text-xs text-primary sm:hidden"
+            >
+              {showAllFields ? '收起方向' : `展开全部 ${(disciplines.data ?? []).length} 个方向`}
+              <ArrowRight className={cn('h-3 w-3 transition-transform', showAllFields && 'rotate-90')} />
+            </button>
+          ) : null}
         </section>
       ) : null}
 

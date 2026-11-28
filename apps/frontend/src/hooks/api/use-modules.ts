@@ -1070,7 +1070,13 @@ export function useConvertSubmissionPreview() {
       const { data } = await api.post<ConvertSubmissionPreviewResult>(
         '/submissions/convert-preview',
         form,
-        { headers: { 'Content-Type': 'multipart/form-data' } },
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          // 大 PDF/Word 的正文转换走 CPU 队列，10 秒全局超时会在正常转换中途
+          // 把请求掐断，用户看到的就是“文件太大，上传不了”。与后端 120 秒
+          // 转换租约对齐，留出排队余量。
+          timeout: 180_000,
+        },
       )
       return data
     },

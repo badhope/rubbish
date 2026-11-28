@@ -1,19 +1,20 @@
 import { Link, useNavigate } from '@tanstack/react-router'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import {
   ArrowRight,
   ArrowUpRight,
   Bell,
   CheckCircle2,
+  ChevronDown,
   Clock3,
   FileText,
-  MessagesSquare,
   PenLine,
 } from 'lucide-react'
 import type { MeWorkStats } from '@/hooks/api/use-modules'
 import type { NotificationResponse, SubmissionStatus } from '@/lib/types'
 import { useMarkRead, useMySubmissions, useNotifications } from '@/hooks/api/use-modules'
 import { Button } from '@/components/ui/button'
+import { useIsMobile } from '@/hooks/use-is-mobile'
 import { notificationDestination } from '@/lib/notification-link'
 import { shortDate } from './format'
 import { MeAppeals } from './me-appeals'
@@ -115,13 +116,13 @@ export function MeOverview({
   onOpenNotifications,
   highlightAppealId,
   workStats,
-  username,
 }: {
   onOpenNotifications: () => void
   highlightAppealId?: number
   workStats?: MeWorkStats
-  username?: string
 }) {
+  const isMobile = useIsMobile()
+  const [showMore, setShowMore] = useState(false)
   const notifications = useNotifications(1, 6)
   const latestNotifications = notifications.data?.data ?? []
   const recentWorks = useMySubmissions(undefined, 1, 4)
@@ -228,109 +229,93 @@ export function MeOverview({
         )}
       </section>
 
-      <section>
-        <SectionHeading
-          kicker="NOTICES"
-          title="最近通知"
-          action={
-            <Button variant="ghost" size="sm" onClick={onOpenNotifications}>
-              <Bell className="h-3.5 w-3.5" />
-              打开通知
-            </Button>
-          }
-        />
-        {notifications.isLoading ? (
-          <p className="border-y py-5 text-sm text-muted-foreground">加载中…</p>
-        ) : notifications.isError ? (
-          <p className="border-y py-5 text-sm text-muted-foreground">
-            通知没加载出来。
-            <button
-              type="button"
-              className="ml-2 text-primary underline-offset-2 hover:underline"
-              onClick={() => void notifications.refetch()}
-            >
-              重试
-            </button>
-          </p>
-        ) : grouped.length === 0 ? (
-          <p className="border-y py-5 text-sm text-muted-foreground">还没有通知。</p>
-        ) : (
-          <div className="divide-y border-y">
-            {grouped.map(({ item, count }) => (
+      {isMobile && !showMore ? (
+        <button
+          type="button"
+          onClick={() => setShowMore(true)}
+          className="flex w-full items-center justify-between border-y py-4 text-left text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <span>展开最近通知与社区信用</span>
+          <ChevronDown className="h-4 w-4" />
+        </button>
+      ) : null}
+
+      {!isMobile || showMore ? (
+        <>
+        <section>
+          <SectionHeading
+            kicker="NOTICES"
+            title="最近通知"
+            action={
+              <Button variant="ghost" size="sm" onClick={onOpenNotifications}>
+                <Bell className="h-3.5 w-3.5" />
+                打开通知
+              </Button>
+            }
+          />
+          {notifications.isLoading ? (
+            <p className="border-y py-5 text-sm text-muted-foreground">加载中…</p>
+          ) : notifications.isError ? (
+            <p className="border-y py-5 text-sm text-muted-foreground">
+              通知没加载出来。
               <button
-                key={item.id}
                 type="button"
-                onClick={() => openNotification(item)}
-                className="flex w-full items-start gap-3 py-3.5 text-left transition-colors hover:bg-primary/[0.03]"
+                className="ml-2 text-primary underline-offset-2 hover:underline"
+                onClick={() => void notifications.refetch()}
               >
-                <span
-                  aria-hidden
-                  className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${item.is_read ? 'bg-transparent' : 'bg-primary'}`}
-                />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm">{item.title}</span>
-                  <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
-                    {shortDate(item.created_at)}
-                    {count > 1 ? ` · 同标题 ${count} 条` : ''}
-                  </span>
-                </span>
-                {notificationDestination(item) ? (
-                  <ArrowUpRight className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                ) : (
-                  <ArrowRight className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                )}
+                重试
               </button>
-            ))}
-          </div>
-        )}
-      </section>
+            </p>
+          ) : grouped.length === 0 ? (
+            <p className="border-y py-5 text-sm text-muted-foreground">还没有通知。</p>
+          ) : (
+            <div className="divide-y border-y">
+              {grouped.map(({ item, count }) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => openNotification(item)}
+                  className="flex w-full items-start gap-3 py-3.5 text-left transition-colors hover:bg-primary/[0.03]"
+                >
+                  <span
+                    aria-hidden
+                    className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${item.is_read ? 'bg-transparent' : 'bg-primary'}`}
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm">{item.title}</span>
+                    <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
+                      {shortDate(item.created_at)}
+                      {count > 1 ? ` · 同标题 ${count} 条` : ''}
+                    </span>
+                  </span>
+                  {notificationDestination(item) ? (
+                    <ArrowUpRight className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  ) : (
+                    <ArrowRight className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
 
-      <section>
-        <SectionHeading
-          kicker="STANDING"
-          title="社区信用"
-          action={
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/guide" search={{ tab: 'policies' }}>
-                看边界
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </Button>
-          }
-        />
-        <ForumCreditCard />
-      </section>
-
-      <section>
-        <SectionHeading kicker="COMMUNITY" title="桌边" />
-        <div className="grid gap-3 border-y py-5 sm:grid-cols-2">
-          <Link
-            to="/forum"
-            className="group flex items-start gap-3 rounded-lg border p-4 transition-colors hover:border-primary/40 hover:bg-primary/[0.03]"
-          >
-            <MessagesSquare className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-            <span>
-              <span className="block text-sm font-medium">去主题论坛</span>
-              <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
-                读帖、回复、收藏；先聊起来，再补记录。
-              </span>
-            </span>
-          </Link>
-          <Link
-            to="/u/$username"
-            params={{ username: username ?? '' }}
-            className="group flex items-start gap-3 rounded-lg border p-4 transition-colors hover:border-primary/40 hover:bg-primary/[0.03]"
-          >
-            <ArrowUpRight className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-            <span>
-              <span className="block text-sm font-medium">看看公开主页</span>
-              <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
-                别人点进来时，看到的是这份作者页。
-              </span>
-            </span>
-          </Link>
-        </div>
-      </section>
+        <section>
+          <SectionHeading
+            kicker="STANDING"
+            title="社区信用"
+            action={
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/guide" search={{ tab: 'policies' }}>
+                  看边界
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            }
+          />
+          <ForumCreditCard />
+        </section>
+        </>
+      ) : null}
 
       <MeAppeals highlightAppealId={highlightAppealId} />
     </div>

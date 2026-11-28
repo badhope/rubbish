@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import axios, { AxiosError, AxiosHeaders } from 'axios'
 import type { InternalAxiosRequestConfig, AxiosResponse } from 'axios'
-import { api } from '@/lib/api'
+import { api, bootstrapSession } from '@/lib/api'
 import { useAuthStore } from '@/lib/auth'
 
 /**
@@ -81,6 +81,7 @@ beforeEach(() => {
         user_id: 7,
         username: 'alice',
         is_admin: false,
+        roles: ['reviewer'],
       }),
     )
   }
@@ -153,6 +154,24 @@ describe('api 401 刷新拦截器', () => {
       id: 7,
       username: 'alice',
       is_admin: false,
+      roles: ['reviewer'],
+    })
+  })
+
+  it('冷启动没有 access token 时用 refresh cookie 恢复会话和角色', async () => {
+    // 模拟标签页被回收：sessionStorage 里的 token 没了，user 也没了。
+    useAuthStore.setState({ token: null, user: null })
+
+    await expect(bootstrapSession()).resolves.toBe(true)
+
+    expect(refreshCalls).toBe(1)
+    expect(refreshUrls).toEqual(['/api/auth/refresh'])
+    expect(useAuthStore.getState().token).toBe('new-token')
+    expect(useAuthStore.getState().user).toEqual({
+      id: 7,
+      username: 'alice',
+      is_admin: false,
+      roles: ['reviewer'],
     })
   })
 

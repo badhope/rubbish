@@ -105,7 +105,7 @@ function MePage() {
       ) : null}
 
       {isOverview && data.permission_role !== 'user' ? (
-        <section className="flex flex-wrap items-center gap-3 border-b py-3" aria-label="工作台入口">
+        <section className="hidden flex-wrap items-center gap-3 border-b py-3 sm:flex" aria-label="工作台入口">
           <p className="hidden text-[11px] uppercase tracking-[0.24em] text-muted-foreground sm:block">工作台</p>
           {['reviewer', 'editor', 'editor_in_chief'].includes(data.permission_role) ? (
             <Link
@@ -145,7 +145,6 @@ function MePage() {
             onOpenNotifications={() => setNotificationsOpen(true)}
             highlightAppealId={search.appeal}
             workStats={data.work_stats}
-            username={data.username}
           />
         ) : null}
         {activeTab === 'creator' ? <MeCreator /> : null}

@@ -137,24 +137,26 @@ function AdminDashboard() {
   const pendingTotal = pendingClaims + pendingComments + pendingReports + pendingRoles
 
   return (
-    <div className="w-full max-w-6xl space-y-8">
+    <div className="flex w-full max-w-6xl flex-col gap-8">
       <PageHeader
         title="站点总览"
         description={`${user?.username ?? '站务'}，先看要处理的，再进各域。`}
       />
 
-      <Suspense
-        fallback={
-          <div
-            className="h-[430px] animate-pulse rounded-lg border bg-muted/20"
-            aria-label="正在加载站点数据"
-          />
-        }
-      >
-        <AdminAnalyticsPanel />
-      </Suspense>
+      <div className="order-3 lg:order-none">
+        <Suspense
+          fallback={
+            <div
+              className="h-[430px] animate-pulse rounded-lg border bg-muted/20"
+              aria-label="正在加载站点数据"
+            />
+          }
+        >
+          <AdminAnalyticsPanel />
+        </Suspense>
+      </div>
 
-      <section>
+      <section className="order-1 lg:order-none">
         <div className="mb-3 flex items-end justify-between gap-3">
           <div>
             <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
@@ -202,7 +204,7 @@ function AdminDashboard() {
         </div>
       </section>
 
-      <section>
+      <section className="order-2 lg:order-none">
         <div className="mb-3">
           <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
             DOMAINS

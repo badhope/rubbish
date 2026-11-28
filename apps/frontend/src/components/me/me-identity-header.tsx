@@ -73,7 +73,7 @@ export function MeIdentityHeader({
                 {profile.permission_label || roleLabel(profile.permission_role)}
               </Badge>
               {profile.permission_role === 'editor_in_chief' && profile.permission_role_label ? (
-                <span className="text-xs text-muted-foreground">
+                <span className="hidden text-xs text-muted-foreground sm:inline">
                   · {profile.permission_role_label}
                 </span>
               ) : null}
@@ -83,13 +83,29 @@ export function MeIdentityHeader({
               >
                 <Gauge className="h-3.5 w-3.5" />
                 档位 {profile.activity.level}
-                <span className="text-[10px] text-muted-foreground">成长记录</span>
+                <span className="hidden text-[10px] text-muted-foreground/70 sm:inline">成长记录</span>
+              </Link>
+              <Link
+                to="/me"
+                search={{ tab: 'points' }}
+                className="inline-flex items-center gap-1 text-xs text-primary sm:hidden"
+              >
+                <Coins className="h-3.5 w-3.5" />
+                经验 {wallet.data ? wallet.data.balance.toLocaleString('zh-CN') : '—'}
+              </Link>
+              <Link
+                to="/u/$username"
+                params={{ username: profile.username }}
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground sm:hidden"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                公开主页
               </Link>
             </div>
             {account?.affiliation ? (
               <p className="mt-2 truncate text-xs text-muted-foreground">{account.affiliation}</p>
             ) : null}
-            <div className="mt-3 flex max-w-md items-center gap-2">
+            <div className="mt-3 hidden max-w-md items-center gap-2 sm:flex">
               <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
                 <div
                   className="h-full rounded-full bg-primary/70"
@@ -105,7 +121,7 @@ export function MeIdentityHeader({
           </div>
         </div>
 
-        <div className="flex shrink-0 flex-wrap items-stretch gap-2">
+        <div className="hidden shrink-0 flex-wrap items-stretch gap-2 sm:flex">
           <Link
             to="/me"
             search={{ tab: 'points' }}

@@ -21,6 +21,7 @@ import { Route as IssuesRouteImport } from './routes/issues'
 import { Route as LevelsRouteImport } from './routes/levels'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MeRouteImport } from './routes/me'
+import { Route as MoreRouteImport } from './routes/more'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -108,6 +109,11 @@ const LoginRoute = LoginRouteImport.update({
 const MeRoute = MeRouteImport.update({
   id: '/me',
   path: '/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MoreRoute = MoreRouteImport.update({
+  id: '/more',
+  path: '/more',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -264,6 +270,7 @@ export interface FileRoutesByFullPath {
   '/levels': typeof LevelsRoute
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
+  '/more': typeof MoreRoute
   '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -305,6 +312,7 @@ export interface FileRoutesByTo {
   '/levels': typeof LevelsRoute
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
+  '/more': typeof MoreRoute
   '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -348,6 +356,7 @@ export interface FileRoutesById {
   '/levels': typeof LevelsRoute
   '/login': typeof LoginRoute
   '/me': typeof MeRoute
+  '/more': typeof MoreRoute
   '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -392,6 +401,7 @@ export interface FileRouteTypes {
     | '/levels'
     | '/login'
     | '/me'
+    | '/more'
     | '/privacy'
     | '/register'
     | '/reset-password'
@@ -433,6 +443,7 @@ export interface FileRouteTypes {
     | '/levels'
     | '/login'
     | '/me'
+    | '/more'
     | '/privacy'
     | '/register'
     | '/reset-password'
@@ -475,6 +486,7 @@ export interface FileRouteTypes {
     | '/levels'
     | '/login'
     | '/me'
+    | '/more'
     | '/privacy'
     | '/register'
     | '/reset-password'
@@ -518,6 +530,7 @@ export interface RootRouteChildren {
   LevelsRoute: typeof LevelsRoute
   LoginRoute: typeof LoginRoute
   MeRoute: typeof MeRoute
+  MoreRoute: typeof MoreRoute
   PrivacyRoute: typeof PrivacyRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -627,6 +640,13 @@ declare module '@tanstack/react-router' {
       path: '/me'
       fullPath: '/me'
       preLoaderRoute: typeof MeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/more': {
+      id: '/more'
+      path: '/more'
+      fullPath: '/more'
+      preLoaderRoute: typeof MoreRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -859,6 +879,7 @@ const rootRouteChildren: RootRouteChildren = {
   LevelsRoute: LevelsRoute,
   LoginRoute: LoginRoute,
   MeRoute: MeRoute,
+  MoreRoute: MoreRoute,
   PrivacyRoute: PrivacyRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,

@@ -16,8 +16,8 @@ export function MeActionBar({
     >
       <div className="min-w-0">
         <p className="text-sm font-medium">今天写点什么？</p>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          长篇存草稿，短帖去主题论坛；进度都收在「我的作品」。
+        <p className="mt-0.5 hidden text-xs text-muted-foreground sm:block">
+          长篇存草稿，短帖去主题论坛；进度看下方「创作进度」。
         </p>
       </div>
       <div className="flex w-full flex-wrap items-center gap-1.5 lg:w-auto lg:flex-nowrap">
@@ -29,9 +29,6 @@ export function MeActionBar({
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
           ) : null}
-        </Button>
-        <Button variant="ghost" size="sm" asChild>
-          <Link to="/submissions">我的作品</Link>
         </Button>
         <Button size="sm" asChild>
           <Link to="/submissions/new">

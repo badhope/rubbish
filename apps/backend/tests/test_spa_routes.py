@@ -17,6 +17,7 @@ EXPECTED = {
     "library",
     "levels",
     "me",
+    "more",
     "privacy",
     "restore-account",
     "review",

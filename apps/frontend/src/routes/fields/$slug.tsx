@@ -24,6 +24,7 @@ import { ArticleCover } from '@/components/common/article-cover'
 import { Pagination } from '@/components/common/pagination'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState } from '@/components/common/state'
+import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -106,6 +107,7 @@ function FieldPage() {
   const { isAuthenticated } = useAuth()
   const [memberPage, setMemberPage] = useState(1)
   const [workPage, setWorkPage] = useState(1)
+  const [section, setSection] = useState<'works' | 'people' | 'coverage'>('works')
   const disciplines = useDisciplines()
   const area = (disciplines.data ?? []).find((item) => item.slug === slug)
 
@@ -219,9 +221,31 @@ function FieldPage() {
         <span>{`订阅 ${subscriberCount ?? '—'} 人`}</span>
       </div>
 
+      <div className="grid grid-cols-3 gap-1 rounded-xl border bg-card p-1 text-xs lg:hidden">
+        {[
+          { key: 'works' as const, label: '最近作品' },
+          { key: 'people' as const, label: '同领域成员' },
+          { key: 'coverage' as const, label: '互评覆盖' },
+        ].map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            onClick={() => setSection(item.key)}
+            className={cn(
+              'rounded-lg px-2 py-2.5 text-center transition-colors',
+              section === item.key
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
       <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-5">
-          <Card>
+          <Card className={cn('lg:block', section === 'works' ? 'block' : 'hidden')}>
             <CardContent className="pt-5">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="flex items-center gap-2 text-sm font-semibold">
@@ -275,7 +299,7 @@ function FieldPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className={cn('lg:block', section === 'people' ? 'block' : 'hidden')}>
             <CardContent className="pt-5">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="flex items-center gap-2 text-sm font-semibold">
@@ -327,7 +351,7 @@ function FieldPage() {
           </Card>
         </div>
 
-        <div className="space-y-4">
+        <div className={cn('space-y-4 lg:block', section === 'coverage' ? 'block' : 'hidden')}>
           <Card>
             <CardContent className="space-y-3 pt-5 text-sm">
               <h2 className="flex items-center gap-2 text-sm font-semibold">

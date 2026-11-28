@@ -6,6 +6,8 @@ export async function uploadMediaImage(file: File, purpose: 'submission' | 'foru
   form.append('file', file)
   const { data } = await api.post<{ url: string }>(`/media/images?purpose=${purpose}`, form, {
     headers: { 'Content-Type': 'multipart/form-data' },
+    // 手机弱网传 5MB 图片超过全局 10 秒很常见，不要把它当成“文件太大”。
+    timeout: 60_000,
   })
   return data.url
 }

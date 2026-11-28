@@ -1,21 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router'
-import { LogOut, LayoutGrid } from 'lucide-react'
-import { toast } from 'sonner'
+import { LayoutGrid } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
-import { useLogout } from '@/hooks/api/use-auth'
 import { useUnreadCount } from '@/hooks/api/use-modules'
 import { cn } from '@/lib/utils'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { AppearanceMenu } from '@/components/appearance-menu'
 import { LanguageButton } from '@/components/language-button'
 import { BrandMark } from '@/components/common/brand-mark'
@@ -23,11 +12,8 @@ import { AmbientBackdrop } from '@/components/common/ambient-backdrop'
 import { ModuleErrorBoundary } from '@/components/common/error-boundary'
 import { PageTransition } from '@/components/common/page-transition'
 import { CookieBanner } from '@/components/common/cookie-banner'
-import { filterNav } from '@/lib/nav'
 import {
   MOBILE_TABS,
-  MOBILE_MORE,
-  MOBILE_MORE_GROUP_ORDER,
   type MobileTab,
 } from './mobile-nav'
 
@@ -68,18 +54,10 @@ function MobileTabButton({
 }
 
 export function MobileAppShell() {
-  const { isAuthenticated, isAdmin, user } = useAuth()
-  const displayName = user?.display_name || user?.username || ''
+  const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const logoutMut = useLogout()
   const { data: unread } = useUnreadCount({ enabled: isAuthenticated })
-
-  const moreItems = filterNav(MOBILE_MORE, {
-    isAuthenticated,
-    isAdmin,
-    roles: user?.roles ?? [],
-  })
 
   // 认证页（登录/注册/找回密码/验证邮箱）不展示底部 Tab 栏与 FAB
   const isAuthPage = [
@@ -158,16 +136,6 @@ export function MobileAppShell() {
   const isActive = (to: string) =>
     location.pathname === to || location.pathname.startsWith(to + '/')
 
-  const onLogout = async () => {
-    try {
-      await logoutMut.mutateAsync()
-      toast.success('已退出登录')
-    } catch {
-      // backend 失败也清本地
-    }
-    void navigate({ to: '/login' })
-  }
-
   const go = (to: string) => {
     void navigate({ to })
   }
@@ -229,77 +197,19 @@ export function MobileAppShell() {
           <LanguageButton />
           <AppearanceMenu />
           {/* 次级入口不再藏在「⋯」里：用带文字的胶囊按钮，第一眼就知道能展开 */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 gap-1.5 rounded-full px-3"
-                aria-label="打开功能菜单"
-              >
+          {location.pathname !== '/more' ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 gap-1.5 rounded-full px-3"
+              asChild
+            >
+              <Link to="/more" aria-label="打开全部功能">
                 <LayoutGrid className="h-4 w-4" />
                 <span className="text-xs font-medium">功能</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="max-h-[70dvh] w-56 overflow-y-auto">
-              {isAuthenticated && user ? (
-                <>
-                  <div className="flex items-center gap-2 px-2 py-1.5">
-                    <Avatar className="h-7 w-7">
-                      <AvatarImage src={user.avatar_url ?? undefined} alt="" />
-                      <AvatarFallback>{displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium">{displayName}</div>
-                    </div>
-                  </div>
-                  <DropdownMenuSeparator />
-                </>
-              ) : (
-                <>
-                  <DropdownMenuLabel>未登录</DropdownMenuLabel>
-                  <DropdownMenuItem asChild>
-                    <Link to="/login">登录</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/register">注册</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                </>
-              )}
-              {MOBILE_MORE_GROUP_ORDER.map((group) => {
-                const items = moreItems.filter((i) => i.group === group)
-                if (items.length === 0) return null
-                return (
-                  <div key={group}>
-                    <DropdownMenuLabel className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                      {group}
-                    </DropdownMenuLabel>
-                    {items.map((item) => {
-                      const Icon = item.icon
-                      return (
-                        <DropdownMenuItem key={item.to} asChild>
-                          <Link to={item.to} search={item.search} className="flex items-center gap-2">
-                            <Icon className="h-4 w-4 text-muted-foreground" />
-                            <span>{item.label}</span>
-                          </Link>
-                        </DropdownMenuItem>
-                      )
-                    })}
-                  </div>
-                )
-              })}
-              {isAuthenticated && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={onLogout} className="text-destructive">
-                    <LogOut className="h-4 w-4" />
-                    <span>退出登录</span>
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </Link>
+            </Button>
+          ) : null}
         </div>
       </header>
 

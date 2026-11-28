@@ -1,6 +1,8 @@
-import { BarChart3, BookOpen, Download, Eye, Route } from 'lucide-react'
+import { useState } from 'react'
+import { BarChart3, BookOpen, ChevronDown, Download, Eye, Route } from 'lucide-react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 import { useAdminAnalytics, useCatalogStats } from '@/hooks/api/use-modules'
 import {
   PageViewTrend,
@@ -15,6 +17,7 @@ function fmt(n: number | null | undefined) {
 export function AdminAnalyticsPanel() {
   const { data: stats, isLoading: statsLoading } = useCatalogStats()
   const { data: analytics, isLoading: analyticsLoading } = useAdminAnalytics(7)
+  const [showCharts, setShowCharts] = useState(false)
 
   const records = stats?.total ?? 0
   const drafts = stats?.draft_total ?? 0
@@ -82,37 +85,48 @@ export function AdminAnalyticsPanel() {
         ))}
       </div>
 
-      <Card>
-        <CardHeader className="pb-1">
-          <CardTitle className="text-sm">近 7 天页面访问趋势</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-2">
-          <PageViewTrend data={analytics?.daily ?? []} />
-        </CardContent>
-      </Card>
+      <button
+        type="button"
+        onClick={() => setShowCharts((value) => !value)}
+        className="flex w-full items-center justify-between rounded-xl border bg-card px-4 py-3 text-sm text-muted-foreground lg:hidden"
+      >
+        <span>{showCharts ? '收起趋势与来源' : '展开趋势与来源'}</span>
+        <ChevronDown className={cn('h-4 w-4 transition-transform', showCharts && 'rotate-180')} />
+      </button>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className={cn('space-y-4', !showCharts && 'hidden lg:block')}>
         <Card>
           <CardHeader className="pb-1">
-            <CardTitle className="text-sm">热门页面 Top 8</CardTitle>
+            <CardTitle className="text-sm">近 7 天页面访问趋势</CardTitle>
           </CardHeader>
           <CardContent className="pt-2">
-            <TopPathsBar data={analytics?.paths ?? []} />
+            <PageViewTrend data={analytics?.daily ?? []} />
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="pb-1">
-            <CardTitle className="text-sm">访问来源 Top 6</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-2">
-            <ReferrerBar data={analytics?.referrers ?? []} />
-          </CardContent>
-        </Card>
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card>
+            <CardHeader className="pb-1">
+              <CardTitle className="text-sm">热门页面 Top 8</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-2">
+              <TopPathsBar data={analytics?.paths ?? []} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-1">
+              <CardTitle className="text-sm">访问来源 Top 6</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-2">
+              <ReferrerBar data={analytics?.referrers ?? []} />
+            </CardContent>
+          </Card>
+        </div>
+
+        <p className="text-[11px] leading-relaxed text-muted-foreground">
+          口径：阅读/下载为站内累计；页面访问为同一会话内同一路径只记一次，近 7 天按中国时区自然日切分。
+        </p>
       </div>
-
-      <p className="text-[11px] leading-relaxed text-muted-foreground">
-        口径：阅读/下载为站内累计；页面访问为同一会话内同一路径只记一次，近 7 天按中国时区自然日切分。
-      </p>
     </section>
   )
 }
