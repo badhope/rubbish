@@ -44,15 +44,19 @@ export function AdminShell() {
   const pathname = useLocation({ select: (state) => state.pathname })
   const { user, isAdmin } = useAuth()
   const roles = user?.roles ?? []
+  const isChief =
+    isAdmin ||
+    roles.some((role) => ['chief_editor', 'deputy_editor', 'editor_in_chief'].includes(role))
   const canEconomy =
-    isAdmin || roles.some((role) => ['chief_editor', 'deputy_editor', 'editor_in_chief', 'shop_manager'].includes(role))
-  // 普通编辑可改“访问设置”，但系统健康、审计和月报仍只给管理员。
+    isChief || roles.includes('shop_manager')
+  // 普通编辑只改“访问设置”；主编/副主编拿完整业务后台（总览、成员、内容、经验、系统），
+  // 平台密钥、提权、删号仍留在 is_admin 手里。
   const canAccessSettings =
     isAdmin ||
     roles.some((role) =>
       ['editor', 'chief_editor', 'deputy_editor', 'editor_in_chief', 'section_editor', 'board_editor'].includes(role),
     )
-  const visibleDomains = isAdmin
+  const visibleDomains = isChief
     ? DOMAINS
     : DOMAINS.filter(
         (domain) =>
@@ -87,7 +91,7 @@ export function AdminShell() {
                   )}
                 >
                   <Icon className="hidden h-3.5 w-3.5 sm:block" />
-                  {domain.key === 'system' && !isAdmin ? '访问设置' : domain.label}
+                  {domain.key === 'system' && !isChief ? '访问设置' : domain.label}
                   {active ? <span aria-hidden className="absolute inset-x-2 bottom-0 h-0.5 bg-primary" /> : null}
                 </Link>
               )

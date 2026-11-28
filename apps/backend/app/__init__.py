@@ -1,3 +1,3 @@
 """Rubbish backend application package."""
 
-__version__ = "1.20.23"
+__version__ = "1.20.24"

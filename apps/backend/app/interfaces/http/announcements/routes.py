@@ -10,7 +10,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import require_admin, require_tenant_id
+from app.api.deps import require_chief_editor, require_tenant_id
 from app.core.db import get_db
 from app.core.time import utcnow
 from app.domain.announcements.models import Announcement
@@ -84,7 +84,7 @@ async def list_announcements(
 @router.post("", response_model=AnnouncementOut, status_code=status.HTTP_201_CREATED)
 async def create_announcement(
     payload: AnnouncementIn,
-    _admin: User = Depends(require_admin),
+    _admin: User = Depends(require_chief_editor),
     db: AsyncSession = Depends(get_db),
 ) -> AnnouncementOut:
     tenant_id = require_tenant_id()
@@ -105,7 +105,7 @@ async def create_announcement(
 async def update_announcement(
     announcement_id: int,
     payload: AnnouncementIn,
-    current_admin: User = Depends(require_admin),
+    current_admin: User = Depends(require_chief_editor),
     db: AsyncSession = Depends(get_db),
 ) -> AnnouncementOut:
     tenant_id = require_tenant_id()
@@ -138,7 +138,7 @@ async def update_announcement(
 @router.delete("/{announcement_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_announcement(
     announcement_id: int,
-    current_admin: User = Depends(require_admin),
+    current_admin: User = Depends(require_chief_editor),
     db: AsyncSession = Depends(get_db),
 ) -> None:
     tenant_id = require_tenant_id()

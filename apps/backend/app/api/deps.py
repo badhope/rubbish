@@ -386,7 +386,20 @@ async def require_chief_editor(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    """要求当前用户权限档位 == editor_in_chief（五层轴，终审权）。"""
+    """要求当前用户权限档位 == editor_in_chief（五层轴，终审权）。
+
+    2FA 策略与 require_admin 保持一致：开启 require_2fa_for_admin 后，
+    没绑定 TOTP 的主编同样不能进业务后台，避免“绕开管理员入口”的缺口。
+    """
+    if settings.require_2fa_for_admin and current_user.totp_enabled_at is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                "Admin access requires two-factor authentication. "
+                "Enable TOTP in your account settings before calling "
+                "admin endpoints."
+            ),
+        )
     actual = await effective_permission_role(db, current_user)
     if PERMISSION_RANK[actual] < PERMISSION_RANK["editor_in_chief"]:
         raise HTTPException(

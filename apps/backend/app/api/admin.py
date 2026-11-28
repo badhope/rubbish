@@ -27,7 +27,7 @@ from sqlalchemy import desc, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import __version__
-from app.api.deps import require_admin, require_editor, require_tenant_id
+from app.api.deps import require_admin, require_chief_editor, require_editor, require_tenant_id
 from app.core.config import settings
 from app.core.db import get_db
 from app.core.email import get_email_sender
@@ -35,6 +35,7 @@ from app.core.email_templates import account_created
 from app.core.key_rotation import _active_secret_keys, _signing_key, reload_settings
 from app.core.logging import get_logger
 from app.core.security import hash_password
+from app.domain.review.blinding import get_review_mode, set_review_mode
 from app.core.site_settings import (
     generate_registration_invite_code,
     get_access_policy,
@@ -50,7 +51,11 @@ from app.schemas import (
     AdminUserAreasUpdate,
     AdminUserCreate,
     AdminUserCreateResponse,
+    ReviewModeResponse,
+    ReviewModeUpdate,
     RoleAssign,
+    SiteSettingsCheckItem,
+    SiteSettingsCheckResponse,
     SiteSettingsResponse,
     SiteSettingsUpdate,
     UserResponse,
@@ -93,7 +98,7 @@ ROLE_LABELS = {
 
 @router.get("/security/status")
 async def security_status(
-    _admin: User = Depends(require_admin),
+    _admin: User = Depends(require_chief_editor),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, object]:
     """Report the JWT signing key state for the running process.
@@ -216,7 +221,7 @@ async def update_user_areas(
     user_id: int,
     payload: AdminUserAreasUpdate,
     db: AsyncSession = Depends(get_db),
-    current_admin: User = Depends(require_admin),
+    current_admin: User = Depends(require_chief_editor),
 ) -> UserResponse:
     """站务维护成员领域：科目领域、审稿领域与审稿能力标签。
 
@@ -287,7 +292,7 @@ async def list_users(
     offset: int = Query(default=0, ge=0),
     q: str = Query(default="", max_length=200, description="按用户名或邮箱模糊匹配"),
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_chief_editor),
 ) -> list[UserResponse]:
     """List users in the current tenant, newest first.
 
@@ -316,7 +321,7 @@ async def list_users(
 async def create_invited_user(
     payload: AdminUserCreate,
     db: AsyncSession = Depends(get_db),
-    current_admin: User = Depends(require_admin),
+    current_admin: User = Depends(require_chief_editor),
 ) -> AdminUserCreateResponse:
     """Create a staff account on behalf of an editor and send the invite.
 
@@ -411,7 +416,7 @@ async def set_user_active(
     user_id: int,
     is_active: bool,
     db: AsyncSession = Depends(get_db),
-    current_admin: User = Depends(require_admin),
+    current_admin: User = Depends(require_chief_editor),
 ) -> UserResponse:
     """Enable or disable a user. Disabling yourself is refused.
 
@@ -601,7 +606,7 @@ async def assign_role(
     user_id: int,
     body: RoleAssign,
     db: AsyncSession = Depends(get_db),
-    current_admin: User = Depends(require_admin),
+    current_admin: User = Depends(require_chief_editor),
 ) -> UserResponse:
     """Assign a role to a user (idempotent per tenant: returns the current state if already assigned)."""
     if body.role not in ASSIGNABLE_ROLES:
@@ -662,7 +667,7 @@ async def revoke_role(
     user_id: int,
     role_name: str,
     db: AsyncSession = Depends(get_db),
-    current_admin: User = Depends(require_admin),
+    current_admin: User = Depends(require_chief_editor),
 ) -> UserResponse:
     """Revoke a role from a user (returns 404 when absent, so silent success never misleads the frontend)."""
     tenant_id = require_tenant_id()
@@ -792,7 +797,7 @@ async def list_audit_logs(
     start: datetime | None = Query(default=None),
     end: datetime | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
-    current_admin: User = Depends(require_admin),
+    current_admin: User = Depends(require_chief_editor),
 ) -> list[dict[str, Any]]:
     """List audit log entries with optional action/actor/target/date filters."""
     tenant_id = require_tenant_id()
@@ -823,7 +828,7 @@ async def count_audit_logs(
     start: datetime | None = Query(default=None),
     end: datetime | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
-    current_admin: User = Depends(require_admin),
+    current_admin: User = Depends(require_chief_editor),
 ) -> dict[str, int]:
     """Count filtered audit rows so pagination does not guess from page fullness."""
     tenant_id = require_tenant_id()
@@ -840,7 +845,7 @@ async def export_audit_logs(
     start: datetime | None = Query(default=None),
     end: datetime | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
-    current_admin: User = Depends(require_admin),
+    current_admin: User = Depends(require_chief_editor),
 ) -> Response:
     """Export filtered audit history as UTF-8 CSV (capped at 5000 rows)."""
     tenant_id = require_tenant_id()
@@ -894,7 +899,7 @@ async def export_audit_logs(
 async def monthly_ops_report(
     month: str | None = Query(default=None, pattern=r"^\d{4}-(0[1-9]|1[0-2])$"),
     db: AsyncSession = Depends(get_db),
-    current_admin: User = Depends(require_admin),
+    current_admin: User = Depends(require_chief_editor),
 ) -> dict[str, Any]:
     """Read-only monthly operations report for the current tenant."""
     from app.domain.ops.monthly import LOCAL_TZ, build_monthly_report
@@ -911,7 +916,7 @@ async def monthly_ops_report(
 async def export_monthly_ops_report(
     month: str | None = Query(default=None, pattern=r"^\d{4}-(0[1-9]|1[0-2])$"),
     db: AsyncSession = Depends(get_db),
-    current_admin: User = Depends(require_admin),
+    current_admin: User = Depends(require_chief_editor),
 ) -> Response:
     """Export the monthly operations report as UTF-8 CSV."""
     from app.domain.ops.monthly import LOCAL_TZ, build_monthly_report
@@ -977,6 +982,162 @@ async def get_site_settings(
     return await _site_settings_payload(db, tenant_id)
 
 
+@router.post("/settings/site/check", response_model=SiteSettingsCheckResponse)
+async def check_site_settings(
+    payload: SiteSettingsUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_editor: User = Depends(require_editor),
+) -> SiteSettingsCheckResponse:
+    """保存前先跑一遍配置检查，不写库、不产生副作用。
+
+    检查的是“这份改动提交后会不会自相矛盾”，不是替运营判断该不该开：
+    - 邀请码开关打开但没有可用码：fail，保存后会把注册入口锁死；
+    - 国内密码门打开但环境里没有 7 位密码：fail；
+    - 登录墙和地区限制同时开：warn，访问链会叠两层；
+    - 邮箱验证和算术验证都关：warn，注册口只剩字段校验；
+    - 运行快照和库内值不一致：warn，保存后需要刷新一次。
+    """
+    tenant_id = require_tenant_id()
+    current = await _site_settings_payload(db, tenant_id)
+    merged = current.model_dump()
+    changes = payload.model_dump(exclude_none=True)
+    merged.update(changes)
+    if isinstance(merged.get("registration_invite_code"), str):
+        merged["registration_invite_code"] = merged["registration_invite_code"].strip().upper()
+
+    items: list[SiteSettingsCheckItem] = []
+
+    def add(key: str, label: str, state: str, detail: str) -> None:
+        items.append(SiteSettingsCheckItem(key=key, label=label, status=state, detail=detail))
+
+    # 1) 数据库读取：能读到当前值就说明租户设置可读，不需要写测试库。
+    add(
+        "storage",
+        "设置存储",
+        "ok",
+        f"已读取租户 {tenant_id} 的当前设置；本次检查不写库。",
+    )
+
+    # 2) 访问层数：分别开都能用，但登录墙 + 地区限制叠在一起会让访客
+    #    先撞登录墙再撞地区页，排查时容易误判“站点打不开”。
+    access_layers = [
+        name
+        for name, enabled in (
+            ("登录墙", bool(merged["auth_wall_enabled"])),
+            ("地区限制", bool(merged["region_access_enabled"])),
+            ("国内密码门", bool(merged["mainland_gate_enabled"])),
+        )
+        if enabled
+    ]
+    if len(access_layers) >= 2:
+        add(
+            "access",
+            "访问层叠",
+            "warn",
+            f"同时开启：{'、'.join(access_layers)}。访客会连续遇到多层拦截，建议只留一层。",
+        )
+    elif access_layers:
+        add("access", "访问层叠", "ok", f"当前只有一层限制：{access_layers[0]}。")
+    else:
+        add("access", "访问层叠", "ok", "当前没有访问限制，访客可直接浏览公开内容。")
+
+    # 3) 国内密码门依赖环境密码，不能只改开关。
+    if merged["mainland_gate_enabled"] and len(settings.mainland_gate_password.strip()) < 7:
+        add(
+            "mainland_gate",
+            "密码门依赖",
+            "fail",
+            "国内密码门已打开，但 RUBBISH_MAINLAND_GATE_PASSWORD 不足 7 位；保存会被拒绝。",
+        )
+    elif merged["mainland_gate_enabled"]:
+        add("mainland_gate", "密码门依赖", "ok", "国内密码门已打开，环境密码长度满足要求。")
+    else:
+        add("mainland_gate", "密码门依赖", "ok", "密码门关闭，不依赖环境密码。")
+
+    # 4) 注册链路：邀请码没有码是硬故障；两道防刷都关只是风险提示。
+    if merged["registration_invite_required"] and not merged["registration_invite_code"]:
+        add(
+            "registration",
+            "注册链路",
+            "fail",
+            "邀请码开关已打开，但当前没有可用邀请码；保存后新用户无法注册。",
+        )
+    elif not merged["registration_email_code_required"] and not merged["captcha_required_for_registration"]:
+        add(
+            "registration",
+            "注册链路",
+            "warn",
+            "邮箱验证码和算术验证码都已关闭，注册口只剩字段校验，建议至少保留一道。",
+        )
+    elif merged["registration_email_code_required"] and merged["captcha_required_for_registration"]:
+        add(
+            "registration",
+            "注册链路",
+            "ok",
+            "邮箱验证码优先；算术验证码已开但会自动让路，不会要求连做两道题。",
+        )
+    else:
+        add(
+            "registration",
+            "注册链路",
+            "ok",
+            "注册防刷由邮箱验证码或算术验证码之一接管。",
+        )
+
+    # 5) 邀请码格式：自定义码也能用，但非标准格式只提示，不拦保存。
+    code = str(merged.get("registration_invite_code") or "")
+    if code and not code.startswith("RUBBISH-"):
+        add(
+            "invite_format",
+            "邀请码格式",
+            "warn",
+            "当前邀请码不是 RUBBISH-XXXX-XXXX-XXXX 标准格式，仍可使用，但人工核对更费劲。",
+        )
+    elif code:
+        add("invite_format", "邀请码格式", "ok", "邀请码符合可读格式。")
+    else:
+        add("invite_format", "邀请码格式", "ok", "当前没有邀请码；邀请码开关关闭时不校验。")
+
+    # 6) 运行快照：改完之后要等 PATCH 的 refresh_access_policy 才生效。
+    policy = get_access_policy()
+    policy_values = {
+        "auth_wall_enabled": policy.auth_wall_enabled,
+        "region_access_enabled": policy.region_access_enabled,
+        "mainland_gate_enabled": policy.mainland_gate_enabled,
+        "registration_invite_required": policy.registration_invite_required,
+        "registration_email_code_required": policy.registration_email_code_required,
+        "registration_invite_code": policy.registration_invite_code,
+    }
+    current_values = {key: current.model_dump()[key] for key in policy_values}
+    if changes:
+        add(
+            "runtime",
+            "运行时快照",
+            "ok",
+            "这份改动还没保存；保存成功后会自动刷新运行时快照。",
+        )
+    elif policy_values != current_values:
+        add(
+            "runtime",
+            "运行时快照",
+            "warn",
+            "库内设置与当前进程快照不一致；保存任意一项或重启后会重新对齐。",
+        )
+    else:
+        add("runtime", "运行时快照", "ok", "库内设置与当前进程快照一致。")
+
+    failed = sum(1 for item in items if item.status == "fail")
+    warned = sum(1 for item in items if item.status == "warn")
+    overall = "fail" if failed else "warn" if warned else "ok"
+    if failed:
+        summary = f"{failed} 项必须先修，修好前不要保存。"
+    elif warned:
+        summary = f"{warned} 项需要确认，确认后可以保存。"
+    else:
+        summary = "全部通过，可以保存。"
+    return SiteSettingsCheckResponse(status=overall, summary=summary, items=items)
+
+
 @router.patch("/settings/site", response_model=SiteSettingsResponse)
 async def update_site_settings(
     payload: SiteSettingsUpdate,
@@ -1039,6 +1200,39 @@ async def update_site_settings(
     return await _site_settings_payload(db, tenant_id)
 
 
+@router.get("/settings/review-mode", response_model=ReviewModeResponse)
+async def read_review_mode(
+    db: AsyncSession = Depends(get_db),
+    current_chief: User = Depends(require_chief_editor),
+) -> ReviewModeResponse:
+    """主编读取互评盲法。"""
+    tenant_id = require_tenant_id()
+    return ReviewModeResponse(review_mode=await get_review_mode(db, tenant_id))
+
+
+@router.patch("/settings/review-mode", response_model=ReviewModeResponse)
+async def update_review_mode(
+    payload: ReviewModeUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_chief: User = Depends(require_chief_editor),
+) -> ReviewModeResponse:
+    """主编切换单盲/双盲；写入租户 settings，立即影响互评侧字段裁剪。"""
+    tenant_id = require_tenant_id()
+    await set_review_mode(db, tenant_id, payload.review_mode)
+    db.add(
+        AuditLog(
+            tenant_id=tenant_id,
+            actor_user_id=current_chief.id,
+            action="admin.settings.review_mode",
+            target_type="tenant",
+            target_id=str(tenant_id),
+            payload={"review_mode": payload.review_mode},
+        )
+    )
+    await db.commit()
+    return ReviewModeResponse(review_mode=payload.review_mode)
+
+
 @router.post("/settings/invite-code", response_model=SiteSettingsResponse)
 async def generate_site_invite_code(
     db: AsyncSession = Depends(get_db),
@@ -1065,7 +1259,7 @@ async def generate_site_invite_code(
 
 @router.get("/maintenance/email-status")
 async def email_status(
-    current_admin: User = Depends(require_admin),
+    current_admin: User = Depends(require_chief_editor),
 ) -> dict[str, Any]:
     """邮件通道自检：是否配置、SMTP 是否可达（不发送真实邮件）。"""
     from app.core.email import (
@@ -1152,7 +1346,7 @@ def _mark_author_position_claimed(
 async def list_claims(
     claim_status: str = Query(default="pending", pattern="^(pending|approved|rejected|all)$"),
     db: AsyncSession = Depends(get_db),
-    _admin: User = Depends(require_admin),
+    _admin: User = Depends(require_chief_editor),
 ) -> list[dict[str, Any]]:
     """认领申请列表（站务组审批台）。"""
     from app.domain.catalog.models import AuthorClaim, Resource
@@ -1194,7 +1388,7 @@ async def decide_claim(
     claim_id: int,
     body: ClaimDecision,
     db: AsyncSession = Depends(get_db),
-    current_admin: User = Depends(require_admin),
+    current_admin: User = Depends(require_chief_editor),
 ) -> dict[str, Any]:
     """批准 / 拒绝一篇认领申请。
 
@@ -1357,7 +1551,7 @@ async def assign_owner(
     resource_id: int,
     body: AssignOwnerBody,
     db: AsyncSession = Depends(get_db),
-    current_admin: User = Depends(require_admin),
+    current_admin: User = Depends(require_chief_editor),
 ) -> dict[str, Any]:
     """驳回后把某作者位直接绑给指定用户（逐位绑定，可多次调用）。
 
@@ -1447,7 +1641,7 @@ async def edit_resource_authors(
     resource_id: int,
     body: AuthorsEditBody,
     db: AsyncSession = Depends(get_db),
-    current_admin: User = Depends(require_admin),
+    current_admin: User = Depends(require_chief_editor),
 ) -> dict[str, Any]:
     """管理端编辑文章作者位（发布前）：保存 names + structured authors_meta。"""
     from app.domain.catalog.models import Resource
@@ -1501,7 +1695,7 @@ async def edit_submission_authors(
     submission_id: int,
     body: AuthorsEditBody,
     db: AsyncSession = Depends(get_db),
-    current_admin: User = Depends(require_admin),
+    current_admin: User = Depends(require_chief_editor),
 ) -> dict[str, Any]:
     """管理端编辑发布作者位（发布前）：保存到 submission.authors。"""
     from app.domain.submission.models import Submission
@@ -1568,7 +1762,7 @@ async def editor_today(
 
 @router.get("/system/health")
 async def system_health(
-    _admin: User = Depends(require_admin),
+    _admin: User = Depends(require_chief_editor),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
     """运营级健康总览：数据库、迁移、磁盘、积压、邮件与版本。

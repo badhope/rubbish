@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { ArrowUpRight, ClipboardCheck, Kanban, Layers, SlidersHorizontal } from 'lucide-react'
-import { requireEditorGuard } from '@/lib/route-guards'
+import { requireChiefGuard } from '@/lib/route-guards'
 import { AdminSectionTabs, type AdminSectionItem } from '@/components/admin/admin-section-tabs'
 import AnnouncementsPage from '@/components/admin/pages/content/announcements'
 import ForumBoardsPage from '@/components/admin/pages/content/forum-boards'
@@ -53,7 +53,7 @@ export const Route = createFileRoute('/admin/content')({
         ? Number(search.topic)
         : undefined,
   }),
-  beforeLoad: () => requireEditorGuard(),
+  beforeLoad: () => requireChiefGuard(),
   component: AdminContentPage,
 })
 

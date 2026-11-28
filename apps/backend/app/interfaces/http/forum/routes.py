@@ -31,7 +31,7 @@ from app.api.deps import (
     effective_permission_role,
     get_current_user,
     get_current_user_optional,
-    require_admin,
+    require_chief_editor,
     require_tenant_id,
     user_has_role,
 )
@@ -2642,7 +2642,7 @@ async def create_report(
 async def list_reports(
     status_filter: str | None = Query(default="open", pattern=r"^(open|resolved|rejected)$"),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_chief_editor),
 ) -> list[ReportOut]:
     """管理端：查看举报队列。仅管理员。"""
     tenant_id = require_tenant_id()
@@ -2896,7 +2896,7 @@ async def handle_content_report(
     report_id: int,
     payload: ReportAction,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_chief_editor),
 ) -> ReportOut:
     """评论/发布举报处置：驳回 / 下架 / 停用作者。"""
     from app.domain.comments.models import Comment
@@ -3017,7 +3017,7 @@ async def handle_report(
     report_id: int,
     payload: ReportAction,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_chief_editor),
 ) -> ReportOut:
     """举报处置：驳回 / 移除内容 / 暂停作者账号。
 
@@ -3155,7 +3155,7 @@ class BoardUpdate(BaseModel):
 @router.get("/admin/boards")
 async def admin_list_boards(
     db: AsyncSession = Depends(get_db),
-    _admin: User = Depends(require_admin),
+    _admin: User = Depends(require_chief_editor),
 ) -> dict[str, object]:
     """管理员版块列表（含停用项，方便恢复）。"""
     tenant_id = require_tenant_id()
@@ -3189,7 +3189,7 @@ async def admin_list_boards(
 @router.post("/admin/boards", status_code=status.HTTP_201_CREATED)
 async def create_board(
     payload: BoardCreate,
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_chief_editor),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, object]:
     tenant_id = require_tenant_id()
@@ -3250,7 +3250,7 @@ async def create_board(
 async def update_board(
     board_id: int,
     payload: BoardUpdate,
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_chief_editor),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, object]:
     tenant_id = require_tenant_id()
@@ -3362,7 +3362,7 @@ async def update_board(
 @router.delete("/admin/boards/{board_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_board(
     board_id: int,
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_chief_editor),
     db: AsyncSession = Depends(get_db),
 ) -> None:
     """删除空版块；有子版块或帖子时拒绝，避免帖子失去归属。"""

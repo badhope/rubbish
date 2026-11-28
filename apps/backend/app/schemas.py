@@ -401,6 +401,23 @@ class SiteSettingsUpdate(BaseModel):
     registration_invite_code: str | None = Field(default=None, max_length=64)
 
 
+class SiteSettingsCheckItem(BaseModel):
+    """One item in the pre-save configuration check."""
+
+    key: str
+    label: str
+    status: Literal["ok", "warn", "fail"]
+    detail: str
+
+
+class SiteSettingsCheckResponse(BaseModel):
+    """Result of checking a proposed settings patch before it is saved."""
+
+    status: Literal["ok", "warn", "fail"]
+    summary: str
+    items: list[SiteSettingsCheckItem]
+
+
 class UserUpdate(BaseModel):
     email: EmailStr | None = None
     username: str | None = Field(default=None, min_length=3, max_length=100)

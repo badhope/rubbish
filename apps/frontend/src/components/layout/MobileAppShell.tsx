@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router'
-import { LayoutGrid } from 'lucide-react'
+import { toast } from 'sonner'
+import { ChevronDown, LogOut, Menu, X } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
+import { useLogout } from '@/hooks/api/use-auth'
+import { filterNav } from '@/lib/nav'
 import { useUnreadCount } from '@/hooks/api/use-modules'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -13,6 +16,8 @@ import { ModuleErrorBoundary } from '@/components/common/error-boundary'
 import { PageTransition } from '@/components/common/page-transition'
 import { CookieBanner } from '@/components/common/cookie-banner'
 import {
+  MOBILE_MORE,
+  MOBILE_MORE_GROUP_ORDER,
   MOBILE_TABS,
   type MobileTab,
 } from './mobile-nav'
@@ -54,10 +59,18 @@ function MobileTabButton({
 }
 
 export function MobileAppShell() {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isAdmin, user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const logoutMut = useLogout()
   const { data: unread } = useUnreadCount({ enabled: isAuthenticated })
+  const [moreOpen, setMoreOpen] = useState(false)
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ 我的空间: true })
+  const moreItems = filterNav(MOBILE_MORE, {
+    isAuthenticated,
+    isAdmin,
+    roles: user?.roles ?? [],
+  })
 
   // 认证页（登录/注册/找回密码/验证邮箱）不展示底部 Tab 栏与 FAB
   const isAuthPage = [
@@ -104,6 +117,31 @@ export function MobileAppShell() {
       window.removeEventListener('scroll', onScroll, { capture: true })
     }
   }, [immersive])
+
+  // 抽屉打开时锁住背景滚动；换页、Esc 都把它关掉，避免“点完还挂在半空”。
+  useEffect(() => {
+    if (!moreOpen) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMoreOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = previous
+    }
+  }, [moreOpen])
+
+  useEffect(() => {
+    setMoreOpen(false)
+  }, [location.pathname])
+
+  const currentGroup = moreItems.find((item) => item.to === location.pathname)?.group
+  useEffect(() => {
+    if (!moreOpen || !currentGroup) return
+    setOpenGroups((groups) => (groups[currentGroup] ? groups : { ...groups, [currentGroup]: true }))
+  }, [moreOpen, currentGroup])
 
   // 创建动作从页面内主按钮进入，不再做右下角悬浮“＋”。
 
@@ -189,27 +227,25 @@ export function MobileAppShell() {
       <AmbientBackdrop />
       {/* 紧凑头部：logo + 主题切换 + 显式「功能」入口 */}
       <header className="app-header-rule sticky top-0 z-20 flex h-14 items-center justify-between border-b bg-background/95 px-5 backdrop-blur relative sm:px-6 supports-[backdrop-filter]:bg-background/60">
-        <Link to="/" className="flex items-center gap-2 font-semibold tracking-tight">
-          <BrandMark className="h-5 w-5 shrink-0" />
-          <span>Rubbish</span>
-        </Link>
+        <div className="flex min-w-0 items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="-ml-2 h-9 w-9 shrink-0"
+            onClick={() => setMoreOpen(true)}
+            aria-label="打开导航"
+            aria-expanded={moreOpen}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          <Link to="/" className="flex min-w-0 items-center gap-2 font-semibold tracking-tight">
+            <BrandMark className="h-5 w-5 shrink-0" />
+            <span className="truncate">Rubbish</span>
+          </Link>
+        </div>
         <div className="flex items-center gap-1.5">
           <LanguageButton />
           <AppearanceMenu />
-          {/* 次级入口不再藏在「⋯」里：用带文字的胶囊按钮，第一眼就知道能展开 */}
-          {location.pathname !== '/more' ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 gap-1.5 rounded-full px-3"
-              asChild
-            >
-              <Link to="/more" aria-label="打开全部功能">
-                <LayoutGrid className="h-4 w-4" />
-                <span className="text-xs font-medium">功能</span>
-              </Link>
-            </Button>
-          ) : null}
         </div>
       </header>
 
@@ -237,6 +273,132 @@ export function MobileAppShell() {
       </main>
 
       {bottomTab}
+
+      {/* 移动端功能抽屉：从左侧展开，保留当前页面与底部 Tab，不再跳整页。 */}
+      <div
+        className={cn(
+          'fixed inset-0 z-[60] md:hidden',
+          moreOpen ? 'visible pointer-events-auto' : 'invisible pointer-events-none',
+        )}
+        aria-hidden={!moreOpen}
+      >
+        <button
+          type="button"
+          aria-label="关闭导航"
+          className={cn(
+            'absolute inset-0 bg-black/45 transition-opacity duration-200',
+            moreOpen ? 'opacity-100' : 'opacity-0',
+          )}
+          onClick={() => setMoreOpen(false)}
+        />
+        <aside
+          role="dialog"
+          aria-modal="true"
+          aria-label="全部导航"
+          className={cn(
+            'absolute inset-y-0 left-0 flex w-[86vw] max-w-[340px] flex-col border-r bg-background shadow-2xl transition-transform duration-250 ease-out',
+            moreOpen ? 'translate-x-0' : '-translate-x-full',
+          )}
+        >
+          <div className="flex h-14 items-center justify-between border-b px-4">
+            <div>
+              <p className="text-sm font-medium">全部功能</p>
+              <p className="text-[10px] text-muted-foreground">当前页面不动，选完直接过去</p>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => setMoreOpen(false)} aria-label="关闭导航">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <nav className="flex-1 overflow-y-auto px-4 py-3">
+            {MOBILE_MORE_GROUP_ORDER.map((group) => {
+              const items = moreItems.filter((item) => item.group === group)
+              if (items.length === 0) return null
+              const open = Boolean(openGroups[group])
+              return (
+                <section key={group} className="border-b last:border-b-0">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setOpenGroups((current) => ({ ...current, [group]: !current[group] }))
+                    }
+                    aria-expanded={open}
+                    className="flex min-h-[48px] w-full items-center justify-between gap-3 py-2 text-left"
+                  >
+                    <span className="flex items-center gap-2 text-sm font-medium">
+                      {group}
+                      <span className="rounded-full border px-1.5 py-0.5 font-mono text-[10px] font-normal text-muted-foreground">
+                        {items.length}
+                      </span>
+                    </span>
+                    <ChevronDown
+                      className={cn(
+                        'h-4 w-4 text-muted-foreground transition-transform',
+                        open && 'rotate-180',
+                      )}
+                    />
+                  </button>
+                  {open ? (
+                    <div className="pb-3">
+                      {items.map((item) => {
+                        const Icon = item.icon
+                        const active = location.pathname === item.to
+                        return (
+                          <Link
+                            key={`${item.to}-${item.label}`}
+                            to={item.to}
+                            search={item.search}
+                            onClick={() => setMoreOpen(false)}
+                            data-active={active ? 'true' : 'false'}
+                            className={cn(
+                              'flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
+                              active
+                                ? 'bg-accent text-accent-foreground'
+                                : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground',
+                            )}
+                          >
+                            <Icon className="h-4 w-4 shrink-0" />
+                            <span className="truncate">{item.label}</span>
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  ) : null}
+                </section>
+              )
+            })}
+          </nav>
+
+          <div className="border-t p-4">
+            {isAuthenticated ? (
+              <Button
+                variant="outline"
+                className="w-full text-muted-foreground"
+                disabled={logoutMut.isPending}
+                onClick={() => {
+                  setMoreOpen(false)
+                  void logoutMut.mutateAsync().then(
+                    () => {
+                      toast.success('已退出登录')
+                      void navigate({ to: '/' })
+                    },
+                    () => toast.error('退出没成功，过一会儿再试'),
+                  )
+                }}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                退出登录
+              </Button>
+            ) : (
+              <Button className="w-full" asChild>
+                <Link to="/login" onClick={() => setMoreOpen(false)}>
+                  登录 / 注册
+                </Link>
+              </Button>
+            )}
+          </div>
+        </aside>
+      </div>
     </div>
   )
 }

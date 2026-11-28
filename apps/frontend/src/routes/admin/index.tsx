@@ -13,7 +13,7 @@ import {
   Users,
 } from 'lucide-react'
 
-import { requireAdminGuard } from '@/lib/route-guards'
+import { requireChiefGuard } from '@/lib/route-guards'
 import { useAuth } from '@/hooks/use-auth'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
@@ -29,7 +29,7 @@ const AdminAnalyticsPanel = lazy(() =>
 
 export const Route = createFileRoute('/admin/')({
   beforeLoad: () => {
-    requireAdminGuard()
+    requireChiefGuard()
   },
   component: AdminDashboard,
 })

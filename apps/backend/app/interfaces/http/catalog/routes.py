@@ -36,6 +36,7 @@ from app.api.deps import (
     get_current_user,
     get_current_user_optional,
     require_admin,
+    require_chief_editor,
     require_editor,
     require_tenant_id,
     user_has_role,
@@ -3711,7 +3712,7 @@ async def admin_list_appeals(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
     appeal_id: int | None = Query(default=None, ge=1),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_chief_editor),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, object]:
     """后台申诉队列：按状态分页；`appeal_id` 供通知深链精确取一条。"""
@@ -3745,7 +3746,7 @@ async def admin_list_appeals(
 async def decide_appeal(
     appeal_id: int,
     payload: AppealDecisionIn,
-    current_admin: User = Depends(require_admin),
+    current_admin: User = Depends(require_chief_editor),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, object]:
     """管理员处理申诉：通过撤回时立即从公开目录下架；重评分/分区只记录决定。"""

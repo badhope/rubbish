@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { requireAdminGuard } from '@/lib/route-guards'
+import { requireChiefGuard } from '@/lib/route-guards'
 import { AdminSectionTabs, type AdminSectionItem } from '@/components/admin/admin-section-tabs'
 import UsersPage from '@/components/admin/pages/people/users'
 import ClaimsPage from '@/components/admin/pages/people/claims'
@@ -38,7 +38,7 @@ export const Route = createFileRoute('/admin/people')({
         ? Number(search.application)
         : undefined,
   }),
-  beforeLoad: () => requireAdminGuard(),
+  beforeLoad: () => requireChiefGuard(),
   component: AdminPeoplePage,
 })
 

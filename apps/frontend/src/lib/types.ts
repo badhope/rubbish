@@ -223,6 +223,19 @@ export interface SiteSettingsResponse {
   registration_invite_code: string
 }
 
+export interface SiteSettingsCheckItem {
+  key: string
+  label: string
+  status: 'ok' | 'warn' | 'fail'
+  detail: string
+}
+
+export interface SiteSettingsCheckResponse {
+  status: 'ok' | 'warn' | 'fail'
+  summary: string
+  items: SiteSettingsCheckItem[]
+}
+
 export interface CapabilitiesResponse {
   email_backend: string
   email_delivery: boolean

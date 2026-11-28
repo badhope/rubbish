@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import (
     get_current_user,
-    require_admin,
+    require_chief_editor,
     require_tenant_id,
     user_has_role,
 )
@@ -282,7 +282,7 @@ async def get_user_level(
 async def grant_points(
     user_id: int,
     body: LevelGrantRequest,
-    current_admin: User = Depends(require_admin),
+    current_admin: User = Depends(require_chief_editor),
     db: AsyncSession = Depends(get_db),
 ) -> LevelGrantRequest:
     """仅管理组：手动发放经验（编辑贡献、活动奖励）。"""
@@ -543,7 +543,7 @@ async def list_applications(
     application_id: int | None = Query(default=None, ge=1),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_chief_editor),
     db: AsyncSession = Depends(get_db),
 ) -> RoleApplicationListResponse:
     """管理员审批队列（默认待审在前）。可按 id 定向取一条，供通知深链使用。"""
@@ -582,7 +582,7 @@ async def list_applications(
 async def decide_application(
     application_id: int,
     body: RoleDecisionRequest,
-    current_admin: User = Depends(require_admin),
+    current_admin: User = Depends(require_chief_editor),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, object]:
     """批准 / 拒绝。授角色与终态、审计在同一事务；通知失败不回滚审批。"""

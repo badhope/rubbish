@@ -124,7 +124,7 @@ export default function AdminUsersPage() {
   const [areasReviewer, setAreasReviewer] = useState<string[]>([])
   const [areasTags, setAreasTags] = useState('')
   const [areasError, setAreasError] = useState('')
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
 
   // 后端返回裸数组无 meta，totalPages 用「当前页是否满页」推断（与审计日志页共用）。
   const totalPages = inferTotalPagesFromFullPage(data ?? [], PAGE_SIZE, page)
@@ -315,19 +315,23 @@ export default function AdminUsersPage() {
                           >
                             {u.is_active ? '禁用账号' : '启用账号'}
                           </DropdownMenuItem>
-                          {/* 平台管理员提权：此前只能改数据库，界面上无路可走 */}
-                          <DropdownMenuItem
-                            onSelect={(e) => {
-                              e.preventDefault()
-                              setPendingUserAction({ user: u, action: 'admin' })
-                              setOpenUserId(null)
-                            }}
-                            disabled={setAdminMut.isPending}
-                            className={u.is_admin ? 'text-destructive' : ''}
-                          >
-                            {u.is_admin ? '取消平台管理员' : '设为平台管理员'}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
+                          {/* 平台管理员提权只给站务管理员；主编能管内容线角色，但不能改平台提权。 */}
+                          {isAdmin ? (
+                            <>
+                              <DropdownMenuItem
+                                onSelect={(e) => {
+                                  e.preventDefault()
+                                  setPendingUserAction({ user: u, action: 'admin' })
+                                  setOpenUserId(null)
+                                }}
+                                disabled={setAdminMut.isPending}
+                                className={u.is_admin ? 'text-destructive' : ''}
+                              >
+                                {u.is_admin ? '取消平台管理员' : '设为平台管理员'}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                            </>
+                          ) : null}
                           <DropdownMenuLabel>经验</DropdownMenuLabel>
                           <DropdownMenuItem
                             onSelect={(e) => {

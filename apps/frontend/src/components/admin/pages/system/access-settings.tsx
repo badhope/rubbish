@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import {
+  Activity,
+  AlertTriangle,
   BookOpen,
+  CheckCircle2,
   Copy,
   Eye,
   EyeOff,
@@ -11,6 +14,7 @@ import {
   ShieldCheck,
   Sparkles,
   UserPlus,
+  XCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
@@ -20,11 +24,15 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
+  useCheckSiteSettings,
   useGenerateSiteInviteCode,
+  useReviewMode,
   useSiteSettings,
+  useUpdateReviewMode,
   useUpdateSiteSettings,
 } from '@/hooks/api/use-modules'
-import type { SiteSettingsResponse } from '@/lib/types'
+import { useAuth } from '@/hooks/use-auth'
+import type { SiteSettingsCheckResponse, SiteSettingsResponse } from '@/lib/types'
 
 type FlagKey =
   | 'auth_wall_enabled'
@@ -269,9 +277,20 @@ function warningFor(
 }
 
 export default function AccessSettingsPage() {
+  const { user, isAdmin } = useAuth()
+  const roles = user?.roles ?? []
+  const isChief =
+    isAdmin ||
+    roles.some((role) => ['chief_editor', 'deputy_editor', 'editor_in_chief'].includes(role))
   const query = useSiteSettings()
   const update = useUpdateSiteSettings()
   const generate = useGenerateSiteInviteCode()
+  const check = useCheckSiteSettings()
+  const reviewQuery = useReviewMode(isChief)
+  const reviewUpdate = useUpdateReviewMode()
+  const [checks, setChecks] = useState<SiteSettingsCheckResponse | null>(null)
+  const [checking, setChecking] = useState(false)
+  const [reviewBusy, setReviewBusy] = useState(false)
   const [busyKey, setBusyKey] = useState<string | null>(null)
   const [inviteCode, setInviteCode] = useState('')
   const [showInviteCode, setShowInviteCode] = useState(false)
@@ -283,10 +302,37 @@ export default function AccessSettingsPage() {
     setInviteCode(serverInviteCode)
   }, [serverInviteCode])
 
+  async function runCheck(patch: Partial<SiteSettingsResponse>, quiet = false) {
+    setChecking(true)
+    try {
+      const result = await check.mutateAsync(patch)
+      setChecks(result)
+      if (!quiet) {
+        if (result.status === 'fail') toast.error(result.summary)
+        else if (result.status === 'warn') toast.warning(result.summary)
+        else toast.success(result.summary)
+      }
+      return result
+    } catch {
+      if (!quiet) toast.error('自检没跑完，请稍后重试')
+      return null
+    } finally {
+      setChecking(false)
+    }
+  }
+
   async function applyToggle(key: FlagKey, next: boolean) {
+    const patch = { [key]: next } as Partial<SiteSettingsResponse>
+    // 保存前先检查：硬冲突直接拦下，提醒类让运营自己决定。
+    const result = await runCheck(patch, true)
+    if (!result || result.status === 'fail') {
+      setChecks(result)
+      toast.error(result?.summary ?? '自检没有通过，设置未保存')
+      return
+    }
     setBusyKey(key)
     try {
-      const data = await update.mutateAsync({ [key]: next } as Partial<SiteSettingsResponse>)
+      const data = await update.mutateAsync(patch)
       if (key === 'registration_invite_required' && next) {
         toast.success(
           data.registration_invite_code
@@ -314,10 +360,17 @@ export default function AccessSettingsPage() {
   }
 
   async function saveInviteCode() {
+    const normalized = inviteCode.trim().toUpperCase()
+    const result = await runCheck({ registration_invite_code: normalized }, true)
+    if (!result || result.status === 'fail') {
+      setChecks(result)
+      toast.error(result?.summary ?? '自检没有通过，邀请码未保存')
+      return
+    }
     setBusyKey('registration_invite_code')
     try {
       const data = await update.mutateAsync({
-        registration_invite_code: inviteCode.trim().toUpperCase(),
+        registration_invite_code: normalized,
       } as Partial<SiteSettingsResponse>)
       setInviteCode(data.registration_invite_code)
       toast.success(data.registration_invite_code ? '邀请码已保存' : '邀请码已清空')
@@ -325,6 +378,19 @@ export default function AccessSettingsPage() {
       toast.error('邀请码保存失败，请检查后重试')
     } finally {
       setBusyKey(null)
+    }
+  }
+
+  async function changeReviewMode(next: 'single_blind' | 'double_blind') {
+    if (!reviewQuery.data || reviewQuery.data.review_mode === next) return
+    setReviewBusy(true)
+    try {
+      await reviewUpdate.mutateAsync(next)
+      toast.success(next === 'double_blind' ? '已切换为双盲互评' : '已切换为单盲互评')
+    } catch {
+      toast.error('互评模式切换失败，原设置没有改变')
+    } finally {
+      setReviewBusy(false)
     }
   }
 
@@ -461,6 +527,58 @@ export default function AccessSettingsPage() {
             </CardContent>
           </Card>
 
+          <Card>
+            <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Activity className="h-4 w-4" />
+                  配置自检
+                </CardTitle>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  保存前先看这份改动会不会自相矛盾。只检查，不写库。
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void runCheck({})}
+                disabled={checking}
+              >
+                {checking ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-1.5 h-4 w-4" />}
+                运行自检
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {checks ? (
+                <div className="space-y-2.5">
+                  <p className="text-xs font-medium">{checks.summary}</p>
+                  {checks.items.map((item) => {
+                    const Icon = item.status === 'ok' ? CheckCircle2 : item.status === 'warn' ? AlertTriangle : XCircle
+                    const tone =
+                      item.status === 'ok'
+                        ? 'text-emerald-700'
+                        : item.status === 'warn'
+                          ? 'text-amber-700'
+                          : 'text-destructive'
+                    return (
+                      <div key={item.key} className="flex items-start gap-2 rounded-lg border px-3 py-2">
+                        <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${tone}`} />
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium">{item.label}</p>
+                          <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{item.detail}</p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  还没有跑过。每次保存前会自动跑一遍；硬冲突会拦住保存，提醒项会列在这里。
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
               <CardHeader>
@@ -580,6 +698,56 @@ export default function AccessSettingsPage() {
               />
             </CardContent>
           </Card>
+
+          {isChief ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <BookOpen className="h-4 w-4" />
+                  互评盲法
+                </CardTitle>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  只给主编/副主编。切换后立即影响互评成员看到的作者信息，不改写已有评审记录。
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {reviewQuery.isLoading ? (
+                  <p className="text-xs text-muted-foreground">正在读取互评模式…</p>
+                ) : reviewQuery.data ? (
+                  <>
+                    {([
+                      { key: 'single_blind', title: '单盲', desc: '互评成员知道作者是谁，作者不知道评者是谁。' },
+                      { key: 'double_blind', title: '双盲', desc: '互评成员与作者互不知情，作者与单位信息会被抹掉。' },
+                    ] as const).map((option) => {
+                      const active = reviewQuery.data.review_mode === option.key
+                      return (
+                        <button
+                          key={option.key}
+                          type="button"
+                          onClick={() => void changeReviewMode(option.key)}
+                          disabled={reviewBusy}
+                          className={`flex w-full items-start gap-3 rounded-lg border px-3 py-3 text-left transition-colors ${
+                            active ? 'border-primary bg-primary/5' : 'hover:border-primary/40'
+                          } disabled:cursor-not-allowed disabled:opacity-60`}
+                        >
+                          <span className={`mt-1 h-3 w-3 shrink-0 rounded-full border ${active ? 'border-primary bg-primary' : 'border-muted-foreground/40'}`} />
+                          <span className="min-w-0">
+                            <span className="flex items-center gap-2 text-sm font-medium">
+                              {option.title}
+                              {active ? <Badge variant="outline" className="text-[10px]">当前</Badge> : null}
+                            </span>
+                            <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">{option.desc}</span>
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </>
+                ) : (
+                  <p className="text-xs text-muted-foreground">互评模式读取失败，稍后刷新重试。</p>
+                )}
+              </CardContent>
+            </Card>
+          ) : null}
 
           <p className="text-xs leading-relaxed text-muted-foreground">
             这些开关存在站点数据库里，不走环境变量；换机器部署时会跟着数据库走。站务管理员和编辑都能改，

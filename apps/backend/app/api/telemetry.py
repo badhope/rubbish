@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_tenant_id, require_admin
+from app.api.deps import get_current_tenant_id, require_chief_editor
 from app.core.db import get_db
 from app.domain.catalog.models import PageView
 
@@ -54,7 +54,7 @@ async def record_page_view(
 async def analytics_summary(
     days: int = Query(default=7, ge=1, le=90),
     db: AsyncSession = Depends(get_db),
-    _admin: Any = Depends(require_admin),
+    _admin: Any = Depends(require_chief_editor),
 ) -> dict[str, object]:
     # 以中国时区的自然日切分，避免“近 7 天”在 UTC 17:00 后跨日错位。
     local_now = datetime.now(ZoneInfo("Asia/Shanghai"))

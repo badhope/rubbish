@@ -52,6 +52,9 @@ import type {
   ResourceUpdate,
   ResourceAnalytics,
   ReviewMatrixResponse,
+  ReviewMode,
+  ReviewModeResponse,
+  SiteSettingsCheckResponse,
   SiteSettingsResponse,
   ReviewDraftResponse,
   ReviewReportResponse,
@@ -142,6 +145,7 @@ export const keys = {
       ['admin', 'users', limit, offset, query] as const,
     audit: (limit = 50, offset = 0) => ['admin', 'audit', limit, offset] as const,
     siteSettings: () => ['admin', 'site-settings'] as const,
+    reviewMode: () => ['admin', 'review-mode'] as const,
     claims: (status: string) => ['admin', 'claims', status] as const,
     releaseIssues: () => ['admin', 'release-issues'] as const,
     releaseManifests: (volume: string, issue: string) =>
@@ -2019,6 +2023,40 @@ export function useGenerateSiteInviteCode() {
     onSuccess: (data) => {
       qc.setQueryData(keys.admin.siteSettings(), data)
       void qc.invalidateQueries({ queryKey: ['capabilities'] })
+    },
+  })
+}
+
+export function useCheckSiteSettings() {
+  return useMutation<
+    SiteSettingsCheckResponse,
+    Error,
+    Partial<SiteSettingsResponse>
+  >({
+    mutationFn: async (patch) =>
+      (await api.post<SiteSettingsCheckResponse>('/admin/settings/site/check', patch)).data,
+  })
+}
+
+export function useReviewMode(enabled = true) {
+  return useQuery<ReviewModeResponse>({
+    queryKey: keys.admin.reviewMode(),
+    queryFn: async () => (await api.get<ReviewModeResponse>('/admin/settings/review-mode')).data,
+    enabled,
+    retry: false,
+  })
+}
+
+export function useUpdateReviewMode() {
+  const qc = useQueryClient()
+  return useMutation<ReviewModeResponse, Error, ReviewMode>({
+    mutationFn: async (reviewMode) =>
+      (await api.patch<ReviewModeResponse>('/admin/settings/review-mode', {
+        review_mode: reviewMode,
+      })).data,
+    onSuccess: (data) => {
+      qc.setQueryData(keys.admin.reviewMode(), data)
+      void qc.invalidateQueries({ queryKey: ['review'] })
     },
   })
 }

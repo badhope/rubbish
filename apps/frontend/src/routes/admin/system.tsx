@@ -35,20 +35,25 @@ export const Route = createFileRoute('/admin/system')({
 
 function AdminSystemPage() {
   const navigate = useNavigate()
-  const { isAdmin } = useAuth()
+  const { isAdmin, user } = useAuth()
+  const roles = user?.roles ?? []
+  const isChief =
+    isAdmin ||
+    roles.some((role) => ['chief_editor', 'deputy_editor', 'editor_in_chief'].includes(role))
   const { section: sectionParam } = Route.useSearch()
   const [section, setSection] = useState<SectionKey>('access')
-  // 编辑只开放“访问设置”；系统健康、审计、运营月报仍留给站务管理员。
-  const visibleSections = isAdmin ? SECTIONS : SECTIONS.filter((item) => item.key === 'access')
-  const activeSection: SectionKey = isAdmin ? section : 'access'
+  // 普通编辑只开放“访问设置”；主编/副主编看完整系统域（健康、审计、月报），
+  // 但安全重载和密钥状态仍由 is_admin 独占。
+  const visibleSections = isChief ? SECTIONS : SECTIONS.filter((item) => item.key === 'access')
+  const activeSection: SectionKey = isChief ? section : 'access'
 
   useEffect(() => {
-    if (isAdmin && isSectionKey(sectionParam)) setSection(sectionParam)
-    if (!isAdmin) setSection('access')
-  }, [isAdmin, sectionParam])
+    if (isChief && isSectionKey(sectionParam)) setSection(sectionParam)
+    if (!isChief) setSection('access')
+  }, [isChief, sectionParam])
 
   const changeSection = (next: SectionKey) => {
-    if (!isAdmin && next !== 'access') return
+    if (!isChief && next !== 'access') return
     setSection(next)
     navigate({ to: '/admin/system', search: { section: next }, replace: true })
   }

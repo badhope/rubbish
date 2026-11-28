@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Activity, AlertTriangle, CheckCircle2, KeyRound, Mail, RefreshCw, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
+import { useAuth } from '@/hooks/use-auth'
 import { PageHeader } from '@/components/common/page-header'
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
 import { Badge } from '@/components/ui/badge'
@@ -71,6 +72,7 @@ function StatusIcon({ status }: { status: Check['status'] }) {
 }
 
 export default function SystemHealthPage() {
+  const { isAdmin } = useAuth()
   const [data, setData] = useState<Health | null>(null)
   const [security, setSecurity] = useState<SecurityStatus | null>(null)
   const [email, setEmail] = useState<EmailStatus | null>(null)
@@ -324,10 +326,12 @@ export default function SystemHealthPage() {
                 ) : (
                   <p className="text-muted-foreground">安全状态读取失败，可重试。</p>
                 )}
-                <Button variant="outline" size="sm" onClick={() => setReloadOpen(true)} disabled={opsBusy || securityLoading}>
-                  <RefreshCw className="mr-1.5 h-4 w-4" />
-                  重载安全配置
-                </Button>
+                {isAdmin ? (
+                  <Button variant="outline" size="sm" onClick={() => setReloadOpen(true)} disabled={opsBusy || securityLoading}>
+                    <RefreshCw className="mr-1.5 h-4 w-4" />
+                    重载安全配置
+                  </Button>
+                ) : null}
               </CardContent>
             </Card>
 
