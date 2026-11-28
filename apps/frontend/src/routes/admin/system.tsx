@@ -4,8 +4,9 @@ import { requireAdminGuard } from '@/lib/route-guards'
 import { AdminSectionTabs, type AdminSectionItem } from '@/components/admin/admin-section-tabs'
 import SystemHealthPage from '@/components/admin/pages/system/system-health'
 import AuditLogsPage from '@/components/admin/pages/system/audit-logs'
+import OpsReportPage from '@/components/admin/pages/system/ops-report'
 
-type SectionKey = 'health' | 'audit'
+type SectionKey = 'health' | 'audit' | 'ops'
 
 interface SystemSearch {
   section?: string
@@ -14,10 +15,11 @@ interface SystemSearch {
 const SECTIONS: readonly AdminSectionItem<SectionKey>[] = [
   { key: 'health', label: '系统健康' },
   { key: 'audit', label: '审计日志' },
+  { key: 'ops', label: '运营月报' },
 ]
 
 function isSectionKey(value: string | undefined): value is SectionKey {
-  return value === 'health' || value === 'audit'
+  return value === 'health' || value === 'audit' || value === 'ops'
 }
 
 export const Route = createFileRoute('/admin/system')({
@@ -47,6 +49,7 @@ function AdminSystemPage() {
       <AdminSectionTabs items={SECTIONS} active={section} onChange={changeSection} label="系统域子段" />
       {section === 'health' ? <SystemHealthPage /> : null}
       {section === 'audit' ? <AuditLogsPage /> : null}
+      {section === 'ops' ? <OpsReportPage /> : null}
     </div>
   )
 }

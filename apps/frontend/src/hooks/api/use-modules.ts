@@ -25,6 +25,7 @@ import type {
   LadderResponse,
   LevelSnapshot,
   MessageResponse,
+  MonthlyOpsReport,
   NotificationListResponse,
   NotificationResponse,
   ParseRequest,
@@ -1971,13 +1972,84 @@ export function useUpdateSiteSettings() {
   })
 }
 
-export function useAdminAuditLogs(limit = 50, offset = 0) {
+export interface AdminAuditFilters {
+  action?: string
+  actorUserId?: number
+  targetType?: string
+  start?: string
+  end?: string
+}
+
+function adminAuditParams(filters: AdminAuditFilters): Record<string, string | number> {
+  const params: Record<string, string | number> = {}
+  if (filters.action?.trim()) params.action = filters.action.trim()
+  if (filters.actorUserId) params.actor_user_id = filters.actorUserId
+  if (filters.targetType?.trim()) params.target_type = filters.targetType.trim()
+  if (filters.start) params.start = filters.start
+  if (filters.end) params.end = filters.end
+  return params
+}
+
+export function useAdminAuditLogs(
+  limit = 50,
+  offset = 0,
+  filters: AdminAuditFilters = {},
+) {
   return useQuery<AuditLogEntry[]>({
-    queryKey: keys.admin.audit(limit, offset),
+    queryKey: [...keys.admin.audit(limit, offset), filters] as const,
     refetchOnWindowFocus: false,
     queryFn: async () =>
-      (await api.get<AuditLogEntry[]>('/admin/audit-logs', { params: { limit, offset } })).data,
+      (
+        await api.get<AuditLogEntry[]>('/admin/audit-logs', {
+          params: { limit, offset, ...adminAuditParams(filters) },
+        })
+      ).data,
   })
+}
+
+export function useAdminAuditCount(filters: AdminAuditFilters = {}) {
+  return useQuery<{ total: number }>({
+    queryKey: ['admin', 'audit-count', filters] as const,
+    queryFn: async () =>
+      (
+        await api.get<{ total: number }>('/admin/audit-logs/count', {
+          params: adminAuditParams(filters),
+        })
+      ).data,
+  })
+}
+
+export async function exportAdminAuditLogs(
+  filters: AdminAuditFilters = {},
+): Promise<{ blob: Blob; disposition: string }> {
+  const response = await api.get<Blob>('/admin/audit-logs/export', {
+    params: adminAuditParams(filters),
+    responseType: 'blob',
+  })
+  return {
+    blob: response.data,
+    disposition: String(response.headers['content-disposition'] ?? ''),
+  }
+}
+
+export function useMonthlyOpsReport(month: string) {
+  return useQuery<MonthlyOpsReport>({
+    queryKey: ['admin', 'ops-monthly', month],
+    queryFn: async () =>
+      (await api.get<MonthlyOpsReport>('/admin/ops/monthly', { params: { month } })).data,
+    staleTime: 60_000,
+  })
+}
+
+export async function exportMonthlyOpsReport(month: string): Promise<{ blob: Blob; disposition: string }> {
+  const response = await api.get<Blob>('/admin/ops/monthly/export', {
+    params: { month },
+    responseType: 'blob',
+  })
+  return {
+    blob: response.data,
+    disposition: String(response.headers['content-disposition'] ?? ''),
+  }
 }
 
 // --- Gamification / 等级体系 ---

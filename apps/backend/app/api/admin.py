@@ -9,6 +9,9 @@ tenant B's data.
 
 from __future__ import annotations
 
+import csv
+import io
+import json
 import os
 import secrets
 import shutil
@@ -18,7 +21,7 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel, Field
 from sqlalchemy import desc, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -100,7 +103,9 @@ async def security_status(
     admin_without_2fa = 0
     try:
         admin_total = int(
-            (await db.execute(text("SELECT count(*) FROM users WHERE is_admin = true"))).scalar_one()
+            (
+                await db.execute(text("SELECT count(*) FROM users WHERE is_admin = true"))
+            ).scalar_one()
         )
         admin_without_2fa = int(
             (
@@ -637,31 +642,81 @@ async def revoke_role(
     return await _user_with_roles(db, user)
 
 
-@router.get("/audit-logs", response_model=list[dict[str, Any]])
-async def list_audit_logs(
-    limit: int = Query(default=50, ge=1, le=200),
-    offset: int = Query(default=0, ge=0),
-    db: AsyncSession = Depends(get_db),
-    current_admin: User = Depends(require_admin),
-) -> list[dict[str, Any]]:
-    """List recent audit log entries for the current tenant (newest first)."""
-    tenant_id = require_tenant_id()
+def _audit_conditions(
+    tenant_id: UUID,
+    action: str | None,
+    actor_user_id: int | None,
+    target_type: str | None,
+    start: datetime | None,
+    end: datetime | None,
+) -> list[Any]:
+    conditions: list[Any] = [AuditLog.tenant_id == tenant_id]
+    if action and action.strip():
+        conditions.append(AuditLog.action.startswith(action.strip()[:64]))
+    if actor_user_id is not None:
+        conditions.append(AuditLog.actor_user_id == actor_user_id)
+    if target_type and target_type.strip():
+        conditions.append(AuditLog.target_type == target_type.strip()[:64])
+    start_utc = (
+        start.astimezone(UTC)
+        if start and start.tzinfo
+        else start.replace(tzinfo=UTC)
+        if start
+        else None
+    )
+    end_utc = (
+        end.astimezone(UTC) if end and end.tzinfo else end.replace(tzinfo=UTC) if end else None
+    )
+    if start_utc and end_utc and start_utc > end_utc:
+        raise HTTPException(status_code=422, detail="start must be before end")
+    if start_utc:
+        conditions.append(AuditLog.created_at >= start_utc)
+    if end_utc:
+        conditions.append(AuditLog.created_at <= end_utc)
+    return conditions
+
+
+async def _audit_rows(
+    db: AsyncSession, conditions: list[Any], limit: int, offset: int
+) -> list[AuditLog]:
     result = await db.execute(
         select(AuditLog)
-        .where(AuditLog.tenant_id == tenant_id)
+        .where(*conditions)
         # id 决胜：同秒写入的日志行排序稳定，审计页不抖动。
         .order_by(desc(AuditLog.created_at), AuditLog.id.desc())
         .limit(limit)
         .offset(offset)
     )
-    logs = list(result.scalars())
+    return list(result.scalars())
+
+
+async def _audit_actor_names(db: AsyncSession, logs: list[AuditLog]) -> dict[int, str]:
     actor_ids = {log.actor_user_id for log in logs if log.actor_user_id is not None}
-    actor_names: dict[int, str] = {}
-    if actor_ids:
-        actors = await db.execute(
-            select(User.id, User.username, User.display_name).where(User.id.in_(actor_ids))
-        )
-        actor_names = {row.id: (row.display_name or row.username) for row in actors}
+    if not actor_ids:
+        return {}
+    actors = await db.execute(
+        select(User.id, User.username, User.display_name).where(User.id.in_(actor_ids))
+    )
+    return {row.id: (row.display_name or row.username) for row in actors}
+
+
+@router.get("/audit-logs", response_model=list[dict[str, Any]])
+async def list_audit_logs(
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    action: str | None = Query(default=None, max_length=64),
+    actor_user_id: int | None = Query(default=None, ge=1),
+    target_type: str | None = Query(default=None, max_length=64),
+    start: datetime | None = Query(default=None),
+    end: datetime | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(require_admin),
+) -> list[dict[str, Any]]:
+    """List audit log entries with optional action/actor/target/date filters."""
+    tenant_id = require_tenant_id()
+    conditions = _audit_conditions(tenant_id, action, actor_user_id, target_type, start, end)
+    logs = await _audit_rows(db, conditions, limit, offset)
+    actor_names = await _audit_actor_names(db, logs)
     return [
         {
             "id": log.id,
@@ -676,6 +731,150 @@ async def list_audit_logs(
         }
         for log in logs
     ]
+
+
+@router.get("/audit-logs/count")
+async def count_audit_logs(
+    action: str | None = Query(default=None, max_length=64),
+    actor_user_id: int | None = Query(default=None, ge=1),
+    target_type: str | None = Query(default=None, max_length=64),
+    start: datetime | None = Query(default=None),
+    end: datetime | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(require_admin),
+) -> dict[str, int]:
+    """Count filtered audit rows so pagination does not guess from page fullness."""
+    tenant_id = require_tenant_id()
+    conditions = _audit_conditions(tenant_id, action, actor_user_id, target_type, start, end)
+    total = (await db.execute(select(func.count(AuditLog.id)).where(*conditions))).scalar_one()
+    return {"total": int(total)}
+
+
+@router.get("/audit-logs/export")
+async def export_audit_logs(
+    action: str | None = Query(default=None, max_length=64),
+    actor_user_id: int | None = Query(default=None, ge=1),
+    target_type: str | None = Query(default=None, max_length=64),
+    start: datetime | None = Query(default=None),
+    end: datetime | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(require_admin),
+) -> Response:
+    """Export filtered audit history as UTF-8 CSV (capped at 5000 rows)."""
+    tenant_id = require_tenant_id()
+    conditions = _audit_conditions(tenant_id, action, actor_user_id, target_type, start, end)
+    logs = await _audit_rows(db, conditions, 5000, 0)
+    actor_names = await _audit_actor_names(db, logs)
+
+    buf = io.StringIO()
+    # BOM 让 Excel 直接按 UTF-8 打开中文，避免乱码。
+    buf.write("\ufeff")
+    writer = csv.writer(buf, lineterminator="\n")
+    writer.writerow(
+        [
+            "id",
+            "created_at",
+            "actor_user_id",
+            "actor_name",
+            "action",
+            "target_type",
+            "target_id",
+            "payload",
+        ]
+    )
+    for log in logs:
+        writer.writerow(
+            [
+                log.id,
+                log.created_at.isoformat(),
+                log.actor_user_id or "",
+                actor_names.get(log.actor_user_id, "") if log.actor_user_id else "",
+                log.action,
+                log.target_type or "",
+                log.target_id or "",
+                json.dumps(log.payload, ensure_ascii=False, separators=(",", ":"))
+                if log.payload
+                else "",
+            ]
+        )
+    stamp = datetime.now(UTC).strftime("%Y%m%d")
+    return Response(
+        content=buf.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="rubbish-audit-{stamp}.csv"',
+            "X-Export-Limit": "5000",
+        },
+    )
+
+
+@router.get("/ops/monthly")
+async def monthly_ops_report(
+    month: str | None = Query(default=None, pattern=r"^\d{4}-(0[1-9]|1[0-2])$"),
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(require_admin),
+) -> dict[str, Any]:
+    """Read-only monthly operations report for the current tenant."""
+    from app.domain.ops.monthly import LOCAL_TZ, build_monthly_report
+
+    tenant_id = require_tenant_id()
+    target = month or datetime.now(LOCAL_TZ).strftime("%Y-%m")
+    try:
+        return await build_monthly_report(db, tenant_id, target)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.get("/ops/monthly/export")
+async def export_monthly_ops_report(
+    month: str | None = Query(default=None, pattern=r"^\d{4}-(0[1-9]|1[0-2])$"),
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(require_admin),
+) -> Response:
+    """Export the monthly operations report as UTF-8 CSV."""
+    from app.domain.ops.monthly import LOCAL_TZ, build_monthly_report
+
+    tenant_id = require_tenant_id()
+    target = month or datetime.now(LOCAL_TZ).strftime("%Y-%m")
+    try:
+        report = await build_monthly_report(db, tenant_id, target)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    buf = io.StringIO()
+    buf.write("\ufeff")
+    writer = csv.writer(buf, lineterminator="\n")
+    writer.writerow(["月度运营报告", target])
+    writer.writerow([])
+    writer.writerow(["指标", "数值"])
+    for key, value in report["totals"].items():
+        writer.writerow([key, value])
+    writer.writerow([])
+    writer.writerow(["处置动作", "数量"])
+    for key, value in report["moderation_breakdown"].items():
+        writer.writerow([key, value])
+    writer.writerow([])
+    writer.writerow(["日期", "新增成员", "投稿", "新增作品", "主题帖", "回帖", "评论", "后台动作"])
+    for row in report["daily"]:
+        writer.writerow(
+            [
+                row["date"],
+                row["new_users"],
+                row["submissions"],
+                row["resources"],
+                row["forum_topics"],
+                row["forum_replies"],
+                row["comments"],
+                row["admin_actions"],
+            ]
+        )
+    return Response(
+        content=buf.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="rubbish-ops-{target}.csv"',
+        },
+    )
 
 
 @router.get("/settings/site", response_model=SiteSettingsResponse)

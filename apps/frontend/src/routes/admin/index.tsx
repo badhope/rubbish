@@ -104,7 +104,7 @@ const DOMAINS: {
   },
   {
     title: '系统与安全',
-    desc: '健康检查、审计日志、迁移',
+    desc: '健康检查、审计台账、运营月报、迁移',
     to: '/admin/system',
     icon: Activity,
   },

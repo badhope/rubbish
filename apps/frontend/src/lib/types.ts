@@ -1222,6 +1222,45 @@ export interface AuditLogEntry {
   created_at: string
 }
 
+export interface MonthlyOpsDaily {
+  date: string
+  new_users: number
+  submissions: number
+  resources: number
+  forum_topics: number
+  forum_replies: number
+  comments: number
+  admin_actions: number
+}
+
+export interface MonthlyOpsReport {
+  month: string
+  period: { start: string; end: string }
+  totals: {
+    new_users: number
+    submissions: number
+    resources: number
+    forum_topics: number
+    forum_replies: number
+    comments: number
+    reports: number
+    moderation_events: number
+    admin_actions: number
+    active_admins: number
+    active_moderators: number
+  }
+  moderation_breakdown: Record<string, number>
+  top_actions: Array<{ action: string; count: number }>
+  top_moderators: Array<{ user_id: number; name: string; count: number }>
+  backlog: {
+    open_reports: number
+    manual_review_topics: number
+    pending_comments: number
+    pending_submissions: number
+  }
+  daily: MonthlyOpsDaily[]
+}
+
 // --- Journal settings (admin) ---
 export type ReviewMode = 'single_blind' | 'double_blind'
 
