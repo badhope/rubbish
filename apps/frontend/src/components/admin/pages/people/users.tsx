@@ -183,7 +183,7 @@ export default function AdminUsersPage() {
     <div>
       <PageHeader
         title="成员管理"
-        description="管理用户、启用状态与社区角色分配；科目与审稿领域可从行末菜单代改。读者身份=注册即得，作者身份=确认《边界与处理》即得，均不在此分配。"
+        description="管理用户、启用状态与社区角色分配；科目领域与审稿人领域可从行末菜单代改。读者身份=注册即得，作者身份=确认《边界与处理》即得，均不在此分配。"
         actions={
           <div className="flex items-center gap-2">
             {data ? <Badge variant="secondary">本页 {data.length} 人</Badge> : null}
@@ -558,8 +558,7 @@ export default function AdminUsersPage() {
           <DialogHeader>
             <DialogTitle>领域资料</DialogTitle>
             <DialogDescription>
-              代 {areasTarget?.username ?? '该成员'} 补齐科目领域与审稿领域。科目领域会展示在公开主页；
-              审稿领域与能力标签只用于互评匹配和站务审阅。改动会写审计日志。
+              代 {areasTarget?.username ?? '该成员'} 补齐科目领域与审稿人领域。科目领域会展示在公开主页；审稿人领域与审稿能力标签只用于互评匹配和站务审阅。改动会写审计日志。
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">

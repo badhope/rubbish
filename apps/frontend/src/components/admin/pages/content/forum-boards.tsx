@@ -4,6 +4,7 @@ import { ArrowUpDown, Pencil, Plus, Power, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { api } from '@/lib/api'
+import { orderForumBoards } from '@/lib/admin-board-tree'
 import { extractError } from '@/lib/utils'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
@@ -71,22 +72,7 @@ export default function AdminForumBoardsPage() {
   })
 
   const rows = useMemo(() => listQ.data ?? [], [listQ.data])
-  const withDepth = useMemo(() => {
-    const byId = new Map(rows.map((b) => [b.id, b]))
-    const depthOf = (b: AdminBoard): number => {
-      let depth = 0
-      let cursor: AdminBoard | undefined = b
-      while (cursor?.parent_id) {
-        cursor = byId.get(cursor.parent_id)
-        depth += 1
-        if (depth > 5) break
-      }
-      return depth
-    }
-    return [...rows]
-      .sort((a, b) => a.sort_order - b.sort_order || a.id - b.id)
-      .map((b) => ({ ...b, depth: depthOf(b) }))
-  }, [rows])
+  const withDepth = useMemo(() => orderForumBoards(rows), [rows])
 
   const saveMut = useMutation({
     mutationFn: async (form: BoardForm) => {

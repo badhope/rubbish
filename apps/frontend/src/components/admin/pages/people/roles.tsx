@@ -239,7 +239,7 @@ export default function RolesPage({
                   <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
                     {(item.subject_disciplines ?? []).length > 0 ? (
                       <>
-                        <span className="text-muted-foreground">科目</span>
+                        <span className="text-muted-foreground">科目领域</span>
                         {(item.subject_disciplines ?? []).map((slug) => (
                           <Badge key={slug} variant="secondary" className="text-[10px] font-normal">
                             {disciplineNames.get(slug) ?? slug}
@@ -249,7 +249,7 @@ export default function RolesPage({
                     ) : null}
                     {(item.reviewer_disciplines ?? []).length > 0 ? (
                       <>
-                        <span className="ml-1 text-muted-foreground">审稿</span>
+                        <span className="ml-1 text-muted-foreground">审稿人领域</span>
                         {(item.reviewer_disciplines ?? []).map((slug) => (
                           <Badge key={slug} variant="outline" className="text-[10px] font-normal">
                             {disciplineNames.get(slug) ?? slug}
@@ -259,7 +259,7 @@ export default function RolesPage({
                     ) : null}
                     {(item.reviewer_tags ?? []).length > 0 ? (
                       <>
-                        <span className="ml-1 text-muted-foreground">能力</span>
+                        <span className="ml-1 text-muted-foreground">审稿能力标签</span>
                         {(item.reviewer_tags ?? []).map((tag) => (
                           <Badge key={tag} variant="outline" className="text-[10px] font-normal">
                             {tag}
@@ -270,7 +270,7 @@ export default function RolesPage({
                   </div>
                 ) : item.status === 'pending' ? (
                   <p className="mt-2 text-[11px] text-amber-700">
-                    申请人还没填科目与审稿领域；可先在成员管理里补，再决定。
+                    申请人还没填科目领域与审稿人领域；可先在成员管理里补，再决定。
                   </p>
                 ) : null}
                 {item.decision_note ? (

@@ -141,6 +141,10 @@ function replacePatterns(source: string): string {
     .replace(/共\s*(\d+)\s*篇作品/g, '$1 works')
     .replace(/共\s*(\d+)\s*条/g, '$1 items')
     .replace(/共\s*(\d+)\s*人/g, '$1 people')
+    .replace(/本页\s*(\d+)\s*人/g, '$1 on this page')
+    .replace(/科目\s*(\d+)\s*·\s*审稿\s*(\d+)/g, 'Subjects $1 · Reviews $2')
+    .replace(/^在售\s*(\d+)$/g, 'Active $1')
+    .replace(/^历史\s*(\d+)$/g, 'Archive $1')
     .replace(/共\s*(\d+)\s*篇/g, '$1 pieces')
     .replace(
       /最近公开的\s*(\d+)\s*篇。先读一两篇，再决定往哪走。/g,
@@ -178,6 +182,8 @@ function replacePatterns(source: string): string {
     .replace(/(\d+)\s*项待补/g, '$1 to fix')
     .replace(/(\d+)\s*项未完成/g, '$1 unfinished')
     .replace(/(\d+)\s*个阻断项待处理/g, '$1 blockers')
+    .replace(/^已选\s*(\d+)\/(\d+)。?$/g, '$1/$2 selected')
+    .replace(/^用这\s*(\d+)\s*个方向$/g, 'Use these $1 areas')
     .replace(/·\s*完成/g, '· completed')
     .replace(/·\s*截止/g, '· due')
     .replace(/·\s*阅读/g, '· read')

@@ -98,6 +98,7 @@ export function ShopCatalogCard() {
   const updateItem = useUpdateShopItem()
   const [editor, setEditor] = useState<{ item: AdminShopItem | null } | null>(null)
   const [toggleTarget, setToggleTarget] = useState<AdminShopItem | null>(null)
+  const [catalogView, setCatalogView] = useState<'active' | 'archived'>('active')
   const [form, setForm] = useState<ItemForm>(EMPTY_FORM)
   const [coverUploading, setCoverUploading] = useState(false)
   const coverInputRef = useRef<HTMLInputElement>(null)
@@ -111,6 +112,9 @@ export function ShopCatalogCard() {
       a.sort_order - b.sort_order ||
       a.id - b.id,
   )
+  const activeItems = orderedItems.filter((item) => item.is_active)
+  const archivedItems = orderedItems.filter((item) => !item.is_active)
+  const visibleItems = catalogView === 'active' ? activeItems : archivedItems
 
   const set = <K extends keyof ItemForm>(key: K, value: ItemForm[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -211,6 +215,35 @@ export function ShopCatalogCard() {
         </CardHeader>
         <CardContent className="space-y-3">
           {items.isLoading ? <p className="text-sm text-muted-foreground">加载中…</p> : null}
+          {!items.isLoading && !items.isError ? (
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="inline-flex rounded-md border p-0.5">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={catalogView === 'active' ? 'default' : 'ghost'}
+                  className="h-7 rounded-sm px-2.5 text-xs"
+                  onClick={() => setCatalogView('active')}
+                >
+                  在售 {activeItems.length}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={catalogView === 'archived' ? 'default' : 'ghost'}
+                  className="h-7 rounded-sm px-2.5 text-xs"
+                  onClick={() => setCatalogView('archived')}
+                >
+                  历史 {archivedItems.length}
+                </Button>
+              </div>
+              {catalogView === 'archived' ? (
+                <p className="text-[11px] leading-relaxed text-muted-foreground">
+                  仅作存档对账。重新上架前先核对公告与兑换口径；实物货品需先确认口径再决定是否恢复。
+                </p>
+              ) : null}
+            </div>
+          ) : null}
           {items.isError ? (
             <div className="flex items-center justify-between gap-3 border-y py-4 text-sm">
               <span className="text-muted-foreground">货品目录加载失败，可重试。</span>
@@ -219,14 +252,16 @@ export function ShopCatalogCard() {
               </Button>
             </div>
           ) : null}
-          {!items.isLoading && !items.isError && (orderedItems.length) === 0 ? (
+          {!items.isLoading && !items.isError && visibleItems.length === 0 ? (
             <p className="border-y py-5 text-sm text-muted-foreground">
-              还没有货品。新增一件，会员就能在经验兑换区兑换。
+              {catalogView === 'active'
+                ? '当前没有在售货品。新增一件，会员就能在经验兑换区兑换。'
+                : '没有历史货品。'}
             </p>
           ) : null}
-          {(orderedItems.length) > 0 ? (
+          {(visibleItems.length) > 0 ? (
             <div className="divide-y border-y">
-              {orderedItems.map((item) => (
+              {visibleItems.map((item) => (
                 <div
                   key={item.id}
                   className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between"
@@ -449,7 +484,7 @@ export function ShopCatalogCard() {
           toggleTarget
             ? toggleTarget.is_active
               ? `「${toggleTarget.name}」下架后，会员会立即看不到它；已兑换的订单不受影响。`
-              : `「${toggleTarget.name}」会重新出现在经验兑换区。`
+              : `「${toggleTarget.name}」会重新出现在经验兑换区。若它是此前下架的实物货品，请先确认公告与兑换口径仍允许恢复。`
             : undefined
         }
         confirmText={toggleTarget?.is_active ? '下架' : '重新上架'}

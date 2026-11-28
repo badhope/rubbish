@@ -11,6 +11,7 @@
 
 export const NAV_EN: Record<string, string> = {
   "/": 'Home',
+  "/explore": 'Discover',
   "/catalog": 'Library',
   "/issues": 'Volumes',
   "/forum": 'Forum',
@@ -529,7 +530,7 @@ export const TEXT_EN: Record<string, string> = {
   "站点管理组": 'Site admin group',
   "内容工作组": 'Content group',
   "成员组": 'Member group',
-  "内容整理": 'Content desk',
+  "内容整理": 'Editor',
   "互评成员": 'Peer reviewer',
   "资深互评成员": 'Senior peer reviewer',
   "第三方复核人": 'Third-party reviewer',
@@ -592,7 +593,7 @@ export const TEXT_EN: Record<string, string> = {
   "违法违规": 'Illegal content',
   "其他问题": 'Something else',
   "具体情况": 'Details',
-  "说明": 'Explain',
+  "说明": 'Description',
   "理由": 'Reason',
   "提交给站务": 'Send to the site team',
   "已提交，站务会收到": 'Submitted — the site team will see it',
@@ -1088,7 +1089,7 @@ export const TEXT_EN: Record<string, string> = {
   "审计日志": 'Audit log',
   "管理员": 'Admin',
   "内容管理": 'Content admin',
-  "成员管理": 'Member admin',
+  "成员管理": 'Members',
   "用户管理": 'People',
   "权限": 'Permissions',
   "角色": 'Role',
@@ -1975,6 +1976,100 @@ const READING_EN: Record<string, string> = {
     "The link may be off, or this page has been retired. Go home, or browse the Library for something to read.",
   "回首页": "Back home",
   "去内容库随便翻一篇": "Browse the Library",
+  // — Admin chrome and the 1.20.17 area fields —
+  "管理后台": "Site admin",
+  "成员、内容、经验、系统，各管一摊。能在这里处理，不用来回跳页。":
+    "Members, content, XP, system — each has its own desk. Handle it here without hopping pages.",
+  "角色申请": "Role applications",
+  "在售": "Active",
+  "历史": "Archive",
+  "仅作存档对账。重新上架前先核对公告与兑换口径；实物货品需先确认口径再决定是否恢复。":
+    "Archive for reconciliation only. Before relisting, check the announcement and redemption policy; confirm the policy before restoring a physical item.",
+  "当前没有在售货品。新增一件，会员就能在经验兑换区兑换。":
+    "No active items. Add one and members can redeem it in the XP store.",
+  "没有历史货品。": "No archived items.",
+  "管理用户、启用状态与社区角色分配；科目领域与审稿人领域可从行末菜单代改。读者身份=注册即得，作者身份=确认《边界与处理》即得，均不在此分配。":
+    "Manage users, account state, and community roles. Subject and reviewer areas can be edited from the row menu. Reader status comes with registration; author status comes after accepting Boundaries & Handling; neither is assigned here.",
+  "跨域工作台": "Workbenches",
+  "待核验投稿、草稿与发布前的整理。": "Submissions, drafts, and pre-publish cleanup.",
+  "按指派与进度处理互评任务。": "Peer-review assignments and progress.",
+  "互评校准": "Review calibration",
+  "查看成员季度校准与评分偏差。": "Quarterly calibration and scoring gaps across members.",
+  "合集编排": "Issue planning",
+  "按卷组织文章顺序与封面。": "Order articles by issue and set covers.",
+  "新建分区": "New section",
+  "排序": "Order",
+  "启用": "Enabled",
+  "停用": "Disabled",
+  "名称": "Name",
+  "父分区": "Parent section",
+  "无（一级分区）": "None (top level)",
+  "编辑分区": "Edit section",
+  "删除分区": "Delete section",
+  "树形结构：父分区汇总，子分区承载内容。排序值越小越靠前；有子分区或主题帖的分区不能直接删除。":
+    "Tree view: parent sections group, child sections hold posts. Lower order values come first; a section with children or posts cannot be deleted directly.",
+  "父分区只做汇总，主题帖发到最具体的子分区；slug 用于 URL，创建后尽量别改。":
+    "Parent sections only group; post in the most specific child section. The slug is used in URLs, so avoid changing it after creation.",
+  "站务组": "Site team",
+  "内容主管": "Content lead",
+  "内容副主管": "Deputy content lead",
+  "分区整理": "Section editor",
+  "经验管理员": "XP manager",
+  "站务": "Site admin",
+  "认领": "Claims",
+  "讨论分区": "Forum sections",
+  "公告管理": "Announcements",
+  "公告": "Announcements",
+  "举报处置": "Reports",
+  "评论审核": "Comments",
+  "内容核验队列": "Verification queue",
+  "主题巡检": "Forum patrol",
+  "系统健康": "Health",
+  "运营月报": "Monthly report",
+  "新增成员": "Add member",
+  "平台管理": "Admin",
+  "邮箱验证": "Email verified",
+  "注册时间": "Joined",
+  "未填领域": "No areas yet",
+  "成员 · 领域资料": "Member · areas",
+  "互评成员和资深互评成员由这里处理；通过后身份立即生效，对方会收到通知。":
+    "Peer reviewer and senior reviewer applications are handled here. Approval takes effect immediately and the applicant is notified.",
+  "申请人还没填科目领域与审稿人领域；可先在成员管理里补，再决定。":
+    "The applicant has not filled in subject or reviewer areas yet. You can add them in Members first, then decide.",
+  "领域与互评": "Areas & peer review",
+  "科目领域": "Subject areas",
+  "审稿人领域": "Reviewer areas",
+  "审稿能力标签": "Review skills",
+  "审稿领域": "Reviewer areas",
+  "能力标签": "Skill tags",
+  "选择科目领域": "Choose subject areas",
+  "选择审稿人领域": "Choose reviewer areas",
+  "保存领域": "Save areas",
+  "公开主页可见，最多 6 个。": "Visible on your public profile, up to 6.",
+  "只进互评匹配，最多 10 个。": "Used for peer-review matching only, up to 10.",
+  "用顿号、逗号或分号分隔，最多 20 个；不会出现在公开主页。":
+    "Separate with commas or semicolons, up to 20. Never shown publicly.",
+  "科目领域会出现在公开主页；审稿人领域与审稿能力标签只用于互评匹配和站务审阅，不对外展示。":
+    "Subject areas appear on your public profile. Reviewer areas and skill tags are used only for peer-review matching and site review, never shown publicly.",
+  "你写作、研究或长期关注的方向，公开主页会显示这些标签。":
+    "Fields you write about, study, or follow. These tags appear on your public profile.",
+  "你能判断的稿件方向。只参与互评候选匹配和站务审阅，不展示给作者。":
+    "Fields whose submissions you can judge. Used only for peer-review matching and site review; authors never see them.",
+  "用顿号、逗号或分号分隔，最多 20 个。适合补充词表里没有的细分能力；同样不会出现在公开主页。":
+    "Separate with commas or semicolons, up to 20. Use this for specific skills not in the list; never shown publicly.",
+  "审稿人领域只给匹配与站务看；公开主页只看得到科目领域。":
+    "Reviewer areas are visible only to matching and site staff. Your public profile shows subject areas only.",
+  "从站内受控词表里选，最多 6 个。选的是方向，不是职称；之后可以随时回来改。":
+    "Choose from the site's controlled list, up to 6. This is a direction, not a title; you can change it later.",
+  "从站内受控词表里选，最多 10 个。选的是方向，不是职称；之后可以随时回来改。":
+    "Choose from the site's controlled list, up to 10. This is a direction, not a title; you can change it later.",
+  "搜方向名称或 slug": "Search a field name or slug",
+  "正在读领域词表…": "Loading the field list…",
+  "领域词表没加载出来，稍后重试或直接保存已有选择。":
+    "The field list did not load. Try again, or save your existing choices.",
+  "没有匹配的领域。": "No matching fields.",
+  "如：质性研究、田野调查、统计分析、代码复现":
+    "e.g. qualitative research, fieldwork, statistics, code replication",
 }
 
 /** Merged lookup used by the runtime translator. */

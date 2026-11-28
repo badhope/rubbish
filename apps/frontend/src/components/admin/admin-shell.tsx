@@ -14,7 +14,7 @@ const DOMAINS = [
   { key: 'overview', label: '总览', to: '/admin', icon: Gauge, paths: ['/admin'] },
   {
     key: 'people',
-    label: '成员',
+    label: '成员管理',
     to: '/admin/people',
     icon: Users,
     paths: ['/admin/people'],

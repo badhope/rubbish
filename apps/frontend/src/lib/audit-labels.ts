@@ -61,6 +61,7 @@ const ACTION_LABELS: Record<string, string> = {
   'user.create': '成员 · 新增',
   'user.set_active': '成员 · 启用/禁用',
   'user.set_admin': '成员 · 平台管理',
+  'user.update_areas': '成员 · 领域资料',
   'user.role.assign': '成员 · 授予角色',
   'user.role.revoke': '成员 · 撤销角色',
   'shop.item.create': '经验货品 · 新增',

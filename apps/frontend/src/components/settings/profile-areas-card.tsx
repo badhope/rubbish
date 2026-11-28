@@ -70,7 +70,7 @@ export function ProfileAreasCard({ initial }: { initial?: UserResponse | null })
           领域与互评
         </CardTitle>
         <CardDescription>
-          科目领域会出现在公开主页；审稿人领域只用于互评匹配和站务审阅，不对外展示。
+          科目领域会出现在公开主页；审稿人领域与审稿能力标签只用于互评匹配和站务审阅，不对外展示。
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -108,7 +108,7 @@ export function ProfileAreasCard({ initial }: { initial?: UserResponse | null })
         <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
           <p className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-            审稿领域只给匹配与站务看；公开主页只看得到科目领域。
+            审稿人领域只给匹配与站务看；公开主页只看得到科目领域。
           </p>
           <Button size="sm" onClick={() => void save()} disabled={!dirty || updateProfile.isPending}>
             {updateProfile.isPending ? '保存中…' : '保存领域'}

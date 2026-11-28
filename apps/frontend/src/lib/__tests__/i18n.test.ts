@@ -24,4 +24,17 @@ describe('review copy in the English layer', () => {
     expect(translateText('内容', 'en')).toBe('Content')
     expect(translateText('系统', 'en')).toBe('System')
   })
+
+  it('translates role-application and area labels introduced in 1.20.17', () => {
+    expect(translateText('角色申请', 'en')).toBe('Role applications')
+    expect(translateText('认领', 'en')).toBe('Claims')
+    expect(translateText('科目领域', 'en')).toBe('Subject areas')
+    expect(translateText('审稿人领域', 'en')).toBe('Reviewer areas')
+    expect(translateText('审稿能力标签', 'en')).toBe('Review skills')
+  })
+
+  it('translates area counts without hard-coding the member', () => {
+    expect(translateText('科目 2 · 审稿 1', 'en')).toBe('Subjects 2 · Reviews 1')
+    expect(translateText('本页 50 人', 'en')).toBe('50 on this page')
+  })
 })
