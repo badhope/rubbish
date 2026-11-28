@@ -44,9 +44,10 @@ export function useUnifiedSearch(
   q: string | undefined,
   page: number,
   discipline?: string,
+  pageSize = 20,
 ) {
   return useQuery<UnifiedSearchResponse>({
-    queryKey: ['search', 'unified', q, kind, page, discipline] as const,
+    queryKey: ['search', 'unified', q, kind, page, discipline, pageSize] as const,
     queryFn: async () =>
       (
         await api.get<UnifiedSearchResponse>('/search', {
@@ -55,7 +56,7 @@ export function useUnifiedSearch(
             ...(discipline ? { discipline } : {}),
             type: kind,
             page,
-            page_size: kind === 'all' ? 6 : 20,
+            page_size: kind === 'all' ? 6 : pageSize,
           },
         })
       ).data,

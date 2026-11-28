@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowUpRight, CheckCircle2, ChevronLeft, ChevronRight, Clock3, UserRoundCheck, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
-import { useDisciplines } from '@/hooks/api/use-modules'
+import { useDisciplines, usePublicExpertise } from '@/hooks/api/use-modules'
 import { extractError } from '@/lib/utils'
 import type { AdminRoleApplications, RoleApplicationItem } from '@/lib/types'
 import { PageHeader } from '@/components/common/page-header'
@@ -112,7 +112,13 @@ export default function RolesPage({
 
   const items = query.data?.data ?? []
   const disciplines = useDisciplines()
+  const expertise = usePublicExpertise()
   const disciplineNames = new Map((disciplines.data ?? []).map((item) => [item.slug, item.name]))
+  const coverage = (disciplines.data ?? []).map((item) => ({
+    ...item,
+    reviewerCount: expertise.data?.disciplines.find((row) => row.slug === item.slug)?.reviewer_count ?? 0,
+  }))
+  const uncovered = coverage.filter((item) => item.reviewerCount === 0)
   const meta = query.data?.meta
   const pendingCount = pendingQuery.data?.meta.total ?? 0
   const totalPages = meta?.total_pages ?? 1
@@ -140,6 +146,46 @@ export default function RolesPage({
         title="角色申请"
         description="互评成员和资深互评成员由这里处理；通过后身份立即生效，对方会收到通知。"
       />
+
+      <Card className="mb-4">
+        <CardContent className="space-y-3 pt-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="text-sm font-semibold">领域互评覆盖</h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {coverage.length > 0
+                  ? `${coverage.length - uncovered.length}/${coverage.length} 个方向至少有一位互评成员；标红的零覆盖方向不会拦投稿，但只能按话题与历史互评匹配。`
+                  : '正在读方向词表…'}
+              </p>
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {expertise.data?.total_reviewers ?? '—'} 位互评成员
+            </span>
+          </div>
+          {coverage.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {coverage.map((item) => (
+                <Link
+                  key={item.slug}
+                  to="/fields/$slug"
+                  params={{ slug: item.slug }}
+                  className="rounded-full border px-2.5 py-1 text-[11px] transition-colors hover:border-primary/40 hover:text-primary"
+                >
+                  <span
+                    className={
+                      item.reviewerCount === 0
+                        ? 'text-amber-700'
+                        : 'text-muted-foreground'
+                    }
+                  >
+                    {item.name} · {item.reviewerCount}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
 
       {focused ? (
         <div className="mb-4 flex flex-wrap items-center gap-3 rounded-md border bg-muted/30 px-4 py-3 text-sm">

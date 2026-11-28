@@ -50,10 +50,10 @@ from app.core.time import utcnow
 from app.domain.catalog.models import Resource
 from app.domain.catalog.visibility import public_conditions
 from app.domain.forum import engagement
+from app.domain.forum import moderation_service as moderation
 from app.domain.forum.models import (
     ForumBoard,
     ForumModerationEvent,
-    ForumModerationSetting,
     ForumReaction,
     ForumReply,
     ForumReport,
@@ -338,6 +338,11 @@ class ModerationSettingsIn(BaseModel):
     manual_threshold: int = Field(default=40, ge=1, le=99)
     sla_minutes: int = Field(default=30, ge=1, le=1440)
     weights: dict[str, int] | None = None
+    # 队列排序：风险分 × risk + 等待小时 × age。0 表示该维度不参与。
+    priority_risk_weight: int = Field(default=10, ge=0, le=100)
+    priority_age_weight: int = Field(default=1, ge=0, le=100)
+    # 灰度：{"boards": {...}, "roles": {...}}；服务端只保留受支持的形状。
+    gray_rules: dict[str, object] | None = None
 
 
 class ModerationSettingsOut(ModerationSettingsIn):
@@ -594,34 +599,6 @@ async def _require_rule_admin(db: AsyncSession, user: User) -> None:
     )
 
 
-async def _moderation_settings(db: AsyncSession, tenant_id) -> ForumModerationSetting:
-    row = (
-        await db.execute(
-            select(ForumModerationSetting).where(ForumModerationSetting.tenant_id == tenant_id)
-        )
-    ).scalar_one_or_none()
-    if row is not None:
-        return row
-    row = ForumModerationSetting(
-        tenant_id=tenant_id,
-        auto_publish_enabled=True,
-        manual_threshold=40,
-        sla_minutes=30,
-        weights={},
-    )
-    db.add(row)
-    await db.flush()
-    return row
-
-
-def _default_weights() -> dict[str, int]:
-    return {code: weight for code, _label, _detail, weight in SOFT_PATTERNS}
-
-
-def _effective_weights(row: ForumModerationSetting) -> dict[str, int]:
-    return {**_default_weights(), **(row.weights or {})}
-
-
 def _auto_board_slug(title: str, body: str) -> str:
     """无版块选择时按内容做保守的确定性归类。
 
@@ -646,123 +623,6 @@ def _auto_board_slug(title: str, body: str) -> str:
     if any(term in text for term in ("生活", "日常", "焦虑", "失眠", "写作", "创作", "心情")):
         return "life"
     return "discussion"
-
-
-async def _record_moderation_event(
-    db: AsyncSession,
-    *,
-    tenant_id,
-    topic: ForumTopic,
-    action: str,
-    from_status: str | None,
-    to_status: str | None,
-    actor_id: int | None,
-    note: str | None,
-    meta: dict | None = None,
-) -> None:
-    db.add(
-        ForumModerationEvent(
-            tenant_id=tenant_id,
-            topic_id=topic.id,
-            actor_id=actor_id,
-            action=action,
-            from_status=from_status,
-            to_status=to_status,
-            note=note,
-            meta=meta,
-        )
-    )
-
-
-async def _apply_topic_decision(
-    db: AsyncSession,
-    *,
-    tenant_id,
-    topic: ForumTopic,
-    action: str,
-    note: str,
-    actor: User,
-    batch_id: str | None = None,
-) -> str:
-    """把人工处置写入主题与事件流。调用方负责 commit。"""
-    before = topic.moderation_status
-    before_published = topic.published_at
-    before_reason = topic.manual_review_reason
-    before_eta = topic.review_eta_at
-    now = utcnow()
-    if action == "approve":
-        topic.moderation_status = "published"
-        topic.published_at = now
-        topic.manual_review_reason = None
-    elif action == "changes":
-        topic.moderation_status = "changes_requested"
-        topic.published_at = None
-        topic.manual_review_reason = note or "需要按运营说明调整"
-    else:
-        topic.moderation_status = "rejected"
-        topic.published_at = None
-        topic.manual_review_reason = note or "未通过站内规则核验"
-    topic.review_eta_at = None
-    topic.sla_reminded_at = None
-    topic.reviewed_by = actor.id
-    topic.reviewed_at = now
-    await _record_moderation_event(
-        db,
-        tenant_id=tenant_id,
-        topic=topic,
-        action=action,
-        from_status=before,
-        to_status=topic.moderation_status,
-        actor_id=actor.id,
-        note=note or None,
-        meta={
-            "risk_score": topic.risk_score,
-            "batch_id": batch_id,
-            "from_published_at": before_published.isoformat() if before_published else None,
-            "from_manual_review_reason": before_reason,
-            "from_review_eta_at": before_eta.isoformat() if before_eta else None,
-        },
-    )
-    return topic.moderation_status
-
-
-async def _notify_moderation_author(
-    db: AsyncSession,
-    *,
-    tenant_id,
-    topic: ForumTopic,
-    action: str,
-    note: str,
-) -> None:
-    """人工处置结果通知作者；失败不能把审核结果回滚。"""
-    try:
-        from app.domain.notifications import services as notifications
-
-        if action == "approve":
-            title = f"主题帖「{topic.title[:80]}」已通过核验"
-            body = "内容已进入公开列表，可以继续在楼层里互动。"
-        elif action == "changes":
-            title = f"主题帖「{topic.title[:80]}」需要调整"
-            body = note or "请按运营说明调整后重新提交。"
-        else:
-            title = f"主题帖「{topic.title[:80]}」未通过核验"
-            body = note or "该内容未通过站内规则核验。"
-        await notifications.create(
-            db,
-            tenant_id=tenant_id,
-            user_id=topic.author_id,
-            type_="forum.moderation",
-            title=title,
-            body=body[:240],
-            related_type="forum_topic",
-            related_id=str(topic.id),
-        )
-        # 审核主事务已经提交，通知单独提交；否则会话关闭时 flush 会被丢弃。
-        await db.commit()
-    except Exception:
-        # 通知是增强能力，不影响已经落库的审核结果。
-        await db.rollback()
-        return
 
 
 @router.get("/topics", response_model=TopicListOut)
@@ -1193,9 +1053,7 @@ async def get_topic_related(
     ):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="主题帖不存在")
 
-    paper, related_topics, related_works = await find_related(
-        db, tenant_id=tenant_id, topic=topic
-    )
+    paper, related_topics, related_works = await find_related(db, tenant_id=tenant_id, topic=topic)
     boards = await _board_index(db, tenant_id)
     return TopicRelatedOut(
         paper=(
@@ -1219,9 +1077,7 @@ async def get_topic_related(
                 board_name=(
                     boards[row.board_id].name if row.board_id and row.board_id in boards else None
                 ),
-                board_path=_board_path(
-                    boards.get(row.board_id) if row.board_id else None, boards
-                ),
+                board_path=_board_path(boards.get(row.board_id) if row.board_id else None, boards),
                 reply_count=row.reply_count,
                 last_reply_at=row.last_reply_at,
                 reason=reason,
@@ -1332,14 +1188,19 @@ async def create_topic(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="「公告」分类仅限编辑与管理员发布",
             )
-    settings = await _moderation_settings(db, tenant_id)
+    base_policy = await moderation.get_policy(db, tenant_id)
+    policy = moderation.effective_policy(
+        base_policy,
+        board_slug=board.slug if board is not None else None,
+        role="admin" if current_user.is_admin else current_user.role,
+    )
     assessment = assess_text(
         payload.title,
         payload.body,
-        manual_threshold=settings.manual_threshold,
-        auto_publish_enabled=settings.auto_publish_enabled,
-        sla_minutes=settings.sla_minutes,
-        weights=settings.weights or {},
+        manual_threshold=policy.manual_threshold,
+        auto_publish_enabled=policy.auto_publish_enabled,
+        sla_minutes=policy.sla_minutes,
+        weights=policy.weights,
     )
     if assessment.action == "blocked":
         raise HTTPException(
@@ -1378,7 +1239,7 @@ async def create_topic(
         moderation_signals=[asdict(signal) for signal in assessment.signals],
         manual_review_reason=assessment.reason if review_status == "manual_review" else None,
         review_eta_at=(
-            now + timedelta(minutes=settings.sla_minutes)
+            now + timedelta(minutes=policy.sla_minutes)
             if review_status == "manual_review"
             else None
         ),
@@ -1386,7 +1247,7 @@ async def create_topic(
     )
     db.add(topic)
     await db.flush()
-    await _record_moderation_event(
+    await moderation.record_event(
         db,
         tenant_id=tenant_id,
         topic=topic,
@@ -1642,7 +1503,11 @@ async def moderation_queue(
     if topic_id is not None:
         stmt = stmt.where(ForumTopic.id == topic_id)
     if sort == "priority":
-        order_by = (desc(ForumTopic.risk_score), ForumTopic.created_at.asc())
+        policy = await moderation.get_policy(db, tenant_id)
+        order_by = (
+            desc(moderation.priority_order_expression(policy)),
+            ForumTopic.created_at.asc(),
+        )
     elif sort == "oldest":
         order_by = (ForumTopic.created_at.asc(),)
     else:
@@ -1921,13 +1786,16 @@ async def get_moderation_settings(
 ) -> ModerationSettingsOut:
     tenant_id = require_tenant_id()
     await _require_moderator(db, current_user)
-    row = await _moderation_settings(db, tenant_id)
+    row = await moderation.load_settings_row(db, tenant_id)
     await db.commit()
     return ModerationSettingsOut(
         auto_publish_enabled=row.auto_publish_enabled,
         manual_threshold=row.manual_threshold,
         sla_minutes=row.sla_minutes,
-        weights=_effective_weights(row),
+        weights=moderation.effective_weights(row.weights),
+        priority_risk_weight=row.priority_risk_weight,
+        priority_age_weight=row.priority_age_weight,
+        gray_rules=row.gray_rules or {},
         updated_at=row.updated_at,
     )
 
@@ -1940,7 +1808,7 @@ async def update_moderation_settings(
 ) -> ModerationSettingsOut:
     tenant_id = require_tenant_id()
     await _require_rule_admin(db, current_user)
-    row = await _moderation_settings(db, tenant_id)
+    row = await moderation.load_settings_row(db, tenant_id)
     allowed = {code for code, *_ in SOFT_PATTERNS}
     weights = {
         k: max(0, min(100, int(v))) for k, v in (payload.weights or {}).items() if k in allowed
@@ -1949,14 +1817,21 @@ async def update_moderation_settings(
     row.manual_threshold = payload.manual_threshold
     row.sla_minutes = payload.sla_minutes
     row.weights = weights
+    row.priority_risk_weight = payload.priority_risk_weight
+    row.priority_age_weight = payload.priority_age_weight
+    row.gray_rules = moderation.sanitize_gray_rules(payload.gray_rules)
     row.updated_at = utcnow()
     await db.commit()
     await db.refresh(row)
+    moderation.invalidate_policy(tenant_id)
     return ModerationSettingsOut(
         auto_publish_enabled=row.auto_publish_enabled,
         manual_threshold=row.manual_threshold,
         sla_minutes=row.sla_minutes,
-        weights=_effective_weights(row),
+        weights=moderation.effective_weights(row.weights),
+        priority_risk_weight=row.priority_risk_weight,
+        priority_age_weight=row.priority_age_weight,
+        gray_rules=row.gray_rules or {},
         updated_at=row.updated_at,
     )
 
@@ -1968,12 +1843,15 @@ async def moderation_rules(
 ) -> dict[str, object]:
     tenant_id = require_tenant_id()
     await _require_moderator(db, current_user)
-    row = await _moderation_settings(db, tenant_id)
+    row = await moderation.load_settings_row(db, tenant_id)
     return {
         "threshold": row.manual_threshold,
         "sla_minutes": row.sla_minutes,
         "auto_publish_enabled": row.auto_publish_enabled,
-        "weights": _effective_weights(row),
+        "weights": moderation.effective_weights(row.weights),
+        "priority_risk_weight": row.priority_risk_weight,
+        "priority_age_weight": row.priority_age_weight,
+        "gray_rules": row.gray_rules or {},
         "soft_rules": [
             {"code": code, "label": label, "detail": detail, "default_weight": weight}
             for code, label, detail, weight in SOFT_PATTERNS
@@ -2006,16 +1884,16 @@ async def decide_topic(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="请写至少 4 个字的处理说明"
         )
-    await _apply_topic_decision(
+    await moderation.apply_decision(
         db,
         tenant_id=tenant_id,
         topic=topic,
         action=payload.action,
         note=payload.note.strip(),
-        actor=current_user,
+        actor_id=current_user.id,
     )
     await db.commit()
-    await _notify_moderation_author(
+    await moderation.notify_author(
         db, tenant_id=tenant_id, topic=topic, action=payload.action, note=payload.note.strip()
     )
     authors = await _author_map(db, {topic.author_id})
@@ -2108,18 +1986,18 @@ async def batch_decide_topics(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="部分主题帖不存在")
     batch_id = payload.batch_id or uuid4().hex[:12]
     for topic in topics:
-        await _apply_topic_decision(
+        await moderation.apply_decision(
             db,
             tenant_id=tenant_id,
             topic=topic,
             action=payload.action,
             note=payload.note.strip(),
-            actor=current_user,
+            actor_id=current_user.id,
             batch_id=batch_id,
         )
     await db.commit()
     for topic in topics:
-        await _notify_moderation_author(
+        await moderation.notify_author(
             db, tenant_id=tenant_id, topic=topic, action=payload.action, note=payload.note.strip()
         )
     return {"count": len(topics), "batch_id": batch_id}
@@ -2308,24 +2186,34 @@ async def edit_topic(
         topic.is_fictional = payload.is_fictional
     # 已公开或需修改的主题再次改正文时，重新进入人工核验，避免先通过再改成广告。
     if payload.title is not None or payload.body is not None:
-        settings = await _moderation_settings(db, tenant_id)
+        edit_board = (
+            await _resolve_board(db, tenant_id, board_id=new_board_id)
+            if new_board_id is not None
+            else None
+        )
+        base_policy = await moderation.get_policy(db, tenant_id)
+        policy = moderation.effective_policy(
+            base_policy,
+            board_slug=edit_board.slug if edit_board is not None else new_category,
+            role="admin" if current_user.is_admin else current_user.role,
+        )
         assessment = assess_text(
             new_title,
             new_body,
-            manual_threshold=settings.manual_threshold,
-            auto_publish_enabled=settings.auto_publish_enabled,
-            sla_minutes=settings.sla_minutes,
-            weights=settings.weights or {},
+            manual_threshold=policy.manual_threshold,
+            auto_publish_enabled=policy.auto_publish_enabled,
+            sla_minutes=policy.sla_minutes,
+            weights=policy.weights,
         )
         before_status = topic.moderation_status
         topic.moderation_status = "manual_review"
         topic.risk_score = assessment.risk_score
         topic.moderation_signals = [asdict(signal) for signal in assessment.signals]
         topic.manual_review_reason = assessment.reason
-        topic.review_eta_at = utcnow() + timedelta(minutes=settings.sla_minutes)
+        topic.review_eta_at = utcnow() + timedelta(minutes=policy.sla_minutes)
         topic.sla_reminded_at = None
         topic.published_at = None
-        await _record_moderation_event(
+        await moderation.record_event(
             db,
             tenant_id=tenant_id,
             topic=topic,

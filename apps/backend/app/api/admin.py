@@ -1567,6 +1567,65 @@ async def system_health(
     except Exception:
         pending_comments = -1
 
+    # Forum review backlog + SLA overrun + notification failure rate.
+    # These are operational leading indicators: a queue that grows quietly
+    # eventually becomes an author-visible delay.
+    forum_manual_review_pending = 0
+    forum_sla_overdue = 0
+    try:
+        forum_manual_review_pending = int(
+            (
+                await db.execute(
+                    text(
+                        "SELECT count(*) FROM forum_topics "
+                        "WHERE moderation_status = 'manual_review' AND deleted_at IS NULL"
+                    )
+                )
+            ).scalar_one()
+        )
+        forum_sla_overdue = int(
+            (
+                await db.execute(
+                    text(
+                        "SELECT count(*) FROM forum_topics "
+                        "WHERE moderation_status = 'manual_review' AND deleted_at IS NULL "
+                        "AND review_eta_at IS NOT NULL AND review_eta_at < CURRENT_TIMESTAMP"
+                    )
+                )
+            ).scalar_one()
+        )
+    except Exception:
+        forum_manual_review_pending = -1
+        forum_sla_overdue = -1
+    notification_failures_24h = 0
+    notification_sent_24h = 0
+    try:
+        notification_failures_24h = int(
+            (
+                await db.execute(
+                    text(
+                        "SELECT count(*) FROM email_digest_records "
+                        "WHERE status = 'failed' AND created_at >= :cutoff"
+                    ),
+                    {"cutoff": cutoff},
+                )
+            ).scalar_one()
+        )
+        notification_sent_24h = int(
+            (
+                await db.execute(
+                    text(
+                        "SELECT count(*) FROM email_digest_records "
+                        "WHERE status = 'sent' AND created_at >= :cutoff"
+                    ),
+                    {"cutoff": cutoff},
+                )
+            ).scalar_one()
+        )
+    except Exception:
+        notification_failures_24h = -1
+        notification_sent_24h = -1
+
     try:
         disk = shutil.disk_usage("/")
         disk_free_gb = round(disk.free / (1024**3), 1)
@@ -1764,6 +1823,11 @@ async def system_health(
             else f"日志已 {age_minutes:.0f} 分钟未更新，检查 cron",
         }
 
+    counts["forum_manual_review_pending"] = forum_manual_review_pending
+    counts["forum_sla_overdue"] = forum_sla_overdue
+    counts["notification_failures_24h"] = notification_failures_24h
+    counts["notification_sent_24h"] = notification_sent_24h
+
     scheduler_checks = [
         _scheduler_check(
             "release_scheduler", "定时发布调度器", release_scheduler_state(), RELEASE_TICK
@@ -1812,6 +1876,29 @@ async def system_health(
             "label": "待审评论",
             "status": "ok" if pending_comments == 0 else "warn",
             "detail": f"{pending_comments} 条",
+        },
+        {
+            "key": "forum_queue",
+            "label": "审核队列",
+            "status": "warn" if forum_manual_review_pending > 0 or forum_sla_overdue > 0 else "ok",
+            "detail": f"待核验 {forum_manual_review_pending} 条 · SLA 超时 {forum_sla_overdue} 条",
+        },
+        {
+            "key": "notification_email",
+            "label": "通知邮件（24h）",
+            "status": "warn"
+            if notification_failures_24h < 0
+            or notification_sent_24h < 0
+            or notification_failures_24h > 0
+            or (
+                notification_sent_24h + notification_failures_24h > 0
+                and notification_failures_24h / (notification_sent_24h + notification_failures_24h)
+                > 0.05
+            )
+            else "ok",
+            "detail": f"失败 {notification_failures_24h} · 成功 {notification_sent_24h}"
+            if notification_failures_24h >= 0 and notification_sent_24h >= 0
+            else "无法读取邮件审计表",
         },
         {
             "key": "email",

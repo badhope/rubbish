@@ -63,6 +63,9 @@ interface ModerationSettings {
   manual_threshold: number
   sla_minutes: number
   weights: Record<string, number>
+  priority_risk_weight: number
+  priority_age_weight: number
+  gray_rules: Record<string, unknown>
   updated_at?: string | null
 }
 
@@ -817,6 +820,29 @@ function SettingsForm({
   onSave: (payload: ModerationSettings) => void
 }) {
   const [form, setForm] = useState<ModerationSettings>(initial)
+  const [grayText, setGrayText] = useState(
+    JSON.stringify(initial.gray_rules ?? {}, null, 2),
+  )
+  const [grayError, setGrayError] = useState('')
+
+  const save = () => {
+    let gray: Record<string, unknown> = {}
+    if (grayText.trim()) {
+      try {
+        const parsed = JSON.parse(grayText)
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+          setGrayError('灰度规则必须是 JSON 对象。')
+          return
+        }
+        gray = parsed as Record<string, unknown>
+      } catch {
+        setGrayError('灰度规则不是合法 JSON，先改好再保存。')
+        return
+      }
+    }
+    setGrayError('')
+    onSave({ ...form, gray_rules: gray })
+  }
   return (
     <div className="space-y-4">
       <label className="flex items-start gap-2 rounded-lg border p-3 text-sm">
@@ -860,6 +886,32 @@ function SettingsForm({
           />
           <p className="mt-1 text-[11px] text-muted-foreground">默认 30。前台会向作者展示这个预计时限。</p>
         </div>
+        <div>
+          <Label htmlFor="priority-risk-weight">队列排序：风险权重</Label>
+          <Input
+            id="priority-risk-weight"
+            type="number"
+            min={0}
+            max={100}
+            value={form.priority_risk_weight}
+            onChange={(event) => setForm((prev) => ({ ...prev, priority_risk_weight: Number(event.target.value) }))}
+            className="mt-1.5"
+          />
+          <p className="mt-1 text-[11px] text-muted-foreground">风险分 × 此权重。0 表示排序不看风险。</p>
+        </div>
+        <div>
+          <Label htmlFor="priority-age-weight">队列排序：等待权重</Label>
+          <Input
+            id="priority-age-weight"
+            type="number"
+            min={0}
+            max={100}
+            value={form.priority_age_weight}
+            onChange={(event) => setForm((prev) => ({ ...prev, priority_age_weight: Number(event.target.value) }))}
+            className="mt-1.5"
+          />
+          <p className="mt-1 text-[11px] text-muted-foreground">每小时等待 × 此权重；长尾积压会随等待时间上来。</p>
+        </div>
       </div>
       <div>
         <p className="text-sm font-medium">风险信号权重</p>
@@ -888,8 +940,23 @@ function SettingsForm({
           ))}
         </div>
       </div>
+      <div>
+        <Label htmlFor="gray-rules">灰度规则（按分区或角色收紧阈值）</Label>
+        <Textarea
+          id="gray-rules"
+          value={grayText}
+          onChange={(event) => setGrayText(event.target.value)}
+          rows={5}
+          className="mt-1.5 font-mono text-xs"
+          placeholder={'{\n  "boards": {"site": {"manual_threshold": 20}},\n  "roles": {"user": {"manual_threshold": 30}}\n}'}
+        />
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          分区规则优先于角色规则；留空或用 {'{}'} 表示全站统一阈值。只接受 manual_threshold、auto_publish_enabled 和 weights。
+        </p>
+        {grayError ? <p className="mt-1 text-[11px] text-destructive">{grayError}</p> : null}
+      </div>
       <div className="flex justify-end">
-        <Button disabled={pending} onClick={() => onSave(form)}>
+        <Button disabled={pending} onClick={save}>
           {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           保存规则
         </Button>

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import {
   ArrowRight,
@@ -20,6 +21,7 @@ import {
   useUnsubscribeDiscipline,
 } from '@/hooks/api/use-modules'
 import { ArticleCover } from '@/components/common/article-cover'
+import { Pagination } from '@/components/common/pagination'
 import { PageHeader } from '@/components/common/page-header'
 import { EmptyState, ErrorState } from '@/components/common/state'
 import { Badge } from '@/components/ui/badge'
@@ -33,7 +35,7 @@ export const Route = createFileRoute('/fields/$slug')({
 })
 
 function formatPeopleCount(value: number | undefined): string {
-  return value === undefined ? '—' : `${value} 位`
+  return value === undefined ? '—' : String(value)
 }
 
 function MemberCard({ row }: { row: SearchPersonCard }) {
@@ -102,12 +104,19 @@ function WorkRow({ row }: { row: ResourceResponse }) {
 function FieldPage() {
   const { slug } = Route.useParams()
   const { isAuthenticated } = useAuth()
+  const [memberPage, setMemberPage] = useState(1)
+  const [workPage, setWorkPage] = useState(1)
   const disciplines = useDisciplines()
   const area = (disciplines.data ?? []).find((item) => item.slug === slug)
 
-  const people = useUnifiedSearch('people', undefined, 1, slug)
+  useEffect(() => {
+    setMemberPage(1)
+    setWorkPage(1)
+  }, [slug])
+
+  const people = useUnifiedSearch('people', undefined, memberPage, slug, 8)
   const resourcesQ = useResources(
-    { discipline: area?.name, page: 1, page_size: 4 },
+    { discipline: area?.name, page: workPage, page_size: 6 },
     Boolean(area?.name) && isAuthenticated,
   )
   const expertise = usePublicExpertise()
@@ -145,8 +154,10 @@ function FieldPage() {
 
   const members = people.data?.people ?? []
   const memberTotal = people.data?.meta.totals.people
+  const memberPages = Math.max(1, Math.ceil((memberTotal ?? 0) / 8))
   const works = resourcesQ.data?.data ?? []
   const workTotal = resourcesQ.data?.meta.total
+  const workPages = Math.max(1, resourcesQ.data?.meta.total_pages ?? 0)
   const reviewerCount = expertise.data
     ? (expertise.data.disciplines.find((item) => item.slug === slug)?.reviewer_count ?? 0)
     : undefined
@@ -197,15 +208,15 @@ function FieldPage() {
 
       <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
         <Badge variant="secondary" className="font-normal">
-          {formatPeopleCount(memberTotal)}同领域成员
+          {`${formatPeopleCount(memberTotal)} 位同领域成员`}
         </Badge>
         <Badge variant="outline" className="font-normal">
-          {workTotal ?? '—'} 篇公开作品
+          {`${workTotal ?? '—'} 篇公开作品`}
         </Badge>
         <Badge variant="outline" className="font-normal">
-          {reviewerCount ?? '—'} 位互评成员覆盖
+          {`${reviewerCount ?? '—'} 位互评成员覆盖`}
         </Badge>
-        <span>订阅 {subscriberCount ?? '—'} 人</span>
+        <span>{`订阅 ${subscriberCount ?? '—'} 人`}</span>
       </div>
 
       <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -260,6 +271,7 @@ function FieldPage() {
                   这个方向还没有公开作品。等第一篇落地，这里会自动出现。
                 </p>
               )}
+              <Pagination page={workPage} totalPages={workPages} onPageChange={setWorkPage} />
             </CardContent>
           </Card>
 
@@ -293,7 +305,7 @@ function FieldPage() {
                 </p>
               ) : members.length > 0 ? (
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  {members.slice(0, 8).map((row) => (
+                  {members.map((row) => (
                     <MemberCard key={row.username} row={row} />
                   ))}
                 </div>
@@ -310,6 +322,7 @@ function FieldPage() {
                   }
                 />
               )}
+              <Pagination page={memberPage} totalPages={memberPages} onPageChange={setMemberPage} />
             </CardContent>
           </Card>
         </div>

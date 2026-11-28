@@ -315,6 +315,17 @@ class ForumModerationSetting(Base, TenantScopedMixin):
         Integer, nullable=False, default=30, server_default="30"
     )
     weights: Mapped[dict | None] = mapped_column(JSONBVariant, nullable=True)
+    # 队列 priority 排序的两个权重：风险分 × risk + 等待小时 × age。
+    # 默认仍让风险分主导，但长尾积压会随着等待时间自然浮上来。
+    priority_risk_weight: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=10, server_default="10"
+    )
+    priority_age_weight: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=1, server_default="1"
+    )
+    # 灰度规则：{"boards": {"site": {"manual_threshold": 20}},
+    # "roles": {"user": {"manual_threshold": 30}}}。没有配置就走全站阈值。
+    gray_rules: Mapped[dict | None] = mapped_column(JSONBVariant, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
     )

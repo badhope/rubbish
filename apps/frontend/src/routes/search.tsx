@@ -15,6 +15,7 @@ import { displayTypeLabel } from '@/lib/resource-labels'
 import { shortDate } from '@/components/me/format'
 import { Highlight } from '@/components/common/highlight'
 import { PageHeader } from '@/components/common/page-header'
+import { translateText } from '@/lib/i18n'
 import { Pagination } from '@/components/common/pagination'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
 import { Badge } from '@/components/ui/badge'
@@ -91,7 +92,7 @@ function ResourceResult({ row, query }: { row: ExploreResourceCard; query: strin
         ) : null}
         <MetaLine>
           <span>{row.author_name}</span>
-          {row.reads > 0 ? <span>· {compact(row.reads)} 阅读</span> : null}
+          {row.reads > 0 ? <span>{translateText(`· ${compact(row.reads)} 阅读`)}</span> : null}
         </MetaLine>
       </span>
       <ArrowRight className="mt-1 hidden h-4 w-4 shrink-0 text-muted-foreground/40 group-hover:text-primary sm:block" />
@@ -119,7 +120,7 @@ function TopicResult({ row, query }: { row: ExploreTopicCard; query: string }) {
       ) : null}
       <MetaLine>
         <span>{row.author_name}</span>
-        <span>· {row.reply_count} 条回应</span>
+        <span>{translateText(`· ${row.reply_count} 条回应`)}</span>
         {row.last_reply_at ? <span>· {shortDate(row.last_reply_at)}</span> : null}
       </MetaLine>
     </Link>
@@ -175,13 +176,13 @@ function PersonResult({
           <span className="mt-2 flex flex-wrap gap-1">
             {areas.map((slug) => (
               <Badge key={slug} variant="secondary" className="text-[10px] font-normal">
-                {disciplineNames?.get(slug) ?? slug}
+                {translateText(disciplineNames?.get(slug) ?? slug)}
               </Badge>
             ))}
           </span>
         ) : null}
         <span className="mt-2 block text-[11px] text-muted-foreground">
-          {row.works} 篇作品 · {row.followers} 关注者
+          {translateText(`${row.works} 篇作品 · ${row.followers} 关注者`)}
         </span>
       </span>
     </Link>

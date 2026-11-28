@@ -39,6 +39,17 @@ curl -fsS -H 'Host: rubbish.argjiemi.cn' http://127.0.0.1:8080/api/health
 
 健康检查失败就恢复 `"/opt/rubbish-app/static-$stamp"` 再查。后端改动替换前先备份文件，`systemctl restart rubbish-app` 后检查健康接口的版本号。Nginx 改动必须先 `nginx -t` 再 `nginx -s reload`。
 
+生产迁移要用数据库 owner 账号。应用运行账号 `rubbish_app` 只有读写权限，执行 `ALTER TABLE` 会报 `must be owner of table`；`RUBBISH_DATABASE_URL` 指向它，不能直接拿来跑 Alembic。用 `.env` 里的 `POSTGRES_USER` / `POSTGRES_PASSWORD` 临时覆盖迁移 URL：
+
+```bash
+cd /opt/rubbish-app
+set -a; . /www/wwwroot/rubbish.argjiemi.cn/.env; set +a
+export RUBBISH_DATABASE_URL="postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB}"
+.venv/bin/python -m alembic upgrade head
+```
+
+仓库里 `.venv/bin/alembic` 的 shebang 指向旧构建路径时，用 `python -m alembic`，不要直接执行脚本。
+
 这台机器不要用 `ops/deploy.sh`：它是 Docker 静态热替换的参考脚本，实际生效的是上面的 systemd 流程。
 
 ## 准备

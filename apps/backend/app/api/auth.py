@@ -963,7 +963,7 @@ async def request_registration_email_code(
         )
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="验证码邮件发送失败，请稍后再试。",
+            detail="验证码邮件没有发出去；先检查邮箱地址，60 秒后再试一次，或改用密码登录。",
         ) from exc
     return MessageResponse(message="注册验证码已发送，请查收（10 分钟内有效，含垃圾邮件箱）")
 
@@ -1069,7 +1069,7 @@ async def request_email_login_code(
         )
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="验证码邮件发送失败，请稍后再试或使用密码登录。",
+            detail="验证码邮件没有发出去；先检查邮箱地址，60 秒后再试一次，或改用密码登录。",
         ) from exc
     return MessageResponse(message="验证码已发送，请查收（10 分钟内有效，含垃圾邮件箱）")
 

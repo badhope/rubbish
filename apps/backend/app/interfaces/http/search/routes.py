@@ -27,6 +27,7 @@ from app.domain.catalog.models import Resource
 from app.domain.catalog.visibility import public_conditions
 from app.domain.follows.models import AuthorFollow
 from app.domain.forum.models import ForumTopic
+from app.domain.submission.models import Submission
 from app.interfaces.http.explore.routes import (
     ExploreResourceCard,
     ExploreTopicCard,
@@ -148,15 +149,22 @@ async def _people_cards(db: AsyncSession, users: list[User]) -> list[SearchPerso
     if not users:
         return []
     user_ids = [row.id for row in users]
+    # Count the same published-submission path the public profile uses.
+    # ``Resource.owner_id`` is the catalog owner and can differ from the
+    # submitter; using it made a member card say 0 works while the profile
+    # showed hundreds.
     works_rows = (
         await db.execute(
-            select(Resource.owner_id, func.count(Resource.id))
+            select(Submission.submitted_by, func.count(Submission.id))
+            .join(Resource, Submission.resource_id == Resource.id)
             .where(
+                Submission.tenant_id == users[0].tenant_id,
+                Submission.submitted_by.in_(user_ids),
+                Submission.status.in_(("accepted", "approved")),
                 Resource.tenant_id == users[0].tenant_id,
-                Resource.owner_id.in_(user_ids),
-                *public_conditions(),
+                Resource.publication_status == "published",
             )
-            .group_by(Resource.owner_id)
+            .group_by(Submission.submitted_by)
         )
     ).all()
     works = {int(owner): int(count) for owner, count in works_rows if owner is not None}
