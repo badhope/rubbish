@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { ArrowRight, BookOpen, MessagesSquare } from 'lucide-react'
 import { api } from '@/lib/api'
 import { typeLabel } from '@/lib/resource-labels'
+import { essayGenreLabel } from '@/lib/essay-genres'
 import { formatDateTime } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 
@@ -16,6 +17,13 @@ export interface TopicLinkedWork {
   year: number
   authors: string[]
   reason?: string | null
+  content_track?: string | null
+  content_genre?: string | null
+}
+
+/** Essays are not research records: label them by their genre, not by `type`. */
+function workKindLabel(work: TopicLinkedWork): string {
+  return work.content_track === 'essay' ? essayGenreLabel(work.content_genre) : typeLabel(work.type)
 }
 
 interface RelatedTopic {
@@ -70,11 +78,11 @@ export function TopicRelated({ topicId }: { topicId: number }) {
             className="group block rounded-lg border bg-muted/20 p-3 transition-colors hover:border-primary/35 hover:bg-muted/30"
           >
             <div className="flex flex-wrap items-center gap-0.5 text-[11px] text-muted-foreground">
-              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-primary">
+              <span data-i18n-allow className="rounded-full bg-primary/10 px-2 py-0.5 text-primary">
                 {data.paper.discipline}
               </span>
               <span aria-hidden>·</span>
-              <span>{typeLabel(data.paper.type)}</span>
+              <span data-i18n-allow>{workKindLabel(data.paper)}</span>
               {data.paper.year ? (
                 <>
                   <span aria-hidden>·</span>
@@ -116,7 +124,7 @@ export function TopicRelated({ topicId }: { topicId: number }) {
                 params={{ topicId: String(topic.id) }}
                 className="group flex items-start gap-2 rounded-md px-1.5 py-2 transition-colors hover:bg-muted/40"
               >
-                <span className="mt-0.5 shrink-0">
+                <span data-i18n-allow className="mt-0.5 shrink-0">
                   <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
                     {topic.reason}
                   </Badge>
@@ -125,11 +133,11 @@ export function TopicRelated({ topicId }: { topicId: number }) {
                   <span className="line-clamp-1 text-sm font-medium group-hover:text-primary">
                     {topic.title}
                   </span>
-                  <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <span data-i18n-allow className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
                     {topic.board_name ? <span>{topic.board_name}</span> : null}
-                    <span>{topic.reply_count} 回应</span>
+                    <span>{`${topic.reply_count} 回应`}</span>
                     {topic.last_reply_at ? (
-                      <span>最后回应 {formatDateTime(topic.last_reply_at)}</span>
+                      <span>{`最后回应 ${formatDateTime(topic.last_reply_at)}`}</span>
                     ) : null}
                   </span>
                 </span>
@@ -154,7 +162,7 @@ export function TopicRelated({ topicId }: { topicId: number }) {
                 params={{ resourceId: String(work.id) }}
                 className="group rounded-lg border p-3 transition-colors hover:border-primary/35 hover:bg-muted/20"
               >
-                <div className="flex flex-wrap items-center gap-1 text-[10px] text-muted-foreground">
+                <div data-i18n-allow className="flex flex-wrap items-center gap-1 text-[10px] text-muted-foreground">
                   {work.reason ? (
                     <span className="rounded-full bg-muted px-1.5 py-0.5 text-foreground/70">
                       {work.reason}

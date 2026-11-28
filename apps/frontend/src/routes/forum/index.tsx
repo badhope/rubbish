@@ -55,6 +55,8 @@ import { cn } from '@/lib/utils'
 import { FORUM_COPY } from '@/lib/forum-copy'
 import { ModerationBadge } from '@/components/forum/moderation-status'
 import { ForumStarterCard } from '@/components/forum/forum-starter-card'
+import { MarginQuote } from '@/components/margins/margin-quote'
+import { detectLang, type Passage } from '@/lib/margins'
 
 const ForumEditor = lazy(() =>
   import('@/components/forum/forum-editor').then((m) => ({ default: m.ForumEditor })),
@@ -83,6 +85,8 @@ interface ForumTopic {
   created_at: string
   last_reply_at: string | null
   paper_id: number | null
+  passage?: Passage | null
+  has_passage?: boolean
   moderation_status?: string | null
   risk_score?: number | null
   review_eta_at?: string | null
@@ -970,9 +974,21 @@ function ForumListPage() {
                       >
                         {t.title}
                       </Link>
-                      <p className="mt-1 line-clamp-2 text-[13px] leading-6 text-muted-foreground">
-                        {plainExcerpt(t.body)}
-                      </p>
+                      {t.passage?.quote ? (
+                        // 页边讨论：先给出它写在旁边的那句原话，再给正文摘要。
+                        <MarginQuote
+                          text={t.passage.quote}
+                          lang={detectLang(t.passage.quote)}
+                          size="sm"
+                          clamp={2}
+                          className="mt-1.5 text-foreground/80"
+                        />
+                      ) : null}
+                      {t.body.trim() ? (
+                        <p className="mt-1 line-clamp-2 text-[13px] leading-6 text-muted-foreground">
+                          {plainExcerpt(t.body)}
+                        </p>
+                      ) : null}
                       <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
                         {t.author ? (
                           <Link

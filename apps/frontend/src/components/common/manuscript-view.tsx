@@ -30,6 +30,7 @@ import {
   stripHtmlComments,
   stripLeadingDuplicateAbstract,
 } from "@/components/common/manuscript-text";
+import { detectLang } from "@/lib/margins";
 
 export type { TocEntry } from "@/components/common/manuscript-toc";
 export { TOC_OPEN_EVENT } from "@/components/common/manuscript-toc";
@@ -60,6 +61,8 @@ interface ManuscriptViewProps {
   title?: string;
   /** 页面已展示的概要/导读；用于剥掉正文开头重复的同一段 */
   abstract?: string | null;
+  /** 正文渲染完成后交出 <article>，页边讨论据此定位引文；卸载时回传 null */
+  onArticleElement?: (el: HTMLElement | null) => void;
 }
 
 export function ManuscriptView({
@@ -75,6 +78,7 @@ export function ManuscriptView({
   contentTrack,
   title,
   abstract,
+  onArticleElement,
 }: ManuscriptViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const restoredRef = useRef(false);
@@ -175,6 +179,19 @@ export function ManuscriptView({
   const refCount = refEntries.length;
   const [toc, setToc] = useState<TocEntry[]>([]);
   const articleRef = useRef<HTMLElement>(null);
+  // 作者原文是什么语言就标什么语言：浏览器据此断字，读屏软件据此发音。
+  // 只标注，不翻译、不改字。
+  const articleLang = main ? detectLang(main) : undefined;
+  const onArticleElementRef = useRef(onArticleElement);
+  useEffect(() => {
+    onArticleElementRef.current = onArticleElement;
+  }, [onArticleElement]);
+  useEffect(() => {
+    if (!data) return;
+    const el = articleRef.current;
+    onArticleElementRef.current?.(el);
+    return () => onArticleElementRef.current?.(null);
+  }, [data]);
   const onTocReadyRef = useRef(onTocReady);
   useEffect(() => {
     onTocReadyRef.current = onTocReady;
@@ -454,6 +471,7 @@ export function ManuscriptView({
           <article
             ref={articleRef}
             data-content-kind={effectiveKind}
+            lang={articleLang}
             className="markdown-body min-w-0 flex-1"
             style={{
               fontSize: `${prefs.fontScale}em`,

@@ -21,7 +21,7 @@ from typing import Literal
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile, status
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -35,6 +35,7 @@ from app.api.deps import (
     require_tenant_id,
     user_has_role,
 )
+from app.core.config import settings
 from app.core.db import get_db, paginate
 from app.core.images import (
     IMAGE_CACHE_HEADERS,
@@ -49,7 +50,7 @@ from app.core.storage import get_storage
 from app.core.time import utcnow
 from app.domain.catalog.models import Resource
 from app.domain.catalog.visibility import public_conditions
-from app.domain.forum import engagement
+from app.domain.forum import engagement, passages
 from app.domain.forum import moderation_service as moderation
 from app.domain.forum.models import (
     ForumBoard,
@@ -192,15 +193,39 @@ CATEGORY_BOARD: dict[str, tuple[str, ...]] = {
 }
 
 
+class PassageIn(BaseModel):
+    """A sentence or two selected in the linked work, in the author's words."""
+
+    quote: str = Field(min_length=2, max_length=passages.QUOTE_MAX)
+    prefix: str = Field(default="", max_length=passages.CONTEXT_MAX * 4)
+    suffix: str = Field(default="", max_length=passages.CONTEXT_MAX * 4)
+
+
+class PassageOut(BaseModel):
+    quote: str
+    prefix: str = ""
+    suffix: str = ""
+
+
 class TopicCreate(BaseModel):
     title: str = Field(min_length=2, max_length=200)
-    body: str = Field(min_length=2, max_length=20000)
+    # 页边讨论可以只有一个问题：引文本身就是上下文，所以带 passage 时正文可空。
+    body: str = Field(default="", max_length=20000)
     category: ForumCategory = "discussion"
     is_fictional: bool = False
     # 树形版块：新客户端传 board_id；旧客户端只传 category 仍然兼容。
     board_id: int | None = Field(default=None, ge=1)
     board_slug: str | None = Field(default=None, max_length=40)
     paper_id: int | None = Field(default=None, ge=1)
+    passage: PassageIn | None = None
+
+    @model_validator(mode="after")
+    def _body_or_passage(self) -> TopicCreate:
+        if self.passage is None and len(self.body.strip()) < 2:
+            raise ValueError("正文至少 2 个字")
+        if self.passage is not None and self.paper_id is None:
+            raise ValueError("页边讨论需要关联作品")
+        return self
 
 
 REACTION_KINDS = ("agree", "helpful", "bookmark")
@@ -236,6 +261,10 @@ class TopicOut(BaseModel):
     created_at: datetime
     last_reply_at: datetime | None
     paper_id: int | None = None
+    # The quoted passage follows the work's own body visibility: viewers who
+    # cannot open the manuscript get ``has_passage`` without the words.
+    passage: PassageOut | None = None
+    has_passage: bool = False
     moderation_status: str = "published"
     risk_score: int = 0
     manual_review_reason: str | None = None
@@ -265,6 +294,9 @@ class LinkedWorkOut(BaseModel):
     year: int
     authors: list[str] = Field(default_factory=list)
     reason: str | None = None
+    # essay / paper：前端据此写“自由创作”还是“研究长文”，不再一律按 type 叫研究长文。
+    content_track: str | None = None
+    content_genre: str | None = None
 
 
 class RelatedTopicOut(BaseModel):
@@ -456,6 +488,27 @@ def _board_path(board: ForumBoard | None, index: dict[int, ForumBoard]) -> str |
     return " / ".join(reversed(names))
 
 
+def _can_read_bodies(viewer: User | None) -> bool:
+    """Whether this viewer may read full manuscripts.
+
+    Mirrors the manuscript route: with the auth wall on (production), only a
+    signed-in reader opens a body; overseas guests get metadata and threads.
+    A quoted passage is part of the body, so it follows the same rule.
+    """
+    return viewer is not None or not settings.auth_wall_enabled
+
+
+def _passage_out(t: ForumTopic, show: bool) -> PassageOut | None:
+    quote = getattr(t, "passage_quote", None)
+    if not show or not quote:
+        return None
+    return PassageOut(
+        quote=quote,
+        prefix=getattr(t, "passage_prefix", None) or "",
+        suffix=getattr(t, "passage_suffix", None) or "",
+    )
+
+
 def _topic_out(
     t: ForumTopic,
     authors: dict[int, AuthorBrief],
@@ -463,6 +516,7 @@ def _topic_out(
     viewer_reactions: list[str] | None = None,
     boards: dict[int, ForumBoard] | None = None,
     viewer_following: bool = False,
+    show_passage: bool = False,
 ) -> TopicOut:
     board = boards.get(t.board_id) if boards and t.board_id else None
     return TopicOut(
@@ -481,6 +535,8 @@ def _topic_out(
         created_at=t.created_at,
         last_reply_at=t.last_reply_at,
         paper_id=t.paper_id,
+        passage=_passage_out(t, show_passage),
+        has_passage=bool(getattr(t, "passage_quote", None)),
         moderation_status=getattr(t, "moderation_status", "published") or "published",
         risk_score=getattr(t, "risk_score", 0) or 0,
         manual_review_reason=getattr(t, "manual_review_reason", None),
@@ -669,6 +725,18 @@ async def list_topics(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="登录后可查看待核验主题"
             )
         await _require_moderator(db, current_user)
+    elif paper_id is not None and current_user is not None:
+        # 作品页的页边：作者刚写下、还在人工核验的那条也要能看到自己的
+        # （详情页本就对作者开放），其他人仍只看已公开的主题。
+        stmt = stmt.where(
+            or_(
+                _visible_clause(),
+                and_(
+                    ForumTopic.author_id == current_user.id,
+                    ForumTopic.moderation_status == "manual_review",
+                ),
+            )
+        )
     else:
         stmt = stmt.where(_visible_clause())
     # board 优先；旧 category 仍可用。父板块筛选包含全部后代。
@@ -803,6 +871,7 @@ async def list_topics(
                 viewer_reactions=viewer_reactions.get(r.id),
                 boards=boards,
                 viewer_following=r.id in followed_topic_ids,
+                show_passage=_can_read_bodies(current_user),
             )
             for r in rows
         ],
@@ -976,6 +1045,7 @@ async def list_bookmarked_topics(
                 viewer_reactions=viewer_reactions.get(row.id),
                 boards=boards,
                 viewer_following=row.id in followed_ids,
+                show_passage=_can_read_bodies(current_user),
             )
             for row in rows
         ],
@@ -1020,7 +1090,14 @@ async def get_topic(
         viewer_id=current_user.id if current_user else None,
     )
     boards = await _board_index(db, tenant_id)
-    return _topic_out(topic, authors, counts.get(topic.id), viewers.get(topic.id), boards)
+    return _topic_out(
+        topic,
+        authors,
+        counts.get(topic.id),
+        viewers.get(topic.id),
+        boards,
+        show_passage=_can_read_bodies(current_user),
+    )
 
 
 @router.get("/topics/{topic_id}/related", response_model=TopicRelatedOut)
@@ -1066,6 +1143,8 @@ async def get_topic_related(
                 discipline=paper.discipline,
                 year=paper.year,
                 authors=paper.authors or [],
+                content_track=paper.content_track,
+                content_genre=paper.content_genre,
             )
             if paper is not None
             else None
@@ -1095,6 +1174,8 @@ async def get_topic_related(
                 year=work.year,
                 authors=work.authors or [],
                 reason=reason,
+                content_track=work.content_track,
+                content_genre=work.content_genre,
             )
             for work, reason in related_works
         ],
@@ -1223,6 +1304,25 @@ async def create_topic(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="关联作品不存在或尚未公开",
             )
+    passage_quote: str | None = None
+    passage_prefix: str | None = None
+    passage_suffix: str | None = None
+    if payload.passage is not None and linked_paper_id is not None:
+        # 引文署的是作者的名字：必须是正文里真有的话，不能借页边替作者“说”一句。
+        passage_quote = passages.collapse(payload.passage.quote)
+        manuscript = await passages.load_manuscript_markdown(
+            db, tenant_id=tenant_id, resource_id=linked_paper_id
+        )
+        if manuscript is None or not passages.quote_in_text(passage_quote, manuscript):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail={
+                    "code": "passage_not_found",
+                    "message": "这段文字和作品正文对不上，请回到正文重新选择。",
+                },
+            )
+        passage_prefix = passages.clean_context(payload.passage.prefix, keep="tail")
+        passage_suffix = passages.clean_context(payload.passage.suffix, keep="head")
     review_status = "manual_review" if assessment.action == "manual_review" else "published"
     now = utcnow()
     topic = ForumTopic(
@@ -1234,6 +1334,9 @@ async def create_topic(
         is_fictional=payload.is_fictional,
         board_id=board.id if board is not None else None,
         paper_id=linked_paper_id,
+        passage_quote=passage_quote,
+        passage_prefix=passage_prefix,
+        passage_suffix=passage_suffix,
         moderation_status=review_status,
         risk_score=assessment.risk_score,
         moderation_signals=[asdict(signal) for signal in assessment.signals],
@@ -1298,7 +1401,7 @@ async def create_topic(
         except Exception:
             await db.rollback()
     boards = await _board_index(db, tenant_id)
-    return _topic_out(topic, {author.id: author}, boards=boards)
+    return _topic_out(topic, {author.id: author}, boards=boards, show_passage=True)
 
 
 @router.post(
@@ -1464,7 +1567,8 @@ class TopicEditRequest(BaseModel):
     """Author-side edit. Moderator pin/lock has its own endpoint."""
 
     title: str | None = Field(default=None, min_length=2, max_length=200)
-    body: str | None = Field(default=None, min_length=2, max_length=20000)
+    # 页边讨论的正文可以为空（引文就是上下文）；普通主题仍至少 2 个字，见 edit_topic。
+    body: str | None = Field(default=None, max_length=20000)
     board_id: int | None = Field(default=None, ge=1)
     is_fictional: bool | None = None
     # 作者可以在不改正文的情况下补挂/更换关联作品；clear_paper 与 paper_id 互斥。
@@ -2177,11 +2281,24 @@ async def edit_topic(
             )
         new_paper_id = paper.id
 
+    # 引文属于原来那篇作品：换作品或取消关联时，页边引文一并撤下。
+    keep_passage = new_paper_id is not None and new_paper_id == topic.paper_id
+    has_passage = keep_passage and bool(topic.passage_quote)
+    if len(new_body) < 2 and not has_passage:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="正文至少 2 个字",
+        )
+
     topic.title = new_title
     topic.body = new_body
     topic.board_id = new_board_id
     topic.category = new_category
     topic.paper_id = new_paper_id
+    if not keep_passage:
+        topic.passage_quote = None
+        topic.passage_prefix = None
+        topic.passage_suffix = None
     if payload.is_fictional is not None:
         topic.is_fictional = payload.is_fictional
     # 已公开或需修改的主题再次改正文时，重新进入人工核验，避免先通过再改成广告。
@@ -2238,7 +2355,7 @@ async def edit_topic(
     await db.refresh(topic)
     authors = await _author_map(db, {topic.author_id})
     boards = await _board_index(db, tenant_id)
-    return _topic_out(topic, authors, boards=boards)
+    return _topic_out(topic, authors, boards=boards, show_passage=True)
 
 
 @router.patch("/topics/{topic_id}", response_model=TopicOut)

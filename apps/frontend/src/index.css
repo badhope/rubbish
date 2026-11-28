@@ -319,6 +319,10 @@
   --color-ring: var(--ring);
   --color-absurd: var(--absurd);
   --color-absurd-soft: var(--absurd-soft);
+  --color-margin-ink: var(--margin-ink);
+  --color-margin-ink-soft: var(--margin-ink-soft);
+  --color-margin-wash: var(--margin-wash);
+  --color-margin-paper: var(--margin-paper);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -1813,5 +1817,118 @@ html {
 @media (max-width: 639px) {
   .forum-writing-desk {
     padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+
+/* ---------------------------------------------------------------------------
+ * 页边 Margins（1.21）：读者在作品页边写下的问题。
+ * 蓝黑墨水只属于页边：引文括线、正文划线、页边标记。它不当按钮主色，
+ * 也不参与导航——墨绿仍是站点身份，琥珀仍是自由创作，朱砂仍是警示。
+ * 形状语言是校对括线「[」：同一个符号出现在正文页边、讨论页引文、
+ * 写作抽屉和主题列表里，读者一眼认出“这是从正文里摘出来的原话”。
+ * ------------------------------------------------------------------------- */
+:root {
+  --margin-ink: oklch(0.42 0.11 262);
+  --margin-ink-soft: oklch(0.42 0.11 262 / 0.5);
+  --margin-wash: oklch(0.66 0.09 262 / 0.13);
+  --margin-wash-strong: oklch(0.66 0.11 262 / 0.26);
+  --margin-paper: oklch(0.992 0.008 85);
+}
+.dark {
+  --margin-ink: oklch(0.81 0.075 262);
+  --margin-ink-soft: oklch(0.81 0.075 262 / 0.55);
+  --margin-wash: oklch(0.72 0.09 262 / 0.17);
+  --margin-wash-strong: oklch(0.72 0.11 262 / 0.32);
+  --margin-paper: oklch(0.235 0.012 85);
+}
+
+/* 正文里被讨论的句子：浅墨底 + 细划线；当前那条加深。CSS Highlight API
+   不改动 React 渲染的正文 DOM，作者原文一个节点都不拆。 */
+::highlight(margin-passage) {
+  background-color: var(--margin-wash);
+  text-decoration-line: underline;
+  text-decoration-color: var(--margin-ink-soft);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.32em;
+}
+::highlight(margin-passage-active) {
+  background-color: var(--margin-wash-strong);
+  text-decoration-line: underline;
+  text-decoration-color: var(--margin-ink);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.32em;
+}
+::highlight(margin-draft) {
+  background-color: var(--margin-wash-strong);
+}
+
+/* 校对括线：引文左侧一个细「[」，不用正文 h2 那条粗绿竖线，避免混成标题。 */
+/* 页边的小标题（“关于整篇”等）用无衬线：全站 h3 默认衬线写在层外，
+   Tailwind 工具类压不过它，这里用类选择器明确覆盖。 */
+.margin-caption {
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  letter-spacing: 0.02em;
+}
+
+.margin-quote {
+  position: relative;
+  padding: 0.1rem 0 0.1rem 1.05rem;
+  font-family: var(--font-serif);
+  color: var(--color-foreground);
+  overflow-wrap: anywhere;
+}
+.margin-quote::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.18em;
+  bottom: 0.18em;
+  width: 0.42rem;
+  border: 1.5px solid var(--margin-ink);
+  border-right: 0;
+  border-radius: 1.5px 0 0 1.5px;
+}
+.margin-quote[data-faded='true']::before {
+  border-style: dashed;
+  border-right: 0;
+  opacity: 0.7;
+}
+
+/* 页边便签：比卡片更像一张夹在页边的纸条。 */
+.margin-slip {
+  background: var(--margin-paper);
+  border: 1px solid color-mix(in oklab, var(--margin-ink) 16%, var(--color-border));
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--foreground) 5%, transparent),
+    0 8px 24px -18px color-mix(in oklab, var(--margin-ink) 45%, transparent);
+}
+.margin-slip[data-active='true'] {
+  border-color: color-mix(in oklab, var(--margin-ink) 55%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--margin-ink) 40%, transparent),
+    0 14px 30px -20px color-mix(in oklab, var(--margin-ink) 60%, transparent);
+}
+
+/* 英文正文在窄屏上：左对齐 + 自动断字，不再用两端对齐撑出大空隙。
+   中文保留两端对齐（inter-ideograph 对汉字是好的）。lang 由阅读页按作者
+   原文判定后写在 <article> 上，不翻译、不改字。 */
+.markdown-body:lang(en) {
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.markdown-body:lang(en) p {
+  text-indent: 1.4em;
+}
+@media (max-width: 639px) {
+  .markdown-body:lang(en) p {
+    text-align: start;
+    text-justify: auto;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .margin-slip,
+  .margin-mark {
+    transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease,
+      background-color 160ms ease, color 160ms ease, top 220ms ease;
   }
 }

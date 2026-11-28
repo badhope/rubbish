@@ -1,10 +1,12 @@
-import { useState } from 'react'
-import { Link } from '@tanstack/react-router'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link, useLocation, useNavigate, useSearch } from '@tanstack/react-router'
+import axios from 'axios'
 import {
   Bookmark,
   ChevronLeft,
   FileDown,
   FileText,
+  LogIn,
   Pencil,
   Share2,
   Trash2,
@@ -13,9 +15,22 @@ import { toast } from 'sonner'
 import type { ResourceResponse } from '@/lib/types'
 import { downloadCatalogArtifactWithFeedback } from '@/lib/catalog-download'
 import { essayGenreMeta } from '@/lib/essay-genres'
-import { formatAuthors } from '@/lib/utils'
+import { cn, formatAuthors } from '@/lib/utils'
+import {
+  detectLang,
+  paragraphChoices,
+  topicsByPassage,
+  type MarginTopic,
+  type ParagraphChoice,
+  type Passage,
+} from '@/lib/margins'
+import { useAuth } from '@/hooks/use-auth'
+import { useWorkMargins } from '@/hooks/api/use-work-margins'
 import { ManuscriptView } from '@/components/common/manuscript-view'
 import { Comments } from '@/components/common/comments'
+import { MarginLayer } from '@/components/margins/margin-layer'
+import { MarginComposer } from '@/components/margins/margin-composer'
+import { MarginsSection, MarginThreadsSheet } from '@/components/margins/margins-section'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -30,6 +45,31 @@ import PdfImagePreview from '@/components/pdf-image-preview'
 // 研究长文页是“看一份记录”：概要卡、分类、引用、PDF、整理信息、站内热度；
 // 自由创作页是“看一篇作品”：大标题、作者、封面、正文、标签、回应。
 // 这里刻意不渲染任何研究块，也不使用研究长文页的封面卡与侧栏。
+//
+// 1.21 页边：读者选中正文里的一句话就能提问。问题是一条普通的主题帖
+// （论坛的核验、回应、关注、通知照旧），只是多带一段原文引文，
+// 于是它能回到这句话旁边：桌面在右侧页边，手机在左侧小标记和文末列表。
+
+function useMinWidth(px: number): boolean {
+  const query = `(min-width: ${px}px)`
+  const [matches, setMatches] = useState(
+    () => typeof window !== 'undefined' && !!window.matchMedia?.(query).matches,
+  )
+  useEffect(() => {
+    const mql = window.matchMedia?.(query)
+    if (!mql) return
+    const on = () => setMatches(mql.matches)
+    on()
+    mql.addEventListener('change', on)
+    return () => mql.removeEventListener('change', on)
+  }, [query])
+  return matches
+}
+
+function topicGroupKey(topic: MarginTopic): string | null {
+  if (!topic.passage?.quote) return null
+  return topicsByPassage([topic]).anchored[0]?.key ?? null
+}
 
 interface FunArticleProps {
   data: ResourceResponse
@@ -57,6 +97,85 @@ export function FunArticle({
   const authorName = author?.name || formatAuthors(data.authors) || '佚名'
   const initial = authorName.trim().slice(0, 1).toUpperCase()
 
+  // —— 页边 ——
+  const { isAuthenticated } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const search = useSearch({ strict: false }) as { passage?: number | string }
+  const wide = useMinWidth(1280)
+  const marginsQ = useWorkMargins(data.id, true)
+  const grouped = useMemo(() => topicsByPassage(marginsQ.data ?? []), [marginsQ.data])
+  const [articleEl, setArticleEl] = useState<HTMLElement | null>(null)
+  const [wrapperEl, setWrapperEl] = useState<HTMLDivElement | null>(null)
+  const [located, setLocated] = useState<string[]>([])
+  const [activeKey, setActiveKey] = useState<string | null>(null)
+  const [focusKey, setFocusKey] = useState<string | null>(null)
+  const [sheetKey, setSheetKey] = useState<string | null>(null)
+  const [composer, setComposer] = useState<{ open: boolean; passage: Passage | null; pick: boolean }>({
+    open: false,
+    passage: null,
+    pick: false,
+  })
+  const [choices, setChoices] = useState<ParagraphChoice[]>([])
+  const [draftPassage, setDraftPassage] = useState<Passage | null>(null)
+  const bodyReady = articleEl !== null && !fatal
+  const canWrite = isAuthenticated
+  const showRail = wide && bodyReady && isAuthenticated
+  const workLang = articleEl?.lang || detectLang(`${data.title} ${data.abstract ?? ''}`)
+  // 游客读不到正文（海外匿名只开放元数据与论坛）：别说“打不开”，告诉他登录就能读。
+  const guestBlocked =
+    !!fatal &&
+    axios.isAxiosError(fatal) &&
+    (fatal.response?.status === 401 || fatal.response?.status === 403)
+  const marginCount = marginsQ.data?.length ?? 0
+
+  const openComposer = useCallback(
+    (passage: Passage | null, options?: { pick?: boolean }) => {
+      if (!isAuthenticated) {
+        void navigate({ to: '/login', search: { redirect: location.pathname } })
+        return
+      }
+      setSheetKey(null)
+      setChoices(articleEl ? paragraphChoices(articleEl) : [])
+      setComposer({ open: true, passage, pick: !!options?.pick })
+    },
+    [articleEl, isAuthenticated, location.pathname, navigate],
+  )
+
+  const onLocated = useCallback((keys: string[]) => {
+    setLocated((prev) =>
+      prev.length === keys.length && keys.every((k, i) => prev[i] === k) ? prev : keys,
+    )
+  }, [])
+  const clearFocus = useCallback(() => setFocusKey(null), [])
+  const scrollToMargins = useCallback((topicId?: number) => {
+    const row = topicId
+      ? document.querySelector<HTMLElement>(`[data-margin-whole="${topicId}"]`)
+      : null
+    ;(row ?? document.getElementById('margins'))?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [])
+
+  // ?passage=<topicId>：讨论页“在原文里读”带过来，落到那句话上。
+  const deepTopic = Number(search.passage) || 0
+  const [deepHandled, setDeepHandled] = useState(0)
+  useEffect(() => {
+    if (!deepTopic || deepHandled === deepTopic || !marginsQ.data || !bodyReady) return
+    const topic = marginsQ.data.find((t) => t.id === deepTopic)
+    if (!topic) return
+    const key = topicGroupKey(topic)
+    if (key && located.includes(key)) {
+      setFocusKey(key)
+      setDeepHandled(deepTopic)
+      return
+    }
+    // 整篇讨论，或作者改过原文：落到文末页边列表里那一条。
+    const timer = window.setTimeout(() => {
+      scrollToMargins(topic.id)
+      setDeepHandled(deepTopic)
+    }, 600)
+    return () => window.clearTimeout(timer)
+  }, [deepTopic, deepHandled, marginsQ.data, bodyReady, located, scrollToMargins])
+
   return (
     <div className="-mx-4 min-h-screen bg-[#fbf8f3] pb-16 dark:bg-background sm:-mx-6">
       <div className="fixed left-0 top-0 z-50 h-[2px] w-full bg-transparent">
@@ -66,7 +185,13 @@ export function FunArticle({
         />
       </div>
 
-      <div className="mx-auto max-w-3xl px-4 pt-4 sm:px-6 sm:pt-6">
+      <div
+        className={cn(
+          'mx-auto max-w-3xl px-4 pt-4 sm:px-6 sm:pt-6',
+          // 1280px 起，正文右侧留出真正的页边，页边讨论就贴在对应句子旁边。
+          showRail && 'xl:max-w-[1120px] xl:pr-[352px]',
+        )}
+      >
         <div className="flex items-center justify-between gap-2">
           <Link
             to="/catalog" search={{ track: 'essay' }}
@@ -102,6 +227,20 @@ export function FunArticle({
             >
               <Share2 className="h-4 w-4" />
               <span className="hidden sm:inline">分享</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 shrink-0 gap-1 px-2 text-margin-ink hover:bg-margin-wash hover:text-margin-ink"
+              aria-label={marginCount ? `页边讨论 ${marginCount} 条` : '页边讨论'}
+              onClick={() => scrollToMargins()}
+            >
+              <span
+                aria-hidden
+                className="inline-block h-3.5 w-[6px] rounded-[1px] border-[1.5px] border-r-0 border-current"
+              />
+              <span className="hidden sm:inline">页边</span>
+              {marginCount ? <span className="tabular-nums">{marginCount}</span> : null}
             </Button>
             {data.has_markdown ? (
               <>
@@ -184,7 +323,10 @@ export function FunArticle({
               </span>
             ) : null}
           </div>
-          <h1 className="mt-4 text-balance font-serif text-[1.7rem] font-semibold leading-[1.35] tracking-tight sm:text-4xl">
+          <h1
+            lang={workLang}
+            className="mt-4 text-balance font-serif text-[1.7rem] font-semibold leading-[1.35] tracking-tight sm:text-4xl"
+          >
             {data.title}
           </h1>
           <div className="mt-5 flex items-center gap-3">
@@ -203,24 +345,64 @@ export function FunArticle({
 
         <article className="mt-8" id="article">
           {fatal ? (
-            <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/20">
-              <CardContent className="py-8 text-center text-sm text-muted-foreground">
-                这篇的正文暂时打不开。可以稍后刷新，或者去主题论坛催更。
-              </CardContent>
-            </Card>
+            guestBlocked ? (
+              <Card className="border-margin-ink-soft bg-margin-paper">
+                <CardContent className="space-y-3 py-8 text-center">
+                  <p className="text-sm text-muted-foreground">登录后可以读全文，也能在页边提问。</p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <Button asChild size="sm">
+                      <Link to="/login" search={{ redirect: location.pathname }}>
+                        <LogIn className="h-4 w-4" />
+                        登录
+                      </Link>
+                    </Button>
+                    <Button asChild size="sm" variant="outline">
+                      <Link to="/register">注册</Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/20">
+                <CardContent className="py-8 text-center text-sm text-muted-foreground">
+                  这篇的正文暂时打不开。可以稍后刷新，或者去主题论坛催更。
+                </CardContent>
+              </Card>
+            )
           ) : (
-            <ManuscriptView
-              resourceId={data.id}
-              initialPercent={progress}
-              onProgress={() => {}}
-              hideTocNav
-              useWindowScroll
-              contentCategory={data.content_category}
-              contentTrack={data.content_track}
-              abstract={data.abstract}
-              title={data.title}
-              onFatalError={setFatal}
-            />
+            <div ref={setWrapperEl} className="relative">
+              <ManuscriptView
+                resourceId={data.id}
+                initialPercent={progress}
+                onProgress={() => {}}
+                hideTocNav
+                useWindowScroll
+                contentCategory={data.content_category}
+                contentTrack={data.content_track}
+                abstract={data.abstract}
+                title={data.title}
+                onFatalError={setFatal}
+                onArticleElement={setArticleEl}
+              />
+              {bodyReady ? (
+                <MarginLayer
+                  wrapper={wrapperEl}
+                  article={articleEl}
+                  groups={grouped.anchored}
+                  activeKey={activeKey}
+                  onActivate={setActiveKey}
+                  onOpenGroup={setSheetKey}
+                  onCompose={openComposer}
+                  draftPassage={draftPassage}
+                  canWrite={canWrite}
+                  showRail={showRail}
+                  workLang={workLang}
+                  focusKey={focusKey}
+                  onFocused={clearFocus}
+                  onLocated={onLocated}
+                />
+              ) : null}
+            </div>
           )}
         </article>
 
@@ -236,6 +418,21 @@ export function FunArticle({
             ))}
           </div>
         ) : null}
+
+        <MarginsSection
+          groups={grouped.anchored}
+          whole={grouped.whole}
+          hidden={grouped.hidden}
+          located={located}
+          railShowsAnchored={showRail}
+          canWrite={canWrite && bodyReady}
+          isAuthenticated={isAuthenticated}
+          loading={marginsQ.isLoading}
+          workLang={workLang}
+          loginRedirect={location.pathname}
+          onCompose={openComposer}
+          onShowPassage={setFocusKey}
+        />
 
         <p className="mt-8 border-t pt-4 text-[11px] leading-5 text-muted-foreground">
           自由创作：不计分、不进站内热度、不走互评；内容只代表作者本人，不代表社区立场。虚构、夸张或整活请在正文里说清楚，别让读者当真。
@@ -256,6 +453,37 @@ export function FunArticle({
           <h2 className="mb-4 text-sm font-medium">回应</h2>
           <Comments resourceId={data.id} title={data.title} />
         </section>
+
+        <MarginComposer
+          open={composer.open}
+          onOpenChange={(open) => setComposer((prev) => ({ ...prev, open }))}
+          resourceId={data.id}
+          workTitle={data.title}
+          workLang={workLang}
+          initialPassage={composer.passage}
+          startPicking={composer.pick}
+          choices={choices}
+          onPassageChange={setDraftPassage}
+          onPublished={(topic) => {
+            const key = topicGroupKey(topic)
+            if (key) {
+              setActiveKey(key)
+              window.setTimeout(() => setFocusKey(key), 350)
+            } else {
+              window.setTimeout(() => scrollToMargins(topic.id), 350)
+            }
+          }}
+        />
+        <MarginThreadsSheet
+          group={grouped.anchored.find((g) => g.key === sheetKey) ?? null}
+          open={sheetKey !== null}
+          onOpenChange={(open) => {
+            if (!open) setSheetKey(null)
+          }}
+          canWrite={canWrite}
+          workLang={workLang}
+          onCompose={(passage) => openComposer(passage)}
+        />
       </div>
     </div>
   )
