@@ -20,6 +20,7 @@ from app.core.mainland_gate import (
     safe_next,
 )
 from app.core.rate_limit_store import get_rate_limiter_store
+from app.core.site_settings import get_access_policy
 
 logger = get_logger("rubbish.access_gate")
 router = APIRouter(tags=["access"])
@@ -31,7 +32,7 @@ _GATE_ATTEMPT_WINDOW_SECONDS = 600
 
 @router.get("/gate", include_in_schema=False, response_model=None)
 async def gate_entry(request: Request) -> HTMLResponse | RedirectResponse:
-    if not settings.mainland_gate_enabled:
+    if not get_access_policy().mainland_gate_enabled:
         return RedirectResponse("/", status_code=303)
     if not is_mainland_ip(client_ip(request)) or has_valid_gate_cookie(request):
         return RedirectResponse("/", status_code=303)
@@ -45,13 +46,13 @@ async def gate_entry(request: Request) -> HTMLResponse | RedirectResponse:
 @router.get("/api/access/status", include_in_schema=False)
 async def gate_status(request: Request) -> JSONResponse:
     required = (
-        settings.mainland_gate_enabled
+        get_access_policy().mainland_gate_enabled
         and is_mainland_ip(client_ip(request))
         and not has_valid_gate_cookie(request)
     )
     return JSONResponse(
         {
-            "gate_enabled": settings.mainland_gate_enabled,
+            "gate_enabled": get_access_policy().mainland_gate_enabled,
             "required": required,
         },
         headers={"Cache-Control": "no-store"},
@@ -64,7 +65,7 @@ async def submit_gate(
     password: str = Form(...),
     next: str = Form("/"),
 ) -> HTMLResponse | RedirectResponse:
-    if not settings.mainland_gate_enabled:
+    if not get_access_policy().mainland_gate_enabled:
         return RedirectResponse("/", status_code=303)
 
     ip = client_ip(request)

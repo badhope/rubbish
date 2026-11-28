@@ -138,6 +138,15 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         if settings.is_production:
             await _warn_if_db_role_bypasses_rls()
         await run_bootstrap()
+        # Access switches live in tenants.settings and are read at the
+        # request edge. Load them once after bootstrap creates the tenant;
+        # admin writes refresh this snapshot immediately.
+        from app.core.site_settings import refresh_access_policy
+
+        try:
+            await refresh_access_policy()
+        except Exception:
+            logger.exception("access_policy_load_failed")
         # 这两个调度器此前只定义了函数、没有在 lifespan 里启动；生产上
         # “定时发布”和“逾期提醒”因此永远不会触发。现在统一启动，并在
         # 退出时取消，避免测试进程残留后台任务。

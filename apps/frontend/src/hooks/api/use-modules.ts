@@ -2011,6 +2011,18 @@ export function useUpdateSiteSettings() {
   })
 }
 
+export function useGenerateSiteInviteCode() {
+  const qc = useQueryClient()
+  return useMutation<SiteSettingsResponse, Error, void>({
+    mutationFn: async () =>
+      (await api.post<SiteSettingsResponse>('/admin/settings/invite-code')).data,
+    onSuccess: (data) => {
+      qc.setQueryData(keys.admin.siteSettings(), data)
+      void qc.invalidateQueries({ queryKey: ['capabilities'] })
+    },
+  })
+}
+
 export interface AdminAuditFilters {
   action?: string
   actorUserId?: number

@@ -27,3 +27,20 @@ export function readAccessRegion(): AccessRegion {
 export function isOverseasReadPath(pathname: string): boolean {
   return OVERSEAS_READ_PATTERNS.some((pattern) => pattern.test(pathname))
 }
+
+// 登录墙关闭后，访客可以匿名浏览的只读页面。账号、投稿、审稿和后台
+// 仍然由各自的路由守卫挡住；这里只放行内容面。
+const PUBLIC_READ_PATTERNS = [
+  ...OVERSEAS_READ_PATTERNS,
+  /^\/library$/,
+  /^\/library\/[^/]+$/,
+  /^\/issues$/,
+  /^\/levels$/,
+  /^\/explore$/,
+  /^\/fields\/[^/]+$/,
+]
+
+/** Read-only pages that can be opened without an account once the wall is off. */
+export function isPublicReadPath(pathname: string): boolean {
+  return PUBLIC_READ_PATTERNS.some((pattern) => pattern.test(pathname))
+}

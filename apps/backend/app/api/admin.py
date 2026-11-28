@@ -35,7 +35,16 @@ from app.core.email_templates import account_created
 from app.core.key_rotation import _active_secret_keys, _signing_key, reload_settings
 from app.core.logging import get_logger
 from app.core.security import hash_password
-from app.core.site_settings import get_all_site_flags, set_site_flag
+from app.core.site_settings import (
+    generate_registration_invite_code,
+    get_access_policy,
+    get_all_site_flags,
+    get_site_text,
+    get_site_texts,
+    refresh_access_policy,
+    set_site_flag,
+    set_site_text,
+)
 from app.models import AuditLog, Role, User, UserRole
 from app.schemas import (
     AdminUserAreasUpdate,
@@ -135,11 +144,13 @@ async def security_status(
         "rotation_window_open": len(keys) > 1,
         # Access model, surfaced so the admin security panel shows what is
         # actually enforcing the wall rather than guessing from env files.
-        "auth_wall_enabled": settings.auth_wall_enabled,
-        "mainland_gate_enabled": settings.mainland_gate_enabled,
-        "region_access_enabled": settings.region_access_enabled,
-        "registration_invite_required": bool(settings.registration_invite_code.strip()),
-        "registration_email_code_required": settings.registration_email_code_required,
+        "auth_wall_enabled": get_access_policy().auth_wall_enabled,
+        "mainland_gate_enabled": get_access_policy().mainland_gate_enabled,
+        "region_access_enabled": get_access_policy().region_access_enabled,
+        "registration_invite_required": get_access_policy().registration_invite_required,
+        "registration_email_code_required": (
+            get_access_policy().registration_email_code_required
+        ),
         "require_2fa_for_admin": settings.require_2fa_for_admin,
         "admin_total": admin_total,
         "admin_without_2fa": admin_without_2fa,
@@ -948,15 +959,22 @@ async def export_monthly_ops_report(
     )
 
 
+async def _site_settings_payload(
+    db: AsyncSession, tenant_id: UUID
+) -> SiteSettingsResponse:
+    flags = await get_all_site_flags(db, tenant_id)
+    texts = await get_site_texts(db, tenant_id)
+    return SiteSettingsResponse(**flags, **texts)
+
+
 @router.get("/settings/site", response_model=SiteSettingsResponse)
 async def get_site_settings(
     db: AsyncSession = Depends(get_db),
     current_admin: User = Depends(require_admin),
 ) -> SiteSettingsResponse:
-    """读取本租户的运营开关（注册验证码 / 作者 DOI 入口）。"""
+    """读取本租户的访问与注册开关（运行时可改，重启后仍在）。"""
     tenant_id = require_tenant_id()
-    flags = await get_all_site_flags(db, tenant_id)
-    return SiteSettingsResponse(**flags)
+    return await _site_settings_payload(db, tenant_id)
 
 
 @router.patch("/settings/site", response_model=SiteSettingsResponse)
@@ -965,11 +983,27 @@ async def update_site_settings(
     db: AsyncSession = Depends(get_db),
     current_admin: User = Depends(require_admin),
 ) -> SiteSettingsResponse:
-    """局部更新运营开关；未传的键保持不变，写审计日志。"""
+    """局部更新访问/注册开关；未传的键保持不变，写审计日志。
+
+    打开邀请码但库里还没有可用码时，顺手生成一枚，避免运营把开关
+    打开却把注册入口锁死。
+    """
     tenant_id = require_tenant_id()
     updates = payload.model_dump(exclude_none=True)
-    for key, value in updates.items():
-        await set_site_flag(db, tenant_id, key, bool(value))
+    flag_updates = {k: bool(v) for k, v in updates.items() if k != "registration_invite_code"}
+    if flag_updates.get("mainland_gate_enabled"):
+        password = settings.mainland_gate_password.strip()
+        if len(password) < 7:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="国内入口密码门需要先配置至少 7 位的 RUBBISH_MAINLAND_GATE_PASSWORD",
+            )
+    for key, value in flag_updates.items():
+        await set_site_flag(db, tenant_id, key, value)
+    if "registration_invite_code" in updates:
+        await set_site_text(
+            db, tenant_id, "registration_invite_code", str(updates["registration_invite_code"])
+        )
     if updates:
         db.add(
             AuditLog(
@@ -982,8 +1016,50 @@ async def update_site_settings(
             )
         )
         await db.commit()
+
     flags = await get_all_site_flags(db, tenant_id)
-    return SiteSettingsResponse(**flags)
+    code = await get_site_text(db, tenant_id, "registration_invite_code")
+    if flags["registration_invite_required"] and not code:
+        code = generate_registration_invite_code()
+        await set_site_text(db, tenant_id, "registration_invite_code", code)
+        db.add(
+            AuditLog(
+                tenant_id=tenant_id,
+                actor_user_id=current_admin.id,
+                action="admin.settings.invite_code",
+                target_type="tenant",
+                target_id=str(tenant_id),
+                payload={"generated": True, "reason": "required_without_code"},
+            )
+        )
+        await db.commit()
+
+    await refresh_access_policy(db, tenant_id)
+    return await _site_settings_payload(db, tenant_id)
+
+
+@router.post("/settings/invite-code", response_model=SiteSettingsResponse)
+async def generate_site_invite_code(
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(require_admin),
+) -> SiteSettingsResponse:
+    """生成新的注册邀请码；只替换码，不改邀请码开关。"""
+    tenant_id = require_tenant_id()
+    code = generate_registration_invite_code()
+    await set_site_text(db, tenant_id, "registration_invite_code", code)
+    db.add(
+        AuditLog(
+            tenant_id=tenant_id,
+            actor_user_id=current_admin.id,
+            action="admin.settings.invite_code",
+            target_type="tenant",
+            target_id=str(tenant_id),
+            payload={"generated": True},
+        )
+    )
+    await db.commit()
+    await refresh_access_policy(db, tenant_id)
+    return await _site_settings_payload(db, tenant_id)
 
 
 @router.get("/maintenance/email-status")

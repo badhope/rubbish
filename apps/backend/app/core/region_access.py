@@ -32,6 +32,7 @@ from app.core.config import settings
 from app.core.logging import get_logger
 from app.core.mainland_gate import client_ip
 from app.core.security import decode_access_token
+from app.core.site_settings import get_access_policy
 
 logger = get_logger("rubbish.region_access")
 
@@ -168,7 +169,7 @@ class RegionAccessMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
 
     async def dispatch(self, request: Request, call_next):  # type: ignore[no-untyped-def]
-        if not settings.region_access_enabled:
+        if not get_access_policy().region_access_enabled:
             return await call_next(request)
 
         path = request.url.path

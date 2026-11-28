@@ -7,12 +7,12 @@ import { MobileAppShell } from '@/components/layout/MobileAppShell'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import { useAuth } from '@/hooks/use-auth'
 import { useAuthStore, type AuthUser } from '@/lib/auth'
-import { isOverseasReadPath, readAccessRegion } from '@/lib/access'
+import { isOverseasReadPath, isPublicReadPath, readAccessRegion } from '@/lib/access'
 import { api, bootstrapSession } from '@/lib/api'
 import { Toaster } from '@/components/ui/sonner'
 import { NotFoundPage } from '@/components/common/not-found-page'
 import { FeedbackLauncher } from '@/components/common/feedback-launcher'
-import type { UserResponse } from '@/lib/types'
+import type { CapabilitiesResponse, UserResponse } from '@/lib/types'
 
 interface RouterContext {
   queryClient: QueryClient
@@ -89,7 +89,23 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       const region = readAccessRegion()
       const overseasRead = region === 'overseas' && isOverseasReadPath(location.pathname)
       if (!PUBLIC_PATHS.has(location.pathname) && !overseasRead) {
-        throw redirect({ to: '/' })
+        // 全站登录墙可以在后台关掉。关掉后内容页对访客开放，
+        // 但账号/投稿/后台仍然走各自守卫。能力探测是公开接口，
+        // 这里缓存几十秒，避免每次点导航都打一次请求。
+        let authWallEnabled = true
+        try {
+          const caps = await context.queryClient.fetchQuery<CapabilitiesResponse>({
+            queryKey: ['capabilities'],
+            queryFn: async () => (await api.get<CapabilitiesResponse>('/capabilities')).data,
+            staleTime: 60_000,
+          })
+          authWallEnabled = caps.auth_wall_enabled ?? true
+        } catch {
+          // 探测失败就按登录墙仍在处理，宁可回封面也不放错。
+        }
+        if (authWallEnabled || !isPublicReadPath(location.pathname)) {
+          throw redirect({ to: '/' })
+        }
       }
     }
   },

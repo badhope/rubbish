@@ -65,6 +65,7 @@ from app.core.security import (
     token_version_matches,
     verify_password,
 )
+from app.core.site_settings import get_access_policy
 from app.core.time import utcnow
 from app.core.token_denylist import DenylistUnavailableError, get_denylist
 from app.core.tokens import (
@@ -224,9 +225,15 @@ async def register(
     # default as the fallback. Read it before validating the token.
     from app.core.site_settings import get_site_flag
 
-    if settings.registration_invite_code.strip():
+    policy = get_access_policy()
+    if policy.registration_invite_required:
+        expected = policy.registration_invite_code.strip().upper()
+        if not expected:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="邀请码尚未配置，请联系站务",
+            )
         supplied = (payload.invite_code or "").strip().upper()
-        expected = settings.registration_invite_code.strip().upper()
         if not hmac.compare_digest(supplied, expected):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -234,7 +241,7 @@ async def register(
             )
 
     email_verified_by_code = False
-    if settings.registration_email_code_required:
+    if policy.registration_email_code_required:
         await _consume_registration_email_code(db, payload.email, payload.email_code)
         email_verified_by_code = True
 
@@ -877,7 +884,7 @@ async def request_registration_email_code(
     to enumerate existing accounts. Unlike the login-code endpoint, this one
     must send to addresses that are not in ``users`` yet.
     """
-    if not settings.registration_email_code_required:
+    if not get_access_policy().registration_email_code_required:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="当前注册流程不需要邮箱验证码",

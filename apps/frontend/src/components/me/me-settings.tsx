@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { ExternalLink, Settings2 } from 'lucide-react'
+import { ExternalLink, Settings2, ShieldCheck } from 'lucide-react'
 import { useMe, useResendVerification } from '@/hooks/api/use-auth'
 import { ProfileDetailsCard } from '@/components/settings/profile-details-card'
 import { ProfileAreasCard } from '@/components/settings/profile-areas-card'
@@ -98,6 +98,24 @@ export function MeSettings({ username, initialSection }: { username: string; ini
                 </Button>
               ) : null}
             </div>
+            {me?.is_admin ? (
+              <Link
+                to="/admin/system"
+                search={{ section: 'access' }}
+                className="flex items-center justify-between gap-3 rounded-lg border bg-muted/30 px-4 py-3 transition-colors hover:border-primary/50"
+              >
+                <div className="flex min-w-0 items-start gap-3">
+                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">站点访问设置</p>
+                    <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                      登录墙、地区限制、注册邀请码都在这里开关。
+                    </p>
+                  </div>
+                </div>
+                <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground" />
+              </Link>
+            ) : null}
             <ProfileAreasCard key={`areas-${me?.id ?? 'empty'}`} initial={me ?? undefined} />
             <ProfileDetailsCard key={me?.id ?? 'profile-empty'} initial={me ?? undefined} />
           </>

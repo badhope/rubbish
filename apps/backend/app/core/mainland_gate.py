@@ -30,6 +30,7 @@ from starlette.types import ASGIApp
 
 from app.core.config import settings
 from app.core.logging import get_logger
+from app.core.site_settings import get_access_policy
 
 logger = get_logger("rubbish.mainland_gate")
 
@@ -363,7 +364,7 @@ class MainlandGateMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
 
     async def dispatch(self, request: Request, call_next):  # type: ignore[no-untyped-def]
-        if not settings.mainland_gate_enabled:
+        if not get_access_policy().mainland_gate_enabled:
             return await call_next(request)
 
         path = request.url.path

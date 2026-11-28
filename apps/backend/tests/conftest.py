@@ -130,6 +130,20 @@ async def fresh_database() -> AsyncGenerator[None, None]:
         await conn.run_sync(Base.metadata.drop_all)
 
 
+@pytest.fixture(autouse=True)
+def reset_runtime_access_policy():
+    """Clear the process-wide access snapshot between tests.
+
+    Production reloads it at startup and on every admin write; tests
+    monkeypatch ``settings`` per case, so a stale snapshot would leak.
+    """
+    from app.core.site_settings import reset_access_policy
+
+    reset_access_policy()
+    yield
+    reset_access_policy()
+
+
 @pytest_asyncio.fixture
 async def db_session() -> AsyncGenerator[AsyncSession, None]:
     async with test_async_session_factory() as session:

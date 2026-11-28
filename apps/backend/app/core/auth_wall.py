@@ -19,8 +19,8 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
-from app.core.config import settings
 from app.core.security import decode_access_token, decode_account_restore_token
+from app.core.site_settings import get_access_policy
 
 # Exact paths that must stay reachable before a user has a token.
 PUBLIC_API_PATHS = frozenset(
@@ -119,7 +119,7 @@ class AuthWallMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
 
     async def dispatch(self, request: Request, call_next):  # type: ignore[no-untyped-def]
-        if not settings.auth_wall_enabled:
+        if not get_access_policy().auth_wall_enabled:
             return await call_next(request)
 
         path = request.url.path

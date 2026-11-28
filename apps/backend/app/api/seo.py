@@ -23,6 +23,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.db import get_db
+from app.core.site_settings import get_access_policy
 from app.domain.catalog.models import Resource
 from app.domain.catalog.visibility import public_conditions
 from app.models import Tenant
@@ -138,7 +139,7 @@ AI_CRAWLERS = [
 
 @router.get("/robots.txt", response_class=Response, include_in_schema=False)
 async def robots(request: Request) -> Response:
-    if settings.auth_wall_enabled:
+    if get_access_policy().auth_wall_enabled:
         return Response(
             content=b"User-agent: *\nDisallow: /\n",
             media_type="text/plain; charset=utf-8",
@@ -159,7 +160,7 @@ async def robots(request: Request) -> Response:
 @router.get("/ai.txt", response_class=Response, include_in_schema=False)
 async def ai_txt(request: Request) -> Response:
     """给 AI Agent 的机器可读边界说明。"""
-    if settings.auth_wall_enabled:
+    if get_access_policy().auth_wall_enabled:
         return Response(
             status_code=404, content="Not Found", media_type="text/plain; charset=utf-8"
         )
@@ -197,7 +198,7 @@ async def ai_txt(request: Request) -> Response:
 
 @router.get("/sitemap.xml", response_class=Response, include_in_schema=False)
 async def sitemap(request: Request, db: AsyncSession = Depends(get_db)) -> Response:
-    if settings.auth_wall_enabled:
+    if get_access_policy().auth_wall_enabled:
         return Response(
             status_code=404, content="Not Found", media_type="text/plain; charset=utf-8"
         )
@@ -245,7 +246,7 @@ async def sitemap(request: Request, db: AsyncSession = Depends(get_db)) -> Respo
 @router.get("/llms.txt", response_class=Response, include_in_schema=False)
 async def llms_txt(request: Request, db: AsyncSession = Depends(get_db)) -> Response:
     """Machine-readable guide for LLM crawlers and answer engines."""
-    if settings.auth_wall_enabled:
+    if get_access_policy().auth_wall_enabled:
         return Response(
             status_code=404, content="Not Found", media_type="text/plain; charset=utf-8"
         )
@@ -299,7 +300,7 @@ async def llms_txt(request: Request, db: AsyncSession = Depends(get_db)) -> Resp
 @router.get("/rss.xml", response_class=Response, include_in_schema=False)
 async def rss_feed(request: Request, db: AsyncSession = Depends(get_db)) -> Response:
     """RSS 2.0 feed of the latest published archive records."""
-    if settings.auth_wall_enabled:
+    if get_access_policy().auth_wall_enabled:
         return Response(
             status_code=404, content="Not Found", media_type="text/plain; charset=utf-8"
         )
@@ -348,7 +349,7 @@ async def rss_feed(request: Request, db: AsyncSession = Depends(get_db)) -> Resp
 @router.get("/atom.xml", response_class=Response, include_in_schema=False)
 async def atom_feed(request: Request, db: AsyncSession = Depends(get_db)) -> Response:
     """Atom 1.0 feed of the latest published records; mirrors the RSS source."""
-    if settings.auth_wall_enabled:
+    if get_access_policy().auth_wall_enabled:
         return Response(
             status_code=404, content="Not Found", media_type="text/plain; charset=utf-8"
         )
@@ -436,7 +437,7 @@ async def build_index_html(
     db: AsyncSession,
 ) -> tuple[str, str]:
     """Return ``(html, status)`` for a SPA route."""
-    if settings.auth_wall_enabled:
+    if get_access_policy().auth_wall_enabled:
         # The SPA shell itself is public, but per-route title/description/JSON-LD
         # would leak article metadata to anonymous crawlers. Let the frontend
         # redirect visitors to the cover; serve only the generic shell here.

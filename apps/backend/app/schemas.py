@@ -380,6 +380,12 @@ class SiteSettingsResponse(BaseModel):
 
     captcha_required_for_registration: bool
     doi_author_entry_enabled: bool
+    auth_wall_enabled: bool
+    mainland_gate_enabled: bool
+    region_access_enabled: bool
+    registration_invite_required: bool
+    registration_email_code_required: bool
+    registration_invite_code: str
 
 
 class SiteSettingsUpdate(BaseModel):
@@ -387,6 +393,12 @@ class SiteSettingsUpdate(BaseModel):
 
     captcha_required_for_registration: bool | None = None
     doi_author_entry_enabled: bool | None = None
+    auth_wall_enabled: bool | None = None
+    mainland_gate_enabled: bool | None = None
+    region_access_enabled: bool | None = None
+    registration_invite_required: bool | None = None
+    registration_email_code_required: bool | None = None
+    registration_invite_code: str | None = Field(default=None, max_length=64)
 
 
 class UserUpdate(BaseModel):

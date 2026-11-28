@@ -1,6 +1,6 @@
 # Rubbish 项目基线
 
-> 版本：1.20.20（2026-11-28）
+> 版本：1.20.21（2026-11-28）
 > 更新：2026-11-28
 > 仓库：`/home/user/work/rubbish-src`，主分支 `main`  
 > 生产入口：`https://rubbish.argjiemi.cn`
@@ -17,12 +17,12 @@ Rubbish 是自托管的公开写作与主题交流社区。长文进入内容库
 
 | 项目 | 状态 |
 |---|---|
-| 服务 | `rubbish-app.service`，监听 `127.0.0.1:8080`；健康接口确认 `1.20.19`（1.20.20 代码已合并，待部署） |
+| 服务 | `rubbish-app.service`，监听 `127.0.0.1:8080`；健康接口确认 `1.20.21`；1.20.21 已部署 |
 | 应用目录 | `/opt/rubbish-app` |
 | 静态目录 | `/opt/rubbish-app/static` |
 | 数据库 | Docker 容器 `rubbish-db-1`，库名 `rubbish`；迁移已到 `076_forum_moderation_tuning`（1.20.19 队列权重与灰度；前置 `075_user_subject_disciplines`、`074_public_reviews`、`073_infra_hardening`） |
-| 访问策略 | 中国大陆及港澳台匿名只看封面；海外匿名只读文章与主题论坛；写操作需登录 |
-| 注册 | 邮箱验证码 + 读者群邀请码 |
+| 访问策略 | 全站公开浏览：登录墙、地区限制、国内入口密码门均关闭；写操作与账号页仍需登录；后台「访问设置」可随时开关 |
+| 注册 | 开放注册，需邮箱验证码；邀请码已关闭，后台可开启并生成新码 |
 | 内容 | 268 篇已公开作品，正文、标题、分类、图源与文献说明已完成四轮机器核查 |
 
 ### 3. 论坛内容流转
@@ -59,7 +59,7 @@ Rubbish 是自托管的公开写作与主题交流社区。长文进入内容库
 - 发布邮件：`publication_digest` job 每日 09:00 后汇总，一人一天一封，独立于站内通知开关。
 - 下载：文章 PDF / Word / 原件统一经 axios blob 鉴权下载，避免浏览器直链不带 Bearer 被区域访问或 AuthWall 拦截；PDF 版式预览的页数与页图同样走鉴权请求。投稿文件与审稿附件的手机端/微信端原生直链带 `ticket` 参数，中间件只放行该签名下载路径，票据权限仍由端点复核。
 - 论坛回归：`tests/test_forum.py` 20 项、`tests/test_forum_moderation.py` 8 项、50 条批量压力回归 1 项；1.19.56 新增 `tests/test_infra_11956.py` 5 项。
-- 后端全量 `1024 passed / 3 skipped`；前端 `tsc -b --noEmit`、ESLint、Vitest 全量 `253 passed / 49 files`、`vite build` 通过（1.20.20）。
+- 后端全量 `1025 passed / 3 skipped`；前端 `tsc -b --noEmit`、ESLint、Vitest 全量 `254 passed / 49 files`、`vite build` 通过（1.20.21）。
 
 ## 二、已交付功能清单
 

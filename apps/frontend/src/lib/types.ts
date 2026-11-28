@@ -215,6 +215,12 @@ export interface HealthResponse {
 export interface SiteSettingsResponse {
   captcha_required_for_registration: boolean
   doi_author_entry_enabled: boolean
+  auth_wall_enabled: boolean
+  mainland_gate_enabled: boolean
+  region_access_enabled: boolean
+  registration_invite_required: boolean
+  registration_email_code_required: boolean
+  registration_invite_code: string
 }
 
 export interface CapabilitiesResponse {
@@ -226,6 +232,10 @@ export interface CapabilitiesResponse {
   /** 注册是否需要邀请码 / 邮箱验证码（生产邀请制）。 */
   registration_invite_required: boolean
   registration_email_code_required: boolean
+  /** 访客能否匿名浏览公开内容；关闭后前端路由放行只读页面。 */
+  auth_wall_enabled: boolean
+  /** 地区访问策略是否启用（大陆/港澳台与海外分开对待）。 */
+  region_access_enabled: boolean
   /** 注册是否必须答自建验证码（管理员可在后台切换）。 */
   captcha_required_for_registration: boolean
   /** 投稿表单是否允许作者填写官方 DOI。 */

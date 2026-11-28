@@ -19,7 +19,7 @@ from app.api.deps import get_current_tenant_id
 from app.core.config import settings
 from app.core.db import get_db
 from app.core.email import ConsoleEmailSender, get_email_sender
-from app.core.site_settings import get_all_site_flags
+from app.core.site_settings import get_access_policy, get_all_site_flags
 
 router = APIRouter(prefix="/capabilities", tags=["public"])
 
@@ -33,6 +33,9 @@ class CapabilitiesResponse(BaseModel):
     # 注册页是否要求邀请码 / 邮箱验证码（生产邀请制）。
     registration_invite_required: bool
     registration_email_code_required: bool
+    # 访客是否可以匿名浏览公开内容；前端路由守卫据此决定是否放行。
+    auth_wall_enabled: bool
+    region_access_enabled: bool
     # 运营开关：注册是否必须答验证码、发布是否允许作者填写官方 DOI。
     captcha_required_for_registration: bool
     doi_author_entry_enabled: bool
@@ -66,6 +69,7 @@ async def get_capabilities(
     sender = get_email_sender()
     delivers = not isinstance(sender, ConsoleEmailSender)
     tenant_id = get_current_tenant_id()
+    policy = get_access_policy()
     flags = (
         await get_all_site_flags(db, UUID(str(tenant_id)))
         if tenant_id is not None
@@ -83,8 +87,10 @@ async def get_capabilities(
         email_verification_required=False,
         oidc_enabled=settings.oidc_enabled,
         registration_open=True,
-        registration_invite_required=bool(settings.registration_invite_code.strip()),
-        registration_email_code_required=settings.registration_email_code_required,
+        registration_invite_required=policy.registration_invite_required,
+        registration_email_code_required=policy.registration_email_code_required,
+        auth_wall_enabled=policy.auth_wall_enabled,
+        region_access_enabled=policy.region_access_enabled,
         captcha_required_for_registration=flags["captcha_required_for_registration"],
         doi_author_entry_enabled=flags["doi_author_entry_enabled"],
         upload_max_bytes=_MAX_UPLOAD_BYTES,

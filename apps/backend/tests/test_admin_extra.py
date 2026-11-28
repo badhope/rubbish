@@ -175,6 +175,73 @@ async def test_admin_site_settings_roundtrip_and_audit(
     )
 
 
+
+
+@pytest.mark.asyncio
+async def test_admin_access_settings_gate_registration(
+    client: AsyncClient, admin_user: dict
+) -> None:
+    """访问开关：打开邀请码自动生成，注册端立即校验，关闭后恢复开放。"""
+    headers = auth_headers(admin_user)
+    patched = await client.patch(
+        "/api/admin/settings/site",
+        json={
+            "auth_wall_enabled": False,
+            "region_access_enabled": False,
+            "mainland_gate_enabled": False,
+            "registration_invite_required": True,
+            "registration_email_code_required": False,
+        },
+        headers=headers,
+    )
+    assert patched.status_code == 200, patched.text
+    body = patched.json()
+    code = body["registration_invite_code"]
+    assert code.startswith("RUBBISH-")
+    assert body["registration_invite_required"] is True
+
+    denied = await client.post(
+        "/api/auth/register",
+        json={
+            "email": "no-invite@example.com",
+            "username": "noinvite",
+            "password": "password123",
+        },
+    )
+    assert denied.status_code == 403
+
+    allowed = await client.post(
+        "/api/auth/register",
+        json={
+            "email": "with-invite@example.com",
+            "username": "withinvite",
+            "password": "password123",
+            "invite_code": code,
+        },
+    )
+    assert allowed.status_code == 201, allowed.text
+
+    regenerated = await client.post("/api/admin/settings/invite-code", headers=headers)
+    assert regenerated.status_code == 200
+    assert regenerated.json()["registration_invite_code"] != code
+
+    # 恢复默认，避免全局运行时快照影响后续用例。
+    restored = await client.patch(
+        "/api/admin/settings/site",
+        json={
+            "auth_wall_enabled": False,
+            "region_access_enabled": False,
+            "mainland_gate_enabled": False,
+            "registration_invite_required": False,
+            "registration_email_code_required": False,
+            "registration_invite_code": "",
+        },
+        headers=headers,
+    )
+    assert restored.status_code == 200
+    assert restored.json()["registration_invite_required"] is False
+
+
 @pytest.mark.asyncio
 async def test_admin_creates_invited_reviewer_account(
     client: AsyncClient, admin_user: dict, db_session: AsyncSession

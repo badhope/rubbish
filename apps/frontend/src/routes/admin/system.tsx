@@ -2,24 +2,26 @@ import { useEffect, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { requireAdminGuard } from '@/lib/route-guards'
 import { AdminSectionTabs, type AdminSectionItem } from '@/components/admin/admin-section-tabs'
+import AccessSettingsPage from '@/components/admin/pages/system/access-settings'
 import SystemHealthPage from '@/components/admin/pages/system/system-health'
 import AuditLogsPage from '@/components/admin/pages/system/audit-logs'
 import OpsReportPage from '@/components/admin/pages/system/ops-report'
 
-type SectionKey = 'health' | 'audit' | 'ops'
+type SectionKey = 'access' | 'health' | 'audit' | 'ops'
 
 interface SystemSearch {
   section?: string
 }
 
 const SECTIONS: readonly AdminSectionItem<SectionKey>[] = [
+  { key: 'access', label: '访问设置' },
   { key: 'health', label: '系统健康' },
   { key: 'audit', label: '审计日志' },
   { key: 'ops', label: '运营月报' },
 ]
 
 function isSectionKey(value: string | undefined): value is SectionKey {
-  return value === 'health' || value === 'audit' || value === 'ops'
+  return value === 'access' || value === 'health' || value === 'audit' || value === 'ops'
 }
 
 export const Route = createFileRoute('/admin/system')({
@@ -33,7 +35,7 @@ export const Route = createFileRoute('/admin/system')({
 function AdminSystemPage() {
   const navigate = useNavigate()
   const { section: sectionParam } = Route.useSearch()
-  const [section, setSection] = useState<SectionKey>('health')
+  const [section, setSection] = useState<SectionKey>('access')
 
   useEffect(() => {
     if (isSectionKey(sectionParam)) setSection(sectionParam)
@@ -47,6 +49,7 @@ function AdminSystemPage() {
   return (
     <div>
       <AdminSectionTabs items={SECTIONS} active={section} onChange={changeSection} label="系统域子段" />
+      {section === 'access' ? <AccessSettingsPage /> : null}
       {section === 'health' ? <SystemHealthPage /> : null}
       {section === 'audit' ? <AuditLogsPage /> : null}
       {section === 'ops' ? <OpsReportPage /> : null}
