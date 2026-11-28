@@ -127,8 +127,7 @@ export function useResetPassword() {
   })
 }
 
-// 注销账号：只允许当前活跃账号。成功后调用方必须先把 token 交给
-// restore-token 单独保存，再退出登录；本 hook 不保管恢复凭证。
+// 调用方在退出登录前保存服务端返回的恢复凭证。
 export function useDeleteMyAccount() {
   const qc = useQueryClient()
   return useMutation<AccountDeletionResponse, Error, DeleteAccountRequest>({
@@ -146,7 +145,7 @@ export function useDeleteMyAccount() {
   })
 }
 
-// 注销冷静期内恢复账号：使用单独保存的注销前 access token。
+// 注销冷静期内恢复账号，使用同一浏览器保存的恢复凭证。
 // 走裸 axios，避免 auth store 已清空时被全局 401 → refresh → logout 拦截，
 // 那会把恢复失败误判成“会话过期”并跳回登录页。
 export function useRestoreMyAccount() {

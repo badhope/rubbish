@@ -1,5 +1,6 @@
 import { createRootRouteWithContext, redirect } from '@tanstack/react-router'
 import { QueryClient } from '@tanstack/react-query'
+import { isAxiosError } from 'axios'
 import { TanStackRouterDevtools } from '@tanstack/router-devtools'
 import { AppShell } from '@/components/layout/AppShell'
 import { MobileAppShell } from '@/components/layout/MobileAppShell'
@@ -57,11 +58,14 @@ export const Route = createRootRouteWithContext<RouterContext>()({
           roles: res.roles ?? [],
         } satisfies AuthUser)
       } catch (err) {
-        // 只有后端明确说「你这个 token 不认」才登出。网络抖动、
-        // 5xx 这类瞬时故障不能把用户踢下线——否则刷新一次页面就掉登录。
-        const status = (err as { response?: { status?: number } }).response
-          ?.status
-        if (status === 401 || status === 403) {
+        // The interceptor handles refresh responses. Only let the profile
+        // request clear the very session whose credentials it submitted.
+        if (
+          isAxiosError(err) &&
+          err.config?.url === '/auth/me' &&
+          (err.response?.status === 401 || err.response?.status === 403) &&
+          err.config.headers.Authorization === `Bearer ${useAuthStore.getState().token}`
+        ) {
           useAuthStore.getState().logout()
         }
       }

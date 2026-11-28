@@ -277,7 +277,7 @@ async def test_delete_invalidates_tokens(auth_client):
     assert me.status_code == 401
 
 
-async def test_restore_brings_account_back(auth_client, db_session):
+async def test_restore_with_unexpired_legacy_session(auth_client):
     client = auth_client["client"]
     headers = auth_client["headers"]
     resp = await client.request(
@@ -291,18 +291,10 @@ async def test_restore_brings_account_back(auth_client, db_session):
     )
     assert resp.status_code == 202
 
-    # Regression for T2 finding H-3: the pre-deletion bearer token is the
-    # ONLY credential a real deleted user has (the password was anonymised
-    # at deletion, so no fresh login is possible), even though deletion
-    # bumped token_version. The grace-window exemption in
-    # get_soft_delete_aware_user must accept it — minting a fresh
-    # version-matched token here would mask the bug (no real user could
-    # ever mint one).
-    fresh_headers = headers
-
+    # Clients deployed before restore_token was added saved this session.
     resp = await client.post(
         "/api/users/me/restore",
-        headers=fresh_headers,
+        headers=headers,
         json={
             "email": "restored@example.com",
             "username": "restored",
@@ -313,6 +305,65 @@ async def test_restore_brings_account_back(auth_client, db_session):
     body = resp.json()
     assert body["email"] == "restored@example.com"
     assert body["username"] == "restored"
+
+
+@pytest.mark.parametrize("until_deadline", [timedelta(minutes=1), timedelta(0)])
+async def test_restore_credential_follows_deletion_deadline(
+    auth_client, monkeypatch, until_deadline
+):
+    import jwt.api_jwt
+
+    from app.api import gdpr
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "auth_wall_enabled", True)
+    monkeypatch.setattr(settings, "region_access_enabled", True)
+    client = auth_client["client"]
+    deleted = await client.request(
+        "DELETE",
+        "/api/users/me",
+        headers=auth_client["headers"],
+        json={"password": auth_client["password"], "confirmation": "DELETE MY ACCOUNT"},
+    )
+    assert deleted.status_code == 202
+    assert deleted.headers["cache-control"] == "no-store"
+    receipt = deleted.json()
+    deadline = datetime.fromisoformat(receipt["hard_delete_after"])
+    observed_at = deadline - until_deadline
+
+    class TestClock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return observed_at.astimezone(tz) if tz else observed_at.replace(tzinfo=None)
+
+    headers = {"Authorization": "Bearer " + receipt["restore_token"]}
+    identity = {
+        "username": "restored",
+        "email": "restored@example.com",
+        "new_password": "AnotherPass123!",
+    }
+    with monkeypatch.context() as clock:
+        clock.setattr(jwt.api_jwt, "datetime", TestClock)
+        clock.setattr(gdpr, "datetime", TestClock)
+        # The signed receipt only authorizes recovery. Normal login expiry still applies.
+        assert (await client.get("/api/users/me", headers=headers)).status_code == 401
+        legacy = await client.post(
+            "/api/users/me/restore", headers=auth_client["headers"], json=identity
+        )
+        assert legacy.status_code == 401
+        recovered = await client.post("/api/users/me/restore", headers=headers, json=identity)
+        if not until_deadline:
+            assert recovered.status_code == 401
+            return
+        assert recovered.status_code == 200, recovered.text
+        assert recovered.json()["username"] == identity["username"]
+        repeated = await client.post("/api/users/me/restore", headers=headers, json=identity)
+        assert repeated.status_code == 401
+    login = await client.post(
+        "/api/auth/login",
+        json={"username": identity["username"], "password": identity["new_password"]},
+    )
+    assert login.status_code == 200, login.text
 
 
 async def test_restore_outside_grace_returns_410(auth_client, db_session):

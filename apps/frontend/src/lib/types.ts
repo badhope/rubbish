@@ -116,6 +116,7 @@ export interface AccountDeletionResponse {
   status: 'scheduled_for_deletion'
   grace_days: number
   hard_delete_after: string
+  restore_token?: string // Older servers return only the deletion deadline.
 }
 
 export interface RestoreAccountRequest {

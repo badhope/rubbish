@@ -176,15 +176,21 @@ api.interceptors.response.use(
 
     // 已退出登录（或本来就没有会话）的页面不该为了后台请求再打一次 refresh，
     // 否则登录页会收到一条并不属于用户的“登录状态已失效”诊断。
-    if (!useAuthStore.getState().token) {
+    const sessionToken = useAuthStore.getState().token
+    if (!sessionToken) {
       return Promise.reject(error)
     }
 
     try {
       await refreshOnce()
-      original._retried = true
-      return api(original)
     } catch (refreshError) {
+      // A timeout, rate limit or unavailable server leaves the cookie usable
+      // for a later request. Only a rejected refresh proves the session is over.
+      if (!axios.isAxiosError(refreshError) || refreshError.response?.status !== 401) {
+        reportApiProblem(refreshError as AxiosError, '登录续期暂未完成，请稍后重试')
+        return Promise.reject(refreshError)
+      }
+      if (useAuthStore.getState().token !== sessionToken) return Promise.reject(refreshError)
       useAuthStore.getState().logout()
       reportApiProblem(
         refreshError as AxiosError,
@@ -198,5 +204,7 @@ api.interceptors.response.use(
       }
       return Promise.reject(refreshError)
     }
+    original._retried = true
+    return api(original)
   },
 )

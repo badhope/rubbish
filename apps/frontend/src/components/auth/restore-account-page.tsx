@@ -65,7 +65,7 @@ export function RestoreAccountPage() {
           {!token ? (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                当前浏览器没有注销前的登录凭证，无法在这里恢复。请回到注销时使用的浏览器；如果已经关闭无痕窗口，只能重新注册。
+                当前浏览器没有有效的恢复凭证。请在注销时使用的浏览器中打开此页，并确认仍在 30 天恢复期内。
               </p>
               <Button asChild variant="outline" className="w-full">
                 <Link to="/login">返回登录</Link>
