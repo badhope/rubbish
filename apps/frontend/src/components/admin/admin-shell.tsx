@@ -52,7 +52,7 @@ export function AdminShell() {
   const activeDomain = visibleDomains.find((domain) => domain.paths.some((path) => isActive(pathname, path)))
 
   return (
-    <div className="w-full">
+    <div className="w-full" data-admin-shell>
       <header className="border-b bg-background/95">
         <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-6">
           <div className="flex items-center justify-between gap-4 pt-4">

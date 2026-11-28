@@ -333,7 +333,7 @@ export default function AccessSettingsPage() {
                 <Input
                   value={inviteCode}
                   onChange={(event) => setInviteCode(event.target.value.toUpperCase())}
-                  placeholder="没有邀请码时，点右侧生成一枚"
+                  placeholder="没有码时点「生成新码」"
                   className="font-mono tracking-wider"
                   maxLength={64}
                   aria-label="注册邀请码"

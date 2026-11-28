@@ -1,6 +1,6 @@
 # Rubbish 项目基线
 
-> 版本：1.20.21（2026-11-28）
+> 版本：1.20.22（2026-11-28）
 > 更新：2026-11-28
 > 仓库：`/home/user/work/rubbish-src`，主分支 `main`  
 > 生产入口：`https://rubbish.argjiemi.cn`
@@ -17,7 +17,7 @@ Rubbish 是自托管的公开写作与主题交流社区。长文进入内容库
 
 | 项目 | 状态 |
 |---|---|
-| 服务 | `rubbish-app.service`，监听 `127.0.0.1:8080`；健康接口确认 `1.20.21`；1.20.21 已部署 |
+| 服务 | `rubbish-app.service`，监听 `127.0.0.1:8080`；健康接口确认 `1.20.22`；1.20.22 已部署 |
 | 应用目录 | `/opt/rubbish-app` |
 | 静态目录 | `/opt/rubbish-app/static` |
 | 数据库 | Docker 容器 `rubbish-db-1`，库名 `rubbish`；迁移已到 `076_forum_moderation_tuning`（1.20.19 队列权重与灰度；前置 `075_user_subject_disciplines`、`074_public_reviews`、`073_infra_hardening`） |

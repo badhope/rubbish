@@ -1304,6 +1304,11 @@ html {
 }
 
 /* 页面标题：标题上方一根短渐变规线，替代纯文字开头 */
+/* 后台页签本身已有选中下划线，标题前的装饰短线会与之叠成双杠，统一隐藏。 */
+[data-admin-shell] .page-title-rule {
+  display: none;
+}
+
 .page-title-rule {
   display: block;
   width: 2.25rem;
