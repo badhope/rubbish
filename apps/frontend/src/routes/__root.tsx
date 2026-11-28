@@ -1,5 +1,6 @@
 import { createRootRouteWithContext, redirect } from '@tanstack/react-router'
 import { QueryClient } from '@tanstack/react-query'
+import { isAxiosError } from 'axios'
 import { TanStackRouterDevtools } from '@tanstack/router-devtools'
 import { AppShell } from '@/components/layout/AppShell'
 import { MobileAppShell } from '@/components/layout/MobileAppShell'
@@ -36,6 +37,11 @@ const PUBLIC_PATHS = new Set([
   '/403',
 ])
 
+function isSessionRejected(error: unknown): boolean {
+  const status = isAxiosError(error) ? error.response?.status : undefined
+  return status === 401 || status === 403
+}
+
 export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async ({ context, location }) => {
     // 刷新页面后 token 还在但 user 为 null：拉一次 /auth/me 回填 store，
@@ -46,6 +52,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         const res = await context.queryClient.fetchQuery<UserResponse>({
           queryKey: ['auth', 'me'],
           queryFn: async () => (await api.get<UserResponse>('/auth/me')).data,
+          retry: (failures, error) => failures < 1 && !isSessionRejected(error),
           staleTime: 60_000,
         })
         useAuthStore.getState().setUser({

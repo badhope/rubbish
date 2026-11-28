@@ -127,14 +127,15 @@ function GuestCover() {
         ) : null}
 
         <div className="mt-7 flex w-full flex-wrap items-center justify-center gap-3">
+          {/* An open cover can outlive a deployment. Load the current document for account entry. */}
           <Button asChild size={overseas ? 'default' : 'lg'} variant={overseas ? 'ghost' : 'default'} className={overseas ? 'h-9 px-4' : 'h-11 min-w-32 px-6'}>
-            <Link to="/login">
+            <Link to="/login" reloadDocument>
               <LogIn className="h-4 w-4" />
               登录
             </Link>
           </Button>
           <Button asChild size={overseas ? 'default' : 'lg'} variant="outline" className={overseas ? 'h-9 px-4' : 'h-11 min-w-32 px-6'}>
-            <Link to="/register">
+            <Link to="/register" reloadDocument>
               注册
               <ArrowRight className="h-4 w-4" />
             </Link>

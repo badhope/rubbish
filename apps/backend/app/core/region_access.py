@@ -179,6 +179,8 @@ class RegionAccessMiddleware(BaseHTTPMiddleware):
             _valid_bearer(request)
             or _has_bearer(request)
             or _has_api_key(request)
+            # Let CORS and authentication handle the session probe, including signed-out visitors.
+            or (path == "/api/auth/me" and request.method in {"GET", "OPTIONS"})
             or is_public_api_path(path)
             or is_public_media_path(path)
             or is_signed_download_request(request)

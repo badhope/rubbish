@@ -2,9 +2,36 @@
 
 from __future__ import annotations
 
+import pytest
 from httpx import AsyncClient
 
 from app.core.config import settings
+
+
+@pytest.mark.parametrize("auth_wall", [True, False])
+async def test_restricted_guest_session_probe_requires_sign_in(
+    client: AsyncClient, monkeypatch, auth_wall: bool
+) -> None:
+    monkeypatch.setattr(settings, "region_access_enabled", True)
+    monkeypatch.setattr(settings, "trusted_proxies_count", 1)
+    monkeypatch.setattr(settings, "auth_wall_enabled", auth_wall)
+    headers = {"x-forwarded-for": "1.0.1.1"}
+
+    origin = "http://localhost:5173"
+    preflight = await client.options(
+        "/api/auth/me",
+        headers={**headers, "Origin": origin, "Access-Control-Request-Method": "GET"},
+    )
+    assert preflight.status_code == 200
+    assert preflight.headers["access-control-allow-origin"] == origin
+
+    session = await client.get("/api/auth/me", headers=headers)
+    assert session.status_code == 401
+    assert session.headers["www-authenticate"] == "Bearer"
+
+    catalog = await client.get("/api/catalog", headers=headers)
+    assert catalog.status_code == 403
+    assert catalog.json()["detail"] == "region_restricted"
 
 
 async def test_restricted_region_blocks_anonymous_but_overseas_can_read(
