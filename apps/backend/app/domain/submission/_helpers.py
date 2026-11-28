@@ -85,9 +85,7 @@ async def _materialize_resource_from_submission(
     tags = normalize_string_list(submission.tags, max_items=50) or []
     if not tags:
         tags = (
-            normalize_string_list(
-                [submission.discipline, submission.subdiscipline], max_items=50
-            )
+            normalize_string_list([submission.discipline, submission.subdiscipline], max_items=50)
             or []
         )
     keywords = normalize_string_list(submission.keywords, max_items=50) or None

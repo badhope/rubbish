@@ -135,9 +135,7 @@ def _people_match(q: str | None, discipline: str | None = None):
     if discipline:
         # JSONB 序列化后 slug 一定带双引号；用带引号的精确片段匹配，
         # 避免 ``computer-science`` 误命中 ``computer-science-education``。
-        conditions.append(
-            cast(User.subject_disciplines, Text).ilike(f'%"{discipline}"%')
-        )
+        conditions.append(cast(User.subject_disciplines, Text).ilike(f'%"{discipline}"%'))
     return conditions
 
 
@@ -182,7 +180,9 @@ async def _people_cards(db: AsyncSession, users: list[User]) -> list[SearchPerso
     followers_by_name = {str(name): int(count) for name, count in follower_rows}
     out: list[SearchPersonCard] = []
     for row in users:
-        followers = sum(followers_by_name.get(name, 0) for name in (row.display_name, row.username) if name)
+        followers = sum(
+            followers_by_name.get(name, 0) for name in (row.display_name, row.username) if name
+        )
         out.append(
             SearchPersonCard(
                 username=row.username,
@@ -208,15 +208,19 @@ async def _tag_cards(db: AsyncSession, q: str, *, limit: int = 500) -> list[Sear
     """
     tenant_id = require_tenant_id()
     rows = (
-        await db.execute(
-            select(Resource.tags)
-            .where(
-                Resource.tenant_id == tenant_id,
-                *public_conditions(),
+        (
+            await db.execute(
+                select(Resource.tags)
+                .where(
+                    Resource.tenant_id == tenant_id,
+                    *public_conditions(),
+                )
+                .limit(10000)
             )
-            .limit(10000)
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     counts: dict[str, int] = {}
     lowered = q.casefold()
     for group in rows:
@@ -278,39 +282,47 @@ async def search(
     if text and kind in ("all", "resources") and total_resources:
         like = f"%{text}%"
         resource_rows = (
-            await db.execute(
-                select(Resource)
-                .where(*_resource_match(text))
-                .order_by(
-                    case(
-                        (Resource.short_title.ilike(like), 0),
-                        (Resource.title.ilike(like), 1),
-                        else_=2,
-                    ),
-                    func.coalesce(Resource.publish_at, Resource.created_at).desc(),
-                    Resource.id.desc(),
+            (
+                await db.execute(
+                    select(Resource)
+                    .where(*_resource_match(text))
+                    .order_by(
+                        case(
+                            (Resource.short_title.ilike(like), 0),
+                            (Resource.title.ilike(like), 1),
+                            else_=2,
+                        ),
+                        func.coalesce(Resource.publish_at, Resource.created_at).desc(),
+                        Resource.id.desc(),
+                    )
+                    .offset(offset)
+                    .limit(per_kind)
                 )
-                .offset(offset)
-                .limit(per_kind)
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         resources = await _resource_cards(db, resource_rows, limit=per_kind)
 
     topics: list[ExploreTopicCard] = []
     if text and kind in ("all", "topics") and total_topics:
         like = f"%{text}%"
         topic_rows = (
-            await db.execute(
-                select(ForumTopic)
-                .where(*_topic_match(text))
-                .order_by(
-                    case((ForumTopic.title.ilike(like), 0), else_=1),
-                    func.coalesce(ForumTopic.last_reply_at, ForumTopic.created_at).desc(),
+            (
+                await db.execute(
+                    select(ForumTopic)
+                    .where(*_topic_match(text))
+                    .order_by(
+                        case((ForumTopic.title.ilike(like), 0), else_=1),
+                        func.coalesce(ForumTopic.last_reply_at, ForumTopic.created_at).desc(),
+                    )
+                    .offset(offset)
+                    .limit(per_kind)
                 )
-                .offset(offset)
-                .limit(per_kind)
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         topics = await _topic_cards(db, topic_rows, limit=per_kind)
 
     people: list[SearchPersonCard] = []
@@ -326,14 +338,18 @@ async def search(
                 User.username,
             ]
         user_rows = (
-            await db.execute(
-                select(User)
-                .where(*_people_match(text or None, discipline))
-                .order_by(*order_by)
-                .offset(offset)
-                .limit(per_kind)
+            (
+                await db.execute(
+                    select(User)
+                    .where(*_people_match(text or None, discipline))
+                    .order_by(*order_by)
+                    .offset(offset)
+                    .limit(per_kind)
+                )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         people = await _people_cards(db, user_rows)
 
     tags: list[SearchTagCard] = []

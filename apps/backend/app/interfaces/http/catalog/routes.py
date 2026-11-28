@@ -2399,18 +2399,22 @@ async def related_resources(
         clauses.append(cast(Resource.tags, Text).ilike(f'%"{tag}"%'))
 
     rows = (
-        await db.execute(
-            select(Resource)
-            .where(
-                Resource.tenant_id == tenant_id,
-                Resource.id != target.id,
-                *public_conditions(),
-                or_(*clauses),
+        (
+            await db.execute(
+                select(Resource)
+                .where(
+                    Resource.tenant_id == tenant_id,
+                    Resource.id != target.id,
+                    *public_conditions(),
+                    or_(*clauses),
+                )
+                .order_by(Resource.publish_at.desc(), Resource.id.desc())
+                .limit(120)
             )
-            .order_by(Resource.publish_at.desc(), Resource.id.desc())
-            .limit(120)
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     if not rows:
         return RelatedResourceResponse(data=[])
 
@@ -2418,11 +2422,9 @@ async def related_resources(
     if target.owner_id:
         owner_ids.add(target.owner_id)
     owners = (
-        (
-            await db.execute(
-                select(User).where(User.tenant_id == tenant_id, User.id.in_(owner_ids))
-            )
-        ).scalars().all()
+        (await db.execute(select(User).where(User.tenant_id == tenant_id, User.id.in_(owner_ids))))
+        .scalars()
+        .all()
         if owner_ids
         else []
     )
@@ -2432,9 +2434,7 @@ async def related_resources(
     for row in rows:
         shared = [tag for tag in target_tags if tag in (row.tags or [])]
         same_owner = target.owner_id is not None and row.owner_id == target.owner_id
-        same_author = bool(
-            target.authors and row.authors and target.authors[0] == row.authors[0]
-        )
+        same_author = bool(target.authors and row.authors and target.authors[0] == row.authors[0])
         score = len(shared) * 3.0
         if same_owner or same_author:
             score += 4.0
@@ -2455,9 +2455,7 @@ async def related_resources(
     for _score, row, reason in ranked[:limit]:
         owner = owner_map.get(row.owner_id) if row.owner_id else None
         author_name = (
-            (owner.display_name or owner.username)
-            if owner
-            else ((row.authors or ["佚名"])[0])
+            (owner.display_name or owner.username) if owner else ((row.authors or ["佚名"])[0])
         )
         cards.append(
             RelatedResourceCard(
@@ -2677,18 +2675,28 @@ async def get_resource_public_reviews(
     anonymous_labels: dict[int, str] = {}
     anonymous_reviewer_ids: list[int] = []
     seen_anonymous: set[int] = set()
-    for report, _round_no, reviewer_id, _submission_id, _display_name, _username in (
-        reports_by_submission.get(primary_id, [])
-    ):
+    for (
+        report,
+        _round_no,
+        reviewer_id,
+        _submission_id,
+        _display_name,
+        _username,
+    ) in reports_by_submission.get(primary_id, []):
         if report.is_anonymous and reviewer_id not in seen_anonymous:
             seen_anonymous.add(reviewer_id)
             anonymous_reviewer_ids.append(reviewer_id)
     for reviewer_id in anonymous_reviewer_ids:
         anonymous_labels[reviewer_id] = f"匿名审稿人 {len(anonymous_labels) + 1}"
 
-    for report, round_no, reviewer_id, _submission_id, display_name, username in (
-        reports_by_submission.get(primary_id, [])
-    ):
+    for (
+        report,
+        round_no,
+        reviewer_id,
+        _submission_id,
+        display_name,
+        username,
+    ) in reports_by_submission.get(primary_id, []):
         if report.is_anonymous:
             # 只给匿名报告编号，避免“署名审稿人”占掉 1 号后读者看到
             # 一个没有 1 号的“匿名审稿人 2”。同一审稿成员跨轮仍保持

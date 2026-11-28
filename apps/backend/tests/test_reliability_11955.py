@@ -29,9 +29,7 @@ async def _tenant(db: AsyncSession) -> Tenant:
 
 async def _editor(db: AsyncSession, tenant_id, name: str, role_name: str) -> User:
     role = (
-        await db.execute(
-            select(Role).where(Role.tenant_id == tenant_id, Role.name == role_name)
-        )
+        await db.execute(select(Role).where(Role.tenant_id == tenant_id, Role.name == role_name))
     ).scalar_one_or_none()
     if role is None:
         role = Role(tenant_id=tenant_id, name=role_name)
@@ -92,9 +90,7 @@ async def test_outbox_retries_skipped_rows_without_consuming_attempts(
 
 
 @pytest.mark.asyncio
-async def test_outbox_refuses_to_resend_sent_row(
-    db_session: AsyncSession, test_user: dict
-) -> None:
+async def test_outbox_refuses_to_resend_sent_row(db_session: AsyncSession, test_user: dict) -> None:
     tenant = await _tenant(db_session)
     record = EmailDigestRecord(
         tenant_id=tenant.id,

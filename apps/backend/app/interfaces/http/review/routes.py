@@ -1172,9 +1172,7 @@ async def review_matrix(
     # 冲突：有通过推荐，同时有不通过/退回修改；或两份意见方向完全相反。
     conflict = accept_count > 0 and (reject_count > 0 or major_count > 0)
     adjudicator_rows = [
-        a
-        for a in current
-        if a.is_adjudicator and a.status in ("pending", "accepted", "completed")
+        a for a in current if a.is_adjudicator and a.status in ("pending", "accepted", "completed")
     ]
     adjudicator_accepted = any(
         a.status == "completed" and a.report and a.report[0].recommendation == "accept"
@@ -1254,9 +1252,7 @@ async def assign_adjudicator(
             status_code=status.HTTP_409_CONFLICT,
             detail={
                 "code": "reviewer_name_conflict",
-                "message": (
-                    f"互评成员 {reviewer.username} 与作者同名：可能是共同作者，请换一位。"
-                ),
+                "message": (f"互评成员 {reviewer.username} 与作者同名：可能是共同作者，请换一位。"),
             },
         )
 

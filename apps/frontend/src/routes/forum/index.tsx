@@ -617,7 +617,7 @@ function ForumListPage() {
       ) : null}
 
       <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
-        <main className="min-w-0 space-y-3">
+        <div className="min-w-0 space-y-3">
           <div className="rounded-xl border bg-card/70">
             <div className="flex flex-col gap-2 border-b px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
               <div
@@ -1053,7 +1053,7 @@ function ForumListPage() {
               onPageChange={(p) => updateSearch({ page: p })}
             />
           )}
-        </main>
+        </div>
 
         <aside className="hidden space-y-4 lg:sticky lg:top-20 lg:block">
           <Card>

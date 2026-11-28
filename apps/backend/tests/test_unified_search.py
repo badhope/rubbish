@@ -38,9 +38,7 @@ async def test_search_returns_four_kinds_and_counts(
 
 
 @pytest.mark.asyncio
-async def test_search_type_filter_pages_one_surface(
-    client: AsyncClient, admin_user: dict
-) -> None:
+async def test_search_type_filter_pages_one_surface(client: AsyncClient, admin_user: dict) -> None:
     for index in range(3):
         created = await client.post(
             "/api/catalog",
@@ -79,9 +77,7 @@ async def test_search_finds_people_by_username(client: AsyncClient, test_user: d
 
 
 @pytest.mark.asyncio
-async def test_search_people_by_subject_discipline(
-    client: AsyncClient, test_user: dict
-) -> None:
+async def test_search_people_by_subject_discipline(client: AsyncClient, test_user: dict) -> None:
     profile = await client.patch(
         "/api/users/me",
         json={"subject_disciplines": ["computer-science"]},
@@ -105,9 +101,7 @@ async def test_search_people_by_subject_discipline(
 
 
 @pytest.mark.asyncio
-async def test_search_people_respects_private_profile(
-    client: AsyncClient, test_user: dict
-) -> None:
+async def test_search_people_respects_private_profile(client: AsyncClient, test_user: dict) -> None:
     profile = await client.patch(
         "/api/users/me",
         json={"subject_disciplines": ["computer-science"], "profile_visibility": "private"},

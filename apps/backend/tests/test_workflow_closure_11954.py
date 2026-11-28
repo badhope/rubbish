@@ -137,7 +137,12 @@ async def test_batch_preflight_and_undo(
 ) -> None:
     settings = await client.put(
         "/api/forum/moderation/settings",
-        json={"auto_publish_enabled": True, "manual_threshold": 30, "sla_minutes": 30, "weights": {}},
+        json={
+            "auto_publish_enabled": True,
+            "manual_threshold": 30,
+            "sla_minutes": 30,
+            "weights": {},
+        },
         headers=auth_headers(admin_user),
     )
     assert settings.status_code == 200, settings.text

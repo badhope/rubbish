@@ -119,9 +119,7 @@ async def _load_readable_list(db: AsyncSession, list_id: int, user: User | None)
     )
 
 
-async def _owner_map(
-    db: AsyncSession, user_ids: set[int]
-) -> dict[int, tuple[str, str | None]]:
+async def _owner_map(db: AsyncSession, user_ids: set[int]) -> dict[int, tuple[str, str | None]]:
     """Batch-resolve list owners so the public index does not do N+1 queries."""
     if not user_ids:
         return {}
@@ -138,9 +136,7 @@ def _with_owner(
     rl: ReadingList,
     owners: dict[int, tuple[str, str | None]] | None,
 ) -> ReadingListResponse | ReadingListDetailResponse:
-    username, display_name = (owners or {}).get(
-        rl.user_id, (None, None)
-    )
+    username, display_name = (owners or {}).get(rl.user_id, (None, None))
     if username is None:
         return payload
     return payload.model_copy(

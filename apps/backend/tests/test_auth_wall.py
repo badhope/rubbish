@@ -37,9 +37,7 @@ def _app() -> FastAPI:
         return {"submission_id": submission_id, "ticket": ticket}
 
     @app.get("/api/submissions/{submission_id}/files/{filename}")
-    async def submission_file_named(
-        submission_id: int, filename: str, ticket: str | None = None
-    ):
+    async def submission_file_named(submission_id: int, filename: str, ticket: str | None = None):
         return {"submission_id": submission_id, "filename": filename, "ticket": ticket}
 
     return app
@@ -88,13 +86,7 @@ def test_auth_wall_allows_only_get_requests_with_signed_download_ticket(monkeypa
     monkeypatch.setattr(settings, "auth_wall_enabled", True, raising=False)
     client = TestClient(_app())
 
-    assert (
-        client.get("/api/submissions/7/files?ticket=signed").json()["ticket"]
-        == "signed"
-    )
-    assert (
-        client.get("/api/submissions/7/files/7.pdf?ticket=signed").json()["filename"]
-        == "7.pdf"
-    )
+    assert client.get("/api/submissions/7/files?ticket=signed").json()["ticket"] == "signed"
+    assert client.get("/api/submissions/7/files/7.pdf?ticket=signed").json()["filename"] == "7.pdf"
     assert client.get("/api/submissions/7/files").status_code == 401
     assert client.post("/api/submissions/7/files?ticket=signed").status_code == 401

@@ -49,9 +49,7 @@ async def _create_resource(
     return int(response.json()["id"])
 
 
-async def _create_list(
-    client: AsyncClient, user: dict, *, name: str, visibility: str
-) -> dict:
+async def _create_list(client: AsyncClient, user: dict, *, name: str, visibility: str) -> dict:
     response = await client.post(
         "/api/reading-lists",
         json={"name": name, "description": "A test list", "visibility": visibility},
@@ -106,9 +104,7 @@ async def test_public_list_hides_unpublished_items_and_exposes_owner(
     assert [item["resource_id"] for item in owner_body["items"]] == [public_id]
 
 
-async def test_private_list_is_not_in_public_index(
-    client: AsyncClient, test_user: dict
-) -> None:
+async def test_private_list_is_not_in_public_index(client: AsyncClient, test_user: dict) -> None:
     private = await _create_list(client, test_user, name="Just for me", visibility="private")
     response = await client.get("/api/reading-lists/public")
     assert response.status_code == 200

@@ -117,11 +117,7 @@ async def _ensure_default_forum_boards(session: AsyncSession, tenant: Tenant) ->
     and sort orders are left alone so admins can keep their own structure.
     """
     rows = (
-        (
-            await session.execute(
-                select(ForumBoard).where(ForumBoard.tenant_id == tenant.id)
-            )
-        )
+        (await session.execute(select(ForumBoard).where(ForumBoard.tenant_id == tenant.id)))
         .scalars()
         .all()
     )
@@ -154,9 +150,7 @@ async def _ensure_default_forum_boards(session: AsyncSession, tenant: Tenant) ->
         )
 
 
-async def _ensure_admissions_guide(
-    session: AsyncSession, tenant: Tenant, admin: User
-) -> None:
+async def _ensure_admissions_guide(session: AsyncSession, tenant: Tenant, admin: User) -> None:
     """Seed the admissions guide once, keyed by its fixed title.
 
     Production already has topic #33. The title check keeps startup from

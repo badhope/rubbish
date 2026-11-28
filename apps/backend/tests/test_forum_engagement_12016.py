@@ -92,7 +92,9 @@ async def test_credit_adds_public_work_and_records_removal(
     assert {row["kind"] for row in credit["records"]} >= {"topic_published", "reply_published"}
     assert credit["positive_points"] == 3
 
-    reporter = await register_user(client, email="reporter12016@example.com", username="reporter12016")
+    reporter = await register_user(
+        client, email="reporter12016@example.com", username="reporter12016"
+    )
     report = await client.post(
         "/api/forum/reports",
         json={"reply_id": reply_id, "reason": "这条回复泄漏了别人的隐私"},

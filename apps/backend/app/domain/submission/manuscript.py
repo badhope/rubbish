@@ -298,9 +298,7 @@ def _inline_docx_images(md: str, media_dir: Path) -> str:
     return pattern.sub(replace, md)
 
 
-_PANDOC_DISPLAY_MATH = re.compile(
-    r"^\$([\s\S]*?)\$(?:[ \t]*(\([A-Za-z0-9.\-]+\)))?$"
-)
+_PANDOC_DISPLAY_MATH = re.compile(r"^\$([\s\S]*?)\$(?:[ \t]*(\([A-Za-z0-9.\-]+\)))?$")
 
 _PANDOC_CITATION_LINK = re.compile(r"\[\\\[([0-9][0-9, ]*)\\\]\]\(#_Ref[^)]*\)")
 _PANDOC_CITATION_MARK = re.compile(r"\\\[([0-9][0-9, ]*)\\\]")

@@ -54,9 +54,7 @@ DECIDED_STATUSES = ("accepted", "approved", "rejected")
 ACTIVE_ASSIGNMENT_STATUSES = ("pending", "accepted")
 
 
-async def _latest_version_map(
-    db: AsyncSession, tenant_id: Any, ids: list[int]
-) -> dict[int, int]:
+async def _latest_version_map(db: AsyncSession, tenant_id: Any, ids: list[int]) -> dict[int, int]:
     """批量取每篇投稿的最大版本号，避免工作台逐条查版本表。"""
     if not ids:
         return {}
@@ -394,9 +392,7 @@ async def editor_workbench(
         .scalars()
         .all()
     )
-    latest_versions.update(
-        await _latest_version_map(db, tenant_id, [s.id for s in submissions])
-    )
+    latest_versions.update(await _latest_version_map(db, tenant_id, [s.id for s in submissions]))
 
     to_assign: list[dict[str, Any]] = []
     in_review: list[dict[str, Any]] = []
@@ -490,9 +486,7 @@ async def editor_workbench(
         .scalars()
         .all()
     )
-    latest_versions.update(
-        await _latest_version_map(db, tenant_id, [s.id for s in decided_page])
-    )
+    latest_versions.update(await _latest_version_map(db, tenant_id, [s.id for s in decided_page]))
     decided = [_base_row(s) for s in decided_page]
 
     email_digest = await _email_digest_summary(db, tenant_id, now)

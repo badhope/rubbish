@@ -24,15 +24,11 @@ depends_on = None
 def upgrade() -> None:
     op.add_column(
         "forum_moderation_settings",
-        sa.Column(
-            "priority_risk_weight", sa.Integer(), nullable=False, server_default="10"
-        ),
+        sa.Column("priority_risk_weight", sa.Integer(), nullable=False, server_default="10"),
     )
     op.add_column(
         "forum_moderation_settings",
-        sa.Column(
-            "priority_age_weight", sa.Integer(), nullable=False, server_default="1"
-        ),
+        sa.Column("priority_age_weight", sa.Integer(), nullable=False, server_default="1"),
     )
     op.add_column(
         "forum_moderation_settings",

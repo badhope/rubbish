@@ -113,9 +113,7 @@ async def deliver_record(
         await db.flush()
 
 
-async def retry_due_emails(
-    db: AsyncSession, *, tenant_id: Any, limit: int = 20
-) -> dict[str, int]:
+async def retry_due_emails(db: AsyncSession, *, tenant_id: Any, limit: int = 20) -> dict[str, int]:
     """Retry failed or temporarily-skipped rows whose backoff has elapsed."""
     now = utcnow()
     stmt = (
@@ -147,9 +145,7 @@ async def retry_due_emails(
     return stats
 
 
-async def retry_record(
-    db: AsyncSession, *, tenant_id: Any, record_id: int
-) -> EmailDigestRecord:
+async def retry_record(db: AsyncSession, *, tenant_id: Any, record_id: int) -> EmailDigestRecord:
     stmt = select(EmailDigestRecord).where(
         EmailDigestRecord.id == record_id,
         EmailDigestRecord.tenant_id == tenant_id,

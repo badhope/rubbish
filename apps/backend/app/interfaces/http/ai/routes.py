@@ -82,7 +82,9 @@ def _token_row(token: ApiToken) -> dict[str, Any]:
     }
 
 
-def _audit(db: AsyncSession, user: User, action: str, token_id: int, payload: dict[str, Any]) -> None:
+def _audit(
+    db: AsyncSession, user: User, action: str, token_id: int, payload: dict[str, Any]
+) -> None:
     db.add(
         AuditLog(
             tenant_id=user.tenant_id,
@@ -373,18 +375,24 @@ async def mcp_endpoint(
         return JSONResponse(_rpc_result(request_id, {}))
     if method == "tools/list":
         role = await effective_permission_role(db, identity.user)
-        return JSONResponse(_rpc_result(request_id, {"tools": tools_for_scopes(identity.scopes, role)}))
+        return JSONResponse(
+            _rpc_result(request_id, {"tools": tools_for_scopes(identity.scopes, role)})
+        )
     if method == "tools/call":
         name = params.get("name") if isinstance(params, dict) else None
         arguments = params.get("arguments") if isinstance(params, dict) else None
         if not isinstance(name, str):
-            return JSONResponse(_rpc_error(request_id, -32602, "tools/call 缺少 name"), status_code=400)
+            return JSONResponse(
+                _rpc_error(request_id, -32602, "tools/call 缺少 name"), status_code=400
+            )
         result = await execute_tool(ToolContext(identity=identity, db=db), name, arguments or {})
         return JSONResponse(_rpc_result(request_id, result))
     if method in ("resources/list", "prompts/list"):
         key = "resources" if method.startswith("resources") else "prompts"
         return JSONResponse(_rpc_result(request_id, {key: []}))
-    return JSONResponse(_rpc_error(request_id, -32601, f"Method not found: {method}"), status_code=200)
+    return JSONResponse(
+        _rpc_error(request_id, -32601, f"Method not found: {method}"), status_code=200
+    )
 
 
 @mcp_router.get("")

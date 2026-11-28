@@ -52,7 +52,9 @@ from app.models import AuditLog
 MAX_AI_SUBMISSIONS_PER_HOUR = 10
 MAX_BODY_BYTES = 1_000_000
 _PLACEHOLDER_RE = re.compile(r"(?i)\b(?:todo|tbd|todo\(|lorem ipsum|待补充|此处省略|placeholder)\b")
-_DANGEROUS_HTML_RE = re.compile(r"(?i)<\s*(?:script|iframe|object|embed)\b|javascript\s*:|on\w+\s*=")
+_DANGEROUS_HTML_RE = re.compile(
+    r"(?i)<\s*(?:script|iframe|object|embed)\b|javascript\s*:|on\w+\s*="
+)
 
 
 class ToolInputError(ValueError):
@@ -150,7 +152,9 @@ def _body_quality_errors(body_markdown: str, abstract: str, title: str) -> list[
     return errors
 
 
-def _body_quality_warnings(body_markdown: str, abstract: str, title: str, keywords: list[str]) -> list[str]:
+def _body_quality_warnings(
+    body_markdown: str, abstract: str, title: str, keywords: list[str]
+) -> list[str]:
     warnings: list[str] = []
     if len(re.sub(r"\s+", "", body_markdown)) < 300:
         warnings.append("正文少于 300 字；请确认这是完整的短文而不是提纲")
@@ -174,7 +178,9 @@ def _quality_payload(
     if body:
         body_errors = _body_quality_errors(body, abstract, title)
         # 摘要/标题错误已在上面收集，避免重复提示。
-        errors.extend(item for item in body_errors if "摘要少于" not in item and "标题过短" not in item)
+        errors.extend(
+            item for item in body_errors if "摘要少于" not in item and "标题过短" not in item
+        )
     warnings = _body_quality_warnings(body or "", abstract, title, keywords) if body else []
     if not body and len(abstract.strip()) < 100:
         warnings.append("摘要少于 100 字；建议补充问题、方法与结论")
@@ -200,16 +206,20 @@ async def _latest_versions(ctx: ToolContext, ids: list[int]) -> dict[int, int]:
         return {}
     rows = (
         await ctx.db.execute(
-            select(SubmissionVersion.submission_id, func.max(SubmissionVersion.version)).where(
+            select(SubmissionVersion.submission_id, func.max(SubmissionVersion.version))
+            .where(
                 SubmissionVersion.tenant_id == ctx.tenant_id,
                 SubmissionVersion.submission_id.in_(ids),
-            ).group_by(SubmissionVersion.submission_id)
+            )
+            .group_by(SubmissionVersion.submission_id)
         )
     ).all()
     return {int(sid): int(version) for sid, version in rows}
 
 
-def _submission_summary(entry: Submission, latest_version: int, *, replayed: bool = False) -> dict[str, Any]:
+def _submission_summary(
+    entry: Submission, latest_version: int, *, replayed: bool = False
+) -> dict[str, Any]:
     return {
         "id": entry.id,
         "title": entry.title,
@@ -304,7 +314,9 @@ async def _preflight(ctx: ToolContext, args: dict[str, Any]) -> Any:
     except ValidationError as exc:
         return {
             "ok": False,
-            "errors": [f"{'.'.join(str(p) for p in item['loc'])}: {item['msg']}" for item in exc.errors()],
+            "errors": [
+                f"{'.'.join(str(p) for p in item['loc'])}: {item['msg']}" for item in exc.errors()
+            ],
             "warnings": [],
             "similarity_score": None,
             "similarity_matches": [],
@@ -344,7 +356,9 @@ async def _preflight(ctx: ToolContext, args: dict[str, Any]) -> Any:
         "similarity_score": score,
         "similarity_matches": matches,
         "rules_acknowledged": ctx.user.rules_ack_version == CURRENT_RULES_VERSION,
-        "next": "rules_ack_required" if ctx.user.rules_ack_version != CURRENT_RULES_VERSION else "submit_paper",
+        "next": "rules_ack_required"
+        if ctx.user.rules_ack_version != CURRENT_RULES_VERSION
+        else "submit_paper",
     }
 
 
@@ -352,12 +366,17 @@ async def _submit(ctx: ToolContext, args: dict[str, Any]) -> Any:
     _require_confirm(args, "投稿")
     key = _required_text(args, "idempotency_key", max_length=100)
     body = _optional_text(args, "body_markdown", max_length=MAX_BODY_BYTES)
-    data = {key_: value for key_, value in args.items() if key_ not in ("body_markdown", "confirm", "idempotency_key")}
+    data = {
+        key_: value
+        for key_, value in args.items()
+        if key_ not in ("body_markdown", "confirm", "idempotency_key")
+    }
     try:
         parsed = SubmissionCreate.model_validate(data)
     except ValidationError as exc:
         raise ToolInputError(
-            "投稿字段校验失败：" + "；".join(
+            "投稿字段校验失败："
+            + "；".join(
                 f"{'.'.join(str(p) for p in item['loc'])}: {item['msg']}" for item in exc.errors()
             )
         ) from exc
@@ -492,7 +511,9 @@ async def _update_own(ctx: ToolContext, args: dict[str, Any]) -> Any:
     if expected is not None:
         entry = await _get_or_404(ctx.db, submission_id)
         if await _latest_version(ctx, entry) != expected:
-            raise HTTPException(status_code=409, detail="作品版本已变化，请重新 get_my_submission 后再修改")
+            raise HTTPException(
+                status_code=409, detail="作品版本已变化，请重新 get_my_submission 后再修改"
+            )
     from app.interfaces.http.submission.routes import update_submission
 
     result = await update_submission(submission_id, body, ctx.user, ctx.db)
@@ -518,7 +539,9 @@ async def _save_body(ctx: ToolContext, args: dict[str, Any]) -> Any:
         raise HTTPException(status_code=409, detail="作品版本已变化，请重新读取后再保存")
     from app.interfaces.http.submission.routes import OnlineMarkdownBody, save_submission_markdown
 
-    result = await save_submission_markdown(submission_id, OnlineMarkdownBody(content=content), ctx.user, ctx.db)
+    result = await save_submission_markdown(
+        submission_id, OnlineMarkdownBody(content=content), ctx.user, ctx.db
+    )
     return _submission_summary(result, await _latest_version(ctx, result))
 
 
@@ -533,7 +556,12 @@ async def _resubmit(ctx: ToolContext, args: dict[str, Any]) -> Any:
         raise HTTPException(status_code=409, detail="作品版本已变化，请重新读取后再重投")
     from app.interfaces.http.submission.routes import ResubmitRequest, author_resubmit
 
-    result = await author_resubmit(submission_id, ResubmitRequest(note=_optional_text(args, "note", max_length=5000)), ctx.user, ctx.db)
+    result = await author_resubmit(
+        submission_id,
+        ResubmitRequest(note=_optional_text(args, "note", max_length=5000)),
+        ctx.user,
+        ctx.db,
+    )
     return _submission_summary(result, await _latest_version(ctx, result))
 
 
@@ -543,7 +571,9 @@ async def _respond(ctx: ToolContext, args: dict[str, Any]) -> Any:
     response = _required_text(args, "response", max_length=20_000)
     from app.interfaces.http.submission.routes import AuthorResponseUpdate, author_response
 
-    result = await author_response(submission_id, AuthorResponseUpdate(response=response), ctx.user, ctx.db)
+    result = await author_response(
+        submission_id, AuthorResponseUpdate(response=response), ctx.user, ctx.db
+    )
     return _submission_summary(result, await _latest_version(ctx, result))
 
 
@@ -565,7 +595,11 @@ async def _list_assignments(ctx: ToolContext, args: dict[str, Any]) -> Any:
     )
     if status_filter:
         stmt = stmt.where(ReviewAssignment.status == status_filter)
-    rows = (await ctx.db.execute(stmt.order_by(ReviewAssignment.invited_at.desc()).limit(50))).scalars().all()
+    rows = (
+        (await ctx.db.execute(stmt.order_by(ReviewAssignment.invited_at.desc()).limit(50)))
+        .scalars()
+        .all()
+    )
     return {
         "data": [
             {
@@ -731,7 +765,9 @@ async def _triage(ctx: ToolContext, args: dict[str, Any]) -> Any:
     note = _optional_text(args, "note", max_length=2000) or ""
     from app.interfaces.http.submission.routes_editor import triage_submission
 
-    result = await triage_submission(submission_id, TriageRequest(decision=decision, note=note), ctx.user, ctx.db)
+    result = await triage_submission(
+        submission_id, TriageRequest(decision=decision, note=note), ctx.user, ctx.db
+    )
     return result.model_dump(mode="json")
 
 
@@ -826,7 +862,11 @@ async def _reports(ctx: ToolContext, args: dict[str, Any]) -> Any:
 def _submission_schema(*, include_body: bool, include_idempotency: bool = False) -> dict[str, Any]:
     props: dict[str, Any] = {
         "title": {"type": "string", "maxLength": 1000},
-        "type": {"type": "string", "enum": ["paper", "book", "dataset", "tutorial"], "default": "paper"},
+        "type": {
+            "type": "string",
+            "enum": ["paper", "book", "dataset", "tutorial"],
+            "default": "paper",
+        },
         "authors": {"type": "array", "items": {"type": "string"}, "minItems": 1},
         "author_affiliations": {"type": "array", "items": {"type": "string"}},
         "year": {"type": "integer"},
@@ -881,7 +921,10 @@ TOOL_SPECS: tuple[ToolSpec, ...] = (
         {
             "type": "object",
             "properties": {
-                "rules_version": {"type": "string", "description": "必须等于当前版本，先读 get_editorial_rules"},
+                "rules_version": {
+                    "type": "string",
+                    "description": "必须等于当前版本，先读 get_editorial_rules",
+                },
                 "confirm": {"type": "boolean", "description": "必须显式 true"},
             },
             "required": ["rules_version", "confirm"],
@@ -1096,7 +1139,13 @@ TOOL_SPECS: tuple[ToolSpec, ...] = (
                 "is_anonymous": {"type": "boolean", "default": True},
                 "confirm": {"type": "boolean"},
             },
-            "required": ["assignment_id", "recommendation", "scores", "comments_to_author", "confirm"],
+            "required": [
+                "assignment_id",
+                "recommendation",
+                "scores",
+                "comments_to_author",
+                "confirm",
+            ],
         },
         (SCOPE_REVIEW_WRITE,),
         _submit_review,
@@ -1143,14 +1192,25 @@ TOOL_SPECS: tuple[ToolSpec, ...] = (
                 "submission_id": {"type": "integer", "minimum": 1},
                 "decision": {
                     "type": "string",
-                    "enum": ["send_to_review", "return_for_revision", "request_materials", "desk_reject"],
+                    "enum": [
+                        "send_to_review",
+                        "return_for_revision",
+                        "request_materials",
+                        "desk_reject",
+                    ],
                 },
                 "note": {"type": "string", "maxLength": 2000},
                 "expected_status": {"type": "string"},
                 "expected_latest_version": {"type": "integer", "minimum": 1},
                 "confirm": {"type": "boolean"},
             },
-            "required": ["submission_id", "decision", "expected_status", "expected_latest_version", "confirm"],
+            "required": [
+                "submission_id",
+                "decision",
+                "expected_status",
+                "expected_latest_version",
+                "confirm",
+            ],
         },
         (SCOPE_EDITORIAL_TRIAGE,),
         _triage,
@@ -1222,17 +1282,30 @@ TOOL_SPECS: tuple[ToolSpec, ...] = (
             "type": "object",
             "properties": {
                 "submission_id": {"type": "integer", "minimum": 1},
-                "decision": {"type": "string", "enum": ["accept", "minor_revision", "major_revision", "reject"]},
+                "decision": {
+                    "type": "string",
+                    "enum": ["accept", "minor_revision", "major_revision", "reject"],
+                },
                 "expected_status": {"type": "string"},
                 "expected_latest_version": {"type": "integer", "minimum": 1},
                 "editor_note": {"type": "string", "maxLength": 5000},
-                "publication_status": {"type": "string", "enum": ["published", "draft"], "default": "published"},
+                "publication_status": {
+                    "type": "string",
+                    "enum": ["published", "draft"],
+                    "default": "published",
+                },
                 "force_accept_d_grade": {"type": "boolean", "default": False},
                 "accept_after_revision": {"type": "boolean", "default": False},
                 "arbitration_note": {"type": "string", "maxLength": 5000},
                 "confirm": {"type": "boolean"},
             },
-            "required": ["submission_id", "decision", "expected_status", "expected_latest_version", "confirm"],
+            "required": [
+                "submission_id",
+                "decision",
+                "expected_status",
+                "expected_latest_version",
+                "confirm",
+            ],
         },
         (SCOPE_EDITORIAL_DECIDE,),
         _decide,
@@ -1240,8 +1313,6 @@ TOOL_SPECS: tuple[ToolSpec, ...] = (
 )
 
 _TOOL_BY_NAME = {tool.name: tool for tool in TOOL_SPECS}
-
-
 
 
 def _required_role(tool: ToolSpec) -> str:
@@ -1266,7 +1337,10 @@ def tools_for_scopes(scopes: list[str], role: str | None = None) -> list[dict[st
     for tool in TOOL_SPECS:
         if not all(scope in scopes for scope in tool.scopes):
             continue
-        if role is not None and PERMISSION_RANK.get(role, 0) < PERMISSION_RANK[_required_role(tool)]:
+        if (
+            role is not None
+            and PERMISSION_RANK.get(role, 0) < PERMISSION_RANK[_required_role(tool)]
+        ):
             continue
         items.append(
             {
@@ -1283,7 +1357,9 @@ def _mcp_result(value: Any, *, is_error: bool = False) -> dict[str, Any]:
         "content": [
             {
                 "type": "text",
-                "text": json.dumps(jsonable_encoder(value), ensure_ascii=False, separators=(",", ":")),
+                "text": json.dumps(
+                    jsonable_encoder(value), ensure_ascii=False, separators=(",", ":")
+                ),
             }
         ],
         "isError": is_error,
@@ -1327,7 +1403,10 @@ async def execute_tool(
     except HTTPException as exc:
         detail = exc.detail
         return _mcp_result(
-            {"error": detail if isinstance(detail, dict) else str(detail), "status": exc.status_code},
+            {
+                "error": detail if isinstance(detail, dict) else str(detail),
+                "status": exc.status_code,
+            },
             is_error=True,
         )
     except ToolInputError as exc:

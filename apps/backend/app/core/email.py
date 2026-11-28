@@ -341,9 +341,7 @@ class SmtpPoolEmailSender:
                 "inflight": self._inflight.get(a.key, 0),
                 "max_inflight": self._max_inflight,
                 "failures": self._failures.get(a.key, 0),
-                "cooldown_seconds": max(
-                    0, round(self._cooldown_until.get(a.key, 0.0) - now)
-                ),
+                "cooldown_seconds": max(0, round(self._cooldown_until.get(a.key, 0.0) - now)),
                 "available": self._cooldown_until.get(a.key, 0.0) <= now,
             }
             for a in self._accounts

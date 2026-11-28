@@ -396,9 +396,7 @@ async def list_reviewer_candidates(
     ).all()
     if discipline:
         rows = [
-            row
-            for row in rows
-            if discipline in (getattr(row, "reviewer_disciplines", None) or [])
+            row for row in rows if discipline in (getattr(row, "reviewer_disciplines", None) or [])
         ]
     rows = rows[:limit]
     reviewer_ids = [row.id for row in rows]

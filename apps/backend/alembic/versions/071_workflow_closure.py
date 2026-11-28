@@ -73,9 +73,7 @@ def upgrade() -> None:
         "email_digest_records",
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=True),
     )
-    op.execute(
-        "UPDATE email_digest_records SET updated_at = COALESCE(updated_at, created_at)"
-    )
+    op.execute("UPDATE email_digest_records SET updated_at = COALESCE(updated_at, created_at)")
     op.alter_column(
         "email_digest_records",
         "updated_at",

@@ -92,7 +92,7 @@ export function ForumStarterCard() {
 
           if (task.done) {
             return (
-              <div key={task.key} className="flex items-start gap-3 px-4 py-3 opacity-70 sm:px-5">
+              <div key={task.key} className="flex items-start gap-3 px-4 py-3 sm:px-5">
                 {inner}
               </div>
             )

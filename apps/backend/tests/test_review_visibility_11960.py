@@ -187,9 +187,7 @@ async def test_author_timeline_and_reports_do_not_leak_reviewer_identity_or_scor
     assert "实名审稿人" not in timeline.text
     assert "互评成员1" in timeline.text
 
-    reports = await client.get(
-        f"/api/submissions/{submission.id}/reports", headers=author_headers
-    )
+    reports = await client.get(f"/api/submissions/{submission.id}/reports", headers=author_headers)
     assert reports.status_code == 200, reports.text
     payload = reports.json()[0]
     assert payload["comments_to_author"] == "给作者：请补限制条件。"
@@ -476,9 +474,7 @@ async def test_cancelled_report_does_not_make_submission_decidable(
     )
     db_session.add(assignment)
     await db_session.flush()
-    db_session.add(
-        _report(tenant, assignment_id=assignment.id, comments="这一轮已取消。")
-    )
+    db_session.add(_report(tenant, assignment_id=assignment.id, comments="这一轮已取消。"))
     await db_session.commit()
 
     response = await client.get(
@@ -594,9 +590,7 @@ async def test_accept_and_submit_recheck_same_name(
     await db_session.commit()
 
     headers = {"Authorization": f"Bearer {reviewer['token']}"}
-    accept = await client.post(
-        f"/api/review/assignments/{assignment.id}/accept", headers=headers
-    )
+    accept = await client.post(f"/api/review/assignments/{assignment.id}/accept", headers=headers)
     assert accept.status_code == 409, accept.text
 
     assignment.status = "accepted"

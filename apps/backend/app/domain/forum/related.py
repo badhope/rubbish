@@ -159,9 +159,7 @@ async def find_related(
     for row in rows:
         same_paper = bool(topic.paper_id and row.paper_id == topic.paper_id)
         same_board = bool(topic.board_id and row.board_id == topic.board_id)
-        score, reason = _topic_score(
-            row, signature, same_paper=same_paper, same_board=same_board
-        )
+        score, reason = _topic_score(row, signature, same_paper=same_paper, same_board=same_board)
         if reason is None:
             continue
         scored.append((score, row, reason))

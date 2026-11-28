@@ -475,9 +475,7 @@ class ApiToken(Base, TenantScopedMixin):
     )
     window_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
-    __table_args__ = (
-        Index("ix_api_tokens_tenant_user", "tenant_id", "user_id", "created_at"),
-    )
+    __table_args__ = (Index("ix_api_tokens_tenant_user", "tenant_id", "user_id", "created_at"),)
 
 
 class FinanceReport(Base, TenantScopedMixin):

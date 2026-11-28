@@ -162,13 +162,9 @@ async def send_decision_email(
         if is_accept:
             from app.core.email import get_congrat_sender
 
-            await get_congrat_sender().send(
-                to=author.email, subject=subject, body=text, html=html
-            )
+            await get_congrat_sender().send(to=author.email, subject=subject, body=text, html=html)
         else:
-            await get_email_sender().send(
-                to=author.email, subject=subject, body=text, html=html
-            )
+            await get_email_sender().send(to=author.email, subject=subject, body=text, html=html)
     except Exception:
         logger.warning("decision_email_failed", author_id=author.id, exc_info=True)
 

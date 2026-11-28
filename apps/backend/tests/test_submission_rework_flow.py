@@ -118,6 +118,7 @@ async def test_request_rework_requires_three_requirements(
     )
     assert response.status_code in (400, 422), response.text
 
+
 @pytest.mark.asyncio
 async def test_triage_return_keeps_note_and_decision_notification(
     client: AsyncClient, db_session: AsyncSession, admin_user: dict, test_user: dict

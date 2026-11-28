@@ -117,9 +117,7 @@ async def test_me_profile_separates_identity_from_activity(
     assert any("作出通过" in item for item in editor_body["permissions"])
 
 
-async def test_me_profile_counts_wizard_draft(
-    client: AsyncClient, test_user: dict
-) -> None:
+async def test_me_profile_counts_wizard_draft(client: AsyncClient, test_user: dict) -> None:
     """发文向导草稿存在独立表，不能被个人中心漏算成 0。"""
     saved = await client.put(
         "/api/submissions/draft",

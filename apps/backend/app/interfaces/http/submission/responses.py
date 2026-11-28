@@ -169,8 +169,7 @@ async def _review_stats_for_submissions(
         )
     ).all()
     current_round_by_sub = {
-        int(submission_id): int(round_no or 1)
-        for submission_id, round_no in round_rows
+        int(submission_id): int(round_no or 1) for submission_id, round_no in round_rows
     }
     adjudicator_rows = (
         await db.execute(
@@ -247,8 +246,7 @@ async def _review_stats_for_submissions(
             "adjudicator_assigned": int(sid) in adjudicator_by_sub,
             "adjudicator_accepted": adj_accept,
             "can_decide": (
-                int(sid) in waived_ids
-                or (len(accept_ids) >= 1 and (not conflict or adj_accept))
+                int(sid) in waived_ids or (len(accept_ids) >= 1 and (not conflict or adj_accept))
             ),
             "review_waived": int(sid) in waived_ids,
             "latest_version": latest_version_by_sub.get(int(sid), 1),
@@ -282,7 +280,9 @@ async def _list_submissions(
     if resource_ids:
         resource_rows = (
             await db.execute(
-                select(Resource.id, Resource.publication_status).where(Resource.id.in_(resource_ids))
+                select(Resource.id, Resource.publication_status).where(
+                    Resource.id.in_(resource_ids)
+                )
             )
         ).all()
         resource_status = {int(resource_id): str(status) for resource_id, status in resource_rows}

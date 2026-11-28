@@ -53,15 +53,23 @@ async def _user(db: AsyncSession, user_id: int) -> User:
 
 
 @pytest.mark.asyncio
-async def test_mcp_accepts_rbk_before_auth_wall(client: AsyncClient, db_session: AsyncSession, test_user: dict) -> None:
-    raw = await _token(db_session, test_user["user_id"], "profile:read submission:read submission:write")
+async def test_mcp_accepts_rbk_before_auth_wall(
+    client: AsyncClient, db_session: AsyncSession, test_user: dict
+) -> None:
+    raw = await _token(
+        db_session, test_user["user_id"], "profile:read submission:read submission:write"
+    )
     init = await client.post(
         "/api/mcp",
         json={
             "jsonrpc": "2.0",
             "id": 1,
             "method": "initialize",
-            "params": {"protocolVersion": "2024-11-05", "capabilities": {}, "clientInfo": {"name": "t", "version": "1"}},
+            "params": {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": {"name": "t", "version": "1"},
+            },
         },
         headers={"Authorization": f"Bearer {raw}"},
     )
@@ -88,13 +96,19 @@ async def test_auth_wall_allows_x_api_key_for_mcp(
         headers={"X-API-Key": raw},
     )
     assert init.status_code == 200, init.text
-    missing = await client.post("/api/mcp", json={"jsonrpc": "2.0", "id": 12, "method": "initialize", "params": {}})
+    missing = await client.post(
+        "/api/mcp", json={"jsonrpc": "2.0", "id": 12, "method": "initialize", "params": {}}
+    )
     assert missing.status_code == 401, missing.text
 
 
 @pytest.mark.asyncio
-async def test_tools_are_filtered_by_role_and_scope(client: AsyncClient, db_session: AsyncSession, test_user: dict) -> None:
-    raw = await _token(db_session, test_user["user_id"], "profile:read submission:read submission:write")
+async def test_tools_are_filtered_by_role_and_scope(
+    client: AsyncClient, db_session: AsyncSession, test_user: dict
+) -> None:
+    raw = await _token(
+        db_session, test_user["user_id"], "profile:read submission:read submission:write"
+    )
     listed = await client.post(
         "/api/mcp",
         json={"jsonrpc": "2.0", "id": 3, "method": "tools/list"},
@@ -123,7 +137,9 @@ async def test_tools_are_filtered_by_role_and_scope(client: AsyncClient, db_sess
 
 
 @pytest.mark.asyncio
-async def test_token_cannot_exceed_role(client: AsyncClient, db_session: AsyncSession, test_user: dict) -> None:
+async def test_token_cannot_exceed_role(
+    client: AsyncClient, db_session: AsyncSession, test_user: dict
+) -> None:
     response = await client.post(
         "/api/ai/tokens",
         json={"name": "越权", "scopes": ["profile:read", "editorial:decide"], "expires_days": 30},
@@ -136,7 +152,9 @@ async def test_token_cannot_exceed_role(client: AsyncClient, db_session: AsyncSe
 async def test_submit_paper_writes_v1_body_and_is_idempotent(
     client: AsyncClient, db_session: AsyncSession, test_user: dict
 ) -> None:
-    raw = await _token(db_session, test_user["user_id"], "profile:read submission:read submission:write")
+    raw = await _token(
+        db_session, test_user["user_id"], "profile:read submission:read submission:write"
+    )
     # AI 不能凭默认替用户勾选规范；必须先显式确认。
     ack = await client.post(
         "/api/mcp",
@@ -161,13 +179,20 @@ async def test_submit_paper_writes_v1_body_and_is_idempotent(
         "discipline": "computer-science",
         "abstract": "这是一段足够长的摘要，用来验证 MCP 投稿不会丢失首版正文，也验证 idempotency_key 重复提交时不会产生第二篇。",
         "keywords": ["MCP", "投稿", "快照"],
-        "body_markdown": "# 正文\n\n" + ("这是正文内容。" * 20) + "\n\n## 结论\n\n快照应该包含这一段。",
+        "body_markdown": "# 正文\n\n"
+        + ("这是正文内容。" * 20)
+        + "\n\n## 结论\n\n快照应该包含这一段。",
         "confirm": True,
         "idempotency_key": "test-mcp-idem-001",
     }
     first = await client.post(
         "/api/mcp",
-        json={"jsonrpc": "2.0", "id": 6, "method": "tools/call", "params": {"name": "submit_paper", "arguments": args}},
+        json={
+            "jsonrpc": "2.0",
+            "id": 6,
+            "method": "tools/call",
+            "params": {"name": "submit_paper", "arguments": args},
+        },
         headers={"Authorization": f"Bearer {raw}"},
     )
     first_result = first.json()["result"]
@@ -182,18 +207,27 @@ async def test_submit_paper_writes_v1_body_and_is_idempotent(
     assert row.markdown_path
 
     versions = (
-        await db_session.execute(
-            select(SubmissionVersion)
-            .where(SubmissionVersion.submission_id == submission_id)
-            .order_by(SubmissionVersion.version)
+        (
+            await db_session.execute(
+                select(SubmissionVersion)
+                .where(SubmissionVersion.submission_id == submission_id)
+                .order_by(SubmissionVersion.version)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     assert versions[0].version == 1
     assert "快照应该包含这一段" in (versions[0].body or "")
 
     replay = await client.post(
         "/api/mcp",
-        json={"jsonrpc": "2.0", "id": 7, "method": "tools/call", "params": {"name": "submit_paper", "arguments": args}},
+        json={
+            "jsonrpc": "2.0",
+            "id": 7,
+            "method": "tools/call",
+            "params": {"name": "submit_paper", "arguments": args},
+        },
         headers={"Authorization": f"Bearer {raw}"},
     )
     replay_result = replay.json()["result"]
@@ -220,7 +254,12 @@ async def test_forged_editor_scope_cannot_replace_real_role(
     raw = await _token(db_session, test_user["user_id"], "profile:read editorial:read")
     response = await client.post(
         "/api/mcp",
-        json={"jsonrpc": "2.0", "id": 8, "method": "tools/call", "params": {"name": "get_editor_workbench", "arguments": {}}},
+        json={
+            "jsonrpc": "2.0",
+            "id": 8,
+            "method": "tools/call",
+            "params": {"name": "get_editor_workbench", "arguments": {}},
+        },
         headers={"Authorization": f"Bearer {raw}"},
     )
     result = response.json()["result"]
@@ -234,10 +273,17 @@ async def test_forged_editor_scope_cannot_replace_real_role(
 async def test_admin_gets_editor_workbench_and_stale_decision_is_rejected(
     client: AsyncClient, db_session: AsyncSession, admin_user: dict, test_user: dict
 ) -> None:
-    raw = await _token(db_session, admin_user["user_id"], "profile:read editorial:read editorial:decide")
+    raw = await _token(
+        db_session, admin_user["user_id"], "profile:read editorial:read editorial:decide"
+    )
     workbench = await client.post(
         "/api/mcp",
-        json={"jsonrpc": "2.0", "id": 9, "method": "tools/call", "params": {"name": "get_editor_workbench", "arguments": {}}},
+        json={
+            "jsonrpc": "2.0",
+            "id": 9,
+            "method": "tools/call",
+            "params": {"name": "get_editor_workbench", "arguments": {}},
+        },
         headers={"Authorization": f"Bearer {raw}"},
     )
     assert workbench.status_code == 200, workbench.text
@@ -291,7 +337,9 @@ async def test_admin_gets_editor_workbench_and_stale_decision_is_rejected(
 async def test_admin_triage_requires_and_matches_expected_state(
     client: AsyncClient, db_session: AsyncSession, admin_user: dict, test_user: dict
 ) -> None:
-    raw = await _token(db_session, admin_user["user_id"], "profile:read editorial:read editorial:triage")
+    raw = await _token(
+        db_session, admin_user["user_id"], "profile:read editorial:read editorial:triage"
+    )
     tenant = await _tenant(db_session)
     row = Submission(
         tenant_id=tenant.id,

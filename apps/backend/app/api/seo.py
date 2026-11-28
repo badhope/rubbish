@@ -160,7 +160,9 @@ async def robots(request: Request) -> Response:
 async def ai_txt(request: Request) -> Response:
     """给 AI Agent 的机器可读边界说明。"""
     if settings.auth_wall_enabled:
-        return Response(status_code=404, content="Not Found", media_type="text/plain; charset=utf-8")
+        return Response(
+            status_code=404, content="Not Found", media_type="text/plain; charset=utf-8"
+        )
     root = _root(request)
     body = f"""# Rubbish AI Agent Policy
 
@@ -196,7 +198,9 @@ async def ai_txt(request: Request) -> Response:
 @router.get("/sitemap.xml", response_class=Response, include_in_schema=False)
 async def sitemap(request: Request, db: AsyncSession = Depends(get_db)) -> Response:
     if settings.auth_wall_enabled:
-        return Response(status_code=404, content="Not Found", media_type="text/plain; charset=utf-8")
+        return Response(
+            status_code=404, content="Not Found", media_type="text/plain; charset=utf-8"
+        )
     root = _root(request)
     urls: list[tuple[str, str, str, str | None]] = [
         (f"{root}/", "weekly", "1.0", None),
@@ -242,7 +246,9 @@ async def sitemap(request: Request, db: AsyncSession = Depends(get_db)) -> Respo
 async def llms_txt(request: Request, db: AsyncSession = Depends(get_db)) -> Response:
     """Machine-readable guide for LLM crawlers and answer engines."""
     if settings.auth_wall_enabled:
-        return Response(status_code=404, content="Not Found", media_type="text/plain; charset=utf-8")
+        return Response(
+            status_code=404, content="Not Found", media_type="text/plain; charset=utf-8"
+        )
     root = _root(request)
     rows = await _published_resources(db, limit=200)
     lines = [
@@ -294,7 +300,9 @@ async def llms_txt(request: Request, db: AsyncSession = Depends(get_db)) -> Resp
 async def rss_feed(request: Request, db: AsyncSession = Depends(get_db)) -> Response:
     """RSS 2.0 feed of the latest published archive records."""
     if settings.auth_wall_enabled:
-        return Response(status_code=404, content="Not Found", media_type="text/plain; charset=utf-8")
+        return Response(
+            status_code=404, content="Not Found", media_type="text/plain; charset=utf-8"
+        )
     from email.utils import format_datetime
 
     root = _root(request)
@@ -341,7 +349,9 @@ async def rss_feed(request: Request, db: AsyncSession = Depends(get_db)) -> Resp
 async def atom_feed(request: Request, db: AsyncSession = Depends(get_db)) -> Response:
     """Atom 1.0 feed of the latest published records; mirrors the RSS source."""
     if settings.auth_wall_enabled:
-        return Response(status_code=404, content="Not Found", media_type="text/plain; charset=utf-8")
+        return Response(
+            status_code=404, content="Not Found", media_type="text/plain; charset=utf-8"
+        )
     root = _root(request)
     site = html.escape(settings.site_name)
     rows = await _published_resources(db, limit=50)

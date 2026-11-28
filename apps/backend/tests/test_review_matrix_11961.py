@@ -67,9 +67,7 @@ async def test_matrix_ignores_cancelled_report_and_honors_waiver(
     await db_session.commit()
 
     headers = {"Authorization": f"Bearer {admin_user['token']}"}
-    matrix = await client.get(
-        f"/api/review/submissions/{submission.id}/matrix", headers=headers
-    )
+    matrix = await client.get(f"/api/review/submissions/{submission.id}/matrix", headers=headers)
     assert matrix.status_code == 200, matrix.text
     payload = matrix.json()
     assert payload["reports_completed"] == 0
@@ -125,9 +123,7 @@ async def test_matrix_ignores_cancelled_report_and_honors_waiver(
         headers=headers,
     )
     assert list_with_adjudicator.status_code == 200, list_with_adjudicator.text
-    row = next(
-        item for item in list_with_adjudicator.json()["data"] if item["id"] == submission.id
-    )
+    row = next(item for item in list_with_adjudicator.json()["data"] if item["id"] == submission.id)
     assert row["adjudicator_assigned"] is True
     assert row["adjudicator_accepted"] is False
 
@@ -152,9 +148,7 @@ async def test_matrix_ignores_cancelled_report_and_honors_waiver(
     assert row["review_waived"] is True
 
 
-async def test_matrix_404_for_unknown_submission(
-    client: AsyncClient, admin_user: dict
-) -> None:
+async def test_matrix_404_for_unknown_submission(client: AsyncClient, admin_user: dict) -> None:
     response = await client.get(
         "/api/review/submissions/99999999/matrix",
         headers={"Authorization": f"Bearer {admin_user['token']}"},

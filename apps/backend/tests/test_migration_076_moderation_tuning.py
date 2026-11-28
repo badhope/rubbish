@@ -11,10 +11,7 @@ from alembic.migration import MigrationContext
 from alembic.operations import Operations
 
 _MIGRATION_PATH = (
-    Path(__file__).resolve().parents[1]
-    / "alembic"
-    / "versions"
-    / "076_forum_moderation_tuning.py"
+    Path(__file__).resolve().parents[1] / "alembic" / "versions" / "076_forum_moderation_tuning.py"
 )
 
 

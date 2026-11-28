@@ -41,20 +41,14 @@ async def test_restricted_region_blocks_anonymous_but_overseas_can_read(
     monkeypatch.setattr(settings, "trusted_proxies_count", 1)
     monkeypatch.setattr(settings, "auth_wall_enabled", True)
 
-    restricted = await client.get(
-        "/api/catalog", headers={"x-forwarded-for": "1.0.1.1"}
-    )
+    restricted = await client.get("/api/catalog", headers={"x-forwarded-for": "1.0.1.1"})
     assert restricted.status_code == 403
     assert restricted.json()["detail"] == "region_restricted"
 
-    overseas = await client.get(
-        "/api/catalog", headers={"x-forwarded-for": "8.8.8.8"}
-    )
+    overseas = await client.get("/api/catalog", headers={"x-forwarded-for": "8.8.8.8"})
     assert overseas.status_code == 200
 
-    forum = await client.get(
-        "/api/forum/topics", headers={"x-forwarded-for": "8.8.8.8"}
-    )
+    forum = await client.get("/api/forum/topics", headers={"x-forwarded-for": "8.8.8.8"})
     assert forum.status_code == 200
 
     search = await client.get(
