@@ -66,7 +66,9 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       } catch (err) {
         // 只有后端明确说「你这个 token 不认」才登出。网络抖动、
         // 5xx 这类瞬时故障不能把用户踢下线——否则刷新一次页面就掉登录。
-        if (isSessionRejected(err)) {
+        const status = (err as { response?: { status?: number } }).response
+          ?.status
+        if (status === 401 || status === 403) {
           useAuthStore.getState().logout()
         }
       }
