@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowUpDown, Pencil, Plus, Power, Trash2 } from 'lucide-react'
+import { ArrowUpDown, Loader2, Pencil, Plus, Power, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { api } from '@/lib/api'
@@ -29,6 +29,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { PreflightResults } from '@/components/admin/preflight-results'
+import type { AdminPreflightResponse } from '@/lib/types'
 
 
 
@@ -64,6 +66,8 @@ const EMPTY_FORM: BoardForm = {
 export default function AdminForumBoardsPage() {
   const qc = useQueryClient()
   const [editing, setEditing] = useState<BoardForm | null>(null)
+  const [checks, setChecks] = useState<AdminPreflightResponse | null>(null)
+  const [checking, setChecking] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<AdminBoard | null>(null)
 
   const listQ = useQuery({
@@ -115,13 +119,48 @@ export default function AdminForumBoardsPage() {
     onError: (err) => toast.error(extractError(err, '删除失败')),
   })
 
+  const formToPayload = (form: BoardForm) => ({
+    board_id: form.id ?? null,
+    parent_id: form.parent_id === 'root' ? null : Number(form.parent_id),
+    slug: form.slug.trim(),
+    name: form.name.trim(),
+    description: form.description.trim() || null,
+    sort_order: Number(form.sort_order) || 0,
+    is_active: form.is_active,
+  })
+
+  const runPreflight = async (form: BoardForm) => {
+    setChecking(true)
+    try {
+      const response = await api.post<AdminPreflightResponse>(
+        '/forum/admin/boards/preflight',
+        formToPayload(form),
+      )
+      setChecks(response.data)
+      return response.data
+    } catch (err) {
+      toast.error(extractError(err, '保存前检查没有跑起来'))
+      return null
+    } finally {
+      setChecking(false)
+    }
+  }
+
+  const onSubmit = async (form: BoardForm) => {
+    const result = await runPreflight(form)
+    if (!result || result.status === 'fail') {
+      return
+    }
+    saveMut.mutate(form)
+  }
+
   return (
     <div>
       <PageHeader
         title="讨论分区"
         description="树形结构：父分区汇总，子分区承载内容。排序值越小越靠前；有子分区或主题帖的分区不能直接删除。"
         actions={
-          <Button onClick={() => setEditing({ ...EMPTY_FORM })}>
+          <Button onClick={() => { setChecks(null); setEditing({ ...EMPTY_FORM }) }}>
             <Plus className="h-4 w-4" />
             新建分区
           </Button>
@@ -181,7 +220,8 @@ export default function AdminForumBoardsPage() {
                       variant="ghost"
                       size="icon-sm"
                       aria-label="编辑分区"
-                      onClick={() =>
+                      onClick={() => {
+                        setChecks(null)
                         setEditing({
                           id: board.id,
                           parent_id: board.parent_id ? String(board.parent_id) : 'root',
@@ -191,7 +231,7 @@ export default function AdminForumBoardsPage() {
                           sort_order: String(board.sort_order),
                           is_active: board.is_active,
                         })
-                      }
+                      }}
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
@@ -212,8 +252,8 @@ export default function AdminForumBoardsPage() {
         </Card>
       )}
 
-      <Dialog open={Boolean(editing)} onOpenChange={(v) => !v && setEditing(null)}>
-        <DialogContent className="sm:max-w-lg">
+      <Dialog open={Boolean(editing)} onOpenChange={(v) => { if (!v) { setEditing(null); setChecks(null) } }}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{editing?.id ? '编辑分区' : '新建分区'}</DialogTitle>
             <DialogDescription>
@@ -297,13 +337,37 @@ export default function AdminForumBoardsPage() {
               </div>
             </div>
           ) : null}
-          <DialogFooter>
+          <div className="rounded-xl border bg-muted/20 p-3">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-medium">保存前检查</p>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">只检查，不写库。slug、父子层级、重名都会先过一遍。</p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => editing && void runPreflight(editing)}
+                disabled={checking}
+              >
+                {checking ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : null}
+                先检查
+              </Button>
+            </div>
+            <PreflightResults result={checks} />
+            {!checks ? (
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                还没有跑过。点保存时也会先检查；有问题会在这里说明。
+              </p>
+            ) : null}
+          </div>
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setEditing(null)}>
               取消
             </Button>
             <Button
-              onClick={() => editing && saveMut.mutate(editing)}
-              disabled={saveMut.isPending || !editing?.name.trim() || !editing?.slug.trim()}
+              onClick={() => editing && void onSubmit(editing)}
+              disabled={saveMut.isPending || checking || !editing?.name.trim() || !editing?.slug.trim()}
             >
               {saveMut.isPending ? '保存中…' : '保存'}
             </Button>

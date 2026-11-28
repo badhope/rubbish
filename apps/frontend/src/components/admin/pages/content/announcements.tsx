@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Megaphone, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Loader2, Megaphone, Pencil, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import { extractError, formatDateTime } from '@/lib/utils'
@@ -27,6 +27,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { PreflightResults } from '@/components/admin/preflight-results'
+import type { AdminPreflightResponse } from '@/lib/types'
 
 
 
@@ -77,6 +79,8 @@ export default function AnnouncementsAdminPage() {
   const [editing, setEditing] = useState<Announcement | null>(null)
   const [form, setForm] = useState<AnnouncementForm>(EMPTY)
   const [open, setOpen] = useState(false)
+  const [checks, setChecks] = useState<AdminPreflightResponse | null>(null)
+  const [checking, setChecking] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Announcement | null>(null)
 
   const listQ = useQuery<Announcement[]>({
@@ -115,6 +119,7 @@ export default function AnnouncementsAdminPage() {
   const openCreate = () => {
     setEditing(null)
     setForm(EMPTY)
+    setChecks(null)
     setOpen(true)
   }
 
@@ -128,18 +133,41 @@ export default function AnnouncementsAdminPage() {
       is_active: a.is_active,
       ends_at: a.ends_at ? a.ends_at.slice(0, 16) : '',
     })
+    setChecks(null)
     setOpen(true)
   }
 
-  const onSubmit = () => {
-    const payload: Record<string, unknown> = {
-      slug: form.slug.trim(),
-      title: form.title.trim(),
-      body: form.body.trim(),
-      level: form.level,
-      is_active: form.is_active,
-      ends_at: form.ends_at ? new Date(form.ends_at).toISOString() : null,
+  const buildPayload = (): Record<string, unknown> => ({
+    announcement_id: editing?.id ?? null,
+    slug: form.slug.trim(),
+    title: form.title.trim(),
+    body: form.body.trim(),
+    level: form.level,
+    is_active: form.is_active,
+    ends_at: form.ends_at ? new Date(form.ends_at).toISOString() : null,
+  })
+
+  const runPreflight = async (payload: Record<string, unknown>) => {
+    setChecking(true)
+    try {
+      const response = await api.post<AdminPreflightResponse>('/announcements/preflight', payload)
+      setChecks(response.data)
+      return response.data
+    } catch (err) {
+      toast.error(extractError(err, '保存前检查没有跑起来'))
+      return null
+    } finally {
+      setChecking(false)
     }
+  }
+
+  const onSubmit = async () => {
+    const result = await runPreflight(buildPayload())
+    if (!result || result.status === 'fail') {
+      return
+    }
+    const { announcement_id, ...payload } = buildPayload()
+    void announcement_id
     saveMut.mutate(payload)
   }
 
@@ -215,8 +243,8 @@ export default function AnnouncementsAdminPage() {
         </div>
       )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-xl">
+      <Dialog open={open} onOpenChange={(next) => { setOpen(next); if (!next) setChecks(null) }}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>{editing ? '编辑公告' : '新建公告'}</DialogTitle>
           </DialogHeader>
@@ -294,13 +322,37 @@ export default function AnnouncementsAdminPage() {
               </div>
             </div>
           </div>
-          <DialogFooter>
+          <div className="rounded-xl border bg-muted/20 p-3">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-medium">保存前检查</p>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">只检查，不写库。硬冲突会拦住保存。</p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void runPreflight(buildPayload())}
+                disabled={checking}
+              >
+                {checking ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : null}
+                先检查
+              </Button>
+            </div>
+            <PreflightResults result={checks} />
+            {!checks ? (
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                还没有跑过。点保存时也会先检查；有问题会在这里说明。
+              </p>
+            ) : null}
+          </div>
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setOpen(false)}>
               取消
             </Button>
             <Button
-              onClick={onSubmit}
-              disabled={saveMut.isPending || !form.slug.trim() || !form.title.trim() || !form.body.trim()}
+              onClick={() => void onSubmit()}
+              disabled={saveMut.isPending || checking || !form.slug.trim() || !form.title.trim() || !form.body.trim()}
             >
               {saveMut.isPending ? '保存中…' : '保存'}
             </Button>

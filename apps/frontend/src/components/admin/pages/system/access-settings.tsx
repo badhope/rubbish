@@ -327,7 +327,7 @@ export default function AccessSettingsPage() {
     const result = await runCheck(patch, true)
     if (!result || result.status === 'fail') {
       setChecks(result)
-      toast.error(result?.summary ?? '自检没有通过，设置未保存')
+      toast.warning(result?.summary ?? '自检没有通过，设置未保存')
       return
     }
     setBusyKey(key)
@@ -364,7 +364,7 @@ export default function AccessSettingsPage() {
     const result = await runCheck({ registration_invite_code: normalized }, true)
     if (!result || result.status === 'fail') {
       setChecks(result)
-      toast.error(result?.summary ?? '自检没有通过，邀请码未保存')
+      toast.warning(result?.summary ?? '自检没有通过，邀请码未保存')
       return
     }
     setBusyKey('registration_invite_code')

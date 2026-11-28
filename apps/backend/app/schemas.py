@@ -401,6 +401,23 @@ class SiteSettingsUpdate(BaseModel):
     registration_invite_code: str | None = Field(default=None, max_length=64)
 
 
+class AdminPreflightItem(BaseModel):
+    """One item in an admin form preflight (read-only, never writes)."""
+
+    key: str
+    label: str
+    status: Literal["ok", "warn", "fail"]
+    detail: str
+
+
+class AdminPreflightResponse(BaseModel):
+    """Shared response for admin form preflight checks."""
+
+    status: Literal["ok", "warn", "fail"]
+    summary: str
+    items: list[AdminPreflightItem]
+
+
 class SiteSettingsCheckItem(BaseModel):
     """One item in the pre-save configuration check."""
 

@@ -223,6 +223,19 @@ export interface SiteSettingsResponse {
   registration_invite_code: string
 }
 
+export interface AdminPreflightItem {
+  key: string
+  label: string
+  status: 'ok' | 'warn' | 'fail'
+  detail: string
+}
+
+export interface AdminPreflightResponse {
+  status: 'ok' | 'warn' | 'fail'
+  summary: string
+  items: AdminPreflightItem[]
+}
+
 export interface SiteSettingsCheckItem {
   key: string
   label: string

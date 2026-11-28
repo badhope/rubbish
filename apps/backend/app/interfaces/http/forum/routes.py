@@ -62,6 +62,7 @@ from app.domain.forum.models import (
 )
 from app.domain.forum.related import find_related
 from app.models import AuditLog, User
+from app.schemas import AdminPreflightItem, AdminPreflightResponse
 
 router = APIRouter(prefix="/forum", tags=["forum"])
 
@@ -3150,6 +3151,259 @@ class BoardUpdate(BaseModel):
     description: str | None = Field(default=None, max_length=200)
     sort_order: int | None = Field(default=None, ge=0, le=9999)
     is_active: bool | None = None
+
+
+class BoardPreflightIn(BaseModel):
+    """Permissive board draft; invalid fields must be reportable, not 422."""
+
+    board_id: int | None = Field(default=None, ge=1)
+    parent_id: int | None = Field(default=None, ge=1)
+    slug: str = Field(default="", max_length=120)
+    name: str = Field(default="", max_length=300)
+    description: str | None = Field(default=None, max_length=500)
+    sort_order: int = 0
+    is_active: bool = True
+
+
+def _board_preflight_result(items: list[AdminPreflightItem]) -> AdminPreflightResponse:
+    if any(item.status == "fail" for item in items):
+        return AdminPreflightResponse(
+            status="fail", summary="有硬冲突，先修正再保存。", items=items
+        )
+    if any(item.status == "warn" for item in items):
+        return AdminPreflightResponse(
+            status="warn", summary="可以保存，但有几处要留意。", items=items
+        )
+    return AdminPreflightResponse(status="ok", summary="检查通过，可以保存。", items=items)
+
+
+@router.post("/admin/boards/preflight", response_model=AdminPreflightResponse)
+async def preflight_board(
+    payload: BoardPreflightIn,
+    _admin: User = Depends(require_chief_editor),
+    db: AsyncSession = Depends(get_db),
+) -> AdminPreflightResponse:
+    """Read-only pre-save check for forum boards. Never writes or audits."""
+    tenant_id = require_tenant_id()
+    rows = (
+        (
+            await db.execute(
+                select(ForumBoard)
+                .where(ForumBoard.tenant_id == tenant_id)
+                .order_by(ForumBoard.sort_order, ForumBoard.id)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    by_id = {board.id: board for board in rows}
+    items: list[AdminPreflightItem] = []
+
+    name = payload.name.strip()
+    name_ok = bool(name) and len(name) <= 60
+    items.append(
+        AdminPreflightItem(
+            key="name",
+            label="分区名称",
+            status="ok" if name_ok else "fail",
+            detail=(
+                f"名称为「{name}」，共 {len(name)} 字。"
+                if name_ok
+                else "分区名称不能为空，也不能超过 60 字。"
+            ),
+        )
+    )
+
+    slug = payload.slug.strip().lower()
+    slug_ok = bool(_BOARD_SLUG.match(slug))
+    items.append(
+        AdminPreflightItem(
+            key="slug",
+            label="slug 格式",
+            status="ok" if slug_ok else "fail",
+            detail=(
+                f"slug `{slug}` 可用于 URL。"
+                if slug_ok
+                else "slug 只能是小写字母、数字、连字符，2–40 位。"
+            ),
+        )
+    )
+
+    sort_ok = 0 <= payload.sort_order <= 9999
+    items.append(
+        AdminPreflightItem(
+            key="sort_order",
+            label="排序值",
+            status="ok" if sort_ok else "fail",
+            detail=(
+                f"排序值 {payload.sort_order} 会排在同级里。"
+                if sort_ok
+                else "排序值只能是 0–9999 的整数。"
+            ),
+        )
+    )
+
+    parent_id = payload.parent_id
+    parent = by_id.get(parent_id) if parent_id is not None else None
+    if parent_id is None:
+        items.append(
+            AdminPreflightItem(
+                key="parent",
+                label="父分区",
+                status="ok",
+                detail="这是一级分区。",
+            )
+        )
+    elif parent is None:
+        items.append(
+            AdminPreflightItem(
+                key="parent",
+                label="父分区",
+                status="fail",
+                detail="父分区不存在，可能已被删除。",
+            )
+        )
+    elif payload.board_id is not None and parent.id == payload.board_id:
+        items.append(
+            AdminPreflightItem(
+                key="parent",
+                label="父分区",
+                status="fail",
+                detail="分区不能挂到自己下面。",
+            )
+        )
+    else:
+        items.append(
+            AdminPreflightItem(
+                key="parent",
+                label="父分区",
+                status="ok",
+                detail=f"父分区是「{parent.name}」。",
+            )
+        )
+
+    # 父链不能回到自己；已经存在的坏环也要在这里显形。
+    if parent is not None and payload.board_id is not None:
+        cursor: ForumBoard | None = parent
+        seen: set[int] = set()
+        cyclic = False
+        while cursor is not None:
+            if cursor.id == payload.board_id:
+                cyclic = True
+                break
+            if cursor.id in seen:
+                cyclic = True
+                break
+            seen.add(cursor.id)
+            cursor = by_id.get(cursor.parent_id) if cursor.parent_id else None
+        if cyclic:
+            items.append(
+                AdminPreflightItem(
+                    key="cycle",
+                    label="父子层级",
+                    status="fail",
+                    detail="父链会形成循环，保存后这一支会从导航里消失。",
+                )
+            )
+        else:
+            items.append(
+                AdminPreflightItem(
+                    key="cycle",
+                    label="父子层级",
+                    status="ok",
+                    detail="父链没有回到当前分区。",
+                )
+            )
+
+    if slug_ok:
+        duplicate = next(
+            (board for board in rows if board.slug == slug and board.id != (payload.board_id or 0)),
+            None,
+        )
+        items.append(
+            AdminPreflightItem(
+                key="slug_unique",
+                label="slug 是否重复",
+                status="fail" if duplicate is not None else "ok",
+                detail=(
+                    f"slug 已被「{duplicate.name}」占用。"
+                    if duplicate is not None
+                    else "slug 没有和其他分区重复。"
+                ),
+            )
+        )
+
+    if name:
+        same_name = next(
+            (
+                board
+                for board in rows
+                if board.id != (payload.board_id or 0)
+                and board.parent_id == parent_id
+                and board.name.strip().casefold() == name.casefold()
+            ),
+            None,
+        )
+        if same_name is not None:
+            items.append(
+                AdminPreflightItem(
+                    key="name_collision",
+                    label="同级重名",
+                    status="warn",
+                    detail=f"同一父分区下还有「{same_name.name}」，读者可能分不清。",
+                )
+            )
+
+    sibling_sort = next(
+        (
+            board
+            for board in rows
+            if board.id != (payload.board_id or 0)
+            and board.parent_id == parent_id
+            and board.sort_order == payload.sort_order
+        ),
+        None,
+    )
+    if sibling_sort is not None:
+        items.append(
+            AdminPreflightItem(
+                key="sort_collision",
+                label="排序值",
+                status="warn",
+                detail=f"排序值 {payload.sort_order} 与「{sibling_sort.name}」相同，先后可能不稳定。",
+            )
+        )
+
+    if payload.is_active and parent is not None and not parent.is_active:
+        items.append(
+            AdminPreflightItem(
+                key="parent_state",
+                label="父分区状态",
+                status="warn",
+                detail="父分区当前停用，子分区启用后未必能从论坛入口看到。",
+            )
+        )
+
+    if payload.board_id is not None and not payload.is_active:
+        topic_count = (
+            await db.execute(
+                select(func.count(ForumTopic.id)).where(
+                    ForumTopic.tenant_id == tenant_id,
+                    ForumTopic.board_id == payload.board_id,
+                )
+            )
+        ).scalar_one()
+        if topic_count:
+            items.append(
+                AdminPreflightItem(
+                    key="topic_state",
+                    label="已有主题帖",
+                    status="warn",
+                    detail=f"这个分区还有 {int(topic_count)} 个主题帖；停用后帖子仍在，直链还能打开。",
+                )
+            )
+
+    return _board_preflight_result(items)
 
 
 @router.get("/admin/boards")
