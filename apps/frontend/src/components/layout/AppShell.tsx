@@ -37,6 +37,7 @@ import { readAccessRegion } from '@/lib/access'
 import { BrandMark } from '@/components/common/brand-mark'
 import { AmbientBackdrop } from '@/components/common/ambient-backdrop'
 import { filterNav, resolveActiveNavPath, type NavItem } from '@/lib/nav'
+import { CHIEF_EDITOR_ROLES } from '@/lib/editor-roles'
 import { ModuleErrorBoundary } from '@/components/common/error-boundary'
 import { PageTransition } from '@/components/common/page-transition'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -75,7 +76,7 @@ const NAV: NavItem[] = [
     label: '互评台',
     icon: ClipboardCheck,
     auth: true,
-    roles: ['reviewer', 'senior_reviewer', 'editor', 'editor_in_chief'],
+    roles: ['reviewer', 'senior_reviewer', 'editor', ...CHIEF_EDITOR_ROLES],
     group: '工作台',
   },
   {
@@ -83,7 +84,7 @@ const NAV: NavItem[] = [
     label: '内容台',
     icon: Kanban,
     auth: true,
-    roles: ['editor', 'editor_in_chief'],
+    roles: ['editor', ...CHIEF_EDITOR_ROLES],
     group: '工作台',
   },
   { to: '/about', label: '关于此处', icon: Building2, group: '关于' },
@@ -92,7 +93,7 @@ const NAV: NavItem[] = [
   { to: '/status', label: '站点状态', icon: Activity, group: '关于' },
   { to: '/accessibility', label: '可访问性', icon: Accessibility, group: '关于' },
   { to: '/privacy', label: '隐私政策', icon: ShieldCheck, group: '关于' },
-  { to: '/admin', label: '站务管理', icon: Gavel, auth: true, adminOnly: true, group: '站点管理' },
+  { to: '/admin', label: '站务管理', icon: Gavel, auth: true, roles: [...CHIEF_EDITOR_ROLES], group: '站点管理' },
 ]
 
 const PUBLIC_NAV = NAV.filter((item) => item.group === '一级入口')

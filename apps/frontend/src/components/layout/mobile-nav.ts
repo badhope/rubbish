@@ -22,6 +22,7 @@ import {
   FileText,
   Layers3,
 } from 'lucide-react'
+import { CHIEF_EDITOR_ROLES } from '@/lib/editor-roles'
 
 export interface MobileTab {
   to: string
@@ -65,7 +66,7 @@ export const MOBILE_MORE: MobileMoreItem[] = [
     label: '互评台',
     icon: ClipboardCheck,
     auth: true,
-    roles: ['reviewer', 'senior_reviewer', 'editor', 'editor_in_chief'],
+    roles: ['reviewer', 'senior_reviewer', 'editor', ...CHIEF_EDITOR_ROLES],
     group: '工作台',
   },
   {
@@ -73,7 +74,7 @@ export const MOBILE_MORE: MobileMoreItem[] = [
     label: '内容台',
     icon: Kanban,
     auth: true,
-    roles: ['editor', 'editor_in_chief'],
+    roles: ['editor', ...CHIEF_EDITOR_ROLES],
     group: '工作台',
   },
   { to: '/submissions', label: '我的作品', icon: FileText, auth: true, group: '我的空间' },
@@ -89,5 +90,5 @@ export const MOBILE_MORE: MobileMoreItem[] = [
   { to: '/accessibility', label: '可访问性', icon: Accessibility, group: '社区' },
   { to: '/privacy', label: '隐私政策', icon: ShieldCheck, group: '社区' },
   { to: '/forum', search: { view: 'feedback' }, label: '反馈与建议', icon: MessageSquareText, group: '社区' },
-  { to: '/admin', label: '站务管理', icon: Gavel, auth: true, adminOnly: true, group: '管理' },
+  { to: '/admin', label: '站务管理', icon: Gavel, auth: true, roles: [...CHIEF_EDITOR_ROLES], group: '管理' },
 ]
