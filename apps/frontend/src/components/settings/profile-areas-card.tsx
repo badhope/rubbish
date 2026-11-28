@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { PenLine, ShieldCheck } from 'lucide-react'
+import { PenLine, ShieldCheck, Copy } from 'lucide-react'
 import { toast } from 'sonner'
 import { useUpdateProfile } from '@/hooks/api/use-auth'
+import { usePublicExpertise } from '@/hooks/api/use-modules'
 import { extractError } from '@/lib/utils'
 import type { UserProfileUpdate, UserResponse } from '@/lib/types'
 import { Button } from '@/components/ui/button'
@@ -26,6 +27,8 @@ const parseTags = (value: string) =>
 
 export function ProfileAreasCard({ initial }: { initial?: UserResponse | null }) {
   const updateProfile = useUpdateProfile()
+  const expertise = usePublicExpertise()
+  const popularTags = expertise.data?.top_tags.slice(0, 10) ?? []
   const savedSubjects = initial?.subject_disciplines ?? []
   const savedReviewer = initial?.reviewer_disciplines ?? []
   const savedTags = initial?.reviewer_tags ?? []
@@ -33,6 +36,14 @@ export function ProfileAreasCard({ initial }: { initial?: UserResponse | null })
   const [reviewer, setReviewer] = useState<string[]>(savedReviewer)
   const [tags, setTags] = useState(savedTags.join('、'))
   const parsedTags = parseTags(tags)
+  const sameAsSubjects =
+    subjects.length > 0 &&
+    reviewer.length === subjects.length &&
+    reviewer.every((slug) => subjects.includes(slug))
+  const addTag = (tag: string) => {
+    if (parsedTags.some((item) => item.toLocaleLowerCase() === tag.toLocaleLowerCase())) return
+    setTags([...parsedTags, tag].join('、'))
+  }
 
   const dirty =
     JSON.stringify([...subjects].sort()) !== JSON.stringify([...savedSubjects].sort()) ||
@@ -82,13 +93,25 @@ export function ProfileAreasCard({ initial }: { initial?: UserResponse | null })
             max={6}
             helper="你写作、研究或长期关注的方向，公开主页会显示这些标签。"
           />
-          <DisciplinePicker
-            label="审稿人领域"
-            value={reviewer}
-            onChange={setReviewer}
-            max={10}
-            helper="你能判断的稿件方向。只参与互评候选匹配和站务审阅，不展示给作者。"
-          />
+          <div className="space-y-1.5">
+            <DisciplinePicker
+              label="审稿人领域"
+              value={reviewer}
+              onChange={setReviewer}
+              max={10}
+              helper="你能判断的稿件方向。只参与互评候选匹配和站务审阅，不展示给作者。"
+            />
+            {subjects.length > 0 && !sameAsSubjects ? (
+              <button
+                type="button"
+                onClick={() => setReviewer([...subjects])}
+                className="inline-flex items-center gap-1 text-[11px] text-muted-foreground transition-colors hover:text-primary"
+              >
+                <Copy className="h-3 w-3" />
+                与科目领域相同
+              </button>
+            ) : null}
+          </div>
         </div>
 
         <div className="space-y-1.5">
@@ -103,6 +126,21 @@ export function ProfileAreasCard({ initial }: { initial?: UserResponse | null })
           <p className="text-[11px] leading-5 text-muted-foreground">
             用顿号、逗号或分号分隔，最多 20 个。适合补充词表里没有的细分能力；同样不会出现在公开主页。
           </p>
+          {popularTags.length > 0 ? (
+            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+              <span className="text-[10px] text-muted-foreground">站内常用：</span>
+              {popularTags.map((item) => (
+                <button
+                  key={item.tag}
+                  type="button"
+                  onClick={() => addTag(item.tag)}
+                  className="max-w-[18rem] truncate rounded-full border bg-background px-2 py-0.5 text-[10px] text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
+                >
+                  {item.tag} × {item.count}
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">

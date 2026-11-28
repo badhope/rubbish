@@ -12,6 +12,7 @@ export interface SearchPersonCard {
   affiliation?: string | null
   works: number
   followers: number
+  subject_disciplines?: string[] | null
 }
 
 export interface SearchTagCard {
@@ -38,21 +39,27 @@ export interface UnifiedSearchResponse {
   }
 }
 
-export function useUnifiedSearch(kind: SearchKind, q: string | undefined, page: number) {
+export function useUnifiedSearch(
+  kind: SearchKind,
+  q: string | undefined,
+  page: number,
+  discipline?: string,
+) {
   return useQuery<UnifiedSearchResponse>({
-    queryKey: ['search', 'unified', q, kind, page] as const,
+    queryKey: ['search', 'unified', q, kind, page, discipline] as const,
     queryFn: async () =>
       (
         await api.get<UnifiedSearchResponse>('/search', {
           params: {
             q,
+            ...(discipline ? { discipline } : {}),
             type: kind,
             page,
             page_size: kind === 'all' ? 6 : 20,
           },
         })
       ).data,
-    enabled: Boolean(q),
+    enabled: Boolean(q) || Boolean(discipline),
     placeholderData: (prev) => prev,
   })
 }

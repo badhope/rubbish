@@ -94,10 +94,26 @@ export function EditorPipeline() {
   const { isAdmin, user } = useAuth()
   const isChief = canFinalDecision(isAdmin, user?.roles)
   const { data, isLoading, isError, refetch } = useEditorWorkbench()
-  const candidates = useReviewerCandidates(200)
+  // 待指派勾选：先于候选查询声明，勾选单篇后可以把方向直接传给服务端筛选。
+  const [checked, setChecked] = useState<Set<number>>(new Set())
+  const [onlySameDiscipline, setOnlySameDiscipline] = useState(false)
   const disciplines = useDisciplines()
   const disciplineNames = new Map(
     (disciplines.data ?? []).map((item) => [item.slug, item.name]),
+  )
+  const checkedDiscipline =
+    checked.size === 1 && data?.columns
+      ? (Object.values(data.columns)
+          .flatMap((col) => col.items)
+          .find((item) => checked.has(item.submission_id))?.discipline ?? null)
+      : null
+  const checkedDisciplineSlug = checkedDiscipline
+    ? (disciplines.data ?? []).find((d) => d.name === checkedDiscipline)?.slug
+    : undefined
+  const candidates = useReviewerCandidates(
+    200,
+    undefined,
+    onlySameDiscipline ? checkedDisciplineSlug : undefined,
   )
   const workload = useReviewerWorkload()
   const batchMut = useBatchAssign()
@@ -107,13 +123,10 @@ export function EditorPipeline() {
   const decisionMut = useEditorDecision()
   const waiveMut = useWaiveReview()
 
-  // 待指派勾选
-  const [checked, setChecked] = useState<Set<number>>(new Set())
   const [assignOpen, setAssignOpen] = useState(false)
   const [selectedReviewers, setSelectedReviewers] = useState<number[]>([])
   const [dueDays, setDueDays] = useState(14)
   const [conflicts, setConflicts] = useState<Record<number, ConflictCandidate>>({})
-  const [onlySameDiscipline, setOnlySameDiscipline] = useState(false)
 
   // 待复核：当前正在复核的作品 id
   const [decidingId, setDecidingId] = useState<number | null>(null)
@@ -167,21 +180,9 @@ export function EditorPipeline() {
     : undefined
   const digest = data?.email_digest
 
-  // 单稿指派时提供与初筛台一致的「只看自选方向」筛选；多稿方向不一，不提供。
-  const checkedDiscipline =
-    checked.size === 1
-      ? (Object.values(columns ?? {})
-          .flatMap((col) => col.items)
-          .find((item) => checked.has(item.submission_id))?.discipline ?? null)
-      : null
-  const checkedDisciplineSlug = checkedDiscipline
-    ? (disciplines.data ?? []).find((d) => d.name === checkedDiscipline)?.slug
-    : undefined
+  // 候选已按服务端筛选返回；这里不再对前 200 人做客户端过滤。
   const allCandidates = candidates.data ?? []
-  const dialogCandidates =
-    onlySameDiscipline && checkedDisciplineSlug
-      ? allCandidates.filter((c) => (c.reviewer_disciplines ?? []).includes(checkedDisciplineSlug))
-      : allCandidates
+  const dialogCandidates = allCandidates
 
   // 只有在琥珀/红两态下才按需拉 records；绿色态不需要
   const digestRecords = useEditorEmailDigestRecords({
@@ -894,7 +895,7 @@ export function EditorPipeline() {
             <div className="max-h-72 space-y-1 overflow-y-auto rounded border p-2">
               {dialogCandidates.length === 0 && (
                 <p className="px-2 py-1.5 text-sm text-muted-foreground">
-                  {onlySameDiscipline && allCandidates.length > 0
+                  {onlySameDiscipline
                     ? '没有自选该方向的互评成员；取消筛选可查看全部候选。'
                     : '暂无候选互评成员：请先在「用户管理」里授予互评成员角色。'}
                 </p>

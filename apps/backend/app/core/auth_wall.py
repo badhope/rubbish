@@ -43,6 +43,7 @@ PUBLIC_API_PATHS = frozenset(
         "/api/health/ready",
         "/api/explore/overview",
         "/api/search",
+        "/api/review/public-expertise",
         "/api/privacy",
         "/api/telemetry/pageview",
     }
@@ -67,6 +68,8 @@ PUBLIC_API_PATTERNS = (
     re.compile(r"^/api/media/images/[\w.-]+$"),
     re.compile(r"^/api/users/profile-images/[\w.-]+$"),
     re.compile(r"^/api/catalog/\d+/img/[\w.-]+$"),
+    # 领域页要在未登录时显示订阅人数；POST/DELETE 仍由路由自身要求登录。
+    re.compile(r"^/api/disciplines/[^/]+/subscribe$"),
 )
 
 # 签名下载链接由移动端/微信内置浏览器直接打开，浏览器不会带 Bearer。

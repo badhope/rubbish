@@ -49,6 +49,8 @@ class SearchPersonCard(BaseModel):
     affiliation: str | None = None
     works: int = 0
     followers: int = 0
+    # 科目领域是公开资料；审稿领域绝不进入检索卡片。
+    subject_disciplines: list[str] = []
 
 
 class SearchTagCard(BaseModel):
@@ -111,19 +113,31 @@ def _topic_match(q: str):
     ]
 
 
-def _people_match(q: str):
-    like = f"%{q}%"
-    return [
+def _people_match(q: str | None, discipline: str | None = None):
+    conditions = [
         User.tenant_id == require_tenant_id(),
         User.is_active.is_(True),
-        or_(
-            User.username.ilike(like),
-            User.display_name.ilike(like),
-            User.bio.ilike(like),
-            User.affiliation.ilike(like),
-            User.research_interests.ilike(like),
-        ),
+        User.deleted_at.is_(None),
+        User.profile_visibility == "public",
     ]
+    if q:
+        like = f"%{q}%"
+        conditions.append(
+            or_(
+                User.username.ilike(like),
+                User.display_name.ilike(like),
+                User.bio.ilike(like),
+                User.affiliation.ilike(like),
+                User.research_interests.ilike(like),
+            )
+        )
+    if discipline:
+        # JSONB 序列化后 slug 一定带双引号；用带引号的精确片段匹配，
+        # 避免 ``computer-science`` 误命中 ``computer-science-education``。
+        conditions.append(
+            cast(User.subject_disciplines, Text).ilike(f'%"{discipline}"%')
+        )
+    return conditions
 
 
 async def _count(db: AsyncSession, stmt) -> int:
@@ -170,6 +184,7 @@ async def _people_cards(db: AsyncSession, users: list[User]) -> list[SearchPerso
                 affiliation=row.affiliation,
                 works=works.get(row.id, 0),
                 followers=followers,
+                subject_disciplines=list(row.subject_disciplines or []),
             )
         )
     return out
@@ -206,7 +221,12 @@ async def _tag_cards(db: AsyncSession, q: str, *, limit: int = 500) -> list[Sear
 
 @router.get("", response_model=SearchResponse)
 async def search(
-    q: str = Query(min_length=1, max_length=80),
+    q: str | None = Query(default=None, max_length=80),
+    discipline: str | None = Query(
+        default=None,
+        max_length=100,
+        pattern=r"^[a-z0-9][a-z0-9-]{0,99}$",
+    ),
     kind: SearchKind = Query(default="all", alias="type"),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=8, ge=1, le=30),
@@ -218,18 +238,22 @@ async def search(
     ``type=all`` returns a short preview of each surface for the landing view.
     A specific type pages that surface while still returning every count, so
     the tab bar never has to guess.
+
+    ``discipline`` lets a field page ask "who works in this area?" without a
+    keyword. When supplied alone, only the member surface is populated; works
+    and topics still need a text query.
     """
-    text = q.strip()
-    if not text:
+    text = (q or "").strip()
+    if not text and not discipline:
         raise HTTPException(status_code=422, detail="检索词不能为空")
 
-    resource_stmt = select(Resource.id).where(*_resource_match(text))
-    topic_stmt = select(ForumTopic.id).where(*_topic_match(text))
-    people_stmt = select(User.id).where(*_people_match(text))
-    tags_all = await _tag_cards(db, text)
+    resource_stmt = select(Resource.id).where(*_resource_match(text)) if text else None
+    topic_stmt = select(ForumTopic.id).where(*_topic_match(text)) if text else None
+    people_stmt = select(User.id).where(*_people_match(text or None, discipline))
+    tags_all = await _tag_cards(db, text) if text else []
 
-    total_resources = await _count(db, resource_stmt)
-    total_topics = await _count(db, topic_stmt)
+    total_resources = await _count(db, resource_stmt) if resource_stmt is not None else 0
+    total_topics = await _count(db, topic_stmt) if topic_stmt is not None else 0
     total_people = await _count(db, people_stmt)
     totals = SearchTotals(
         resources=total_resources,
@@ -243,7 +267,7 @@ async def search(
     offset = 0 if preview else (page - 1) * page_size
 
     resources: list[ExploreResourceCard] = []
-    if kind in ("all", "resources") and total_resources:
+    if text and kind in ("all", "resources") and total_resources:
         like = f"%{text}%"
         resource_rows = (
             await db.execute(
@@ -265,7 +289,7 @@ async def search(
         resources = await _resource_cards(db, resource_rows, limit=per_kind)
 
     topics: list[ExploreTopicCard] = []
-    if kind in ("all", "topics") and total_topics:
+    if text and kind in ("all", "topics") and total_topics:
         like = f"%{text}%"
         topic_rows = (
             await db.execute(
@@ -283,18 +307,21 @@ async def search(
 
     people: list[SearchPersonCard] = []
     if kind in ("all", "people") and total_people:
+        order_by = [User.username]
+        if text:
+            order_by = [
+                case(
+                    (User.username.ilike(f"%{text}%"), 0),
+                    (User.display_name.ilike(f"%{text}%"), 1),
+                    else_=2,
+                ),
+                User.username,
+            ]
         user_rows = (
             await db.execute(
                 select(User)
-                .where(*_people_match(text))
-                .order_by(
-                    case(
-                        (User.username.ilike(f"%{text}%"), 0),
-                        (User.display_name.ilike(f"%{text}%"), 1),
-                        else_=2,
-                    ),
-                    User.username,
-                )
+                .where(*_people_match(text or None, discipline))
+                .order_by(*order_by)
                 .offset(offset)
                 .limit(per_kind)
             )

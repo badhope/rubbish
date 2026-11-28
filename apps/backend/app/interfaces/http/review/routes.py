@@ -1396,6 +1396,7 @@ async def public_expertise(
     只输出聚合计数：学科覆盖人数 + 高频能力标签，绝不携带互评成员
     id/姓名/邮箱——匿名互评策略下作者永远不可识别互评成员身份。
     """
+    import re
     from collections import Counter
 
     from app.domain.catalog.models import Discipline
@@ -1410,6 +1411,7 @@ async def public_expertise(
             .where(
                 User.tenant_id == tenant_id,
                 User.is_active.is_(True),
+                User.deleted_at.is_(None),
                 UserRole.tenant_id == tenant_id,
                 Role.tenant_id == tenant_id,
                 Role.name.in_([ROLE_REVIEWER, ROLE_SENIOR_REVIEWER]),
@@ -1427,13 +1429,16 @@ async def public_expertise(
         seen_ids.add(row.id)
         for slug in row.reviewer_disciplines or []:
             discipline_counts[str(slug)] += 1
-        for tag in row.reviewer_tags or []:
-            text = " ".join(str(tag).split()).strip()
-            if not text:
-                continue
-            key = text.casefold()
-            tag_counts[key] += 1
-            tag_display.setdefault(key, text)
+        for raw_tag in row.reviewer_tags or []:
+            # 旧资料里可能把多个标签塞进一个字符串；聚合时按同一套分隔符
+            # 拆开，否则“站内常用”会把一整串当成一个标签。
+            for tag in re.split(r"[,，;；、\n]+", str(raw_tag)):
+                text = " ".join(tag.split()).strip()
+                if not text:
+                    continue
+                key = text.casefold()
+                tag_counts[key] += 1
+                tag_display.setdefault(key, text)
 
     disciplines = (
         (

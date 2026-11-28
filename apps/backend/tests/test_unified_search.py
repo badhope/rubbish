@@ -79,5 +79,50 @@ async def test_search_finds_people_by_username(client: AsyncClient, test_user: d
 
 
 @pytest.mark.asyncio
+async def test_search_people_by_subject_discipline(
+    client: AsyncClient, test_user: dict
+) -> None:
+    profile = await client.patch(
+        "/api/users/me",
+        json={"subject_disciplines": ["computer-science"]},
+        headers=auth_headers(test_user),
+    )
+    assert profile.status_code == 200, profile.text
+
+    r = await client.get(
+        "/api/search",
+        params={"type": "people", "discipline": "computer-science"},
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["meta"]["query"] == ""
+    assert body["meta"]["totals"]["people"] >= 1
+    hit = next(row for row in body["people"] if row["username"] == test_user["username"])
+    assert hit["subject_disciplines"] == ["computer-science"]
+    # 审稿领域不能借检索卡片泄露。
+    assert "reviewer_disciplines" not in hit
+    assert "reviewer_tags" not in hit
+
+
+@pytest.mark.asyncio
+async def test_search_people_respects_private_profile(
+    client: AsyncClient, test_user: dict
+) -> None:
+    profile = await client.patch(
+        "/api/users/me",
+        json={"subject_disciplines": ["computer-science"], "profile_visibility": "private"},
+        headers=auth_headers(test_user),
+    )
+    assert profile.status_code == 200, profile.text
+
+    r = await client.get(
+        "/api/search",
+        params={"type": "people", "discipline": "computer-science"},
+    )
+    assert r.status_code == 200, r.text
+    assert all(row["username"] != test_user["username"] for row in r.json()["people"])
+
+
+@pytest.mark.asyncio
 async def test_search_rejects_blank_query(client: AsyncClient) -> None:
     assert (await client.get("/api/search", params={"q": "   "})).status_code == 422

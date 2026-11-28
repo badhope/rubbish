@@ -171,6 +171,7 @@ _SPA_ROUTE_PREFIXES = frozenset(
         "catalog",
         "editor",
         "explore",
+        "fields",
         "forgot-password",
         "issues",
         "levels",

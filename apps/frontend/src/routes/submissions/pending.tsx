@@ -1157,23 +1157,21 @@ function AssignReviewerDialog({
 }) {
   // 专供内容整理的候选端点：只返回持 reviewer 角色且启用的账号，非 admin 的
   // editor 也能用（此前走 /admin/users 会 403，下拉永远是空的）。
-  const { data: candidateData, isLoading } = useReviewerCandidates(REVIEWER_CANDIDATE_LIMIT, submission.id)
   const disciplines = useDisciplines()
   const disciplineNames = new Map(
     (disciplines.data ?? []).map((item) => [item.slug, item.name]),
   )
+  const [onlySameDiscipline, setOnlySameDiscipline] = useState(false)
   const submissionDisciplineSlug = (disciplines.data ?? []).find(
     (item) => item.name === submission.discipline,
   )?.slug
-  const [onlySameDiscipline, setOnlySameDiscipline] = useState(false)
-  const allCandidates = candidateData ?? []
-  const candidates =
-    onlySameDiscipline && submissionDisciplineSlug
-      ? allCandidates.filter((u) =>
-          (u.reviewer_disciplines ?? []).includes(submissionDisciplineSlug),
-        )
-      : allCandidates
-  const truncated = allCandidates.length >= REVIEWER_CANDIDATE_LIMIT
+  const { data: candidateData, isLoading } = useReviewerCandidates(
+    REVIEWER_CANDIDATE_LIMIT,
+    submission.id,
+    onlySameDiscipline ? submissionDisciplineSlug : undefined,
+  )
+  const candidates = candidateData ?? []
+  const truncated = candidates.length >= REVIEWER_CANDIDATE_LIMIT
   const assignMut = useAssignReviewersBulk()
   const [selected, setSelected] = useState<number[]>([])
   const [dueDays, setDueDays] = useState('14')
@@ -1264,7 +1262,7 @@ function AssignReviewerDialog({
               <Loading />
             ) : candidates.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                {onlySameDiscipline && allCandidates.length > 0
+                {onlySameDiscipline
                   ? '没有自选该方向的互评成员；取消筛选可查看全部候选。'
                   : '没有可指派的互评成员：请先在「用户管理」里给用户授予互评成员角色。'}
               </p>
@@ -1339,8 +1337,8 @@ function AssignReviewerDialog({
           </div>
           {truncated && (
             <p className="text-xs text-muted-foreground">
-              候选列表只取了前 {REVIEWER_CANDIDATE_LIMIT} 个互评成员，目标互评成员不在其中时请用
-              「用户管理」确认其角色。
+              当前筛选下最多返回 {REVIEWER_CANDIDATE_LIMIT} 位互评成员；目标不在其中时请用
+              「用户管理」确认其角色与自选方向。
             </p>
           )}
           <div className="space-y-2 rounded-md border p-3">

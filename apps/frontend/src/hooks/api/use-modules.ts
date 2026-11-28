@@ -551,13 +551,21 @@ export function useSaveMyCoiDeclaration() {
   })
 }
 
-export function useReviewerCandidates(limit = 200, submissionId?: number) {
+export function useReviewerCandidates(
+  limit = 200,
+  submissionId?: number,
+  discipline?: string,
+) {
   return useQuery<ReviewerCandidate[]>({
-    queryKey: ['submissions', 'reviewer-candidates', limit, submissionId] as const,
+    queryKey: ['submissions', 'reviewer-candidates', limit, submissionId, discipline] as const,
     queryFn: async () =>
       (
         await api.get<{ data: ReviewerCandidate[] }>('/submissions/reviewer-candidates', {
-          params: { limit, ...(submissionId ? { submission_id: submissionId } : {}) },
+          params: {
+            limit,
+            ...(submissionId ? { submission_id: submissionId } : {}),
+            ...(discipline ? { discipline } : {}),
+          },
         })
       ).data.data,
     staleTime: 60_000,

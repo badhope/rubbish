@@ -9,20 +9,22 @@ import {
   Tag,
 } from 'lucide-react'
 import type { ExploreResourceCard, ExploreTopicCard } from '@/hooks/api/use-explore'
-import { useUnifiedSearch, type SearchKind } from '@/hooks/api/use-search'
+import { useUnifiedSearch, type SearchKind, type SearchPersonCard } from '@/hooks/api/use-search'
+import { useDisciplines } from '@/hooks/api/use-modules'
 import { displayTypeLabel } from '@/lib/resource-labels'
 import { shortDate } from '@/components/me/format'
 import { Highlight } from '@/components/common/highlight'
 import { PageHeader } from '@/components/common/page-header'
 import { Pagination } from '@/components/common/pagination'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 export const Route = createFileRoute('/search')({
   validateSearch: (
     search: Record<string, unknown>,
-  ): { q?: string; type?: Exclude<SearchKind, 'all'>; page?: number } => {
+  ): { q?: string; type?: Exclude<SearchKind, 'all'>; page?: number; discipline?: string } => {
     const q = typeof search.q === 'string' && search.q.trim() ? search.q.trim() : undefined
     const type =
       search.type === 'resources' ||
@@ -32,7 +34,11 @@ export const Route = createFileRoute('/search')({
         ? search.type
         : undefined
     const page = typeof search.page === 'number' && search.page > 1 ? Math.floor(search.page) : undefined
-    return { q, type, page }
+    const discipline =
+      typeof search.discipline === 'string' && /^[a-z0-9][a-z0-9-]{0,99}$/.test(search.discipline)
+        ? search.discipline
+        : undefined
+    return { q, type, page, discipline }
   },
   component: SearchPage,
 })
@@ -136,17 +142,12 @@ function TagResult({ row }: { row: { name: string; count: number } }) {
 
 function PersonResult({
   row,
+  disciplineNames,
 }: {
-  row: {
-    username: string
-    display_name?: string | null
-    avatar_url?: string | null
-    bio?: string | null
-    affiliation?: string | null
-    works: number
-    followers: number
-  }
+  row: SearchPersonCard
+  disciplineNames?: Map<string, string>
 }) {
+  const areas = (row.subject_disciplines ?? []).slice(0, 4)
   return (
     <Link
       to="/u/$username"
@@ -168,6 +169,15 @@ function PersonResult({
         {row.bio || row.affiliation ? (
           <span className="mt-1.5 line-clamp-2 block text-xs leading-5 text-muted-foreground">
             {row.bio || row.affiliation}
+          </span>
+        ) : null}
+        {areas.length > 0 ? (
+          <span className="mt-2 flex flex-wrap gap-1">
+            {areas.map((slug) => (
+              <Badge key={slug} variant="secondary" className="text-[10px] font-normal">
+                {disciplineNames?.get(slug) ?? slug}
+              </Badge>
+            ))}
           </span>
         ) : null}
         <span className="mt-2 block text-[11px] text-muted-foreground">
@@ -207,10 +217,16 @@ function SectionHead({
 
 function SearchPage() {
   const navigate = useNavigate()
-  const { q, type, page = 1 } = Route.useSearch()
+  const { q, type, page = 1, discipline } = Route.useSearch()
   const [input, setInput] = useState(q ?? '')
   const kind: SearchKind = type ?? 'all'
-  const query = useUnifiedSearch(kind, q, page)
+  const query = useUnifiedSearch(kind, q, page, discipline)
+  const disciplineRows = useDisciplines()
+  const disciplineNames = new Map(
+    (disciplineRows.data ?? []).map((item) => [item.slug, item.name]),
+  )
+  const disciplineName = discipline ? (disciplineNames.get(discipline) ?? discipline) : ''
+  const queryText = q ?? ''
 
   useEffect(() => {
     setInput(q ?? '')
@@ -221,16 +237,21 @@ function SearchPage() {
     const next = input.trim()
     void navigate({
       to: '/search',
-      search: next ? { q: next } : {},
+      search: next
+        ? { q: next, ...(kind !== 'all' ? { type: kind } : {}) }
+        : discipline
+          ? { type: 'people', discipline }
+          : {},
     })
   }
 
   const go = (nextKind: SearchKind, nextPage = 1) => {
-    if (!q) return
+    if (!q && !discipline) return
     void navigate({
       to: '/search',
       search: {
-        q,
+        ...(q ? { q } : {}),
+        ...(discipline ? { discipline } : {}),
         ...(nextKind === 'all' ? {} : { type: nextKind }),
         ...(nextPage > 1 ? { page: nextPage } : {}),
       },
@@ -281,10 +302,33 @@ function SearchPage() {
         </Button>
       </form>
 
-      {!q ? (
+      {discipline ? (
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className="text-muted-foreground">正在按领域找人</span>
+          <Badge variant="secondary" className="font-normal">
+            {disciplineName}
+          </Badge>
+          <Link
+            to="/fields/$slug"
+            params={{ slug: discipline }}
+            className="text-primary hover:underline"
+          >
+            进入领域页
+          </Link>
+          <button
+            type="button"
+            className="text-muted-foreground hover:text-primary"
+            onClick={() => void navigate({ to: '/search', search: q ? { q } : {} })}
+          >
+            清除领域筛选
+          </button>
+        </div>
+      ) : null}
+
+      {!q && !discipline ? (
         <EmptyState
           title="输入一个词，四类结果一起出现"
-          description="不用先选去内容库还是论坛。搜作者名会看到人和作品，搜标签会看到同题内容。"
+          description="不用先选去内容库还是论坛。搜作者名会看到人和作品，搜标签会看到同题内容。也可以从领域页直接找同方向的人。"
         />
       ) : query.isPending ? (
         <Loading />
@@ -324,7 +368,7 @@ function SearchPage() {
                   <SectionHead title="作品" count={totals.resources} onMore={() => go('resources')} />
                   <div className="divide-y">
                     {data.resources.map((row) => (
-                      <ResourceResult key={row.id} row={row} query={q} />
+                      <ResourceResult key={row.id} row={row} query={queryText} />
                     ))}
                   </div>
                 </section>
@@ -335,7 +379,7 @@ function SearchPage() {
                   <SectionHead title="主题帖" count={totals.topics} onMore={() => go('topics')} />
                   <div className="space-y-3">
                     {data.topics.map((row) => (
-                      <TopicResult key={row.id} row={row} query={q} />
+                      <TopicResult key={row.id} row={row} query={queryText} />
                     ))}
                   </div>
                 </section>
@@ -346,7 +390,7 @@ function SearchPage() {
                   <SectionHead title="成员" count={totals.people} onMore={() => go('people')} />
                   <div className="grid gap-3 sm:grid-cols-2">
                     {data.people.map((row) => (
-                      <PersonResult key={row.username} row={row} />
+                      <PersonResult key={row.username} row={row} disciplineNames={disciplineNames} />
                     ))}
                   </div>
                 </section>
@@ -366,8 +410,12 @@ function SearchPage() {
               {totals.resources + totals.topics + totals.people + totals.tags === 0 ? (
                 <div className="space-y-3">
                   <EmptyState
-                    title={`没有找到「${q}」`}
-                    description="可以缩短关键词、换一个作者名，或者直接去内容库按方向和年份浏览。"
+                    title={q ? `没有找到「${q}」` : `「${disciplineName}」暂时没有公开成员`}
+                    description={
+                      q
+                        ? '可以缩短关键词、换一个作者名，或者直接去内容库按方向和年份浏览。'
+                        : '领域词表里有这个方向，但还没有人把它写进公开资料。可以先关注这个方向，等新成员补上。'
+                    }
                   />
                   <div className="flex flex-wrap justify-center gap-2">
                     <Button variant="outline" size="sm" asChild>
@@ -386,7 +434,7 @@ function SearchPage() {
                 data.resources.length ? (
                   <div className="divide-y">
                     {data.resources.map((row) => (
-                      <ResourceResult key={row.id} row={row} query={q} />
+                      <ResourceResult key={row.id} row={row} query={queryText} />
                     ))}
                   </div>
                 ) : (
@@ -398,7 +446,7 @@ function SearchPage() {
                 data.topics.length ? (
                   <div className="space-y-3">
                     {data.topics.map((row) => (
-                      <TopicResult key={row.id} row={row} query={q} />
+                      <TopicResult key={row.id} row={row} query={queryText} />
                     ))}
                   </div>
                 ) : (
@@ -410,7 +458,7 @@ function SearchPage() {
                 data.people.length ? (
                   <div className="grid gap-3 sm:grid-cols-2">
                     {data.people.map((row) => (
-                      <PersonResult key={row.username} row={row} />
+                      <PersonResult key={row.username} row={row} disciplineNames={disciplineNames} />
                     ))}
                   </div>
                 ) : (
@@ -455,14 +503,14 @@ function NoKindResult({
   fallbackLabel,
 }: {
   kind: string
-  q: string
+  q?: string
   fallback: '/catalog' | '/forum' | '/explore' | '/tags'
   fallbackLabel: string
 }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed px-4 py-5 text-sm text-muted-foreground">
       <span>
-        没有与「{q}」匹配的{kind}。
+        {q ? `没有与「${q}」匹配的${kind}。` : `这个条件下暂时没有${kind}。`}
       </span>
       <Button variant="outline" size="sm" asChild>
         <Link to={fallback}>{fallbackLabel}</Link>

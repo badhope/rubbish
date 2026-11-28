@@ -348,6 +348,11 @@ def _candidate_score(
 async def list_reviewer_candidates(
     limit: int = Query(default=200, ge=1, le=200),
     submission_id: int | None = Query(default=None, ge=1),
+    discipline: str | None = Query(
+        default=None,
+        max_length=100,
+        pattern=r"^[a-z0-9][a-z0-9-]{0,99}$",
+    ),
     _: User = Depends(require_editor),
     db: AsyncSession = Depends(get_db),
 ) -> ReviewerCandidateListResponse:
@@ -358,6 +363,9 @@ async def list_reviewer_candidates(
     候选池（与 require_reviewer 同口径）。传 ``submission_id`` 时按
     学科/子领域/关键词重合、历史互评量与当前负载排序；不传时仍按
     用户名返回，保持旧调用兼容。
+
+    ``discipline`` 在服务端先筛再用 ``limit`` 截断。此前前端只对前 200
+    人做客户端过滤，候选池一大就会把后面的同方向成员藏起来。
     """
     tenant_id = require_tenant_id()
     rows = (
@@ -378,14 +386,21 @@ async def list_reviewer_candidates(
             .where(
                 User.tenant_id == tenant_id,
                 User.is_active.is_(True),
+                User.deleted_at.is_(None),
                 UserRole.tenant_id == tenant_id,
                 Role.tenant_id == tenant_id,
                 Role.name.in_([ROLE_REVIEWER, ROLE_SENIOR_REVIEWER]),
             )
             .order_by(User.username.asc())
-            .limit(limit)
         )
     ).all()
+    if discipline:
+        rows = [
+            row
+            for row in rows
+            if discipline in (getattr(row, "reviewer_disciplines", None) or [])
+        ]
+    rows = rows[:limit]
     reviewer_ids = [row.id for row in rows]
     if not reviewer_ids:
         return ReviewerCandidateListResponse(data=[])

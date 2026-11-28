@@ -24,6 +24,14 @@ def _app() -> FastAPI:
     async def capabilities():
         return {"registration_open": True}
 
+    @app.get("/api/review/public-expertise")
+    async def public_expertise():
+        return {"total_reviewers": 2}
+
+    @app.get("/api/disciplines/{discipline}/subscribe")
+    async def discipline_subscription(discipline: str):
+        return {"discipline": discipline, "subscribers_count": 3}
+
     @app.get("/api/submissions/{submission_id}/files")
     async def submission_file(submission_id: int, ticket: str | None = None):
         return {"submission_id": submission_id, "ticket": ticket}
@@ -48,6 +56,8 @@ def test_auth_wall_blocks_anonymous_business_api(monkeypatch):
 
     assert client.get("/api/auth/login").status_code == 200
     assert client.get("/api/capabilities").status_code == 200
+    assert client.get("/api/review/public-expertise").status_code == 200
+    assert client.get("/api/disciplines/physics/subscribe").status_code == 200
 
 
 def test_auth_wall_allows_valid_bearer(monkeypatch):

@@ -437,11 +437,29 @@ export function PublicProfileView({
                       <h2 className="text-sm font-semibold">科目领域</h2>
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {subjectAreas.map((area) => (
-                          <Badge key={area.slug} variant="secondary" className="text-[11px] font-normal">
-                            {area.name}
-                          </Badge>
+                          <Link
+                            key={area.slug}
+                            to="/fields/$slug"
+                            params={{ slug: area.slug }}
+                            className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            title={`进入「${area.name}」领域页`}
+                          >
+                            <Badge
+                              variant="secondary"
+                              className="cursor-pointer text-[11px] font-normal transition-colors hover:bg-primary/10 hover:text-primary"
+                            >
+                              {area.name}
+                            </Badge>
+                          </Link>
                         ))}
                       </div>
+                      <Link
+                        to="/search"
+                        search={{ type: 'people', discipline: subjectAreas[0]?.slug }}
+                        className="mt-2 inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary"
+                      >
+                        看看同领域的人 <ChevronRight className="h-3 w-3" />
+                      </Link>
                     </div>
                   ) : profile.is_owner ? (
                     <div className="border-b pb-4">

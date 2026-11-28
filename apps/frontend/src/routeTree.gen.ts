@@ -38,6 +38,7 @@ import { Route as CatalogIndexRouteImport } from './routes/catalog/index'
 import { Route as CatalogResourceIdRouteImport } from './routes/catalog/$resourceId'
 import { Route as EditorCalibrationRouteImport } from './routes/editor/calibration'
 import { Route as EditorIssuePlanRouteImport } from './routes/editor/issue-plan'
+import { Route as FieldsSlugRouteImport } from './routes/fields/$slug'
 import { Route as ForumIndexRouteImport } from './routes/forum/index'
 import { Route as ForumTopicIdRouteImport } from './routes/forum/$topicId'
 import { Route as LibraryIndexRouteImport } from './routes/library/index'
@@ -194,6 +195,11 @@ const EditorIssuePlanRoute = EditorIssuePlanRouteImport.update({
   path: '/editor/issue-plan',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FieldsSlugRoute = FieldsSlugRouteImport.update({
+  id: '/fields/$slug',
+  path: '/fields/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ForumIndexRoute = ForumIndexRouteImport.update({
   id: '/forum/',
   path: '/forum/',
@@ -273,6 +279,7 @@ export interface FileRoutesByFullPath {
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
   '/editor/calibration': typeof EditorCalibrationRoute
   '/editor/issue-plan': typeof EditorIssuePlanRoute
+  '/fields/$slug': typeof FieldsSlugRoute
   '/forum/$topicId': typeof ForumTopicIdRoute
   '/library/$listId': typeof LibraryListIdRoute
   '/submissions/new': typeof SubmissionsNewRoute
@@ -313,6 +320,7 @@ export interface FileRoutesByTo {
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
   '/editor/calibration': typeof EditorCalibrationRoute
   '/editor/issue-plan': typeof EditorIssuePlanRoute
+  '/fields/$slug': typeof FieldsSlugRoute
   '/forum/$topicId': typeof ForumTopicIdRoute
   '/library/$listId': typeof LibraryListIdRoute
   '/submissions/new': typeof SubmissionsNewRoute
@@ -355,6 +363,7 @@ export interface FileRoutesById {
   '/catalog/$resourceId': typeof CatalogResourceIdRoute
   '/editor/calibration': typeof EditorCalibrationRoute
   '/editor/issue-plan': typeof EditorIssuePlanRoute
+  '/fields/$slug': typeof FieldsSlugRoute
   '/forum/$topicId': typeof ForumTopicIdRoute
   '/library/$listId': typeof LibraryListIdRoute
   '/submissions/new': typeof SubmissionsNewRoute
@@ -398,6 +407,7 @@ export interface FileRouteTypes {
     | '/catalog/$resourceId'
     | '/editor/calibration'
     | '/editor/issue-plan'
+    | '/fields/$slug'
     | '/forum/$topicId'
     | '/library/$listId'
     | '/submissions/new'
@@ -438,6 +448,7 @@ export interface FileRouteTypes {
     | '/catalog/$resourceId'
     | '/editor/calibration'
     | '/editor/issue-plan'
+    | '/fields/$slug'
     | '/forum/$topicId'
     | '/library/$listId'
     | '/submissions/new'
@@ -479,6 +490,7 @@ export interface FileRouteTypes {
     | '/catalog/$resourceId'
     | '/editor/calibration'
     | '/editor/issue-plan'
+    | '/fields/$slug'
     | '/forum/$topicId'
     | '/library/$listId'
     | '/submissions/new'
@@ -517,6 +529,7 @@ export interface RootRouteChildren {
   CatalogResourceIdRoute: typeof CatalogResourceIdRoute
   EditorCalibrationRoute: typeof EditorCalibrationRoute
   EditorIssuePlanRoute: typeof EditorIssuePlanRoute
+  FieldsSlugRoute: typeof FieldsSlugRoute
   ForumTopicIdRoute: typeof ForumTopicIdRoute
   LibraryListIdRoute: typeof LibraryListIdRoute
   SubmissionsNewRoute: typeof SubmissionsNewRoute
@@ -735,6 +748,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EditorIssuePlanRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/fields/$slug': {
+      id: '/fields/$slug'
+      path: '/fields/$slug'
+      fullPath: '/fields/$slug'
+      preLoaderRoute: typeof FieldsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/forum/': {
       id: '/forum/'
       path: '/forum'
@@ -850,6 +870,7 @@ const rootRouteChildren: RootRouteChildren = {
   CatalogResourceIdRoute: CatalogResourceIdRoute,
   EditorCalibrationRoute: EditorCalibrationRoute,
   EditorIssuePlanRoute: EditorIssuePlanRoute,
+  FieldsSlugRoute: FieldsSlugRoute,
   ForumTopicIdRoute: ForumTopicIdRoute,
   LibraryListIdRoute: LibraryListIdRoute,
   SubmissionsNewRoute: SubmissionsNewRoute,

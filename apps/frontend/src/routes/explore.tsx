@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useExploreOverview, useFollowingFeed } from '@/hooks/api/use-explore'
+import { useDisciplines } from '@/hooks/api/use-modules'
 import { PageHeader } from '@/components/common/page-header'
 import { ArticleCover } from '@/components/common/article-cover'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
@@ -128,6 +129,7 @@ function ExplorePage() {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
   const overview = useExploreOverview()
+  const disciplines = useDisciplines()
   const tab: ExploreTab = search.tab === 'following' ? 'following' : 'discover'
   const following = useFollowingFeed(tab === 'following' && isAuthenticated)
 
@@ -174,6 +176,33 @@ function ExplorePage() {
           </div>
         ))}
       </section>
+
+      {(disciplines.data ?? []).length > 0 ? (
+        <section className="rounded-xl border bg-card p-4">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground">FIELDS</p>
+              <h2 className="mt-1 font-serif text-lg tracking-tight">按领域找人</h2>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              {(disciplines.data ?? []).length} 个受控方向，进去看同方向的人、最近作品和互评覆盖。
+            </p>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {(disciplines.data ?? []).map((discipline) => (
+              <Link
+                key={discipline.slug}
+                to="/fields/$slug"
+                params={{ slug: discipline.slug }}
+                className="inline-flex items-center gap-1 rounded-full border bg-background px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
+              >
+                {discipline.name}
+                <ArrowRight className="h-3 w-3" />
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-2 border-b">
         <button

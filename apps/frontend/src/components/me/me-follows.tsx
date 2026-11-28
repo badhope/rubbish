@@ -5,6 +5,7 @@ import { BellOff, Bookmark, MessagesSquare, Trash2, UserMinus } from 'lucide-rea
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
 import {
+  useDisciplines,
   useMyFollowedAuthors,
   useMySubscribedDisciplines,
   useUnfollowAuthor,
@@ -13,7 +14,6 @@ import {
 import { extractError } from '@/lib/utils'
 import { Pagination } from '@/components/common/pagination'
 import { EmptyState, ErrorState, Loading } from '@/components/common/state'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -127,7 +127,11 @@ function AuthorsTab() {
 
 function DisciplinesTab() {
   const { data, isLoading, isError, refetch } = useMySubscribedDisciplines()
+  const disciplines = useDisciplines()
   const unsubscribeMut = useUnsubscribeDiscipline()
+  const nameToSlug = new Map(
+    (disciplines.data ?? []).map((item) => [item.name, item.slug]),
+  )
 
   const onUnsubscribe = async (discipline: string) => {
     try {
@@ -146,31 +150,43 @@ function DisciplinesTab() {
     return (
       <EmptyState
         title="暂未订阅任何话题"
-        description="在作品页可以订阅话题，订阅后会出现在这里。"
+        description="在作品页或领域页可以订阅方向，订阅后会出现在这里。"
       />
     )
   }
   return (
     <div className="flex flex-wrap gap-2">
-      {data.data.map((slug) => (
-        <Badge
-          key={slug}
-          variant="secondary"
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm"
-        >
-          <Bookmark className="h-3.5 w-3.5" />
-          {slug}
-          <button
-            type="button"
-            onClick={() => onUnsubscribe(slug)}
-            disabled={unsubscribeMut.isPending}
-            className="ml-1 rounded-full text-muted-foreground hover:text-foreground"
-            aria-label={`取消订阅 ${slug}`}
+      {data.data.map((discipline) => {
+        const slug = nameToSlug.get(discipline)
+        return (
+          <span
+            key={discipline}
+            className="flex items-center gap-1.5 rounded-full border bg-secondary px-3 py-1.5 text-sm"
           >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
-        </Badge>
-      ))}
+            <Bookmark className="h-3.5 w-3.5 shrink-0" />
+            {slug ? (
+              <Link
+                to="/fields/$slug"
+                params={{ slug }}
+                className="hover:text-primary hover:underline"
+              >
+                {discipline}
+              </Link>
+            ) : (
+              <span>{discipline}</span>
+            )}
+            <button
+              type="button"
+              onClick={() => onUnsubscribe(discipline)}
+              disabled={unsubscribeMut.isPending}
+              className="ml-1 rounded-full text-muted-foreground hover:text-foreground"
+              aria-label={`取消订阅 ${discipline}`}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </span>
+        )
+      })}
     </div>
   )
 }
