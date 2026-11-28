@@ -205,17 +205,36 @@ describe('api 401 刷新拦截器', () => {
     expect(useAuthStore.getState().user).toBeNull()
   })
 
-  it('刷新失败（网络错误）时清空登录态', async () => {
+  it.each(['network', 'timeout', 403, 429, 503] as const)('续期临时失败 (%s) 后可再次续期', async (failure) => {
     useAuthStore.setState({
       token: 'old-token',
       user: { id: 1, username: 'alice', is_admin: false },
     })
+    const recover = refreshImpl
     business = async (config) =>
-      later(() => Promise.reject<AxiosResponse>(makeError(401, config)))
-    refreshImpl = async () => later(() => Promise.reject(new Error('Network Error')))
+      config.headers.Authorization === 'Bearer new-token'
+        ? makeResponse(config, { ok: true })
+        : Promise.reject(makeError(401, config))
+    refreshImpl = async (config) => {
+      if (typeof failure === 'number') throw makeError(failure, config)
+      throw new AxiosError(failure, failure === 'timeout' ? 'ECONNABORTED' : 'ERR_NETWORK', config)
+    }
 
-    await expect(api.get('/library')).rejects.toThrow('Network Error')
+    await expect(api.get('/library')).rejects.toThrow()
+    expect(useAuthStore.getState().token).toBe('old-token')
+    expect(useAuthStore.getState().user?.username).toBe('alice')
+    refreshImpl = recover
+    expect((await api.get('/library')).data).toEqual({ ok: true })
+    expect(useAuthStore.getState().token).toBe('new-token')
+  })
+
+  it('续期凭证确实被拒绝时退出登录', async () => {
+    useAuthStore.setState({ token: 'old-token', user: { id: 1, username: 'alice', is_admin: false } })
+    business = async (config) => Promise.reject(makeError(401, config))
+    refreshImpl = async (config) => Promise.reject(makeError(401, config))
+    await expect(api.get('/library')).rejects.toMatchObject({ response: { status: 401 } })
     expect(useAuthStore.getState().token).toBeNull()
+    expect(useAuthStore.getState().user).toBeNull()
   })
 
   it('非 401 错误直接透传，不触发刷新', async () => {

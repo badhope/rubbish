@@ -117,5 +117,23 @@ def decode_access_token(token: str) -> dict[str, Any] | None:
     return decode_token(token, expected_type="access")
 
 
+def create_account_restore_token(
+    user_id: int, tenant_id: str, token_version: int, expires_at: datetime
+) -> str:
+    return encode_jwt(
+        {
+            "type": "account_restore",
+            "sub": str(user_id),
+            "tenant_id": tenant_id,
+            "token_version": token_version,
+            "exp": expires_at,
+        }
+    )
+
+
+def decode_account_restore_token(token: str) -> dict[str, Any] | None:
+    return decode_jwt(token, expected_type="account_restore")
+
+
 def decode_refresh_token(token: str) -> dict[str, Any] | None:
     return decode_token(token, expected_type="refresh")

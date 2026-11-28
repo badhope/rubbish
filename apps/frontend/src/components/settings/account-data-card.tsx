@@ -125,13 +125,10 @@ function DeleteAccountDialog({
     remove.mutate(
       { password, confirmation: confirmation.trim().toUpperCase() },
       {
-        onSuccess: () => {
+        onSuccess: ({ restore_token, hard_delete_after }) => {
           onOpenChange(false)
-          const token = useAuthStore.getState().token
-          if (token) saveRestoreToken(token)
-          // 注销后普通接口已经拒绝这个 token；把它从 auth store 摘走，
-          // 只保留在 recover token 里，避免后台 401 触发 refresh 失败后
-          // 把唯一凭证清掉。
+          const token = restore_token ?? useAuthStore.getState().token
+          if (token) saveRestoreToken(token, hard_delete_after)
           useAuthStore.getState().logout()
           toast.success('账号已注销。30 天内可用当前浏览器恢复；逾期将永久删除。')
           void navigate({ to: '/restore-account' })

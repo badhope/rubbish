@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { clearRestoreToken, loadRestoreToken, saveRestoreToken } from '../restore-token'
 
 const KEY = 'rubbish-restore-token'
+const deadline = '2026-12-22T01:30:00Z'
 
 describe('restore token', () => {
   beforeEach(() => {
@@ -15,17 +16,17 @@ describe('restore token', () => {
     localStorage.clear()
   })
 
-  it('keeps a pre-deletion token outside the auth store', () => {
-    saveRestoreToken('old-token')
+  it('stores the recovery credential with the deadline from the server', () => {
+    saveRestoreToken('restore-token', deadline)
     const raw = JSON.parse(localStorage.getItem(KEY) ?? '{}')
-    expect(raw.token).toBe('old-token')
-    expect(raw.expires_at).toBe(Date.now() + 30 * 24 * 60 * 60 * 1000)
-    expect(loadRestoreToken()).toBe('old-token')
+    expect(raw.token).toBe('restore-token')
+    expect(raw.expires_at).toBe(Date.parse(deadline))
+    expect(loadRestoreToken()).toBe('restore-token')
   })
 
   it('expires after the 30-day deletion window', () => {
-    saveRestoreToken('old-token')
-    vi.setSystemTime(new Date('2026-12-23T00:00:00Z'))
+    saveRestoreToken('restore-token', deadline)
+    vi.setSystemTime(new Date(deadline))
     expect(loadRestoreToken()).toBeNull()
     expect(localStorage.getItem(KEY)).toBeNull()
   })
@@ -33,7 +34,7 @@ describe('restore token', () => {
   it('ignores corrupt credentials and clears on success', () => {
     localStorage.setItem(KEY, '{not json')
     expect(loadRestoreToken()).toBeNull()
-    saveRestoreToken('old-token')
+    saveRestoreToken('restore-token', deadline)
     clearRestoreToken()
     expect(loadRestoreToken()).toBeNull()
   })

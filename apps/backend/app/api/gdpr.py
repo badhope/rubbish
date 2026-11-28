@@ -38,8 +38,8 @@ Note on the ``get_soft_delete_aware_user`` dependency: the standard
 403 because they cannot poke at write endpoints. The restore endpoint
 needs the opposite: a user in the soft-deleted state must still be
 able to call back inside the grace window to undo the deletion.
-``get_soft_delete_aware_user`` accepts the bearer token (checking
-``token_version`` as usual) but does NOT refuse on ``is_active``.
+``get_soft_delete_aware_user`` checks the recovery credential issued at
+deletion. Older clients can still use their unexpired pre-deletion session.
 """
 
 from __future__ import annotations
@@ -50,7 +50,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -59,7 +59,9 @@ from app.core.db import get_db
 from app.core.logging import get_logger
 from app.core.retention import USER_DELETION_GRACE_DAYS
 from app.core.security import (
+    create_account_restore_token,
     decode_access_token,
+    decode_account_restore_token,
     hash_password,
     token_version_matches,
     verify_password,
@@ -107,7 +109,8 @@ async def get_soft_delete_aware_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     token = parts[1]
-    payload = decode_access_token(token)
+    restore_claims = decode_account_restore_token(token)
+    payload = restore_claims or decode_access_token(token)
     if payload is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     sub = payload.get("sub")
@@ -125,26 +128,20 @@ async def get_soft_delete_aware_user(
     user = result.scalar_one_or_none()
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
-    # Soft-deleted grace-window exemption (T2 finding H-3): deletion bumps
-    # token_version, so the strict check below would 401 every pre-deletion
-    # token and permanently brick the restore endpoint — the documented
-    # 30-day recovery promise was unreachable. During the window the
-    # deleted-state user has no other credential (password was anonymised
-    # at deletion), so the pre-deletion bearer token IS the intended
-    # restore credential. Threat model: a stolen pre-deletion token could
-    # re-activate the account and set a new password; mitigated because
-    # (a) the same token was equally usable while the account was alive,
-    # (b) restore stamps a fresh token_version, invalidating every
-    # outstanding token including the attacker's, and (c) restore only
-    # works while deleted_at is set and inside the grace window.
-    if not (_is_soft_deleted(user) and _within_grace_window(user)):
-        if not token_version_matches(payload, user.token_version):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has been revoked"
-            )
-    # Note: is_active / is_email_verified deliberately NOT checked
-    # here. The GDPR restore path is the only legitimate reason for
-    # a soft-deleted user to be talking to the API at all.
+    if restore_claims is not None and restore_claims.get("tenant_id") != str(user.tenant_id):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    # Older clients saved the session from just before deletion bumped the
+    # version. Honour its original expiry and only that previous generation.
+    legacy_session = (
+        restore_claims is None
+        and _is_soft_deleted(user)
+        and _within_grace_window(user)
+        and token_version_matches(payload, user.token_version - 1)
+    )
+    if not legacy_session and not token_version_matches(payload, user.token_version):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has been revoked"
+        )
     return user
 
 
@@ -742,11 +739,16 @@ async def delete_my_account(
     current_user.totp_secret_encrypted = None
     current_user.totp_enabled_at = None
     current_user.totp_backup_codes_hashed = None
-    current_user.deleted_at = datetime.now(UTC)
+    # JWT deadlines use whole seconds; the browser and the row share this cutoff.
+    current_user.deleted_at = datetime.now(UTC).replace(microsecond=0)
     # Invalidate every active session immediately. The bump below is
     # enough — no separate "log out everywhere" call is needed.
     current_user.token_version += 1
     current_user.refresh_token_version += 1
+    deadline = current_user.deleted_at + timedelta(days=_DELETION_GRACE_DAYS)
+    restore_token = create_account_restore_token(
+        current_user.id, str(current_user.tenant_id), current_user.token_version, deadline
+    )
 
     db.add(
         AuditLog(
@@ -757,9 +759,7 @@ async def delete_my_account(
             target_id=str(current_user.id),
             payload={
                 "grace_days": _DELETION_GRACE_DAYS,
-                "hard_delete_after": (
-                    current_user.deleted_at + timedelta(days=_DELETION_GRACE_DAYS)
-                ).isoformat(),
+                "hard_delete_after": deadline.isoformat(),
             },
         )
     )
@@ -768,15 +768,14 @@ async def delete_my_account(
     logger.info(
         "user_soft_deleted",
         user_id=current_user.id,
-        grace_until=(current_user.deleted_at + timedelta(days=_DELETION_GRACE_DAYS)).isoformat(),
+        grace_until=deadline.isoformat(),
     )
 
     return {
         "status": "scheduled_for_deletion",
         "grace_days": _DELETION_GRACE_DAYS,
-        "hard_delete_after": (
-            current_user.deleted_at + timedelta(days=_DELETION_GRACE_DAYS)
-        ).isoformat(),
+        "hard_delete_after": deadline.isoformat(),
+        "restore_token": restore_token,
     }
 
 
@@ -816,28 +815,43 @@ async def restore_my_account(
             ),
         )
 
-    # Uniqueness check on the new email/username (per tenant). If
-    # either is taken, the caller picks another one.
-    current_user.email = payload.email
-    current_user.username = payload.username
-    current_user.hashed_password = hash_password(payload.new_password)
-    current_user.is_active = True
-    current_user.is_email_verified = False
-    current_user.deleted_at = None
-    current_user.token_version += 1
-    current_user.refresh_token_version += 1
-
-    db.add(
-        AuditLog(
-            tenant_id=current_user.tenant_id,
-            actor_user_id=current_user.id,
-            action="user.restore",
-            target_type="user",
-            target_id=str(current_user.id),
-            payload={"new_email": payload.email, "new_username": payload.username},
-        )
-    )
     try:
+        # Consume this deletion's credential in the same write as restoration.
+        # A concurrent submission must not overwrite the first success.
+        restored_id = await db.scalar(
+            update(User)
+            .where(
+                User.id == current_user.id,
+                User.tenant_id == current_user.tenant_id,
+                User.token_version == current_user.token_version,
+                User.deleted_at.is_not(None),
+            )
+            .values(
+                email=payload.email,
+                username=payload.username,
+                hashed_password=hash_password(payload.new_password),
+                is_active=True,
+                is_email_verified=False,
+                deleted_at=None,
+                token_version=User.token_version + 1,
+                refresh_token_version=User.refresh_token_version + 1,
+            )
+            .returning(User.id)
+        )
+        if restored_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="Account state changed"
+            )
+        db.add(
+            AuditLog(
+                tenant_id=current_user.tenant_id,
+                actor_user_id=current_user.id,
+                action="user.restore",
+                target_type="user",
+                target_id=str(current_user.id),
+                payload={"new_email": payload.email, "new_username": payload.username},
+            )
+        )
         await db.commit()
     except IntegrityError as exc:
         await db.rollback()

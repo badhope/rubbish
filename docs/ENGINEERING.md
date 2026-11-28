@@ -20,6 +20,8 @@ The backend is a modular monolith. A module owns one product surface and must no
 
 Shared identity, tenancy, auth, mail, storage and rate limits live in `app/core`, `app/api` and `app/models`. The dependency direction is `interfaces/http → domain → core`. `tests/test_architecture_layers.py` is the guardrail.
 
+A successful account deletion returns a single-use `restore_token` and its `hard_delete_after` deadline. The browser stores both separately from the login session and presents the credential to `POST /api/users/me/restore`. For ordinary sessions, a temporary refresh failure leaves the session available for retry.
+
 ### Adding a module
 
 1. Add `app/domain/<module>/` (models and rules) and `app/interfaces/http/<module>/` (router and DTOs).

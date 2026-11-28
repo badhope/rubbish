@@ -42,7 +42,7 @@ describe('AccountDataCard', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.deleteMutate.mockImplementation((_body, options) => {
-      options?.onSuccess?.()
+      options?.onSuccess?.({ restore_token: 'restore-only', hard_delete_after: '2026-12-22T00:00:00Z' })
     })
   })
 
@@ -65,7 +65,7 @@ describe('AccountDataCard', () => {
       { password: 'secret', confirmation: 'DELETE MY ACCOUNT' },
       expect.any(Object),
     )
-    expect(mocks.saveRestoreToken).toHaveBeenCalledWith('old-token')
+    expect(mocks.saveRestoreToken).toHaveBeenCalledWith('restore-only', '2026-12-22T00:00:00Z')
     expect(mocks.logout).toHaveBeenCalled()
     expect(mocks.navigate).toHaveBeenCalledWith({ to: '/restore-account' })
   })

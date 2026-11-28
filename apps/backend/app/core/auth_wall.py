@@ -20,7 +20,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
 from app.core.config import settings
-from app.core.security import decode_access_token
+from app.core.security import decode_access_token, decode_account_restore_token
 
 # Exact paths that must stay reachable before a user has a token.
 PUBLIC_API_PATHS = frozenset(
@@ -139,6 +139,13 @@ class AuthWallMiddleware(BaseHTTPMiddleware):
 
         token = _bearer_token(request)
         if token is not None and decode_access_token(token) is not None:
+            return await call_next(request)
+        if (
+            request.method == "POST"
+            and path == "/api/users/me/restore"
+            and token is not None
+            and decode_account_restore_token(token) is not None
+        ):
             return await call_next(request)
         # `rbk_` tokens are deliberately opaque; let the AI/MCP router verify
         # hash, expiry, revocation, tenant and scope. The wall must not decode
