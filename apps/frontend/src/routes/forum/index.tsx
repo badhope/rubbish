@@ -54,6 +54,7 @@ import {
 import { cn } from '@/lib/utils'
 import { FORUM_COPY } from '@/lib/forum-copy'
 import { ModerationBadge } from '@/components/forum/moderation-status'
+import { ForumStarterCard } from '@/components/forum/forum-starter-card'
 
 const ForumEditor = lazy(() =>
   import('@/components/forum/forum-editor').then((m) => ({ default: m.ForumEditor })),
@@ -552,6 +553,8 @@ function ForumListPage() {
           </div>
         }
       />
+
+      {isAuthenticated ? <ForumStarterCard /> : null}
 
       {!activeBoard && !keyword ? (
         <div className="overflow-hidden rounded-xl border bg-muted/20 px-4 py-3 sm:px-5 sm:py-4">

@@ -49,6 +49,7 @@ from app.core.storage import get_storage
 from app.core.time import utcnow
 from app.domain.catalog.models import Resource
 from app.domain.catalog.visibility import public_conditions
+from app.domain.forum import engagement
 from app.domain.forum.models import (
     ForumBoard,
     ForumModerationEvent,
@@ -3516,3 +3517,56 @@ async def delete_board(
     )
     await db.delete(board)
     await db.commit()
+
+
+# ---------------------------------------------------------------------------
+# 新手任务与社区信用
+# ---------------------------------------------------------------------------
+
+
+@router.get("/starter")
+async def get_forum_starter(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, object]:
+    """新手四项的完成度与奖励领取状态。登录后即可查看。"""
+    return await engagement.starter_summary(db, current_user)
+
+
+@router.post("/starter/claim")
+async def claim_forum_starter(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, object]:
+    """四项都完成后领取 25 经验；重复领取只返回现状，不重复发奖。"""
+    summary = await engagement.starter_summary(db, current_user)
+    if summary["claimed"]:
+        return summary
+    if not summary["all_done"]:
+        missing = summary["total"] - summary["completed"]
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"还有 {missing} 项没完成，完成后才能领取",
+        )
+    from app.domain.gamification import service as gamification
+
+    await gamification.award(
+        db,
+        current_user,
+        engagement.NEWBIE_REWARD_ACTION,
+        ref_type=engagement.NEWBIE_REF_TYPE,
+        ref_id=engagement.NEWBIE_REF_ID,
+        note="完成论坛新手四项",
+    )
+    await gamification.evaluate_badges(db, current_user)
+    await db.commit()
+    return await engagement.starter_summary(db, current_user)
+
+
+@router.get("/credit/me")
+async def get_my_forum_credit(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, object]:
+    """我的社区信用：分数、等级与最近的加减分来源。"""
+    return await engagement.credit_summary(db, current_user)

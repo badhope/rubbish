@@ -122,6 +122,10 @@ export const keys = {
     public: (page = 1) => ['library', 'public', page] as const,
     detail: (id: number) => ['library', 'detail', id] as const,
   },
+  forum: {
+    starter: () => ['forum', 'starter'] as const,
+    credit: () => ['forum', 'credit'] as const,
+  },
   notifications: {
     // pageSize 也要进 key：仪表盘取 (1,5)、通知页取 (1,20)，
     // 只带 page 会让两者共用一个缓存条目、互相污染数据。
@@ -2123,8 +2127,86 @@ export function useAcknowledgeCommunity() {
     mutationFn: async () => (await api.post('/gamification/onboarding/community')).data,
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: keys.gamification.profile() })
+      void qc.invalidateQueries({ queryKey: keys.forum.starter() })
       void qc.invalidateQueries({ queryKey: ['auth', 'me'] })
     },
+  })
+}
+
+export interface ForumStarterTask {
+  key: string
+  label: string
+  hint: string
+  done: boolean
+  action: 'ack_rules' | null
+  to: string
+}
+
+export interface ForumStarter {
+  tasks: ForumStarterTask[]
+  completed: number
+  total: number
+  all_done: boolean
+  claimed: boolean
+  claimed_at: string | null
+  reward_xp: number
+  counts: { published_topics: number; replies: number }
+}
+
+export function useForumStarter(enabled = true) {
+  return useQuery<ForumStarter>({
+    queryKey: keys.forum.starter(),
+    queryFn: async () => (await api.get<ForumStarter>('/forum/starter')).data,
+    enabled,
+    staleTime: 30_000,
+  })
+}
+
+export function useClaimForumStarter() {
+  const qc = useQueryClient()
+  return useMutation<ForumStarter, unknown, void>({
+    mutationFn: async () => (await api.post<ForumStarter>('/forum/starter/claim')).data,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: keys.forum.starter() })
+      void qc.invalidateQueries({ queryKey: keys.gamification.profile() })
+      void qc.invalidateQueries({ queryKey: ['auth', 'me'] })
+    },
+  })
+}
+
+export interface ForumCreditRecord {
+  kind: string
+  label: string
+  detail: string
+  delta: number
+  at: string
+  ref_type: string
+  ref_id: number
+}
+
+export interface ForumCredit {
+  score: number
+  max_score: number
+  tier: string
+  tier_label: string
+  positive_points: number
+  negative_points: number
+  counts: {
+    published_topics: number
+    published_replies: number
+    rejected_topics: number
+    removed_contents: number
+  }
+  records: ForumCreditRecord[]
+  scoring: string
+}
+
+export function useForumCredit(enabled = true) {
+  return useQuery<ForumCredit>({
+    queryKey: keys.forum.credit(),
+    queryFn: async () => (await api.get<ForumCredit>('/forum/credit/me')).data,
+    enabled,
+    staleTime: 60_000,
   })
 }
 
