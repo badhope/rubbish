@@ -83,7 +83,7 @@ export function MeIdentityHeader({
               >
                 <Gauge className="h-3.5 w-3.5" />
                 档位 {profile.activity.level}
-                <span className="hidden text-[10px] text-muted-foreground/70 sm:inline">成长记录</span>
+                <span className="hidden text-[10px] text-muted-foreground sm:inline">成长记录</span>
               </Link>
               <Link
                 to="/me"

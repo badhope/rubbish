@@ -136,7 +136,7 @@ _PaginateT = TypeVar("_PaginateT")
 
 async def paginate(  # noqa: UP047 - 3.11 兼容，见上注释
     db: AsyncSession,
-    stmt: Select[_PaginateT],
+    stmt: Select[tuple[_PaginateT]],
     *,
     page: int,
     page_size: int,

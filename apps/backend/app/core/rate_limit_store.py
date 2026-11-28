@@ -249,7 +249,7 @@ class RedisRateLimiterStore(RateLimiterStore):
                 "redis package is required for RedisRateLimiterStore; "
                 "install with `pip install redis>=5`."
             ) from exc
-        self._client = redis_async.from_url(  # type: ignore[no-untyped-call]
+        self._client = redis_async.from_url(
             self._redis_url,
             encoding="utf-8",
             decode_responses=True,

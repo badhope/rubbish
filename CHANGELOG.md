@@ -23,6 +23,7 @@
 - 新增 `apps/frontend/src/routes/more.tsx`；`MobileAppShell` 改为直接链接 `/more`，不再在 header 渲染下拉菜单。
 - 后端 SPA 回落白名单补上 `more`，避免手机端直接打开 `/more` 时被当成拼错地址 404。
 - 回归：前端 typecheck、lint、build 通过；合并远端后的全量测试 **49 个测试文件、254 条测试全部通过**（934.49s，含 `article-preview.test.tsx` 3 条，本轮没有再出现 worker 超时）。
+- **回归补丁**：`/me` 身份头的“成长记录”标签改回 `text-muted-foreground` 全不透明度——`/70` 在浅底上过不了 WCAG AA 对比度，CI 的 Browser smoke 在 chromium 与 webkit 上都报 serious；本地 chromium 18/18、firefox 16/16（2 条按浏览器条件跳过）通过。
 
 ### 后端类型检查清零
 
