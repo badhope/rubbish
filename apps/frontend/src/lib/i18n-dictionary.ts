@@ -158,6 +158,8 @@ export const TEXT_EN: Record<string, string> = {
   "关于": 'About',
   "站点管理": 'Site admin',
   "总览": 'Overview',
+  "内容": 'Content',
+  "系统": 'System',
   "成员与权限": 'Members & access',
   "内容与讨论": 'Content & discussion',
   "系统与安全": 'System & security',

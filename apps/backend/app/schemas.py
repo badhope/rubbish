@@ -234,6 +234,8 @@ class UserResponse(BaseModel):
     department: str | None = None
     academic_title: str | None = None
     research_interests: str | None = None
+    # 科目领域（迁移 075）：Discipline.slug 数组，空列表 = 未填写。公开主页可见。
+    subject_disciplines: list[str] = Field(default_factory=list)
     # P1-7 互评能力标签（空列表 = 未填写）
     reviewer_tags: list[str] = Field(default_factory=list)
     # 受控学科标签（迁移 057；空列表 = 未填写）
@@ -286,6 +288,7 @@ class UserResponse(BaseModel):
                 "department": data.department,
                 "academic_title": data.academic_title,
                 "research_interests": data.research_interests,
+                "subject_disciplines": list(getattr(data, "subject_disciplines", None) or []),
                 "reviewer_tags": list(getattr(data, "reviewer_tags", None) or []),
                 "reviewer_disciplines": list(getattr(data, "reviewer_disciplines", None) or []),
                 "website": data.website,
@@ -354,6 +357,14 @@ class AdminUserCreateResponse(BaseModel):
     invite_error: str | None = None
 
 
+class AdminUserAreasUpdate(BaseModel):
+    """Body for PATCH /admin/users/{id}/areas — station-side expertise edit."""
+
+    subject_disciplines: list[str] | None = Field(default=None, max_length=6)
+    reviewer_disciplines: list[str] | None = Field(default=None, max_length=10)
+    reviewer_tags: list[str] | None = Field(default=None, max_length=20)
+
+
 class ReviewModeUpdate(BaseModel):
     """Body for PATCH /admin/settings/review-mode."""
 
@@ -395,6 +406,8 @@ class UserUpdate(BaseModel):
     department: str | None = Field(default=None, max_length=200)
     academic_title: str | None = Field(default=None, max_length=100)
     research_interests: str | None = Field(default=None, max_length=500)
+    # 科目领域（迁移 075）：Discipline.slug 数组；公开主页展示，最多 6 个。
+    subject_disciplines: list[str] | None = Field(default=None, max_length=6)
     reviewer_tags: list[str] | None = Field(default=None, max_length=20)
     # 受控学科标签（迁移 057）：Discipline.slug 数组；存在性在端点按
     # onto 宽松模式校验（租户未配置词表时放行）。

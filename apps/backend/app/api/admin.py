@@ -38,6 +38,7 @@ from app.core.security import hash_password
 from app.core.site_settings import get_all_site_flags, set_site_flag
 from app.models import AuditLog, Role, User, UserRole
 from app.schemas import (
+    AdminUserAreasUpdate,
     AdminUserCreate,
     AdminUserCreateResponse,
     RoleAssign,
@@ -197,6 +198,76 @@ async def _user_with_roles(db: AsyncSession, user: User) -> UserResponse:
     resp.xp = user.xp or 0
     resp.level = await level_of(db, user)
     return resp
+
+
+@router.patch("/users/{user_id}/areas", response_model=UserResponse)
+async def update_user_areas(
+    user_id: int,
+    payload: AdminUserAreasUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_admin: User = Depends(require_admin),
+) -> UserResponse:
+    """站务维护成员领域：科目领域、审稿领域与审稿能力标签。
+
+    这是成员自助资料之外唯一的代改入口，用于申请人资料缺失时补齐；
+    每次改动写审计日志，便于回溯是谁改了谁的领域。
+    """
+    from app.domain.catalog.models import Discipline
+
+    tenant_id = require_tenant_id()
+    user = (
+        await db.execute(select(User).where(User.id == user_id, User.tenant_id == tenant_id))
+    ).scalar_one_or_none()
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    if not payload.model_fields_set:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="没有要更新的领域字段",
+        )
+
+    known = set(
+        (await db.execute(select(Discipline.slug).where(Discipline.tenant_id == tenant_id)))
+        .scalars()
+        .all()
+    )
+    changes: dict[str, object] = {}
+    for field_name, label in (
+        ("subject_disciplines", "科目领域"),
+        ("reviewer_disciplines", "审稿领域"),
+    ):
+        if field_name not in payload.model_fields_set:
+            continue
+        values = [slug for slug in (getattr(payload, field_name) or []) if slug]
+        if known:
+            unknown = [slug for slug in values if slug not in known]
+            if unknown:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"未知{label}：{', '.join(unknown)}",
+                )
+        deduped = list(dict.fromkeys(values))
+        setattr(user, field_name, deduped)
+        changes[field_name] = deduped
+    if "reviewer_tags" in payload.model_fields_set:
+        tags = [tag.strip() for tag in (payload.reviewer_tags or []) if tag and tag.strip()]
+        tags = list(dict.fromkeys(tags))[:20]
+        user.reviewer_tags = tags
+        changes["reviewer_tags"] = tags
+
+    db.add(
+        AuditLog(
+            tenant_id=tenant_id,
+            actor_user_id=current_admin.id,
+            action="user.update_areas",
+            target_type="user",
+            target_id=str(user.id),
+            payload=changes,
+        )
+    )
+    await db.commit()
+    await db.refresh(user)
+    return await _user_with_roles(db, user)
 
 
 @router.get("/users", response_model=list[UserResponse])

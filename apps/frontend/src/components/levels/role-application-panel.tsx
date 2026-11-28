@@ -221,6 +221,13 @@ export function RoleApplicationPanel() {
               写清你为什么想参与互评、能看哪些方向。至少 20 字，站务组会据此判断。
             </DialogDescription>
           </DialogHeader>
+          <p className="-mt-1 rounded-md border bg-muted/30 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
+            提交前建议先在
+            <Link to="/me" search={{ tab: 'settings', section: 'profile' }} className="mx-1 text-primary hover:underline">
+              资料页
+            </Link>
+            填好「审稿人领域」和「审稿能力标签」。站务审批时会一并看这些方向，进互评台后也按它们匹配稿件。
+          </p>
           <div>
             <Textarea
               value={statement}

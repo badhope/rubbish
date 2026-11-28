@@ -19,4 +19,9 @@ describe('review copy in the English layer', () => {
       'The 4 most recently published pieces. Read one or two, then decide where to go.',
     )
   })
+
+  it('translates the admin domain tabs that used to fall back to Chinese', () => {
+    expect(translateText('内容', 'en')).toBe('Content')
+    expect(translateText('系统', 'en')).toBe('System')
+  })
 })

@@ -13,6 +13,7 @@ export interface PublicProfileUser {
   department: string | null
   academic_title: string | null
   research_interests: string | null
+  subject_disciplines: string[]
   location: string | null
   website: string | null
   google_scholar: string | null

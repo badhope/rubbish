@@ -38,9 +38,6 @@ type ProfileForm = {
   academic_title: string
   location: string
   research_interests: string
-  reviewer_tags: string
-  /** 排序后逗号拼接的学科 slug，保持与其他字段一致的字符串比较。 */
-  reviewer_disciplines: string
   website: string
   google_scholar: string
   bio: string
@@ -60,8 +57,6 @@ function toForm(user?: UserResponse | null): ProfileForm {
     academic_title: user?.academic_title ?? '',
     location: user?.location ?? '',
     research_interests: user?.research_interests ?? '',
-    reviewer_tags: (user?.reviewer_tags ?? []).join(', '),
-    reviewer_disciplines: [...(user?.reviewer_disciplines ?? [])].sort().join(','),
     website: user?.website ?? '',
     google_scholar: user?.google_scholar ?? '',
     bio: user?.bio ?? '',
@@ -155,18 +150,6 @@ export function ProfileDetailsCard({ initial }: { initial?: UserResponse | null 
       }
       if (key === 'accent_color') {
         body.accent_color = form.accent_color
-        continue
-      }
-      if (key === 'reviewer_tags') {
-        body.reviewer_tags = form.reviewer_tags
-          .split(/[,，;；\n]/)
-          .map((tag) => tag.trim())
-          .filter(Boolean)
-          .slice(0, 20)
-        continue
-      }
-      if (key === 'reviewer_disciplines') {
-        body.reviewer_disciplines = form.reviewer_disciplines.split(',').filter(Boolean)
         continue
       }
       // 空串提交 = 清除该字段；后端会把空串归一为 None。

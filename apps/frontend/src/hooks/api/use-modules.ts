@@ -1779,6 +1779,27 @@ export function useRevokeRole() {
   })
 }
 
+/** 站务代改成员领域：科目领域、审稿领域与审稿标签。 */
+export function useUpdateUserAreas() {
+  const qc = useQueryClient()
+  return useMutation<
+    UserResponse,
+    Error,
+    {
+      userId: number
+      subject_disciplines: string[]
+      reviewer_disciplines: string[]
+      reviewer_tags: string[]
+    }
+  >({
+    mutationFn: async ({ userId, ...body }) =>
+      (await api.patch<UserResponse>(`/admin/users/${userId}/areas`, body)).data,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['admin', 'users'] })
+    },
+  })
+}
+
 // --- 作者申诉（Appeal） -----------------------------------------------------
 
 export function useMyAppeals() {

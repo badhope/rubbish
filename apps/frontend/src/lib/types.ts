@@ -48,6 +48,8 @@ export interface UserResponse {
   department?: string | null
   academic_title?: string | null
   research_interests?: string | null
+  /** 科目领域（Discipline.slug 数组；迁移 075，公开主页可见） */
+  subject_disciplines?: string[] | null
   reviewer_tags?: string[] | null
   /** 受控学科标签（Discipline.slug 数组；迁移 057） */
   reviewer_disciplines?: string[] | null
@@ -81,6 +83,7 @@ export type UserProfileUpdate = Partial<
     | 'department'
     | 'academic_title'
     | 'research_interests'
+    | 'subject_disciplines'
     | 'reviewer_tags'
     | 'reviewer_disciplines'
     | 'website'
@@ -1582,6 +1585,9 @@ export interface RoleApplicationItem {
   target_role: 'reviewer' | 'senior_reviewer'
   status: 'pending' | 'approved' | 'rejected'
   statement: string
+  subject_disciplines?: string[]
+  reviewer_disciplines?: string[]
+  reviewer_tags?: string[]
   decision_note?: string | null
   decided_by?: number | null
   decided_at?: string | null

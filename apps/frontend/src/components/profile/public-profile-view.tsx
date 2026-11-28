@@ -18,6 +18,7 @@ import {
   Users,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useDisciplines } from '@/hooks/api/use-modules'
 import type { PublicProfile } from '@/hooks/api/use-profile'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -86,6 +87,12 @@ export function PublicProfileView({
   const [tab, setTab] = useState<ProfileTab>('works')
   const [shared, setShared] = useState(false)
   const lastSpokeAt = profile.topics[0]?.created_at ?? null
+  const disciplines = useDisciplines()
+  const disciplineNames = new Map((disciplines.data ?? []).map((item) => [item.slug, item.name]))
+  const subjectAreas = (user.subject_disciplines ?? []).map((slug) => ({
+    slug,
+    name: disciplineNames.get(slug) ?? slug,
+  }))
   const links = [
     user.website ? { href: user.website, label: '个人网站', icon: Globe2 } : null,
     user.google_scholar
@@ -425,6 +432,33 @@ export function PublicProfileView({
             <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
               <Card>
                 <CardContent className="space-y-4 pt-5 text-sm">
+                  {subjectAreas.length > 0 ? (
+                    <div className="border-b pb-4">
+                      <h2 className="text-sm font-semibold">科目领域</h2>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {subjectAreas.map((area) => (
+                          <Badge key={area.slug} variant="secondary" className="text-[11px] font-normal">
+                            {area.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ) : profile.is_owner ? (
+                    <div className="border-b pb-4">
+                      <h2 className="text-sm font-semibold">科目领域</h2>
+                      <p className="mt-1.5 text-muted-foreground">
+                        还没有选科目领域。
+                        <Link
+                          to="/me"
+                          search={{ tab: 'settings', section: 'profile' }}
+                          className="ml-1 text-primary hover:underline"
+                        >
+                          去资料页补上
+                        </Link>
+                        。
+                      </p>
+                    </div>
+                  ) : null}
                   <div>
                     <h2 className="text-sm font-semibold">关注方向</h2>
                     {user.research_interests ? (

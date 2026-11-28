@@ -85,6 +85,11 @@ class RoleApplicationResponse(BaseModel):
     target_role: str
     status: str
     statement: str
+    # 申请人领域画像：给站务判断“这个方向缺不缺人”，不把审稿领域
+    # 写进前台申请回执以外的公开面。
+    subject_disciplines: list[str] = Field(default_factory=list)
+    reviewer_disciplines: list[str] = Field(default_factory=list)
+    reviewer_tags: list[str] = Field(default_factory=list)
     decision_note: str | None = None
     decided_by: int | None = None
     # 用 datetime 而非 object：object 会让 OpenAPI 生成字符串类型，
@@ -324,7 +329,11 @@ async def get_level_detail(level: int) -> dict[str, object]:
 _ROLE_LABELS = {"reviewer": "互评成员", "senior_reviewer": "资深互评成员"}
 
 
-def _application_response(row: RoleApplication, username: str | None) -> RoleApplicationResponse:
+def _application_response(
+    row: RoleApplication,
+    username: str | None,
+    user: User | None = None,
+) -> RoleApplicationResponse:
     return RoleApplicationResponse(
         id=row.id,
         user_id=row.user_id,
@@ -332,6 +341,9 @@ def _application_response(row: RoleApplication, username: str | None) -> RoleApp
         target_role=row.target_role,
         status=row.status,
         statement=row.statement,
+        subject_disciplines=list(user.subject_disciplines or []) if user else [],
+        reviewer_disciplines=list(user.reviewer_disciplines or []) if user else [],
+        reviewer_tags=list(user.reviewer_tags or []) if user else [],
         decision_note=row.decision_note,
         decided_by=row.decided_by,
         decided_at=row.decided_at,
@@ -410,7 +422,9 @@ async def my_applications(
     already_reviewer = "reviewer" in roles
     already_senior = "senior_reviewer" in roles
     return {
-        "applications": [_application_response(r, current_user.username) for r in rows],
+        "applications": [
+            _application_response(r, current_user.username, current_user) for r in rows
+        ],
         "eligibility": {
             "reviewer": {
                 **reviewer,
@@ -517,7 +531,7 @@ async def create_application(
     await _notify_admins_new_application(db, tenant_id, row, current_user.username)
     # 通知失败时 helper 会 rollback；重新读一次，确保响应不依赖已过期的对象。
     await db.refresh(row)
-    return _application_response(row, current_user.username)
+    return _application_response(row, current_user.username, current_user)
 
 
 @router.get("/admin/applications", response_model=RoleApplicationListResponse)
@@ -546,12 +560,19 @@ async def list_applications(
         order_by=(RoleApplication.created_at.desc(), RoleApplication.id.desc()),
     )
     user_ids = list({r.user_id for r in rows})
-    names: dict[int, str] = {}
+    applicants: dict[int, User] = {}
     if user_ids:
-        result = await db.execute(select(User.id, User.username).where(User.id.in_(user_ids)))
-        names = {uid: uname for uid, uname in result.all()}
+        result = await db.execute(select(User).where(User.id.in_(user_ids)))
+        applicants = {u.id: u for u in result.scalars().all()}
     return RoleApplicationListResponse(
-        data=[_application_response(r, names.get(r.user_id)) for r in rows],
+        data=[
+            _application_response(
+                r,
+                applicants[r.user_id].username if r.user_id in applicants else None,
+                applicants.get(r.user_id),
+            )
+            for r in rows
+        ],
         meta=meta,
     )
 

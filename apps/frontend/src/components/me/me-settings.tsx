@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { ExternalLink, Settings2 } from 'lucide-react'
 import { useMe, useResendVerification } from '@/hooks/api/use-auth'
 import { ProfileDetailsCard } from '@/components/settings/profile-details-card'
+import { ProfileAreasCard } from '@/components/settings/profile-areas-card'
 import { NotificationPrefsCard } from '@/components/settings/notification-prefs-card'
 import { TwoFactorSection } from '@/components/settings/two-factor-section'
 import { ChangePasswordCard } from '@/components/settings/change-password-card'
@@ -97,6 +98,7 @@ export function MeSettings({ username, initialSection }: { username: string; ini
                 </Button>
               ) : null}
             </div>
+            <ProfileAreasCard key={`areas-${me?.id ?? 'empty'}`} initial={me ?? undefined} />
             <ProfileDetailsCard key={me?.id ?? 'profile-empty'} initial={me ?? undefined} />
           </>
         ) : null}

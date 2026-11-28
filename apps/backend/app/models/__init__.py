@@ -206,6 +206,13 @@ class User(Base, TenantScopedMixin):
     department: Mapped[str | None] = mapped_column(String(200), nullable=True)
     academic_title: Mapped[str | None] = mapped_column(String(100), nullable=True)
     research_interests: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # 用户自报的科目领域（迁移 075）：受控词表 Discipline.slug 数组。
+    # 与 reviewer_disciplines 分开：这里回答“我写什么/关心什么”，公开
+    # 主页可以展示；审稿领域回答“我能评什么”，只在互评匹配与站务后台用，
+    # 不进公开主页，避免把“谁审过哪篇”从侧面暴露出来。
+    subject_disciplines: Mapped[list[str]] = mapped_column(
+        JSONBVariant, nullable=False, default=list, server_default="[]"
+    )
     # 互评能力标签（P1-7）：自由文本短标签，参与候选匹配；空数组表示未填写。
     # 与 research_interests 分开：后者是主页展示的研究兴趣，前者是可用于
     # 分派解释的能力标签，编辑不会因为一句简介就被当成专家。

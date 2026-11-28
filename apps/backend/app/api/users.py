@@ -107,9 +107,18 @@ async def update_me(
     if "bio" in payload.model_fields_set:
         current_user.bio = payload.bio
     # 受控学科标签：租户配置了词表才严格校验（与 catalog onto 宽松模式一致）。
-    if "reviewer_disciplines" in payload.model_fields_set and payload.reviewer_disciplines:
-        from app.domain.catalog.models import Discipline
+    # 科目领域与审稿领域共用同一套 slug，但库存字段分开。
+    from app.domain.catalog.models import Discipline
 
+    for field_name, label in (
+        ("subject_disciplines", "科目领域"),
+        ("reviewer_disciplines", "审稿领域"),
+    ):
+        if field_name not in payload.model_fields_set:
+            continue
+        values = getattr(payload, field_name)
+        if not values:
+            continue
         tenant_id = require_tenant_id()
         known = set(
             (await db.execute(select(Discipline.slug).where(Discipline.tenant_id == tenant_id)))
@@ -117,11 +126,11 @@ async def update_me(
             .all()
         )
         if known:
-            unknown = [slug for slug in payload.reviewer_disciplines if slug not in known]
+            unknown = [slug for slug in values if slug not in known]
             if unknown:
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=f"未知话题标签：{', '.join(unknown)}",
+                    detail=f"未知{label}：{', '.join(unknown)}",
                 )
     # 扩展资料：字段出现即写入，缺键保持不变。空串在 schema 层已归一为 None。
     for field in (
@@ -131,6 +140,7 @@ async def update_me(
         "department",
         "academic_title",
         "research_interests",
+        "subject_disciplines",
         "reviewer_tags",
         "reviewer_disciplines",
         "website",
@@ -250,6 +260,9 @@ def _public_user(user: User) -> dict[str, object]:
         "department": user.department,
         "academic_title": user.academic_title,
         "research_interests": user.research_interests,
+        # 科目领域可以公开；审稿领域与能力标签不进公开响应，
+        # 避免从“谁标了哪些审稿方向”反推匿名互评身份。
+        "subject_disciplines": list(user.subject_disciplines or []),
         "location": user.location,
         "website": user.website,
         "google_scholar": user.google_scholar,

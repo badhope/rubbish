@@ -637,6 +637,7 @@ async def export_my_data(
         "department": current_user.department,
         "academic_title": current_user.academic_title,
         "research_interests": current_user.research_interests,
+        "subject_disciplines": current_user.subject_disciplines,
         "reviewer_tags": current_user.reviewer_tags,
         "reviewer_disciplines": current_user.reviewer_disciplines,
         "website": current_user.website,

@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2, ChevronLeft, ChevronRight, Clock3, UserRoundCheck, XCircle } from 'lucide-react'
+import { ArrowUpRight, CheckCircle2, ChevronLeft, ChevronRight, Clock3, UserRoundCheck, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/lib/api'
+import { useDisciplines } from '@/hooks/api/use-modules'
 import { extractError } from '@/lib/utils'
 import type { AdminRoleApplications, RoleApplicationItem } from '@/lib/types'
 import { PageHeader } from '@/components/common/page-header'
@@ -109,6 +111,8 @@ export default function RolesPage({
   })
 
   const items = query.data?.data ?? []
+  const disciplines = useDisciplines()
+  const disciplineNames = new Map((disciplines.data ?? []).map((item) => [item.slug, item.name]))
   const meta = query.data?.meta
   const pendingCount = pendingQuery.data?.meta.total ?? 0
   const totalPages = meta?.total_pages ?? 1
@@ -211,10 +215,64 @@ export default function RolesPage({
                 <div className="flex flex-wrap items-center gap-2">
                   {statusBadge(item.status)}
                   <Badge variant="outline">{ROLE_LABELS[item.target_role] ?? item.target_role}</Badge>
-                  <span className="text-sm font-medium">{item.username ?? `用户 #${item.user_id}`}</span>
+                  {item.username ? (
+                    <Link
+                      to="/u/$username"
+                      params={{ username: item.username }}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-0.5 text-sm font-medium hover:text-primary hover:underline"
+                      title="打开申请人公开主页"
+                    >
+                      {item.username}
+                      <ArrowUpRight className="h-3 w-3 text-muted-foreground" />
+                    </Link>
+                  ) : (
+                    <span className="text-sm font-medium">用户 #{item.user_id}</span>
+                  )}
                   <span className="ml-auto text-xs text-muted-foreground">{dateText(item.created_at)}</span>
                 </div>
                 <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed">{item.statement}</p>
+                {(item.subject_disciplines ?? []).length > 0 ||
+                (item.reviewer_disciplines ?? []).length > 0 ||
+                (item.reviewer_tags ?? []).length > 0 ? (
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
+                    {(item.subject_disciplines ?? []).length > 0 ? (
+                      <>
+                        <span className="text-muted-foreground">科目</span>
+                        {(item.subject_disciplines ?? []).map((slug) => (
+                          <Badge key={slug} variant="secondary" className="text-[10px] font-normal">
+                            {disciplineNames.get(slug) ?? slug}
+                          </Badge>
+                        ))}
+                      </>
+                    ) : null}
+                    {(item.reviewer_disciplines ?? []).length > 0 ? (
+                      <>
+                        <span className="ml-1 text-muted-foreground">审稿</span>
+                        {(item.reviewer_disciplines ?? []).map((slug) => (
+                          <Badge key={slug} variant="outline" className="text-[10px] font-normal">
+                            {disciplineNames.get(slug) ?? slug}
+                          </Badge>
+                        ))}
+                      </>
+                    ) : null}
+                    {(item.reviewer_tags ?? []).length > 0 ? (
+                      <>
+                        <span className="ml-1 text-muted-foreground">能力</span>
+                        {(item.reviewer_tags ?? []).map((tag) => (
+                          <Badge key={tag} variant="outline" className="text-[10px] font-normal">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </>
+                    ) : null}
+                  </div>
+                ) : item.status === 'pending' ? (
+                  <p className="mt-2 text-[11px] text-amber-700">
+                    申请人还没填科目与审稿领域；可先在成员管理里补，再决定。
+                  </p>
+                ) : null}
                 {item.decision_note ? (
                   <p className="mt-2 rounded-md bg-muted/60 px-3 py-2 text-xs leading-relaxed">
                     处理说明：{item.decision_note}

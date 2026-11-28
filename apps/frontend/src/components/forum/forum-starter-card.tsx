@@ -161,7 +161,11 @@ export function ForumStarterCard() {
           className="h-8"
         >
           <Sparkles className="h-3.5 w-3.5" />
-          {claim.isPending ? '领取中…' : `领取 ${data.reward_xp} 经验`}
+          {claim.isPending
+            ? '领取中…'
+            : data.all_done
+              ? `领取 ${data.reward_xp} 经验`
+              : `还差 ${data.total - data.completed} 项`}
         </Button>
       </div>
     </div>

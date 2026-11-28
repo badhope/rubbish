@@ -9,11 +9,13 @@ import {
   useRevokeRole,
   useSetUserActive,
   useSetUserAdmin,
+  useUpdateUserAreas,
 } from '@/hooks/api/use-modules'
 import { useAuth } from '@/hooks/use-auth'
 import type { AssignableRole, UserResponse } from '@/lib/types'
 import { extractError, formatDateTime, inferTotalPagesFromFullPage } from '@/lib/utils'
 import { roleLabel } from '@/lib/role-labels'
+import { DisciplinePicker } from '@/components/settings/discipline-picker'
 import { PageHeader } from '@/components/common/page-header'
 import { ConfirmDialog } from '@/components/common/confirm-dialog'
 import { Pagination } from '@/components/common/pagination'
@@ -112,10 +114,16 @@ export default function AdminUsersPage() {
   const revokeRoleMut = useRevokeRole()
   const createUserMut = useCreateAdminUser()
   const grantXpMut = useGrantUserXp()
+  const updateAreasMut = useUpdateUserAreas()
   const [grantTarget, setGrantTarget] = useState<UserResponse | null>(null)
   const [grantPoints, setGrantPoints] = useState('100')
   const [grantNote, setGrantNote] = useState('')
   const [grantError, setGrantError] = useState('')
+  const [areasTarget, setAreasTarget] = useState<UserResponse | null>(null)
+  const [areasSubjects, setAreasSubjects] = useState<string[]>([])
+  const [areasReviewer, setAreasReviewer] = useState<string[]>([])
+  const [areasTags, setAreasTags] = useState('')
+  const [areasError, setAreasError] = useState('')
   const { user } = useAuth()
 
   // 后端返回裸数组无 meta，totalPages 用「当前页是否满页」推断（与审计日志页共用）。
@@ -162,11 +170,20 @@ export default function AdminUsersPage() {
     }
   }
 
+  const openAreas = (u: UserResponse) => {
+    setAreasTarget(u)
+    setAreasSubjects(u.subject_disciplines ?? [])
+    setAreasReviewer(u.reviewer_disciplines ?? [])
+    setAreasTags((u.reviewer_tags ?? []).join('、'))
+    setAreasError('')
+    setOpenUserId(null)
+  }
+
   return (
     <div>
       <PageHeader
         title="成员管理"
-        description="管理用户、启用状态与社区角色分配。读者身份=注册即得，作者身份=确认《边界与处理》即得，均不在此分配。"
+        description="管理用户、启用状态与社区角色分配；科目与审稿领域可从行末菜单代改。读者身份=注册即得，作者身份=确认《边界与处理》即得，均不在此分配。"
         actions={
           <div className="flex items-center gap-2">
             {data ? <Badge variant="secondary">本页 {data.length} 人</Badge> : null}
@@ -208,7 +225,7 @@ export default function AdminUsersPage() {
                 <TableHead>状态</TableHead>
                 <TableHead>邮箱验证</TableHead>
                 <TableHead>注册时间</TableHead>
-                <TableHead className="w-12" />
+                <TableHead className="w-12 text-right">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -222,6 +239,20 @@ export default function AdminUsersPage() {
                       <span>{u.username}</span>
                       <span className="ml-2 text-[11px] font-normal text-muted-foreground">
                         活跃 Lv {u.level ?? 1}
+                      </span>
+                      <span className="mt-0.5 block text-[11px] font-normal text-muted-foreground">
+                        {(u.subject_disciplines ?? []).length > 0 || (u.reviewer_disciplines ?? []).length > 0
+                          ? [
+                              (u.subject_disciplines ?? []).length > 0
+                                ? `科目 ${(u.subject_disciplines ?? []).length}`
+                                : null,
+                              (u.reviewer_disciplines ?? []).length > 0
+                                ? `审稿 ${(u.reviewer_disciplines ?? []).length}`
+                                : null,
+                            ]
+                              .filter(Boolean)
+                              .join(' · ')
+                          : '未填领域'}
                       </span>
                     </TableCell>
                     <TableCell className="max-w-[220px] truncate text-muted-foreground" title={u.email}>
@@ -270,6 +301,10 @@ export default function AdminUsersPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
                           <DropdownMenuLabel>用户操作</DropdownMenuLabel>
+                          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); openAreas(u) }}>
+                            领域资料
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onSelect={(e) => {
                               e.preventDefault()
@@ -508,6 +543,85 @@ export default function AdminUsersPage() {
               }}
             >
               {grantXpMut.isPending ? '发放中…' : '确认发放'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={areasTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setAreasTarget(null)
+        }}
+      >
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>领域资料</DialogTitle>
+            <DialogDescription>
+              代 {areasTarget?.username ?? '该成员'} 补齐科目领域与审稿领域。科目领域会展示在公开主页；
+              审稿领域与能力标签只用于互评匹配和站务审阅。改动会写审计日志。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <DisciplinePicker
+                label="科目领域"
+                value={areasSubjects}
+                onChange={setAreasSubjects}
+                max={6}
+                helper="公开主页可见，最多 6 个。"
+              />
+              <DisciplinePicker
+                label="审稿人领域"
+                value={areasReviewer}
+                onChange={setAreasReviewer}
+                max={10}
+                helper="只进互评匹配，最多 10 个。"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="admin-area-tags">审稿能力标签</Label>
+              <Input
+                id="admin-area-tags"
+                value={areasTags}
+                maxLength={300}
+                placeholder="如：质性研究、田野调查、统计分析、代码复现"
+                onChange={(e) => setAreasTags(e.target.value)}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                用顿号、逗号或分号分隔，最多 20 个；不会出现在公开主页。
+              </p>
+            </div>
+            {areasError ? <p className="text-sm text-destructive">{areasError}</p> : null}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAreasTarget(null)}>
+              取消
+            </Button>
+            <Button
+              disabled={updateAreasMut.isPending}
+              onClick={async () => {
+                if (!areasTarget) return
+                setAreasError('')
+                try {
+                  await updateAreasMut.mutateAsync({
+                    userId: areasTarget.id,
+                    subject_disciplines: areasSubjects,
+                    reviewer_disciplines: areasReviewer,
+                    reviewer_tags: areasTags
+                      .split(/[,，;；、\n]/)
+                      .map((tag) => tag.trim())
+                      .filter(Boolean)
+                      .slice(0, 20),
+                  })
+                  toast.success(`已更新 ${areasTarget.username} 的领域资料`)
+                  setAreasTarget(null)
+                } catch (err) {
+                  setAreasError(extractError(err, '领域保存失败，可再试一次'))
+                }
+              }}
+            >
+              {updateAreasMut.isPending ? '保存中…' : '保存领域'}
             </Button>
           </DialogFooter>
         </DialogContent>
