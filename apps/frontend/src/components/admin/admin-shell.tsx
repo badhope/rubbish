@@ -46,9 +46,19 @@ export function AdminShell() {
   const roles = user?.roles ?? []
   const canEconomy =
     isAdmin || roles.some((role) => ['chief_editor', 'deputy_editor', 'editor_in_chief', 'shop_manager'].includes(role))
+  // 普通编辑可改“访问设置”，但系统健康、审计和月报仍只给管理员。
+  const canAccessSettings =
+    isAdmin ||
+    roles.some((role) =>
+      ['editor', 'chief_editor', 'deputy_editor', 'editor_in_chief', 'section_editor', 'board_editor'].includes(role),
+    )
   const visibleDomains = isAdmin
     ? DOMAINS
-    : DOMAINS.filter((domain) => domain.key === 'economy' && canEconomy)
+    : DOMAINS.filter(
+        (domain) =>
+          (domain.key === 'economy' && canEconomy) ||
+          (domain.key === 'system' && canAccessSettings),
+      )
   const activeDomain = visibleDomains.find((domain) => domain.paths.some((path) => isActive(pathname, path)))
 
   return (
@@ -77,7 +87,7 @@ export function AdminShell() {
                   )}
                 >
                   <Icon className="hidden h-3.5 w-3.5 sm:block" />
-                  {domain.label}
+                  {domain.key === 'system' && !isAdmin ? '访问设置' : domain.label}
                   {active ? <span aria-hidden className="absolute inset-x-2 bottom-0 h-0.5 bg-primary" /> : null}
                 </Link>
               )

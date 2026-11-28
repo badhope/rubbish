@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pytest
-from conftest import auth_headers
+from conftest import auth_headers, register_user
 from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -271,3 +271,47 @@ async def test_admin_creates_invited_reviewer_account(
 
     duplicate = await client.post("/api/admin/users", json=body, headers=auth_headers(admin_user))
     assert duplicate.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_editor_can_manage_site_settings_but_plain_user_cannot(
+    client: AsyncClient, admin_user: dict, test_user: dict, db_session: AsyncSession
+) -> None:
+    """访问设置对编辑开放；普通成员仍不能读或改。"""
+    granted = await client.post(
+        f"/api/admin/users/{test_user['user_id']}/roles",
+        json={"role": "editor"},
+        headers=auth_headers(admin_user),
+    )
+    assert granted.status_code == 201, granted.text
+    editor_headers = auth_headers(test_user)
+
+    readable = await client.get("/api/admin/settings/site", headers=editor_headers)
+    assert readable.status_code == 200
+
+    changed = await client.patch(
+        "/api/admin/settings/site",
+        json={"doi_author_entry_enabled": False, "registration_invite_code": "  custom-code  "},
+        headers=editor_headers,
+    )
+    assert changed.status_code == 200, changed.text
+    assert changed.json()["doi_author_entry_enabled"] is False
+    assert changed.json()["registration_invite_code"] == "CUSTOM-CODE"
+
+    audit = await db_session.execute(
+        select(AuditLog).where(
+            AuditLog.action == "admin.settings.site",
+            AuditLog.actor_user_id == test_user["user_id"],
+        )
+    )
+    assert audit.scalars().first() is not None
+
+    plain = await register_user(client, email="plain@example.com", username="plainuser")
+    denied_read = await client.get("/api/admin/settings/site", headers=auth_headers(plain))
+    assert denied_read.status_code == 403
+    denied_write = await client.patch(
+        "/api/admin/settings/site",
+        json={"doi_author_entry_enabled": True},
+        headers=auth_headers(plain),
+    )
+    assert denied_write.status_code == 403

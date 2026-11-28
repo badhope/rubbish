@@ -970,9 +970,9 @@ async def _site_settings_payload(
 @router.get("/settings/site", response_model=SiteSettingsResponse)
 async def get_site_settings(
     db: AsyncSession = Depends(get_db),
-    current_admin: User = Depends(require_admin),
+    current_editor: User = Depends(require_editor),
 ) -> SiteSettingsResponse:
-    """读取本租户的访问与注册开关（运行时可改，重启后仍在）。"""
+    """读取本租户的访问与注册开关（编辑及以上可读，运行时可改）。"""
     tenant_id = require_tenant_id()
     return await _site_settings_payload(db, tenant_id)
 
@@ -981,12 +981,12 @@ async def get_site_settings(
 async def update_site_settings(
     payload: SiteSettingsUpdate,
     db: AsyncSession = Depends(get_db),
-    current_admin: User = Depends(require_admin),
+    current_editor: User = Depends(require_editor),
 ) -> SiteSettingsResponse:
-    """局部更新访问/注册开关；未传的键保持不变，写审计日志。
+    """局部更新访问/注册开关；编辑及以上可改，未传的键保持不变，写审计日志。
 
     打开邀请码但库里还没有可用码时，顺手生成一枚，避免运营把开关
-    打开却把注册入口锁死。
+    打开却把注册入口锁死。邀请码保存前统一去空格并转大写。
     """
     tenant_id = require_tenant_id()
     updates = payload.model_dump(exclude_none=True)
@@ -1001,14 +1001,15 @@ async def update_site_settings(
     for key, value in flag_updates.items():
         await set_site_flag(db, tenant_id, key, value)
     if "registration_invite_code" in updates:
+        updates["registration_invite_code"] = str(updates["registration_invite_code"]).strip().upper()
         await set_site_text(
-            db, tenant_id, "registration_invite_code", str(updates["registration_invite_code"])
+            db, tenant_id, "registration_invite_code", updates["registration_invite_code"]
         )
     if updates:
         db.add(
             AuditLog(
                 tenant_id=tenant_id,
-                actor_user_id=current_admin.id,
+                actor_user_id=current_editor.id,
                 action="admin.settings.site",
                 target_type="tenant",
                 target_id=str(tenant_id),
@@ -1025,7 +1026,7 @@ async def update_site_settings(
         db.add(
             AuditLog(
                 tenant_id=tenant_id,
-                actor_user_id=current_admin.id,
+                actor_user_id=current_editor.id,
                 action="admin.settings.invite_code",
                 target_type="tenant",
                 target_id=str(tenant_id),
@@ -1041,16 +1042,16 @@ async def update_site_settings(
 @router.post("/settings/invite-code", response_model=SiteSettingsResponse)
 async def generate_site_invite_code(
     db: AsyncSession = Depends(get_db),
-    current_admin: User = Depends(require_admin),
+    current_editor: User = Depends(require_editor),
 ) -> SiteSettingsResponse:
-    """生成新的注册邀请码；只替换码，不改邀请码开关。"""
+    """生成新的注册邀请码；编辑及以上可生成，只替换码，不改邀请码开关。"""
     tenant_id = require_tenant_id()
     code = generate_registration_invite_code()
     await set_site_text(db, tenant_id, "registration_invite_code", code)
     db.add(
         AuditLog(
             tenant_id=tenant_id,
-            actor_user_id=current_admin.id,
+            actor_user_id=current_editor.id,
             action="admin.settings.invite_code",
             target_type="tenant",
             target_id=str(tenant_id),
