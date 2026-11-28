@@ -121,7 +121,7 @@ class S3Storage:
         if not bucket:
             raise StorageError("STORAGE_BACKEND=s3 requires RUBBISH_S3_BUCKET")
         self._bucket = bucket
-        self._client: Any = boto3.client(
+        self._client: Any = boto3.client(  # type: ignore[no-untyped-call]
             "s3",
             endpoint_url=endpoint_url or None,
             region_name=region or None,

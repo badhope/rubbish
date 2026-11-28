@@ -231,14 +231,14 @@ async def export_my_data(
     def iso(value: datetime | None) -> str | None:
         return value.isoformat() if value else None
 
-    async def scalar_rows(stmt) -> list[Any]:
-        rows = (await db.execute(stmt.limit(section_limit + 1))).scalars().all()
+    async def scalar_rows(stmt: Any) -> list[Any]:
+        rows: list[Any] = list((await db.execute(stmt.limit(section_limit + 1))).scalars().all())
         if len(rows) > section_limit:
             truncated[stmt_key] = len(rows) - 1
         return rows[:section_limit]
 
-    async def tuple_rows(stmt) -> list[Any]:
-        rows = (await db.execute(stmt.limit(section_limit + 1))).all()
+    async def tuple_rows(stmt: Any) -> list[Any]:
+        rows: list[Any] = list((await db.execute(stmt.limit(section_limit + 1))).all())
         if len(rows) > section_limit:
             truncated[stmt_key] = len(rows) - 1
         return rows[:section_limit]

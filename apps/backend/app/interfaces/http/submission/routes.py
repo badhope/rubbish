@@ -11,6 +11,7 @@ import difflib
 import logging
 import mimetypes
 from pathlib import Path
+from typing import Any, cast
 from urllib.parse import quote
 
 from fastapi import (
@@ -23,6 +24,7 @@ from fastapi import (
 )
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -923,14 +925,17 @@ async def author_withdraw(
         .all()
     )
     cancelled = (
-        await db.execute(
-            _update(_RA)
-            .where(
-                _RA.submission_id == entry.id,
-                _RA.tenant_id == entry.tenant_id,
-                _RA.status.in_(("pending", "accepted")),
-            )
-            .values(status="cancelled")
+        cast(
+            "CursorResult[Any]",
+            await db.execute(
+                _update(_RA)
+                .where(
+                    _RA.submission_id == entry.id,
+                    _RA.tenant_id == entry.tenant_id,
+                    _RA.status.in_(("pending", "accepted")),
+                )
+                .values(status="cancelled")
+            ),
         )
     ).rowcount or 0
     entry.status = "withdrawn"

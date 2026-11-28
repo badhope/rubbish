@@ -90,6 +90,7 @@ def _to_response(
         cover_image=entry.cover_image,
         file_path=entry.file_path,
         markdown_path=entry.markdown_path,
+        source=getattr(entry, "source", "human"),
         submitted_by=entry.submitted_by,
         submitted_at=entry.submitted_at,
         reviewed_by=entry.reviewed_by,

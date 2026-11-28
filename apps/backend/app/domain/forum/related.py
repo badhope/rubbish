@@ -73,7 +73,7 @@ def _work_score(work: Resource, paper: Resource) -> tuple[int, str | None]:
     return score, "同一方向"
 
 
-def _visible_topics() -> Select[tuple[ForumTopic]]:
+def _visible_topics() -> Select[ForumTopic]:
     return select(ForumTopic).where(
         ForumTopic.deleted_at.is_(None),
         or_(

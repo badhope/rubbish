@@ -107,7 +107,7 @@ class ReviewAssignment(Base, TenantScopedMixin):
     )
     external_affiliation: Mapped[str | None] = mapped_column(String(120), nullable=True)
 
-    submission = relationship("Submission", backref="review_assignments")
+    submission = relationship("Submission", back_populates="review_assignments")
     reviewer = relationship("User", foreign_keys="ReviewAssignment.reviewer_id")
     assigner = relationship("User", foreign_keys="ReviewAssignment.assigned_by")
     report: Mapped[list[ReviewReport]] = relationship(

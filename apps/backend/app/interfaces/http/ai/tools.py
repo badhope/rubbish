@@ -14,6 +14,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
+from uuid import UUID
 
 from fastapi import HTTPException, status
 from fastapi.encoders import jsonable_encoder
@@ -42,12 +43,16 @@ from app.interfaces.http.ai.scopes import (
 from app.interfaces.http.review.schemas import AssignmentCreate, ReviewSubmit
 from app.interfaces.http.submission.responses import _get_or_404, _to_response
 from app.interfaces.http.submission.schemas import (
+    AuthorResponseUpdate,
+    ResubmitRequest,
     SubmissionCreate,
     SubmissionDecision,
+    SubmissionResponse,
     SubmissionUpdate,
     TriageRequest,
+    WithdrawRequest,
 )
-from app.models import AuditLog
+from app.models import ApiToken, AuditLog, User
 
 MAX_AI_SUBMISSIONS_PER_HOUR = 10
 MAX_BODY_BYTES = 1_000_000
@@ -67,15 +72,15 @@ class ToolContext:
     db: Any  # AsyncSession
 
     @property
-    def user(self):
+    def user(self) -> User:
         return self.identity.user
 
     @property
-    def token(self):
+    def token(self) -> ApiToken:
         return self.identity.token
 
     @property
-    def tenant_id(self):
+    def tenant_id(self) -> UUID:
         return self.identity.user.tenant_id
 
 
@@ -189,12 +194,12 @@ def _quality_payload(
     return errors, warnings
 
 
-async def _latest_version(ctx: ToolContext, submission: Submission) -> int:
+async def _latest_version(ctx: ToolContext, submission: Submission | SubmissionResponse) -> int:
     value = (
         await ctx.db.execute(
             select(func.max(SubmissionVersion.version)).where(
                 SubmissionVersion.submission_id == submission.id,
-                SubmissionVersion.tenant_id == submission.tenant_id,
+                SubmissionVersion.tenant_id == ctx.tenant_id,
             )
         )
     ).scalar()
@@ -218,7 +223,7 @@ async def _latest_versions(ctx: ToolContext, ids: list[int]) -> dict[int, int]:
 
 
 def _submission_summary(
-    entry: Submission, latest_version: int, *, replayed: bool = False
+    entry: Submission | SubmissionResponse, latest_version: int, *, replayed: bool = False
 ) -> dict[str, Any]:
     return {
         "id": entry.id,
@@ -554,7 +559,7 @@ async def _resubmit(ctx: ToolContext, args: dict[str, Any]) -> Any:
         raise HTTPException(status_code=403, detail="只能重新提交自己的作品")
     if expected is not None and await _latest_version(ctx, entry) != expected:
         raise HTTPException(status_code=409, detail="作品版本已变化，请重新读取后再重投")
-    from app.interfaces.http.submission.routes import ResubmitRequest, author_resubmit
+    from app.interfaces.http.submission.routes import author_resubmit
 
     result = await author_resubmit(
         submission_id,
@@ -569,7 +574,7 @@ async def _respond(ctx: ToolContext, args: dict[str, Any]) -> Any:
     _require_confirm(args, "回复互评意见")
     submission_id = _required_int(args, "submission_id", minimum=1)
     response = _required_text(args, "response", max_length=20_000)
-    from app.interfaces.http.submission.routes import AuthorResponseUpdate, author_response
+    from app.interfaces.http.submission.routes import author_response
 
     result = await author_response(
         submission_id, AuthorResponseUpdate(response=response), ctx.user, ctx.db
@@ -581,7 +586,7 @@ async def _withdraw(ctx: ToolContext, args: dict[str, Any]) -> Any:
     _require_confirm(args, "撤稿")
     submission_id = _required_int(args, "submission_id", minimum=1)
     reason = _required_text(args, "reason", max_length=2000)
-    from app.interfaces.http.submission.routes import WithdrawRequest, author_withdraw
+    from app.interfaces.http.submission.routes import author_withdraw
 
     result = await author_withdraw(submission_id, WithdrawRequest(reason=reason), ctx.user, ctx.db)
     return _submission_summary(result, await _latest_version(ctx, result))

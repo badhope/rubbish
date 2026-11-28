@@ -30,7 +30,7 @@ NEWBIE_REF_ID = "v1"
 
 
 async def _scalar_count(db: AsyncSession, stmt: Any) -> int:
-    value = (await db.execute(stmt)).scalar_one()
+    value: Any = (await db.execute(stmt)).scalar_one()
     return int(value or 0)
 
 

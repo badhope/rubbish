@@ -124,7 +124,7 @@ async def _load_article_docs(
     ).all()
     markdown_paths: dict[int, str] = {}
     for resource_id, path in rows:
-        markdown_paths.setdefault(int(resource_id), str(path))
+        markdown_paths.setdefault(int(resource_id or 0), str(path))
 
     storage = get_storage()
     documents: list[tuple[Resource, str]] = []

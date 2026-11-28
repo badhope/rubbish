@@ -16,6 +16,7 @@ Two tables, both tenant-scoped with RLS:
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
@@ -95,7 +96,9 @@ class ForumTopic(Base, TenantScopedMixin):
     )
     risk_score: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
     # 规则命中明细：[{code,label,detail,weight}]，给运营看，不把内部规则粗暴暴露给普通用户。
-    moderation_signals: Mapped[list[dict] | None] = mapped_column(JSONBVariant, nullable=True)
+    moderation_signals: Mapped[list[dict[str, Any]] | None] = mapped_column(
+        JSONBVariant, nullable=True
+    )
     manual_review_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     review_eta_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     # SLA 超时提醒只发一次；重新进入人工核验时由路由清零，避免重复轰炸。
@@ -282,7 +285,7 @@ class ForumModerationEvent(Base, TenantScopedMixin):
     from_status: Mapped[str | None] = mapped_column(String(24), nullable=True)
     to_status: Mapped[str | None] = mapped_column(String(24), nullable=True)
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
-    meta: Mapped[dict | None] = mapped_column(JSONBVariant, nullable=True)
+    meta: Mapped[dict[str, Any] | None] = mapped_column(JSONBVariant, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, nullable=False
     )
@@ -312,7 +315,7 @@ class ForumModerationSetting(Base, TenantScopedMixin):
     sla_minutes: Mapped[int] = mapped_column(
         Integer, nullable=False, default=30, server_default="30"
     )
-    weights: Mapped[dict | None] = mapped_column(JSONBVariant, nullable=True)
+    weights: Mapped[dict[str, Any] | None] = mapped_column(JSONBVariant, nullable=True)
     # 队列 priority 排序的两个权重：风险分 × risk + 等待小时 × age。
     # 默认仍让风险分主导，但长尾积压会随着等待时间自然浮上来。
     priority_risk_weight: Mapped[int] = mapped_column(
@@ -323,7 +326,7 @@ class ForumModerationSetting(Base, TenantScopedMixin):
     )
     # 灰度规则：{"boards": {"site": {"manual_threshold": 20}},
     # "roles": {"user": {"manual_threshold": 30}}}。没有配置就走全站阈值。
-    gray_rules: Mapped[dict | None] = mapped_column(JSONBVariant, nullable=True)
+    gray_rules: Mapped[dict[str, Any] | None] = mapped_column(JSONBVariant, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
     )

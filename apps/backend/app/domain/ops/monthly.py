@@ -9,7 +9,7 @@ spreadsheet.
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, cast
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -78,7 +78,7 @@ async def _daily_counts(
     rows = (
         await db.execute(select(day, func.count().label("n")).where(*conditions).group_by(day))
     ).all()
-    return {str(key): int(count) for key, count in rows}
+    return {str(key): int(cast("int", count)) for key, count in rows}
 
 
 async def build_monthly_report(
@@ -221,9 +221,9 @@ async def build_monthly_report(
         moderator_names = {row.id: (row.display_name or row.username) for row in users}
     top_moderators = [
         {
-            "user_id": int(uid),
-            "name": moderator_names.get(int(uid), f"成员 #{uid}"),
-            "count": int(n),
+            "user_id": int(uid or 0),
+            "name": moderator_names.get(int(uid or 0), f"成员 #{uid}"),
+            "count": int(n or 0),
         }
         for uid, n in moderator_rows
     ]

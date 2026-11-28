@@ -24,6 +24,14 @@
 - 后端 SPA 回落白名单补上 `more`，避免手机端直接打开 `/more` 时被当成拼错地址 404。
 - 回归：前端 typecheck、lint、build 通过；合并远端后的全量测试 **49 个测试文件、254 条测试全部通过**（934.49s，含 `article-preview.test.tsx` 3 条，本轮没有再出现 worker 超时）。
 
+### 后端类型检查清零
+
+- **CI 的 Backend 作业不再红在 mypy 上**：`mypy app` 从 129 条降到 0 条，严格模式下 `--exclude` 的 submission/ingest 之外全绿；补的是标注与库类型覆盖，没有为了过检查改运行时行为。
+- **顺带修掉一个真会炸的路径**：MCP 的「重新提交」拿到的是 `SubmissionResponse`，旧代码却当 ORM 对象读 `entry.source` / `submission.tenant_id`，工具一旦跑通就 AttributeError；现在版本号按调用方租户查，响应模型补上 `source` 字段，新增 `test_mcp_ai_access.py::test_mcp_resubmit_summarises_route_response` 锁住。
+- **互评关系改成显式声明**：`Submission.review_assignments` 由 `backref` 改为 `relationship(back_populates=...)`，mypy 能看见这条关系，签发台与时间线不再靠 `getattr` 兜。
+- **几处类型债的收拾方式**：分页 `Select[_PaginateT]` 泛型按实测形状修正；`ipaddress.BaseNetwork` 在 typeshed 里不导出，换成 `IPv4Network | IPv6Network` 别名；`docxcompose`/`fontTools`/`pypandoc`/`sentry_sdk` 走 `ignore_missing_imports` 而不是逐行 ignore；`boto3`/`aioredis` 的未标注调用加定位明确的 `no-untyped-call`。
+- 复跑口径：`1025 passed / 3 skipped`（新增 1 条回归）、`ruff 0.15.21 format --check` 与 `ruff check` 全过、`mypy app` 0 错误。
+
 ## [1.20.19] — 2026-11-28
 
 ### 路线图收口：领域体验、审核配置与运行监控

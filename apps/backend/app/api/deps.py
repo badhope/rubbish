@@ -229,10 +229,10 @@ async def effective_permission_role(db: AsyncSession, user: User) -> str:
         )
     )
     for name in result.scalars():
-        mapped = _LEGACY_ROLE_TO_PERMISSION.get(name)
-        if mapped and PERMISSION_RANK[mapped] > best_rank:
-            best = mapped
-            best_rank = PERMISSION_RANK[mapped]
+        row_role = _LEGACY_ROLE_TO_PERMISSION.get(name)
+        if row_role and PERMISSION_RANK[row_role] > best_rank:
+            best = row_role
+            best_rank = PERMISSION_RANK[row_role]
     return best
 
 

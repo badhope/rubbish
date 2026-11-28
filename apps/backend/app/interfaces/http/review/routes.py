@@ -19,7 +19,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from fastapi.responses import Response
@@ -292,7 +292,7 @@ async def delete_review_draft(
 @router.get("/board")
 async def review_board(
     viewer: User | None = Depends(get_current_user_optional),
-    tenant_id=Depends(require_tenant_id),
+    tenant_id: UUID = Depends(require_tenant_id),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
     """公开的「互评围观」列表。
@@ -350,7 +350,7 @@ async def review_board(
 async def express_review_interest(
     submission_id: int,
     current_user: User = Depends(require_reviewer),
-    tenant_id=Depends(require_tenant_id),
+    tenant_id: UUID = Depends(require_tenant_id),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
     """互评成员表达互评意愿；不直接改变指派状态，由站务组在指派台决定。"""

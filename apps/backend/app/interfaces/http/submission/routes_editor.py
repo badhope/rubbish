@@ -6,12 +6,14 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from types import SimpleNamespace
+from typing import Any, cast
 from uuid import uuid4
 
 from fastapi import Depends, HTTPException, Query, status
 from sqlalchemy import func, or_, select, update
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -485,12 +487,15 @@ async def list_reviewer_candidates(
             else []
         )
         if current is not None:
-            candidate_user = SimpleNamespace(
-                username=getattr(row, "username", None),
-                display_name=getattr(row, "display_name", None),
-                real_name=getattr(row, "real_name", None),
-                affiliation=getattr(row, "affiliation", None),
-                department=getattr(row, "department", None),
+            candidate_user = cast(
+                "User",
+                SimpleNamespace(
+                    username=getattr(row, "username", None),
+                    display_name=getattr(row, "display_name", None),
+                    real_name=getattr(row, "real_name", None),
+                    affiliation=getattr(row, "affiliation", None),
+                    department=getattr(row, "department", None),
+                ),
             )
             if row.id == current.submitted_by:
                 conflict_reasons = ["本人就是该作品提交人", *conflict_reasons]
@@ -1156,7 +1161,7 @@ async def submission_timeline(
     submission_id: int,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """文章全流程时间线：发布、版本、邀请/拒审、报告、作者回复、裁决。
 
     编辑可看全部作品；作者只能看自己的作品。作者侧始终使用稳定匿名标签，
@@ -1173,9 +1178,9 @@ async def submission_timeline(
     # 到作者可见的时间线，避免刊出前就泄露身份。
     hide_reviewers = not is_editor
 
-    events: list[dict] = []
+    events: list[dict[str, Any]] = []
 
-    def add(at, kind: str, title: str, detail: str | None = None) -> None:
+    def add(at: datetime | None, kind: str, title: str, detail: str | None = None) -> None:
         if at is not None:
             events.append({"at": at, "kind": kind, "title": title, "detail": detail})
 
@@ -1684,14 +1689,17 @@ async def request_rework(
         .all()
     )
     cancelled_assignments = (
-        await db.execute(
-            update(ReviewAssignment)
-            .where(
-                ReviewAssignment.submission_id == entry.id,
-                ReviewAssignment.tenant_id == entry.tenant_id,
-                ReviewAssignment.status.in_(("pending", "accepted", "completed")),
-            )
-            .values(status="cancelled")
+        cast(
+            "CursorResult[Any]",
+            await db.execute(
+                update(ReviewAssignment)
+                .where(
+                    ReviewAssignment.submission_id == entry.id,
+                    ReviewAssignment.tenant_id == entry.tenant_id,
+                    ReviewAssignment.status.in_(("pending", "accepted", "completed")),
+                )
+                .values(status="cancelled")
+            ),
         )
     ).rowcount or 0
     for reviewer_id in open_reviewer_ids:

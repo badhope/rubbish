@@ -40,6 +40,7 @@ if TYPE_CHECKING:
     # (submission depends on catalog; importing catalog here would
     # re-trigger its own __init__ registration).
     from app.domain.catalog.models import Resource
+    from app.domain.review.models import ReviewAssignment
 
 
 class Submission(Base, TenantScopedMixin):
@@ -253,6 +254,10 @@ class Submission(Base, TenantScopedMixin):
     # Resource lives in the catalog module; import lazily (string ref)
     # to avoid a circular import at module load time.
     resource: Mapped[Resource | None] = relationship("Resource")
+    # 显式声明反向关系，替换 review 模块里的 backref，便于类型检查与静态分析。
+    review_assignments: Mapped[list[ReviewAssignment]] = relationship(
+        "ReviewAssignment", back_populates="submission"
+    )
 
 
 class SubmissionVersion(Base, TenantScopedMixin):

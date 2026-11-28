@@ -118,7 +118,7 @@ class RedisTokenDenylist:
         if self._redis is None:
             import redis.asyncio as aioredis
 
-            self._redis = aioredis.from_url(
+            self._redis = aioredis.from_url(  # type: ignore[no-untyped-call]
                 self._redis_url,
                 decode_responses=True,
                 socket_connect_timeout=2,
