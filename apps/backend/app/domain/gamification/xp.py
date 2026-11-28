@@ -27,6 +27,8 @@ XP_RULES: dict[str, int] = {
     # 社区：主题与回复都计入全站活跃经验（评论另有每日上限）
     "forum.topic": 5,
     "forum.reply": 2,
+    # 新手四项全部完成后的手动领取，一次性，幂等
+    "forum.newbie_complete": 25,
     # 讨论（每日上限由调用方控制）
     "comment.create": 2,
     "comment.received_like": 1,

@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button'
 import { notificationDestination } from '@/lib/notification-link'
 import { shortDate } from './format'
 import { MeAppeals } from './me-appeals'
+import { ForumCreditCard } from './forum-credit-card'
 
 function SectionHeading({
   kicker,
@@ -282,6 +283,22 @@ export function MeOverview({
             ))}
           </div>
         )}
+      </section>
+
+      <section>
+        <SectionHeading
+          kicker="STANDING"
+          title="社区信用"
+          action={
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/guide" search={{ tab: 'policies' }}>
+                看边界
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </Button>
+          }
+        />
+        <ForumCreditCard />
       </section>
 
       <section>

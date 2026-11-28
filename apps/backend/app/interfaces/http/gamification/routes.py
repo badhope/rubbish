@@ -159,6 +159,9 @@ async def onboarding_community(
     await service.award(
         db, current_user, "onboarding.ack_rules", ref_type="rules", ref_id=CURRENT_RULES_VERSION
     )
+    # 社区规范确认与作者规范共用版本号；确认后新手任务和发布门禁都读这个字段。
+    current_user.rules_ack_version = CURRENT_RULES_VERSION
+    current_user.rules_ack_at = utcnow()
     await service.evaluate_badges(db, current_user)
     await db.commit()
     roles = await service._user_role_names(db, current_user)
