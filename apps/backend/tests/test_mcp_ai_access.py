@@ -237,6 +237,93 @@ async def test_submit_paper_writes_v1_body_and_is_idempotent(
 
 
 @pytest.mark.asyncio
+async def test_mcp_resubmit_summarises_route_response(
+    client: AsyncClient, db_session: AsyncSession, test_user: dict
+) -> None:
+    """回归：重投/store 走的是路由函数，返回 SubmissionResponse。
+
+    旧实现把返回对象当 ORM Submission 用（``entry.source`` /
+    ``submission.tenant_id``），一旦工具真的跑通就会 AttributeError；
+    mypy 在这里报 arg-type，测试锁住「响应模型也能算出摘要与版本号」。
+    """
+    raw = await _token(
+        db_session, test_user["user_id"], "profile:read submission:read submission:write"
+    )
+    ack = await client.post(
+        "/api/mcp",
+        json={
+            "jsonrpc": "2.0",
+            "id": 20,
+            "method": "tools/call",
+            "params": {
+                "name": "acknowledge_rules",
+                "arguments": {"rules_version": "2.0", "confirm": True},
+            },
+        },
+        headers={"Authorization": f"Bearer {raw}"},
+    )
+    assert ack.json()["result"]["isError"] is False, ack.text
+
+    submit = await client.post(
+        "/api/mcp",
+        json={
+            "jsonrpc": "2.0",
+            "id": 21,
+            "method": "tools/call",
+            "params": {
+                "name": "submit_paper",
+                "arguments": {
+                    "title": "验证 MCP 重投摘要的作品",
+                    "type": "paper",
+                    "authors": ["测试作者"],
+                    "year": 2026,
+                    "discipline": "computer-science",
+                    "abstract": "这是一段足够长的摘要，用来验证 MCP 重投路径不会把响应模型当成 ORM 对象，摘要里仍能算出最新版本号。",
+                    "keywords": ["MCP", "重投"],
+                    "body_markdown": "# 正文\n\n" + ("正文内容。" * 20),
+                    "confirm": True,
+                    "idempotency_key": "test-mcp-resubmit-001",
+                },
+            },
+        },
+        headers={"Authorization": f"Bearer {raw}"},
+    )
+    submit_result = submit.json()["result"]
+    assert submit_result["isError"] is False, submit.text
+    submission_id = int(__import__("json").loads(submit_result["content"][0]["text"])["id"])
+
+    row = (
+        await db_session.execute(select(Submission).where(Submission.id == submission_id))
+    ).scalar_one()
+    row.status = "rework_requested"
+    await db_session.commit()
+
+    resubmit = await client.post(
+        "/api/mcp",
+        json={
+            "jsonrpc": "2.0",
+            "id": 22,
+            "method": "tools/call",
+            "params": {
+                "name": "resubmit_my_submission",
+                "arguments": {
+                    "submission_id": submission_id,
+                    "note": "按互评意见补了实验与讨论",
+                    "confirm": True,
+                },
+            },
+        },
+        headers={"Authorization": f"Bearer {raw}"},
+    )
+    payload = resubmit.json()["result"]
+    assert payload["isError"] is False, resubmit.text
+    summary = __import__("json").loads(payload["content"][0]["text"])
+    assert summary["status"] == "under_review"
+    assert summary["latest_version"] == 2
+    assert summary["source"] == "ai"
+
+
+@pytest.mark.asyncio
 async def test_legacy_ai_submissions_route_still_lists(
     client: AsyncClient, db_session: AsyncSession, test_user: dict
 ) -> None:

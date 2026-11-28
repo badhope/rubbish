@@ -131,11 +131,11 @@ async def _owner_map(db: AsyncSession, user_ids: set[int]) -> dict[int, tuple[st
     return {int(row[0]): (row[1], row[2]) for row in rows}
 
 
-def _with_owner(
-    payload: ReadingListResponse | ReadingListDetailResponse,
+def _with_owner[PayloadT: (ReadingListResponse, ReadingListDetailResponse)](
+    payload: PayloadT,
     rl: ReadingList,
     owners: dict[int, tuple[str, str | None]] | None,
-) -> ReadingListResponse | ReadingListDetailResponse:
+) -> PayloadT:
     username, display_name = (owners or {}).get(rl.user_id, (None, None))
     if username is None:
         return payload

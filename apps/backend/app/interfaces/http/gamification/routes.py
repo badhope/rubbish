@@ -6,6 +6,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from typing import Literal
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
@@ -353,7 +354,7 @@ def _application_response(
 
 async def _notify_admins_new_application(
     db: AsyncSession,
-    tenant_id: object,
+    tenant_id: UUID,
     row: RoleApplication,
     username: str,
 ) -> None:
@@ -658,9 +659,9 @@ async def decide_application(
             )
     except Exception:
         logger.warning(
-            "role_application_decision_notify_failed",
-            application_id=row.id,
-            applicant_id=applicant.id,
+            "role_application_decision_notify_failed application_id=%s applicant_id=%s",
+            row.id,
+            applicant.id,
             exc_info=True,
         )
 

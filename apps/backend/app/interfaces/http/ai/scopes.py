@@ -8,9 +8,10 @@ editor_in_chief); callers may request a subset, never a superset.
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import Depends, Header, HTTPException, Request, status
 from sqlalchemy import or_, select
@@ -206,7 +207,7 @@ async def get_api_token_identity(
     return TokenIdentity(user=user, token=token, scopes=scopes)
 
 
-def require_scope(*required: str):
+def require_scope(*required: str) -> Callable[..., Any]:
     async def _guard(identity: TokenIdentity = Depends(get_api_token_identity)) -> TokenIdentity:
         missing = [scope for scope in required if scope not in identity.scopes]
         if missing:

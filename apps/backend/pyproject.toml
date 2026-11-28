@@ -176,6 +176,12 @@ module = ["redis", "redis.*", "boto3", "boto3.*", "meilisearch_python_sdk", "mei
 ignore_missing_imports = true
 follow_untyped_imports = true
 
+# 转换/字体/监控等运行时依赖没有 py.typed；缺库或缺 stub 时按 Any 处理，
+# 不再逐行 type: ignore（CI 只装核心依赖，sentry_sdk 可能缺席）。
+[[tool.mypy.overrides]]
+module = ["docxcompose", "docxcompose.*", "fontTools", "fontTools.*", "pypandoc", "pypandoc.*", "sentry_sdk", "sentry_sdk.*"]
+ignore_missing_imports = true
+
 # 稿件转换依赖（0.6.2）：均无 py.typed；其未标注函数不触发严格调用检查
 [[tool.mypy.overrides]]
 module = ["pymupdf4llm", "pymupdf4llm.*", "mammoth", "mammoth.*", "markdownify", "markdownify.*"]

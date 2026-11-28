@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 from sqlalchemy.orm import Session
-from sqlalchemy.sql import ColumnElement, Select
+from sqlalchemy.sql import Select
 
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -140,7 +140,7 @@ async def paginate(  # noqa: UP047 - 3.11 兼容，见上注释
     *,
     page: int,
     page_size: int,
-    order_by: Sequence[ColumnElement[Any]],
+    order_by: Sequence[Any],
 ) -> tuple[list[_PaginateT], PaginationMeta]:
     """Run a paginated query; return (rows, PaginationMeta).
 

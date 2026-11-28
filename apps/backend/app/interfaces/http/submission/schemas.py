@@ -364,6 +364,9 @@ class SubmissionResponse(BaseModel):
     markdown_path: str | None = None
     # 完整正文（仅互评成员分配端点按需下发；详情/列表不返回，避免把正文塞进列表响应）
     manuscript_body: str | None = None
+    # 提交来源：human = 网页/表单，ai = API Token 调用（MCP 工具）。
+    # 作者侧摘要与自动化排查靠它区分，ORM 对象与响应模型都带该字段。
+    source: str = "human"
     # 双盲评审下互评成员视角会被抹掉，因此可空
     submitted_by: int | None = None
     submitted_at: datetime

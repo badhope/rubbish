@@ -14,6 +14,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from time import monotonic
+from typing import Any
+from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -39,7 +41,7 @@ class ModerationPolicy:
     weights: dict[str, int]
     priority_risk_weight: int
     priority_age_weight: int
-    gray_rules: dict
+    gray_rules: dict[str, Any]
 
     def with_segment(
         self,
@@ -58,11 +60,11 @@ class ModerationPolicy:
         )
 
 
-def sanitize_gray_rules(raw: dict | None) -> dict:
+def sanitize_gray_rules(raw: dict[str, Any] | None) -> dict[str, Any]:
     """Keep only known gray-rule shapes; drop everything else at the boundary."""
     if not isinstance(raw, dict):
         return {}
-    cleaned: dict[str, dict] = {}
+    cleaned: dict[str, dict[str, Any]] = {}
     for group in ("boards", "roles"):
         source = raw.get(group)
         if not isinstance(source, dict):
@@ -119,11 +121,11 @@ def effective_weights(weights: dict[str, int] | None) -> dict[str, int]:
     return {**default_weights(), **(weights or {})}
 
 
-def invalidate_policy(tenant_id) -> None:
+def invalidate_policy(tenant_id: UUID) -> None:
     _POLICY_CACHE.pop(str(tenant_id), None)
 
 
-async def load_settings_row(db: AsyncSession, tenant_id) -> ForumModerationSetting:
+async def load_settings_row(db: AsyncSession, tenant_id: UUID) -> ForumModerationSetting:
     """Return the tenant's single settings row, creating defaults on first read."""
     row = (
         await db.execute(
@@ -147,7 +149,9 @@ async def load_settings_row(db: AsyncSession, tenant_id) -> ForumModerationSetti
     return row
 
 
-async def get_policy(db: AsyncSession, tenant_id, *, refresh: bool = False) -> ModerationPolicy:
+async def get_policy(
+    db: AsyncSession, tenant_id: UUID, *, refresh: bool = False
+) -> ModerationPolicy:
     key = str(tenant_id)
     cached = _POLICY_CACHE.get(key)
     if not refresh and cached is not None:
@@ -160,7 +164,7 @@ async def get_policy(db: AsyncSession, tenant_id, *, refresh: bool = False) -> M
     return snapshot
 
 
-def _segment_policy(base: ModerationPolicy, segment) -> ModerationPolicy:
+def _segment_policy(base: ModerationPolicy, segment: object) -> ModerationPolicy:
     if isinstance(segment, int):
         return base.with_segment(threshold=max(1, min(99, segment)))
     if not isinstance(segment, dict):
@@ -214,7 +218,7 @@ def priority_score(risk_score: float | int, age_minutes: float, policy: Moderati
     )
 
 
-def priority_order_expression(policy: ModerationPolicy):
+def priority_order_expression(policy: ModerationPolicy) -> Any:
     """SQL expression: risk weight plus waiting time weight.
 
     ``EXTRACT(EPOCH FROM now() - created_at)`` is PostgreSQL-native and
@@ -231,14 +235,14 @@ def priority_order_expression(policy: ModerationPolicy):
 async def record_event(
     db: AsyncSession,
     *,
-    tenant_id,
+    tenant_id: UUID,
     topic: ForumTopic,
     action: str,
     from_status: str | None,
     to_status: str | None,
     actor_id: int | None,
     note: str | None,
-    meta: dict | None = None,
+    meta: dict[str, Any] | None = None,
 ) -> None:
     db.add(
         ForumModerationEvent(
@@ -257,7 +261,7 @@ async def record_event(
 async def apply_decision(
     db: AsyncSession,
     *,
-    tenant_id,
+    tenant_id: UUID,
     topic: ForumTopic,
     action: str,
     note: str,
@@ -309,7 +313,7 @@ async def apply_decision(
 async def notify_author(
     db: AsyncSession,
     *,
-    tenant_id,
+    tenant_id: UUID,
     topic: ForumTopic,
     action: str,
     note: str,

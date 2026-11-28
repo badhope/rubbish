@@ -262,7 +262,7 @@ async def run_file_scan_backfill(
             stats["error"] += 1
 
     # Legacy versions whose submission row is already gone.
-    versions = list(
+    legacy_versions = list(
         (
             await db.execute(
                 select(SubmissionVersion)
@@ -285,7 +285,7 @@ async def run_file_scan_backfill(
         .scalars()
         .all()
     )
-    for version in versions:
+    for version in legacy_versions:
         try:
             data = await storage.load(version.file_path or "")
         except FileNotFoundError:

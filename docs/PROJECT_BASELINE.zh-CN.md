@@ -59,7 +59,7 @@ Rubbish 是自托管的公开写作与主题交流社区。长文进入内容库
 - 发布邮件：`publication_digest` job 每日 09:00 后汇总，一人一天一封，独立于站内通知开关。
 - 下载：文章 PDF / Word / 原件统一经 axios blob 鉴权下载，避免浏览器直链不带 Bearer 被区域访问或 AuthWall 拦截；PDF 版式预览的页数与页图同样走鉴权请求。投稿文件与审稿附件的手机端/微信端原生直链带 `ticket` 参数，中间件只放行该签名下载路径，票据权限仍由端点复核。
 - 论坛回归：`tests/test_forum.py` 20 项、`tests/test_forum_moderation.py` 8 项、50 条批量压力回归 1 项；1.19.56 新增 `tests/test_infra_11956.py` 5 项。
-- 后端全量 `1025 passed / 3 skipped`；前端 `tsc -b --noEmit`、ESLint、Vitest 全量 `254 passed / 49 files`、`vite build` 通过（1.20.21）。
+- 后端全量 `1025 passed / 3 skipped`（含 MCP 重投回归）；前端 `tsc -b --noEmit`、ESLint、Vitest 全量 `254 passed / 49 files`、`vite build` 通过（1.20.21）。
 
 ## 二、已交付功能清单
 

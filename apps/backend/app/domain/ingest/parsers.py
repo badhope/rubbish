@@ -15,7 +15,7 @@ from __future__ import annotations
 import csv
 import io
 import json
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 import bibtexparser
@@ -358,7 +358,7 @@ def _normalize_header(name: str) -> str:
 
 
 def _resolve_column_map(
-    fieldnames: list[str],
+    fieldnames: Sequence[str],
     column_map: Mapping[str, str] | None,
 ) -> dict[str, str]:
     """把原始表头映射到 IngestResource 字段，拒绝未知字段和重复目标。"""
@@ -384,11 +384,11 @@ def _resolve_column_map(
     for raw in fieldnames:
         if raw in resolved:
             continue
-        target = CSV_HEADER_ALIASES.get(_normalize_header(raw))
-        if target is None or target in used:
+        alias_target = CSV_HEADER_ALIASES.get(_normalize_header(raw))
+        if alias_target is None or alias_target in used:
             continue
-        resolved[raw] = target
-        used.add(target)
+        resolved[raw] = alias_target
+        used.add(alias_target)
 
     return resolved
 

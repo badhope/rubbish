@@ -40,6 +40,9 @@ REGION_COOKIE_NAME = "rubbish_region"
 RESTRICTED = "restricted"
 OVERSEAS = "overseas"
 
+# typeshed 不导出私有的 BaseNetwork；两者行为一致，统一用 IPv4/IPv6Network 联合。
+IPNetwork = ipaddress.IPv4Network | ipaddress.IPv6Network
+
 _DEFAULT_IP_LIST = Path(__file__).resolve().parents[1] / "data" / "restricted_service_ip_ranges.txt"
 
 # Safe read-only endpoints for overseas guests. Everything here is published
@@ -92,12 +95,12 @@ _OVERSEAS_PATTERNS = (
 
 
 @lru_cache(maxsize=4)
-def _load_networks(path_value: str) -> tuple[ipaddress.BaseNetwork, ...]:
+def _load_networks(path_value: str) -> tuple[IPNetwork, ...]:
     path = Path(path_value)
     if not path.is_file():
         logger.error("region_ip_list_missing", path=str(path))
         return ()
-    networks: list[ipaddress.BaseNetwork] = []
+    networks: list[IPNetwork] = []
     for line in path.read_text(encoding="utf-8").splitlines():
         value = line.strip()
         if not value or value.startswith("#"):
@@ -110,7 +113,7 @@ def _load_networks(path_value: str) -> tuple[ipaddress.BaseNetwork, ...]:
     return tuple(networks)
 
 
-def restricted_networks() -> tuple[ipaddress.BaseNetwork, ...]:
+def restricted_networks() -> tuple[IPNetwork, ...]:
     path = settings.region_access_restricted_ip_list_path.strip()
     return _load_networks(path or str(_DEFAULT_IP_LIST))
 

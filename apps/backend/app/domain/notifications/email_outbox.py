@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.email import (
+    EmailSender,
     configured_accounts,
     get_congrat_sender,
     get_email_sender,
@@ -35,7 +36,7 @@ class EmailOutboxConflict(Exception):
     """The row exists but its current state forbids another delivery."""
 
 
-def _sender(channel: str):
+def _sender(channel: str) -> EmailSender:
     if channel == "congrat":
         return get_congrat_sender()
     return get_email_sender()

@@ -16,7 +16,8 @@ import html
 import io
 import os
 import re
-from typing import Any
+from collections.abc import Iterable
+from typing import Any, cast
 
 _SERIF_SRC = "/usr/share/fonts/opentype/noto/NotoSerifCJK-Regular.ttc"
 
@@ -384,7 +385,7 @@ def render_studio_pdf(meta: dict[str, Any], body_md: str) -> bytes:
     )
     if meta.get("license"):
         license_text += f" · {meta['license']}"
-    for i, page in enumerate(doc, start=1):
+    for i, page in enumerate(cast("Iterable[Any]", doc), start=1):
         page.insert_text(
             (40.5, 26),
             "RUBBISH",

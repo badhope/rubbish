@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from typing import cast
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -205,7 +206,7 @@ async def _pageview_series(
             .order_by(local_day)
         )
     ).all()
-    daily_map = {str(day): int(views) for day, views in rows}
+    daily_map = {str(day): int(cast("int", views)) for day, views in rows}
     total = sum(daily_map.values())
     daily = [
         {
@@ -325,19 +326,22 @@ async def creator_overview(
         if resource.slug:
             paths.append(f"/catalog/{resource.slug}")
     _since, page_views_30d, daily_views = await _pageview_series(db, tenant_id, paths, 30)
-    comment_rows = []
+    comment_rows: list[tuple[int, int]] = []
     if resources:
-        comment_rows = (
-            await db.execute(
-                select(Comment.resource_id, func.count(Comment.id))
-                .where(
-                    Comment.tenant_id == tenant_id,
-                    Comment.resource_id.in_([resource.id for resource in resources]),
-                    Comment.status != "rejected",
+        comment_rows = [
+            (int(row[0] or 0), int(row[1] or 0))
+            for row in (
+                await db.execute(
+                    select(Comment.resource_id, func.count(Comment.id))
+                    .where(
+                        Comment.tenant_id == tenant_id,
+                        Comment.resource_id.in_([resource.id for resource in resources]),
+                        Comment.status != "rejected",
+                    )
+                    .group_by(Comment.resource_id)
                 )
-                .group_by(Comment.resource_id)
-            )
-        ).all()
+            ).all()
+        ]
     comments_by_resource = {int(rid): int(count) for rid, count in comment_rows}
 
     author_names = [
@@ -430,10 +434,10 @@ async def creator_overview(
         ]
 
     totals = {
-        "reads": sum(item["reads"] for item in works),
-        "downloads": sum(item["downloads"] for item in works),
-        "saves": sum(item["saves"] for item in works),
-        "comments": sum(item["comments"] for item in works),
+        "reads": sum(cast("int", item["reads"]) for item in works),
+        "downloads": sum(cast("int", item["downloads"]) for item in works),
+        "saves": sum(cast("int", item["saves"]) for item in works),
+        "comments": sum(cast("int", item["comments"]) for item in works),
     }
     return {
         "published": len(resources),

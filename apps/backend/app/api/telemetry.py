@@ -7,7 +7,7 @@ the browser already sends. The table is tenant-scoped and RLS-protected.
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, cast
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -96,7 +96,7 @@ async def analytics_summary(
             .order_by(local_day)
         )
     ).all()
-    daily_map = {str(day): int(views) for day, views in daily_rows}
+    daily_map = {str(day): int(cast("int", views)) for day, views in daily_rows}
     daily = [
         {
             "date": (start_local.date() + timedelta(days=offset)).isoformat(),

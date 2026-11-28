@@ -15,11 +15,13 @@ the remaining sweeps.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable
 from contextlib import suppress
 from functools import partial
 from typing import Any
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.db import async_session_factory
@@ -62,7 +64,9 @@ def workflow_scheduler_state() -> dict[str, Any]:
     }
 
 
-async def _run_job(name: str, tenant_id: Any, runner: Any) -> dict[str, int]:
+async def _run_job(
+    name: str, tenant_id: Any, runner: Callable[[AsyncSession], Awaitable[dict[str, int]]]
+) -> dict[str, int]:
     """Run one tenant-scoped job in its own session, rollback on failure."""
     async with async_session_factory() as job_db:
         try:
@@ -160,7 +164,7 @@ async def run_workflow_once() -> dict[str, int]:
     return totals
 
 
-_task: asyncio.Task | None = None
+_task: asyncio.Task[None] | None = None
 
 
 async def _loop() -> None:
