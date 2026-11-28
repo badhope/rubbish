@@ -6,8 +6,11 @@ test.describe('后台高风险动作确认链路', () => {
   test('成员角色撤销/分配、账号禁用/启用都要确认后才落库', async ({ page }) => {
     const user = nextTestUser('confirm')
     await loginViaUi(page, ADMIN)
-    await page.goto('/admin/people?section=users')
+    // Firefox 在 dev server 下等 load 会被中断的模块请求带成 NS_ERROR_FAILURE；
+    // 这里只关心页面可用，等到 DOM 就绪后直接等下一条断言。
+    await page.goto('/admin/people?section=users', { waitUntil: 'domcontentloaded' })
 
+    await expect(page.getByRole('button', { name: '新增成员' })).toBeVisible()
     await page.getByRole('button', { name: '新增成员' }).click()
     const createDialog = page.getByRole('dialog')
     await createDialog.getByLabel('邮箱').fill(user.email)

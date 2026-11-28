@@ -53,6 +53,14 @@ export async function loginViaUi(
   await page.waitForURL(/\/me(?:[?#]|$)/, { timeout: 15_000 })
   await ensureAuthorReady(page)
   await dismissOnboarding(page)
+  // Vite dev server 在登录后会继续拉若干个懒加载模块；Firefox 在请求未结清时
+  // 立刻跳转会把文档请求判成 NS_ERROR_FAILURE（Chromium 不受影响）。等网络
+  // 静默再继续，后面的 page.goto 才是稳定的。超时不致命，只做尽力稳定。
+  try {
+    await page.waitForLoadState('networkidle', { timeout: 10_000 })
+  } catch {
+    // 有轮询请求时 networkidle 可能等不到；不影响后续断言。
+  }
 }
 
 export async function dismissOnboarding(page: Page): Promise<void> {
