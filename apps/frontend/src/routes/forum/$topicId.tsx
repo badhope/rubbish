@@ -44,6 +44,8 @@ import { MODERATION_STATUS_LABEL } from '@/lib/forum-copy'
 import { ModerationNotice } from '@/components/forum/moderation-status'
 import { TopicRelated, type TopicLinkedWork } from '@/components/forum/topic-related'
 import { OperatorQuickPanel } from '@/components/forum/operator-quick-panel'
+import { TopicPassage } from '@/components/margins/topic-passage'
+import type { Passage } from '@/lib/margins'
 
 const ForumEditor = lazy(() =>
   import('@/components/forum/forum-editor').then((m) => ({ default: m.ForumEditor })),
@@ -68,6 +70,8 @@ interface ForumTopic {
   is_pinned: boolean
   is_locked: boolean
   paper_id?: number | null
+  passage?: Passage | null
+  has_passage?: boolean
   reply_count: number
   created_at: string
   last_reply_at: string | null
@@ -601,6 +605,14 @@ function ForumTopicPage() {
               </Badge>
             )}
           </div>
+          <TopicPassage
+            topicId={topic.id}
+            paperId={topic.paper_id}
+            passage={topic.passage}
+            hasPassage={!!topic.has_passage}
+            workTitle={relatedQ.data?.paper ? relatedQ.data.paper.short_title?.trim() || relatedQ.data.paper.title : null}
+            workAuthors={relatedQ.data?.paper?.authors}
+          />
           <h1 className="min-w-0 break-words text-xl font-semibold leading-snug">{topic.title}</h1>
           <p className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
             {topic.author ? (
@@ -624,10 +636,13 @@ function ForumTopicPage() {
             <span aria-hidden>·</span>
             <span>发布于 {formatDateTime(topic.created_at)}</span>
           </p>
-          {/* 话题正文按 Markdown 渲染；react-markdown 默认转义原始 HTML，XSS 面为零。 */}
-          <div className="forum-topic-body markdown-body text-sm leading-relaxed">
-            <MarkdownContent text={topic.body} />
-          </div>
+          {/* 话题正文按 Markdown 渲染；react-markdown 默认转义原始 HTML，XSS 面为零。
+              页边讨论可以只有一个问题（引文就是上下文），此时不渲染空正文。 */}
+          {topic.body.trim() ? (
+            <div className="forum-topic-body markdown-body text-sm leading-relaxed">
+              <MarkdownContent text={topic.body} />
+            </div>
+          ) : null}
 
           <div className="flex flex-wrap items-center gap-1 border-t pt-2">
             <ReactionBar
@@ -730,7 +745,7 @@ function ForumTopicPage() {
       <div className="space-y-2">
         <p className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
           <MessageSquare className="h-4 w-4" />
-          楼层互动（{topic.reply_count}）
+          {`楼层互动（${topic.reply_count}）`}
         </p>
         {repliesQ.isLoading ? (
           <Loading />
@@ -1014,7 +1029,12 @@ function ForumTopicPage() {
             </span>
             <Button
               onClick={() => editMut.mutate()}
-              disabled={editMut.isPending || editTitle.trim().length < 2 || editBody.trim().length < 2}
+              disabled={
+                editMut.isPending ||
+                editTitle.trim().length < 2 ||
+                // 页边讨论在不换作品时可以没有正文；换作品或取消关联会撤下引文，就需要正文了。
+                (editBody.trim().length < 2 && !(topic.has_passage && !editPaperTouched))
+              }
             >
               {editMut.isPending ? '保存中…' : '保存修改'}
             </Button>

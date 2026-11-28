@@ -82,6 +82,12 @@ class ForumTopic(Base, TenantScopedMixin):
     # 关联论文（可选）：从论文详情页发起的讨论带上资源 id，
     # 论文页据此显示"讨论 N"；普通帖子保持 NULL。
     paper_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    # 页边讨论（1.21）：读者在关联作品正文里选中的一段原话。只存作者原文，
+    # 不存译文；prefix / suffix 是前后各一小段上下文，正文里同一句话出现
+    # 多次时用来定位（W3C TextQuoteSelector 的同一思路）。没有 paper_id 时必为空。
+    passage_quote: Mapped[str | None] = mapped_column(Text, nullable=True)
+    passage_prefix: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    passage_suffix: Mapped[str | None] = mapped_column(String(64), nullable=True)
     # 置顶与锁定：版主/管理员操作
     is_pinned: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     is_locked: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)

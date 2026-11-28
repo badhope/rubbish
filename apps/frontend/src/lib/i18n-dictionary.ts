@@ -2206,10 +2206,134 @@ const READING_EN: Record<string, string> = {
   "可以缩短关键词、换一个作者名，或者直接去内容库按方向和年份浏览。": "Try a shorter keyword, another author name, or browse the Library by field and year.",
 }
 
+/**
+ * Margins (1.21): questions readers write beside a passage of a work, plus
+ * the reading-page and thread-page copy that was still showing in Chinese.
+ * The quoted passage itself is never translated.
+ */
+const MARGINS_EN: Record<string, string> = {
+  // — the margin itself —
+  "页边": 'Margins',
+  "页边讨论": 'Margin threads',
+  "在页边提问": 'Ask in the margin',
+  "写在": 'Next to',
+  "旁边。": '.',
+  "问题会发到主题论坛，回应在那里继续。": 'Your question becomes a Forum thread, and replies continue there.',
+  "你在问这一段": 'You are asking about this passage',
+  "引一段原文（可选）": 'Quote a passage (optional)',
+  "换一段": 'Choose another',
+  "改问整篇": 'Ask about the whole piece',
+  "从正文里选一段；不选就是问整篇。": 'Pick a passage from the text, or skip it to ask about the whole piece.',
+  "选择要引用的段落": 'Choose a paragraph to quote',
+  "方向键在段落间移动，回车确认。想引更短的一句，可以直接在正文里选中。":
+    'Arrow keys move between paragraphs; Enter confirms. For a shorter quote, select it in the text itself.',
+  "你的问题": 'Your question',
+  "关于这一段，你想问什么？": 'What do you want to ask about this passage?',
+  "读完整篇，你想问什么？": 'Having read the whole piece, what do you want to ask?',
+  "多说一点（可选）": 'Say more (optional)',
+  "多说一点": 'Say more',
+  "你读到了什么、卡在哪里、想听谁说说……支持 Markdown。":
+    'What you noticed, where you got stuck, whose view you want… Markdown works.',
+  "这段文字和作品正文对不上，可能作者刚改过。请回到正文重新选一次。":
+    'That passage no longer matches the published text; the author may have just revised it. Select it again in the text.',
+  "没有发出去，请稍后再试。": 'It did not go through. Try again in a moment.',
+  "发在「写作讨论」，并留在这篇作品的页边。Ctrl / ⌘ + Enter 发布。":
+    'Posted to Writing discussion and kept in this piece’s margin. Ctrl / ⌘ + Enter publishes.',
+  "写进页边": 'Add to the margin',
+  "已提交。核验通过后，其他读者会在页边看到它。": 'Submitted. Other readers will see it in the margin once it has been reviewed.',
+  "已写进页边，也发到了主题论坛。": 'Added to the margin and posted in the Forum.',
+  "关闭": 'Close',
+  "划线的句子旁边，是读者留下的问题。": 'Beside each underlined sentence is a question a reader left.',
+  "在正文里选中一句话，就能在这里提问。": 'Select a sentence in the text to ask about it here.',
+  "选一段提问": 'Quote a passage',
+  "问整篇": 'Ask about the whole piece',
+  "核验中": 'In review',
+  "核验中，暂时只有你看得到": 'In review: only you can see it for now',
+  "在这段继续问": 'Ask about this passage too',
+  "选中了一段原文": 'Passage selected',
+  "选短一点：600 字以内": 'Select less: 600 characters at most',
+  "一次选一段之内的文字": 'Select within a single paragraph',
+  "在原文里看": 'Show in the text',
+  "读者在页边写下的问题": 'Questions readers left in the margins',
+  "选中正文里的一句话就能提问。每个问题都会成为主题论坛里的一条讨论，回应也在那里继续。":
+    'Select any sentence in the piece to ask about it. Each question becomes a Forum thread, and the replies continue there.',
+  "读者可以选中正文里的一句话提问；每个问题都是主题论坛里的一条讨论。":
+    'Readers can select a sentence in the piece and ask about it; each question is a Forum thread.',
+  "还没有人在页边留下问题。第一句可以是你的。": 'No one has left a question in the margins yet. The first one could be yours.',
+  "原文已经改过的段落": 'Passages the author has since revised',
+  "这些讨论引用了正文里的句子。登录后可以读到原文，也能看到它在文中的位置。":
+    'These threads quote sentences from the piece. Sign in to read the original words and see where they sit in the text.',
+  "关于整篇": 'About the whole piece',
+  "这段的页边讨论": 'Margin threads on this passage',
+  "摘自": 'From',
+  "这条讨论写在正文的一段话旁边。登录后可以读到那段原文。":
+    'This thread was written beside a passage of the piece. Sign in to read that passage.',
+  "在原文里读这一段": 'Read it in context',
+  "登录后可以读全文，也能在页边提问。": 'Sign in to read the whole piece and ask questions in its margins.',
+  // — essay reading page —
+  "这篇的正文暂时打不开。可以稍后刷新，或者去主题论坛催更。":
+    'The text of this piece will not open right now. Refresh in a while, or ask after it in the Forum.',
+  "自由创作：不计分、不进站内热度、不走互评；内容只代表作者本人，不代表社区立场。虚构、夸张或整活请在正文里说清楚，别让读者当真。":
+    'Free writing: no scores, no site ranking, no peer review. It speaks for its author, not for the community. If it is fiction, exaggeration or a bit, the text should say so, so no one takes it literally.',
+  "复制失败，手动复制地址栏吧": 'Copy failed. Copy the address bar by hand.',
+  "以读者的身份发言：问题、质疑、补充都欢迎（≤1000 字，发布后不可编辑）":
+    'Speak as a reader: questions, doubts and additions are all welcome (≤1000 characters, cannot be edited once posted).',
+  "/1000 · 发布后不可编辑": '/1000 · cannot be edited once posted',
+  "发布评论": 'Post comment',
+  "第一条评论的位置留给你。": 'The first comment is yours to write.',
+  "未登录可阅读评论；登录后可参与讨论。": 'Anyone can read comments; sign in to join in.',
+  "评论加载失败，": 'Comments failed to load, ',
+  "发布失败，稍后再试": 'Posting failed. Try again later.',
+  "举报评论": 'Report comment',
+  "举报原因（≤200 字）": 'Reason for the report (≤200 characters)',
+  "填写举报原因": 'Enter a reason',
+  "举报失败，稍后再试": 'Report failed. Try again later.',
+  "写清问题（广告、辱骂、侵权等）。恶意举报会被记录；站务可驳回、下架评论或停用作者。":
+    'Say what is wrong (spam, abuse, infringement…). Bad-faith reports are logged; moderators may dismiss the report, remove the comment or suspend its author.',
+  "删除评论": 'Delete comment',
+  "删除这条评论？": 'Delete this comment?',
+  "提交中…": 'Submitting…',
+  // — thread page —
+  "写回应": 'Write a reply',
+  "写下你的楼层互动…": 'Write a reply…',
+  "写下你的楼层互动…（支持标题、引用、列表、表情和站内表情包）":
+    'Write a reply… (headings, quotes, lists, emoji and site stickers all work)',
+  "Markdown / 图片 / 表情": 'Markdown / images / emoji',
+  "Ctrl / ⌘ + Enter 发送；请针对内容，不针对人。": 'Ctrl / ⌘ + Enter sends. Respond to the writing, not the person.',
+  "写在这条回应下面；Ctrl / ⌘ + Enter 发送": 'Reply under this one; Ctrl / ⌘ + Enter sends',
+  "回复这个主题帖": 'Reply to this thread',
+  "已发布楼层互动": 'Reply posted',
+  "楼层互动发布失败": 'Reply failed to post',
+  "关联与延伸": 'Linked work & further reading',
+  "从这条讨论继续读": 'Keep reading from this thread',
+  "这条讨论关联的作品": 'The work this thread is about',
+  "相关讨论": 'Related threads',
+  "同一方向的延伸阅读": 'More in the same direction',
+  "同一作品": 'Same work',
+  "话题相近": 'Similar topic',
+  "同一分区": 'Same board',
+  "主题帖已更新": 'Thread updated',
+  "关联作品（可选）": 'Linked work (optional)',
+  "读者会在详情页看到作品卡片；只能关联已公开的作品。":
+    'Readers see the work’s card on the thread page. Only published works can be linked.',
+  "更换": 'Change',
+  "取消关联": 'Unlink',
+  "取消更换，保留原关联": 'Keep the current link',
+  "没有匹配的公开作品。": 'No published work matches.',
+  "搜索中…": 'Searching…',
+  "删除这个主题帖？": 'Delete this thread?',
+  "删除后主题帖与回复将不再公开，此操作不可恢复。":
+    'The thread and its replies will no longer be public. This cannot be undone.',
+  "提交举报？": 'Submit a report?',
+  "操作失败": 'Something went wrong',
+  "其他": 'Other',
+}
+
 /** Merged lookup used by the runtime translator. */
 export const ZH_EN: Record<string, string> = {
   ...BRAND_EN,
   ...TEXT_EN,
   ...EXTRA_EN,
   ...READING_EN,
+  ...MARGINS_EN,
 }

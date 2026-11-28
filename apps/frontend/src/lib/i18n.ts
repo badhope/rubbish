@@ -156,11 +156,11 @@ function replacePatterns(source: string): string {
     .replace(/(\d+)\s*篇作品/g, '$1 works')
     .replace(/(\d+)\s*关注者/g, '$1 followers')
     .replace(/(\d+)\s*条投稿记录/g, '$1 submissions')
-    .replace(/(\d+)\s*条回应/g, '$1 replies')
+    .replace(/(\d+)\s*条回应/g, (_m, n: string) => `${n} ${n === '1' ? 'reply' : 'replies'}`)
     .replace(/(\d+)\s*篇\s*·/g, '$1 works ·')
     .replace(/(\d+)\s*阅读/g, '$1 reads')
     .replace(/(\d+)\s*关注/g, '$1 followers')
-    .replace(/(\d+)\s*回应/g, '$1 replies')
+    .replace(/(\d+)\s*回应/g, (_m, n: string) => `${n} ${n === '1' ? 'reply' : 'replies'}`)
     .replace(/^关注作者\s*(\d+)/g, '$1 followed authors')
     .replace(/^订阅方向\s*(\d+)/g, '$1 field subscriptions')
     .replace(/^关注主题\s*(\d+)/g, '$1 followed threads')
@@ -191,6 +191,14 @@ function replacePatterns(source: string): string {
     .replace(/^回复 @(.+)$/g, 'Reply to @$1')
     .replace(/^正文\s*(\d+)\s*字\s*·\s*保存后立即对外可见$/g, 'Body: $1 characters · visible as soon as you save')
     .replace(/^讨论\s*·\s*(\d+)$/g, 'Discuss · $1')
+    // Margins (the quoted words after the colon are the author's own; left as written)
+    .replace(/^页边有\s*(\d+)\s*条讨论：([\s\S]*)$/g, (_m, n: string, q: string) =>
+      `${n} margin ${n === '1' ? 'thread' : 'threads'} on: ${q}`)
+    .replace(/^在正文中标出：([\s\S]*)$/g, 'Show in the text: $1')
+    .replace(/^页边讨论\s*(\d+)\s*条$/g, (_m, n: string) => `${n} margin ${n === '1' ? 'thread' : 'threads'}`)
+    .replace(/^(\d+)\s*条讨论贴在正文右侧的页边上$/g, (_m, n: string) =>
+      `${n} ${n === '1' ? 'thread sits' : 'threads sit'} in the margin to the right of the text`)
+    .replace(/^最后回应\s+(.+)$/g, 'Last reply $1')
     .replace(/^楼层互动（(\d+)）$/g, 'Replies ($1)')
     .replace(/^楼层互动\((\d+)\)$/g, 'Replies ($1)')
     // Paging

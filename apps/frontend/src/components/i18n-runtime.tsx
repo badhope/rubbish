@@ -18,7 +18,17 @@ import { getLang, translateText, useLang } from '@/lib/i18n'
 const originalText = new WeakMap<Text, string>()
 const originalAttrs = new WeakMap<Element, Map<string, string>>()
 const ownWrite = new WeakSet<Text>()
-const ownAttrWrite = new WeakSet<Element>()
+// The exact value this runtime last wrote into each attribute. A mutation
+// whose value differs is fresh Chinese copy from React (a toggled label, a
+// placeholder that follows state) and must be translated again; matching the
+// value, not the element, keeps one translation from freezing an attribute.
+const ownAttrValues = new WeakMap<Element, Map<string, string>>()
+
+function markOwnAttr(el: Element, attr: string, value: string) {
+  const map = ownAttrValues.get(el) ?? new Map<string, string>()
+  map.set(attr, value)
+  ownAttrValues.set(el, map)
+}
 
 const SKIP_SELECTOR = [
   '[data-i18n-skip]',
@@ -78,7 +88,7 @@ function translateAttr(el: Element, attr: string) {
   const map = originalAttrs.get(el) ?? new Map<string, string>()
   if (!map.has(attr)) map.set(attr, value)
   originalAttrs.set(el, map)
-  ownAttrWrite.add(el)
+  markOwnAttr(el, attr, translated)
   el.setAttribute(attr, translated)
 }
 
@@ -97,8 +107,10 @@ function translateAttrs(el: Element) {
 function restoreAttrs(el: Element) {
   const map = originalAttrs.get(el)
   if (!map) return
-  ownAttrWrite.add(el)
-  for (const [attr, value] of map) el.setAttribute(attr, value)
+  for (const [attr, value] of map) {
+    markOwnAttr(el, attr, value)
+    el.setAttribute(attr, value)
+  }
 }
 
 function walk(root: Node, fn: (node: Text) => void) {
@@ -170,8 +182,17 @@ function schedule(mutated: MutationRecord[]) {
     queued = false
     for (const record of mutated) {
       if (record.type === 'attributes' && record.target instanceof Element) {
-        if (ownAttrWrite.has(record.target)) continue
-        translateAttrs(record.target)
+        const el = record.target
+        const attr = record.attributeName
+        if (!attr) continue
+        const current = el.getAttribute(attr)
+        if (current !== null && ownAttrValues.get(el)?.get(attr) === current) continue
+        // React wrote new source copy: forget the old source, then translate.
+        originalAttrs.get(el)?.delete(attr)
+        // Same rule as translateAttrs: field attributes are interface copy;
+        // elsewhere, author content stays untouched.
+        const isField = el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement
+        if (isField || !shouldSkip(el)) translateAttr(el, attr)
         continue
       }
       if (record.type === 'characterData' && record.target instanceof Text) {

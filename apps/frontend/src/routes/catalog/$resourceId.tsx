@@ -93,6 +93,11 @@ import { EmptyState, ErrorState, LoadingSkeleton } from '@/components/common/sta
 // 详情页向访客开放（后端 GET /catalog/{id} 本就是公开接口）。
 // v5：点开即正文——标题/作者/标签后直接渲染 Markdown 正文，不再跳 /reader。
 export const Route = createFileRoute('/catalog/$resourceId')({
+  // ?passage=<topicId>：页边讨论的“在原文里读这一段”落到那句话上。其它参数（如 lang）原样保留。
+  validateSearch: (search: Record<string, unknown>): { passage?: number; [key: string]: unknown } => {
+    const passage = Number(search.passage)
+    return { ...search, passage: Number.isInteger(passage) && passage > 0 ? passage : undefined }
+  },
   component: CatalogDetailPage,
 })
 
