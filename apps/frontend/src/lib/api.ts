@@ -45,6 +45,12 @@ function reportApiProblem(error: AxiosError, title?: string): void {
   if (axios.isCancel(error) || error.code === 'ERR_CANCELED') return
   const status = error.response?.status
   const rawUrl = error.config?.url ?? ''
+  const data = error.response?.data as { detail?: unknown } | undefined
+  // The route guard shows the guest cover for this response. A modal would block its links.
+  if (
+    rawUrl === '/auth/me' && status === 403 &&
+    data?.detail === 'region_restricted' && !useAuthStore.getState().user
+  ) return
   // 文章页把 /manuscript 的 404/409 当作“没有在线正文”处理，会自己退化到
   // PDF/下载视图；正文 404 后，history / claim-status / 阅读记录也不该再
   // 弹全局诊断。这些请求失败属于“内容不在了”的正常退化，页面自己会说明。
@@ -66,7 +72,6 @@ function reportApiProblem(error: AxiosError, title?: string): void {
   ) {
     return
   }
-  const data = error.response?.data as { detail?: unknown } | undefined
   let message = ''
   if (typeof data?.detail === 'string') message = translateBackendError(data.detail)
   else if (data?.detail && typeof data.detail === 'object') {
